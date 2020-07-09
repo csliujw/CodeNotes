@@ -271,8 +271,6 @@ public class MyClassLoader extends ClassLoader {
 
 > 网络类加载器
 
-![](E:\69546\Documents\image\网络类加载器.png)
-
 > 热部署，越过双亲委派，就是不用loadClass 用findClass
 
 ## 4.5 类的显示与隐式加载
