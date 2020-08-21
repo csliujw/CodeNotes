@@ -371,4 +371,3 @@ public class DemoCreateBeanTest {
 <bean id="beanDemo" class="com.spr.day05.DemoCreateBean" c:_0="title1" c:_1="123"></bean>
 <bean id="beanDemo" class="com.spr.day05.DemoCreateBean" c:title="title2" c:artist="123"></bean>
 ```
-

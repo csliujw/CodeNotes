@@ -9,3 +9,4 @@ vue 父子数据传值
 vue子传父 自定义一个事件 v-on:click="xxx('事件名'，‘参数’)"
 
 找父对象的方法 this.$parent.方法名称
+
