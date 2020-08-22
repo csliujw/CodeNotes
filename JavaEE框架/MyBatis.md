@@ -176,6 +176,50 @@ log4j.appender.stdout.layout.ConversionPattern=%5p [%t] - %m%n
 
 ----
 
+## Mapper映射文件
+
+<a href="https://mybatis.org/mybatis-3/zh/configuration.html#mappers">官方链接</a>
+
+Mapper映射文件放在maven工程resource下com/daily/mapper也是resource的子目录
+
+1、用文件路径引入
+
+```xml
+<mappers>
+    <mapper resource="com/daily/mapper/UserMapper.xml" />
+    <mapper resource="com/daily/mapper/ProductMapper.xml" />
+    <mapper resource="com/daily/mapper/BlogMapper.xml" />
+</mappers>
+```
+
+2、用包名引入
+
+这种引入方式相当于批量引入一个包下的所有映射器。此种方式要求xml和接口名称一致？
+
+```xml
+<mappers>
+    <package name="com.daily.mapper"/>
+</mappers>
+```
+
+3、用类注册引入
+
+```xml
+<mappers>
+    <mapper class="com.daily.mapper.UserMapper" />
+    <mapper class="com.daily.mapper.ProductMapper" />
+    <mapper class="com.daily.mapper.BlogMapper" />
+</mappers>
+```
+
+4、使用URL方式引入
+
+```xml
+<mappers>
+    <mapper url="xml文件访问URL" />
+</mappers>
+```
+
 maven的resource是项目的资源根目录哦！
 
 mybatis 多对多 是两个一对一组成的哦
@@ -369,7 +413,7 @@ class A{
 
 缺点：初始化连接时速度慢
 
-### MyBatis中的连接池
+### `MyBatis`中的连接池
 
 **提供三种方式**
 
@@ -379,9 +423,9 @@ class A{
   - `UNPOOLED`：采用传统的获取连接的方式，虽然也实现`Javax.sql.DataSource`接口，但是并没有使用池的思想。
   - `JNDI`：采用服务器提供的`JNDI`技术实现，来获取`DataSource`对象，不同的服务器所能拿到`DataSource`是不一样。
     		   注意：如果不是web或者`maven`的`war`工程，是不能使用的。
-    		  使用`tomcat`服务器的话，采用连接池就是`dbcp`连接池。
+      		  使用`tomcat`服务器的话，采用连接池就是`dbcp`连接池。
 
-### MyBatis中的事务
+### `MyBatis`中的事务
 
 事务的四大特性ACID
 	不考虑隔离性会产生的3个问题
@@ -636,13 +680,143 @@ public class Demo {
 
 ## 多表操作
 
+如果POJO字段的名称和数据库的名称不对应则采用
+
+```xml
+<resultMap type="类型 如xx类" id="标识符">
+	<id column="数据库字段名" property="代码中的字段名"></id> // 主键
+    <result column="数据库字段名" property="代码中的字段名"></result> // 普通字段
+</resultMap>
+```
+
+如果是一对一采用
+
+```xml
+<resultMap type="类型 如xx类" id="标识符">
+	<id column="数据库字段名" property="代码中的字段名"></id> // 主键
+    <result column="数据库字段名" property="代码中的字段名"></result> // 普通字段
+    <association property="代码字段名" javaType="POJO属性的类型">
+        <id column="数据库字段名" property="代码中的字段名"></id> 
+    	<result column="数据库字段名" property="代码中的字段名"></result>
+    </association>
+</resultMap>
+```
+
+如果是一对多采用
+
+```xml
+<resultMap type="类型 如xx类" id="标识符">
+	<id column="数据库字段名" property="代码中的字段名"></id> // 主键
+    <result column="数据库字段名" property="代码中的字段名"></result> // 普通字段
+    <collection property="代码字段名" ofType="指定的是映射到list集合属性中pojo的类型。">
+        <id column="数据库字段名" property="代码中的字段名"></id> 
+    	<result column="数据库字段名" property="代码中的字段名"></result>
+    </collection>
+</resultMap>
+```
+
+### `javaType`和`ofType`
+
+`JavaType`和`ofType`都是用来指定对象类型的，但是`JavaType`是用来指定`pojo`中属性的类型，而`ofType`指定的是映射到list集合属性中`pojo`的类型。
+
 ### 一对一
+
+**一对一的POJO如下**
+
+```java
+public class User{
+    private Integer id;
+    private String userName;
+    private Role role;
+}
+/**
+ * 一个用户 对应 一个 角色。 一对一
+*/
+```
+
+**MyBatis中一对一采用**
+
+```xml
+<mapper namespace="com.itheima.dao.IAccountDao">
+<!-- 建立对应关系 -->
+    <resultMap type="User" id="userMap">
+        <id column="id" property="id"/>
+        <result column="user_name" property="userName"/>
+    	<!-- 它是用于指定从表方的引用实体属性的 -->
+        <association property="role" javaType="Role">
+            <id column="id" property="id"/>
+            <result column="role_name" property="roleName"/>
+            <result column="role_desc" property="roleDesc"/>
+        </association>
+    </resultMap>
+	<select id="findAll" resultMap="userMap">
+		SQL语句
+    </select>
+</mapper>
+```
+
+PS：简单，所以没有例子。
 
 ### 一对多
 
+**一对多的POJO**
+
+```java
+public class RoleVO implements Serializable {
+    private Integer id;
+
+    private String roleName;
+
+    private String roleDesc;
+    
+    private List<UserVO> userList;
+}
+```
+
+**`xml`**
+
+```xml
+<mapper namespace="com.bbxx.dao.IRoleDao">
+
+    <resultMap id="roleMap" type="RoleVO">
+        <id property="id" column="id"/>
+        <result property="roleName" column="role_name"/>
+        <result property="roleDesc" column="role_desc"/>
+        <collection property="userList" ofType="UserVO" >
+            <!-- 有两个id 确保不出错，不这样会出错的，查询的数据会不对。 -->
+            <id column="u.id" property="id"></id>
+            <result column="username" property="username"/>
+            <result column="birthday" property="birthday"/>
+            <result column="address" property="address"/>
+        </collection>
+    </resultMap>
+
+    <select id="findByPrimaryKey" resultMap="roleMap">
+        select r.id, r.role_desc, r.role_name, u.id, u.username, u.address, u.birthday
+        from users as u,
+             role as r,
+             middle as m
+        where r.id = #{value}
+          and m.u_id = u.id
+          and m.r_id = r.id
+    </select>
+
+</mapper>
+```
+
 ### 多对多
 
-# MyBatis(三)
+一个用户对应多种角色
+
+一个角色对应多个用户
+
+用户与角色间多对多关系。
+
+多对多关系需要中间表（middle），数据库系统概论中学过的。
+
+不会，数据库方面有欠缺，先鸽了，看完书后再补，不过代码里我给了一个我认为正确的简单的多对多。
+
+# `MyBatis`(三)
 
 ## 引言
 
@@ -650,7 +824,7 @@ public class Demo {
 - 一级缓存
 - 二级缓存
 
-# MyBatis(四)
+# `MyBatis`(四)
 
 ## 引言
 
