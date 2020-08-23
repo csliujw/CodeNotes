@@ -821,8 +821,160 @@ public class RoleVO implements Serializable {
 ## 引言
 
 - 延迟加载
+  - 需要用的时候再加载数据
 - 一级缓存
+  - 一级缓存是 `SqlSession` 范围的缓存，当调用 `SqlSession` 的修改，添加，删除，`commit()，close()`等方法时，就会清空一级缓存。
 - 二级缓存
+  - 二级缓存是 `mapper` 映射级别的缓存，多个 `SqlSession` 去操作同一个 `Mapper` 映射的 `sql` 语句，多个 `SqlSession` 可以共用二级缓存，二级缓存是跨 `SqlSession` 的
+
+## 延迟加载
+
+### 一对一的延迟加载
+
+#### 概要
+
+举例：用户和账户之间是 一个用户对应多个账户。一个账户对应一个用户。所以账户和用户是一对一的关系。
+
+我们对用户信息进行懒加载。
+
+- proerty是java字段的名称
+- javaType是查询出来的数据类型
+- select是要调用的查询方法，通过这个查询方法把懒数据查询出来
+- column是查询的条件，即where xx = column的值。这个column取自resultMap。
+
+```xml
+<association property="user" javaType="User" select="com.bbxx.dao.lazy.IUserDao.findOne" column="uid">
+</association>
+```
+
+#### 具体代码
+
+```java
+public interface IAccountDao {
+    // 懒加载案例，只查账号不查用户信息 一对一
+    List<Account> findAll();
+}
+
+public interface IUserDao {
+    // User是一对一查询 懒加载中的那个懒数据
+    User findOne(Integer id);
+}
+```
+
+```xml
+<mapper namespace="com.bbxx.dao.lazy.IAccountDao">
+	<resultMap id="accountMap" type="Account">
+        <id column="id" property="id"/>
+        <result column="uid" property="uid"/>
+        <result column="money" property="money"/>
+        <association property="user" javaType="User" select="com.bbxx.dao.lazy.IUserDao.findOne" column="uid">
+        </association>
+    </resultMap>
+
+    <select id="findAll" resultMap="accountMap">
+        select *
+        from account
+    </select>
+</mapper>
+
+<mapper namespace="com.bbxx.dao.lazy.IUserDao">
+    <resultMap id="userMap" type="User">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="address" property="address"/>
+        <result column="sex" property="sex"/>
+        <result column="birthday" property="birthday"/>
+    </resultMap>
+
+    <select id="findOne" resultMap="userMap">
+        select * from user where id = #{uid}
+    </select>
+</mapper>
+```
+
+### 一对多延迟加载
+
+#### 概要
+
+用户和账户是一对多查询。我们对“多”进行懒加载，要用时在查询。
+
+对多的查询采用
+
+- `proerty`是数据对应的`java`字段的名称
+- `ofType`是查询出来集合中存储的数据类型
+- `select`是要调用的查询方法，通过这个查询方法把懒数据查询出来
+- `column`是查询的条件，即`where xx = column`的值。这个`column`取自`resultMap`。
+
+```xml
+<collection property="accounts" ofType="Account" select="com.bbxx.dao.lazy.IAccountDao.findById" column="id">
+</collection>
+```
+#### 具体代码
+
+```java
+public interface IUserDao {
+    // 懒加载 一对多查询 查询每个用户的所有账户信息
+    List<User> findAll();
+}
+
+public interface IAccountDao {
+	// 懒加载  对“多”的懒加载
+    List<Account> findById(Integer id);
+}
+```
+
+```xml
+IUserDao的mapper文件
+<mapper namespace="com.bbxx.dao.lazy.IUserDao">
+    <resultMap id="userMap" type="User">
+        <id column="id" property="id"/>
+        <result column="username" property="username"/>
+        <result column="address" property="address"/>
+        <result column="sex" property="sex"/>
+        <result column="birthday" property="birthday"/>
+        <collection property="accounts" ofType="Account" select="com.bbxx.dao.lazy.IAccountDao.findById" column="id">
+
+        </collection>
+    </resultMap>
+
+    <select id="findAll" resultMap="userMap">
+        select * from user
+    </select>
+</mapper>
+
+IAccountDao的mapper文件
+<mapper namespace="com.bbxx.dao.lazy.IAccountDao">
+<!--  一对一的查询  -->
+    <resultMap id="accountMap" type="Account">
+        <id column="id" property="id"/>
+        <result column="uid" property="uid"/>
+        <result column="money" property="money"/>
+    </resultMap>
+
+    <select id="findById" resultMap="accountMap">
+        select * from account where uid = #{id}
+    </select>
+</mapper>
+```
+
+## 一级缓存
+
+一级缓存是 SqlSession 级别的缓存，只要 SqlSession 没有 flush 或 close，它就存在！
+
+```xml
+<mapper namespace="com.itheima.dao.IUserDao">
+<!-- 根据 id 查询 -->
+<select id="findById" resultType="UsEr" parameterType="int" useCache="true">
+select * from user where id = #{uid}
+</select>
+</mapper>
+```
+
+请自行编码验证！
+
+## 二级缓存
+
+好像基本不用，所有我不学，要的时候再看文档！
 
 # `MyBatis`(四)
 

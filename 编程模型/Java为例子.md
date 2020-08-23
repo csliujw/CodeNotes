@@ -1,6 +1,6 @@
 # 引言
 
-Java自发布以来一直都在不断的发展，有语法层面的扩展，类库方面的优化，编译器方面的性能优化，这些优化让我们可以合理地运用这些优化创造新的编程模型。
+Java自发布以来一直都在不断的发展，有语法层面的扩展，类库方面的优化，编译器方面的性能优化，这些优化使得我们对某些功能可以有更多的实现 甚至是创造新的编程模型。
 
 # 语法层面
 
@@ -46,7 +46,9 @@ public static String XX(String path) throws IOException {
 - `Java5`：JUC，Formatter，Java管理扩展（JMX），XML处理（DOM，SAX，XPath，XSTL）
 - `Java6`：JDBC 4.0（JSR221）、 JAXB 2.0（JSR222）、可插拔注解处理API（JSR269）、Common Annotations（JSR 250）、Java Compiler API（JSR199）、Scripting in JVM（JSR223）
 - `Java7`：NIO 2（JSR203）Fork/Join框架（JSR166）invokedynamic字节码（JSR 292）
-- `Java8`：Stream API （JSR335）、CompletableFuture（J.U.C.）、Annotation on Java Types（JSR 308）、Date and Time API（JSR 301）、可重复Annotations（JSR 337）、 JavaScript运行时（JSR 223） 
+- `Java8`：Stream API （JSR335）、CompletableFuture（J.U.C.）、Annotation on Java Types（JSR 308）、Date and Time API（JSR 301）、可重复Annotations（JSR 337）、 JavaScript运行时（JSR 223）
+
+类库提升，有的是新增API，有的是对原有API的扩充或优化，以适应当下的潮流。
 
 # Java编程模型
 
@@ -55,3 +57,96 @@ public static String XX(String path) throws IOException {
 - 面向元信息编程 MDOP
 - 面向函数编程 FOP
 - 面向模块编程 MOP
+
+# Java契约编程
+
+# 设计模式
+
+## 面向对象设计模式
+
+构造模式
+
+结构模式
+
+行为模式
+
+开发模式
+
+## 面向切面设计模式
+
+判断模式
+
+拦截模式
+
+## 面向元数据设计模式
+
+泛型接口设计
+
+注解驱动设计
+
+## 面向函数设计模式
+
+函数式接口设计
+
+Fluent API设计
+
+Reactive / Stream API 设计
+
+# Java模式驱动
+
+## 接口驱动
+
+JavaSE（GoF 23模式）
+
+JavaEE API（Servlet、JSF、EJB）
+
+Spring Core API（interface 21）
+
+## 配置驱动
+
+Java System Properties
+
+OS 环境变量
+
+文件配置（xml properties yaml）
+
+JavaEE 配置（JDNI Servlet EJB）
+
+## 注解驱动
+
+JavaSE（Java Beans、 JMX）
+
+JavaEE（Servlet3.0 、 JAX-RS、  Bean Validation、 EJB 3.0+ ...）
+
+Spring（@Component、@Service、@Respository...）
+
+Spring Boot（@SpringBootApplication）
+
+Spring Cloud（@SpringCloudApplication）
+
+## 函数驱动
+
+Java 8 Stream API
+
+Java 9 Flow API
+
+RxJava
+
+Vert.x
+
+Spring Boot WebFlux
+
+Spring Cloud Gateway/Function
+
+## 模块驱动
+
+Java OSGI
+
+Java 9 Module
+
+Spring @Enable
+
+Spring Boot AutoConfiguration
+
+Spring Boot Actuator
+
