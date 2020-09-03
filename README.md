@@ -60,9 +60,10 @@ Docker容器：镜像启动后的实例，称为一个容器。tomcat镜像运�
   - 查看内核版本 `uname -r`
   - 不是的话，用 `yum update`更新
 - 安装： `yum install docker`
-- 启动：`start docker`
+- 启动：`systemctl start docker`
   - `docker -v` 查看docker版本号
-- 停止：`stop docker`
+  - 这里我出现了问题，看了这篇<a href="https://blog.csdn.net/E09620126/article/details/86577917?utm_medium=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param">博客</a>解决了问题
+- 停止：`systemctl stop docker`
 - 将`docker`设置为开机自启：`systemctl enable docker`
 - 停止`docker`：`systemctl stop docker`
 
@@ -104,3 +105,12 @@ Docker容器：镜像启动后的实例，称为一个容器。tomcat镜像运�
 - 查看容器日志：`docker logs`
 - 更多请看官网文档<a href="https://hub.docker.com/">地址</a>
 
+# Docker安装mysql
+
+- docker search mysql
+- docker pull mysql
+- dokcer run --name mysql01 -d mysql 发现运行错误
+  - 查看日志，看错误原因 【docker logs 对应容器的id】
+  - 如何正确运行？去官网看哦！
+  - docker run --name mysql01 -e MYSQL_ROOT_PASSWORD=123456 -d mysql
+  - docker run -p 3306:3306 --name mysql01 -e MYSQL_ROOT_PASSWORD=123456 -d mysql
