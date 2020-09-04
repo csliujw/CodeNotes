@@ -178,13 +178,76 @@ docker：比vm 更少的抽象层，不需要Hypervisor实现硬件资源虚拟�
 
 docker是利用宿主机的内核，不需要Guest OS，docker无须想vm一样加载os内核。
 
-## 常用命令
+## 常用镜像命令
 
 - docker info 查看docker的信息
 - docker --help 查看帮助文档
-- docker images 查看本机的镜像
+- **docker images** 查看本机的镜像
+  - docker images -a 查看所有镜像（含中间映像层）
+  - docker images -q 只显示镜像id
+  - docker images --disgests 显示镜像的摘要信息
+  - docker images --no-trunc 显示完整的镜像信息
+- **docker search xxx** 查询xxx
+  - 去<a href="https://hub.docker.com/">官网</a>搜镜像 
+  - docker search -s 点赞数  镜像名
+    - docker search -s 30 tomcat 查找点赞数超过30k的tomcat镜像
+  - docker search --no-trunc 显示完整的镜像描述
+  - docker search --automated 只列出automated build类型的镜像。
+- **docker pull xxx** 拉取xxx镜像
+  - `docker pull tomcat 等价于 docker pull tomcat:latest`
+- **docker rmi xxx** 删除镜像
+  - `docker rmi tomcat 等价于 docker rmi tomcat:laster`
+  - `docker rmi -f tomcat 强制删除`
+  - `docker rmi -f hello nginx 级联删除，同时删除多个`
+  - `docker rmi -f $(docker images -qa) 删除全部`
 
+## 常用容器命令（一）
 
+> **docker run   [OPTIONS]    IMAGE   [COMMAND]   [ARG...]**
+
+- OPTIONS说明【常用】：有些是一个减号，有些事两个减号。
+  - --name=“容器新名字”       为容器指定一个名称
+  - -d   后台运行容器，并返回容器ID，即启动守护式容器
+  - -i    以交互式模式运行容器，通常与-t同时使用
+  - -t    为容器重新分配一个伪输入终端，通常与-i同时使用
+  - -p   随机端口映射
+    - 指定端口映射，有以下四种格式
+    - `ip:hostPort:containerPort`
+    - `ip:containerPort`
+    - `hostPort:containerPort`
+    - `containerPort`
+- eg：`docker run -it 7e6257c9f8d8[这个是centos镜像的id]`
+  - -it   i一交互式模式运行容器 t----为容器分配一个伪终端
+  - 退出容器用 exit 或 <span style="color:red">ctrl + p + q【正常退出不关闭容器】</span>
+    - exit  容器停止 退出
+    - ctrl+p+q 容器不停止退出
+  - 启动容器：docker start 容器id/容器名
+  - 重新启动容器：docker restart 容器id/容器名
+  - 停止容器：docker stop 容器id/容器名   【温柔的，慢慢的关闭】
+    - docker kill 容器id/容器名  强制停止，直接拔电源。
+  - 删除容器：docker rm 容器id/容器名
+    - docker rm -f 容器id/容器名字 强制
+    - docker rm  $(docker ps -a -q)  因为不是强制的，所以只能删除未运行的容器！
+- **docker ps** 列出容器
+  - `docker ps -a` 列出所有容器【运行中的+历史运行的】
+  - `docker ps -n 3` 列出上三次运行的容器
+  - `docker ps -l` 上次运行的容器
+  - `docker ps -lq` 上次运行的容器，且只显示id
+- eg: `docker run -it --name mycontainer centos`
+  - 创建centos容器，名称为mycontainer，以交互式模式运行且为其分配一个伪终端。
+  - `docker run -it --name mycontainer2 -d centos`
+
+## 常用容器命令（二）
+
+> **使用镜像centos:7 以后台模式启动一个容器**
+
+- `docker run -d centos`
+  - `docker ps -a` 查看，发现容器已经退出。
+  - <span style="color:red">**docker容器后台运行，必须要有一个前台进程！！**</span> 容器的命令如果不是那些一直挂起的命令（如top tail）就会自动退出。
+- docker logs -f -t --tail 容器id  查看容器日志
+  - -t 是加入时间戳
+  - -f 跟随最新的日志打印
+  - --tail 数字显示最后多少条
 
 # Docker安装mysql
 
