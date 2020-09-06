@@ -2,6 +2,8 @@
 
 > **Python基础语法入门**，便于后期用python写代码
 
+shift+tab 查看帮助文档。 jupyter notebook
+
 # 基本语法
 
 ### **基本数据类型**
@@ -658,14 +660,411 @@ np.hstack((arr1,arr2))
 
 > **连在一起**
 
+默认水平连接
+
+与其他拼接的区别：concatenate 合并的array维度要相同，array形状要匹配。
+
 ```python
 np.concatenate((array1,array2),axis=0) # 垂直合并
 np.concatenate((array1,array2),axis=1) # 水平合并
 ```
 
+> **新增维度**
 
+```python
+arr = np.array([1,2,3,4])
+arr_1 = arr[np.newaxis,:] # 新增一个维度
+```
+
+把行向量变成列向量
+
+```python
+arrs = np.array([1,2,3])
+arrs_1 = arrs[np.newaxis,:]
+arrs_1.T
+```
+
+> **维度扩展**
+
+```python
+arrs_2 = np.atleast_2d(arrs) # 如果低于2d（2 dim）则会扩充为2dim 反之不改变
+```
+
+----
 
 ### 分割
 
+> **水平分割**
+
+```python
+import numpy as np
+arr1 = np.arange(12).reshape((3,4))
+print(arr1)
+arr2,arr3 = np.split(arr1,2,axis=1) # 水平分割 分2份
+```
+
+> **垂直分割**
+
+```python
+arr4,arr5 = np.split(arr1,3,axis=0) # 垂直方向 分3份
+```
+
+矩阵中的向量一般默认为列向量。所以axis默认为0，垂直方向分割。
+
+> **无法等份切割**
+
+```python
+arr6,arr7,arr8 = np.array_split(arr1,3,axis=1) # 水平切割 分三份 不等份分割
+```
+
+----
+
 ### 深拷贝浅拷贝
+
+> **浅拷贝**
+
+使用同一块内存
+
+> **深拷贝**
+
+使用不同的内存，互不干扰。
+
+```python
+arr2 = arr1.copy();
+```
+
+# matplotlib
+
+主要用pyplot包
+
+### 入门案例
+
+> **生成数据**
+
+```python
+x = np.linspace(-1,1,100) # 生成从-1 ~ 1的100个数据
+
+y = 2*x + 1
+
+plt.plot(x,y)
+plt.show()
+```
+
+> **绘制图像figure**
+
+```python
+x = np.linspace(-1,1,100) # 生成从-1 ~ 1的100个数据
+
+y1 = 2*x + 1
+y2 = x**2 +1
+
+plt.figure()
+plt.plot(x,y1)
+
+plt.figure(figsize=(8,5)) # 设置要创建的图像的大小
+plt.plot(x,y2,linewidth=1.0,linestyle='--')
+
+plt.show()
+```
+
+两个函数画在同一个坐标系，标明颜色，线条样式。
+
+```python
+x = np.linspace(-1,1,100) # 生成从-1 ~ 1的100个数据
+
+y1 = 2*x + 1
+y2 = x**2 +1
+plt.figure()
+plt.plot(x,y1,color='red',linewidth=1.0,linestyle='--')
+plt.plot(x,y2,color='black',linewidth=2.0,linestyle=':')
+plt.show()
+help(plt.plot) # 查看plt.plot的帮助文档
+```
+
+### 设置坐标轴
+
+PS：四条边框就是四条脊梁。
+
+限制坐标轴范围
+
+```python
+plt.xlim((-1,2))
+plt.ylim((-5,10))
+```
+
+设置x y描述
+
+```python
+plt.xlabel('This is X')
+plt.ylab('This is Y')
+
+plt.plot(xxxx)
+```
+
+指定x y下方显示的尺度/用文字表示尺度
+
+```python
+plt.xticks([-1,-0.5,0,0.25,0.5,1])
+# -1 0 1 2 3 与 leavel对应
+plt.yticks([-1,0,1,2,3],['leave1','leave2','leave3','leave4','leave5'])
+```
+
+获取坐标轴
+
+```python
+ax = plt.gca() # gca get current axis
+# 选择对应的脊梁 右边的脊梁设置为红色
+ax.spines['right'].set_color('red')
+ax.spines['top'].set_color('none') # top无边框
+```
+
+将坐标轴移至中间 spines：脊梁
+
+```python
+ax = plt.gca()
+ax.spines['right'].set_color('none')
+ax.spines['top'].set_color('none')
+ax.xaxis.set_ticks_position('bottom') # 用下边的坐标轴代替x
+ax.yaxis.set_ticks_position('left') # 用左边的坐标轴代替y
+ax.spines['bottom'].set_position(('data',-1))
+```
+
+**移动脊柱文件**【菜鸟教程】
+
+坐标轴线和上面的记号连在一起就形成了脊柱（Spines，一条线段上有一系列的凸起，是不是很像脊柱骨啊~），它记录了数据区域的范围。它们可以放在任意位置，不过至今为止，我们都把它放在图的四边。
+
+实际上每幅图有四条脊柱（上下左右），为了将脊柱放在图的中间，我们必须将其中的两条（上和右）设置为无色，然后调整剩下的两条到合适的位置——数据空间的 0 点。
+
+```python
+...
+ax = gca()
+ax.spines['right'].set_color('none')
+ax.spines['top'].set_color('none')
+ax.xaxis.set_ticks_position('bottom')
+ax.spines['bottom'].set_position(('data',0))
+ax.yaxis.set_ticks_position('left')
+ax.spines['left'].set_position(('data',0))
+```
+
+### legned图例
+
+> **基础代码**
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+x = np.linspace(-2,2,100)
+
+# 设置函数
+y_1 = x*2
+y_2 = x**2
+axis = plt.gca() # 获取当前坐标轴
+
+# 隐藏多余边框
+axis.spines['top'].set_color('none')
+axis.spines['right'].set_color('none')
+
+axis.spines['bottom'].set_position(('data',0))
+axis.spines['left'].set_position(('data',0))
+
+# 注意有逗号
+l1, = plt.plot(x,y_1,color='blue')
+l2, = plt.plot(x,y_2,color='red')
+
+plt.legend(handles=[l1,l2],labels=['111','222'],loc='best')
+```
+
+### 图像标注/annotation标注
+
+- 画出函数
+- 画出散点
+- 根据散点画出垂直的线
+  - `plt.plot([x0,x0],[y0,0],'k--',lw=2.5)`连接点`[x0,y0] [x0,0]`
+    - k：黑色 -- 虚线
+    - lw：线宽 2.5
+  - 注解：`plt.annotate(r'$2x+1=%s' % y0,xy=(x0,y0),xycoords='data',xytext=(+30,-30)，textcooords=’offset points‘，fontsize=16,arrowprops=dict(arrowstyle='->',connectionstyle='arc3,rad=.2))`
+    - r‘ 是正则表达式
+    - xy是xy的值
+    - xytext 距离点的位置 x方向+30 y方向-30
+    - connectionstyle：弧度，角度
+  - 普通的文字注解
+    - plt.text(x,y,r'$This is the some text. $'，fontdict={'size':16,'color':'red'})
+    - 可以用数学公式，但是很麻烦
+
+ ### tick 能见度
+
+设置坐标轴数字的能见度
+
+### 散点图
+
+看API，实验楼实验
+
+> **绘制散点图**
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+N = 1024
+X = np.random.normal(0,1,N)
+Y = np.random.normal(0,1,N)
+
+T = np.arctan2(Y,X) # 颜色的值
+
+# s --> size ; c --> color  alpah --> 透明度
+# plt.scatter(X,Y,s=75,c=T,alpha=0.5)
+plt.scatter(np.arange(5),np.rarange(5))
+# plt.xlim((-1.5,1.5))
+# plt.ylim((-1.5,1.5))
+
+plt.xticks(())
+plt.yticks(())
+plt.show()
+```
+
+### 柱状图/直方图
+
+> **基本用法**
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.arange(10)
+y = 2**x + 10
+plt.bar(x,y)
+plt.bar(x,-y)
+plt.show()
+```
+
+> **方法补充**
+
+```python
+seq1 = ['one', 'two', 'three']
+seq2=[1,2,3]
+
+list(zip(seq1,seq2))
+# output [('one', 1), ('two', 2), ('three', 3)]
+
+dict(zip(seq1,seq2))
+# output {'one': 1, 'two': 2, 'three': 3}
+
+list(zip(*zip(seq1,seq2)))
+# output [('one', 'two', 'three'), (1, 2, 3)]
+```
+
+> **为柱状图标数值**
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.arange(10)
+y = 2**x + 10
+
+plt.bar(x,y)
+plt.bar(x,-y)
+
+for x,y in zip(x,y):
+    plt.text(x,y,'%.2f' %y ,ha='center',va='bottom')
+    plt.text(x,-y,'%.2f' %y ,ha='center',va='top')
+    
+plt.show()
+```
+
+---
+
+# Pandas
+
+### 概述
+
+是基于Numpy的，用于数据分析
+
+知识点
+
+- 排列
+- 索引
+- 交叉表
+- 透视表
+- 数据探索
+
+可用类似于SQL的方式对 csv tsv xlsx等格式的数据进行处理和分析。
+
+主要使用的数据结构为：Series和DataFrame类
+
+- Series：类似于一维数组对象
+- DataFrame：类似于二维数据结构
+  - key - value
+  - key为表头，value为表头的各种取值。value为list数据类型
+
+```python
+import numpy as np
+import pandas as pd
+import warnings
+
+warnings.filterwarnings('ignore')
+
+data = pd.read_csv('https://labfile.oss.aliyuncs.com/courses/1283/telecom_churn.csv')
+print(data.head())
+# 查看形状
+print(data.shape, '\n')
+# 查看列名
+print(data.columns, '\n')
+# 查看数据的信息！
+print(data.info(), '\n')
+
+print("===================\n\n")
+# 修改数据类型
+data['Churn'] = data['Churn'].astype('int32')
+# 查看数据的信息！
+print(data.info(), '\n')
+
+# 显示基本的统计特征 如期望 方差 max min  数据类型为 pandas.core.frame.DataFrame
+print(data.describe())
+# 显示出类型为 object 和 int32的数据 【显示对应类型的数据】
+print(data.describe(include=['object', 'int32']))
+
+# 查看类别和布尔值的特征  对Churn属性的值进行统计
+print(data['Churn'].value_counts())
+"""
+output
+0    2850
+1     483
+Name: Churn, dtype: int64
+"""
+# 归一化  统计各种类型的比例
+print(data['Churn'].value_counts(normalize=True))
+
+print("================ \n\n\n")
+# 排序 by=排序字段  ascending 上升的=False  就是降序
+print(data.sort_values(by='Account length', ascending=False).head())
+print("================ \n\n\n")
+# 索引和获取数据
+print(data['Churn'])
+"""
+output
+index      value
+0            0
+1            0
+2            0
+3            0
+"""
+
+# 求均值
+print(data['Churn'].mean())
+
+# 布尔索引
+# 布尔值索引同样很方便，语法是 df[P(df['Name'])]，
+# P 是在检查 Name 列每个元素时所使用的逻辑条件。
+# 这一索引的输出是 DataFrame 的 Name 列中满足 P 条件的行。
+# 求为真的均值
+print(data['Churn'] == 1)
+print(data[data['Churn'] == 1].mean())  # 筛选出data中Churn == 1的所有数据的均值
+
+# 组合使用 求均值。 如求离网用户在白天打电话的总时长的均值
+# 离网用户 data[data['Churn'] == 1]
+# 离网用户中白天打电话 data[data['Churn'] == 1]['Total day minutes']
+print(data[data['Churn'] == 1]['Total day minutes'].mean())
+```
 
