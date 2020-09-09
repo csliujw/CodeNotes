@@ -994,9 +994,40 @@ plt.show()
 主要使用的数据结构为：Series和DataFrame类
 
 - Series：类似于一维数组对象
+
+  - ```python
+    series = [1,2,3,41,123,123]
+    
+    # output
+    # index  value
+    #   0      1
+    #   1      2
+    #   2      3
+    #   3     41
+    #   4    123
+    ```
+
 - DataFrame：类似于二维数据结构
   - key - value
   - key为表头，value为表头的各种取值。value为list数据类型
+
+### Series
+
+### DataFrame
+
+### 选择数据
+
+### 赋值及操作
+
+### 处理丢失数据
+
+### 读取及写入文件
+
+### 合并
+
+### plot
+
+
 
 ```python
 import numpy as np
@@ -1066,5 +1097,34 @@ print(data[data['Churn'] == 1].mean())  # 筛选出data中Churn == 1的所有数
 # 离网用户 data[data['Churn'] == 1]
 # 离网用户中白天打电话 data[data['Churn'] == 1]['Total day minutes']
 print(data[data['Churn'] == 1]['Total day minutes'].mean())
+
+# DataFrame 可以通过列名、行名、行号进行索引。loc 方法为通过名称索引，iloc 方法为通过数字索引。
+# 打印0-5行、State州至Area code区号的数据
+print(data.loc[0:5, 'State':'Area code'])
+# 打印前10行，前三列的數據
+print(data.iloc[0:10, 0:3])
+
+# 第一行的切片 和第一列的切片 data[行切片，列切片]  看官方文档的解释  当成一个list[list]的切片？
+print("This is the first \n")
+print(data[:1])  # 首行
+print(data[-1:])  # 末行
+
+# 应用函数到单元格、列、行
+data.apply(np.max)  # 求每一列的最大值 感觉有点像lambda表达式 传个方法过去
+
+# 把数据中的旧值替换为新值{'old value': 'new value'}
+# 把原先的No替换为False 把原先的Yes替换为True
+replace_data = {'No': False, 'Yes': True}
+data['International plan'] = data['International plan'].map(replace_data)
+print(data['International plan'])
+
+"""
+分组 group by
+"""
+print("******************************\n")
+columns_to_show = ['Total day minutes', 'Total eve minutes',
+                   'Total night minutes']
+print(data.groupby(['Churn'])[columns_to_show].describe())
+print(data.groupby(['Churn'])[columns_to_show].agg([np.mean, np.std, np.min, np.max]))
 ```
 
