@@ -899,7 +899,3 @@ class MyCache {
 }
 ```
 
-# 八、阻塞队列
-
-`BlockingQueue`
-

@@ -340,8 +340,3 @@ public void prepare(@Qualifier("main") MovieCatalog movieCatalog,
 > **@Value**
 
 为字段属性赋值。也可以用在方法的形参上。
-
-
-
-# Spring(二)
-
