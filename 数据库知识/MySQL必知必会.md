@@ -456,4 +456,170 @@ select concat(vend_name, '(' , vend_contry , ')') from vendors;
 -  用于处理日期和时间值并从这些值中提取特定成分（例如，返回两个日期之差，检查日期有效性等）的日期和时间函数。
 -  返回DBMS正使用的特殊信息（如返回用户登录信息，检查版本细节）的系统函数
 
-> 
+## 文本处理函数
+
+长度、大小写转换、去空串、字符串截取，发音相近。
+
+> **发音相近**
+
+```sql
+select * from customers where soundex(cust_contact) = soundex('Y Lie');
+```
+
+## 日期和时间处理函数
+
+这块的内容比较重要，要好好学学，用的挺频繁。
+
+| 函数          | 说明                                                         |
+| ------------- | ------------------------------------------------------------ |
+| AddDate()     | 增加一个日期（天 、周）AddDate(字段, INTERVAL 1 WEEK/YEAR/DAY) |
+| AddTime()     | 增加一个时间（时、分）类似上面                               |
+| CurDate()     | 返回当前日期【年月日】                                       |
+| CurTime()     | 返回当前时间【时分秒】select CurTime(); 查询当前时间         |
+| Date()        | 返回日期时间的日期部分 Date(xxx) xxx字段的日期部分           |
+| DateDiff()    | 计算两个日期之差                                             |
+| Date_Add()    | 高度灵活的日期运算函数<a href="https://www.w3school.com.cn/sql/func_date_add.asp">具体用法</a> |
+| Date_Format() | 返回格式化的日期或串<a href="https://www.w3school.com.cn/sql/func_date_format.asp">具体用法</a> |
+| DayOfWeek()   | 返回日期对应的星期几 DayOfWeek(日期)                         |
+| Time()        | 返回时间部分。 时分秒。                                      |
+
+利用MySQL进行时间部分的匹配时，只匹配需要的那一部分字段。比如只要年月日就只比年月日。
+
+反例：`WHERE order_date = '2005-09-01’` 可能含有 `00：00：00`
+
+---
+
+# 数据汇总/聚集函数
+
+<span style="color:red">聚集函数，用的很频繁</span>
+
+## 典型场景
+
+- 确定表中行数。【统计null吗？】
+- 获得表中行组的和
+- 找出表列的Max Min Avg
+
+## SQL聚集函数
+
+| 函数  | 说明                                             |
+| ----- | ------------------------------------------------ |
+| avg   | 忽略为null的行                                   |
+| count | count(*) 空，非空都统计；count(column)不统计null |
+| max   | 忽略为null的行，可用于数值，非数值。如最大日期。 |
+| min   | 说明同max                                        |
+| sum   | 忽略为null的行                                   |
+
+如果不允许计算重复的值，则可以指定distinct参数
+
+```sql
+# 17.多
+select avg(distinct prod_price) as avg_price from products;
+# 16.多
+select avg(prod_price) as avg_price from products;
+# 对于count 只能用于 count() 不能count(*)
+# 个人看法 count(distinct *)逻辑上也说不过去~~ 一般都有primary，不会同。
+select count(distinct  prod_price) from products;
+```
+
+同时使用多个聚集函数。
+
+```sql
+ select count(*) as num_items,
+    -> max(prod_price) as max_price,
+    -> min(prod_price) as min_price,
+    -> avg(prod_price) as avg_price
+    -> from products;
+```
+
+----
+
+# 分组数据
+
+group by & having。【弱项】
+
+## 典型场景
+
+需要把数据分为多个逻辑组，对每个逻辑组进行聚集计算。
+
+## 创建分组
+
+根据vend_id 分组，统计每组的`num_prods`数目。group by后面
+
+```mysql
+ select vend_id,count(*) as num_prods 
+ from products 
+ group by vend_id;
+ 
+ # 下面这条语句 没有显示 vend_id
+ select count(*) as num_prods 
+ from products 
+ group by vend_id;
+```
+
+## group by！
+
+- GROUP BY子句可以包含任意数目的列。这使得能对分组进行嵌套，为数据分组提供更细致的控制。
+- 如果在GROUP BY子句中嵌套了分组，数据将在最后规定的分组上进行汇总。换句话说，在建立分组时，指定的所有列都一起计算（所以不能从个别的列取回数据）。
+- GROUP BY子句中列出的每个列都必须是检索列或有效的表达式（<span style="color:red">但不能是聚集函数</span>）。如果在SELECT中使用表达式，则必须在GROUP BY子句中指定相同的表达式。不能使用别名。
+-  除聚集计算语句外，SELECT语句中的每个列都必须在GROUP BY子句中给出。【前面试了，发现不必给出~~~】
+-  如果分组列中具有NULL值，则NULL将作为一个分组返回。如果列中有多行NULL值，它们将分为一组。
+- GROUP BY子句必须出现在WHERE子句之后，ORDER BY子句之前。
+
+## 过滤分组
+
+包括那些分组，排除那些分组。
+
+### having与where
+
+无法使用where。where过滤指定的行而非分组。where没有分组的概念。我们需要使用having！
+
+having在分组中的用法与where类似。
+
+**另一种解释**
+
+<span style="color:orange">WHERE在数据分组前进行过滤，HAVING在数据分组后进行过滤。</span>这是一个重要的区别，WHERE排除的行不包括在分组中。这可能会改变计算值，从而影响HAVING子句中基于这些值过滤掉的分组。
+
+```mysql
+# 筛选出 数目大于2的
+select cust_id,count(*) as orders 
+from orders 
+group by cust_id 
+having count(*)>=2;
+```
+
+### having与where一起使用
+
+使它返回过去12个月内具有两个以上订单的顾客。
+
+```mysql
+select vend_id, count(*) as num_prods 
+from products
+where prod_price >= 10
+group by vend_id 
+having count(*) >=2 ;
+
+# where 先过滤了，having在把where过滤后的数据 再进行过滤。
+```
+
+### select子句顺序
+
+```mysql
+select
+from
+where   行级别过滤
+group by  分组说明
+having  组级别过滤
+order by  排序 【默认升序 asc[上升] desc[下降]】
+limit
+```
+
+----
+
+# 子查询
+
+嵌套在其他查询中的查询。
+
+## 利用子查询进行过滤
+
+
+
