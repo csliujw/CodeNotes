@@ -2,7 +2,29 @@
 
 > **Python基础语法入门**，便于后期用python写代码
 
-shift+tab 查看帮助文档。 jupyter notebook
+shift+tab 查看帮助文档。 jupyter notebook.
+
+Annconda：开源得Python发行版本，集成了众多的三方库，不用自己去安装（减少了版本冲突，很多框架也用了这些方式，典型的有SpringBoot的约定大于配置）。Annconda中也包含了conda。conda可以当作一个虚拟环境，为不同的项目继承不同的依赖，彼此互不干扰（类似于沙箱机制吗？）
+
+Python的效率和语法有关。
+
+列表推导式的效率远高于for循环。
+
+```python
+# 采用列表推导式遍历文件
+file_obj = open("IO_Demo.txt")
+[print(x.rstrip()) for x in file_obj]
+
+list = [1,2,3,4,5,6,7,7,4,4]
+[ print(x) for x in list if x%2 == 0 ]
+# 遍历的基本模板
+# [ 操作 for x in xxx ]
+
+# 数据筛选模板
+# [ 操作 for x in xxx 条件判断 ]
+```
+
+---
 
 # 基本语法
 
@@ -207,7 +229,7 @@ if x is not None
 
 ### 函数
 
-> 定义
+> **定义**
 
 ```python
 # 无参数
@@ -332,9 +354,7 @@ son1.get_age() # output 15
 
 ----
 
-### input
-
-输入
+### input 输入
 
 > **基本使用**
 
@@ -348,39 +368,52 @@ b_input= input("please input a number:")
 
 ### IO
 
+基本语法及其参数
+
+```python
+file object = open(file_name, access_model, buffering)
+- file_name  文件名
+- access_model 访问级别
+- buffering 每次缓冲的量
+
+访问级别的选项，help(open)看帮助文档即可
+'r'       open for reading (default)
+'w'       open for writing, truncating[先清除数据] the file first
+'x'       create a new file and open it for writing
+'a'       open for writing, appending to the end of the file if it exists
+'b'       binary mode
+'t'       text mode (default)
+'+'       open a disk file for updating (reading and writing)
+'U'       universal newline mode (deprecated)
+```
+
 IO = input output
 
 ```python
+# 常规写入
 text = "Writing a text \n\n hello world"
-my_file = open("file.txt","w") # 写入的方式打开文件 [以清空的方式写入]
+my_file = open("file.txt","w") # 写入的方式打开文件 [以清空的方式写入]  不记得了就help(open)查下api，写的挺清楚。
 my_file.write(text)
 my_file.close()
 ```
 
 ```python
+# 不用手动关闭IO的写法
 with open('a.txt','w') as f: # 无需手动close流
     f.write("1213")
-```
-
-> **open的参数**
-
-open(args1,args2)
-
-args2的取值
-
-- w【write】 清空再写入
-- a【append】 追加写入
-- r【read】读取文件内容
-  - file.read() 读取全部内容
-  - file.readline() 只读一行
-  - file.readlines() 读取所有行，存入一i个列表，并返回这个列表。
-- r+ 读取到了文件，就写入，读不到就报异常。
-
-```python
 # 循环遍历文件，一次读一行。
 with open(filename) as f:
     for line in f:
         print(line)
+```
+
+可读可写案例，结合上面的参数即可
+
+```python
+file_obj = open('IO_Demo.txt','r+')
+file_obj.readline()
+file_obj.write("1231231asf\n") # 写入一行数据
+file_obj.flush() # 写入后刷新
 ```
 
 ----
@@ -395,6 +428,8 @@ try:
         f.write(123)
 except Exception as e:
     print(e)
+else:
+    print("No exception")
 # output [Errno 2] No such file or directory: 'aaa'
 ```
 
@@ -437,7 +472,7 @@ array = np,array([
                     [7,8,9]
                 ])
 print(array)
-
+# 基本上见名知意
 print(array.ndim) # 维度 [[ 二维]] 看括号！！
 print(array.shape) # 形状
 print(array.size) # 形状
