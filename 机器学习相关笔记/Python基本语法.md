@@ -466,7 +466,7 @@ with open('example.json') as f:
 ```python
 import numpy as np
 
-array = np,array([
+array = np.array([
                     [1,2,3],
                     [4,5,6],
                     [7,8,9]
@@ -523,7 +523,7 @@ f = np.arange(4,8) # output [4 5 6 7]
 
 g = np.arange(1,20,3) # 1-20 步长为3
 
-h = np.arange(8).reshape(2,4) # 转换形状 2行4列
+h = np.arange(8).reshape(2,4) # 转换形状【重新调整形状】 2行4列
 ```
 
 ### numpy的运算
@@ -558,9 +558,20 @@ arr1.dot(arr2)
 arr1.T # 转置矩阵
 np.transpose(arr1) # arr1的转置矩阵
 
+# 也可用@ 进行矩阵乘法 py3.5及以上版本
+a @ b
+
+# 其他
+np.exp(2) # e^2 e的平方
 ```
 
 ### 随机数生成★
+
+**形式参数说明：**
+
+```python
+np.random.xxx(low,high,size,dtype)
+```
 
 > **生成从0-1的随机数**
 
@@ -570,7 +581,7 @@ sample = np.random.random((3,2)) # 3行2列
 print(sample)
 ```
 
-> **生成符合标准正太分布的随机数**
+> **生成符合标准正态分布的随机数**
 
 ```python
 sample2 = np.random.normal(size=(3,2))# 3行2列
@@ -584,6 +595,14 @@ PS：标准正太分布 N(0，1)； 期望=1，方法差=1
 sample3 = no.random.randint(0,10,size=(3,2)) # 3行2列 整数
 ```
 
+> **生成等份数据**
+
+```python
+np.linspace(0,2,9) # 9个数组 从0-2中等份取
+```
+
+----
+
 ### 元素求和
 
 > **对矩阵内的元素求和**
@@ -593,6 +612,8 @@ np.sum(sample3)
 ```
 
 > **对每一列求和**
+
+**向量 默认是列向量！**
 
 ```python
 np.sum(sample,axis=0)
@@ -604,34 +625,21 @@ np.sum(sample,axis=0)
 np.sum(sample,axis=1)
 ```
 
-> **最小值的索引**
+> **最小/大值的索引**
+
+命名风格arg开头
 
 ```python
 np.argmin(sample3) # 求最小值的索引
+np.argmax(sample3) # 最大值的索引
 ```
 
-> **最大值的索引**
-
-```python
-np.argmax(sample3)
-```
-
-> **求均值**
+> **求均值/中位数/开方**
 
 ```python
 np.mean(sample3)
 sample3.mean()
-```
-
-> **求中位数**
-
-```python
 np.median(sample3)
-```
-
-> **开方**
-
-```python
 np.sqrt(sample3)
 ```
 
@@ -649,24 +657,28 @@ np.clip(sample3,1,4) # 小于1的都变成1 大于4的都变成4
 
 ### 索引
 
-> 仅一行的话，与python的切片语法一致。
+> **仅一行的话，与python的切片语法一致。**
 
 > **二维**
 
 ```python
 array = np.array([
-    			  [1,2,3],
-                  [4,5,6]])
+    			 [1,2,3],
+                  [4,5,6]
+				])
 
 array[1] # 取到第一行 与二维数组类似
-array[:,2] # 取每一行的第二列 [3,6]
+array[; ,2] # 取每一行的第二列 [3,6] / 每行都取，每列只取第0 1个元素
 ```
 
 > **迭代**
 
 ```python
-for i in arrar.flat: # 迭代每一个元素
+for i in array.flat: # 迭代每一个元素
     print(i)
+    
+# 列表推导式
+[ print(x) for x in aaray.flat ]
 ```
 
 ----
@@ -674,6 +686,8 @@ for i in arrar.flat: # 迭代每一个元素
 ### 合并★
 
 > **垂直合并【垂直拼接】**
+
+<span style="color:white">vstack  vertical stack【垂直】</span>
 
 ```python
 import numpy as np
@@ -686,6 +700,8 @@ arr3 = np.vstack((arr1,arr2))
 ```
 
 > **水平合并【水平拼接】**
+
+<span style="color:white">hstack horizontal【水平】</span>
 
 ```python
 np.hstack((arr1,arr2))
@@ -768,6 +784,8 @@ arr6,arr7,arr8 = np.array_split(arr1,3,axis=1) # 水平切割 分三份 不等�
 arr2 = arr1.copy();
 ```
 
+---
+
 # matplotlib
 
 主要用pyplot包
@@ -777,6 +795,9 @@ arr2 = arr1.copy();
 > **生成数据**
 
 ```python
+import matplotlib.pyplot as plt
+import numpy as np
+
 x = np.linspace(-1,1,100) # 生成从-1 ~ 1的100个数据
 
 y = 2*x + 1
@@ -793,9 +814,11 @@ x = np.linspace(-1,1,100) # 生成从-1 ~ 1的100个数据
 y1 = 2*x + 1
 y2 = x**2 +1
 
+# 绘制的第一个图像
 plt.figure()
 plt.plot(x,y1)
 
+# 绘制的第二个图像
 plt.figure(figsize=(8,5)) # 设置要创建的图像的大小
 plt.plot(x,y2,linewidth=1.0,linestyle='--')
 
