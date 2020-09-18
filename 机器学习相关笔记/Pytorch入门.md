@@ -16,6 +16,192 @@
 
 ## 矩阵操作
 
+### 取随机矩阵
+
+api的基本使用方式为：
+
+- 创建各种随机数据  torch.methodName(行，列)
+
+- 给定数据创建 torch.methodName([数据])
+
+常用api
+
+| methodName | describe |
+| ---------- | -------- |
+|            |          |
+|            |          |
+|            |          |
+|            |          |
+|            |          |
+|            |          |
+|            |          |
+
+Tensor(*sizes) 基础构造函数
+tensor(data,) 类似np.array的构造函数
+ones(*sizes) 全1Tensor
+zeros(*sizes) 全0Tensor
+eye(*sizes) 对⻆角线为1，其他为0
+arange(s,e,step 从s到e，步⻓长为step
+linspace(s,e,steps) 从s到e，均匀切分成steps份
+
+rand/randn(*sizes) 均匀/标准分布
+normal(mean,std)/uniform(from,to) 正态分布/均匀分布
+randperm(m) 随机排列列  
+
+----
+
+### 算术&矩阵运算
+
+- a+b
+- torch.add（num1,num2）
+- torch.add(x,y,out=result)
+- y.add_(x) 创建的那些数据也是一个对象。
+
+----
+
+### 索引
+
+pytorch的索引赋值为浅拷贝，指向同一块内存。
+
+以下为代码验证
+
+```python
+import torch
+x = torch.ones(3,3)
+# 取每行数据的第一列
+y = x[:,0]
+y[1] = 5
+# out put
+"""
+tensor([[1., 1., 1.],
+        [5., 1., 1.],
+        [1., 1., 1.]])
+"""
+```
+
+### 索引高级函数
+
+| 函数                            | 功能                                                         |
+| ------------------------------- | ------------------------------------------------------------ |
+| index_select(input, dim, index) | 指定维度选取，如选某些行/列，返回一个新矩阵，深拷贝，互不影响。 |
+| masked_select(input, mask)      |                                                              |
+| nonzero(input)                  | 非0元素下标                                                  |
+| gather(input, dim, index)       |                                                              |
+
+> **index_select(input, dim , index)**
+
+- input 需要选择的那个矩阵
+
+- dim 维数 0为选择每一行，1为选择每一列
+
+- index 为需要选择另一维的那些数据。
+
+  - 如 dim = 0 选择行
+  - index = [1 ,3]
+  - 选择第一行和第三行的数据
+
+  ```python
+  tensor([[0.3346, 0.2801, 0.6146, 0.6209, 0.8886], 第0行
+          [0.8055, 0.8360, 0.0765, 0.8212, 0.8358], 第1行
+          [0.0052, 0.8295, 0.0566, 0.4908, 0.3620], 第2行
+          [0.6363, 0.6391, 0.1611, 0.9173, 0.6518], 第3行
+          [0.2913, 0.0361, 0.7733, 0.4480, 0.7769]]) 第4行
+  # index = [1,3]
+  torch.index_select(data,0,index)
+  tensor([[0.8055, 0.8360, 0.0765, 0.8212, 0.8358],
+          [0.6363, 0.6391, 0.1611, 0.9173, 0.6518]])
+  
+  ```
+
+> **nonzoer(input)**
+
+```python
+zoers = torch.zeros(3,4)
+
+zoers[0][1] = 1
+zoers[1][2] = 2
+
+torch.nonzero(zoers)
+```
+
+---
+
+### 改变形状
+
+- view(行，列)
+- reshape(行，列)
+
+都是浅拷贝，共用内存。
+
+- clone() 后再改变形状
+
+```python
+data = torch.randint(0,1000,size=(3,4))
+copy_data = data.clone()
+reshape_data = copy_data.reshape(4,3)
+print(reshape_data)
+```
+
+---
+
+### tensor 转python数据
+
+```python
+# 当个数的转
+x = torch.randn(1)
+x.item()
+```
+
+## 线性代数操作
+
+直接看官方文档就是。随用随学。
+
+---
+
+### 广播机制
+
+不同形状做计算，会进行适当的广播（增加维数，一致后再计算）
+
+```python
+x = torch.arange(1,3).view(1,2)
+print(x)
+y = torch.arange(1,4).view(3,1)
+print(y)
+x + y
+```
+
+---
+
+## tensor与numpy的转换
+
+tensor对象调用 xx.numpy即可
+numpy转tensor用
+torch.from_numpy(xx)
+
+---
+
+## 求梯度
+
+```python
+x = torch.ones(2,2,requires_grad=True)
+print(x)
+print(x.grad_fn) # x是常数  输出为none
+y = x + 2
+print(y)
+print(y.grad_fn) # y 通过加法计算得来 有 grad_fn
+
+z = y*y*3
+out = z.mean()
+print("z , out")
+print(z,out)
+print(x.grad)s
+# 不是很明白 ，待会看下官方文档。数学知识忘了，补一下
+out.backward()
+print(x.grad)
+```
+
+
+
 pytorch的数据类型。与numpy的array类似。
 
 

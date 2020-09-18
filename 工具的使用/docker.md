@@ -221,8 +221,8 @@ docker是利用宿主机的内核，不需要Guest OS，docker无须想vm一样�
 - eg：`docker run -it 7e6257c9f8d8[这个是centos镜像的id]`
   - -it   i一交互式模式运行容器 t----为容器分配一个伪终端
   - 退出容器用 exit 或 <span style="color:red">ctrl + p + q【正常退出不关闭容器】</span>
-    - exit  容器停止 退出
-    - ctrl+p+q 容器不停止退出
+    - exit  <span style="color:red">容器停止 退出</span>
+    - ctrl+p+q <span style="color:red">容器不停止退出</span>
   - 启动容器：docker start 容器id/容器名
   - 重新启动容器：docker restart 容器id/容器名
   - 停止容器：docker stop 容器id/容器名   【温柔的，慢慢的关闭】
@@ -230,7 +230,7 @@ docker是利用宿主机的内核，不需要Guest OS，docker无须想vm一样�
   - 删除容器：docker rm 容器id/容器名
     - docker rm -f 容器id/容器名字 强制
     - docker rm  $(docker ps -a -q)  因为不是强制的，所以只能删除未运行的容器！
-- **docker ps** 列出容器
+- **docker ps** 列出容器[正在运行的容器]
   - `docker ps -a` 列出所有容器【运行中的+历史运行的】
   - `docker ps -n 3` 列出上三次运行的容器
   - `docker ps -l` 上次运行的容器
@@ -244,8 +244,16 @@ docker是利用宿主机的内核，不需要Guest OS，docker无须想vm一样�
 > **使用镜像centos:7 以后台模式启动一个容器**
 
 - `docker run -d centos`
+  
   - `docker ps -a` 查看，发现容器已经退出。
+  
   - <span style="color:red">**docker容器后台运行，必须要有一个前台进程！！**</span> 容器的命令如果不是那些一直挂起的命令（如top tail）就会自动退出。
+  
+  - 所以可以这样运行。
+  
+    - ```shell
+      docker run -d centos /bin/sh -c 'while true;do echo hello xx;sleep 2; done'
+      ```
 - docker logs -f -t --tail 容器id  查看容器日志
   - -t 是加入时间戳
   - -f 跟随最新的日志打印
