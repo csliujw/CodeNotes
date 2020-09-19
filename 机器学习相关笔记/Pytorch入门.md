@@ -10,6 +10,14 @@
 
 看<a href="https://pytorch.org/get-started/locally/">官网</a>
 
+cuda的安装有点麻烦，请看这篇博客。cuda得版本一定要对上！
+
+<a href="https://blog.csdn.net/marleylee/article/details/81988365?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param">这是MXNET安装CUDA的过程，按这个来就行。</a>
+
+我是按上面那安装成功的。
+
+如果一直试了好几次都失败了，那么大概率是电脑某些服务或驱动有问题【某些安全软件的锅】，建议直接重装电脑。
+
 ----
 
 # 基本操作
@@ -183,21 +191,72 @@ torch.from_numpy(xx)
 ## 求梯度
 
 ```python
-x = torch.ones(2,2,requires_grad=True)
-print(x)
-print(x.grad_fn) # x是常数  输出为none
-y = x + 2
-print(y)
-print(y.grad_fn) # y 通过加法计算得来 有 grad_fn
+import torch
 
-z = y*y*3
-out = z.mean()
-print("z , out")
-print(z,out)
-print(x.grad)s
-# 不是很明白 ，待会看下官方文档。数学知识忘了，补一下
-out.backward()
-print(x.grad)
+"""
+自动求梯度
+.requires_grad 属性 为是否被跟踪
+张量的梯度会自动累加到 .grad
+阻止跟踪可以使用 .detach()
+
+下面的看不懂
+为了防止跟踪历史记录(和使用内存），可以将代码块包装在 with torch.no_grad(): 中。
+在评估模型时特别有用，因为模型可能具有 requires_grad = True 的可训练的参数，但是
+我们不需要在此过程中对他们进行梯度计算。
+"""
+
+
+class grad:
+
+    def __init__(self):
+        self.x = torch.randint(0, 100, (2, 2), dtype=torch.float32, requires_grad=True)
+        self.y = self.x + 2
+        self.z = self.y * self.y * 3
+
+    def demo_1(self):
+        # 暂且不管为何种意思
+        out = self.z.mean()
+        print(self.z, out)
+        out.backward()  # 进行求导
+        print(self.x.grad)  # 输出对x倒数
+
+    def demo_2(self):
+        # 目前测试结果就是把导数的值累加了一下而已。
+        out = self.z.sum()
+        out.backward()
+        print(self.x.grad)
+
+    def demo_3(self):
+        # 这里似乎必须调用一个z的方法才可，不然会报错
+        # 原因：需要变成标量，所以要做一个处理，如求mean，sum
+        out = self.z
+        out.backward()
+        print(self.x.grad)
+
+    def demo_4(self):
+        out = self.z.mean()
+        out.backward()
+        print(self.x.grad)
+
+    def demo_5(self):
+        x = torch.tensor(5.0, dtype=torch.float32, requires_grad=True)
+        print(x)
+        y = x * x * 2
+        y.backward()
+        # 对x的求导结果为20. 之前那些都是向量求导，还不会好吧。
+        # xx.mean()这种链式调用应该是和求导的结果有关，暂时不看
+        # 等学了矩阵论再说。
+        print(x.grad)
+
+    def help_docs(self, obj):
+        help(obj)
+
+
+if __name__ == '__main__':
+    obj = grad()
+    # obj.demo_2()
+    # obj.help_docs(obj.z)
+    obj.demo_5()
 ```
 
 
