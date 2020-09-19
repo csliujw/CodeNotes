@@ -61,9 +61,19 @@ randperm(m) 随机排列列
 ### 算术&矩阵运算
 
 - a+b
+
 - torch.add（num1,num2）
+
 - torch.add(x,y,out=result)
+
 - y.add_(x) 创建的那些数据也是一个对象。
+
+- torch.matmul() 矩阵乘法
+
+  ```python
+  # b.T 表示b的转置
+  torch.matmul(a,b.T)
+  ```
 
 ----
 
@@ -394,92 +404,172 @@ print(tensor)
         [0.4890, 0.6017, 0.4017]], dtype=torch.float64)
 ```
 
+---
 
-## 基本运算操作
+# 参考步骤
 
-加减删除
+## 文字描述
 
+用pytorch构建自己的深度学习模型的时候，可考虑采用以下流程：
+
+- 找数据定义
+- 找model定义（找损失函数、优化器定义）
+- 主循环代码逻辑
+
+深度学习模型过程
+
+- 输入处理模块（把输入的数据变成网络能够处理的Tensor类型）
+- 模型构建模块（根据输入的数据得到预测的y，【前向过程】）
+  - 前向过程只会得到模型预测结果，不会自动求导和更新
+- 定义代价函数和优化器模块
+- 构建训练过程（迭代训练过程）
+
+## 代码举例
+
+> **数据处理部分**
+
+```python
+from torch.utils.data import Dataset
+# 继承Dataset方法，Override以下方法
+class trainDataset(Dataset):
+    def __init__(self):
+        # 构造函数，初始化常用数据
+    
+    def __getitem__(self,index):
+        # 获得第index号的数据和标签
+        
+    def __len__(self):
+        # 获得数据量   
+```
+
+`torch.utils.data.DataLoader`
+
+```python
+# 假设我们把数据集 和 标签 放在了一起，这样我们就可以十分方便地同时遍历数据集和标签了
+data_items = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False)
+
+for label,data in data_items
+	print(label,data)
+    break # 只输出一组
+```
+
+> **构建模型**
+
+所有模型都需要继承torch.nn.Module,需要实现以下方法.
+
+其中forward() ⽅法是前向传播的过程。在实现模型时，我们不需要考虑反向传播。
+
+```python
+class MyModel(torch.nn.Module):
+    def __init__(self):
+        super(MyModel,self).__init__()
+        
+    def forward(self,x):
+        return
+    
+ model = MyModel()
+```
+
+> **定义代价函数和优化器**
+
+```python
+criterion = torch.nn.BCELoss(reduction='sum') # 代价函数
+optimizer = torch.optim.Adam(model.paramenters(), lr=0.001, betas=(0.9,0.999), eps=1e-08, weight_decay=0, amsgrad=False) # 优化器
+```
+
+> **构建训练过程**
+
+----
+
+```python
+def train(epoch):
+    for i,data in data_items:
+        x,y = i,data
+        y_pred = model(x) # 前向传播
+        loss = criterion(y_pred, y) # 计算代价函数
+        optimizer.zero_grad() # 清理梯度准备计算
+        loss.backward() # 反向传播
+        optimizer.step() # 更新训练参数
+```
+
+> **具体案例**
+
+流程图如下
+
+```flow
+flow
+st=>start: Prepare dataset
+op1=>operation: Design model using class
+op2=>operation: Construct loss and optimizer
+op3=>operation: Training cycle
+cond=>condition: Yes or No?
+e=>end
+st->op1->op2->op3
+```
+
+
+
+仅是梳理过程，不要在意具体的细节。
 
 ```python
 import torch
+from torch.nn import Module
+
+# 步骤一 预定义数据
+x_data = torch.tensor([[1.0], [2.0], [3.0]])
+y_data = torch.tensor([[0.0], [0.0], [1.0]])
+
+
+# Design model using class
+class LogisticRegressionModel(Module):
+    def __init__(self):
+        super(LogisticRegressionModel, self).__init__()
+        self.linear = torch.nn.Linear(1, 1)
+
+    def forward(self, x):
+        return torch.sigmoid(self.linear(x))
+
+
+if __name__ == '__main__':
+    model = LogisticRegressionModel()
+    # construct loss and optimizer
+    criterion = torch.nn.BCELoss(reduction='sum')
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+
+    # training cycle
+    for epoch in range(1500):
+        y_pred = model.forward(x_data)
+        loss = criterion(y_pred, y_data)
+        print(epoch, loss.item())
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 ```
 
 
-```python
-a = torch.randint(1,10,(3,2))
-b = torch.randint(1,10,(3,2))
-print(a)
-print(b)
-```
-
-    tensor([[8, 6],
-            [8, 8],
-            [3, 6]])
-    tensor([[4, 9],
-            [8, 6],
-            [2, 3]])
-
-```python
-a + b
-```
 
 
-    tensor([[12, 15],
-            [16, 14],
-            [ 5,  9]])
 
 
-```python
-c = torch.add(a,b)
-print(c)
-```
-
-    tensor([[12, 15],
-            [16, 14],
-            [ 5,  9]])
-
-```python
-# 这么麻烦做什么，直接a+b不好吗
-result = torch.zeros(3,2)
-torch.add(a,b,out=result)
-```
 
 
-    tensor([[12., 15.],
-            [16., 14.],
-            [ 5.,  9.]])
 
 
-```python
-a - b
-```
 
+# 线性回归
 
-    tensor([[ 9, -2],
-            [-1, -1],
-            [ 2, -3]])
+主要是熟悉API的使用，理论方面去看书。
 
+## 流程
 
-```python
-a // b
-```
-
-
-    tensor([[2, 0],
-            [1, 1],
-            [1, 2]])
-
-矩阵运算
-
-
-```python
-torch.matmul(a,b.T) # b.T 转置  mat矩阵的缩写 mul乘法的缩写
-```
-
-
-    tensor([[ 86, 100,  34],
-            [104, 112,  40],
-            [ 66,  60,  24]])
+- 生成数据集（一般会有自己的数据集）
+- 读取数据（训练集、测试集的划分？）
+- 定义模型
+- 初始化模型参数
+- 定义损失函数
+- 定义优化算法
+- 训练模型
 
 
 
