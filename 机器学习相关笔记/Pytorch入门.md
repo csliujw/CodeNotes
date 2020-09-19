@@ -502,9 +502,8 @@ st=>start: Prepare dataset
 op1=>operation: Design model using class
 op2=>operation: Construct loss and optimizer
 op3=>operation: Training cycle
-cond=>condition: Yes or No?
 e=>end
-st->op1->op2->op3
+st->op1->op2->op3->e
 ```
 
 
@@ -520,7 +519,7 @@ x_data = torch.tensor([[1.0], [2.0], [3.0]])
 y_data = torch.tensor([[0.0], [0.0], [1.0]])
 
 
-# Design model using class
+# 步骤二 Design model using class
 class LogisticRegressionModel(Module):
     def __init__(self):
         super(LogisticRegressionModel, self).__init__()
@@ -532,11 +531,11 @@ class LogisticRegressionModel(Module):
 
 if __name__ == '__main__':
     model = LogisticRegressionModel()
-    # construct loss and optimizer
+    # 步骤三 construct loss and optimizer
     criterion = torch.nn.BCELoss(reduction='sum')
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
-    # training cycle
+    # 步骤四 training cycle
     for epoch in range(1500):
         y_pred = model.forward(x_data)
         loss = criterion(y_pred, y_data)
@@ -547,29 +546,166 @@ if __name__ == '__main__':
         optimizer.step()
 ```
 
+----
+
+# 流程演变
+
+## Rule-based systems
+
+**人工设计**
+
+```flow
+flow
+st=>start: start
+op0=>operation: input
+op1=>operation: Hand-designed program
+op2=>operation: output
+e=>end
+st->op1->op2->e
+```
+
+
+
+## Classic machine learning
+
+```flow
+flow
+st=>start: start
+op0=>operation: input
+op1=>operation: Hand-designed features
+op2=>operation: Mapping from features
+op3=>operation: output
+e=>end
+st->op1->op2->op3->e
+```
+
+---
+
+```flow
+flow
+st=>start: start
+op0=>operation: input
+op1=>operation: features
+op2=>operation: Mapping from features
+op3=>operation: output
+e=>end
+st->op1->op2->op3->e
+```
 
 
 
 
 
+## Deep learning
 
+多了一个提取特征的过程。
 
+传统的机器学习方式feature是单独训练的。
 
+深度学习中，训练过程是统一的。【端-->端的训练过程】
 
+```flow
+flow
+st=>start: start
+op0=>operation: input
+op1=>operation: simple features
+op2=>operation: additional layers of more abstract features
+op3=>operation: mapping from features
+op4=>operation: output
+e=>end
+st->op1->op2->op3->op4->e
+```
 
-# 线性回归
+方式在逐渐演变
 
-主要是熟悉API的使用，理论方面去看书。
+----
 
-## 流程
+# 基本概念普及
 
-- 生成数据集（一般会有自己的数据集）
-- 读取数据（训练集、测试集的划分？）
-- 定义模型
-- 初始化模型参数
-- 定义损失函数
-- 定义优化算法
-- 训练模型
+反向传播：求偏导数。神经网络层数过高的话，求导很麻烦，故采用反向传播。反向传播的核心是计算图。
 
+就是链式法则。
+
+深度学习的模型很多，不必部学。学其精髓，即如何构造模型/构造模型的套路。可以把某些模型当作基本块，用这些基本块进行组装。
+
+CUDA的安装，如果安装过vs 可能会出错，所以cuda建议选择自定义安装，不要勾选vs支持。
+
+----
+
+# 线性模型
+
+主要是熟悉API的使用，具体理论方面去看书。
+
+- 准备数据集
+- 选择模型（根据数据集进行选择）
+- 训练（个别可以不做训练，eg：KNN）
+- inferring，看模型的效果
+
+有标签：监督学习
+
+无标签：无监督学习
+
+有些有，有些无：半监督学习。
+
+判断模型的优劣
+
+将数据分为测试集和训练集，进行模型训练和模型效果检测。关于测试集和训练集的划分看书。数据集尽量和真实的环境保持一致。这让我想起了NLP中语料库的重要性。
+
+随机猜测权重，对权重进行评估，然后重新调整。
+
+评估找到的模型与数据集的误差有多大。这种评估模型称之为<span style="color:red">损失</span>
+$$
+损失函数
+loss = (\hat{y}-y)^2 = (x * \omega - y)^2
+$$
+y_hat 是预测值
+
+ω是权重。
+
+对于整个训练集，我们需要把累加每一个样本的损失函数求均值。
+$$
+cost = \frac{1}{N}\sum^{n}_{1\to n} (\hat y_n - y_n)^2
+$$
+根据不同的权重计算MSE 平均平方误差 ，选取最优的ω。通过穷举来做【准确的来说，是通过类似于二分的方式来做吧】。
+
+视频里真的是定义好步长，穷举。
+
+请通过以下数据集，和以下方程计算出一个较优的ω
+
+```shell
+x_data = [1,2,3,4]
+y_data = [2,4,6,8]
+
+y = x * ω
+loss = （y_hat -y）^2
+# 拓展 增加一个b（bais）
+```
+
+训练的结果通过可视化工具，直观的展示训练效果，看那个区间最优，继续缩小范围进行调参【论可视化工具的重要性 visdom】
+
+深度学习的代码 跑的周期可能很长。怕程序奔溃，丢失训练的部分结果，最好是存盘。
+
+----
+
+# 梯度下降
+
+梯度：求偏导。
+$$
+\frac{\partial cost}{\partial ω}
+$$
+
+$$
+ω = ω - a\frac{\partial cost}{\partial ω}
+$$
+
+a是学习率
+
+梯度下降：朝梯度下降的地方走，片面来说就是朝导数下降的地方走。
+
+梯度下降 局部最优。如何尽量避免这种片面的情况？
+
+随机取起始点，梯度下降，取最优的。
+
+鞍点：
 
 
