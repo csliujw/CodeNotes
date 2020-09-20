@@ -623,5 +623,162 @@ limit
 
 select 套 select
 
+我感觉没啥好记得，就是嵌套查询嘛。
+
+给一个例子即可。
+
+```mysql
+select cust_id 
+from orders 
+where order_num in (select order_num 
+                    from orderitems 
+                    where prod_id = 'TNT2');
+```
+
+嵌套子查询效率较低，不建议大量使用。
+
+## 作为计算字段使用子查询
+
+经典案例，供参考。效率较差，不是很推荐。
+
+```mysql
+select cust_name,cust_state,
+	(select count(*) 
+     from orders 
+     where orders.cust_id = customers.cust_id) as orders from customers 
+order by cust_name;
+```
+
+----
+
+# 联结表
+
+这块还是看王姗的数据库系统概论。
+
+## 联结（join）
+
+超过三个表不推荐使用join，不清晰。推荐用where。【阿里巴巴开发手册】
+
+联结是一种机制，用来在一条SELECT语句中关联表。【用Where不香吗，清晰，效率高】
+
+where写法，不加条件的话会产生<span style="color:red">笛卡儿积</span>。
+
+- where是等值联结
+
+```mysql
+select vend_name, prod_name, prod_price 
+from vendors, products 
+where vendors.vend_id = products.vend_id 
+order by vend_name, prod_name;
+```
+
+- 联结的表越多，越耗性能。
+
+----
+
+# 高级联结
+
+表别名，解决二义性。
+
+## 自联结
+
+有时候自联结比子查询快！
+
+```mysql
+select p1.prod_id, p1.prod_name 
+from products as p1, products as p2 
+where p1.vend_id = p2.vend_id
+and p2.prod_id = 'DTNTR';
+```
+
+用自联结而不用子查询 自联结通常作为外部语句用来替代从相同表中检索数据时使用的子查询语句。虽然最终的结果是相同的，但有时候处理联结远比处理子查询快得多。
+
+## 自然联结
+
+## 外部联结
+
+两张表之间的关联。
+
+```mysql
+# 内连接 可以不写inner关键字
+select customers.cust_id, orders.order_num 
+from customers 
+inner join orders on customers.cust_id = orders.cust_id;
+
+# 左外连接，
+# LEFT JOIN 关键字会从左表 (table_name1) 那里返回所有的行，即使在右表 (table_name2) 中没有匹配的行
+# 可以不写outer关键字
+select customers.cust_id, orders.order_num 
+from customers 
+left outer join orders on customers.cust_id = orders.cust_id;
+
+```
+
+----
+
+# 组合查询
+
+## 推荐&效率
+
+使用UNION，UNION ALL。看王姗的书。
+
+- 在单个查询中从不同的表返回类似结构的数据；
+- 对单个表执行多个查询，按单个查询返回数据；
+- 组合查询和where到达那个效率高未知，需要我们进行测试；
+
+## 使用UNION
+
+UNION会取消重复行！！！UNION ALL，不取消重复行。
+
+> **案例**
+
+把两个查询结果集并起来了
+
+```mysql
+select * from products 
+where prod_price<=5
+	union
+select * from products 
+where vend_id in(1001,1002)
+# 相当于
+select * from products 
+where prod_price<=5 or vend_id in(1001,1002)
+```
+
+> **使用规则**
+
+- UNION必须由两条或两条以上的SELECT语句组成，语句之间用关键字UNION分隔（因此，如果组合4条SELECT语句，将要使用3个UNION关键字）。
+-  UNION中的每个查询必须包含相同的列、表达式或聚集函数（不过各个列不需要以相同的次序列出）。
+- 列数据类型必须兼容：类型不必完全相同，但必须是DBMS可以隐含地转换的类型（例如，不同的数值类型或不同的日期类型）。
+
+## 对组合结果进行排序
+
+末尾加个order by即可
+
+```mysql
+select * from products 
+where prod_price<=5
+	union
+select * from products 
+where vend_id in(1001,1002)
+order by vend_id
+```
+
+----
+
+# 全文本搜索
+
+并非所有的搜索引擎都支持全文本搜索。
+
+- `MyISAM`支持全文本搜索。
+
+- `InnoDB`不支持全文本搜索。
+
+
+
+
+
+
+
 
 
