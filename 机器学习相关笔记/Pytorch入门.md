@@ -34,20 +34,16 @@ api的基本使用方式为：
 
 常用api
 
-| methodName | describe |
-| ---------- | -------- |
-|            |          |
-|            |          |
-|            |          |
-|            |          |
-|            |          |
-|            |          |
-|            |          |
+| methodName                                         | describe               |
+| -------------------------------------------------- | ---------------------- |
+| Tensor(*sizes)                                     | 基础构造函数           |
+| tensor(data,)                                      | 类似np.array的构造函数 |
+| ones(*sizes) 全1Tensor<br/>zeros(*sizes) 全0Tensor |                        |
+|                                                    |                        |
+|                                                    |                        |
+|                                                    |                        |
+|                                                    |                        |
 
-Tensor(*sizes) 基础构造函数
-tensor(data,) 类似np.array的构造函数
-ones(*sizes) 全1Tensor
-zeros(*sizes) 全0Tensor
 eye(*sizes) 对⻆角线为1，其他为0
 arange(s,e,step 从s到e，步⻓长为step
 linspace(s,e,steps) 从s到e，均匀切分成steps份
@@ -410,6 +406,8 @@ print(tensor)
 
 ## 文字描述
 
+前馈，反馈，循环。前馈算损失，反馈算梯度，循环找最优解。
+
 用pytorch构建自己的深度学习模型的时候，可考虑采用以下流程：
 
 - 找数据定义
@@ -706,6 +704,158 @@ a是学习率
 
 随机取起始点，梯度下降，取最优的。
 
-鞍点：
+----
 
+# PyTorch实现线性回归
+
+## 步骤
+
+- 准备数据
+- 设计模型，计算y_hat
+- 构造损失函数和构造器
+- 训练周期
+  - forward：算损失
+  - backward：算损失的梯度
+  - update：更新权重
+
+$$
+\hat y = ω*x + b
+$$
+
+​				需要确定 ω和b的大小
+
+```python
+import torch
+
+x_data = torch.tensor([[1.0], [2.0], [3.0]])
+y_data = torch.tensor([[2.0], [4.0], [6.0]])
+
+
+class LinearModel(torch.nn.Module):
+    def __init__(self):
+        # 调用父类的构造
+        super(LinearModel, self).__init__()
+        # torch.nn.Linear(1, 1) 构造一个对象，包含权重和偏置
+        self.linear = torch.nn.Linear(1, 1)
+
+    def forward(self, x):
+        # 实现了一个__call__
+        y_pred = self.linear(x)
+        return y_pred
+
+
+model = LinearModel()
+# 标准
+criterion = torch.nn.MSELoss(size_average=False)
+# 优化器   lr是学习率，应该是每次梯度下降的步长
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+
+for epoch in range(2000):
+    y_pred = model(x_data) # 模型
+    loss = criterion(y_pred, y_data) # 损失
+    print(epoch, loss.item())
+
+    # 更新的时候需要相应的优化器
+    optimizer.zero_grad()
+    # 反馈 得到梯度 然后进行优化
+    loss.backward()
+    optimizer.step()
+
+print('w=', model.linear.weight.item())
+print('b=', model.linear.bias.item())
+
+x_test = torch.tensor([[4, 0]])
+y_test = model(x_test)
+print('y_pred', y_test.data)
+
+
+# * 元组
+# ** 字典
+def func(*args, **kwargs):
+    print(args)
+    print(kwargs)
+```
+
+## 再次强调！
+
+**步骤**
+
+- 准备数据
+- 定义模型
+- 计算损失
+- 优化
+
+---
+
+# Pytorch实现逻辑斯蒂回归
+
+```python
+import torchvision # 集成了常用的那些数据集
+
+# 从里面找数据集 root应该是下载的文件存放在哪里
+tran_set = torchvision.datasets.MNIST(root='../dataset/mnist', train=True, download=True)
+test_set = torchvision.datasets.MNIST(root='../dataset/mnist', train=False, download=True)
+```
+
+## Logistic Regression Model
+
+$$
+\hat y = σ(x*ω+b)
+$$
+
+加了一个xx函数（名字忘了哈哈哈），让值分布在0-1之间
+
+- Loss Function for Linear Regression
+  $$
+  loss = (\hat y - y)^2 = (x*ω-y)^2
+  $$
+
+- Loss Function for Binary Classification
+  $$
+  loss = -(y log\hat y + (1-y)log(1-\hat y))
+  $$
+
+```python
+import torch
+import torch.nn.functional as F
+import torch.nn.modules
+
+x_data = torch.Tensor([[1.0], [2.0], [3.0]])
+y_data = torch.Tensor([[0], [0], [1]])
+
+class LogisiticRegressionModel(torch.nn.Module):
+    def __init__(self):
+        super(LogisiticRegressionModel, self).__init__()
+        self.linear = torch.nn.Linear(1, 1)
+
+    def forward(self, x):
+        y_pred = F.sigmoid(self.linear(x))
+        return y_pred
+
+
+model = LogisiticRegressionModel()
+
+criterion = torch.nn.BCELoss(size_average=False)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+print("hello")
+for epoch in range(1200):
+    y_pred = model(x_data)
+    loss = criterion(y_pred, y_data)
+    print(epoch, loss.item())
+
+    optimizer.zero_grad()  # 清理
+    loss.backward()
+    optimizer.step()
+```
+
+基本就是这四个步骤。
+
+- 准备数据
+- 选择模型
+- 构造loss 和 优化器
+- 不断迭代
+
+---
+
+# Pytorch处理多维特征输入
 
