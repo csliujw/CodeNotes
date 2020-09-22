@@ -6,6 +6,14 @@
 
 ----
 
+# LaTex
+
+恶补一波LaTex语法，好写数学公式
+
+<a href="https://zhuanlan.zhihu.com/p/95886235">LaTex语法</a>
+
+----
+
 # 安装
 
 看<a href="https://pytorch.org/get-started/locally/">官网</a>
