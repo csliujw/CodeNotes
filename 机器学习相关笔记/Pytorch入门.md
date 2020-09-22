@@ -960,5 +960,119 @@ if __name__ == '__main__':
 """
 ```
 
+---
+
+# Dataset&Dataloader
+
+## API概述
+
+```python
+DataLoader: batch_size=2, shuffle=True
+# batch_size = 2 2个数据分为一组
+# shuffle 打乱数据。
+```
+
+## 定义自己的Dataset
+
+```python
+# 来看一手源码注释
+r"""
+    Data loader. Combines a dataset and a sampler, and provides an iterable over
+    the given dataset.
+
+    The :class:`~torch.utils.data.DataLoader` supports both map-style and
+    iterable-style datasets with single- or multi-process loading, customizing
+    loading order and optional automatic batching (collation) and memory pinning.
+
+    See :py:mod:`torch.utils.data` documentation page for more details.
+
+    Arguments:
+        dataset (Dataset): dataset from which to load the data.
+        batch_size (int, optional): how many samples per batch to load
+            (default: ``1``).
+        shuffle (bool, optional): set to ``True`` to have the data reshuffled
+            at every epoch (default: ``False``).
+        num_workers (int, optional): how many subprocesses to use for data
+"""
+    def __init__(self, dataset, batch_size=1, shuffle=False, sampler=None,
+                 batch_sampler=None, num_workers=0, collate_fn=None,
+                 pin_memory=False, drop_last=False, timeout=0,
+                 worker_init_fn=None, multiprocessing_context=None,
+                 generator=None):
+```
+
+## 代码
+
+```python
+import torch
+import numpy as np
+from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
+
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super(Model, self).__init__()
+        # in_features: int, out_features: int
+        # 8是特征的数量  1时输出结果的数目
+        self.linear1 = torch.nn.Linear(8, 6)  # 第一层
+        self.linear2 = torch.nn.Linear(6, 4)  # 第二层
+        self.linear3 = torch.nn.Linear(4, 1)  # 第三层
+        self.sigmoid = torch.nn.Sigmoid()  # 阶跃函数
+
+    def forward(self, x):
+        # 一层一层正向传播
+        x = self.sigmoid(self.linear1(x))
+        x = self.sigmoid(self.linear2(x))
+        x = self.sigmoid(self.linear3(x))
+        return x
+
+
+# 自定义的Dataset需要几次 torch的Dataset
+class DiabetesDataset(Dataset):
+    # 初始化数据集
+    def __init__(self, filepath):
+        xy = np.loadtxt(filepath, delimiter=',', dtype=np.float32)
+        self.len = xy.shape[0]
+        self.x_data = xy[:, :-1]
+        self.y_data = xy[:, [-1]]
+
+    # The expression dataset[item] will call this magic function
+    # 得看看python的高級语法了····
+    def __getitem__(self, item):
+        return self.x_data[item], self.y_data[item]
+
+    def __len__(self):
+        return self.len
+
+
+model = Model()
+criterion = torch.nn.BCELoss(reduction='mean')
+optimizer = torch.optim.SGD(model.parameters(), lr=0.010)
+
+dataset = DiabetesDataset('diabetes.csv.gz')
+# dataset 加载的数据集
+# batch_size 多少数据为一个batch
+# shuffle 是否打乱原始的数据
+# num_workers 使用多少子程序处理数据
+train_loader = DataLoader(dataset=dataset,
+                          batch_size=32,
+                          shuffle=True,
+                          num_workers=2)
+
+if __name__ == '__main__':
+    for epoch in range(100):
+        # 补充 enumerate语法
+        # debug 看看
+        for i, data in enumerate(train_loader, 0):
+            inputs, labels = data
+            y_pred = model(inputs)
+            loss = criterion(y_pred, labels)
+            print(epoch, loss.item())
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+```
+
 
 
