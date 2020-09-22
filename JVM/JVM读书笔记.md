@@ -1,5 +1,9 @@
 # 高效并发
 
+先保证正确,在考虑高效.
+
+先写出正确的并发代码,再考虑细/粗化锁操作.
+
 ## Java内存模型与线程
 
 ### 科普
@@ -7,6 +11,28 @@
 衡量服务器性能的高低好坏：每秒事务处理数（Transactions Per Second，`TPS`）
 
 高速缓存一定程度上解决了速度不匹配问题，但是又引入了缓存一致性的问题。
+
+为了解决一致性的问题，需要各个处理器访问缓存时都遵循一些协议，在读写时要根据协议来进行操作。这类协议有：
+
+- MSI
+- MESI
+- MOSI
+- Synapse
+- Firefly
+- Dragon Protocol
+
+```mermaid
+graph LR
+处理器1==>高速缓存1==>缓存一致性协议==>主内存
+处理器2==>高速缓存2==>缓存一致性协议
+处理器3==>高速缓存3==>缓存一致性协议
+高速缓存1==>处理器1
+高速缓存2==>处理器2
+高速缓存3==>处理器3
+主内存==>缓存一致性协议
+```
+
+处理器内部的运算单元能尽量被充分利用，处理器可能会对输入代码进行乱序执行（Out-Of-Order Execution）优化，处理器会在计算之后将乱序执行的结果重组，保证该结果与顺序执行的结果是一致的，但并不保证程序中各个语句计算的先后顺序与输入代码中的顺序一致
 
 CPU现在多采用流水线执行的方式，会发生指令重排序的问题，目的是为了提高硬件资源的使用效率，但是有时候重排序会导致线程不安全（Java的`DCL`要使用volatile的原因，可以防止指令重排序。）
 
@@ -18,9 +44,22 @@ Java Memory Model（`JMM`），用以屏蔽掉各种硬件和操作系统的内�
 
 #### 主内存与工作内存
 
-Java内存模型规定了所有的变量都存储在主内存中。每天线程都有自己的工作内存。线程的工作内存保存了被该线程使用到的变量的主内存副本拷贝，线程对变量的所有操作（读取，赋值等）都必须在工作内存中进行，不能直接读写主内存中的变量【分主内存，工作内存（每条线程有自己的工作内存），主内存数据赋值到工作内存后，线程才可对变量进行各种操作】
+Java内存模型规定了所有的变量都存储在主内存中。每条线程都有自己的工作内存。线程的工作内存保存了被该线程使用到的变量的主内存副本拷贝，线程对变量的所有操作（读取，赋值等）都必须在工作内存中进行，不能直接读写主内存中的变量【分主内存，工作内存（每条线程有自己的工作内存），主内存数据赋值到工作内存后，线程才可对变量进行各种操作】
 
 **PS**：`JVM`规范规定了volatile变量依旧有工作内存的拷贝，当由于他特殊的操作顺序规定，看起来如同直接在主存中读写访问一样。
+
+<span style="color:red">**都是双向箭头**</span>
+
+```mermaid
+graph LR
+Java线程1==>工作内存1==>Save和Load操作==>主内存
+Java线程2==>工作内存2==>Save和Load操作
+Java线程3==>工作内存3==>Save和Load操作
+```
+
+这里所讲的主内存、工作内存与第2章所讲的Java内存区域中的Java堆、栈、方法区等并不是同一个层次的对内存的划分，这两者基本上是没有任何关系的。如果两者一定要勉强对应起来，那么从变量、主内存、工作内存的定义来看，<span style="color:red">**主内存主要对应于Java堆中的对象实例数据部分**</span>，而<span style="color:red">**工作内存则对应于虚拟机栈中的部分区域**</span>。从更基础的层次上说，**主内存直接对应于物理硬件的内存，而<span style="color:red">为了获取更好的运行速度，虚拟机（或者是硬件、操作系统本身的优化措施）可能会让工作内存优先存储于寄存器和高速缓存中，因为程序运行时主要访问的是工作内存。</span>**
+
+----
 
 #### 内存间交互操作
 
@@ -41,8 +80,13 @@ Java内存模型规定了所有的变量都存储在主内存中。每天线程�
 
 #### volatile的特殊规则
 
+**轻量级同步机制，单例模式DCL**
+
 - 此变量对所有线程都可见
+  - 这个可见的意思是，A线程修改了值，这个值改变后会立即更新到主内存中，其他线程去主内存拿数据的时候可以拿到这个新的值。但是之前拿了值得线程是无法得知得。因为线程操作数据是先从主内存中把数据copy到线程内存中，拿的是副本。
 - 禁止指令重排序优化
+
+<span style="color:red">Java内存模型为volatile专门定义了一些特殊的访问规则！！！</span>
 
 <u>**volatile禁止了指令重排序，所以执行完操作后，一定是把变量写入主存当有其他线程需要读取时，它会去内存中读取新值。而普通的共享变量不能保证可见性，因为普通共享变量被修改之后，什么时候被写入主存是不确定的，当其他线程去读取时，此时内存中可能还是原来的旧值，因此无法保证可见性**。</u>
 
@@ -52,15 +96,164 @@ Java内存模型规定了所有的变量都存储在主内存中。每天线程�
 
   volatile变量性能消耗与普通变量没啥区别，但写操作可能慢一些。因为它需要在本地代码中插入许多内存屏障指令来保证处理器不发生乱序执行。
 
+---
+
+#### 为什么说volatile并发不安全?
+
+volatile只是保证你读取的时候一定是从主内存中拿数据.
+
+但是在操作的时候,不保证这个值是与主内存中同步更新的.
+
+且Java的一些操纵如:+ - * /不是原子性的,所以可能会出现并发问题.
+
+请看下方的部分汇编代码
+
+**附上汇编代码**
+
+```java
+javap -c 字节码指令
+
+public static void increase():
+	Code:
+		Stack=2, Locals=0, Args_size=0
+        0:	getstatic  #13;  //Field race:I
+		3:  iconst_1
+		4:  iadd
+		5:  putstatic #13;  //Field race:I
+		8:  return
+    LineNumberTable:
+		line 14: 0
+        line 15: 8
+```
+
+使用字节码分析并发问题并不严谨,因为字节码指令也不一定是原子性的.但是这里用字节码足以说明问题了!
+
+**再来看下synchronized关键字的实现**
+
+<span style="color:red">synchronized 是用monitorenter字节码指令实现的!</span>
+
+```java
+ javap -c .\Synchronized.class
+Compiled from "Synchronized.java"
+public class com.payphone.thread.Synchronized {
+  static int i;
+
+  public com.payphone.thread.Synchronized();
+    Code:
+       0: aload_0
+       1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+       4: return
+
+  public static void main(java.lang.String[]);
+    Code:
+       0: new           #2                  // class java/lang/Object
+       3: dup
+       4: invokespecial #1                  // Method java/lang/Object."<init>":()V
+       7: astore_1
+       8: aload_1
+       9: dup
+      10: astore_2
+      11: monitorenter
+      12: getstatic     #3                  // Field i:I
+      15: bipush        50
+      17: if_icmplt     31
+      20: getstatic     #3                  // Field i:I
+      23: iconst_1
+      24: isub
+      25: putstatic     #3                  // Field i:I
+      28: goto          12
+      31: aload_2
+      32: monitorexit
+      33: return
+      34: astore_3
+      35: aload_2
+      36: monitorexit
+      37: aload_3
+      38: athrow
+    Exception table:
+       from    to  target type
+          12    33    34   any
+          34    37    34   any
+
+  static {};
+    Code:
+       0: bipush        100
+       2: putstatic     #3                  // Field i:I
+       5: return
+}
+```
+
+**到底什么时候使用volatile变量**
+
+由于volatile变量只能保证可见性，在不符合以下两条规则的运算场景中，我们仍然要通过加锁（使用synchronized、java.util.concurrent中的锁或原子类）来保证原子性：·运算结果并不依赖变量的当前值，或者能够确保只有单一的线程修改变量的值。·变量不需要与其他的状态变量共同参与不变约束。
+
+```java
+volatile boolean shutdownRequested;
+
+public void shutdown(){
+    shutdownRequest = true;
+}
+
+public void doWork(){
+    while(!shutdownRequested){
+        // 代码业务逻辑
+    }
+}
+```
+
+#### 针对long和double型变量的特殊规则
+
+Java内存模型要求lock、unlock、read、load、assign、use、store、write这八种操作都具有原子性，但是对于64位的数据类型（long和double），在模型中特别定义了一条宽松的规定：允许虚拟机将没有被volatile修饰的64位数据的读写操作划分为两次32位的操作来进行，即允许虚拟机实现自行选择是否要保证64位数据类型的load、store、read和write这四个操作的原子性，这就是所谓的“long和double的非原子性协定”（Non-Atomic Treatment of double and long Variables）。
+
+#### fianl修饰
+
+而final关键字的可见性是指：被final修饰的字段在构造器中一旦被初始化完成，并且构造器没有把“this”的引用传递出去（this引用逃逸是一件很危险的事情，其他线程有可能通过这个引用访问到“初始化了一半”的对象），那么在其他线程中就能看见final字段的值。
+
+---
+
+### Java与线程
+
+并发不一定要依赖多线程（如PHP中很常见的多进程并发），但是在Java里面谈论并发，基本上都与线程脱不开关系.
+
+#### 线程的实现
+
+主流的操作系统都提供了线程实现，Java语言则提供了在不同硬件和操作系统平台下对线程操作的统一处理.
+
+实现线程主要有三种方式：
+
+- 使用内核线程实现（1：1实现），
+- 使用用户线程实现（1：N实现），
+- 使用用户线程加轻量级进程混合实现（N：M实现）
+
+### Java与协程
+
+Java的线程大多数都是1-1模型,切换成本高!在当今的局势下,劣势很明显!以前可能是长连接,长时间使用,现在分布式,负载均衡,有些是短时间的连接,线程间的切换开销十分大!
 
 
 
+---
 
-## Java的锁升级过程
+## 线程安全与锁优化
+
+**方法级别的锁,方法上加synchronized,锁的是this对象?静态方法,方法上加synchronized锁的是字节码对象!**
+
+#### Java语言中的线程安全
+
+**可将Java语言中各种操作共享的数据分为以下五类：**
+
+- 不可变、
+  - 只要一个不可变的对象被正确地构建出来（即没有发生this引用逃逸的情况），那其外部的可见状态永远都不会改变，永远都不会看到它在多个线程之中处于不一致的状态。“不可变”带来的安全性是最直接、最纯粹的。
+- 绝对线程安全:
+  - vector方法上加的是 synchronized 锁的是this对象
+  - 静态方法上的synchronized 锁的是字节码对象
+- 相对线程安全、
+- 线程兼容和线程对立。
 
 
 ### 锁升级
 锁的4中状态：无锁状态、偏向锁状态、轻量级锁状态、重量级锁状态（级别从低到高）
+
+**AQS补**
 
 #### 偏向锁：
 
