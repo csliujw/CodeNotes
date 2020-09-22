@@ -32,25 +32,22 @@ api的基本使用方式为：
 
 - 给定数据创建 torch.methodName([数据])
 
-常用api
+**常用api**
 
-| methodName                                         | describe               |
-| -------------------------------------------------- | ---------------------- |
-| Tensor(*sizes)                                     | 基础构造函数           |
-| tensor(data,)                                      | 类似np.array的构造函数 |
-| ones(*sizes) 全1Tensor<br/>zeros(*sizes) 全0Tensor |                        |
-|                                                    |                        |
-|                                                    |                        |
-|                                                    |                        |
-|                                                    |                        |
+*表示元组
 
-eye(*sizes) 对⻆角线为1，其他为0
-arange(s,e,step 从s到e，步⻓长为step
-linspace(s,e,steps) 从s到e，均匀切分成steps份
-
-rand/randn(*sizes) 均匀/标准分布
-normal(mean,std)/uniform(from,to) 正态分布/均匀分布
-randperm(m) 随机排列列  
+| methodName                        | describe                  |
+| --------------------------------- | ------------------------- |
+| Tensor(*sizes)                    | 基础构造函数              |
+| tensor(data,)                     | 类似np.array的构造函数    |
+| ones(*sizes)                      | 全1Tensor                 |
+| zeros(*sizes)                     | 全0Tensor                 |
+| eye(*sizes)                       | 对⻆角线为1，其他为0      |
+| arange(s,e,step)                  | 从s到e，步⻓长为step      |
+| linspace(s,e,steps)               | 从s到e，均匀切分成steps份 |
+| rand/randn(*sizes)                | 均匀/标准分布             |
+| normal(mean,std)/uniform(from,to) | 正态分布/均匀分布         |
+| randperm(m)                       | 随机排列列                |
 
 ----
 
@@ -264,8 +261,6 @@ if __name__ == '__main__':
     # obj.help_docs(obj.z)
     obj.demo_5()
 ```
-
-
 
 pytorch的数据类型。与numpy的array类似。
 
@@ -814,6 +809,12 @@ $$
   $$
   loss = -(y log\hat y + (1-y)log(1-\hat y))
   $$
+  
+- 优化器公式【梯度下降】
+  $$
+  ω = ω - a \frac {\partial cost}{\partial ω}
+  $$
+  
 
 ```python
 import torch
@@ -837,7 +838,6 @@ model = LogisiticRegressionModel()
 
 criterion = torch.nn.BCELoss(size_average=False)
 optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
-print("hello")
 for epoch in range(1200):
     y_pred = model(x_data)
     loss = criterion(y_pred, y_data)
@@ -855,7 +855,102 @@ for epoch in range(1200):
 - 构造loss 和 优化器
 - 不断迭代
 
+```text
+损失最低 就是效果好
+
+一般  实验 要看指标
+
+损失就是通过计算  准确呢  可以作为参考
+
+越不准确  loss越大
+
+实验中  效果最好也不是看你的训练数据
+
+你要用验证数据 去验证
+
+不然损失很低  训练时候过拟合  但是 在测试集上效果非常差
+
+一般是 训练集 训练  指标看验证集的
+
+同时看
+```
+
 ---
 
 # Pytorch处理多维特征输入
+
+```python
+import torch.nn.modules
+import numpy as np
+
+"""
+测试代码
+result = np.random.randint(low=0, high=100, size=25).reshape((5, 5))
+print(result)
+print(result[:, [-1]])
+print("\n\n\n\n")
+"""
+
+xy = np.loadtxt('diabetes.csv.gz', delimiter=',', dtype=np.float32)
+# 这个数据集最后一列是y的取值
+# 每行都选  列的话 从0-最后一列，不包括最后一列
+x_data = torch.from_numpy(xy[:, :-1])
+# 每行都选，但是只取最后一列
+y_data = torch.from_numpy(xy[:, [-1]])
+
+# print(x_data)
+# print("\n\n")
+# print(y_data)
+
+
+class Model(torch.nn.Module):
+    def __init__(self):
+        super(Model, self).__init__()
+        # in_features: int, out_features: int
+        # 8是特征的数量  1时输出结果的数目
+        self.linear1 = torch.nn.Linear(8, 6)
+        self.linear2 = torch.nn.Linear(6, 4)
+        self.linear3 = torch.nn.Linear(4, 1)
+        self.sigmoid = torch.nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.sigmoid(self.linear1(x))
+        x = self.sigmoid(self.linear2(x))
+        x = self.sigmoid(self.linear3(x))
+        return x
+
+
+model = Model()
+
+criterion = torch.nn.BCELoss(size_average=True)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.010)
+
+for epoch in range(100):
+    y_pred = model(x_data)
+    loss = criterion(y_pred, y_data)
+    print(epoch, loss.item())
+
+    # 反向传播
+    optimizer.zero_grad()
+    loss.backward()
+    # 更新
+    optimizer.step()
+
+"""
+多个特征
+公式就变为了向量之间的操作了
+$$
+\hat y = σ(x^{(i)}*ω + b)
+$$
+if __name__ == '__main__':
+    x = torch.tensor([1, 2, 3, 4])
+    w = torch.tensor(3)
+    result = x * w
+    print(result)
+    # output
+    # tensor([ 3,  6,  9, 12])
+"""
+```
+
+
 
