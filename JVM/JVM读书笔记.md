@@ -205,6 +205,74 @@ public void doWork(){
 
 Java内存模型要求lock、unlock、read、load、assign、use、store、write这八种操作都具有原子性，但是对于64位的数据类型（long和double），在模型中特别定义了一条宽松的规定：允许虚拟机将没有被volatile修饰的64位数据的读写操作划分为两次32位的操作来进行，即允许虚拟机实现自行选择是否要保证64位数据类型的load、store、read和write这四个操作的原子性，这就是所谓的“long和double的非原子性协定”（Non-Atomic Treatment of double and long Variables）。
 
+#### Integer并发问题
+
+以下代码会存在并发安全问题
+
+我的理解是：ABC三个线程抢1000，A抢到了，A--操作，此时A持有的是999的锁，1000的锁被释放了【会被释放吗？】。BC争夺1000这把锁。
+
+但是由于synchronized包裹的变量，有线程可见性的特点，所以其他线程有机会得到最新的那个引用，故只会存在部分数据被重复输出。
+
+问题：工作线程操作完数据后，会有一个回写的操作，【不是或者说不仅仅是指令重排序的锅，给Integer加了volatile也会有线程安全问题】，回写过程中，发现不对劲会直接改为指向最新的那个应用吗？heap中是否存在一个句柄对象，其他工作线程都是copy这个句柄对象？
+
+**到底是怎么样的？？**
+
+```java
+package com.payphone.thread;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 线程锁的一些陷阱。
+ * 此种写法 线程不安全。
+ * 理由如下：
+ * Integer是final修饰的,Integer中的值改变后，Integer的引用就变了。所以syn锁的并不是同一个对象！String也是这样。
+ * 其他的包装类也是！final修饰的都要注意！
+ * 这块问的细致的话，需要用到JMM。
+ * <p>
+ * 举例说明：
+ * A B两个线程
+ * A 拿到了 Integer = 100的那个锁（对象）。
+ * B 没有拿到 Integer = 100的那个锁（对象）。
+ * A 把Integer变成了99，此时Integer的引用变了！ A
+ * B 想拿到Integer持有的引用，此时那个引用被改了，且无人拥有。（A拿的是100的引用，）
+ */
+public class ThreadTrap {
+    public static void main(String[] args) {
+        ThreadDemo threadDemo = new ThreadDemo();
+        Thread th1 = new Thread(threadDemo, "窗口一");
+        Thread th2 = new Thread(threadDemo, "窗口二");
+        Thread th3 = new Thread(threadDemo, "窗口三");
+        th1.start();
+        th2.start();
+        th3.start();
+    }
+}
+
+class ThreadDemo implements Runnable {
+    // 经典卖票程序
+    private static Integer tickets = 1000;
+    @Override
+    public void run() {
+        while (true) {
+            synchronized (tickets) {
+                try {
+                    TimeUnit.MILLISECONDS.sleep(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (tickets <= 200) {
+                    return;
+                }
+                System.out.println(Thread.currentThread().getName() + "：卖了一张，还剩" + --tickets);
+            }
+        }
+    }
+}
+```
+
+
+
 #### fianl修饰
 
 而final关键字的可见性是指：被final修饰的字段在构造器中一旦被初始化完成，并且构造器没有把“this”的引用传递出去（this引用逃逸是一件很危险的事情，其他线程有可能通过这个引用访问到“初始化了一半”的对象），那么在其他线程中就能看见final字段的值。
