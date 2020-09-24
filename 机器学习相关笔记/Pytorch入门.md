@@ -1074,5 +1074,124 @@ if __name__ == '__main__':
             optimizer.step()
 ```
 
+----
+
+# 多分类问题
+
+## Softmax概述
+
+softmax
+
+多分类要输出多个。二分类输出两个即可。 
+
+有10个分类，有9个参数就够了。第10个分类用1-前面的求和，但是这样不利于并行计算。
+
+<img src="..\pics\pytorch\softmax01.png">
+
+归一化？
+
+<img src="..\pics\pytorch\softmax02.png">
+
+<img src="..\pics\pytorch\softmax03.png">
+
+激活的操作，在交叉熵损失中完成了。
+
+<img src="..\pics\pytorch\cross01.png">
+
+<img src="..\pics\pytorch\cross02.png">
+
+**交叉熵损失demo测试**
+
+```python
+import torch
+
+criterion = torch.nn.CrossEntropyLoss()
+y = torch.LongTensor([2, 0, 1])
+
+y_pred1 = torch.Tensor([[0.1, .02, 0.9],
+                        [1.1, 0.1, 0.2],
+                        [0.2, 2.1, 0.1]])
+y_pred2 = torch.Tensor([[0.8, 0.2, 0.3],
+                        [0.2, 0.3, 0.5],
+                        [0.2, 0.2, 0.5]])
+# 1的loss是比较小的 2的loss是比较大的
+l1 = criterion(y_pred1, y)
+l2 = criterion(y_pred2, y)
+print(l1, l2)
+```
+
+## MNIST
+
+拿到图像后先把他变成Tensor数据类型
+
+<img src="..\pics\pytorch\soft_pre_data.png">
+
+- 1x28x28 1维 28*28 == 把三阶张量变成一阶，一张图片一共784个像素数。
+- ToTensor 把图像变成Tensor类型
+- Normalize(mean,σ) 让数据满足0 1 分布
+
+<img src="..\pics\pytorch\design_model01.png">
+
+<img src="..\pics\pytorch\design_model02.png">
+
+<img src="..\pics\pytorch\clao.png">
+
+<img src="..\pics\pytorch\train_and_test.png">
+
+---
+
+晚上把代码捋一捋。
+
+# 卷积神经网络
+
+## CNN基础
+
+由线性层连接起来的叫全连接的网络。
+
+CWH
+
+- C ==> Channle
+- W ==> Width
+- H ==> High
+
+卷积神经网络保留了原始的空间信息。经过卷积后，得到的图像其通道会变，图像的高度和宽度也会变（高宽也可以不变）。做一个2*2的下采样后，通道数不变，但是图像的宽高会变。做下采样是为了降低计算要求。
+
+<img src="..\pics\pytorch\cnn01.png">
+
+---
+
+RGB 通道 有三个channle。
+
+以下的为 3xWxH
+
+<img src="..\pics\pytorch\cnn02.png">
+
+做数乘！每个通道配一个核！
+
+ <img src="..\pics\pytorch\cnn03.png">
+
+<img src="..\pics\pytorch\cnn04.png">
+
+---
+
+????????
 
 
+
+
+
+
+
+
+
+
+
+
+
+## CNN高级
+
+# 循环神经网络
+
+## 基础
+
+## 高级
