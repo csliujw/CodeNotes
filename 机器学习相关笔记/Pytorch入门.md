@@ -203,7 +203,6 @@ torch.from_numpy(xx)
 
 ```python
 import torch
-
 """
 自动求梯度
 .requires_grad 属性 为是否被跟踪
@@ -215,8 +214,6 @@ import torch
 在评估模型时特别有用，因为模型可能具有 requires_grad = True 的可训练的参数，但是
 我们不需要在此过程中对他们进行梯度计算。
 """
-
-
 class grad:
 
     def __init__(self):
@@ -1156,7 +1153,7 @@ CWH
 
 卷积神经网络保留了原始的空间信息。经过卷积后，得到的图像其通道会变，图像的高度和宽度也会变（高宽也可以不变）。做一个2*2的下采样后，通道数不变，但是图像的宽高会变。做下采样是为了降低计算要求。
 
-<img src="..\pics\pytorch\cnn01.png">
+<img src="..\pics\pytorch\a_simple_convolution_neural_network.png">
 
 ---
 
@@ -1174,24 +1171,45 @@ RGB 通道 有三个channle。
 
 ---
 
-????????
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## CNN高级
+
+### GoogLeNet
+
+想减少代码冗余，OOP！代码复用！
+
+抽取出公共的内容。
+
+1*1的卷积改变通道数。
+
+<img src="..\pics\pytorch\GoogleNet01.png">
+
+什么是1*1的卷积？
+
+CWH = 100 * 500 * 500
+
+filter = 20，filter的通道数要和输入的通道数一样。
+
+一个filter相乘相加就是1 * 500 * 500
+
+二十个就是 20 * 500 * 500.
+
+---
+
+### Implementation of Inception Module
+
+<img src="..\pics\pytorch\GoogleNet02.png">
+
+算出各个走法的通道后，再进行通道的拼接。
+
+<img src="..\pics\pytorch\GoogleNet03.png">
+
+<img src="..\pics\pytorch\GoogleNet04.png">"
+
+
 
 # 循环神经网络
 
 ## 基础
 
 ## 高级
+

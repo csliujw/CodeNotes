@@ -19,11 +19,35 @@
 - Ctrl + Shift + F10 运行代码
 - Ctrl + W 关闭侧边栏
 
-# MyBatis 基础篇
+----
+
+# `MyBatis`中的设计模式
+
+绝对路径：
+
+相对路径 `src/java/main/文件名.xml`
+
+读配置文件：①用类加载器，读类路径下的
+
+​					 ②用`Servlet Context`对象的`getRealPath`
+
+创建工程`MyBatis`用了构建者模式。告诉需求，根据需求创建我们想要的。
+
+```java
+build.build(in) // in形式下创建的工厂，多了几个类，操作看起来麻烦了，但是组合更加灵活的。
+```
+
+生成`SqlSession`用了工厂模式
+
+创建`Dao`接口实现类用了代理模式
+
+在看`MyBatis`源码的时候，通过一些类的名称大概知道了`MyBatis`用到了什么技术。`MyBatis`解析的时候应该用到了词法分析，分析字符串。在动态生成代理类的时候用到了字节码增强技术。
+
+# `MyBatis` 基础篇
 
 ## 基本环境搭建
 
-> **Maven工程使用MyBatis的时候，配置文件需要放在resrouces目录下，否则无法找到。**
+> **Maven工程使用`MyBatis`的时候，配置文件需要放在`resrouces`目录下，否则无法找到。**
 
 > **Maven整合Druid的时候，需要的是数据源，需要我们手动new出Druid的数据源。**
 
@@ -31,7 +55,7 @@
 - mapper文件
 - 日志文件
 
-**maven的pom文件**
+**maven的`pom`文件**
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -85,7 +109,7 @@
 </project>
 ```
 
-**SqlConfig配置文件**
+**`SqlConfig`配置文件**
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -140,7 +164,7 @@
 
 ## 日志相关
 
-**log4j日志配置**
+**`log4j`日志配置**
 
 ```properties
 #log4j基本配置
@@ -161,7 +185,7 @@ log4j.appender.file.layout=org.apache.log4j.PatternLayout     #布局器
 log4j.appender.file.layout.ConversionPattern=%c-%m%n   #布局器格式
 ```
 
-**log4j仅打印SQL语句**
+**`log4j`仅打印`SQL`语句**
 
 ```properties
 # 全局日志配置
@@ -222,7 +246,7 @@ Mapper映射文件放在maven工程resource下com/daily/mapper也是resource的�
 
 maven的resource是项目的资源根目录哦！
 
-mybatis 多对多 是两个一对一组成的哦
+`mybatis` 多对多 是两个一对一组成的哦
 
 ​	user 一对多role
 
@@ -230,15 +254,15 @@ mybatis 多对多 是两个一对一组成的哦
 
 这样 user 和 role就是多对多关系了。 数据库的多对多需要一个中间表来描述 两表的多对多关系。
 
-多对多SQL的写法？
+多对多`SQL`的写法？
 
 <a href="https://github.com/csliujw/MyBatis-Study">项目地址</a>
 
-# MyBatis(一)
+# `MyBatis`(一)
 
 ## 解决的问题
 
-MyBatis解决了持久层重复代码多的问题，简化了持久层的开发，减少了持久层的代码量。
+`MyBatis`解决了持久层重复代码多的问题，简化了持久层的开发，减少了持久层的代码量。
 
 ## 简单的CURD
 
@@ -337,15 +361,15 @@ public interface IUserDao {
 
 `#{}`表示一个占位符号
 
-通过`#{}`可以实现 preparedStatement 向占位符中设置值，自动进行 java 类型和 jdbc 类型转换，
+通过`#{}`可以实现 `preparedStatement` 向占位符中设置值，自动进行 `java` 类型和 `jdbc` 类型转换，
 
-`#{}`可以有效防止 sql 注入。 `#{}`可以接收简单类型值或 pojo 属性值。 如果 parameterType 传输单个简单类
+`#{}`可以有效防止 `sql` 注入。 `#{}`可以接收简单类型值或 `pojo` 属性值。 如果 `parameterType` 传输单个简单类
 型值，`#{}`括号中可以是 value 或其它名称。
 
-`${}`表示拼接 sql 串
+`${}`表示拼接 `sql` 串
 
-通过`${}`可以将 parameterType 传入的内容拼接在 sql 中且不进行 jdbc 类型转换， `${}`可以接收简
-单类型值或 pojo 属性值，如果 parameterType 传输单个简单类型值，`${}`括号中只能是 value。
+通过`${}`可以将 `parameterType` 传入的内容拼接在 `sql` 中且不进行 `jdbc` 类型转换， `${}`可以接收简
+单类型值或 `pojo` 属性值，如果 `parameterType` 传输单个简单类型值，`${}`括号中只能是 value。
 
 > 源码级别解析
 
@@ -371,9 +395,9 @@ class A{
 
 ## 深入理解
 
-- MyBatis可自己写Dao实现类也可不写实现类。推荐不写实现类。
+- `MyBatis`可自己写`Dao`实现类也可不写实现类。推荐不写实现类。
 - 不写实现类采用的是基于代理的CRUD操作。
-- MyBatis用到了OGNL表达式
+- `MyBatis`用到了`OGNL`表达式
   - `Object Graphic Navigation Language`
     	对象	图	导航	   语言
   - 它是通过对象的取值方法来获取数据。在写法上把get给省略了。
@@ -383,20 +407,20 @@ class A{
     `mybatis`中为什么能直接写`username`,而不用user.呢：
     	因为在`parameterType`中已经提供了属性所属的类，所以此时不需要写对象名
 
-## 简单实现MyBatis
+## 简单实现`MyBatis`
 
 先空着
 
-# MyBatis(二)
+# `MyBatis`(二)
 
 ## 引言
 
 **主要介绍**
 
-- mybatis中的连接池及事务控制
+- `mybatis`中的连接池及事务控制
   - 连接池使用及分析
   - 事务控制分析
-- xml的动态SQL
+- `xml`的动态`SQL`
 - 多表操作
   - 一对一
   - 一对多
@@ -431,13 +455,13 @@ class A{
 	不考虑隔离性会产生的3个问题
 	解决办法：四种隔离级别
 
-它是通过sqlsession对象的commit方法和rollback方法实现事务的提交和回滚
+它是通过`sqlsession`对象的commit方法和rollback方法实现事务的提交和回滚
 
 ## 动态`SQL`
 
 ### if
 
-满足条件就会拼接SQL，不满足就不拼接
+满足条件就会拼接`SQL`，不满足就不拼接
 
 ### choose(when,otherwise)
 
@@ -461,9 +485,9 @@ Map的话，查文档得知 index是key item是value
 
 **提示** 你可以将任何可迭代对象（如 `List`、`Set` 等）、`Map` 对象或者数组对象作为集合参数传递给 `*foreach*`。当使用可迭代对象或者数组时，`index` 是当前迭代的序号，item 的值是本次迭代获取到的元素。当使用 `Map` 对象（或者 `Map.Entry` 对象的集合）时，`index` 是键，`item` 是值。
 
-### 动态SQL全部代码
+### 动态`SQL`全部代码
 
-#### java代码
+#### `java`代码
 
 ```java
 public interface IUserDao {
@@ -494,7 +518,7 @@ public interface IUserDao {
 }
 ```
 
-#### xml文件
+#### `xml`文件
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -721,7 +745,7 @@ public class Demo {
 
 ### 一对一
 
-**一对一的POJO如下**
+**一对一的`POJO`如下**
 
 ```java
 public class User{
@@ -734,7 +758,7 @@ public class User{
 */
 ```
 
-**MyBatis中一对一采用**
+**`MyBatis`中一对一采用**
 
 ```xml
 <mapper namespace="com.itheima.dao.IAccountDao">
@@ -759,7 +783,7 @@ PS：简单，所以没有例子。
 
 ### 一对多
 
-**一对多的POJO**
+**一对多的`POJO`**
 
 ```java
 public class RoleVO implements Serializable {
@@ -837,10 +861,10 @@ public class RoleVO implements Serializable {
 
 我们对用户信息进行懒加载。
 
-- proerty是java字段的名称
-- javaType是查询出来的数据类型
+- `proerty`是`java`字段的名称
+- `javaType`是查询出来的数据类型
 - select是要调用的查询方法，通过这个查询方法把懒数据查询出来
-- column是查询的条件，即where xx = column的值。这个column取自resultMap。
+- column是查询的条件，即where xx = column的值。这个column取自`resultMap`。
 
 ```xml
 <association property="user" javaType="User" select="com.bbxx.dao.lazy.IUserDao.findOne" column="uid">
@@ -959,7 +983,7 @@ IAccountDao的mapper文件
 
 ## 一级缓存
 
-一级缓存是 SqlSession 级别的缓存，只要 SqlSession 没有 flush 或 close，它就存在！
+一级缓存是 `SqlSession` 级别的缓存，只要 `SqlSession` 没有 flush 或 close，它就存在！
 
 ```xml
 <mapper namespace="com.itheima.dao.IUserDao">
@@ -978,8 +1002,10 @@ select * from user where id = #{uid}
 
 # `MyBatis`(四)
 
+使用注解还是`xml`，看公司的使用习惯，目前看到的是用`xml`更多一些（看过四家公司，看过其中三家公司的代码，都是用的`xml`，没看到用注解的，只看到过个人开发用注解！）。
+
 ## 引言
 
 - 注解配置
 - 注解开发
-- 注解动态SQL
+- 注解动态`SQL`
