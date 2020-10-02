@@ -34,6 +34,35 @@ if __name__ == '__main__':
 # 2
 ```
 
+---
+
+## 设置/获取属性
+
+| 方法                       | 说明     |
+| -------------------------- | -------- |
+| setattr(obj, name,  value) | 设置属性 |
+| getattr(obj , name)        | 获取属性 |
+
+```python
+class A:
+    def __init__(self):
+        pass
+    
+    def set_attribute(self):
+        setattr(self, 'number', 5)
+        
+    def set_loop(self):
+        for i in range(10):
+            setattr(self, 'fc%i' % i, i)# %i 和 i对应，名字也要一样！！
+
+if __name__ == '__main__':
+    a = A()
+    a.set_attribute()
+    a.set_loop()
+    print(a.fc2)
+
+```
+
 
 
 

@@ -1450,3 +1450,47 @@ train_data 计算图纸 都移动到cuda里去。
   - L2: `cost = （Wx - realy）^2 + (W)^2`
 - Dropout regularization (丢弃正则化)
 
+官方文档
+
+```python
+torch.nn.Dropout(0.5) # 随机有 50% 的神经元会被关闭/丢弃.
+"""
+dropout神经网络的建立
+"""
+net_dropped = torch.nn.Sequential(
+    torch.nn.Linear(1, N_HIDDEN),
+    torch.nn.Dropout(0.5),  # drop 50% of the neuron
+    torch.nn.ReLU(),
+    torch.nn.Linear(N_HIDDEN, N_HIDDEN),
+    torch.nn.Dropout(0.5),  # drop 50% of the neuron
+    torch.nn.ReLU(),
+    torch.nn.Linear(N_HIDDEN, 1),
+)
+```
+
+---
+
+#  Batch Normalization
+
+## 概述
+
+**批标准化**
+
+**为什么要标准化？**
+
+具有统一规格的数据, 能让机器学习更容易学习到数据之中的规律.
+
+**如何处理**
+
+Batch normalization 的 batch 是批数据, 把数据分成小批小批进行 stochastic gradient descent. 而且在每批数据进行前向传递 forward propagation 的时候, 对每一层都进行 normalization 的处理。计算结果值的分布对于激励函数很重要
+
+**Normalization公式**
+
+<img src="..\pics\pytorch\normalization.png" style="float:left">
+
+我们引入一些 batch normalization 的公式. 这三步就是我们在刚刚一直说的 normalization 工序, 但是公式的后面还有一个反向操作, 将 normalize 后的数据再扩展和平移. 原来这是为了让神经网络自己去学着使用和修改这个扩展参数 gamma, 和 平移参数 β, 这样神经网络就能自己慢慢琢磨出前面的 normalization 操作到底有没有起到优化的作用, 如果没有起到作用, 我就使用 gamma 和 belt 来抵消一些 normalization 的操作.
+
+## Demo
+
+
+
