@@ -65,13 +65,90 @@
 
 ### 3数之和
 
+PS：法一超时，法二不会，法三看了题解才会。总结：我好菜啊！
+
 - 法一：
+  
   - 暴力求解，三重for循环，out of time
+  
 - 法二：
   - 双重for循环+hash表
     - A + B + C = Target ==> A+B = Target-C
+  
 - 法三：
+  
   - 先排序，再双指针。 
+  
+  <a href="https://leetcode-cn.com/problems/3sum/solution/li-yong-pai-xu-jia-shuang-zhi-zhen-qiu-san-shu-zhi/">优秀题解</a>
+  
+  ```java
+  /**
+       * 先排序在双指针
+       * <p>
+       * 边界条件 难受啊
+       * 菜是原罪 备注题解
+       */
+  public List<List<Integer>> fun2(int nums[]) {
+      List<List<Integer>> list = new ArrayList<>();
+      // 先排序 默认升序
+      Arrays.sort(nums);
+      // 边界条件
+      if (nums == null || nums.length < 3) return list;
+  
+      for (int i = 0; i < nums.length - 2 && nums[i] <= 0; i++) {
+          if (i > 0 && nums[i] == nums[i - 1]) continue;
+          int fixed = nums[i];
+          int start = i + 1;
+          int end = nums.length - 1;
+  
+          while (start < end) {
+              if (fixed + nums[start] + nums[end] == 0) {  //  符合条件加入
+                  list.add(addToList(fixed, nums[start], nums[end]));
+                  // 排除重复的
+                  while (start < end && nums[start] == nums[start + 1]) start++;
+                  while (start < end && nums[end] == nums[end - 1]) end--;
+                  start++;
+                  end--;
+              } else if (fixed + nums[start] + nums[end] < 0 && end > 0) {
+                  start++;
+              } else {
+                  end--;
+              }
+          }
+      }
+      return list;
+  }
+  
+  public List<List<Integer>> copy(int[] nums) {
+      List<List<Integer>> result = new ArrayList<>();
+      if (nums == null || nums.length < 3) return result;
+      Arrays.sort(nums);
+      int low, high, sum;
+      for (int i = 0; i < nums.length - 2 && nums[i] <= 0; i++) {
+          // 如果 当前数和上一次的数一样则直接跳过 这次循环。【防止数据重复】
+          if (i > 0 && nums[i] == nums[i - 1]) continue;
+          low = i + 1;
+          high = nums.length - 1;
+          while (low < high) {
+              sum = nums[i] + nums[low] + nums[high];
+              if (sum == 0) {
+                  result.add(Arrays.asList(nums[i], nums[low], nums[high]));
+                  while (low < high && nums[low] == nums[low + 1]) low++;
+                  while (low < high && nums[high] == nums[high - 1]) high--;
+                  low++;
+                  high--;
+              } else if (sum < 0) {
+                  low++;
+              } else {
+                  high--;
+              }
+          }
+      }
+      return result;
+  }
+  ```
+  
+  
 
 ### 环形链表
 

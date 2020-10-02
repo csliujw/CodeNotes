@@ -6,6 +6,89 @@
 
 ----
 
+# 常用的网络
+
+- resnet
+- vgg
+- deeplab
+- unet
+
+# 安装记录`PyTorch`
+
+- 安装cuda
+- 安装cudnn
+- 安装pytorch gpu版本
+
+安装cuda的时候要查看自己显卡驱动和那个版本的cuda匹配，要下载匹配的。
+
+<a href="https://developer.nvidia.com/cuda-toolkit-archive">旧版cuda下载地址</a>
+
+安装cudnn的过程，只需要下载好文件，然后移动即可。
+
+<a href="https://developer.nvidia.com/rdp/cudnn-archive">旧版本cudnn下载地址</a>
+
+<a href="https://blog.csdn.net/sinat_23619409/article/details/84202651">cudnn安装方法</a>
+
+安装pytorch gup版本的时候速度可能会很慢，建议换成阿里云的源或者直接去清华镜像下载 然后安装。
+
+安装普通的库下载过慢，可将源换为豆瓣源 或 阿里源pi
+
+```python
+pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+pip config set global.index-url 源地址
+
+常用的源
+阿里云 https://mirrors.aliyun.com/pypi/simple/
+中国科技大学 https://pypi.mirrors.ustc.edu.cn/simple/
+豆瓣(douban) http://pypi.douban.com/simple/
+清华大学 https://pypi.tuna.tsinghua.edu.cn/simple/
+中国科学技术大学 http://pypi.mirrors.ustc.edu.cn/simple/
+```
+
+换了之后发现没有。于是我又试了这个
+
+```python
+首先输这个，更换镜像源（注意顺序，第四条一定要在最后，原因不详）
+
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+conda config --set show_channel_urls yes
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/
+最后，运行执行安装pytorch
+
+conda install pytorch torchvision cudatoolkit=10.0
+搞定
+```
+
+----
+
+实际上我是按下面的步骤，和参考上面的博客成功的
+
+- 安装N卡驱动，注意N卡驱动支持的cuda版本，这里建议用驱动精灵这些工具，下载18年发行的驱动，然后查看驱动支持的cuda版本。
+  - 如果没有n卡的控制面板，不能查看支持的cuda型号，就去下一个<a href="https://www.qqxiazai.com/down/44050.html">一个下载地址,我没用过！！！</a>
+- 安装对应版本的cuda
+- 安装miniconda <a href="ModuleNotFoundError: No module named 'torch._C'">下载地址</a>
+- 下载pytorch的离线包，离线安装。在线安装我试了好多次，总出错，最后还是去清华镜像下载的。<a href="https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/">下载地址</a>
+- 下载离线安装包 <a href="https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/">清华镜像下载地址</a>
+  - 注意py的版本 一定要一致，不一致会出错！！！
+- conda install 下载的压缩包
+- over
+
+```python
+# 测试代码
+import torch
+
+if __name__ == '__main__':
+    print(123)
+    print(torch.cuda.is_available())
+    
+# output
+# 123
+# True
+```
+
+---
+
 # LaTex
 
 恶补一波LaTex语法，好写数学公式
@@ -1209,6 +1292,8 @@ filter = 20，filter的通道数要和输入的通道数一样。
 
 # 循环神经网络
 
+RNN让神经网络有了记忆，<span style="color:red">对于序列化的数据，RNN网络能达到更好的效果。</span>
+
 ## 基础
 
 ### 神经网络回顾
@@ -1247,9 +1332,121 @@ U是输入层到隐藏层的**权重矩阵**，o也是一个向量，它表示**
 
 注意：为了简单说明问题，偏置都没有包含在公式里面
 
-----
-
-
+---
 
 ## 高级
+
+### 普通RNN的弊端
+
+RNN会对之前发生的事情进行记忆，但是它的记忆能力并不好，会发生记忆丢失。为什么？
+
+信息源可能需要多次传播才可以到达目标点，我们可以得到误差，但是在反向传播的时候，他会乘以一个参数，这种操作可能会导致误差消失（梯度消失）或误差无限放大（梯度爆炸）所以RNN可能无法回忆久远的事物。
+
+### 解决方案LSTM
+
+LSTM Long Short-Term Memory
+
+比起RNN，它多出了三个控制器，输入/出 & 忘记。
+
+多了一个控制全局的记忆，会将分线剧情，根据其重要程度写入主线中。忘记方面，若分线剧情改变了，忘记就会更新主线中的对应内容。输出根据主线和支线进行判断。
+
+<img src="..\pics\pytorch\LSTM_RNN.png">
+
+## RNN 分类
+
+demo概述：用RNN对MNIST数据集进行分类。
+
+RNN一般用在时间序列方面的数据，如何用它处理图片？
+
+<span style="color:red">用 RNN 的最后一个时间点输出来判断之前看到的图片属于哪一类</span>
+
+<img src="../pics/pytorch/CS231n_RNN.jpg">
+
+图像的分类对应上图就是个`many to one`的问题. 对于mnist来说其图像的size是28*28，如果将其看成28个step，每个step的size是28的话，是不是刚好符合上图. 当我们得到最终的输出的时候将其做一次线性变换就可以加softmax来分类了
+
+## RNN 回归
+
+demo概述：用 `sin` 的曲线预测出 `cos` 的曲线.
+
+---
+
+# 自编码 (AutoEncoder)
+
+图像的压缩与解压。
+
+图片经过了压缩,再解压. 压缩的时候, 原有的图片质量被缩减, 解压时用信息量小却包含了所有关键信息的文件可以恢复出原本的图片.
+
+这样做的目的是：神经网络要接受大量的输入信息, 如输入信息是高清图片时, 输入信息量可能达到上千万, 让神经网络直接从上千万个信息源中学习是一件很吃力的工作. 所以, 可以进行压缩, 提取出原图片中的最具代表性的信息, 缩减输入信息量, 再把缩减过后的信息放进神经网络学习. 这样学习起来就简单轻松了.
+
+自编码就能在这时发挥作用. 通过将原数据白色的X 压缩, 解压 成黑色的X, 然后通过对比黑白 X ,求出预测误差, 进行反向传递, 逐步提升自编码的准确性. 训练好的自编码中间这一部分就是能总结原数据的精髓. 可以看出, 从头到尾, 我们只用到了输入数据 X, 并没有用到 X 对应的数据标签, 所以也可以说自编码是一种非监督学习. 到了真正使用自编码的时候. 通常只会用到自编码前半部分.
+
+<img  src="..\pics\pytorch\auto1.png" style="float:left">
+
+得到原数据的精髓，再通过精髓数据进行学习，减轻计算负担。
+
+自编码，非监督学习
+
+----
+
+# DQN
+
+<img src="..\pics\pytorch\DQN01.png">
+
+----
+
+# GAN
+
+Generative Adversarial Nets
+
+## 回顾
+
+神经网络分类回顾【输入数据 得到结果】
+
+- 普通前向传播网络
+- 分析图片的CNN
+- 分析语音文字的RNN网络
+
+## 生成网络
+
+凭空生成数据。没有意义的数字  生成数据。
+
+生成对抗网络
+
+<img  src="..\pics\pytorch\GAN01.png">
+
+Generator 会根据随机数来生成有意义的数据 , Discriminator 会学习如何判断哪些是真实数据 , 哪些是生成数据, 然后将学习的经验反向传递给 Generator, 让 Generator 能根据随机数生成更像真实数据的数据. 这样训练出来的 Generator 可以有很多用途, 比如最近有人就拿它来生成各种卧室的图片.
+
+---
+
+#  GPU加速
+
+把tensor数据放在GPU上
+
+- 数据.cuda()
+
+把神经网络放在GPU上
+
+- cnn = CNN()
+- cnn.cuda()
+
+把数据移动到cuda里。
+
+把cnn的模块移动到cuda里。
+
+train_data 计算图纸 都移动到cuda里去。
+
+----
+
+# 过拟合
+
+训练过度，把非特征的数据当作特征来训练。
+
+如何解决？
+
+- 增加数据量
+- 运用正规化
+  - y = Wx 【W为学习参数】
+  - L1: `cost = （Wx - realy）^2 + abs(W)`
+  - L2: `cost = （Wx - realy）^2 + (W)^2`
+- Dropout regularization (丢弃正则化)
 
