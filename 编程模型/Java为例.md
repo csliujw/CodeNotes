@@ -8,19 +8,21 @@ Java的一些常用类的命名很好，基本上见名知意，源码上的注�
 
 Java是纯面向对象的语言，这也注定了Java源码的阅读不会轻松，各种设计模式，类与类的各种组合方式，“眼花缭乱”，用或许很简单，但源码的阅读却是艰难的（会用只是起点，了解为什么设计，如何实现才是重点）。
 
-看过一些JVM的书，对JVM也有所了解。JVM的编译优化做的很优秀，一些性能差的地方也随着版本的更替越来越快。Java从原先的运行速度慢的语言其效率变得可与CPP媲美（得益于JIT和程序的局部性原理）尤其是引入主流的商用虚拟机引入了JIT，热点代码直接翻译成机器码，无需中转。
+看过一些`JVM`的书，对`JVM`也有所了解，了解的越多，愈发觉得`JVM`强大。`JVM`的编译优化做的很优秀，一些性能差的地方也随着版本的更替越来越快。Java从运行速度慢，到其效率可与`CPP`媲美（得益于`JIT`和程序的局部性原理）尤其是主流的商用虚拟机引入了`JIT`，热点代码直接翻译成机器码，无需中转。【`JIT`默认是启用的，`JVM` 读入.class文件解释后发给`JIT`编译器，然后它将字节码编译成本机机器代码】
 
 Java生态圈优秀，有很多优秀的工具类，开发人员多，学习资料多，相应的成本也较低。
 
-Java发展的越来越好，也越来越“臃肿”，相同的功能，众多的实现方式，虽然灵活，但是也变相加大了学习的难度和应用难度，有些甚至需要足够理解JVM才能知道如何抉择。最初的Java抛弃了cpp的很多繁琐的特征，但是随着不断的发展Java也变得越来越繁琐。
+Java发展的越来越好，也越来越“臃肿”，相同的功能，众多的实现方式，虽然灵活，但是也变相加大了学习的难度和应用难度，有些甚至需要足够理解`JVM`才能知道如何抉择。最初的Java抛弃了`CPP`的很多繁琐的特征，但是随着不断的发展Java也变得越来越繁琐。
 
-Java的GC是它的亮点也是痛点。优秀的CPP工程师需要懂得硬件知识，优秀的Java工程师需要懂得JVM。JVM->内存自动管理，调优->懂得JVM，懂得JVM->看JVM设计，JVM设计->看HotSpot源码。
+Java的`GC`是它的亮点也是痛点。优秀的`CPP`工程师需要懂得硬件知识，优秀的Java工程师需要懂得`JVM`。`JVM`->内存自动管理，调优->懂得`JVM`，懂得`JVM`->看`JVM`设计，`JVM`设计->看`HotSpot`源码。【优秀的Java工程师也需要熟悉`CPP`】
+
+----
 
 # 语法层面
 
 ## assert关键字 
 
-个别jdk源码中有用到assert关键字，好像是Integer源码里。
+个别`JDK`源码中有用到assert关键字，好像是Integer源码里。
 
 ## 可边长参数
 
@@ -59,20 +61,20 @@ public static String XX(String path) throws IOException {
 
 # 类库提升
 
-- `Java5`：JUC，Formatter，Java管理扩展（JMX），XML处理（DOM，SAX，XPath，XSTL）
-- `Java6`：JDBC 4.0（JSR221）、 JAXB 2.0（JSR222）、可插拔注解处理API（JSR269）、Common Annotations（JSR 250）、Java Compiler API（JSR199）、Scripting in JVM（JSR223）
-- `Java7`：NIO 2（JSR203）Fork/Join框架（JSR166）invokedynamic字节码（JSR 292）
-- `Java8`：Stream API （JSR335）、CompletableFuture（J.U.C.）、Annotation on Java Types（JSR 308）、Date and Time API（JSR 301）、可重复Annotations（JSR 337）、 JavaScript运行时（JSR 223）
+- `Java5`：`JUC`，`Formatter`，Java管理扩展（`JMX`），`XML`处理（`DOM`，`SAX`，`XPath`，`XSTL`）
+- `Java6`：`JDBC 4.0`（`JSR221`）、 `JAXB 2.0`（`JSR222`）、可插拔注解处理`API`（`JSR269`）、Common Annotations（`JSR` 250）、Java Compiler `API`（`JSR199`）、Scripting in `JVM（``JSR223`）
+- `Java7`：NIO 2（`JSR203`）Fork/Join框架（`JSR166`）`invokedynamic`字节码（`JSR` 292）
+- `Java8`：Stream `API` （`JSR335`）、`CompletableFuture`（`J.U.C.`）、Annotation on Java Types（`JSR` 308）、Date and Time `API`（`JSR` 301）、可重复Annotations（`JSR` 337）、 JavaScript运行时（`JSR` 223）
 
-类库提升，有的是新增API，有的是对原有API的扩充或优化，以适应当下的潮流。
+类库提升，有的是新增`API`，有的是对原有`API`的扩充或优化，以适应当下的潮流。
 
 # Java编程模型
 
-- 面向对象 OOP
-- 面向切面 AOP
-- 面向元信息编程 MDOP
-- 面向函数编程 FOP
-- 面向模块编程 MOP
+- 面向对象 `OOP`
+- 面向切面 `AOP`
+- 面向元信息编程 `MDOP`
+- 面向函数编程 `FOP`
+- 面向模块编程 `MOP`
 
 # Java契约编程
 
