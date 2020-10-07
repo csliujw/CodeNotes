@@ -509,38 +509,36 @@ public void init(ServletConfig config){
   - `/xx/xx`
   - `*.do` 匹配以 **.do**结尾的
   - / 不能省略
-
 - 注解配置方式测试
 
   - 路径写错会报错
   - `WebServlet("/demo1")` 正确写法，不能省略/
-
 - ==注解和xml不能同给一个类，配置相同的名字，但是可以配置不同的名字。==**[同时书写下面的，不会报错]**
 
-  - ```java
-    @WebServlet("/Servlet3")
-    public class Servlet3 extends HttpServlet {
-        protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    
-        }
-    
-        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-            response.getWriter().write("3");
-    
-        }
-    ```
+```java
+@WebServlet("/Servlet3")
+public class Servlet3 extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-  - ```xml
-    <servlet>
-        <!-- 此处是小写！ -->
-        <servlet-name>servlet3</servlet-name>
-        <servlet-class>com.demo.Servlet3</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>servlet3</servlet-name>
-        <url-pattern>/servlet3</url-pattern>
-    </servlet-mapping>
-    ```
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.getWriter().write("3");
+
+    }
+```
+
+```xml
+<servlet>
+    <!-- 此处是小写！ -->
+    <servlet-name>servlet3</servlet-name>
+    <servlet-class>com.demo.Servlet3</servlet-class>
+</servlet>
+<servlet-mapping>
+    <servlet-name>servlet3</servlet-name>
+    <url-pattern>/servlet3</url-pattern>
+</servlet-mapping>
+```
 
 ----
 
@@ -648,13 +646,13 @@ request域：代表一次请求的范围，一般用于请求转发的多个资�
 - Object getAttitude(String name):通过键获取值
 - void removeAttribute(String name):通过键移除键值对
 
-### 4.2.4 获取ServletContext
+### 4.2.4 获取`ServletContext`
 
 ```java
 ServletContext context = request.getServletContext();
 ```
 
-> `ServletContext`官方叫`servlet`上下文。服务器会为每一个工程创建一个对象，这个对象就是`ServletContext`对象。这个对象全局唯一，而且==工程内部的所有servlet都共享这个对象。所以叫全局应用程序共享对象。==
+> `ServletContext`官方叫`servlet`上下文。服务器会为每一个工程创建一个对象，这个对象就是`ServletContext`对象。这个对象全局唯一，而且==工程内部的所有`servlet`都共享这个对象。所以叫全局应用程序共享对象。==
 
 ### 4.2.5 获取输入流
 
@@ -1050,7 +1048,7 @@ public class DownLoadUtils {
 
 ## 6.5 Session
 
-> 服务器端会话技术，在一次会话的多次请求间共享数据，将数据保存在服务器端的对象中。HttpSession
+> 服务器端会话技术，在一次会话的多次请求间共享数据，将数据保存在服务器端的对象中。HttpSession.
 
 ### 6.5.1 Session快速入门
 
@@ -1264,7 +1262,6 @@ public class FilterDemo implements Filter {
       }
   ```
 
-  
 
 ### 7.4.2 过滤敏感词
 
@@ -1505,11 +1502,9 @@ public void contextInitialized(ServletContextEvent sce) {
 }
 ```
 
+# 九、`MVC`&三层架构
 
-
-# 九、MVC&三层架构
-
-## 9.1 MVC
+## 9.1 `MVC`
 
 M：Model，模型，进行业务逻辑操作【JavaBean】
 
