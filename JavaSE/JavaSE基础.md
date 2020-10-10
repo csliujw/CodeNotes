@@ -48,6 +48,8 @@
 - 布尔型
     - boolean   1个字节
 >**Java中默认类型：整型是int，浮点类型是double**
+想要精确的数字不推荐用double，用BigDemical吧。
+
 #### 5.1.2 引用数据类型
 > **字符串，数组，类，接口，Lambda**
 
@@ -193,8 +195,6 @@ public static void main(String[] args) {
 }
 ```
 
-
-
 ### 7.4 数组
 
 #### 7.4.1 数组得初始化
@@ -244,8 +244,6 @@ public static int[] calculate(int a,int b){
 数组作为参数，作为返回值其实都是数组的地址值
 ```
 
-
-
 ### 7.5 Java内存划分
 
 - 1.栈（stack）：存放的都是方法中的局部变量。方法的运行一定要在栈中运行
@@ -263,4 +261,4 @@ public static int[] calculate(int a,int b){
 
 > NullPointException
 
- 
+> OutOfMemmory
