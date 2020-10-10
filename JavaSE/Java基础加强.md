@@ -160,7 +160,7 @@ enum Color {
 }
 ```
 
-# 你真的回比较对象吗？
+# 你真的会比较对象吗？
 
 ## Comparator和Comparable
 
