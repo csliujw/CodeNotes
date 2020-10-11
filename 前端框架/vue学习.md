@@ -477,22 +477,6 @@ Use history mode for router? (Requires proper server setup for index fallback in
 - 重定向
 - 路由组件传参
 
-### 案例场景
-
-<img src="..\pics\vue\vue.png">
-
-**左边的大方框**
-
-导航栏为一个组件
-
-文章列表为一个组件。最新 |  热门 | xx | xx 用静态路由实现点击后显示不同类型的文章。
-
-**右边的大方框**
-
-导航栏，文章详细数据，快速导航栏均用多视图实现。
-
- 
-
 # Vue案例知识
 
 ## 子组件调用父组件的方法。

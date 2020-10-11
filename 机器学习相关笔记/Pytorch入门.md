@@ -125,7 +125,7 @@ api的基本使用方式为：
 
 **常用api**
 
-*表示元组
+**表示元组**
 
 | methodName                        | describe                  |
 | --------------------------------- | ------------------------- |
@@ -150,7 +150,7 @@ api的基本使用方式为：
 
 - torch.add(x,y,out=result)
 
-- y.add_(x) 创建的那些数据也是一个对象。
+- y.add_(x) 创建的那些数据也是一个对象。 <span style="color:red">带下划线表示原地操作</span>
 
 - torch.matmul() 矩阵乘法
 
@@ -350,7 +350,7 @@ if __name__ == '__main__':
     obj.demo_5()
 ```
 
-pytorch的数据类型。与numpy的array类似。
+**pytorch的数据类型。与numpy的array类似。**
 
 
 ```python
@@ -363,8 +363,7 @@ print(a.dtype)
 # torch.int64
 ```
 
-
-定义二维数据并查看数据类型
+**定义二维数据并查看数据类型**
 
 
 ```python
@@ -375,8 +374,7 @@ print(tensor.size())
 # torch.Size([2, 3])
 ```
 
-
-查看维度
+**查看维度**
 
 
 ```python
@@ -385,8 +383,7 @@ print(tensor.ndim)
 # 2
 ```
 
-
-生成数据
+**生成数据**
 
 
 ```python
@@ -424,8 +421,7 @@ tensor([[0.4620, 0.6949, 0.0714, 0.5057],
 """
 ```
 
-
-查看形状并修改
+**查看形状并修改**
 
 
 ```python
@@ -436,7 +432,7 @@ print(b.size())
 # torch.Size([3, 4])
 ```
 
-重新调整大小
+**重新调整大小**
 
 ```python
 c = b.reshape(4,3)
@@ -456,8 +452,7 @@ tensor([[0.4620, 0.6949, 0.0714],
 """
 ```
 
-
-tensor数据变为python数据
+**tensor数据变为python数据**
 
 
 ```python
@@ -466,7 +461,7 @@ d[0][0].item() # 只能转换单个值
 # 0.46197234568033185
 ```
 
-np和pytorch之间的矩阵转换
+**np和pytorch之间的矩阵转换**
 
 
 ```python

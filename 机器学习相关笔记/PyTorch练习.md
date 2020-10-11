@@ -13,8 +13,6 @@ RuntimeError:
         child processes and you have forgotten to use the proper idiom
 ```
 
-
-
 # 第一次跑代码
 
 ```python
