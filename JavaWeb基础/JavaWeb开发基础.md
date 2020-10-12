@@ -275,8 +275,6 @@ username=zhangsan
 
 ​		|-- lib目录：放置依赖的jar包
 
-
-
 > **URL和URI**
 
 URL：统一资源定位符，用于定位这个资源在哪里。
@@ -1003,7 +1001,6 @@ public class DownLoadUtils {
     - Cookie大小受浏览器限制
     - Cookie存储在客户端，若客户端禁用Cookie则无效。
 - **HTTPSession对象API**
-  - 
 
 ## 6.4 Cookie的使用
 
