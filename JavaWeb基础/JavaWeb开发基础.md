@@ -1,4 +1,4 @@
-# 一、Http协议
+# 一、HTTP协议
 
 ## 小知识
 
@@ -1889,7 +1889,6 @@ public class JsonDemo {
         System.out.println(person.toString());
     }
 }
-
 ```
 
 
