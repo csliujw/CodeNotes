@@ -1296,7 +1296,6 @@ public void fn1(){
     // 不使用多态，便于测试特有的实现方法
     ArrayList<Integer> list = new ArrayList<Integer>();
     /**
-         * 科普
          * ArrayList初始化时有容量。默认10.当用到了一定比例的空间会自行进行扩充
          * 简而言之：可变长数组！
          * 如果存储空间不足，会扩大至原来大小的2倍
@@ -1352,7 +1351,7 @@ public void fn3(){
 
 > **set无重复元素**
 
-- `TreeSet` 有序，红黑树【不会】
+- `TreeSet` 有序，红黑树
 
 ```java
 @Test

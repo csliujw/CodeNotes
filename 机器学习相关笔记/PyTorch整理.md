@@ -1106,6 +1106,8 @@ Batch normalization 的 batch 是批数据, 把数据分成小批小批进行 st
 
 demo概述：用 `sin` 的曲线预测出 `cos` 的曲线.
 
+----
+
 # 简单案例
 
 ## 线性模型
