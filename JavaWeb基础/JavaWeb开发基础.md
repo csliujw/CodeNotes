@@ -1169,18 +1169,116 @@ public class FilterDemo implements Filter {
 ```
 
 ```java
-@WebFilter("/*")
-@WebInitParam(name="liu",value = "sd")
-public class FilterDemo implements Filter {
-	///xxxjava
+/***
+ * 在web.xml中，filter执行顺序跟<filter-mapping>的顺序有关，先声明的先执行
+ * 使用注解配置的话，filter的执行顺序跟名称的字母顺序有关，例如AFilter会比BFilter先执行
+ * 如果既有在web.xml中声明的Filter，也有通过注解配置的Filter，那么会优先执行web.xml中配置的Filter
+ */
+@WebFilter(filterName = "LoginFilter", urlPatterns = {"/*"}, initParams = {
+        @WebInitParam(name = "username", value = "root"),
+        @WebInitParam(name = "password", value = "root")
+})
+public class LoginFilter implements Filter {
+    private ArrayList<String> address = new ArrayList();
+
+    public void destroy() {
+    }
+
+    // 防止url非法访问 不能直接通过url访问
+    public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws ServletException, IOException {
+        System.out.println("LLL");
+        String localName = req.getLocalName();
+        HttpServletRequest request = (HttpServletRequest) req;
+        HttpServletResponse response = (HttpServletResponse) resp;
+        StringBuffer requestURL = request.getRequestURL();
+        HttpSession session = request.getSession();
+        if (session.getAttribute("user") == null) {
+            // 统一资源定位符  http://localhost:8080/TomcatDemo/
+            String requestURI = request.getRequestURI();
+            if (canPass(requestURI)) {
+                chain.doFilter(req, resp);
+            } else {
+                System.out.println("*********************");
+                request.getRequestDispatcher("/index.html").forward(request, response);
+            }
+        } else {
+            chain.doFilter(req, resp);
+        }
+    }
+
+    // 能否通过 包含才能通过
+    private boolean canPass(String adr) {
+        for (String str : address) 
+            if (adr.contains(str)) return true;
+        return false;
+    }
+
+    public void init(FilterConfig config) throws ServletException {
+        String username = config.getInitParameter("username");
+        String password = config.getInitParameter("password");
+        address.add("login");
+        address.add("index");
+        address.add("demo");
+    }
 }
 ```
 
 ### 7.3.2 过滤器执行流程
 
 - 执行过滤器
+
 - 执行放行后的资源
+
 - 回来执行过滤器放行代码下边的代码
+
+- 执行的顺序 可以理解为一个压栈的过程。
+
+  - 定义的顺序F3，F2，F1
+  - 初始化的时候，F3 2 1 依次入栈
+  - 然后依次出栈执行初始化过程，所以init的输出顺序是 1 2 3.初始化好后的又入栈到doFilter这个栈中。 1 2 3【栈顶】
+  - 栈顶元素再一次 执行doFilter方法。 顺序为  3  2  1.
+  - destroy方法也是如此记忆。顺序为 1 2 3.
+
+  ```xml
+  <filter>
+      <filter-name>xml3</filter-name>
+      <filter-class>com.lg.controller.XMLFilter3</filter-class>
+  </filter>
+  <filter-mapping>
+      <filter-name>xml3</filter-name>
+      <url-pattern>/*</url-pattern>
+  </filter-mapping>
+  <filter>
+      <filter-name>xml2</filter-name>
+      <filter-class>com.lg.controller.XMLFilter2</filter-class>
+  </filter>
+  <filter-mapping>
+      <filter-name>xml2</filter-name>
+      <url-pattern>/*</url-pattern>
+  </filter-mapping>
+  <filter>
+      <filter-name>xml1</filter-name>
+      <filter-class>com.lg.controller.XMLFilter1</filter-class>
+  </filter>
+  <filter-mapping>
+      <filter-name>xml1</filter-name>
+      <url-pattern>/*</url-pattern>
+  </filter-mapping>
+  
+  init Filter1
+  init Filter2
+  init Filter3
+  
+  doFilter3
+  doFilter2
+  doFilter1
+  
+  F1 destroy
+  F2 destroy
+  F3 destroy
+  ```
+
+  注解的配置方式有个bug。
 
 ### 7.3.3 生命周期方法
 
@@ -1499,17 +1597,45 @@ public void contextInitialized(ServletContextEvent sce) {
 }
 ```
 
+- 动态添加Servlet 感觉有点鸡肋（Servlet 3.0+）
+
+```java
+@WebListener(value = "listener1")
+public class Listener implements ServletContextListener {
+
+    public Listener() {
+    }
+
+    // -------------------------------------------------------
+    // ServletContextListener implementation
+    // -------------------------------------------------------
+    public void contextInitialized(ServletContextEvent sce) {
+        // 这个动态注册感觉优点鸡肋
+        ServletContext servletContext = sce.getServletContext();
+        ServletRegistration.Dynamic d = servletContext.addServlet("d", Servlet.class);
+        d.addMapping("/servlet");
+    }
+
+    public void contextDestroyed(ServletContextEvent sce) {
+    }
+}
+```
+
+
+
 # 九、`MVC`&三层架构
 
 ## 9.1 `MVC`
 
-M：Model，模型，进行业务逻辑操作【JavaBean】
+`M：Model`，模型，用来表示数据和处理业务，对应组件是`JavaBean`。（==`JavaBean` 可重用组件==）
 
 - 如：查询数据库，封装对象
 
-V：View，视图，展示数据。【JSP】
+`V：View`，视图，用户看到并与之交互的界面。对应组件是`JSP` 或HTML 
 
-C：Controller，控制器，不做具体业务操作，只是中转。【Servlet】
+`C：Controller`，控制器，接受用户的输入并调用模型和视图去完成用户的请求。不做具体业务操作，只是中转。对应组件`Servlet`
+
+`MVC`是Web开发特有的，`JavaWeb/JavaEE`用的是三层架构！
 
 - 获取用户的输入
 - 调用模型
@@ -1521,9 +1647,23 @@ C：Controller，控制器，不做具体业务操作，只是中转。【Servle
 
 ## 9.2 三层架构
 
+- DAL层 (数据访问层)：
+  - 该层所做事务直接操作数据库，针对数据的增添，删除，修改，更新，查找等，每层之间是一种垂直的关系。
+- BLL层 （业务层）
+  - 针对具体问题的操作，也可以说是对数据层的操作，对数据业务逻辑的处理；
+- UI层 （表现层）
+  - 表现层就是展现给用户的界面，即用户在使用一个系统的时候的所见所得；
+
 1. 界面层(表示层)：用户看的得界面。用户可以通过界面上的组件和服务器进行交互
 2. 业务逻辑层：处理业务逻辑的。
 3. 数据访问层：操作数据存储文件。
+
+----
+
+- `cn.itcast.dao`：这个包中存放的是数据层的相关类，对应着`javaweb`三层架构中的数据层；
+- `cn.itcast.domain`：这个包中存放的是`javabean`类；
+- `cn.itcast.service`：这个包中存放的是与业务相关的类，对应着`javaweb`三层架构中的业务层；
+- `cn.itcast.web.servlet`：这个包中存放的是用来处理请求的`servlet`，对应着`javaweb`三层架构的web层。
 
 # 10、Ajax和JSON
 
@@ -1568,18 +1708,18 @@ C：Controller，控制器，不做具体业务操作，只是中转。【Servle
 </script>
 ```
 
-### 10.1.2 JQuery实现
+### 10.1.2 `JQuery`实现
 
-> $.ajax实现方式
+> $.`ajax`实现方式
 
 - 语法：`$.ajax({键值对})`
-  - 具体参数查API
-- 语法：$.get(url, [data], [callback], [type])
-- 语法：$.post(url, [data], [callback], [type])
-  - url：请求路径
-  - data：请求参数
-  - callback：回调函数
-  - type：响应结果的类型
+  - 具体参数查`API`
+- 语法：`$.get(url, [data], [callback], [type])`
+- 语法：`$.post(url, [data], [callback], [type])`
+  - `url`：请求路径
+  - `data`：请求参数
+  - `callback`：回调函数
+  - `type`：响应结果的类型
 
 ```js
 // $.ajax方式
@@ -1593,7 +1733,6 @@ $("#button2").click(function(){
             console.log(data);
         },
         error:function(){
-
         },
         dataType:"json"
     });
@@ -1614,27 +1753,27 @@ $.post("demo.json", {
 }, "json");
 ```
 
-## 10.2 JSON
+## 10.2 `JSON`
 
-> **JSON是JS对象的字符串表示法，它使用文本表示一个JS对象信息，本质是一个字符串！**
+> `**JSON`是`JS`对象的字符串表示法，它使用文本表示一个`JS`对象信息，本质是一个字符串！**
 
-### 10.2.1 JSON的基本用法
+### 10.2.1 `JSON`的基本用法
 
 - 对象表示为键值对
 - 数据由逗号分隔
 - 花括号保存对象
 - 方括号保存数组
 
-- JSON与JS对象互转
+- `JSON`与`JS`对象互转
 
-  - JSON字符串转为JS对象，使用JSON.parse()
+  - `JSON`字符串转为`JS`对象，使用`JSON.parse()`
 
     ```js
     var obj = JSON.parse('{"a","hello"}');
     // 控制台的输出结果是 {a:'hello',b:'world'}
     ```
 
-  - JS对象转换为JSON字符串,使用JSON.stringify()
+  - `JS`对象转换为`JSON`字符串,使用`JSON.stringify()`
 
     ```js
     var json = JSON.stringifu({a:'hello',b:'world'}); 
