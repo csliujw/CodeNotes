@@ -341,9 +341,22 @@ public class RefelectDemo {
 }
 ```
 
-
-
 # 四、类加载器
+
+基础阶段 了解，中级阶段 熟悉
+
+继承`ClassLoader`类完成自定义类加载器。自定义类加载器一般是为了加载网络上的类，class在网络中传输，为了安全，那么class需要加密，需要自定义类加载器来加载（对class做解密工作）
+
+`ClassLoader`加载类都是通过`loadClass()`方法来完成的。`loadClass()`方法的工作流程如下：
+
+- 调用`findLoadedClass()`方法查看该类是否已经被加载过了，如果该类没有加载过，那么这个方法返回null。
+- 判断`findLoadedClass()`返回的是否为null,如果不是null那么直接返回，可避免同一个类被加载两次。
+- 如果`findLoadedClass()`返回的是null, 那么就启动代理模式（委托机制），即调用上级的`loadClass()`方法，获取上级的方法是`getParent()`，当然上级可能还有上级，这个动作就一直向上走；（==双亲委派机制==，tomcat破坏了双亲委派模型）
+- 如果`getParent().loadClass()`返回的不是null，这说明上级加载成功了，那么就加载结果；
+- 如果上级返回的是null，说明需要自己出手，`loadClass()`方法会调用本类的`findClass()`方法来加载类
+- 这说明我们只需要重写`ClassLoader`的`findClass()`方法，这就可以了！如果重写了`loadClass()`方法覆盖了代理模式！
+
+我们要自定义一个类加载器，只需要继承`ClassLoader`类。
 
 > Bootstrap类加载器，扩展类加载器，系统类加载器
 
