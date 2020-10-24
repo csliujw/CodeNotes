@@ -171,7 +171,7 @@ Comparable接口/ Comparator接口
 
 #  注解？
 
-# 单元测试
+# 一、单元测试
 
 ## 1.1 单元测试的有点
 
@@ -245,6 +245,148 @@ public class JunitDemo {
 #### 2.2.4 获取类名
 
 - `String getName()` // 获得类全名`com.bbxx.junits.Son`
+
+## 2.3 动态代理
+
+### 2.3.1 作用
+
+运行时，动态创建一组指定的接口的实现类对象！（在运行时，创建实现了指定的一组接口的对象）
+
+动态代理对比其他方法增强方式
+
+<img src="..\pics\JavaStrengthen\proxy.png" style="float:left">
+
+### 2.3.2 基本Demo
+
+```java
+interface A{    
+}
+interface B{
+}
+Object o = 方法(new Class[]{ A.class, B.class })
+o 它实现了A和B两个接口！
+```
+
+```java
+Object proxyObject = Proxy.newProxyInstance(ClassLoader classLoader, Class[] interfaces, InvocationHandler h);
+```
+
+- 方法的作用：动态创建实现了interfaces数组中所有指定接口的实现类对象！
+- ==`ClassLoader`==：类加载器！
+  - 它是用来加载器的，把.class文件加载到内存，形成Class对象！
+- ==`Class[ ] interfaces`==：指定要实现的接口们。
+- ==`InvocationHandler`==：代理对象的所有方法（个别不执行，一般`nativate`方法不会执行，但是`hashCode`却会执行，好奇怪）都会调用`InvocationHadnler`的`invoke()`方法
+- 动态代理的作用
+  - 最终是学习`AOP`（面向切面编程），它与装饰者模式有点相似，它比装饰者模式更灵活（潜在含义，动态代理更难！）
+
+**动态代理基本Demo**
+
+```java
+interface IBase {
+    public void say();
+
+    public void sleep();
+
+    public String getName();
+}
+```
+
+```java
+public class Person implements IBase {
+    public void say() {
+        System.out.println("hello");
+    }
+
+    public void sleep() {
+        System.out.println("sleep");
+    }
+
+    public String getName() {
+        return "getName";
+    }
+}
+```
+
+```java
+public class ProxyDemo1 {
+    public static void main(String[] args) {
+
+        Person person = new Person();
+        // 获得类加载器
+        ClassLoader classLoader = person.getClass().getClassLoader();
+        // 获得被代理对象实现的接口
+        Class[] interfaces = person.getClass().getInterfaces();
+        // 实例化一个处理器 用于增强方法用的
+        InvocationHandler h = new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                method.invoke(person, args);
+                return null;
+            }
+        };
+        IBase p = (IBase) Proxy.newProxyInstance(classLoader, interfaces, h);
+        // 获得代理类的名称 com.sun.proxy.$Proxy0
+        System.out.println(p.getClass().getName());
+        p.say();
+    }
+}
+```
+
+
+
+### 2.3.3 invoke解释
+
+```java
+public Object invoke(Object proxy, Method method, Object[] args)
+```
+
+**这个invoke什么时候被调用？**
+
+- 在调用代理对象所实现接口中的方法时被调用！
+
+**参数解释**
+
+- `Object proxy`：当前对象，即代理对象！在调用谁的方法！
+- `Method method`：当前被调用的方法（目标方法）
+- `Object [ ] args`：实参
+- 返回的是方法的返回值。
+
+<img src="..\pics\JavaStrengthen\invoke_explain.png" style="float:left">
+
+**Demo**
+
+```java
+public class ProxyDemo2 {
+    public static void main(String[] args) {
+        Person person = new Person();
+        ClassLoader classLoader = person.getClass().getClassLoader();
+        Class[] interfaces = person.getClass().getInterfaces();
+        System.out.println(interfaces.length);
+        InvocationHandler h = new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                Object retVal = method.invoke(person, args);
+                 // 这个返回了，方法才有返回值 
+                return retVal; 
+            }
+        };
+        IBase p = (IBase) Proxy.newProxyInstance(classLoader, interfaces, h);
+        p.say();
+        // invoke返回null的话，这里的输出就是null
+        System.out.println(p.getName());
+    }
+}
+```
+
+## 2.4 简单模拟`Spring AOP`
+
+`Spring AOP`，感受一下什么叫增强内容可变！
+
+- `ProxyFactory` 代理工厂
+- `IBeforeAdvice` 前置通知接口【方法执行前调用前置】
+- `IAfterAdvice` 后置通知接口【方法执行后调用后置】
+- `IWaiter` 服务员类接口
+- `ManWaiterImple` 具体的服务员类【对他进行增强】
 
 # 三、注解
 
@@ -343,82 +485,174 @@ public class RefelectDemo {
 
 # 四、类加载器
 
-基础阶段 了解，中级阶段 熟悉
+## 分类
+
+`ClassLoad`分类
+
+- 引导 类加载器----->负责加载类库 rt中的jar 【最高，Bootstrap】
+- 扩展 类加载器----->负责加载扩展jar包  ext下的都是扩展jar
+- 系统 类加载器----->应用下的类，包含开发人员写的类和三方jar包【最低】
+
+`ClassLoad`有个双亲委派模型，会先问父   类加载器/上级类加载器，向上级委托，没有就自己加载，没找到就抛出`ClassNotFound`。永远不会出现类库中的类被系统加载器加载，应用下的类 被引导加载。
+
+委托父加载器加载，父可以加载就让父加载。父无法加载时再自己加载。
+
+- 可避免类的重复加载，父类加载器已经加载了该类时，就没必要子`ClassLoader`再加载一次了/
+- 考虑到安全因素，`java`核心`api`中定义类型不会被随意替换。
+
+## 类加载的顺序
+
+```java
+class MyApp{
+    public static void main(String[]args){ // 系统加载
+        // 也由系统加载
+        A a = new A(); 
+        // 也由系统加载 （从系统开始匹配，最终会委托上去， ...由引导加载）
+        String s = new String();
+    }
+}
+
+class String{ // 引导加载， String类，类库中的
+    private Integer i;// 直接引导加载，毕竟无法委托了！
+}
+```
+
+其实还得分线程，每个线程都有一个当前的类加载器来负责加载类。
+
+## 流程
+
+基础阶段 **了解**，中级阶段 **熟悉**，高级阶段，**不清楚**。
 
 继承`ClassLoader`类完成自定义类加载器。自定义类加载器一般是为了加载网络上的类，class在网络中传输，为了安全，那么class需要加密，需要自定义类加载器来加载（对class做解密工作）
 
-`ClassLoader`加载类都是通过`loadClass()`方法来完成的。`loadClass()`方法的工作流程如下：
+`ClassLoader`加载类都是通过==`loadClass()`==方法来完成的。`loadClass()`方法的工作流程如下：
 
-- 调用`findLoadedClass()`方法查看该类是否已经被加载过了，如果该类没有加载过，那么这个方法返回null。
+- 调用==`findLoadedClass()`==方法查看该类是否已经被加载过了，如果该类没有加载过，那么这个方法返回null。
 - 判断`findLoadedClass()`返回的是否为null,如果不是null那么直接返回，可避免同一个类被加载两次。
 - 如果`findLoadedClass()`返回的是null, 那么就启动代理模式（委托机制），即调用上级的`loadClass()`方法，获取上级的方法是`getParent()`，当然上级可能还有上级，这个动作就一直向上走；（==双亲委派机制==，tomcat破坏了双亲委派模型）
 - 如果`getParent().loadClass()`返回的不是null，这说明上级加载成功了，那么就加载结果；
 - 如果上级返回的是null，说明需要自己出手，`loadClass()`方法会调用本类的`findClass()`方法来加载类
 - 这说明我们只需要重写`ClassLoader`的`findClass()`方法，这就可以了！如果重写了`loadClass()`方法覆盖了代理模式！
 
-我们要自定义一个类加载器，只需要继承`ClassLoader`类。
+我们要自定义一个类加载器，只需要继承`ClassLoader`类。然后重写它的`findClass()`方法即可。在`findClass()`中我们需要完成如下的工作！
 
-> Bootstrap类加载器，扩展类加载器，系统类加载器
+- 找到class文件，把它加载到一个byte[]中
+- 调用`defineClass()`方法，把byte[]传递给这个方法即可
 
-Bootstrap类加载器，cpp实现
-
-扩展类加载器，java实现。扩展包（ext）下的由它加载。
-
-系统类加载器，java实现。我们写的代码都是由系统类加载器加载的。
-
-## 4.1 类加载器的双亲委派机制
-
-委托父加载器加载，父可以加载就让父加载。父无法加载时再自己加载。
-
-> **优点**
-
-- 可避免类的重复加载，父类加载器已经加载了该类时，就没必要子ClassLoader再加载一次了/
-- 考虑到安全因素，java核心api中定义类型不会被随意替换。
-
-## 4.2 ClassLoader
-
-所有的类加载器（除了根类加载器）都必须继承java.lang.ClassLoader.它是一个抽象类，主要方法如下：
-
-### 4.2.1 loadClass
-
-存在父类加载的委托机制
-
-### 4.2.2 findClass
-
-
-
-### 4.2.3 defineClass
-
-
-
-### 4.2.4 resolveClass
-
-## 4.3 URLClassLoader
-
-![](E:\69546\Documents\image\URLClassload.png)
+## 自定义类加载器Demo
 
 ```java
+package org.example.classloader;
 
-public class ClassLoadDemo2 {
+import java.io.File;
+import java.io.FileInputStream;
+import java.lang.reflect.Method;
+
+/**
+ * 类加载器学习
+ */
+// 注意maven中的单元测试只能写在 test下面！
+// 字节码文件请自己生成一个 然后调用对应的方法哦！！
+public class ClassLoaderDemo extends ClassLoader {
+
+    // 类加载器的地盘，指明加载那个地方的class文件
+    private String classpath;
+
+    public ClassLoaderDemo() {
+    }
+
+    public ClassLoaderDemo(String classpath) {
+        this.classpath = classpath;
+    }
+
     public static void main(String[] args) throws Exception {
-        // E盘下
-        File file = new File("E:/");
-        URI uri = file.toURI();
-        URL url = uri.toURL();
+        ClassLoaderDemo classLoaderDemo = new ClassLoaderDemo();
+        classLoaderDemo.fun2();
+    }
 
-        URLClassLoader urlClassLoader = new URLClassLoader(new URL[] { url });
-        // 类所在的包是com.xxbb  具体路径是 E:/com/xxbb/App.class
-        Class<?> loadClass = urlClassLoader.loadClass("com.xxbb.App");
-        loadClass.newInstance();
+    // 执行字节码的非静态方法
+    public void fun1() throws Exception {
+        ClassLoaderDemo classLoaderDemo = new ClassLoaderDemo("D:\\");
+        Class<?> clazz = classLoaderDemo.loadClass("org.example.classloader.ClassLoaderTest");
+        // loaderSay是一个非静态方法，需要一个实例调用
+        Method loaderSay = clazz.getMethod("loaderSay");
+        ClassLoaderTest o = (ClassLoaderTest) clazz.newInstance();
+        // 非静态方法需要一个实例进行调用
+        loaderSay.invoke(o);
+    }
+
+
+    // 执行字节码的静态方法
+    public void fun2() throws Exception {
+        ClassLoaderDemo classLoaderDemo = new ClassLoaderDemo("D:\\");
+        Class<?> clazz = classLoaderDemo.loadClass("org.example.classloader.ClassLoaderTest");
+        // loaderSay是一个非静态方法，需要一个实例调用
+        Method loaderSay = clazz.getMethod("loaderStaticFunction");
+        // 静态方法不用实例
+        String result = (String) loaderSay.invoke(null);
+        System.out.println(result);
+    }
+
+
+    // 重写这个方法即可
+    @Override
+    public Class<?> findClass(String name) throws ClassNotFoundException {
+        try {
+            // 自定义的方法，通过类名找到class文件，把文件加载到一个字节数组中
+            byte[] datas = getClassData(name);
+            if (datas == null) {
+                throw new ClassNotFoundException("类没有找到：" + name);
+            }
+            return this.defineClass(name, datas, 0, datas.length);
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            throw new ClassNotFoundException("类找不到:" + name);
+        }
+    }
+
+    private byte[] getClassData(String name) {
+        // 把名字换成文件夹的名字
+        name = name.replace(".", "\\") + ".class";
+        File classFile = new File(classpath, name);
+        System.out.println(classFile.getAbsoluteFile());
+        return readClassData(classFile);
+    }
+
+    private byte[] readClassData(File classFile) {
+        if (!classFile.exists()) return null;
+        byte[] bytes = null;
+        try {
+            FileInputStream fis = new FileInputStream(classFile);
+            bytes = fis.readAllBytes();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return bytes;
     }
 }
 ```
 
+## Tomcat类加载器
 
+tomcat提供了两种类加载器。
 
-## 4.4 自定义类加载器
+第一种
 
->文件类加载器
+- ${CATALINA-HOME}\lib\，tomcat类加载器，它负责加载下面的类
+
+第二种
+
+- ${CONTEXT}\WEB-INF\lib  
+- ${CONTEXT}\WEB-INF\classes
+
+**总结**
+
+<img src="..\pics\JavaStrengthen\tomcat_classLoader.png" style="float:left">
+
+## 自定义类加载器 Other Video
+
+>**文件类加载器**
 
 ```java
 public class MyClassLoader extends ClassLoader {
@@ -453,15 +687,11 @@ public class MyClassLoader extends ClassLoader {
 }
 ```
 
+热部署，越过双亲委派，就是不用`loadClass` 用`findClass`
 
+# 五 `Servlet3.0`
 
-> 网络类加载器
-
-> 热部署，越过双亲委派，就是不用loadClass 用findClass
-
-## 4.5 类的显示与隐式加载
-
-## 4.6 线程上下文类加载器
+使用型特性就是在保护你的Java职业生涯。
 
 
 
