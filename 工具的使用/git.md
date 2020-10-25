@@ -209,3 +209,31 @@ git add util/redisUtil.scala
 8.在idea中如何查看两个分支的diff
 
 选中工程-》右键-》git-》compare with branch
+
+----
+
+**git错误**
+
+```java
+ssh -T git@github.com
+
+ssh: connect to host github.com port 22: Connection timed out
+```
+
+错误原因，端口不行（换个端口）。
+
+```text
+Host github.com
+User git
+Hostname ssh.github.com
+PreferredAuthentications publickey
+IdentityFile ~/.ssh/id_rsa
+Port 443
+
+Host gitlab.com
+Hostname altssh.gitlab.com
+User git
+Port 443
+PreferredAuthentications publickey
+IdentityFile ~/.ssh/id_rsa
+```
