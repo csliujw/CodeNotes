@@ -637,16 +637,28 @@ public class ClassLoaderDemo extends ClassLoader {
 
 tomcat提供了两种类加载器。
 
-第一种
+**第一种 服务器类加载器**
 
 - ${CATALINA-HOME}\lib\，tomcat类加载器，它负责加载下面的类
 
-第二种
+**第二种 应用类加载器**
 
 - ${CONTEXT}\WEB-INF\lib  
 - ${CONTEXT}\WEB-INF\classes
 
 **总结**
+
+tomcat破坏了双亲委派模型
+
+引导
+
+扩展
+
+系统
+
+服务器类加载器：先自己动手，然后再去委托
+
+应用类加载器：先自己动手，然后再去委托
 
 <img src="..\pics\JavaStrengthen\tomcat_classLoader.png" style="float:left">
 
@@ -692,6 +704,152 @@ public class MyClassLoader extends ClassLoader {
 # 五 `Servlet3.0`
 
 使用型特性就是在保护你的Java职业生涯。
+
+## 注解替代`xml`
+
+```java
+
+@WebServlet("/index.do")
+public class IndexServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setAttribute("data", fakeData());
+        request.getRequestDispatcher("/demo.jsp").forward(request, response);
+    }
+
+    public ArrayList<User> fakeData() {
+        ArrayList<User> users = new ArrayList<>();
+        users.addAll(Arrays.asList(
+                new User("111", "111"),
+                new User("222", "222"),
+                new User("333", "333")));
+        users.forEach(System.out::println);
+        return users;
+    }
+}
+```
+
+## 异步响应
+
+- 异步响应如果不设置编码格式 可能会导致异步失败（有乱码，异步可能会失败；主要是告诉它响应文本是什么。）测试了一下，的确是设置好响应文本即可。
+
+- 异步响应如果过滤器这些东西没有设置为异步状态，也会导致异步失败
+
+  ```text
+   * 类型 异常报告
+   * 消息 当前链的筛选器或servlet不支持异步操作。
+   * 描述 服务器遇到一个意外的情况，阻止它完成请求
+   
+   错误的原因就是过滤器没有设置  asyncSupported = true
+  ```
+
+- 
+
+```java
+@WebServlet(urlPatterns = "/async", asyncSupported = true)
+public class AsyncServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        doGet(request, response);
+    }
+
+    private char[] getOutPutChar(String str) {
+        return str == null ? "   2020年 10月24日，祝各位程序员节日快乐！ 2020-1024=996，想不到吧！".toCharArray() : null;
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // 不加设置响应的类型的话，就无法异步。
+        response.setContentType("text/html");
+        AsyncContext asyncContext = request.startAsync(request, response);
+        threadOutPut(asyncContext, response, getOutPutChar(null));
+    }
+
+    /**
+     * @param asyncContext
+     * @param response
+     * @param outputStr    需要输出给浏览器的数据
+     */
+    private void threadOutPut(AsyncContext asyncContext, HttpServletResponse response, char[] outputStr) {
+        asyncContext.start(() -> {
+            try {
+                PrintWriter print = response.getWriter();
+                TimeUnit.MILLISECONDS.sleep(600);
+                for (char c : outputStr) {
+                    TimeUnit.MILLISECONDS.sleep(180);
+                    print.print(c); print.flush();
+                }
+                asyncContext.complete();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                asyncContext.complete();
+            }
+        });
+    }
+}
+```
+
+## 文件上传
+
+### 几个重要的API
+
+```java
+- request.getPart("file_name") // 获得文件对象Part
+- part.getName() // 获得文件上传时的 name <input name="xx"> 中的name
+- part.getSize() // 获得文件的大小
+- part.getSubmittedFileName() // 获得提交的文件的名字。上传的是 demo.txt 那么得到的就是 demo.txt
+- part.getInputStream(); // 获得文件输入流。
+```
+
+**文件上传的简单Demo**
+
+==文件上传用绝对路径【公司】==
+
+```java
+@WebServlet("/upload")
+@MultipartConfig // 表示它支持文件上传
+public class FileUpload extends HttpServlet {
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Part part = request.getPart("file_name");
+        System.out.println(part.getName());
+        System.out.println(part.getSize());
+        System.out.println(part.getSubmittedFileName());
+        InputStream inputStream = part.getInputStream();
+        // new FileOutputStream("filename") 这样是无法定位位置的，不能正常存储？
+        //D:\citespace.projects.txt
+        FileOutputStream fos = new FileOutputStream("D://" + part.getSubmittedFileName());
+        // citespace.projects.txt
+        // FileOutputStream fos = new FileOutputStream(part.getSubmittedFileName());
+        byte[] bys = new byte[1024];
+        int len = 0;
+        while ((len = inputStream.read(bys)) != -1) {
+            fos.write(bys, 0, len);
+        }
+        inputStream.close();
+        fos.close();
+    }
+}
+```
+
+```html
+<html>
+<head>
+    <title>Title</title>
+</head>
+<body>
+    enctype 说明有文件要提交过去
+<form action="/Tomcat/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file_name">
+    <input type="submit">
+</form>
+</body>
+</html>
+```
+
+
 
 
 
