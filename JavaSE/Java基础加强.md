@@ -703,6 +703,10 @@ public class MyClassLoader extends ClassLoader {
 
 # 五 `Servlet3.0`
 
+- 注解
+- 文件上传
+- 异步处理 需要 `asyncSupported=true`，有过滤器的话，过滤器也要设置`asyncSupported = true`
+
 使用型特性就是在保护你的Java职业生涯。
 
 ## 注解替代`xml`
@@ -746,7 +750,7 @@ public class IndexServlet extends HttpServlet {
    错误的原因就是过滤器没有设置  asyncSupported = true
   ```
 
-- 
+**代码案例**
 
 ```java
 @WebServlet(urlPatterns = "/async", asyncSupported = true)
@@ -801,6 +805,8 @@ public class AsyncServlet extends HttpServlet {
 - part.getSize() // 获得文件的大小
 - part.getSubmittedFileName() // 获得提交的文件的名字。上传的是 demo.txt 那么得到的就是 demo.txt
 - part.getInputStream(); // 获得文件输入流。
+
+获取文件输入流后，在用输出流 存入磁盘。
 ```
 
 **文件上传的简单Demo**
