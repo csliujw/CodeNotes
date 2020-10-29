@@ -87,8 +87,82 @@ list(enumerate(seasons, start=1))       # 下标从 1 开始
 id(python_obj)
 ```
 
-
-
 # 高级语法层面
 
 ## 魔法函数
+
+# `Numpy`补充
+
+```python
+# numpy axis
+import numpy as np
+
+np_array = np.array([[30, 40, 70], [80, 20, 10], [50, 90, 60]])
+print('我们的数组是：')
+print(np_array, '\n')
+print('调用 argmax() 函数：')
+"""
+By default, the index is into the flattened array, otherwise along the specified axis.
+查看注释，默认是按展平进行计算的。
+按照数组展平后计算索引。 展平后90对应的索引是 7（索引从0开始）
+"""
+print(np.argmax(np_array), '\n')
+print('展开数组：')
+print(np_array.flatten(), '\n')  # 展开数组 [30 40 70 80 20 10 50 90 60]
+print('沿轴 0 的最大值索引：')
+"""
+沿0轴就是 沿着x轴。以列向量为基本单位。
+[[30 40 70]            30                                40
+ [80 20 10]   表示为:   80 最大的值的索引为 1(对应元素80)   20  最大值的索引为 2(对应元素90) 
+ [50 90 60]]           50                                90
+"""
+maxindex = np.argmax(np_array, axis=0)
+print(maxindex, '\n')
+print('沿轴 1 的最大值索引：')
+"""
+沿1轴就是 沿着y轴。以行向量为基本单位。
+[[30 40 70]             [30,40,70] 最大值的索引为 2(值为70)
+ [80 20 10]   表示为:    [80 20 10] 最大值的索引为 0(值为80)
+ [50 90 60]]            [50 90 60] 最大值的索引为 1(值为90)
+"""
+maxindex = np.argmax(np_array, axis=1)
+print(maxindex, '\n')
+print('调用 argmin() 函数：')
+minindex = np.argmin(np_array)
+print(minindex, '\n')
+print('展开数组中的最小值：')
+print(np_array.flatten()[minindex], '\n')
+print('沿轴 0 的最小值索引：')
+minindex = np.argmin(np_array, axis=0)
+print(minindex, '\n')
+print('沿轴 1 的最小值索引：')
+minindex = np.argmin(np_array, axis=1)
+print(minindex)
+```
+
+```python
+"""
+output:
+我们的数组是：
+[[30 40 70]
+ [80 20 10]
+ [50 90 60]] 
+
+调用 argmax() 函数：7 
+
+展开数组：[30 40 70 80 20 10 50 90 60] 
+
+沿轴 0 的最大值索引：[1 2 0] 
+
+沿轴 1 的最大值索引：[2 0 1] 
+
+调用 argmin() 函数：5 
+
+展开数组中的最小值：10 
+
+沿轴 0 的最小值索引：[0 1 1] 
+
+沿轴 1 的最小值索引：[0 2 0]
+"""
+```
+
