@@ -217,6 +217,17 @@ public class JunitDemo {
 
 反射可以把类的各个组成部分封装为其他对象。
 
+反射，Java的高级特性，流行的框架基本都是基于反射的思想写成的。
+
+Java反射机制是在程序的运行过程中，对于任何一个类，都能够知道它的所有属性和方法；对于任意一个对象，都能够知道它的所有属性和方法，**<span style="color:green">这种动态获取信息以及动态调用对象方法的功能称为Java语言的反射机制。</span>**
+
+Java反射机制主要提供了以下这几个功能：
+
+- 在运行时判断任意一个对象所属的类
+- 在运行时构造任意一个类的对象
+- 在运行时判断任意一个类所有的成员变量和方法
+- 在运行时调用任意一个对象的方法
+
 ## 2.2 反射的基本操作
 
 ### 2.2.1 获取成员变量
@@ -226,7 +237,7 @@ public class JunitDemo {
 - `Filed[] getDeclaredFileds() `// 获取该类自己声明的，包括私有
 - `Filed[] getDeclaredFileds(String name)` // 获取指定名称的
 
-#### 2.2.2 获取构造方法
+### 2.2.2 获取构造方法
 
 - `Constructor<?>[] getConstructors()` // 获得所有公有构造器
 
@@ -234,7 +245,7 @@ public class JunitDemo {
 - `Constructor<?>[]getDeclaredConstructors()`// 获得所有私有构造器
 - `Constructor<T>[]getDeclaredConstructors()`//  得指定参数的构造器【包括public~~~private 】
 
-#### 2.2.3 获取成员方法
+### 2.2.3 获取成员方法
 
 - `Method[] getMethods()` // **获得所有public修饰的方法，包括继承的**
 
@@ -242,9 +253,41 @@ public class JunitDemo {
 - `Method[] getDeclaredMethods()` //获得所有的私有方法
 - `Method getDeclaredMethod(String name, Class<?>... parameterTypes)` // 获得指定名称和参数类型的方法
 
-#### 2.2.4 获取类名
+### 2.2.4 获取类名
 
 - `String getName()` // 获得类全名`com.bbxx.junits.Son`
+
+### 2.2.5 几个重要的类
+
+
+
+####  2.2.5.1 Class类
+
+​		每定义一个java class 实体都会产生一个Class对象。我们编写一个类，编译完成后，在生成的 `.class`文件中，就会产生一个Class对象，这个Class对象用于表示这个类的类型信息。Class中没有公共构造器，即Class对象不能被实例化。
+
+#### 2.2.5.2 Field类
+
+Field类提供类或接口中单独字段的信息，以及对单独字段的动态访问。
+
+#### 2.2.5.3 Method类
+
+```java
+invoke(Object obj, Object... args)
+```
+
+#### 2.2.5.4 ClassLoader类
+
+**<span style="color:green">ClassLoader类加载器！类加载器用来把类（class）装载进JVM的。ClassLoader使用的双亲委派模型来搜索加载类的，这个模型也就是双亲委派模型。</span>**
+
+**ClassLoader的类继承图如下：**
+
+<img src="../pics/JavaStrengthen/classLoader.png" style="float:left">
+
+
+
+
+
+
 
 ## 2.3 动态代理
 
