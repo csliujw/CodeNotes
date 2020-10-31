@@ -274,9 +274,11 @@ Introduction & Related work
 
  Locations in higher layers correspond to the locations in the image they are path-connected to, which are called their receptive fields. == 第一次提出感受域/感受野的概念
 
+#### 感受野/域
+
 - **感受域/野：**一个点对应的区域，就是这个点的感受野/域
 
-通常来说，大感受野的效果要比小感受野的效果 更好。由公式可见，stride越大，感受野越大。 但是过大的stride会使feature map保留的信息 变少。因此，在减小stride的情况下，如何增大 感受野或使其保持不变，称为了分割中的一大问 题。$RF_{l+1} = RF_{l}+(kernelSize - 1)*stride$ 这个的计算结果是对应原始图像的区域大小哦！
+通常来说，大感受野的效果要比小感受野的效果 更好。由公式可见，stride越大，感受野越大。 但是过大的stride会使feature map保留的信息 变少。因此，在减小stride的情况下，如何增大 感受野或使其保持不变，成为了分割中的一大问题。$RF_{l+1} = RF_{l}+(kernelSize - 1)*stride$ 这个的计算结果是对应原始图像的区域大小哦！
 
 - $l+1$表示层数
 
@@ -284,6 +286,52 @@ Introduction & Related work
 
 - stride表示步长大小
 - <span style="color:green">**约定俗成**</span>，感受域/野的大小对应的是原图的区域大小（统一！好！）
+
+感受域过大的话，保存的信息就少了。
+
+对应原文3.Fully convolutional networks第一段结尾处
+
+#### 平移不变性
+
+不适用于CNN。被证伪了。。。。
+
+《why do deep convolutional networks generalize so poorly to small image transformations?》它忽略了采样定律，过多的下采样导致了这个问题。步长的变化。破坏原始空间。
+
+卷积网络是建立在平移不变性的基础上的。
+
+**宏观结果：**图像中的目标无论被移到图片中的哪个位置，分类结果都应该 是相同的 
+
+**具体过程：**卷积 & 最大池化 ≈ 平移不变图像中的目标有移动时，得到的特征图也会产生相同移动
+
+对应原文3.Fully convolutional networks第二段开头处
+
+<span style="color:green">**原文**</span>：The fully connected layers of these nets have fixed dimensions and throw away spatial coordinates. FC需要固定尺寸，丢弃空间坐标（输出一维向量，它怎么着都不会变成二维的，损失了图像的空间特点）。
+
+<span style="color:green">**原文**</span>：However, these fully connected layers can also be viewed as convolutions with kernels that cover their entire input regions. Doing so casts them into fully convolutional networks that take input of any size and output classification maps. This transformation is illustrated in Figure. 【上帝视角啊】
+
+FCN与经典网络的对比，图示：
+
+<img src="../../../pics/CV/FCN/comp_old_net.png" style="float:left">
+
+**经典算法 VS 本文算法**
+
+<img src="../../../pics/CV/FCN/classical_comp_fcn.png" style="float:left">
+
+FCN网络中，将CNN网络的后三层全部转化为1*1的卷积核所对应等同向量长度的多通道卷积层。整 个网络模型全部都由卷积层组成，没有全连接层产生的向量。CNN是图像级的识别，也就是从图像 到结果。而FCN是像素级的识别，标注出输入图像上的每一个像素最可能属于哪一类别。
+
+对应原文3.1 Adapting classifiers for dense prediction
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## **摘要**
 
