@@ -73,7 +73,7 @@ lsmod | grep nouveau
 
 如果执行`nvidia-smi`显示了显卡的信息说明安装成功。
 
-我个人采用的安装方式是
+<span style="color:green">**我个人采用的安装方式是**</span>
 
 ```shell
 #  查看ubuntu合适的安装版本
@@ -96,7 +96,7 @@ CUDA版本的对应关系如下：
 sudo apt install # 驱动名称，我安装的是推荐的版本 它给我推荐的是450
 ```
 
-然后重启电脑，再执行
+<span style="color:green">**然后重启电脑，再执行，一定要重启电脑！！**</span>
 
 ```shell
 nvidia-smi # 查看驱动是否安装成功
@@ -104,7 +104,7 @@ nvidia-smi # 查看驱动是否安装成功
 
 ## CUDA的安装
 
-< a href="https://developer.nvidia.com/cuda-toolkit-archive">CUDA历史版本下载</a>
+<a href="https://developer.nvidia.com/cuda-toolkit-archive">CUDA历史版本下载</a>
 
 理论上runfile还是deb都是可以的，但是我deb安装不成功，所以用的runfile文件。
 
@@ -125,6 +125,9 @@ sudo sh cuda_10.0.130_410.48_linux.run
 export CUDA_HOME=/usr/local/cuda # 这个是用来建立软链接的，通过这个进行多CUDA共存
 export PATH=$PATH:$CUDA_HOME/bin 
 export LD_LIBRARY_PATH=/usr/local/cuda10.0/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+
+# 生成软链接 /usr/local/cuda-10.0这个是我安装的cuda10.0的目录
+sudo ln -s /usr/local/cuda-10.0 /usr/local/cuda
 ```
 
 > **注意对应版本的更改，这个是cuda 10.0。**
