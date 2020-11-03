@@ -219,3 +219,5 @@ cat /usr/local/cuda/include/cudnn.h | grep CUDNN_MAJOR -A 2
 #  PyTorch安装
 
 按照官网的流程进行按照的话，是无法按照GPU版本的，即便选的是GPU的安装方式。所以，先通过官网的方式安装一下，看什么版本最合适，然后去清华镜像下载对应版本的GPU版本文件，离线安装。
+
+或者直接取清华镜像找对应的GPU版本，离线安装。
