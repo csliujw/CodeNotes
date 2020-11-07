@@ -321,9 +321,25 @@ FCN网络中，将CNN网络的后三层全部转化为1*1的卷积核所对应�
 
 对应原文3.1 Adapting classifiers for dense prediction
 
+#### Shift-and-stitch
 
+解决密集预测任务【慢】
 
+<img src="../../../pics/CV/FCN/shift_and_stitch.png" style="float:left">
 
+（0，0）原地不动
+
+（1，0）左移
+
+（0，1）右移动
+
+（1，1）左上移
+
+都是做最大池化。<span style="color:green">可能会出现重复取值的问题</span>！
+
+得到四种输出，然后对输出进行拼接。
+
+可以用来解决密集预测任务，但是费事。
 
 
 

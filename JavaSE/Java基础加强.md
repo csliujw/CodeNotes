@@ -744,7 +744,63 @@ public class MyClassLoader extends ClassLoader {
 
 热部署，越过双亲委派，就是不用`loadClass` 用`findClass`
 
-# 五 `Servlet3.0`
+# 五、并发（Core Java）
+
+## 5.1 注意
+
+> **不要调用Thread类或Runnable对象的run方法**。直接调用run方法会在同一个线程中执行----不会启动新的线程。调用`Thread.start()`方法会创建一个执行run方法的新线程。
+
+> **线程的六种状态**
+
+- New：新建
+- Runnable：可运行【可能在运行 或 准备运行】
+- Blocked：【阻塞】
+- Waiting：【等待】
+- Timed waiting：【具有指定等待时间的等待线程的线程状态。一个线程处于定时等待状态，这是由于调用了以下方法中的一种，具有指定的正等待时间】
+- Terminated：【终止】
+
+```java
+//Thread内部的枚举类
+public enum State {
+    NEW,
+    RUNNABLE,
+    BLOCKED,
+    WAITING,
+    TIMED_WAITING,
+    TERMINATED;
+}
+```
+
+> **lock和unlock，unlock要放在finally中，确保锁可以被释放。**
+
+> **可重入锁，获得锁的方法（代码）可以调用持有相同锁的方法**
+
+> **`ReentrantLock()`**
+
+- 公平锁和非公平锁。
+- 公平锁倾向于选择等待时间长的线程，这种策略可能严重影响性能。
+- 一般选择非公平锁。
+
+> <span style="color:green">**Condition，用`ReentrantLock()`的实例对象获得Condition对象**</span>
+
+- `await()` 将该线程放在这个条件的等待集中，<span style="color:green">**并放弃锁！**</span>
+- `singalAll()` 激活等待这个条件的所有线程，把他们从等待集中移出，让他们重新成为可运行的线程！
+- `singal()` 从该条件的等待集中随机选取一个从等待集中移出，让他们重新成为可运行的线程！
+- <span style="color:green">**用if做条件判断不合适，存在虚假唤醒的问题，用while。【`JDK`注释中有说明】**</span>
+
+> **synchronized**
+
+> **线程就是一个单独的资源类，没有任何附属的操作。**
+
+> **线程局部变量 `ThreadLocal`**
+
+- `ThreadLocal.withInitial()`为函数式编程提供的方法
+
+**Unsafe类啊！**
+
+
+
+# 六 、`Servlet3.0`
 
 - 注解
 - 文件上传

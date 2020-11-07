@@ -40,7 +40,7 @@ Unsafe类
       return currentThread().isInterrupted(true);
   }
   
-  /**
+  	/**
        * Tests if some Thread has been interrupted.  The interrupted state
        * is reset or not based on the value of ClearInterrupted that is
        * passed.
@@ -50,6 +50,10 @@ Unsafe类
   ```
 
 ### 如何优雅的中断线程
+
+这玩意马士兵说 根本不用。。。。。。。。。简直了！
+
+不学了，了解就好。
 
 何谓优雅的中断线程？
 
