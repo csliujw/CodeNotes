@@ -657,18 +657,51 @@ np.clip(sample3,1,4) # 小于1的都变成1 大于4的都变成4
 
 ### 索引
 
-> **仅一行的话，与python的切片语法一致。**
+> **仅一行的话，与python的切片语法<span style="color:green">一致</span>。**
 
 > **二维**
 
 ```python
-array = np.array([
-    			 [1,2,3],
-                  [4,5,6]
-				])
+import numpy as np
 
-array[1] # 取到第一行 与二维数组类似
-array[; ,2] # 取每一行的第二列 [3,6] / 每行都取，每列只取第0 1个元素
+"""
+numpy 的索引最重要！
+"""
+
+class demo:
+    def __init__(self):
+        self.arr = np.array([[1,2,3,4,5],
+                             [4,5,6,7,8],
+                             [7,8,9,10,11]])
+
+    def test1(self):
+        print(self.arr[1:,3:])
+
+    def test2(self):
+        print(self.arr[1:,2:])
+
+    def test_demo1(self):
+        # output (0,3)  (1,4)  use tuple
+        print(self.arr[((0,1),(3,4))])
+
+    def test_demo2(self):
+        # 使用切片和元组组合的方式
+        print(self.arr[0:,(1,2,4)])
+
+    def test_demo3(self):
+        # 比较 得布尔数组
+        print(self.arr >=4)
+
+if __name__ == "__main__":
+    obj = demo()
+    obj.test_demo3()
+    array = np.array([
+                     [1,2,3],
+                      [4,5,6]
+                    ])
+
+    array[1] # 取到第一行 与二维数组类似
+    array[; ,2] # 取每一行的第二列 [3,6] / 每行都取，每列只取第0 1个元素
 ```
 
 > **迭代**
@@ -785,6 +818,10 @@ arr2 = arr1.copy();
 ```
 
 ---
+
+###  通过索引访问数组的技巧
+
+
 
 # matplotlib
 
