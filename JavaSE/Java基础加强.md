@@ -1,4 +1,4 @@
-# 你真的会用枚举吗
+# 枚举
 
 ## 枚举的使用Demo
 
@@ -160,7 +160,7 @@ enum Color {
 }
 ```
 
-# 你真的会比较对象吗？
+# 比较对象
 
 ## Comparator和Comparable
 
@@ -169,19 +169,20 @@ Comparable接口/ Comparator接口
 - Comparator  函数式接口 jdk1.8引入
 - Comparable 普通接口
 
-#  注解？
+
 
 # 一、单元测试
 
-## 1.1 单元测试的有点
+## 1.1 单元测试的优点
 
 保证的程序代码的正确性【语法上了逻辑上】。
 
-## 1.2 单元测试的使用【junit】
+## 1.2 单元测试的使用【`junit`】
 
-- @Test
-- @Before 无论Test是否出现异常，都会执行
-- @After 无论Test是否出现异常，都会执行
+@Test0
+
+- @Before 无论Test是否出现异常，都会执行 【初始化资源】
+- @After 无论Test是否出现异常，都会执行 【销毁资源】
 
 ```java
 public class JunitDemo {
@@ -210,6 +211,10 @@ public class JunitDemo {
     }
 }
 ```
+
+## 1.3 单元测试是如何运行的
+
+
 
 # 二、反射
 
@@ -263,7 +268,7 @@ Java反射机制主要提供了以下这几个功能：
 
 ####  2.2.5.1 Class类
 
-​		每定义一个java class 实体都会产生一个Class对象。我们编写一个类，编译完成后，在生成的 `.class`文件中，就会产生一个Class对象，这个Class对象用于表示这个类的类型信息。Class中没有公共构造器，即Class对象不能被实例化。
+每定义一个`java` `class` 实体都会产生一个Class对象。我们编写一个类，编译完成后，在生成的 `.class`文件中，就会产生一个Class对象，这个Class对象用于表示这个类的类型信息。Class中没有公共构造器，即Class对象不能被实例化。
 
 #### 2.2.5.2 Field类
 
@@ -275,19 +280,13 @@ Field类提供类或接口中单独字段的信息，以及对单独字段的动
 invoke(Object obj, Object... args)
 ```
 
-#### 2.2.5.4 ClassLoader类
+#### 2.2.5.4 `ClassLoader`类
 
 **<span style="color:green">ClassLoader类加载器！类加载器用来把类（class）装载进JVM的。ClassLoader使用的双亲委派模型来搜索加载类的，这个模型也就是双亲委派模型。</span>**
 
-**ClassLoader的类继承图如下：**
+**`ClassLoader`的类继承图如下：**
 
 <img src="../pics/JavaStrengthen/classLoader.png" style="float:left">
-
-
-
-
-
-
 
 ## 2.3 动态代理
 

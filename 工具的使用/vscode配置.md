@@ -1,3 +1,25 @@
+
+
+
+
+
+
+# VSCode 插件推荐
+
+## Python必备插件
+
+- Python。
+- Pylance 代码提示功能完美，还有形参提示。
+- Eclipse Keymap（个人键位习惯）。
+- Visual Studio IntelliCode 代码智能提示。
+- anaconda  Extension pack
+- Python Docstring Generator 文档生成。
+- Better Comments 不同代码注释颜色不一样。
+
+## Java必备插件
+
+
+
 # VSCode&Java
 
 按照官网下载插件

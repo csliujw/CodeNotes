@@ -323,7 +323,7 @@ FCN网络中，将CNN网络的后三层全部转化为1*1的卷积核所对应�
 
 #### Shift-and-stitch
 
-解决密集预测任务【慢】
+解决密集预测任务【慢】，其实不是很理解这个过程。
 
 <img src="../../../pics/CV/FCN/shift_and_stitch.png" style="float:left">
 
@@ -341,13 +341,96 @@ FCN网络中，将CNN网络的后三层全部转化为1*1的卷积核所对应�
 
 可以用来解决密集预测任务，但是费事。
 
+对应原文3.2 Shift-and-stitch is filter rarefaction
 
+#### `Upsampling is backwards strided convolution`
 
+coarse ：粗糙
 
+插值法，代码中讲。
 
+插值法了解即可。
 
+反卷积的特点，参数可以学习。
 
+本文没有沿用以往的插值上采样（Interpolation），而是提出了新的上采样方法，即反卷积（Deconvolution）。反卷积 可以理解为卷积操作的逆运算，反卷积并不 能复原因卷积操作造成的值的损失，它仅仅 是将卷积过程中的步骤反向变换一次，因此 它还可以被称为转置卷积。
 
+仅是扩大图片尺寸。
+
+### Segmentation Architecture
+
+模型搭建。
+
+把分类算法变为全卷积网络（微调），增加了跳跃结构，可以改善语义。
+
+忽略了边缘像素。
+
+#### From classifier to dense FCN
+
+把经典的VGG网络和GoogLeNet网络进行了改编。
+
+实验证明VGG-16就够用了，16和19差距不大。
+
+训练技巧：We report the best results achieved after convergence at a fixed learning rate (at least 175 epochs) 175轮训练后可以获得好结果。
+
+#### Combining what and where
+
+两个卷积层（用一个卷积块表示）
+
+FCN-32s 直接把图扩大32倍，还原成原图的大小【对比实验，为了验证跳跃连接的效果】
+
+FCN-16s 直接把图扩大16倍，还原成原图的大小
+
+FCN-8s 直接把图扩大8倍，还原成原图的大小
+
+2 * conv7 把conv7的结果扩大两倍 然后与pool4进行融合（<span style="color:green">融合方式为，对应位置相加</span>）融合后得到的是原图的1/16 然后再扩大16倍
+
+后面的也是这个意思。
+
+<img src="../../../pics/CV/FCN/FCN_architecture.png" style="float:left">
+
+----
+
+图里的尺寸有些不对应，是做了裁剪，不必深究。
+
+<img src="../../../pics/CV/FCN/FCN_architecture2.png" style="float:left">
+
+原文：The 32 pixel stride at the final prediction layer limits the scale of detail in the upsampled output。太粗暴了，效果很模糊。
+
+原文：As they see fewer pixels, the finer scale predictions should need fewer layers. 像素太少的话，那么就用浅层的网络。但是浅层网络的信息又不太够，深层的用于分割效果又不好（矛盾点）。FCN采用浅层+深层 （再多一个中层呢）
+
+原文：We add a 1 × 1 convolution layer on top of pool4 to produce additional class predictions. 在pool4后面增加了一个1*1的卷积操作，产生类别预测。（通道数对应类别数）
+
+summing：融合
+
+原文：Learning this skip net improves performance on the validation set by 3.0 mean IU to 62.4. Figure 4 shows improvement in the fine structure of the output. We compared this fusion with learning only from the pool4 layer, which resulted in poor performance, and simply decreasing the learning rate without adding the skip, which resulted in an insignificant performance improvement without improving the quality of the output
+
+对比，表明跳跃连接的重要性。
+
+负反馈：我再做一个多余的操作，并没有对结果产生很大的影响（相差不大），反而增加了参数，这样不如不加。【实验该终止了，不能只靠经验之谈，只能靠实验】
+
+----
+
+减小步长，感受野一定会减小的。只能扩大卷积核。
+
+原文：Refinement by other means Decreasing the stride of pooling layers is the most straightforward way to obtain finer predictions. However, doing so is problematic for our VGG16-based net. Setting the pool5 stride to 1 requires our convolutionalized fc6 to have kernel size 14 × 14 to 6Max fusion made learning difficult due to gradient switching. Refining fully convolutional nets by fusing information from layers with different strides improves segmentation detail. The first three images show the output from our 32, 16, and 8 pixel stride nets (see Figure 3). 【进一步的优化策略，但是效果不好，放弃了。】
+
+#### 论文算法模型细节
+
+##### 训练技巧
+
+- 加载预训练模型【使用经典的网络】
+- 初始化反卷积参数【加快收敛速度】
+- 至少175个epoch后算法才会有不错的表现【实验得出的结论】
+- 学习率在100次后进行调整【越到后，学习率调整的越小】
+- pool3之前的特征图不需要融合【实验得出的结论】
+
+算法技巧（原文）：
+
+- intermediate upsampling layers are initialized to bilinear upsampling, and then learned
+- We report the best results achieved after convergence at a fixed learning rate (at least 175 epochs)
+- The learning rate is decreased by a factor of 100.
+-  At this point our fusion improvements have met diminishing returns, both with respect to the IU metric which emphasizes large-scale correctness, and also in terms of the improvement visible e.g. in Figure 4, so we do not continue fusing even lower layers.
 
 ## **摘要**
 
