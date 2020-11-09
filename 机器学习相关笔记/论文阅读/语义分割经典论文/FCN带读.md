@@ -578,7 +578,9 @@ torchvision中包含不少经典算法的实现
           return output
   ```
 
-  
+编码解码的作用 和 具体代码好好理一理。
+
+损失 = （out，labels）
 
 ## Other
 

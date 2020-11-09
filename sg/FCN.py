@@ -6,6 +6,7 @@ import torch
 from torchvision import models
 from torch import nn
 
+
 # 插值是否了解无所谓
 def bilinear_kernel(in_channels, out_channels, kernel_size):
     """Define a bilinear kernel according to in channels and out channels.
