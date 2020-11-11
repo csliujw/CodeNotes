@@ -135,6 +135,54 @@ FCN【DL 语义分割的鼻祖？】
 
 <span style="color:green">**注意：对输入图片的尺寸有要求！**</span>
 
+### Training
+
+介绍如何训练网络的【包含一些训练技巧】
+
+> <span style="color:green">**英语学习**</span>
+
+corresponding segmentation map ==对应的语义分割图
+
+the output image is smaller than the input by a constant border width == 输出图像比输入图像小一个恒定的边框宽度。
+
+To minimize the overhead == 最小化开销
+
+denotes == 表示
+
+> <span style="color:green">**训练技巧**</span>
+
+- 使用的SGD 随机梯度下降
+- 一次训练一张图
+- SGD的momentum设置的很高 达到了 0.99
+
+> <span style="color:green">**解释公式**</span>
+
+解释了下交叉熵公式中各个值的意思。
+
+$P_{k}(x) = \exp(a_{k}(X)) /(\sum_{k^`}^{K}\exp(a_{k^`}(X))$
+
+$a_{k}(x)$表示 第k个feature channel在像素x处激活。k代表分类数 $P_k(X)$是approximated maximum-function
+
+公式这部分没太看懂。
+
+> <span style="color:green">**3.1 数据增强**</span>
+
+说明数据增强的必要性，数据少的话，最好进行数据增强，扩大数据的规模。
+
+数据增强的方法：
+
+- 看不太懂。
+
+### 实验
+
+### 结论
+
+
+
+
+
+> ****
+
 ## 总结
 
 总览全文，归纳总结。总结文中创新点，关键点，启发点等重要信息。
