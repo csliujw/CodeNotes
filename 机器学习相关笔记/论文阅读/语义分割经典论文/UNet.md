@@ -94,7 +94,7 @@ Abstract感觉理解有误。
 
 - 介绍了卷积的发展史，视觉的任务和现有不足，引出分割中的不足
 - 他人策略的不足，Obviously, the strategy in Ciresan et al. [1] has two drawbacks. 
-  - 速度慢，patch直接重叠，重复计算
+  - 速度慢，patch直接重叠，重复计算【以前的思路，根据像素点周围的像素来对该像素进行分类-->滑动窗的神经网络，这种网络以像素为单位对图片进行分类（计算量太大，冗余性太高，每个patch之间都有相关的像素），以图片为整体来进行图片分类分割相比起来计算量就小一些】
   - 位置的准确率和视野无法兼得
     - Larger patches范围大，准确率低
     - small patches范围又太小不合适
@@ -103,12 +103,13 @@ Abstract感觉理解有误。
 #### 本文网络特点
 
 - elegant   architecture，优雅的结构
-- 修改了网络结构，可以适用于少量数据集上的分割
+- 修改了网络结构，只需很少的训练图像就能工作，并产生更精准的分割。
 - 应用取得成功的经典网络，pooling operators被替换为upsampling operators.【与FCN类似】
-- 原文：In order to localize, high resolution features from the contracting path are combined with the upsampled output. 为了解决定位问题，将收缩路径中的高分辨率特征与上采样的输出结合在一起。【U型结构中 统一水平线的进行融合】
+- 原文：In order to localize, high resolution features from the contracting path are combined with the upsampled output. 为了解决定位问题，将收缩路径中的高分辨率特征与上采样的输出结合在一起，用这些信息进行组装，得到精确的输出。【U型结构中 统一水平线的进行融合】
 - 原文：One important modification in our architecture is that in the upsampling part we have also a large number of feature channels, which allow the network to propagate context information to higher resolution layers. 低层的特征信息会被一级一级传递上去进行融合，上下文的信息可以传播到更高的分辨率层。
 - 无全连接层
 - 推断缺失上下文【the missing context is extrapolated by mirroring the input image（怎么推断？重叠拼贴策略（请参见图2）。 预测边界区域中的像素）】
+- 
 - 切片策略进行分割，避开GPU的限制（医疗图像的分辨率好像特别大）【<span style="color:green">网络的小技巧？</span>】
 
 ----
@@ -129,7 +130,9 @@ FCN【DL 语义分割的鼻祖？】
 
 与博客中的描述一致，网络结构比较简单。
 
-都是用$3*3$的卷积核，padding=0，$2*2$的max-pooling，无 全连接。
+都是用$3*3$的卷积核，padding=0，$2*2$的max-pooling，无全连接。
+
+存在的问题：输入图像和输出图像大小并不一致。 由于采用nopadding的卷积层，每次卷积图像都会小一圈，所以downsample和upsample所还原的像素并不一致。(一般会采用加上padding方式来使图像size不变)
 
 <img src="../../../pics/CV/UNet/UNet_structures.png">
 
@@ -211,9 +214,23 @@ $d_2$表示到第二个最近细胞边界的距离
 **数据增强的方式：**
 
 - 仿射变换
-  - 颜色抖动
-  - 水平/垂直翻转
-  - 随机crop(裁剪)
+- 颜色抖动
+- 水平/垂直翻转
+- 随机crop(裁剪)
+
+**仿射变换：**可用OpenCV
+
+- 旋转
+
+- 平移
+
+- 错切（shear）
+
+- 尺度变化
+
+- <span style="color:green">特点：经过仿射变化仍是直线</span>
+
+  <img src="../../../pics/CV/UNet/affine_transformation.jpg" style="float:left">
 
 ​	特别是训练样本的随机弹性变形似乎是训练一个带有少量图像注释的语义分割网络是一个关键概念。
 
