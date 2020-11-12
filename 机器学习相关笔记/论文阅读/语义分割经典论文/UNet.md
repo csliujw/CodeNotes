@@ -139,43 +139,93 @@ FCN【DL 语义分割的鼻祖？】
 
 介绍如何训练网络的【包含一些训练技巧】
 
+用输入图像和他对应的语义分割图（maps不知道咋翻译比较好）进行模型训练
+
 > <span style="color:green">**英语学习**</span>
 
-corresponding segmentation map ==对应的语义分割图
+**corresponding segmentation map ==对应的语义分割图**
 
-the output image is smaller than the input by a constant border width == 输出图像比输入图像小一个恒定的边框宽度。
+**the output image is smaller than the input by a constant border width == 输出图像比输入图像小一个恒定的边框宽度。**
 
-To minimize the overhead == 最小化开销
+**To minimize the overhead == 最小化开销**
 
-denotes == 表示
+**denotes == 表示**
+
+**deviation == 偏差**
+
+**compensate == 补偿**
 
 > <span style="color:green">**训练技巧**</span>
 
 - 使用的SGD 随机梯度下降
 - 一次训练一张图
 - SGD的momentum设置的很高 达到了 0.99
+- 为了平衡不同像素类别之间的差距，为不同类别的像素引入了不同的权值
 
 > <span style="color:green">**解释公式**</span>
 
+energy function 能量函数 ， 在某种意义上和损失函数类似。
+
+能量函数是通过交叉熵损失函数和最终特征图上的像素soft-max 来计算的。（我翻译的好垃圾）
+
 解释了下交叉熵公式中各个值的意思。
 
-$P_{k}(x) = \exp(a_{k}(X)) /(\sum_{k^`}^{K}\exp(a_{k^`}(X))$
+**soft-max函数的定义如下：**
+
+$P_{k}(x) = \frac{\exp(a_{k}(X)) }{(\sum_{k^`}^{K}\exp(a_{k^`}(X))}$
 
 $a_{k}(x)$表示 第k个feature channel在像素x处激活。k代表分类数 $P_k(X)$是approximated maximum-function
 
-公式这部分没太看懂。
+交叉熵在每个位置上计算其偏差，使用以下的公式进行计算【不懂】
+
+**$E=\sum_{x\in\Omega}\omega(x)log(P_{l(x)}(x))$**
+
+$l$是每个像素的真实label，w是权值，我们通过权值让一些label更加重要【忽略背景，抓住重点分割的对象】
+
+ground truth 正确打标签的训练数据。
+
+预先计算正确打标签的训练数据的权重，用这个补偿训练中不同类别像素之间频率不同的情况，【<span style="color:green">并迫使网络学习我们在接触细胞之间引入的小的分离边界，</span>**<span style="color:red">这个不是很理解</span>**】
+
+> <span style="color:green">**细胞边界的处理**</span>
+
+分离细胞边界采用的是 **morphological operations**【形态学操作】
+
+权重图（weight map）的计算公式如下：
+
+**$\omega(x) = \omega_{c}(x) + \omega_{0}*\exp(- \frac{(d_{1}(x)+d_{2}(x))^2}{2\sigma^2})$**
+
+$d_1$表示到第一个最近细胞边界的距离
+
+$d_2$表示到第二个最近细胞边界的距离
+
+在实验中，我们设置$\omega_0 = 10$，$\sigma≈5$ 【<span style="color:red">**训练技巧**</span>】
+
+为了防止网络过度激活或部分网络无法激活，我们需要初始化一个合适的权值。在UNet网络架构中，我们可以从标准差为$\sqrt{2/N}$的高斯分布中提取初始化权重【<span style="color:red">**实验得出的？？？**</span>】
 
 > <span style="color:green">**3.1 数据增强**</span>
 
 说明数据增强的必要性，数据少的话，最好进行数据增强，扩大数据的规模。
 
-数据增强的方法：
+原文：Especially random elastic deformations of the training samples seem to be the key concept to train a segmentation network with very few annotated images.【<span style="color:red">**不懂**</span>】
 
-- 看不太懂。
+**数据增强的方式：**
 
-### 实验
+- 仿射变换
+  - 颜色抖动
+  - 水平/垂直翻转
+  - 随机crop(裁剪)
 
-### 结论
+​	特别是训练样本的随机弹性变形似乎是训练一个带有少量图像注释的语义分割网络是一个关键概念。
+
+​	在粗糙的3×3网格上使用随机位移矢量生成平滑变形。位移从具有10个像素标准偏差的高斯分布中采样。然后使用双三次插值计算每像素位移。收缩路径末端的退出层执行进一步的隐式数据增加。【<span style="color:red">**这部分真的没看太明白**</span>】
+
+###  Experiments
+
+效果明显比滑动卷积好。
+
+实验结果对比，UNet效果特别好，没了。
+
+### Conclusion
 
 
 
