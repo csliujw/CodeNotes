@@ -109,7 +109,6 @@ Abstract感觉理解有误。
 - 原文：One important modification in our architecture is that in the upsampling part we have also a large number of feature channels, which allow the network to propagate context information to higher resolution layers. 低层的特征信息会被一级一级传递上去进行融合，上下文的信息可以传播到更高的分辨率层。
 - 无全连接层
 - 推断缺失上下文【the missing context is extrapolated by mirroring the input image（怎么推断？重叠拼贴策略（请参见图2）。 预测边界区域中的像素）】
-- 
 - 切片策略进行分割，避开GPU的限制（医疗图像的分辨率好像特别大）【<span style="color:green">网络的小技巧？</span>】
 
 ----
