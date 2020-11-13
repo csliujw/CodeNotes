@@ -2,6 +2,8 @@
 
 <a href="https://www.numpy.org.cn/">numpu中文网【推荐⭐⭐⭐⭐⭐】</a>
 
+<a href="https://opencv.apachecn.org/#/">OpenCV中文官网【推荐⭐⭐⭐⭐⭐】</a></a>
+
 <a href="https://lab.datafountain.cn/">DLab教学与实训平台【推荐⭐⭐⭐⭐⭐】</a>
 
 <a href="https://github.com/mrgloom/awesome-semantic-segmentation">U-Net系列【推荐⭐⭐⭐⭐⭐】</a>
