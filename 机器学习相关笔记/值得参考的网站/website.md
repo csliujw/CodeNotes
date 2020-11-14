@@ -2,7 +2,7 @@
 
 <a href="https://www.numpy.org.cn/">numpu中文网【推荐⭐⭐⭐⭐⭐】</a>
 
-<a href="https://opencv.apachecn.org/#/">OpenCV中文官网【推荐⭐⭐⭐⭐⭐】</a></a>
+<a href="https://opencv.apachecn.org">OpenCV中文官网【推荐⭐⭐⭐⭐⭐】</a></a>
 
 <a href="https://lab.datafountain.cn/">DLab教学与实训平台【推荐⭐⭐⭐⭐⭐】</a>
 
@@ -14,9 +14,13 @@
 
 <a href="https://pytorch.apachecn.org">PyTorch官方文档（中文apache）</a>
 
+<a href="https://www.sohu.com/a/196836207_642762">PyTorch基础教程【简单的机器学习实现】</a>
+
 ## 论文相关笔记
 
 <a href="https://zhuanlan.zhihu.com/p/46251798">U-Net笔记</a>
+
+<a href="https://github.com/SnailTyan/deep-learning-papers-translation">部分论文中英对照</a>
 
 <a href="https://zhuanlan.zhihu.com/p/123081328">2020年以来的图像分割进展：结构，损失函数，数据集以及框架</a>
 
