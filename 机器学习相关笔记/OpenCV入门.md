@@ -2,6 +2,14 @@
 
 ## 安裝
 
+ubuntu环境
+
+```shell
+conda install -c https://conda.anaconda.org/menpo opencv 
+```
+
+
+
 pip install opencv-python  
 
 pip install opencv-contrib-python  识别物体用的
