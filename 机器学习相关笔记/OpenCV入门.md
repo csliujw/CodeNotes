@@ -565,6 +565,16 @@ c_video.release()
 -  torch.cat    <span style="color:green">**[按已有维度拼接张量]**</span>
 -  torch.stack <span style="color:green">**[按新维度拼接张量]**</span>
 
+张量的升维和降维
+
+- torch.unsequeeze  <span style="color:green">**[升高维度一般式unsequeeze(0)]**</span>
+  - 大致意思就是原来的shape = （2，2）
+  - unsequeeze(0) 后 shape = （1，2，2）
+  - <span style="color:green">**unsqueeze（arg）是增添第arg个维度为1，以插入的形式填充**</span>
+- torch.sequeeze
+  - <span style="color:green">**squeeze（arg）是删除第arg个维度(如果当前维度不为1，则不会进行删除)**</span>
+  - 这样是为了防止删除数据
+
 ## numpy与tensor的转换
 
 OpenCV用到了numpy存储图像的数据！
@@ -594,7 +604,7 @@ if __name__ == '__main__':
     d1.tensorToNumpy()
 ```
 
-## OpenCV拆分通道后，torch如何拼接
+## cat拼接
 
 ```python
 import torch as t
@@ -646,5 +656,108 @@ if __name__ == '__main__':
     print("=" * 20)
     cat.cat3()
     print("=" * 20)
+```
+
+## stack拼接
+
+```python
+import torch as t
+
+"""来补一下stack的操作，写代码的时候遇到过，继续捡起来"""
+"""stack按新维度进行拼接张量"""
+"""
+来看看合并的规则
+    data shape is [4]
+    out = t.stack( (data,data),dim=0 )
+    out shape is [ 2 , 4 ] 在第0维进行维度扩充
+    
+    out = t.stack( (data,data),dim=1 )
+    out shape is [ 4, 2 ] 在第1维进行维度扩充
+    
+    data shape is [ 1 ,4 ]
+    out = t.stack( (data,data),dim=0 )
+    out shape is [ 2 , 1 , 4 ] 在第0维进行维度扩充
+    
+    out = t.stack( (data,data),dim=1 )
+    out shape is [ 1 , 2 , 4 ] 在第1维进行维度扩充
+    
+    out = t.stack( (data,data),dim=2 )
+    out shape is [ 1 , 4, 2 ] 在第1维进行维度扩充
+    
+    原shape= (1,1) 那么dim最大为2（0,1,2）
+"""
+
+
+class stackDemo:
+
+    def __init__(self):
+        self.data1 = t.tensor([1, 1, 1, 1])
+        self.data2 = t.tensor([[2, 2, 2, 2]])
+        self.data3 = t.tensor([[[3, 3, 3, 3]]])
+
+    def stack1(self):
+        print(self.data1.shape)
+        out = t.stack((self.data1, self.data1), dim=0)
+        print(out.shape)
+
+    def stack2(self):
+        print(self.data1.shape)
+        out = t.stack((self.data1, self.data1), dim=1)
+        print(out.shape)
+
+    def stack3(self):
+        print(self.data2.shape)
+        out = t.stack((self.data2, self.data2), dim=2)
+        print(out.shape)
+
+
+if __name__ == '__main__':
+    s1 = stackDemo()
+    s1.stack1()
+    print("=" * 50)
+    s1.stack2()
+    print("=" * 50)
+    s1.stack3()
+```
+
+## unsequeeze&sequeeze
+
+```python
+"""torch升维 减维"""
+import torch as t
+
+"""升维的方式 和 stack 基本一样"""
+
+class unsqueezeDemo:
+    def __init__(self):
+        self.dim1 = t.tensor([1, 1, 1])
+        self.dim2 = t.tensor([[1, 1, 1], [2, 2, 2]])
+        self.dim3 = t.tensor([[[1, 1, 1], [2, 2, 2], [3, 3, 3]]])
+
+    def un1(self):
+        print(self.dim1.shape)  # (3)
+        self.dim2.squeeze()
+        out = self.dim1.unsqueeze(0)
+        print(out.shape)  # (1,3)
+
+    def un2(self):
+        print(self.dim1.shape)  # (3)
+        out = self.dim1.unsqueeze(1)
+        print(out.shape)  # (1,3)
+
+    def un3(self):
+        print(self.dim2.shape)  # (3)
+        out = self.dim2.unsqueeze(2)
+        print(out.shape)  # (1,3)
+
+    def se1(self):
+        print("dim2.shape is {}\t dim2 data is {}".format(self.dim3.shape, self.dim3))
+        """要删除的第0个维度 维度为1 可以删除"""
+        out = self.dim3.squeeze(0)
+        print("dim2.shape is {}\t dim2 data is {}".format(out.shape, out))
+
+if __name__ == '__main__':
+    d = unsqueezeDemo()
+    d.se1()
 ```
 
