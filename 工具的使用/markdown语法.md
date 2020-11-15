@@ -10,19 +10,33 @@
 
 - <a href="https://www.jianshu.com/p/4460692eece4">编辑数学公式：LATEX</a>
 
-- 支持html css修饰
+- <a href="https://www.jianshu.com/p/756bc7e0ef6d">打出矩阵</a>
 
-  
+  ```math
+  \begin{matrix} a & b & c & d & e\\ f & g & h & i & j \\ k & l & m & n & o \\ p & q & r & s & t \end{matrix}
+  ```
 
-$$ {123}
+  $\begin{matrix} a & b & c & d & e\\ f & g & h & i & j \\ k & l & m & n & o \\ p & q & r & s & t \end{matrix}$
 
-$$ {123}
+  ```math
+  \left[ \begin{matrix} a & b & c & d & e\\ f & g & h & i & j \\ k & l & m & n & o \\ p & q & r & s & t \end{matrix} \right]
+  ```
 
+  $\left[ \begin{matrix} a & b & c & d & e\\ f & g & h & i & j \\ k & l & m & n & o \\ p & q & r & s & t \end{matrix} \right]$
 
-$$
+  ```math
+  \left\{ \begin{matrix} a & b & c & d & e\\ f & g & h & i & j \\ k & l & m & n & o \\ p & q & r & s & t \end{matrix} \right\}
+  ```
 
-$$
+  $\left\{ \begin{matrix} a & b & c & d & e\\ f & g & h & i & j \\ k & l & m & n & o \\ p & q & r & s & t \end{matrix} \right\}$
 
+  ```math
+  A= \left\{ \begin{matrix} a & b & c & d & e\\ f & g & h & i & j \\ k & l & m & n & o \\ p & q & r & s & t \end{matrix} \right\}
+  ```
+
+  $A= \left\{ \begin{matrix} a & b & c & d & e\\ f & g & h & i & j \\ k & l & m & n & o \\ p & q & r & s & t \end{matrix} \right\}$
+
+- **支持html css修饰**
 
 
 - <a href="https://zhuanlan.zhihu.com/p/149579648">如何画流程图</a>

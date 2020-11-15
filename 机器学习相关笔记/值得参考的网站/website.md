@@ -16,6 +16,8 @@
 
 <a href="https://www.sohu.com/a/196836207_642762">PyTorch基础教程【简单的机器学习实现】</a>
 
+<a href="https://wizardforcel.gitbooks.io/learn-dl-with-pytorch-liaoxingyu/content/">深度学习入门之PyTorch力推！</a>
+
 ## 论文相关笔记
 
 <a href="https://zhuanlan.zhihu.com/p/46251798">U-Net笔记</a>
