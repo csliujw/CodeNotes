@@ -30,6 +30,8 @@
 
 ## 部分值得参考的博客
 
+<a href="https://www.cnblogs.com/Terrypython/category/1255030.html">机器学习&视觉</a>
+
 <a href="https://www.cnblogs.com/wj-1314/p/11519663.html">[tensorflow学习笔记——ResNet](https://www.cnblogs.com/wj-1314/p/11519663.html)</a>
 
 <a href="https://blog.csdn.net/zhenaoxi1077/article/details/80951034">PyTorch 50行代码搭建ResNet</a>
