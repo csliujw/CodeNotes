@@ -19,6 +19,14 @@
 - 填充字节，`netty`框架就是采用了填充字节的方式，保证一个变量存在一个cache里，而不是两个cache，只用读一次cache。
 - `sun.misc.contrebded注解`（`Java8`）
 
+## 热部署
+
+又是一个不懂的概念
+
+- 修改`classloader`实现热部署
+- `JVM`只能实现方法体的热部署
+- 打破双亲委派，自定义`classloader`，要替换类时，就丢弃之前的类加载器。
+
 
 
 ## Java内存模型与线程

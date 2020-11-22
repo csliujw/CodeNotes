@@ -28,6 +28,8 @@
 
 <a href="https://zhuanlan.zhihu.com/p/142108953">改善医学图像分割的数据增强</a>
 
+<a href="https://zhuanlan.zhihu.com/p/58883095">常见的损失函数(loss function)总结</a>
+
 ## 部分值得参考的博客
 
 <a href="https://www.cnblogs.com/Terrypython/category/1255030.html">机器学习&视觉</a>

@@ -135,8 +135,6 @@
 - 直接在cmd下输入”jupyter notebook”,系统将自动弹出notebook窗口。【我之前安装过】
 - 如果选择其他盘的话，先进入xx盘，再执行命令！
 
-
-
 使用的主要三方库
 
 `numpy；matplotlib；sklearn；pandas`
@@ -147,17 +145,11 @@
 
 ## 1.1 `jupyter`的使用
 
-
-
 Run cells 运行代码
 
 添加单元格 a，向前添加；b，向后添加；光标要蓝色的时候哦！
 
-
-
 按m变成markdown语法，按y变成code；也要在蓝色光标下哦！
-
-
 
 ## 1.2 `Jupyter`魔法命令
 
