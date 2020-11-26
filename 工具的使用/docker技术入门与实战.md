@@ -188,6 +188,150 @@ sudo docker  start container_id
 
 ## 端口映射实现访问容器
 
+### 一个自带的映射demo
+
+```shell
+# 远程docker仓库中有的例子
+sudo docker run -d -P training/webapp python app.py 
+sudo docker ps -l
+"""
+CONTAINER ID|IMAGE          |COMMAND        |PORTS  
+fbc5d6bca5f7|training/webapp|"python app.py"|0.0.0.0:32768-5000/tcp   
+"""
+```
+
+**本机端口 32768映射到了容器的5000端口**
+
+**查看应用信息**
+
+```shell
+sudo docker logs -f 容器name
+sudo docker logs -f nostalgic_morse
+```
+
+### 指定映射端口
+
+- 映射到所有接口地址
+
+```shell
+# -p 主机端口:容器端口
+sudo docker run -d -p 5000:5000 training/webapp python app.py
+# 映射到多个端口
+sudo docker run -d -p 5000:5000 -p 3000:80 training/webapp python app.py
+```
+
+- 映射到指定地址的指定端口
+
+```shell
+# 本机的127.0.0.1：5000映射到容器的5000端口
+sudo docker run -d -p 127.0.0.1:5000:5000 training/webapp python app.py
+```
+
+- 映射到指定地址的任意端口
+
+```shell
+# 本机会任意分配一个端口给容器 用sudo docker ps -l 查看具体映射到了哪里
+sudo docekr run -d -p 127.0.0.1::5000 training/webapp python 
+```
+
+- 标记指定udp端口
+
+```shell
+sudo docker run -d -p 127.0.0.1:5000:5000/udp training/webapp python 
+```
+
+- 查看映射端口配置
+
+`sudo docker port stoic_diffie 5000`
+
+```shell
+# 查看
+sudo docker ps -l
+# 查看端口映射配置
+sudo docker port stoic_diffie 5000
+# output 127.0.0.1:32768
+```
+
+##  容器互联实现容器通信☆☆☆
+
+开启一个web应用，开启一个mysql服务，web应用需要用到mysql服务，两个容器需要进行交互。
+
+### 自定义容器命名
+
+```shell
+sudo docker run -d -P --name newName training/webapp python app.py
+```
+
+### 容器互联
+
+使用 `--link` 参数让容器之间安全的进行交互 <span style="color:green">**docker官方并不推荐**</span>
+
+```shell
+# 建议先删除之前的容器
+sudo docker rm -f xxx
+sudo docker run -d --name web_site training/webapp python app.py 
+sudo docker run -d --name db training/postgres
+```
+
+# Dockerfile创建镜像☆☆☆
+
+## 基本结构
+
+- 基础镜像
+- 维护者信息
+- 镜像操作指令
+- 容器启动时执行指令
+
+**基本Demo**
+
+```shell
+# This dockerfile uses the ubuntu image
+# VERSION 2 - EDITION 1
+# Author: docker_user
+# Command format: Instruction [arguments / command] ..
+# 第一行必须指定基于的基础镜像
+FROM ubuntu
+
+# 维护者信息
+MAINTAINER docker_user docker_user@email.com
+
+# 镜像操作指令
+RUN echo ""
+
+# 容器启动时执行指令
+CMD /usr/sbin/nginx
+```
+
+# 操作系统
+
+安装ubuntu镜像，在ubuntu中再安装curl
+
+```shell
+# 启动ubuntu镜像 直接run，本地镜像没有，他会直接去仓库搜索。
+sudo docker search --filter=stars=50 ubuntu
+sudo docker run -it ubuntu:18.04 bash
+
+# 在ubuntu容器中更新仓库信息
+apt-get update
+# 安装curl工具 {压测工具}
+apt-get install curl
+# 安装apache服务
+apt-get install -y apache2
+# 启动apache服务，用curl工具来测试本地访问
+service apache2 start
+```
+
+**配合使用-p参数对外映射服务端口，可以允许容器外来访问该服务。**
+
+#  为镜像添加SSH服务
+
+用ssh远程连接docker中运行的Linux容器，并详细介绍了两种创建容器的方法：基于docker commit命令创建和基于Dockerfile创建。
 
 
-##  容器互联实现容器通信
+
+
+
+
+
+
+
