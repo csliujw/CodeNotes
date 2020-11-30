@@ -232,6 +232,26 @@ Linux内核可用于不用的体现结构，支持多种硬件。所以开发时
 
 
 
+#  系统调用
+
+```shell
+# ubuntu下查看有那些系统调用
+cat /usr/src/linux-headers-5.4.0-42/arch/alpha/include/asm/unistd.h
+```
+
+讲了下系统调用的规则，有点，怎么看有那些系统调用，如何自定义系统调用。
+
+# 内核数据结构
+
+## 主要内容
+
+`ubuntu`下的文件位置
+
+- 链表----在`/usr/src/linux-headers-5.4.0-42/include/linux/list.h`
+- 队列----在``
+- 映射
+- 红黑树
+
 
 
 
