@@ -54,7 +54,7 @@ git remote add origin git项目的免密地址
 git add .
 
 # 提交
-git commit .  或者 git commit -m "提交的内容说明"
+git commit .  或者 git commit -m"提交的内容说明"
 
 # 存入仓库
 git push origin master
@@ -81,8 +81,8 @@ git clone git@github.com:yanqun/mygitremote.git
 # 提交(本地-远程)
 # (在当前工作目录 右键-git bash)
 git add.
-git commit -m "提交到分支"
-git push  origin master
+git commit -m"提交到分支"
+git push origin master
 
 # 更新(远程-本地)
 git pull
@@ -135,8 +135,6 @@ git remote add origin https://github.com/yangxiaoyan20/BowlingScore.git
 ```powershell
 git push origin test
 ```
-
-
 
 git常用命令总结，开发流程
 
