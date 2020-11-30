@@ -2,6 +2,8 @@
 
 > **Python基础语法入门**，便于后期用python写代码
 
+python的列表不支持多维切片，numpy支持！
+
 shift+tab 查看帮助文档。 jupyter notebook.
 
 Annconda：开源得Python发行版本，集成了众多的三方库，不用自己去安装（减少了版本冲突，很多框架也用了这些方式，典型的有SpringBoot的约定大于配置）。Annconda中也包含了conda。conda可以当作一个虚拟环境，为不同的项目继承不同的依赖，彼此互不干扰（类似于沙箱机制吗？）
@@ -22,6 +24,8 @@ list = [1,2,3,4,5,6,7,7,4,4]
 
 # 数据筛选模板
 # [ 操作 for x in xxx 条件判断 ]
+# [ 方法操作(x) for x in xxx 方法判断 ]
+# 我真机智。
 ```
 
 ---
@@ -30,7 +34,7 @@ list = [1,2,3,4,5,6,7,7,4,4]
 
 ### **基本数据类型**
 
-- Integer： integer转string  str(123)
+- integer： integer转string  str(123)
 - float
 - string
 
@@ -52,7 +56,7 @@ list = [1,2,3,4,5,6,7,7,4,4]
 
 ---
 
-### **prinf**
+### **print**
 
 ```python
 print(123)  # output 123
@@ -76,7 +80,6 @@ while condition > 1:
 for i in range(10): # range(10)产生0 1 2 3 4 5 6 7 8 9
     print(i)
     
-    
 range(2,10) #左闭 右开  包含2 不包括10
 
 range(2,10,2) # start end step
@@ -93,6 +96,8 @@ True False 首字母大写
 ### **数据结构及API**
 
 #### list
+
+<span style="color:green">list[ start_index : end_index ] 不包含end_index 经典左闭右开</span>
 
 **列表用法【list】**
 
@@ -184,8 +189,6 @@ for key in sorted(dicitionary.keys()):
     print("key == ",key)
 ```
 
-
-
 ----
 
 ### 条件判断
@@ -194,31 +197,31 @@ for key in sorted(dicitionary.keys()):
 num1 = 10
 num2 = 20
 num3 = 30
-if num1<num2<num3:
+if num1 < num2 < num3:
     print("OK")
 else:
     print("sorry")
     
-if num1>10:
+if num1 > 10:
     print("num1>10")
-elif num2>20:
+elif num2 > 20:
     print("num2>20")
 else:
     print("sorry")
 
 if num1 == 100:
     print("num1==100")
-elif num1==50:
+elif num1 == 50:
     pass # 不想执行任何语句的话要加pass
 else:
     print(num1)
 ```
 
 ```python
-if 1>2 and 3<4:
+if 1 > 2 and 3 < 4:
     print("1111")
     
-if 1>2 or 3<4:
+if 1 > 2 or 3 < 4:
     print("1111")
 
 # 判空
@@ -605,6 +608,18 @@ np.linspace(0,2,9) # 9个数组 从0-2中等份取
 
 ### 元素求和
 
+0一般都是向x轴走 x轴每走一步，那步的都为一个计算整体
+
+1一般都是向y轴走
+
+```python
+	1 2 3 4
+	5 6 7 8
+x轴 ->
+ 1 为一个计算整体~
+ 5 
+```
+
 > **对矩阵内的元素求和**
 
 ```python
@@ -617,12 +632,24 @@ np.sum(sample3)
 
 ```python
 np.sum(sample,axis=0)
+# eg：
+data = np.array([[1,2,3,4],
+                 [5,6,7,8]])
+np.sum(data,axis=0)
+# output
+# [6 , 8 , 10 , 12]
 ```
 
 > **对每一行求和**
 
 ```python
 np.sum(sample,axis=1)
+# eg：
+data = np.array([[1,2,3,4],
+                 [5,6,7,8]])
+np.sum(data,axis=0)
+# output
+# [10 , 26]
 ```
 
 > **最小/大值的索引**
@@ -659,11 +686,10 @@ np.clip(sample3,1,4) # 小于1的都变成1 大于4的都变成4
 
 > **仅一行的话，与python的切片语法<span style="color:green">一致</span>。**
 
-> **二维**
+> **二维,python语法不支持二维哦~**
 
 ```python
 import numpy as np
-
 """
 numpy 的索引最重要！
 """
@@ -720,6 +746,8 @@ for i in array.flat: # 迭代每一个元素
 
 > **垂直合并【垂直拼接】**
 
+垂直的方式叠起来
+
 <span style="color:white">vstack  vertical stack【垂直】</span>
 
 ```python
@@ -735,6 +763,8 @@ arr3 = np.vstack((arr1,arr2))
 > **水平合并【水平拼接】**
 
 <span style="color:white">hstack horizontal【水平】</span>
+
+水平方向叠起来
 
 ```python
 np.hstack((arr1,arr2))
@@ -821,9 +851,7 @@ arr2 = arr1.copy();
 
 ###  通过索引访问数组的技巧
 
-
-
-# matplotlib
+# maplotlib
 
 主要用pyplot包
 
