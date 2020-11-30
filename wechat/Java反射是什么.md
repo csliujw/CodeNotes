@@ -64,4 +64,4 @@ public Map<Integer, Integer> getMap(String className) {
 
 无论使用什么 Map，只要实现了`Map接口`，就可以使用`全类名路径`传入到方法中，获得对应的 Map 实例。例如java.util.HashMap / java.util.LinkedHashMap····如果要创建其它类例如`WeakHashMap`，我也**不需要修改上面这段源码**。
 
-用多态不也一样？传参不就行了？感觉写的好垃圾。。。。。。。。。。。
+用多态不也一样？传参不就行了？感觉写的好垃圾，虽然我知道他想表明什么，但是例子举的真的好垃圾。。。。。。。。。。。
