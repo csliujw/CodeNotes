@@ -192,8 +192,6 @@ git push origin -d BranchName
 git push origin --delete BranchName
 ```
 
-
-
 # Git命令大全
 
 ## git config
