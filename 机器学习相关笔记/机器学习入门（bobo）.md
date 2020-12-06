@@ -15,6 +15,10 @@
 - 存在边缘模糊的情况
 - 适用于处理随机噪声
 
+> `sklearn`官网
+
+<a href="[scikit-learn: machine learning in Python — scikit-learn 0.23.2 documentation (scikit-learn.org)](https://scikit-learn.org/stable/)">sklearn官网</a>
+
 # 一、机器学习基础
 
 > **按可解决的问题**
@@ -717,6 +721,14 @@ plt.scatter(x[y==2,0],x[y==2,1],color='black')
 
 # 四、`KNN`算法
 
+回顾：什么是机器学习
+
+```mermaid
+graph LR
+输入大量学习资料==>机器学习算法==>模型==>输出结果
+输入样例==>模型
+```
+
 > **K近邻算法**
 
 - 计算欧式距离，并存入数组
@@ -893,6 +905,18 @@ class KNNClassifier:
 
 ## 5.1 判断算法性能
 
+我们需要判断算法的性能，所以需要对训练的数据集进行进一步的划分。
+
+- 可划分了train set 和 validation set. 
+- 进行随机划分，比例一般为`9:1`或者`8:2`或者`7:3`
+
+`sklearn`采用的数据集和package
+
+- `from sklearn datasets`
+- `from sklearn.neighbords import KNeighborsClassifier`
+
+训练数据和测试数据的划分。
+
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
@@ -917,8 +941,8 @@ test_index = shuffle_index[:test_size]
 train_index = shuffle_index[test_size:]
 
 # 用索引进行切片，获得数据
-x_train = x[train_index]
-y_train = y[train_index]
+x_train = x[train_index] # 原始数据
+y_train = y[train_index] # 原始数对应的label
 x_test = x[test_index]
 y_test = y[test_index]
 
@@ -959,17 +983,40 @@ accuracy_score(y_pretice,y_test)
 
 KNN没有模型参数，只有超参数
 
+一般我们调参，调的是超参数~
+
+**寻找好的参数**
+
+一般通过如下的知识进行寻找
+
+- 领域知识
+- 经验数值
+- 实验搜索
+
 > **KNN如何寻找最好的K？**
 
 循环测试，找到最好的K，如果K在搜索范围的边缘取得最好值，则需要考虑扩大搜索范围。
 
 > **KNN有什么超参数？**
 
-- K的取值
-- distance的权重
-- 默认使用的欧式距离，可以考虑使用其他距离，如曼哈顿距离，明可夫斯基距离。
+- K的取值。
+
+- distance的权重，一般情況是取distance的倒数。
+
+- 默认使用的欧式距离，可以考虑使用其他距离，如曼哈顿距离，明可夫斯基距离。相当于我们又获得了一个超参数P.
+
+  $明可夫斯距离 (\sum|X_i^{(a)}-X_i^{(b)}|^p)^{\frac{1}{p}}$
 
 我们自己测试使用的是for循环（网格搜索），`sklearn`为我们封装了网格搜索。
+
+更多的距离定义
+
+- 向量空间余弦相似度Cosine Similarity
+- 调整余弦相似度 Adjusted Cosine Similarity
+- 皮尔森相关系数 Pearson Correlation Coefficient
+- `Jaccard`相似系数 `Jaccard` Coefficient
+
+`sklearn`的metric可以指定使用何种距离，具体可以看官方文档~~
 
 ### `sklearn`的网格搜索
 
@@ -1000,41 +1047,129 @@ best_knn = grid_search.best_estimator_  #[返回最合适的分类器]
 
 ## 5.5 数据归一化
 
-> 将所有数据映射到同一尺度
+> **将所有数据映射到同一尺度**
 
 > **为什么要进行归一化/标准化。**
 
 - 特征的单位或者大小相差较大，或者某特征的方差比其他的特征要大出几个数量级，容易影响目标结果，使得一些算法无法学习到其他的特征。
 - 比如：有三个条件，同等重要，但是数量级不同，则进行归一化/标注化【理科，文科排名比较，标准分】。
 
-----
+> **例子说明：**
+
+| .      | 肿瘤大小（厘米） | 发现时间（天） |
+| ------ | ---------------- | -------------- |
+| 样本一 | 1                | 200            |
+| 样本二 | 5                | 100            |
+
+这些值之间的差距过大，计算的话很不友好，值被发现天数所主导。我们可以将其进行归一化处理~
+
+200天 = 0.55年；100天 = 0.27年；这样数据又被肿瘤大小主导；因此我们要把数据进行归一化处理。把所有数据映射到同一尺度~
 
 **最值归一化**[normalization]：把所有数据映射到0-1之间
+
+$X_scale = \frac{X-X_{min}}{X_{max}-X_{min}}$
+
+<span style="color:green">适用于分布有明显边界的情况；</span>==但是受`outlier`影响较大，极端值会影响结果！==
+
+`eg：`多数人的收入是5000~10000，个别人收入是100w+，那么使用最值归一化就显得很不合理了。我们期望的是数据的分布尽量均匀
 
 对于每一个特征，求出他的最大值最小值。由于每个样本的特征值是一行一行存储的，所以每种特征的最大值是要按列进行筛选的！
 
 
 
-适用于分布有明显边界的情况；==但是受outlier影响较大，极端值会影响结果！==
-
 **均值方差归一化**[standardization]：把所有数据归一到均值为0方差为1的分布中
 
+$X_{scale} = \frac{X-X_{mean}}{S}$
+
 适用于数据分布没有明显边界；有可能存在极端数据值，但由于数据量大，个别极端数据带来的影响可忽略不记。
+
+> **Coding**
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def test1():
+    # 50条数据，每条数据2种特征。
+    x = np.random.randint(low=0, high=100, size=50)
+    x = np.array(x, dtype=float)
+    x_nor = (x - np.min(x)) / (np.max(x) - np.min(x))
+    print(x_nor)
+
+
+def test2():
+    # 50条数据，每条数据2种特征。我们要对每一维特征分别进行归一化处理
+    x = np.random.randint(low=0, high=100, size=(50, 2))
+    x = np.array(x, dtype=float)
+    # 实话实说，计算过程很容易乱
+    for i in range(x.shape[1]):
+        x[:, i] = (x[:, i] - np.min(x[:, i])) / (np.max(x[:, i]) - np.min(x[:, i]))
+    print(f"第0列 mean is {np.mean(x[:, 0])} std is {np.std(x[:, 0])}")
+    print(f"第1列 mean is {np.mean(x[:, 1])} std is {np.std(x[:, 0])}")
+    plt.figure()
+    plt.scatter(x[:, 0], x[:, 1], c='r')
+    plt.show()
+
+
+"""均值方差归一化"""
+
+
+def test3():
+    x = np.random.randint(low=0, high=100, size=(500, 2))
+    x = np.array(x, dtype=float)
+    for i in range(x.shape[1]):
+        x[:, i] = (x[:, i] - np.mean(x[:, i])) / np.std(x[:, i])
+    print(f"第0列 mean is {np.mean(x[:, 0])} std is {np.std(x[:, 0])}")
+    print(f"第1列 mean is {np.mean(x[:, 1])} std is {np.std(x[:, 0])}")
+    plt.figure()
+    plt.scatter(x[:, 0], x[:, 1], c='r')
+    plt.show()
+
+if __name__ == '__main__':
+    test3()
+```
+
+> **`sklearn`中的数据归一化处理**
+
+对测试数据集如何归一化？
+
+训练数据：mean_train, std_train
+
+测试数据：很难得到测试的mean和std，所以测试数据集的归一化处理是使用mean_train和std_train而不是算测试的mean和std。
+
+原因：
+
+- 测试数据是模拟真实环境
+  - 真实环境很有可能无法得到所有测试数据的均值和方差
+  - 对数据的归一化也是算法的一部分
+
+我们需要保存训练数据集得到的均值和方差
+
+```mermaid
+graph LR
+训练数据集==>Scalar==>fit==>保存关键信息的Scalar==transform==>输出结果
+输入样例==>保存关键信息的Scalar
+```
+
+```python
+
+```
 
 
 
 **总结**
 
-- 对于最值归一化：如果出现异常点，影响了最大值最小值，那么结果显然会发生改变。
-- 对于**均值方差归一：如果出现异常点，由于具有一定数据量，少量的异常点对平均值的影响并不大，从而方差改变较小。
+- 对于<span style="color:green">**最值归一化**</span>：如果出现异常点，影响了最大值最小值，那么结果显然会发生改变。
+- 对于**<span style="color:green">均值方差归一</span>**：如果出现异常点，由于具有一定数据量，少量的异常点对平均值的影响并不大，从而方差改变较小。
 
 # 六、`KNN`及ML流程总结
 
 `KNN`可解决分类问题，且天然可解决多分类问题，思想简单，效果强大。
 
-- KNN最大的缺点是效率低下。若训练集中有m个样本，n个特征，则预测每一个新数据需要O(m*n)
+- `KNN`最大的缺点是效率低下。若训练集中有m个样本，n个特征，则预测每一个新数据需要$O(m*n)$
 
-  可采用树结构就行优化：KD-Tree，Ball-Tree
+  可采用树结构就行优化：`KD-Tree`，`Ball-Tree`
 
 - 高度数据相关
 
@@ -1044,7 +1179,117 @@ best_knn = grid_search.best_estimator_  #[返回最合适的分类器]
 
   随着维度的增加，看似相近的两个点之间的距离越来越大
 
-  可用降维的方法解决。【PCA】
+  可用降维的方法解决。【`PCA`】
+
+流程回顾图：视频截图哦~
+
+# 五、线性回归算法
+
+## 概述
+
+- 解决回归问题
+- 思想简单，实现容易
+- 许多强大的非线性模型的基础
+- 结果具有很好的可解释性
+- 蕴含机器学习中的很多重要思想
+
+## 简单线性回归
+
+样本特征只有一个，称为简单线性回归~
+
+### 理论讲解
+
+<img src="../pics/ML/linear_regression/simple_linear_regression.png" style="float:left">
+
+<img src="../pics/ML/linear_regression/simple_linear_regression2.png" style="float:left">
+
+ 使差距（损失Loss）尽量小
+
+目标：找到a和b，使得$\sum_{i=1}^{m}{(y^{(i)}-ax^{(i)}-b)^2}$尽可能小，我们称之为损失函数（loss function），如果是度量拟合程度，我们称之为效用函数（utility function）
+
+通过分析问题，确定问题的损失函数或者效用函数；
+
+通过最优化损失函数或者效用函数，获得机器学习的模型。
+
+近乎所有参数学习算法都是这样的套路~
+
+- 线性回归~
+- 多项式回归~
+- 逻辑回归~
+- `SVM~`
+- 神经网络~
+- 最优化原理~
+- 凸优化~
+
+目标：找到a和b，使得$\sum_{i=1}^{m}{(y^{(i)}-ax^{(i)}-b)^2}$尽可能小
+
+典型的最小二乘法问题：最小化误差的平方
+
+$a = \frac{\sum_{i=1}^m(x^{(i)}-\overline{x})(y^{(i)}*\overline{y})}{\sum_{i=1}^m(x^{(i)}-\overline{x})^2}$
+
+$b = \overline{y} - a\overline{x}$
+
+注意哦，a和b是未知数，我们要求a和b。
+
+<span style="color:green">**求解b的表达式**</span>
+
+<img src="../pics/ML/linear_regression/leastSquares01.png" style="float:left">
+
+<img src="../pics/ML/linear_regression/leastSquares02.png" style="float:left">
+
+<span style="color:green">**求解a的表达式**</span>
+
+<img src="../pics/ML/linear_regression/leastSquares03.png" style="float:left">
+
+<img src="../pics/ML/linear_regression/leastSquares04.png" style="float:left">
+
+<span style="color:green">**a表达式的简化**</span>
+
+<img src="../pics/ML/linear_regression/leastSquares05.png" style="float:left">
+
+----
+
+**==最终结论==**
+
+<img src="../pics/ML/linear_regression/leastSquares06.png" style="float:left">
+
+### 代码实现
+
+#### 简陋版
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+# fake data
+x = np.array([1., 2., 3., 4., 5.])
+y = np.array([1., 3., 2., 3., 5.])
 
 
+def show():
+    plt.figure()
+    plt.scatter(x, y, c='g')
+    plt.show()
 
+"""知道公式，求解a和b的值~ 强力的理论支撑"""
+def test1():
+    x_mean = np.mean(x)
+    y_mean = np.mean(y)
+    num = 0.0
+    d = 0.0
+    for x_i, y_i in zip(x, y):
+        num += (x_i - x_mean) * (y_i - y_mean)
+        d += (x_i - x_mean) ** 2
+    # 求解出a 和 b
+    a = num / d
+    b = y_mean - a * x_mean
+    # 用求解出的a和b 求出 y_hat (预测值)
+    y_hat = a * x + b
+    plt.figure()
+    plt.scatter(x, y, c='g') 
+    plt.plot(x, y_hat, c='r')
+    plt.show()
+
+if __name__ == '__main__':
+    test1()
+```
