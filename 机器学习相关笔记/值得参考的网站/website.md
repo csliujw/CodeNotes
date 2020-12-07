@@ -1,6 +1,6 @@
 ## 学习网站
 
-<a href="https://www.numpy.org.cn/">numpu中文网【推荐⭐⭐⭐⭐⭐】</a>
+<a href="https://www.runoob.com/numpy/numpy-tutorial.html">numpy菜鸟教程【推荐⭐⭐⭐⭐⭐】</a>
 
 <a href="https://opencv.apachecn.org">OpenCV中文官网【推荐⭐⭐⭐⭐⭐】</a></a>
 
@@ -9,6 +9,8 @@
 <a href="https://github.com/mrgloom/awesome-semantic-segmentation">U-Net系列【推荐⭐⭐⭐⭐⭐】</a>
 
 <a href="https://github.com/ShawnBIT/UNet-family">U-Net family【推荐⭐⭐⭐】</a>
+
+<a href="https://www.numpy.org.cn/">numpu中文网【推荐⭐⭐⭐】</a>
 
 <a href="https://pytorch.org/docs/stable/index.html">PyTorch官方文档（英文）</a>
 

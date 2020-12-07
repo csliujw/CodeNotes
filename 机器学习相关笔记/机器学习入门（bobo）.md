@@ -1293,3 +1293,108 @@ def test1():
 if __name__ == '__main__':
     test1()
 ```
+
+### 向量化运算
+
+<img src="../pics/ML/linear_regression/leastSquares06.png" style="float:left">
+
+将$\sum(x^{(i)}-\overline x)$用向量表示；$\sum(y^{(i)}-\overline y)$用向量表示，利用`np`的向量运算快速实现运算。速度得到了极大的提升！！
+
+```python
+import numpy as np
+
+class SimpleLinearRegression2:
+    def __init__(self):
+        """初始化simple linear regression模型"""
+        self.a_ = None
+        self.b_ = None
+
+    def fit(self, x_train, y_train):
+        assert x_train.ndim == 1, "Simple linear regression can not only solve single feature training data"
+        assert len(x_train) == len(y_train), "the size of x_train must be equal to the size of y_train"
+
+        x_mean = np.mean(x_train)
+        y_mean = np.mean(y_train)
+
+        num = 0.0
+        d = 0.0
+        """
+        使用向量化运算
+        numpy.dot() 
+        对于两个一维的数组，计算的是这两个数组对应下标元素的乘积和(数学上称之为内积)；
+        对于二维数组，计算的是两个数组的矩阵乘积；
+        """
+        num = (x_train - x_mean).dot(y_train - y_mean)
+        d = (x_train - x_mean).dot(x_train - x_mean)
+        # for x, y in zip(x_train, y_train):
+        #     num += (x - x_mean) * (y - y_mean)
+        #     d += (x - x_mean) ** 2
+        self.a_ = num / d
+        self.b_ = y_mean - self.a_ * x_mean
+        return self
+
+    def predict(self, x_predict):
+        assert x_predict.ndim == 1, "Simple linear regression can not only solve single feature training data"
+        assert self.a_ is not None and self.b_ is not None, "must fit before predict"
+
+        return np.array([self._predict(x) for x in x_predict])
+
+    def _predict(self, x_single):
+        return self.a_ * x_single + self.b_
+
+    def __repr__(self):
+        return "simpleLinearRegression1"
+```
+
+### 回归算法的评价
+
+<img src="../pics/ML/linear_regression/evaluate.png" style="float:left">
+
+ 这个衡量标准和m有关，故我们取均值，1/m 更为合理（让衡量标准与测试样本数无关）
+
+<span style="color:green">**衡量标准：均方误差MSE（Mean Squared Error）**</span>
+
+$\frac{1}{m} \sum(y_{test}^{(i)} - \hat y_{test}^{(i)})^2$
+
+<span style="color:green">**衡量标准：均方根误差RMSE（Root Mean Squared Error）**</span>
+
+- 可以放大预测结果很真实结果之间较大差距的趋势。
+- **我们尽量让RMSE更小**，即可以让误差大的数据尽量的缩小误差。
+- **一般我们是用RMSE而非MAE~**
+
+$\sqrt{\frac{1}{m} \sum(y_{test}^{(i)} - \hat y_{test}^{(i)})^2}$
+
+<span style="color:green">**衡量标准：平均绝对误差MAE（Mean Absolute Error）**</span>
+
+$\frac{1}{m} \sum|y_{test}^{(i)} - \hat y_{test}^{(i)}|$
+
+<span style="color:red">**我们评价算法的标准和训练模型时最优化的目标函数是可以完全不一致的！！！**</span>
+
+PS：$\hat y$是预测值 $y$ 是真实值
+
+PS：`python`模块导入问题，文件名和类目不是一一对应。
+
+```python
+from 包名.文件名 import 类名
+```
+
+-----
+
+问题：分类的准确度：1最好，0最差
+
+<span style="color:green">**R Squared**</span>
+
+$R^2 = 1 - \frac{SS_{residual}}{SS_{total}}$
+
+$R^2 = 1- \frac{\sum(\hat y^{(i)} -y^{(i)})^2} {\sum(\overline y - y^{(i)})^2}$
+
+<img src="../pics/ML/linear_regression/metrics.png" style="float:left">
+
+把回归问题的衡量结果规约到0~1之间。
+
+- $R^2<=1$
+- $R^2$ 越大越好。当我们的预测模型不犯任何错误时i，$R^2$得到最大值1
+- 当我们的模型等于基准模型时，（$\hat y^{(i)} = \overline y$）,$R^2$为0，
+- 如果$R^2<0$，说明我们学习到的模型还不如基准模型。此时很有可能我们的数据不存在任何线性关系。
+
+<img src="../pics/ML/linear_regression/metrics2.png" style="float:left">
