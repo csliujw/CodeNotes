@@ -1359,8 +1359,8 @@ $\frac{1}{m} \sum(y_{test}^{(i)} - \hat y_{test}^{(i)})^2$
 <span style="color:green">**衡量标准：均方根误差RMSE（Root Mean Squared Error）**</span>
 
 - 可以放大预测结果很真实结果之间较大差距的趋势。
-- **我们尽量让RMSE更小**，即可以让误差大的数据尽量的缩小误差。
-- **一般我们是用RMSE而非MAE~**
+- **我们尽量让`RMSE`更小**，即可以让误差大的数据尽量的缩小误差。
+- **一般我们是用`RMSE`而非MAE~**
 
 $\sqrt{\frac{1}{m} \sum(y_{test}^{(i)} - \hat y_{test}^{(i)})^2}$
 
@@ -1390,11 +1390,104 @@ $R^2 = 1- \frac{\sum(\hat y^{(i)} -y^{(i)})^2} {\sum(\overline y - y^{(i)})^2}$
 
 <img src="../pics/ML/linear_regression/metrics.png" style="float:left">
 
-把回归问题的衡量结果规约到0~1之间。
+ ${\sum(\overline y - y^{(i)})^2}$ 我们可以把它理解成一个模型，这个模型就是$y = \overline y$, 这个模型与$x$无关，不管来什么$x$ 我都预测这个结果就是样本的均值。这是一个非常朴素的预测结果，我们称之为`Baseline Model`，这个的错误是比较多的，因为我们没有考虑$x$,直接生硬的预测$x$的值都等于均值，我们的模型预测产生的错误是比较少的，因为我们考虑了输入的$x$.
+
+<span style="color:green">**把回归问题的衡量结果规约到0~1之间。**</span>
+
+<span style="color:red">**$R^2$这个还是没理解。。。**</span>
+
+**百度搜了一下：**
+
+$R^2$越接近1，说明回归方程对于样本数据点的拟合优度越高；反之，$R^2$越接近0，说明回归方程对于样本数据点的拟合优度越低.
 
 - $R^2<=1$
-- $R^2$ 越大越好。当我们的预测模型不犯任何错误时i，$R^2$得到最大值1
+- $R^2$ 越大越好。当我们的预测模型不犯任何错误时，$R^2$得到最大值1
 - 当我们的模型等于基准模型时，（$\hat y^{(i)} = \overline y$）,$R^2$为0，
-- 如果$R^2<0$，说明我们学习到的模型还不如基准模型。此时很有可能我们的数据不存在任何线性关系。
+- 如果$R^2<0$，说明我们学习到的模型还不如基准模型。此时很有可能我们的数据不存在任何线性关系。不该使用线性回归法进行预测~
 
 <img src="../pics/ML/linear_regression/metrics2.png" style="float:left">
+
+$Var(y)$ 指的是方差。$y$是原始值，$\hat y$是预测值，$\overline y$是均值。
+
+$\sigma ^2 = \frac{\sum{(X-\mu)^2}}{N}$    $\sigma 为总体方差，X为变量，\mu 为总体均值， N为总体例数$
+
+<span style="color:green">**$R^2$衡量的是我们的模型，对比基准模型的效果~**</span>
+
+```python
+"""我们自己算R^2"""
+    """sklearn中的库"""
+    from sklearn.metrics import mean_squared_error, mean_absolute_error
+    R = 1 - mean_squared_error(y_test, y_predict) / np.var(y_test)
+    print("=================")
+    print(R)
+    print("=================")
+```
+
+```python
+"""sklearn库"""
+    """sklearn计算 R Square"""
+    from sklearn.metrics import r2_score
+
+    """
+    def r2_score(y_true, y_pred, *, sample_weight=None,
+            multioutput="uniform_average"):
+    """
+    r2 = r2_score(y_test, y_predict)
+    print(f"r^2 is {r2}")
+```
+
+`sklearn.linear_model.LinearRegression`的`score`默认是 $  R^2  $
+
+## 多元线性回归
+
+### 理论讲解
+
+<img src="../pics/ML/linear_regression/multiple_linear_regression.png" style="float:left">
+
+求解问题的思路和简单线性回归一样。
+
+-----
+
+**目标：使$\sum(y^{(i)}-\hat y^{(i)})^2$尽可能小**
+
+<img src="../pics/ML/linear_regression/multiple_linear_regression2.png" style="float:left">
+
+-----
+
+<img src="../pics/ML/linear_regression/multiple_linear_regression3.png" style="float:left">
+
+-----
+
+<img src="../pics/ML/linear_regression/multiple_linear_regression4.png" style="float:left">
+
+**$\hat y$是预测值**
+
+----
+
+<img src="../pics/ML/linear_regression/multiple_linear_regression5.png" style="float:left">
+
+-----
+
+**具体推导看统计学习方法或西瓜书吧~**
+
+------
+
+<img src="../pics/ML/linear_regression/multiple_linear_regression6.png" style="float:left">
+
+-----
+
+<img src="../pics/ML/linear_regression/multiple_linear_regression7.png" style="float:left">
+
+----
+
+`KNN`的数据需要进行归一化，线性回归的数据不用进行归一化。
+
+### 代码实现
+
+我们为了形式上的统一，引入了一个$X_0 \equiv 1$. $\theta_0 * X_0 = \theta_0$
+
+每个系数都对应数据中的一个特征。
+
+<img src="../pics/ML/linear_regression/multiple_linear_regression8.png" style="float:left">
+
+在实际的代码编写中，截距$\theta_0$和系数可能会分开返回。因为$\theta_0$只是一个偏移量，不是特征，对最终样本贡献的程度不一样。故把这两部分分开。
