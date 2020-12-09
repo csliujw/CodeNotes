@@ -2,6 +2,69 @@
 
 补充代码中看到的部分语法。
 
+# 博客中看到的
+
+- `*args`；`**kwargs`；`glob`；`uuid`；`serialization序列化与反序列化`
+
+```python
+"""带任意数量参数的函数"""
+import torch
+import glob
+import os
+import uuid
+import pickle
+
+"""第一个的写法不明所以，还以为是可变长参数"""
+def test1(*args):
+    for index, emelent in enumerate(args):
+        print(f"index={index}, elements is {emelent}, element type is {type(emelent)}")
+
+
+"""字典"""
+def test2(**kwargs):
+    # 字典的迭代
+    for key, value in kwargs.items():
+        print(f"key is {key}, value is {value}")
+
+
+def test3():
+    # 只查找当前目录匹配到的以 *py结尾的文件名. 这个在一个github 关于cv的开源项目里看到过~
+    files = glob.glob("*.py")
+    # 把它转成绝对路径
+    realPath = [os.path.realpath(path) for path in files]
+    print(realPath)
+
+
+"""生成uuid，随机字符~"""
+def test4():
+    print(uuid.uuid1())
+
+
+"""
+序列化，可以理解为按某种规则的持久化存储,dumps变成pickle对应格式的文件后，再用io存储起来即可~ 反序列化时，io读取内容，然后loads加载还原数据
+"""
+def serialization():
+    print("===================start serialization===================")
+    target = {'a': 1, 'b': 2, 'c': 3}
+    dumps_result = pickle.dumps(target)
+    print(f"dumps result is {dumps_result}")
+    loads_result = pickle.loads(dumps_result)
+    print(f"loads result is {loads_result}")
+    print("===================end  serialization===================")
+
+
+if __name__ == '__main__':
+    # *args
+    test1(torch.tensor(1), torch.tensor(2), torch.tensor(3))
+    # **kwargs
+    test2(a=1, b=2, c=3)
+    test3()
+    test4()
+    serialization()
+```
+
+
+
 # 语法层面
 
 ## 函数形参类型

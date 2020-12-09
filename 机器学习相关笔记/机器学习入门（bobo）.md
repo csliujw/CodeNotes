@@ -1491,3 +1491,108 @@ $\sigma ^2 = \frac{\sum{(X-\mu)^2}}{N}$    $\sigma 为总体方差，X为变量�
 <img src="../pics/ML/linear_regression/multiple_linear_regression8.png" style="float:left">
 
 在实际的代码编写中，截距$\theta_0$和系数可能会分开返回。因为$\theta_0$只是一个偏移量，不是特征，对最终样本贡献的程度不一样。故把这两部分分开。
+
+# 六、梯度下降
+
+## 概述
+
+最小化损失函数的最常用的方法。
+
+- 不是一个机器学习算法
+- 是一种基于搜索的最优化方法
+- 作用：最小化一个损失函数
+- 梯度上升法：最大化一个效用函数
+
+-----
+
+- 在直线方程中，导数代表斜率    $\frac{dJ}{d\theta}$
+- 在曲线方程中，导数代表切线斜率    $\frac{dJ}{d\theta}$
+- 导数代表$\theta$单位变化时，$J$相应的变化  $\frac{dJ}{d\theta}$
+- 此时，导数小于零，向$\theta$增大的地方前进，损失函数$J$的值会变小。
+- 导数可以代表方向，对应$J$增大的方向，导数是负值，所以$J$增大的方向是在$X$轴的负方向。
+- 希望点向$J$减小的方向移动。我们求出导数后就知道$J$增大的方向，但是我们要$J$减小。
+
+<img src="../pics/ML/gradient_elute/gradient_elute01.png" style="float:left">
+
+$-\eta \frac{dJ}{d\theta}$
+
+导数小于0，$-\eta \frac{dJ}{d\theta} \gt 0$  向$\theta$增大的方向移动，找他的极值点
+
+导数大于0，$-\eta \frac{dJ}{d\theta} \lt 0$  向$\theta$减小的方向移动，找他的极值点
+
+- $\eta$称为学习率（learning rate）
+- $\eta$的取值影响获得最优解的速度
+- $\eta$取值不合适，甚至得不到最优解
+- $\eta$是梯度下降法的一个超参数
+
+----
+
+- 并不是所有函数都有唯一的极值点
+- 解决方案
+  - 多次运行，随机初始化点
+  - 梯度下降法的初始点也是一个超参数
+
+----
+
+## 线性回归中使用GD
+
+**GD：梯度下降**
+
+<img src="../pics/ML/gradient_elute/question.png" style="float:left">
+
+线性回归法的损失函数具有唯一的最优解。
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+
+"""求导，你居然手动求导！！"""
+def dJ(theta):
+    return 2 * (theta - 2.5)
+
+"""损失函数的公式是已知的"""
+def J(theta):
+    try:
+        return (theta - 2.5) ** 2 - 1
+    except:
+        return float('inf')
+
+if __name__ == '__main__':
+    plot_x = np.linspace(-1, 6, 140)
+    plot_y = (plot_x - 2.5) ** 2 - 1
+    theta = 0.0
+    eta = 0.01
+    epsilon = 1e-8
+    # 查看梯度的变化
+    theta_history = []
+    while True:
+        gradient = dJ(theta)
+        last_theta = theta
+        theta = theta - eta * gradient
+        theta_history.append(theta)
+        if abs(J(theta) - J(last_theta)) < epsilon:
+            break
+    print(theta)
+    print(J(theta))
+    plt.plot(plot_x, J(plot_x), c='r')
+    plt.plot(np.array(theta_history), J(np.array(theta_history)), c='b', marker='+')
+    plt.show()
+```
+
+----
+
+## 梯度下降
+
+梯度就是$J$对每一个方向求偏导。数一考题：求梯度，，，不就是求偏导，然后偏导组成向量吗。。
+
+<img src="../pics/ML/gradient_elute/gd01.png" style="float:left">
+
+----
+
+<img src="../pics/ML/gradient_elute/demo01.png" style="float:left">
+
+----
+
+我们为了形式上的统一，又引入了一个$X_0 \equiv 1$. $\theta_0 * X_0 = \theta_0$，把$\theta 与 X_{i}$的乘积变成了向量形式
+
+<img src="../pics/ML/gradient_elute/demo02.png" style="float:left">
