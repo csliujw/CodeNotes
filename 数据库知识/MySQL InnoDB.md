@@ -136,3 +136,36 @@ set global innodb_old_blocks_pct = 10
 - 异步IO（Async IO）
 - 刷新邻接页（Flush Neighbor Page）
 
+**自适应哈希索引原理：**
+
+<img src="../pics/SQL/MySQL/adaptive_hash_index.png" style="float:left">
+
+Innodb存储引擎会监控对表上二级索引的查找，如果发现某二级索引被频繁访问，二级索引成为热数据，建立哈希索引可以带来速度的提升，则：
+
+1、自适应hash索引功能被打开
+
+```mysql
+mysql> show variables like '%ap%hash_index';
++----------------------------+-------+
+| Variable_name              | Value |
++----------------------------+-------+
+| innodb_adaptive_hash_index | ON    |
++----------------------------+-------+
+1 row in set (0.01 sec)
+```
+
+2、经常访问的二级索引数据会自动被生成到hash索引里面去(最近连续被访问三次的数据)，自适应哈希索引通过缓冲池的B+树构造而来（缓冲池就是内存区域中的数据），因此建立的速度很快。
+
+3、缺陷
+
+- hash自适应索引会占用innodb buffer pool；
+
+- 自适应hash索引只适合搜索等值的查询，如select * from table where index_col='xxx'，而对于其他查找类型，如范围查找，是不能使用的；
+
+- 极端情况下，自适应hash索引才有比较大的意义，可以降低逻辑读；
+
+4、自适应哈希索引的控制
+
+　　由于innodb不支持hash索引，但是在某些情况下hash索引的效率很高，于是出现了adaptive hash index功能，但是通过上面的状态监控，可以计算其收益以及付出，控制该功能开启与否。
+
+　　默认开启，建议关掉，意义不大。可以通过 set global innodb_adaptive_hash_index=off/on 关闭和打开该功能。

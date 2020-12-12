@@ -64,10 +64,9 @@ String []str = of("1","2","#"); // 省去了new的过程。
 
 ```java
 public static String XX(String path) throws IOException {
-		
-		try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-			return br.readLine();
-		}
+    try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+        return br.readLine();
+    }
 }
 ```
 
