@@ -1,4 +1,4 @@
-# Docker简介
+# 1.Docker简介
 
 ## 学习目标
 
@@ -65,7 +65,7 @@ Docker容器使用的是沙箱机制，相互之间不会有任何接口，更�
 
 - 私有，公有。
 
-# 核心概念
+# 2.核心概念
 
 Docker主机：安装了Docker程序的机器。Docker是直接安装在OS上的。
 
@@ -84,7 +84,7 @@ Docker容器：镜像启动后的实例，称为一个容器。tomcat镜像运�
 - 直接使用docker运行这个镜像，这个镜像就会生成一个docker容器
 - 停止容器就是停止软件。一个容器对应一个软件。
 
-# 安装Docker
+# 3.安装Docker
 
 ## 安装虚拟机
 
@@ -203,7 +203,7 @@ vim /etc/docker/daemon.json
 - 查看容器日志：`docker logs`
 - 更多请看官网文档<a href="https://hub.docker.com/">地址</a>
 
-# Docker命令
+# 4.Docker命令
 
 ## 入门
 
@@ -234,6 +234,188 @@ docker：比vm 更少的抽象层，不需要Hypervisor实现硬件资源虚拟�
 docker是利用宿主机的内核，不需要Guest OS，docker无须想vm一样加载os内核。
 
 ## 常用镜像命令
+
+### 镜像相关
+
+#### 查看
+
+docker images 查看有那些镜像
+
+```html
+REPOSITORY   TAG       IMAGE ID   CREATED   SIZE
+镜像名称	  版本	   镜像id		 创建时间	镜像大小
+```
+
+#### 搜索
+
+docker search 镜像名称 - 搜索镜像
+
+```shell
+docker search centos
+```
+
+#### 拉取
+
+docker pull 拉取镜像
+
+不指定的话，默认拉取latest版本的镜像。要指定的话就 docker pull tutum/centos:7 这样
+
+```shell
+docker pull tutum/centos
+```
+
+#### 删除
+
+docker rmi 删除镜像
+
+```shell
+docker rmi 镜像ID
+```
+
+删除所有镜像
+
+```shell
+# 把docker images -q 这个命令的结果 作为docker rmi的参数
+docker rmi `docker images -q`
+```
+
+### 容器相关
+
+#### 查看容器
+
+查看正在运行的容器
+
+```shell
+docker ps
+```
+
+查看所有容器
+
+```shell
+dcoker ps -a
+```
+
+查看最后一次运行的容器
+
+```shell
+docker ps -l
+```
+
+查看停止的容器
+
+```shell
+docker ps -f status=exited
+```
+
+#### 创建与启动容器
+
+**参数说明**
+
+创建容器命令：docker run
+
+-i ：表示运行容器
+
+-t（terminal）：表示容器启动后会进入其命令行。加入这两个参数后，容器创建就能登录进去。即分配一个伪终端。
+
+--name：为创建的容器命名
+
+-v：表示目录映射关系（前者是宿主机目录，后者是映射到宿主机上的目录），可以使用多个-v做多个目录或文件映射。注意：最好做目录映射，在宿主机上做修改，然后共享到容器上。
+
+-d（daemon）：在run后面加上-d参数，则<span style="color:green">会创建一个守护式容器**在后台运行**</span>（这样创建容器不会自动登录容器，如果只加-i-t两个参数，创建后就会自动进入容器）
+
+-p：表示端口映射，前者是宿主机端口，后者是容器内的映射端口
+
+----
+
+PS：**宿主机：**装docker的电脑
+
+-----
+
+**交互式方式创建容器**
+
+```shell
+docker run -it --name=容器名称 镜像名称:标签 /bin/bash 
+# 好像可以不加 /bin/bash
+```
+
+通过`docker  ps`命令查看运行中的容器
+
+退出当前容器用`exit`
+
+**守护式方式创建容器**
+
+```shell
+docker run -di --name=容器名称 镜像名称:标签
+# 创建成功后会返回容器的id
+# 如何进入创建的容器呢？
+docker exec -it 容器名称 /bin/bash
+# 退出的话，容器依旧是运行的！！！
+exit
+```
+
+> 总结：守护式创建的进程，exit后，容器不会退出！！！
+
+#### 停止与启动容器
+
+**停止容器**
+
+```shell
+docker stop 容器名称（或容器id）
+```
+
+**启动容器**
+
+```shell
+docker start 容器名称（或容器id）
+```
+
+#### 文件拷贝
+
+将文件拷贝到容器可使用cp命令。文件--->容器内
+
+```shell
+docker cp 需要拷贝的文件or目录  容器名称:容器目录
+```
+
+也可以将文件从容器内拷贝出来。容器内---->外面
+
+```shell
+docker cp 容器名称:容器目录 需要拷贝的文件或目录
+```
+
+#### 目录挂载
+
+创建容器的时候，<span style="color:green">将宿主机的目录与容器内的目录进行映射</span>，这样我们就可以通过修改宿主机某个目录的文件从而影响容器.
+
+<span style="color:red">创建容器 添加-v参数 后边为 宿主机目录:容器目录</span>，eg：
+
+```shell
+docker run -di -v  /usr/local/mythm:/usr/local/mythml --name=mycentos3 centos:7
+```
+
+#### 查看容器IP地址
+
+通过如下命令查看容器运行的各种数据
+
+```shell
+docker inspect 容器名称（容器id）
+```
+
+输出ip地址
+
+```shell
+docker inspect --format='{{.NetworkSetting.IPAddress}}' 容器名称（容器ID）
+```
+
+#### 删除容器
+
+```shell
+docker rm 容器名称（容器ID）
+```
+
+----
+
+
 
 - docker info 查看docker的信息
 - docker --help 查看帮助文档
@@ -312,12 +494,262 @@ docker是利用宿主机的内核，不需要Guest OS，docker无须想vm一样�
   - -f 跟随最新的日志打印
   - --tail 数字显示最后多少条
 
-# Docker安装mysql
+----
 
-- docker search mysql
-- docker pull mysql
-- dokcer run --name mysql01 -d mysql 发现运行错误
-  - 查看日志，看错误原因 【docker logs 对应容器的id】
-  - 如何正确运行？去官网看哦！
-  - docker run --name mysql01 -e MYSQL_ROOT_PASSWORD=123456 -d mysql
-  - docker run -p 3306:3306 --name mysql01 -e MYSQL_ROOT_PASSWORD=123456 -d mysql
+# 5.应用部署
+
+## MySQL部署
+
+查找镜像
+
+```shell
+docker search mysql
+```
+
+拉取镜像
+
+```shell
+docker pull centos/mysql-57-centos7
+```
+
+创建容器
+
+```shell
+docker run -di --name=tensquare_mysql -p 33306:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql
+```
+
+-p：代表端口映射，格式为 宿主机端口映射：容器运行端口
+
+-e：代表添加环境变量 MYSQL_ROOT_PASSWORD 是root用户名的登录密码
+
+进入MySQL容器
+
+```shell
+docker exec -it tensquare_mysql /bin/bash
+```
+
+登录MySQL
+
+```shell
+mysql -uroot -p123456
+```
+
+远程登录MySQL
+
+连接宿主机的IP，指定端口为`33306`
+
+查看日志，看错误原因 【docker logs 对应容器的id】
+
+----
+
+## tomcat部署
+
+查找镜像
+
+```shell
+docker search tomcat
+```
+
+拉取镜像
+
+```shell
+docker pull tomcat:7-jre7
+```
+
+创建容器
+
+```shell
+docker run -di --name=mytomcat -p 9000:8080 -v /usr/local/webapps:/usr/local/tomcat/webapps tomcat:7-jre7
+```
+
+-p：代表端口映射，格式为 宿主机端口映射：容器运行端口
+
+-v：表示目录映射关系（前者是宿主机目录，后者是映射到宿主机上的目录），可以使用多个-v做多个目录或文件映射。注意：最好做目录映射，在宿主机上做修改，然后共享到容器上。
+
+## Nginx部署
+
+查找镜像
+
+```shell
+docker search nginx
+```
+
+拉取镜像
+
+```shell
+docker pull nginx
+```
+
+创建Nginx容器
+
+```shell
+docker run -di --name=mynginx -p 80:80 nginx
+```
+
+## Redis部署
+
+查找镜像
+
+```shell
+docker search redis
+```
+
+拉取镜像
+
+```shell
+docker pull redis
+```
+
+创建容器
+
+```shell
+docker  run -di --name=myredis -p 6379:6379 redis
+```
+
+# 6.迁移与备份
+
+## 容器保存为镜像
+
+将容器保存为镜像（我们对容器进行了一些修改，希望以后可以继续用~）
+
+```shell
+docker commit mynginx myngnix_i
+```
+
+## 镜像备份
+
+将镜像保存为tar文件
+
+```shell
+docker save -o mynginx.tar myngnix_i
+```
+
+## 镜像恢复与迁移
+
+先删除myngnix_i镜像，再执行下面的命令
+
+```shell
+docker load -i myngnix.tar
+```
+
+-i 输入的文件
+
+执行后再次查看镜像，可以看到镜像已恢复。
+
+# 7.Dockerfile
+
+## 解释
+
+Dockerfile 是一个用来构建镜像的文本文件，文本内容包含了一条条构建镜像所需的指令和说明。这些命令应用于基础镜像并最终创建一个新的镜像。
+
+- 开发人员：可以为开发团队提供一个完全一直的开发环境
+- 测试人员：直接拿开发时所构建的镜像或者通过Dockerfile文件构建一个新的镜像开始工作
+- 运维人员：部署时，可实现应用的无缝移植。
+
+## 常用命令
+
+| 命令                                    | 作用                                                         |
+| --------------------------------------- | ------------------------------------------------------------ |
+| FROM image_name:tag                     | 定义了使用那个基础镜像启动构建流程                           |
+| MAINTAINER user_name                    | 声明镜像的创建者                                             |
+| ENV    key value                        | 设置环境变量（可写多条）                                     |
+| RUN   command                           | dockerfile的核心部分（可写多条）；用于执行后面跟着的命令行命令。 |
+| ADD   source_dir/fie      dest_dir/file | 将宿主机的文件复制到容器内，如果是一个压缩文件，将会在复制后**自动解压** |
+| COPY source_dir/file   dest_dir/file    | 和ADD相似，但是如果有压缩文件并不能解压                      |
+| WORKDIR path_dir                        | 设置工作目录                                                 |
+
+## 构建Java8镜像
+
+把jdk文件上传到服务器
+
+创建存放jdk的多级目录
+
+```shell
+mkdir -p /usr/local/dockerjdk8
+```
+
+把jdk移动到指定目录
+
+```shell
+mv jdkxxxxxx  /usr/local/dockerjdk8
+```
+
+编辑Dockerfile文件
+
+```shell
+gedit Dockerfile # 没有则创建 注意，这个文件的名称是固定的！！！
+```
+
+```shell
+FROM centos:7  # 基础镜像，本地必须存在，如果不存在则会下载
+MAINTAINER payphone # 指定创建者的信息
+WORK_DIR /usr # 设置当前目录
+RUN mkdir /usr/local/java # 用来执行指令，在local下创建一个目录
+ADD jdk-8u171-linux-x64.tar.gz /usr/local/java/ # 把xx文件复制到  /usr/local/java/目录下
+
+ENV JAVA_HOME /usr/local/java/jdk1.8.0_171
+ENV JRE_HOME $JAVA_HOME/jre
+ENV CLASSPATH $JAVA_HOME/bin/dt.jar:$JAVA_HOME$/lib/tools.jar:$JRE_HOME/lib:$CLASSPATH
+ENV PATH $JAVA_HOME/bin:$PATH
+```
+
+执行构建命令
+
+```shell
+docker build -t='jdk1.8' . # .表示指定当前目录
+```
+
+注意后面的空格和点！！！
+
+# 8.私有仓库
+
+## 搭建与配置
+
+拉取私有仓库镜像
+
+```shell
+docker pull registry
+```
+
+启动私有仓库容器
+
+```shell
+docker run -di --name=reistry -p 5000:5000 registry
+```
+
+打开浏览器 输入地址 http:// ip地址:5000/v2/_catalog 看到`{repositories:[]}`表示私有仓库搭建成功并且内容为空
+
+-----
+
+修改daemon.json
+
+```shell
+vi /etc/docker/daemon.json
+```
+
+添加以下内容，保存退出
+
+```shell
+{"insecure-registries":["ip地址:5000"]}
+# 因为之前改过，所以最后是这些内容
+{
+	"registry-mirrors":["https://docker.mirrors.ustc.deu.cn"],
+	"insecure-registries":["ip地址:5000"]
+}
+# 要想配置生效需要重启docker
+systemctl restart docker
+```
+
+此步用于让docker信任私有仓库地址
+
+## 镜像上传到私有仓库
+
+在上传前，要把私服启动起来。
+
+```shell
+# tag是把一个原来的镜像打包成一个新的镜像 新镜像的名字是私服地址:端口/jdk1.8
+docker tag jdk1.8 私服地址:端口/jdk1.8
+# 推送到私服
+docker push 新镜像的名字
+```
+
