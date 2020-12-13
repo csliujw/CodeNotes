@@ -1,6 +1,16 @@
 # Docker简介
 
-会用只是第一步，了解/懂得原理，设计思想才是重点。
+## 学习目标
+
+- 掌握Docker基础知识，理解Docker镜像与容器的概念
+- 完成Docker的安装与启动
+- 掌握Docker镜像与容器相关命令
+- 掌握Tomcat `Nginx`等软件的常用应用的安装
+- 掌握Docker迁移与备份相关命令
+- 运用`dockerfile`编写创建容器的脚本
+- 搭建与使用Docker私有仓库
+
+<span style="color:green">**会用只是第一步，了解/懂得原理，设计思想才是重点。**</span>
 
 ## 为什么要Docker
 
@@ -14,7 +24,14 @@ Docker 一次构建 处处运行。
 
 可以把容器看做是一个简易版的Linux环境。
 
-## Docker能做什么
+## 为什么选择Docker
+
+- 上手快，启动快，性能高。
+- 职责的逻辑分类：开发任意关系容器中运行的出现，运维人员关系管理容器即可。
+- 快速高效的开发生命周期：直接给你把部署环境都打包好了。
+- 鼓励使用面向服务的架构：推荐单个容器只运行一个应用出现或者进程，这样就形成了一个分布式的应用程序模型。
+
+## 容器与虚拟机的比较（背）
 
 Docker 模拟的不是一个完整的操作系统，而是对进程进行隔离。
 
@@ -22,11 +39,15 @@ Docker 模拟的不是一个完整的操作系统，而是对进程进行隔离�
 - 而容器内的应用进程直接运行于宿主的内核，容器没有自己的内容，而且也没有进行硬件虚拟。因此容器要比传统VM更为轻便。
 - 每个容器之间互相隔离，每个容器有自己的文件系统，容器之间进程不会相互影响，能区分计算资源。
 
+
+
 ## Docker三要素
 
 - 仓库：存放镜像的地方。我们可以把镜像发布到仓库中，需要时再从仓库里下载。
 - 镜像：一个模板。image文件生成的容器实例，本身也是一个文件，称为镜像文件。
 - 容器：镜像的实例就是容器。一个容器运行一种服务，当我们需要的时候，就可以通过docker客户端创建一个对应的运行实例，即容器。
+
+<span style="color:green">**镜像相对于类，容器相对于对象**</span>
 
 从仓库里下载镜像，用下载到的镜像得到一个一个的实例（容器）。一个模板生成多个实例。
 
@@ -39,6 +60,10 @@ Docker容器使用的是沙箱机制，相互之间不会有任何接口，更�
 大概意思是：Docker可以集成很多软件，然后把软件弄成镜像，让使用者可以直接用镜像，无需再安装软件。
 
 运行中的这个镜像成为容器，容器的启动很迅速。
+
+**注册中心：保存用户构建的镜像。**
+
+- 私有，公有。
 
 # 核心概念
 
@@ -92,25 +117,53 @@ Docker容器：镜像启动后的实例，称为一个容器。tomcat镜像运�
 - `docker`要求内核版本高于3.10
   - 查看内核版本 `uname -r`
   - 不是的话，用 `yum update`更新
-- 安装： `yum install docker`
-- 启动：`systemctl start docker`
-  - `docker -v` 查看docker版本号
-  - 这里我出现了问题，看了这篇<a href="https://blog.csdn.net/E09620126/article/details/86577917?utm_medium=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param">博客</a>解决了问题
-- 停止：`systemctl stop docker`
-- 将`docker`设置为开机自启：`systemctl enable docker`
-- 停止`docker`：`systemctl stop docker`
+  
+- 安装需要的软件包，yum-util提供yum-config-manager功能，另外两个是devicemapper驱动依赖的。
+
+  - `sudo yum install -y yum-utils device-mapper-persistent-data lvm2`
+
+- 设置yum源为阿里云
+
+  ```shell
+  sudo yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+  ```
+
+- 安装： `sudo yum install docker-ce`
+- 查看docker版本 `docker -v`
 
 <a hre="https://docs.docker.com/engine/install/centos/">官方安装文档</a>
 
-## 更改Docker的镜像地址
+## 更改镜像地址
 
-我下的中科大的CentOS好像速度很快，并不慢。
+设置ustc的镜像
 
-- 去阿里云或其他云上获得加速地址
-- 配置本机docker，运行镜像加速器
-  - 更改配置
-- 保存，service docker restart
-  - 查看配置是否成功： ps -ef|grep docker
+ustc docker mirror无需注册。
+
+https://lug.ustc.edu.cn/wiki/mirrors/help/docker
+
+```shell
+vim /etc/docker/daemon.json
+```
+
+在文件中输入如下内容[没有这个文件的话，就创建 然后添加内容]
+
+```shell
+{
+	"registry-mirrors":["https://docker.mirrors.ustc.edu.cn"]
+}
+```
+
+## 安装与启动
+
+- 启动：`systemctl start docker`
+  - `docker -v` 查看docker版本号
+  - 这里我出现了问题，看了这篇<a href="https://blog.csdn.net/E09620126/article/details/86577917?utm_medium=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param">博客</a>解决了问题
+- 状态：`systemctl status docker`
+- 停止：`systemctl stop docker`
+- 重启：`systemctl restart docker`
+- 开机自启：`systemctl enable docker`
+- 查看信息：`docker info`
+- 查看文档：`docker --help`
 
 ## 安装软件
 
