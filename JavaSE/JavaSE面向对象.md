@@ -1241,7 +1241,7 @@ public void fn6(){
 
 ### 0 引言（Think in Java 第11章 持有对象）
 
-> Java容器类类库的用途是“保存对象”。可细分为单列集合，双列集合！
+> **Java容器类类库的用途是“保存对象”。可细分为单列集合，双列集合！**
 
 - Collection。一个独立元素序列
 - Map。一组成队的“键值对”对象，允许使用键来查找值
@@ -1606,6 +1606,70 @@ public class Student implements Comparable {
       Runtime runtime = Runtime.getRuntime();java
   }
   ```
+
+### 12.4 集合工具类
+
+集合工具类 Collections：排序、复制、翻转等操作
+
+数据工具类 Arrays：排序、复制、翻转等操作，Arrays.sort(数组)
+
+排序默认是字典顺序，从小到大。
+
+> **Collections**
+
+```java
+Collections.max(list);
+Collections.min(list);
+Collections.binarySearch(list,find_value);
+Collections.shuffle(list); // 洗牌，打乱数据的顺序
+Collections.reverse(list); // 反转
+Collections.swap(list,2,3);// 2  3 位置的数据交换
+Collections.replaceAll(list,"a","A"); // 所有小写a替换成大写A
+Collections.fill(list,"h"); // 全部填充为h
+```
+
+> **Arrays**
+
+```java
+// 与Collections没什么区别
+```
+
+### 12.5 比较器
+
+用户自定义对象需要排序的话就需要比较器了~
+
+自定义比较器：
+
+- Comparable：内部比较器，需要修改被比较的对象Person
+- Comparator：外部比较器，不需要修改被比较的对象Person
+
+```java
+// 内部比较器
+/*
+返回值
+    1  正数 当前对象大 [降序，怎么理解，，，]
+    0  一样大
+    -1 负数 当前对象小，传入的对象大
+    
+    这样记忆吧。假设当前对象位置是0。
+    当前对象大，返回1，新对象就在1了，降序，就是大-->小
+    当前对象小，返回-1，那么新对象就插在-1处，就是：小-->大
+*/
+```
+
+思路：将比较的对象（Person）实现Comparable接口，重写compareTo方法，在该方法内写比较的逻辑。重点返回值是：-1，0，1
+
+```java
+// 外部比较器，无侵入性，传给集合
+// 这种没必要记，写个demo测一下就可以了~~~
+public class myxx implements Comparator{
+    public int compare(Object o1,Object o2){
+        // 强转
+        return s1.age - s2.age;
+    }
+}
+```
+
 
 
 ## 第十三章 异常
@@ -2705,7 +2769,7 @@ public class ServerDemo {
 
 **第二版代码**
 
-```
+```java
 public class ClientDemo {
     public static void main(String[] args) throws IOException {
         // 发送数据 内存向外 输出流
