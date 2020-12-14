@@ -1580,7 +1580,7 @@ public class Student implements Comparable {
       while(iterator.hasNext()){
           Map.Entry<String, String> next = iterator.next();
           // 有时候不用泛型 代码返回值就是舒服
-          System.out.println(next.getKey()+":"+next.getValue());
+     System.out.println(next.getKey()+":"+next.getValue());
       }
   }
   ```
@@ -1589,6 +1589,8 @@ public class Student implements Comparable {
 
   > `HashTable`的子类。常用于存储一些配置信息。回忆`properties`文件，好像是的。还有一个properties流？果不其然，有load方法传入的对象是输入流！
 
+   
+  
   ```java
   public void fn3(){
       Properties properties = new Properties();
@@ -1596,7 +1598,6 @@ public class Student implements Comparable {
       properties.setProperty("name","kkx");
       properties.setProperty("age","18");
       properties.setProperty("sex","xxx");
-  
       Set<Map.Entry<Object, Object>> entries = properties.entrySet();
       Iterator<Map.Entry<Object, Object>> iterator = entries.iterator();
       while(iterator.hasNext()){
@@ -1606,6 +1607,70 @@ public class Student implements Comparable {
       Runtime runtime = Runtime.getRuntime();java
   }
   ```
+
+### 12.4 集合工具类
+
+集合工具类 Collections：排序、复制、翻转等操作
+
+数据工具类 Arrays：排序、复制、翻转等操作，Arrays.sort(数组)
+
+排序默认是字典顺序，从小到大。
+
+> **Collections**
+
+```java
+Collections.max(list);
+Collections.min(list);
+Collections.binarySearch(list,find_value);
+Collections.shuffle(list); // 洗牌，打乱数据的顺序
+Collections.reverse(list); // 反转
+Collections.swap(list,2,3);// 2  3 位置的数据交换
+Collections.replaceAll(list,"a","A"); // 所有小写a替换成大写A
+Collections.fill(list,"h"); // 全部填充为h
+```
+
+> **Arrays**
+
+```java
+// 与Collections没什么区别
+```
+
+### 12.5 比较器
+
+用户自定义对象需要排序的话就需要比较器了~
+
+自定义比较器：
+
+- Comparable：内部比较器，需要修改被比较的对象Person
+- Comparator：外部比较器，不需要修改被比较的对象Person
+
+```java
+// 内部比较器
+/*
+返回值
+    1  正数 当前对象大 [降序，怎么理解，，，]
+    0  一样大
+    -1 负数 当前对象小，传入的对象大
+    
+    这样记忆吧。假设当前对象位置是0。
+    当前对象大，返回1，新对象就在1了，降序，就是大-->小
+    当前对象小，返回-1，那么新对象就插在-1处，就是：小-->大
+*/
+```
+
+思路：将比较的对象（Person）实现Comparable接口，重写compareTo方法，在该方法内写比较的逻辑。重点返回值是：-1，0，1
+
+```java
+// 外部比较器，无侵入性，传给集合
+// 这种没必要记，写个demo测一下就可以了~~~
+public class myxx implements Comparator{
+    public int compare(Object o1,Object o2){
+        // 强转
+        return s1.age - s2.age;
+    }
+}
+```
+
 
 
 ## 第十三章 异常
@@ -1764,7 +1829,7 @@ public void fn7() throws Exception{
 @Test
 public void fn8() throws UnsupportedEncodingException {
     String str = "详细信息显示";
-    //sing the platform's default charset
+    //using the platform's default charset
     byte[] bytes = str.getBytes();
     byte[] bytess = str.getBytes("GBK");
     // U8
