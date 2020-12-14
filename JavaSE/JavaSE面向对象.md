@@ -1241,7 +1241,7 @@ public void fn6(){
 
 ### 0 引言（Think in Java 第11章 持有对象）
 
-> Java容器类类库的用途是“保存对象”。可细分为单列集合，双列集合！
+> **Java容器类类库的用途是“保存对象”。可细分为单列集合，双列集合！**
 
 - Collection。一个独立元素序列
 - Map。一组成队的“键值对”对象，允许使用键来查找值
@@ -2770,7 +2770,7 @@ public class ServerDemo {
 
 **第二版代码**
 
-```
+```java
 public class ClientDemo {
     public static void main(String[] args) throws IOException {
         // 发送数据 内存向外 输出流
