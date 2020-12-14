@@ -1,0 +1,178 @@
+# Mask R-CNN
+
+目标检测+语义分割 ≈ 实例分割
+
+其他博客
+
+<a href="https://blog.csdn.net/soaring_casia/article/details/110677745">UNet镜像</a>
+
+<a href="https://blog.csdn.net/weixin_43198141/article/details/90178512">Fast RCNN</a>
+
+<a href="https://blog.csdn.net/crazyice521/article/details/65448935?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-2.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-2.control">Mask RCNN导读</a>
+
+<a href="https://blog.csdn.net/xiaqunfeng123/article/details/78716136?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-1.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-1.control">Mask RCNN翻译</a>
+
+<a href="https://blog.csdn.net/myGFZ/article/details/79136610">Mask RCNN完整翻译</a>
+
+
+
+# 第一篇博客
+
+<a href="https://blog.csdn.net/chao_shine/article/details/85917280?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-1.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-1.control">**来源**</a>
+
+## 问题背景
+
+实例分割需要目标检测+语义分割。
+
+Mask R-CNN在Faster R-CNN的基础上，对每个RoI增加一个掩膜预测分支。这个分支用的是简单的FCN，可以实现像素到像素产生分割掩膜。
+
+为了解决像素不对称问题（实际就是因为截断造成的），提出RoIAlign，效果优于RoIPooling和RoIWarp，可以提高10%-50%的性能。解耦掩膜和类别预测，并对每个感兴趣区域生成$K$个二值掩膜，$K$为类别的个数，每个掩膜dui。这相当于做了多个二分类，机器学习中，用多个二分类处理比一个多分类效果要好。
+
+**啥是掩膜？**
+
+掩模是由0和1组成的一个二进制图像。当在某一功能中应用掩模时，1值区域被处理，被屏蔽的0值区域不被包括在计算中。通过指定的数据值、数据范围、有限或无限值、感兴趣区和注释文件来定义图像掩模，也可以应用上述选项的任意组合作为输入来建立掩模。
+
+**啥是RoIPooling?**
+
+RoIPooling = Region of interest pooling
+
+对感兴趣的区域进行特征提取。具体操作请看下图~
+
+画出感兴趣的区域，我们希望它输出$2*2$的feature  map，所以，把它分成四份（可以不均匀），然后分别进行最大池化（也可以其他池化）。
+
+<img src="../../../pics/CV_blog/instance segment/ROI_Pooling.webp" style="float:left">
+
+**啥是RoIWarp？**
+
+相当于将目标尺寸放缩成指定尺寸的特征图。弃用了？
+
+**啥是RoIAlign?**
+
+使生成的候选框region proposal（候选区域）映射产生固定大小的feature map时提出的。
+
+<img src="../../../pics/CV_blog/instance segment/explain_roialign.png" style="float:left">
+
+针对上图，有着类似的映射
+
+- Conv layers使用的是VGG16，feat_stride=32(即表示，经过网络层后图片缩小为原图的1/32),原图$800*800$,最后一层特征图feature map大小:$25*25$
+- 假定原图中有一region proposal，大小为$665*665$，这样，映射到特征图中的大小：665/32=20.78,即$20.78*20.78$，此时，没有像RoiPooling那样就行取整操作，保留浮点数
+- 假定pooled_w=7,pooled_h=7,即pooling后固定成$7*7$大小的特征图，所以，将在 feature map上映射的$20.78*20.78$的region proposal 划分成49个同等大小的小区域（$7*7$的特征图需要49个值，所以要pooling49次），每个小区域的大小20.78/7=2.97,即$2.97*2.97$
+- 假定采样点数为4，即表示，对于每个$2.97*2.97$的小区域，平分四份，每一份取其中心点位置，而中心点位置的像素，采用双线性插值法进行计算，这样，就会得到四个点的像素值。
+- 最后，取四个像素值中最大值作为这个小区域(即：$2.97*2.97$大小的区域)的像素值，如此类推，同样是49个小区域得到49个像素值，组成$7*7$大小的feature map
+
+----
+
+## 研究内容
+
+### Mask R-CNN的特点
+
+- 训练收敛速度快，分割效果优；
+
+- 不外加任何trick，多个技术的融合，例如RoIAlign、Faster R-CNN、FPN；
+
+- 同时完成检测、分割和人体关键点检测任务，并取得start-of-art效果；
+
+- 基础网络强势：ResNeXt-101+FPN；
+
+### 与Faster R-CNN的异同
+
+<img src="../../../pics/CV_blog/instance segment/compare_with_mask rcnn.png" style="float:left">
+
+将有截断的RoIPooling改成RoIAlign
+
+### 区域推荐网络
+
+RPN，region proposal network。
+
+<span style="color:red">**不懂**</span>
+
+### FPN特征金字塔网络
+
+Feature Pyramid Networks（特征金字塔网络）
+
+结合不同层的信息，低层位置信息，高层语义信息，提高检测精度。
+
+### Mask branch掩码分支
+
+**目标**：生成掩膜，解耦物体框和掩膜掩膜的关系。
+
+因为COCO提供80类分割的实例，所以最后的输出的通道数为80。
+
+<img src="../../../pics/CV_blog/instance segment/mask_branch.png" style="float:left">
+
+因为完全基于检测的分割，受限于检测的精度。对于未能检测到的小部分，分割效果自然不好。Mask R-CNN让网络自己选择，选择最好尺度的框用于分割，大尺度下的区域可以的分割操作肯定比紧凑的不完整信息要好。直观的影响便是，出现检测重叠部位，出现“块效应”。
+
+## 损失函数
+
+在训练中，Mask R-CNN将每个RoI上的多任务损失函数定义为：
+
+$L=L_{cls}+L_{box}+L_{mask}$
+
+其中，$L_{cls}$和$L_{box}$和在Fast R-CNN中提出的一样，为分类误差和物体框误差。$L_{mask}$仅对分类分支得到的类进行计算损失，即只关注某个类别的分割效果，对其他的类也没法求啊，实际位置都没有，求了也应该是0。
+
+## 疑问点总结
+
+**全连接层的原理以及作用**
+
+全连接层之前的作用是提取特征，全连接层的作用是分类。
+
+**什么是ROI呢**
+
+ROI是Region of Interest的简写，指的是在“特征图上的框”；
+
+​    1）在Fast RCNN中， RoI是指Selective Search完成后得到的“候选框”在特征图上的映射。
+
+​    2）在Faster RCNN中，候选框是经过RPN产生的，然后再把各个“候选框”映射到特征图上，得到RoIs。
+
+**什么是RPN**
+
+替代Selective Search得到感兴趣的区域，并且一个重要的意义是算法的所有步骤都被包含在一个完整的框架中，实现了端到端的训练。
+
+## 常用英语表达
+
+| 英语表达                                           | 中文翻译             |
+| -------------------------------------------------- | -------------------- |
+| Object instance segmentation                       | 目标实例分割         |
+| Segmentation mask                                  | 分割掩模             |
+| Object mask                                        | 目标掩模             |
+| Bounding-box object detection                      | 边框目标检测         |
+| Person keypoint detection                          | 人体关键点检测       |
+| Single-model entry                                 | 单一模型实体         |
+| Semantic segmentation                              | 语义分割             |
+| Fully convolutional network(*FCN*)                 | 全卷积网络           |
+| R-CNN                                              | 区域卷积神经网络     |
+| Region of Interest(*ROI*)                          | 感兴趣区域           |
+| Feature extraction                                 | 特征提取             |
+| Quantization-free layer                            | 量化无关层           |
+| *Decouple mask*                                    | 解耦掩模             |
+| Ablation experiment                                | 对比实验             |
+| COCO key-point dataset                             | COCO关键点数据集     |
+| One-hot binary mask                                | One-hot 二进制掩模   |
+| Instance-level recognition                         | 实例级识别           |
+| Region Proposal Network (*RPN*)                    | 区域建议网络         |
+| Attention mechanism                                | 注意机制             |
+| Segment proposal                                   | 分割建议             |
+| Segment candidate                                  | 分割候选区           |
+| Bounding box                                       | 边框                 |
+| Bounding box proposal                              | 建议边框             |
+| Bounding box offset                                | 边框偏移量           |
+| Bounding box regression                            | 边框回归             |
+| Class label                                        | 类标签               |
+| Fully convolutional instance segmentation (*FCIS*) | 全卷积实例分割       |
+| pixel-to-pixel alignment                           | 像素到像素对齐       |
+| Per-pixel/pixel-level                              | 像素级               |
+| Average binary cross-entropy                       | 平均二进制交叉熵损失 |
+| Multinomial cross-entropy loss                     | 多项式交叉熵损失     |
+| Fully-connected (*fc*) layer                       | 全连接层             |
+| Pixel-to-pixel correspondence                      | 像素到像素匹配       |
+| Bilinear interpolation                             | 双线性插值           |
+| Bilinear resampling                                | 双线性重采样         |
+| Network-depth-feature                              | 网络深层特征         |
+| Feature Pyramid Network (*FPN*)                    | 特征金字塔网络       |
+| Lateral connection                                 | 横向连接             |
+| Non-maximum suppression (*NMS*)                    | 非极大值抑制         |
+| receptive field (RF)                               | 感受野               |
+
+# 第二篇博客
+
+# 我的总结
