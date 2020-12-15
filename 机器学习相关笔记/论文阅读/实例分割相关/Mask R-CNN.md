@@ -14,7 +14,80 @@
 
 <a href="https://blog.csdn.net/myGFZ/article/details/79136610">Mask RCNN完整翻译</a>
 
+# 开心的背单词时刻
 
+## Abstract中的
+
+夸了下自己的网络有多好，速度有多快，方便应用到其他地方。
+
+**present**
+
+- adj. 现在的；出席的；（事物）存在的；正在考虑的；现在时（态）的
+- n. 礼物；现在，目前；（动词）现在式；（举枪的）瞄准
+- v. 颁发；赠送；
+
+**conceptually** 
+
+- adv. 概念上
+
+例句：We present a conceptually simple, flexible, and general framework for object instance segmentation.
+
+我们提出了一种概念简单，灵活和通用的实例对象分割框架。
+
+**simutaneously**
+
+- adv. 同时地
+
+例句：Our approach efficiently detects objects in an image while simultaneously generating a high-quality segmentation mask for each instance.
+
+**overhead**
+
+- 开销
+- computational overhead 计算开销
+
+例句：Mask R-CNN is simple to train and adds only a small overhead to Faster R-CNN, running at 5 fps.
+
+**serve as a solid baseline**
+
+- 作为一个坚实的基线
+
+## Introduction中的
+
+**over a short period of time**
+
+- 在很短的时间内
+
+例句：The vision community has rapidly improved object detection and semantic segmentation results over a short period of time.
+
+视觉社区在短时间内迅速改进了目标检测和语义分割结果。
+
+**respectively**
+
+- adv. 分别地；各自地，独自地
+
+----
+
+**intuitive**
+
+- adj. 直觉的；凭直觉获知的
+
+**inference**
+
+- n. 推理；推论；推断
+
+例句：These methods are conceptually intuitive and offer flexibility and robustness, together with fast training and inference time. 
+
+这些方法概念直观，提供灵活性和鲁棒性，以及快速训练和推理时间。
+
+----
+
+**facilitates**
+
+- v. 促进；帮助；使…容易（facilitate的第三人称单数形式）
+
+例句：which facilitates a wide range of flexible architecture designs.
+
+促进了广泛灵活的架构设计。
 
 # 第一篇博客
 
@@ -189,12 +262,44 @@ ROI是Region of Interest的简写，指的是在“特征图上的框”；
 
 损失函数 = 分类误差+检测误差+分割误差
 
-$L=L_{cls}+L_{box}+L_{mask}$
+$L=L_{cls}+L_{box}+L_{mask}$；我的问题是：损失函数的反向传播咋反向的？
 
 分类误差：
 
 检测误差：
 
 分割误差：分类有3类（猫，狗，人），检测得到当前ROI属于“人”这一类，那么所使用的Lmask为“人”这一分支的mask。这样的定义使得我们的网络不需要去区分每一个像素属于哪一类，只需要去区别在这个类当中的不同分别小类。（变成二分类问题吗？）
+
+----
+
+**Faster R-CNN：**包含两个部分，提出RPN区域，找到目标框，对ROI进行分类。核心思想就是把图片区域内容送给深度网络，然后提取出深度网络某层的特征，并用这个特征来判断是什么物体（文章把背景也当成一种类别，故如果是判断是不是20个物体时，实际上在实现是判断21个类。），最后再对是物体的区域进行微微调整。
+
+**Mask Representation**（表示）：mask 对输入目标的空间布局进行编码。使用m*m的矩阵对每一个ROI进行预测而不是使用向量去进行预测，这样可以保证ROI当中的空间信息不会损失。
+
+**ROIAlign：**RoI Pooling就是实现从原图区域映射到卷积区域最后pooling到固定大小的功能，把该区域的尺寸归一化成卷积网络输入的尺寸。在归一化的过程当中，会存在ROI和提取的特征不重合现象出现，作者就提出了这个概念ROIAlign，使用ROIAlign层对提取的特征和输入之间进行校准。 
+
+**改变：**我们避免对每一个ROI边界或者块进行数字化。使用双线性内插法计算在ROI 块当中固定的四个采样位置得到的输入特征值并对结果进行融合。
+
+**Network Architecture：** 分成三个部分进行介绍，第一个是<span style="color:red">主干网络用来进行特征提取</span>，第二个是<span style="color:red">头结构用来做边界框识别（分类和回归）</span>，第三个就是<span style="color:red">mask预测用来对每一个ROI进行区分</span>。
+
+# 第三篇博客
+
+## 摘要
+
+Mask R-CNN：简单，灵活和通用的目标分割框架。
+
+通过添加一个与现有目标检测框回归并行的（原文的确是分割与检测并行），用于预测目标掩码的分支来扩展Faster R-CNN。Mask R-CNN训练简单，相对于Faster R-CNN，只需增加一个较小的开销，运行速度可达5 FPS。
+
+# 原文
+
+## Abstract
+
+## Introduction
+
+提出了Mask R-CNN，继承自Faster R-CNN，增加了一个预测分割的并行分支（对每个RoI进行分割）。
+
+mask branch用的是FCN，我觉得我们测评的改成UNet比较好。
+
+他说，Faster R-CNN改成Mask R-CNN很简单，不如再Faster R-CNN的基础上进行修改。
 
 # 我的总结
