@@ -82,9 +82,7 @@ RoIPooling = Region of interest pooling
 
 ### 区域推荐网络
 
-RPN，region proposal network。
-
-<span style="color:red">**不懂**</span>
+RPN，region proposal network。<span style="color:red">**这块不懂~**</span>
 
 ### FPN特征金字塔网络
 
@@ -174,5 +172,29 @@ ROI是Region of Interest的简写，指的是在“特征图上的框”；
 | receptive field (RF)                               | 感受野               |
 
 # 第二篇博客
+
+## 文章思想
+
+把Faster-RCNN进行拓展，添加一个分支进行语义分割。
+
+## 简介
+
+先检测出目标，再对目标进行分割。这样，目标检测效果的好坏会直接影响到分割效果的好坏。
+
+<img src="../../../pics/CV_blog/instance segment/mask_rcnn_framework.png" style="float:left">
+
+## 主要思想
+
+对图片进行检测，找出图像中的ROI，对ROI使用ROIAlign进行像素校正，然后对每一个ROI使用设计的FCN框架进行预测不同的实例所属分类，最终得到图像实例分割结果。
+
+损失函数 = 分类误差+检测误差+分割误差
+
+$L=L_{cls}+L_{box}+L_{mask}$
+
+分类误差：
+
+检测误差：
+
+分割误差：分类有3类（猫，狗，人），检测得到当前ROI属于“人”这一类，那么所使用的Lmask为“人”这一分支的mask。这样的定义使得我们的网络不需要去区分每一个像素属于哪一类，只需要去区别在这个类当中的不同分别小类。（变成二分类问题吗？）
 
 # 我的总结
