@@ -14,6 +14,8 @@
 
 <a href="https://blog.csdn.net/myGFZ/article/details/79136610">Mask RCNN完整翻译</a>
 
+<a href="https://zhuanlan.zhihu.com/p/145842317">Faster RCNN解读</a>
+
 # 开心的背单词时刻
 
 ## Abstract中的
@@ -88,6 +90,24 @@
 例句：which facilitates a wide range of flexible architecture designs.
 
 促进了广泛灵活的架构设计。
+
+---
+
+**感觉不错的句子**
+
+In principle Mask R-CNN is an intuitive extension（直接扩展） of Faster R-CNN, yet constructing the mask branch properly is critical for good results（构建mask分支对取得良好的结果至关重要）
+
+----
+
+**de facto**：事实
+
+**coarse**：粗糙
+
+**spatial **：空间的（adj）
+
+**quantization**：量化
+
+the de facto core operation for attending to instances, performs coarse spatial quantization for feature extraction.
 
 # 第一篇博客
 
