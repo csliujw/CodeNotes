@@ -131,7 +131,7 @@
 ## 2.0 环境搭建
 
 - 安装anaconda
-- 直接在cmd下输入”jupyter notebook”,系统将自动弹出notebook窗口。【我之前安装过】
+- 直接在`cmd`下输入”`jupyter notebook`”,系统将自动弹出notebook窗口。【我之前安装过】
 - 如果选择其他盘的话，先进入xx盘，再执行命令！
 
 使用的主要三方库

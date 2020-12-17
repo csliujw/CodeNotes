@@ -383,6 +383,548 @@ print(tensor)
 
 ---
 
+# PyTorch常用API
+
+核心组件：
+
+- 层：神经网络的基本结构，并输入张量转换为输出张量
+- 模型：层构成的网络
+- 损失函数：参数学习的目标函数，通过最小化损失函数来学习各种参数
+- 优化器：如何使损失函数最小，这涉及优化器
+
+<img src="../../pics/pytorch/pytorch_structure.png" style="float:left">
+
+## torch.nn模块构建网络
+
+### Module直接构建
+
+```python
+class Net(torch.nn.Module):
+    
+    def __init__(self):
+        super().__init__()  # python2.7的继承才要在super里写方法
+        self.conv1 = torch.nn.Conv2d(3, 32, 3, 1, 1)
+        self.dense1 = torch.nn.Linear(32 * 3 * 3, 128)
+        self.dense2 = torch.nn.Linear(128, 10)
+
+    def forward(self, x):
+        x = torch.max_pool2d(torch.relu(self.conv(x)), kernel_size=2)
+        x = x.view(x.size(0), -1)
+        x = torch.relu(self.dense1(x))
+        x = self.dense2(x)
+        return x
+
+
+model1 = Net1()
+print(model1)
+
+```
+
+### Sequential构建
+
+输入输出的参数可能对不上，后面再修改。
+
+```python
+class Net(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        # in_channels, out_channels, kernel_size
+        self.conv = torch.nn.Sequential(
+            torch.nn.Conv2d(3, 32, 3, 1, 1),
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d(2, 1)
+        )
+        self.dense = torch.nn.Sequential(
+            torch.nn.Linear(1984, 128),
+            torch.nn.ReLU(),
+            torch.nn.Linear(128, 10)
+        )
+
+    def forward(self, x):
+        conv_out = self.conv(x)
+        conv_out.view(conv_out.size(0), -1)
+        out = self.dense(conv_out)
+        return out
+```
+
+### 逐步向Sequential添加
+
+```python
+self.conv=torch.nn.Sequential()  				self.conv.add_module("conv1",torch.nn.Conv2d(3, 32, 3, 1, 1))
+```
+
+### Sequential字典构建
+
+```python
+class Net4(torch.nn.Module):
+    def __init__(self):
+        super(Net4, self).__init__()
+        self.conv = torch.nn.Sequential(
+            OrderedDict(
+                [
+                    ("conv1", torch.nn.Conv2d(3, 32, 3, 1, 1)),
+                    ("relu1", torch.nn.ReLU()),
+                    ("pool", torch.nn.MaxPool2d(2))
+                ]
+            ))
+ 
+        self.dense = torch.nn.Sequential(
+            OrderedDict([
+                ("dense1", torch.nn.Linear(32 * 3 * 3, 128)),
+                ("relu2", torch.nn.ReLU()),
+                ("dense2", torch.nn.Linear(128, 10))
+            ])
+        )
+```
+
+## optim
+
+### 常见优化器汇总
+
+<a href="https://pytorch.org/docs/stable/optim.html#">PyTorch中的优化器文档</a>
+
+常用优化器都在`torch.optim`
+
+> **基本使用**
+
+```python
+from torch import optim
+# 或
+import torch.optim as optim
+
+optimizer = optim.Adagrad(params, lr=0.01, lr_decay=0, weight_decay=0, initial_accumulator_value=0, eps=1e-10)
+
+optimizer = optim.Adam(params, lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)
+
+optimizer = AdamW(params, lr=0.001, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.01, amsgrad=False)
+
+optimizer = optim.ASGD(params, lr=0.01, lambd=0.0001, alpha=0.75, t0=1000000.0, weight_decay=0)
+
+optimizer = optim.RMSprop(params, lr=0.01, alpha=0.99, eps=1e-08, weight_decay=0, momentum=0, centered=False)
+
+optimizer = optim.SGD(params, lr=<required parameter>, momentum=0, dampening=0, weight_decay=0, nesterov=False)
+```
+
+### SGD算法
+
+使用参数的梯度，沿梯度方向更新参数，并重复这个步骤多次，从而逐渐靠近最优参数，这个过程称为随机梯度下降法。SGD好像是是随机选择样本进行判断梯度的走向。
+
+缺点：SGD的取值可视化查看一般都是呈“之”字形移动，这是一个相当低效的路径。即SGD的缺点是，如果函数的形状非均匀向，比如呈延伸状，搜索的路径就会非常低效。根本原因在于，梯度的方向并没有指向最小值的方向。
+
+改进：加上动量，会减轻“之”字型的程度。
+
+### AdaGrad算法
+
+传统梯度下降算法对学习率这个超参数非常敏感，难以驾驭，对参数空间的某些方向也没有很好的方法。<span  style="color:red">AdaGrad算法通过参数来调整合适的学习率r,能独立地自动调整模型参数的学习率，对稀疏参数进行大幅更新和对频繁参数进行小幅更新。因此AdaGrad算法非常适合处理稀疏数据。</span>
+
+**缺点：**
+
+- 可能因其累积梯度平方导致学习率过早或过量的减少。
+
+- AdaGrad会记录过去所有梯度地平方和。因此，学习越深入，更新的幅度就越小。如果无止境地学习，更新量就会变为0，完全不再更新。为改善这个问题，可以使用RMRSProp方法。
+
+### RMSProp算法
+
+通过修改AdaGrad算法而来，其目的是在非凸背景下效果更好。不将过去所有的梯度都一视同仁地相加，而是逐渐忘记过去的梯度，在做加法运算时将梯度的信息更多地反映出来。这种操作称为“指数平均移动”，呈指数函数式地减小过去的梯度的尺寸。为了使移动平均，还引入了一个新的超参数，来控制移动平均的长度范围。
+
+### Adam算法
+
+融合了Momentum和AdaGrad的方法。组合前两个方法的优点，有望实现参数空间的高效搜索。此外还会进行超参数的“偏置校正”。
+
+它利用梯度的一阶矩估计和二阶矩估计动态调整每个参数的学习速率。
+
+### other
+
+
+
+## Loss
+
+### 介绍
+
+- **sigmod**是一个阶跃函数，用于二分类。
+- **softmax**计算每个数据可能的概率，里面概率最大就是预测值。
+- **logsoftmax**是对softmax进行了一个与log等价的操作，但是不是直接log。
+- <span style="color:red">**博客回答：**</span>我的理解是这样的：理论上对于单标签多分类问题，直接经过softmax求出概率分布，然后把这个概率分布用crossentropy做一个似然估计误差。但是softmax求出来的概率分布，每一个概率都是(0,1)的，这就会导致有些概率过小，导致下溢。 考虑到这个概率分布总归是要经过crossentropy的，而crossentropy的计算是把概率分布外面套一个-log 来似然，那么直接在计算概率分布的时候加上log,把概率从（0，1）变为（-∞，0），这样就防止中间会有下溢出。 所以log_softmax说白了就是将本来应该由crossentropy做的套log的工作提到预测概率分布来，跳过了中间的存储步骤，防止中间数值会有下溢出，使得数据更加稳定。 正是由于把log这一步从计算误差提到前面，所以用log_softmax之后，下游的计算误差的function就应该变成NLLLoss(它没有套log这一步，直接将输入取反，然后计算和label的乘积求和平均)
+
+### 常见损失函数汇总
+
+```python
+# 均方误差损失函数 用于回归问题
+torch.nn.MSELoss(size_average=None, reduce=None, reduction: str = 'mean')
+
+# 与BCELoss的不同：将sigmoid函数和BCELoss方法结合到一个类中
+torch.nn.BCEWithLogitsLoss(weight=None, size_average=None, reduce=None, reduction='mean', pos_weight=None)
+
+
+# NLLLoss的全称是Negative Log Likelihood Loss，也就是最大似然函数。 用于多分类问题
+torch.nn.NLLLoss(weight: Optional[torch.Tensor] = None, size_average=None, ignore_index: int = -100, reduce=None, reduction: str = 'mean')
+
+# CrossEntropyLoss 交叉熵损失函数，适用于多分类问题  This criterion combines nn.LogSoftmax() and nn.NLLLoss() in one single class.
+torch.nn.CrossEntropyLoss(weight: Optional[torch.Tensor] = None, size_average=None, ignore_index: int = -100, reduce=None, reduction: str = 'mean')
+```
+
+PS：当使用sigmoid作为激活函数的时候，常用**交叉熵损失函数**而不用**均方误差损失函数**，因为它可以**完美解决平方损失函数权重更新过慢**的问题，具有“误差大的时候，权重更新快；误差小的时候，权重更新慢”的良好性质。
+
+### 用法
+
+#### BCELoss
+
+==二分类==
+
+```python
+CLASS torch.nn.BCELoss(weight=None, size_average=None, reduce=None, reduction='mean')
+```
+
+创建一个衡量目标和输出之间二进制交叉熵的criterion
+
+- 参数
+  - **weight** (*Tensor**,**可选*) – 每批元素损失的手工重标权重。如果给定，则必须是一个大小为“nbatch”的张量。
+  - **reduction** (*string**,**可选*) – 指定要应用于输出的`reduction`操作:' none ' | 'mean' | ' sum '。“none”:表示不进行任何`reduction`，“mean”:输出的和除以输出中的元素数，即求平均值，“sum”:输出求和。
+  - 其他的被弃用了
+
+```python
+import torch.nn
+
+input = torch.tensor([
+    [0.3585, 0.5973, -0.4429, -0.0270, 0.2480, 0.3332, -2.0774, 0.1682,
+                       1.5812, -1.5677],
+    [0.3585, 0.5973, -0.4429, -0.0270, 0.2480, 0.3332, -2.0774, 0.1682,
+                       1.1252, -1.5677]
+])
+target = torch.tensor([[1., 0., 0., 0., 1., 0., 0., 0., 0., 0.], [1., 0., 0., 0., 1., 0., 0., 0., 0., 0.]])
+
+
+# 可以一个一个标记的算
+def test1(input, target):
+    """
+    :param input: 单纯的数据
+    :param target: 数据对应的标签
+    :return:
+    """
+    loss = torch.nn.BCELoss()
+    out = loss(torch.sigmoid(input), target)
+    return out.data
+
+
+# 也可以批处理算
+def test2(input, target):
+    """
+    批量计算 一次处理batch_size数目的data
+    :param input: [batch_size , data]
+    :param target:[batch_size , data]
+    :return:
+    """
+    loss = torch.nn.BCELoss()
+    out = loss(torch.sigmoid(input), target)
+    print(out.data)
+
+
+if __name__ == '__main__':
+    count = 0.0
+    for epoch in range(input.shape[0]):
+        for i, t in zip(input[epoch], target[epoch]):
+            count += test1(i, t)
+    print(count / 20)
+    test2(input, target)
+    print(input.shape)
+```
+
+#### BCEWithLogitsLoss
+
+==二分类==
+
+```python
+torch.nn.BCEWithLogitsLoss(weight=None, size_average=None, reduce=None, reduction='mean', pos_weight=None)
+```
+
+与BCELoss的不同：
+
+将sigmoid函数和BCELoss方法结合到一个类中
+
+这个版本在数值上比使用一个带着BCELoss损失函数的简单的Sigmoid函数更稳定，通过将操作合并到一层中，我们利用log-sum-exp技巧来实现数值稳定性。
+
+- 多出的参数
+  - **pos_weight** ([*Tensor*](https://pytorch.org/docs/stable/tensors.html#torch.Tensor)*,**可选*) –正值例子的权重，必须是有着与分类数目相同的长度的向量
+
+```python
+import torch
+import torch.nn as nn
+
+m = nn.Sigmoid()
+loss = nn.BCELoss()
+input = torch.randn(3, requires_grad=True)
+target = torch.empty(3).random_(2)
+output = loss(m(input), target)
+print(output)
+
+loss = nn.BCEWithLogitsLoss()
+input = torch.randn(3,requires_grad=True)
+target = torch.empty(3).random_(2)
+output = loss(input, target)
+print(output)
+```
+
+```python
+import torch
+import torch.nn as nn
+
+import torch.nn
+
+input = torch.tensor([
+    [0.3585, 0.5973, -0.4429, -0.0270, 0.2480, 0.3332, -2.0774, 0.1682,
+     1.5812, -1.5677],
+    [0.3585, 0.5973, -0.4429, -0.0270, 0.2480, 0.3332, -2.0774, 0.1682,
+     1.1252, -1.5677]
+])
+target = torch.tensor([[1., 0., 0., 0., 1., 0., 0., 0., 0., 0.], [1., 0., 0., 0., 1., 0., 0., 0., 0., 0.]])
+
+
+# 可以一个一个标记的算
+def test1(input, target):
+    """
+    :param input: 单纯的数据
+    :param target: 数据对应的标签
+    :return:
+    """
+    loss = torch.nn.BCEWithLogitsLoss()
+    out = loss(input, target)
+    return out.data
+
+
+# 也可以批处理算
+def test2(input, target):
+    """
+    批量计算 一次处理batch_size数目的data
+    :param input: [batch_size , data]
+    :param target:[batch_size , data]
+    :return:
+    """
+    loss = torch.nn.BCEWithLogitsLoss()
+    out = loss(input, target)
+    print(out.data)
+
+
+if __name__ == '__main__':
+    count = 0.0
+    for epoch in range(input.shape[0]):
+        for i, t in zip(input[epoch], target[epoch]):
+            count += test1(i, t)
+    print(count / 20)
+    test2(input, target)
+    print(input.shape)
+```
+
+#### NLLLoss
+
+**NLLLoss的全称是Negative Log Likelihood Loss，也就是最大似然函数。**
+
+<a href="https://blog.csdn.net/qq_22210253/article/details/85229988">博客</a>
+
+多分类
+
+```python
+CLASS torch.nn.NLLLoss(weight=None, size_average=None, ignore_index=-100, reduce=None, reduction='mean')
+```
+
+多出参数：
+
+- **ignore_index** ([*int*](https://docs.python.org/3/library/functions.html#int)*,* *optional*) – 指定一个被忽略的目标值，该目标值不影响输入梯度。当size_average为真时，对非忽略目标的损失进行平均。
+
+ 形状：
+
+- 输入：*(N,C), C*代表类别的数量；或者在计算高维损失函数例子中输入大小为(N,C,d1,d2,...,dK)，k>=1
+- 目标：*(N)*，与输入拥有同样的形状，每一个值大小为为 0≤targets[i]≤C−1 ；或者在计算高维损失函数例子中输入大小为(N,C,d1,d2,...,dK)，k>=1
+- 输出:标量scalar。如果reduction='none',则其大小与目标相同，为(N)或(N,C,d1,d2,...,dK)，k>=1
+
+## 激活函数
+
+<a href="https://pytorch.org/docs/stable/nn.functional.html#non-linear-activation-functions">torch中实现的激活函数</a>
+
+> 将线性函数变为非线性函数。如果不用激活函数进行激活的话，多层神经网络最后是可以用一层来表示的。这样设置多层网络的意义就存在了。所有要用非线性的激活函数进行激活。所以<span style="color:red">激活函数必须为非线性函数</span>
+
+> **sigmoid**
+
+公式如下：$σ(x) = \frac{1}{1+e^{-x}}$
+
+- 优点
+  - 便于求导的平滑函数
+  - 能压缩数据，保证数据幅度不会有问题
+  - 适合用于前向传播
+- 缺点
+  - 容易出现<span style="color:red">梯度消失的现象</span>：当激活函数接近饱和区时，变化太缓慢，导数接近0，根据后向传递的数学依据是微积分求导的链式法则，当前导数需要之前各层导数的乘积，几个比较小的数相乘，导数结果很接近0，从而无法完成深层网络的训练。
+  - Sigmoid的输出不是0均值（zero-centered）的：这会导致后层的神经元的输入是非0均值的信号，这会对梯度产生影响。以 f=sigmoid(wx+b)为例， 假设输入均为正数（或负数），那么对w的导数总是正数（或负数），这样在反向传播过程中要么都往正方向更新，要么都往负方向更新，导致有一种捆绑效果，使得收敛缓慢。
+
+> **tanh**
+
+公式如下：$tanhx = \frac{e^x -e^{-x}}{e^x+e^{-x}}$
+
+tanh函数将输入值压缩到 -1~1 的范围，因此它是0均值的，解决了Sigmoid函数的非zero-centered问题，但是它也存在梯度消失和幂运算的问题。
+
+> **ReLU**
+
+公式：$ReLU = max(0,x)$
+
+- 优点
+  - ReLu的收敛速度比 sigmoid 和 tanh 快；（梯度不会饱和，解决了梯度消失问题）
+  - 计算复杂度低，不需要进行指数运算；
+  - 适合用于后向传播。
+- 缺点
+  - ReLU的输出不是zero-centered；
+  - Dead  ReLU  Problem（神经元坏死现象）：某些神经元可能永远不会被激活，导致相应参数永远不会被更新（在负数部分，梯度为0）。产生这种现象的两个原因：参数初始化问题；learning  rate太高导致在训练过程中参数更新太大。 解决方法：采用Xavier初始化方法，以及避免将learning  rate设置太大或使用adagrad等自动调节learning  rate的算法。【**这个所谓的缺点，也是其优点，丢弃一些参数，加快收敛。**】
+  - ReLU不会对数据做幅度压缩，所以数据的幅度会随着模型层数的增加不断扩张。
+
+> **Leakly ReLU**
+
+公式：$f(x) = max(0.01x,x)$
+
+此激活函数的提出是<span style="color:red">用来解决ReLU带来的神经元坏死的问题</span>，可以将0.01设置成一个变量a，其中a可以由后向传播学习。<span style="color:red">但是其表现并不一定比ReLU好</span>
+
+> **ELU函数（指数线性函数）**
+
+$f(x) = x \  \ if \  x>0$
+
+$f(x) = a(e^x-1), \ otherwise$
+
+ELU有ReLU的所有优点，并且不会有 Dead  ReLU问题，输出的均值接近0（zero-centered）。但是计算量大，其表现并不一定比ReLU好。
+
+## 正则化
+
+机器学习中容易发送过拟合，过拟合的原因主要有这两个
+
+- 模型拥有大量参数、表现力强
+- 训练数据少
+
+权值衰减常被用来抑制过拟合。该方法通过在学习过程中对最大权值进行惩罚，来抑制过拟合。很多过拟合原本就是因为权值参数取值过大才发生的。
+
+为损失函数加权重的L2范数的权值衰减方法。该方法可以简单地实现，在某种程度上能够抑制过拟合，但是如果模型复杂，只用权值衰减就很难应付了。这时候可以用正则化！！
+
+### Dropout
+
+学习过程中随机删除一些神经元。减少参数的数量，加快收敛速度，避免过拟合。一般好像是设置成丢弃50%的数据。
+
+## 数据处理
+
+### 概述
+
+- utils.data
+- torchvision
+- tensorboardX
+
+### utils.data
+
+utils.data主要包括Dataset和DataLoader。
+
+torch.utils.data.Dataset为抽象类，自定义数据集需要继承这个类。并实现两个函数
+
+- `__len__`
+- `__getitem__`一次只能对一个数据，所以来通过torch.utils.data.DataLoader定义一个新的迭代器，实现batch读取。
+
+```python
+import torch
+import numpy as np
+from torch.utils import data
+
+class TestDataset(data.Dataset):
+    def __init__():
+        self.Data = np.asarray([[1,2],[3,4],[2,1],[3,4],[4,5]])
+        self.Label = np.asarray([0,1,0,1,2]) # 数据集对应的标签
+    
+    def __getitem__(self,index):
+        txt = torch.from_numpy(self.Data[index])
+        label = torch.tensor(self.Label[index])
+        return txt,label
+    def __len__(self):
+        return len(self.Data)
+    
+Test = TestDataset()
+print(Test[2])
+print(Test.__len__())
+
+train_data = data.DataLoader(
+	dataset,
+    batch_size=1,
+    shuffle=False,
+    sampler=None,
+    batch_sampler=None,
+    num_workers=0,
+    collate_fn = <function default_collate at 地址值>,
+    pin_memory=False,
+    timeout=0,
+    worker_init_fn=None,
+)
+
+for i,item_data in enumerate(test_loader):
+    print("i:",i)
+    data,label = item_data
+    print("data:",item_data)
+    print("i:",i)
+```
+
+- dataset：加载的数据集
+- batch_size：批大小
+- shuffle：是否将数据打乱
+- sampler：样本抽样
+- num_workers：使用多进程加载的进程数，0代表不使用多进程
+- pin_memory：是否将数据保存在pin_memory中的数据转到GPU
+- drop_last：dataset中的数据个数可能不是batch_size的整数被，drop_last为True将多出来不足一个batch的数据丢弃
+
+### torchvision
+
+包含4个功能模块：model、datasets、transforms和utils。
+
+datasets可以下载一些经典数据集
+
+transforms提供了对PIL Image对象和Tensor对象的常用操作。
+
+对PIL Image的常见操作如下：
+
+- Scale/Resize：调整尺寸，长宽比保持不变。
+- CenterCrop、RandomCrop、RandomSizedCrop：裁剪图片，CenterCrop和RandomCrop在crop时是固定size，RandomSizedCrop则是random size的crop。
+- Pad：填充
+- ToTensor：把一个取值范围是 [0,255]的PIL.Image转换成Tensor。形状为（H，W，C）的Numpy.ndarray转换成形状为 [ C，H，W ]，取值范围是 [ 0，1，0 ]的torch.FloatTensor。
+- RandomHorizontalFlip：图片随机水平翻转，翻转概率为0.5
+- RandomVerticalFlip：图像随机垂直翻转。
+- ColorJitter：修改亮度、对比度和饱和度。
+
+对Tensor的常见操作如下：
+
+- Normalize：标准化，即，减均值，除以标准差
+- ToPILImage：将Tensor转为PIL Image。
+
+如果要对数据集进行多个操作，可以通过Compose将这些操作像管道一样拼接起来，类似于`nn.Sequential`.
+
+```python
+transforms.Compose([
+    # 将给定的PIL.Image 进行中心切割，得到给的的size
+    # size 可以是 tuple, (target_height, target_witdh)
+    # size 也可以是一个 Integer，在这种情况下，切出来的图片形状是正方形。
+    transforms.CenterCrop(10),
+    # 切割中心点的位置随机选取
+    transforms.RandomCrop(20,padding=0),
+    # 把一个取值范围是 [0,255] 的PIL.Image 或者 shape 为(H,W,C)的numpy.ndarray
+    # 转换为形状为(C,H,W)，取值范围为[0,1]的torch.FloatTensor
+    transforms.ToTensor(),
+    # 规范化到[-1,1]
+    transforms.Normalize(mean=(0.5,0.5,0.5), std=(0.5,0.5,0.5))
+])
+```
+
+
+
+### tensorboardX
+
+安装 `pip install tensorboardX`
+
+```python
+from tensorboardX import SummaryWriter
+
+writer = SummaryWriter(log_dir='logs')
+writer.add_xxx()
+writer.close()
+```
+
+
+
 # NN基本步骤
 
 ## NN基本搭建流程
