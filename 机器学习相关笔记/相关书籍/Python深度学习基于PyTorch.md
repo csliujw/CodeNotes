@@ -103,46 +103,6 @@ print(np.hstack((data1, data2)))
 
 ```
 
-## <span style="color:red">批量处理</span>
-
-```python
-
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-----
-
 # 第二章 PyTorch基础
 
 ## numpy与Tensor
@@ -198,52 +158,4 @@ print(np.hstack((data1, data2)))
   ```
 
 - item() 为单个变量则放回Python的标量
-
-
-
-## 自动求导
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-----
-
-# 第三章 PyTorch神经网络工具
-
-
-
-
-
-
-
-
-
-
-
-----
-
-# 第四章 PyTorch数据处理工具
 
