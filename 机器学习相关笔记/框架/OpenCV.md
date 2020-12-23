@@ -402,7 +402,7 @@ def affine(self):
 
 ## 通道转换 BRG <----> RGB
 
-OpenCV的图像默认是按BRG通道读取的，正常图片是RGB三色，需要机械能转换，以下提供几种转换的Demo.
+OpenCV的图像默认是按BRG通道读取的，正常图片是RGB三色，需要进行转换，以下提供几种转换的Demo.
 
 <span style="color:green">**提供多种是为了以后看得懂别人的代码哦！**</span>
 
