@@ -154,6 +154,175 @@ id(python_obj)
 
 ## 魔法函数
 
+## `__new__`
+
+python对象的初始化：
+
+- `__new__`进行内存空间分配
+- `__init__`进行数据初始化操作
+
+可以通过`__new__`实现单例模式
+
+## 对象
+
+- 类对象
+- 实例对象
+
+类是一个特殊的对象`--------`类对象。
+
+在程序运行的时候，类对象在内存中只有一份，使用一个类可以创建出很多个对象实例。（和Java的字节码对象很像？）
+
+类对象有自己的属性和方法
+
+- 类属性
+- 类方法
+
+通过类名.的方式可以访问类的属性 或者 调用类的方法。
+
+```python
+"""类方法"""
+class Tool(object):
+    # 类属性
+    instance = None
+    count = 0
+
+    def __init__(self):
+        Tool.count += 1
+
+    @classmethod
+    def show_tool_count(cls):
+        print("当前工具类的数目%d" % cls.count)
+
+
+if __name__ == '__main__':
+    t1 = Tool()
+    t2 = Tool()
+    t3 = Tool()
+    Tool.show_tool_count()
+```
+
+## 单例模式
+
+```python
+class Tool(object):
+    # 类属性
+    instance = None
+
+    def __init__(self):
+        print("!23")
+
+    def __new__(cls, *args, **kwargs):
+        if cls.instance is None:
+            cls.instance = super().__new__(cls)
+        return cls.instance
+
+
+if __name__ == '__main__':
+    t1 = Tool()
+    t2 = Tool()
+    t3 = Tool()
+    print(t1, t2, t3)
+```
+
+## 捕获异常
+
+```python
+try:
+    # 尝试代码
+    pass
+except:
+    # 提示错误内容
+    
+==============
+try:
+    # 尝试代码
+    pass
+except 错误类型1：
+	pass
+except (错误类型2, 错误类型3):
+    pass
+except Exception as result:
+    print("未知错误 %s" % result)
+===============
+try:
+    # 尝试代码
+    pass
+except 错误类型1：
+	pass
+except (错误类型2, 错误类型3):
+    pass
+except Exception as result:
+    print("未知错误 %s" % result)
+else:
+    # 没有异常才执行
+finally:
+    # 无论是否有异常都会执行
+```
+
+## 主动抛出异常
+
+- Python提供了一个Exception异常类
+- 在开发时，如果满足特定业务需求时，希望抛出异常，可以：
+  - 创建一个Exception对象。
+  - 使用raise关键字抛出异常对象。
+
+```python
+# 这块的操作比较迷~
+def throw_exception():
+    pwd = input("please input you password")
+    if len(pwd) >= 8:
+        return
+    exception = Exception("捕获异常,密码长度不够")
+    raise exception
+
+
+if __name__ == '__main__':
+    throw_exception()
+```
+
+## 模块
+
+模块名就是文件名。
+
+```import moduleName```导入模块中所有的类，方法，变量等
+
+```from moduleName import 类``` 从模块中导入具体的一个类
+
+```python
+import moduleName # 导入模块中的所偶工具 -- 全局变量、函数、类
+from moduleName import xx # 导入模块中的xx工具 导入后无需 模块名.工具
+from moduleName import * # 导入模块中的所有工具
+```
+
+- 模块名称相同的话，用别名进行标识
+
+**模块搜索顺序**
+
+如果在当前目录则直接导入，没有则再搜索系统目录。
+
+python中的每个模块都有一个内置属性`__file__`可以查看模块的完整路径
+
+这点上，没有Java的安全。Java的类加载机制保证了类加载，和类库调用的安全！！
+
+```python
+print(random__file__)
+```
+
+```python
+"""代码风格"""
+# 导入模块
+# 定义全局变量
+# 定义类
+# 定义函数
+
+def main():
+    """测试代码"""
+    pass
+
+def if __name__ == '__main__':
+    main() # 测试模块的作用！
+```
+
 # `Numpy`补充
 
 ```python

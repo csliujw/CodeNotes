@@ -109,6 +109,51 @@ In principle Mask R-CNN is an intuitive extension（直接扩展） of Faster R-
 
 the de facto core operation for attending to instances, performs coarse spatial quantization for feature extraction.
 
+----
+
+- decouple ：解耦
+
+Second, we found it essential to decouple mask and class prediction
+
+我们发现解耦掩码和分类至关重要。
+
+----
+
+- couples：夫妻，一对
+
+---
+
+- without bells and whistles：没有花里胡哨的东西。 
+
+---
+
+- ablation：消融
+- In ablation experiments：在消融实验中
+
+----
+
+- showcase：展示
+
+----
+
+- detect instance-specific poses 检测特定姿势
+  - instance-specific：特定于
+
+## Related Work
+
+- **resorted：**
+  - n. 凭借，手段；度假胜地；常去之地
+  - vi. 求助，诉诸；常去；采取某手段或方法
+
+----
+
+- **simultaneously**
+  - adv. 同时地
+
+## Mask R-CNN
+
+- **finerspatial layout：**精细的布局
+
 # 第一篇博客
 
 <a href="https://blog.csdn.net/chao_shine/article/details/85917280?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-1.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromBaidu-1.control">**来源**</a>
@@ -320,6 +365,26 @@ Mask R-CNN：简单，灵活和通用的目标分割框架。
 
 mask branch用的是FCN，我觉得我们测评的改成UNet比较好。
 
-他说，Faster R-CNN改成Mask R-CNN很简单，不如再Faster R-CNN的基础上进行修改。
+他说，Faster R-CNN改成Mask R-CNN很简单，我们不如再Faster R-CNN的基础上进行修改。（需要什么样的标签数据？？）
+
+Mask R-CNN中提出了一个简单的，量化无关的层，称为RoIAlign，可以保留精确的空间位置。
+
+Mask R-CNN是为每个类独立地预测二进制掩码，这样不会跨类别竞争。并且依赖于网络的RoI分类分支来预测类别。相比之下，FCN通常执行每像素多类分类，分割和分类同时进行，基于我们的实验，对于目标分割效果不佳。【<span style="color:red">为每个类独立的预测二进制掩码，不会引起跨类别竞争。机器学习P63页，多分类和二分类的适用场景和对比</span>】
+
+## Related Work
+
+介绍像素到像素对齐，这是Fast/Faster R-CNN的主要缺失。
+
+别人要么是先分割，再识别。
+
+要么是从候选框中预测候选分割，然后进行分类（that predicts segment proposals from bounding-box proposals， followed by classification）
+
+我们的方法并行进行掩码和类标签的预测，更简单也更灵活。
+
+## Mask R-CNN
+
+Faster R-CNN的每个候选目标都有两个输出，一个类别标签和一个边框偏移量。为此，我们添加了一个输出目标掩模的第三条分支。（掩模的分支是并行的）
+
+介绍Mask R-CNN的关键特点，包括像素到像素的对齐。
 
 # 我的总结
