@@ -314,10 +314,10 @@ Object proxyObject = Proxy.newProxyInstance(ClassLoader classLoader, Class[] int
 ```
 
 - 方法的作用：动态创建实现了interfaces数组中所有指定接口的实现类对象！
-- ==`ClassLoader`==：类加载器！
+- `ClassLoader`：类加载器！
   - 它是用来加载器的，把.class文件加载到内存，形成Class对象！
-- ==`Class[ ] interfaces`==：指定要实现的接口们。
-- ==`InvocationHandler`==：代理对象的所有方法（个别不执行，一般`nativate`方法不会执行，但是`hashCode`却会执行，好奇怪）都会调用`InvocationHadnler`的`invoke()`方法
+- `Class[ ] interfaces`：指定要实现的接口们。
+- `InvocationHandler`：代理对象的所有方法（个别不执行，一般`nativate`方法不会执行，但是`hashCode`却会执行，好奇怪）都会调用`InvocationHadnler`的`invoke()`方法
 - 动态代理的作用
   - 最终是学习`AOP`（面向切面编程），它与装饰者模式有点相似，它比装饰者模式更灵活（潜在含义，动态代理更难！）
 
