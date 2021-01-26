@@ -2167,6 +2167,19 @@ class ProfileDemo implements EmbeddedValueResolverAware {
 
 ## 概述
 
+> **如何使用注解AOP？**
+
+点进`@EnableAspectJAutoProxy`注解里，会发现文档注释里给了很详细的用法！！！
+
+> **三步走**
+
+- 1）在业务逻辑组件和切面类都加入到容器中，告诉Spring哪个是切面类（<span  style="color:green">**@Aspect注解标注**</span>）
+- 2）在切面类上的每一个通知方法上标注通知注解，告诉Spring何时何地运行（<span  style="color:green">**切入点表达式**</span>）
+    - @After("public int com.cc.ClassName.method(int,int)")
+- 3）开启基于注解的`aop`模式：`@EnableAspectJAutoProxy`
+
+> **基本Demo**
+
 - 配置环境
 
 ```xml
@@ -2183,12 +2196,16 @@ class ProfileDemo implements EmbeddedValueResolverAware {
 ```java
 package org.example.configuration.aop;
 
+import com.google.inject.internal.util.Join;
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.*;
-import org.springframework.context.annotation.*;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
-import java.util.stream.Stream;
+import java.util.Arrays;
 
 /**
  * AOP[动态代理]
@@ -2236,6 +2253,7 @@ public class MainConfigOfAOP {
 class MathCalculator {
     public int div(int i, int j) {
         System.out.println("div method");
+        int s = 2 / 0;
         return i / j;
     }
 }
@@ -2253,8 +2271,11 @@ class LogAspects {
     // 指定只切入某个方法 @Before("public int org.example.configuration.aop.MathCalculator.div(int,int)")
     // 指定切入该类的所有方法..任意多参数 @Before("public int org.example.configuration.aop.MathCalculator.*(..)")
     @Before("pointCut()")
+    // JoinPoint一定要出现在参数列表的第一位
     public void logStart(JoinPoint joinPoint) {
-        System.out.println("log Start " + joinPoint.getSignature());
+        Signature signature = joinPoint.getSignature();
+        Object[] args = joinPoint.getArgs();
+        System.out.println("log Start 的方法签名是" + signature + " 参数列表是：" + Arrays.asList(args));
     }
 
     @After("pointCut()")
@@ -2262,15 +2283,535 @@ class LogAspects {
         System.out.println("log End");
     }
 
-    @AfterReturning("pointCut()")
-    public void logRet() {
-        System.out.println("log Return");
+    @AfterReturning(value = "pointCut()", returning = "res")
+    public void logReturn(Object res) {
+        System.out.println("log Return, 运行结果是" + res);
     }
 
-    @AfterThrowing("pointCut()")
-    public void logException() {
-        System.out.println("log Exception");
+    @AfterThrowing(value = "pointCut()", throwing = "exc")
+    public void logException(JoinPoint joinPoint, Exception exc) {
+        System.out.println("log Exception, 方法签名是" + joinPoint.getSignature().getName() + ",异常是：" + exc);
     }
 }
 ```
+
+## AOP源码解析
+
+### 概述
+
+原理：看给容器中注册了什么组件，这个组件什么时候工作，组件工作时的功能。
+
+- 1）`@EnableAspectJAutoProxy`
+
+- 2）`AspectJAutoProxyRegistrar`
+- 3）`AnnotationAspectJA`
+- 4）`AnnotationAwareAspect`
+- 5）
+- 6）
+- 7）
+
+### @EnableAspectJAutoProxy注解
+
+加了这个注解才有AOP，先研究这个。
+
+- @EnableAspectJAutoProxy源码
+
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Import(AspectJAutoProxyRegistrar.class)
+public @interface EnableAspectJAutoProxy {
+
+	/**
+	 * Indicate whether subclass-based (CGLIB) proxies are to be created as opposed
+	 * to standard Java interface-based proxies. The default is {@code false}.
+	 */
+	boolean proxyTargetClass() default false;
+
+	/**
+	 * Indicate that the proxy should be exposed by the AOP framework as a {@code ThreadLocal}
+	 * for retrieval via the {@link org.springframework.aop.framework.AopContext} class.
+	 * Off by default, i.e. no guarantees that {@code AopContext} access will work.
+	 * @since 4.3.1
+	 */
+	boolean exposeProxy() default false;
+
+}
+```
+
+然后去看AspectJAutoProxyRegistrar的源码，对注册bean哪里debug运行看一下
+
+```java
+package org.springframework.context.annotation;
+
+/**
+ * Registers an {@link org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator
+ * AnnotationAwareAspectJAutoProxyCreator} against the current {@link BeanDefinitionRegistry}
+ * as appropriate based on a given @{@link EnableAspectJAutoProxy} annotation.
+ *
+ * @author Chris Beams
+ * @author Juergen Hoeller
+ * @since 3.1
+ * @see EnableAspectJAutoProxy
+ */
+class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
+
+	/**
+	 * Register, escalate, and configure the AspectJ auto proxy creator based on the value
+	 * of the @{@link EnableAspectJAutoProxy#proxyTargetClass()} attribute on the importing
+	 * {@code @Configuration} class.
+	 */
+	@Override
+	public void registerBeanDefinitions(
+			AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+
+// 注册这样一个组件，如果需要的话。我们点进去看一下。
+		AopConfigUtils.registerAspectJAnnotationAutoProxyCreatorIfNecessary(registry);
+
+		AnnotationAttributes enableAspectJAutoProxy =
+				AnnotationConfigUtils.attributesFor(importingClassMetadata, EnableAspectJAutoProxy.class);
+		if (enableAspectJAutoProxy != null) {
+			if (enableAspectJAutoProxy.getBoolean("proxyTargetClass")) {
+				AopConfigUtils.forceAutoProxyCreatorToUseClassProxying(registry);
+			}
+			if (enableAspectJAutoProxy.getBoolean("exposeProxy")) {
+				AopConfigUtils.forceAutoProxyCreatorToExposeProxy(registry);
+			}
+		}
+	}
+
+}
+```
+
+
+
+# Spring注解--扩展原理
+
+## `BeanFactoryPostProcessor`
+
+### 概述
+
+- BeanPostProcessor：bean后置处理器，bean创建对象初始话前后进行拦截工作的。
+
+- `BeanFactoryPostProcessor：beanFactory`的后置处理器，可以在`beanFactory`初始化后进行一些操作
+
+    - 在`BeanFactory`标准初始化之后调用；所有的bean定义已经保存加载到`beanFactory`中，**但是bean的实例还未创建。**
+
+    - BeanFactoryPostProcessor的源码注释“
+
+        - ```java
+            Modify the application context's internal bean factory after its standard
+            initialization. All bean definitions will have been loaded, but no beans
+            will have been instantiated yet.
+            ```
+
+        - 在bean factory标准初始化后执行。所有的bean的定义信息已经加载了，但是bean没有初始化！
+
+### 原理
+
+- 1）IOC容器创建对象
+- 2）invokeBeanFactoryPostProcessor（beanFactory）
+    - 如何找到所有的BeanFactoryPostProcessor并执行他们的方法？
+        - 直接在`BeanFactory`中找到所有类型是`BeanFactoryPostProcessor`的组件，并执行他们的方法
+        - 在初始化创建其他组件前面执行
+- 3）学到的一种写法，用接口表示排序规则，获取类时，查看它是否实现了xxx接口，以此判断执行顺序。
+
+## `BeanDefinitionegistryPostProcessor`
+
+### 概述
+
+`BeanDefinitionegistryPostProcessor`是`BeanFactoryPostProcessor`的子接口
+
+```java
+public interface BeanDefinitionRegistryPostProcessor extends BeanFactoryPostProcessor {
+
+	/**
+	 * Modify the application context's internal bean definition registry after its
+	 * standard initialization. All regular bean definitions will have been loaded,
+	 * but no beans will have been instantiated yet. This allows for adding further
+	 * bean definitions before the next post-processing phase kicks in.
+	 * @param registry the bean definition registry used by the application context
+	 * @throws org.springframework.beans.BeansException in case of errors
+	 */
+	void postProcessBeanstDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException;
+
+}
+```
+
+`postProcessBeanstDefinitionRegistry()` 在所有bean定义信息将要被加载，bean实例还未创建的时候执行。
+
+先给结论：
+
+- `BeanDefinitionRegistryPostProcessor()`优于`BeanFactoryPostProcessor`执行。
+- 我们可以利用`BeanDefinitionRegistryPostProcessor()`给容器中再额外添加一些组件。
+- 可以在如下代码的两个方法中打断点，看看执行流程。
+
+验证代码如下
+
+```java
+package org.example.configuration.ext;
+
+
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
+import org.springframework.beans.factory.support.RootBeanDefinition;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class BeanDefinitionRegistryPostProcessorConfig {
+
+    @Bean
+    public MyBeanDefinitionRegistryPostProcessor get() {
+        return new MyBeanDefinitionRegistryPostProcessor();
+    }
+
+
+    public static void main(String[] args) {
+        /**
+         * 这个测试流程如下：
+         *  postProcessBeanDefinitionRegistry 获取到的注册的bean数目为 7，有注册一个后 为 8
+         *  postProcessBeanFactory 获取到的注册的bean数目  为 8.
+         *  这说明了  Registry先执行于Factory
+         */
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanDefinitionRegistryPostProcessorConfig.class);
+        context.close();
+    }
+}
+
+class MyBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPostProcessor {
+
+    @Override
+    public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
+        System.out.println(String.format("postProcessBeanDefinitionRegistry拥有的类数量为 %d", registry.getBeanDefinitionCount()));
+        // 可在这里进行bean的注册
+        RootBeanDefinition beanDefinition = new RootBeanDefinition(Blue.class);
+        registry.registerBeanDefinition("blue", beanDefinition);
+        System.out.println(String.format("postProcessBeanDefinitionRegistry又注册了一个bean %s", "blue"));
+    }
+
+    @Override
+    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+        System.out.println(String.format("postProcessBeanFactory拥有的bean数量 %d", beanFactory.getBeanDefinitionCount()));
+    }
+}
+```
+
+### 原理
+
+- 1）ioc创建对象
+- 2）`refresh()-->invokeBeanFactoryPostProcssors(beanFactory)`
+- 3）从容器中获取所有的`BeanDefinitionRegistryPostProcessor`组件
+    - 1、依次触发所有的`postProessBeanDefinitionRegistry()`方法
+    - 2、再来触发`postProcessBeanFactory()`方法【该方法位于`BeanFactoryPostProcessor`类里】
+- 4）再来从容器中找到`BeanFactoryPostProcessor`组件，然后依次触发`postProcessBeanFactory()`方法
+
+## `ApplicationListener`
+
+### 概述
+
+监听容器中发布的事件。事件驱动模型开发。
+
+- 容器关闭事件
+
+- 容器刷新事件
+
+- 容器开始事件
+
+- 容器停止事件
+
+----
+
+要想实现事件监听机制，我们需要这样做：
+
+我们要写一个类实现如下监听器接口
+
+`public interface ApplicationListener<E extends ApplicationEvent> extends EventListener {}`
+
+这个接口，它所带的泛型就是我们要监听的事件。即它会监听`ApplicationEvent`及下面的子事件。
+
+然后重写接口中的`onApplicationEvent()`方法即可
+
+----
+
+**容器事件监听步骤**
+
+1）写一个监听器来监听某个事件（ApplicationEvent及其子类）
+
+2）把监听器加入到容器
+
+3）只要容器中有相关事件的发布，我们就能监听到这个事件
+
+- `ContextRefreshedEvent`：容器刷新完成（所有bean都完全创建）会发布这个事件。
+- `ContextClosedEvent`：关闭容器会发布这个事件。
+- 我们也可以自定义事件！
+
+4）发布一个事件
+
+```java
+package org.example.configuration.ext;
+
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+// 代码中含义Spring自己定义的一些事件的发布，也有我们自定义事件的发布。
+@Configuration
+public class ApplicationEventConfig {
+
+    @Bean
+    public MyApplicationEvent event() {
+        return new MyApplicationEvent();
+    }
+
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ApplicationEventConfig.class);
+        // 自定义事件发布
+        context.publishEvent(new ApplicationEvent(new String("123")) {
+        });
+        context.close();
+    }
+
+}
+
+// Spring中的事件的发布
+class MyApplicationEvent implements ApplicationListener<ApplicationEvent> {
+    // 当容器中发布此事件以后，方法触发
+    @Override
+    public void onApplicationEvent(ApplicationEvent event) {
+        System.out.println(String.format("收到事件 %s", event));
+    }
+}
+
+```
+
+---
+
+**自己发布事件**
+
+1）写一个监听器来监听这个世界（`ApplicationEvent`及其子类）。
+
+2）把监听器加入到容器。
+
+3）只要容器中有相关事件的发布，我们就能监听到这个事件。
+
+## `SmartInitializingSingleton`
+
+## Spring容器的创建过程
+
+# Spring注解--源码总结
+
+# Servlet3.0
+
+## Servlet的运行时插件能力
+
+### 概述
+
+Shared libraries（共享库） / `runtimes pluggability`（运行时插件能力）
+
+1）`Servlet`容器启动会扫描，当前应用里面每一个jar包的`ServletContainerInitServletContainerIntiializer`的实现
+
+2）提供`ServletContainerInitializer`的实现类；
+
+- 必须绑定在，`META-INF/services/javax.servlet.ServletContainerInitializer`文件中
+    - maven项目中，META-INF/services 这个目录是以resources为根目录的。即目录全名为：`resources/META-INF/services`
+    - `javax.servlet.ServletContainerInitializer`是一个没有后缀的文件哦！
+- 文件的内容就是`ServletContainerInitServletContainerIntiializer`实现类的全类名
+
+**总结：**
+
+- 容器在启动应用的时候，会扫描当前应用每一个jar包里面
+
+     `META-INF/services/javax.servlet.ServletContainerInitializer`
+
+    指定的实现类，启动并运行这个实现类的方法；传入感兴趣的类型。SpringMVC也是通过这种原理来实现的！！！
+
+**代码示例**
+
+maven工厂，`JavaWeb`项目，工程目录结构如下：
+
+<img src="../pics/Spring/Spring_ann_runtimes_pluggability.png" style="float:left">
+
+```java
+package lg;
+
+import javax.servlet.ServletContainerInitializer;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.HandlesTypes;
+import java.util.Set;
+
+// 容器启动的时候会将@HandlesTypes指定的这个类型下面的子类（实现类）传递过来
+// 写一个感兴趣的类型.
+@HandlesTypes(value = {Hello.class})
+public class MyServletContainerInitializer implements ServletContainerInitializer {
+    /**
+     * @param c   感兴趣的类型的所有子类型
+     * @param ctx 代表当前web应用的ServletContext：一个web应用一个ServletContext
+     * 使用 ServletContext注册web组件（Servlet、Filter、Listener）
+     * @throws ServletException
+     */
+    @Override
+    public void onStartup(Set<Class<?>> c, ServletContext ctx) throws ServletException {
+        System.out.println("感兴趣的类型");
+        for (Class<?> clazz : c) {
+            // 会输出  class lg.Demo
+            System.out.println(clazz);
+        }
+    }
+}
+
+interface Hello {
+
+}
+
+class Demo implements Hello {
+    public Demo() {
+        System.out.println("Demo");
+    }
+}
+```
+
+## 用上述代码注册JavaWeb三大组件
+
+PS：Servlet，Filter，XxxListener的实现类要是public修饰的！！！不然会失败！！
+
+- 例子：你直接 `class Servlet xxx` 这样注册组件，添加范围路径访问的话，浏览器会显示`no this function`!!
+
+> `ServletContainerInitializer`实现类
+
+```java
+package lg;
+
+import javax.servlet.*;
+import javax.servlet.annotation.HandlesTypes;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.EnumSet;
+import java.util.Set;
+
+// 容器启动的时候会将@HandlesTypes指定的这个类型下面的子类（实现类）传递过来
+// 写一个感兴趣的类型.
+@HandlesTypes(value = {Hello.class})
+public class MyServletContainerInitializer implements ServletContainerInitializer {
+    /**
+     * @param c   感兴趣的类型的所有子类型
+     * @param ctx 代表当前web应用的ServletContext：一个web应用一个ServletContext
+     * @throws ServletException
+     */
+    @Override
+    public void onStartup(Set<Class<?>> c, ServletContext ctx) throws ServletException {
+        System.out.println("感兴趣的类型");
+        for (Class<?> clazz : c) {
+            System.out.println(clazz);
+        }
+        // 注册 Servlet 組件
+        ServletRegistration.Dynamic userServlet = ctx.addServlet("userServlet", UserServlet.class);
+        // 配置Servlet的映射信息
+        userServlet.addMapping("/userServlet");
+
+        ServletRegistration.Dynamic demo = ctx.addServlet("demo", Demos.class);
+        demo.addMapping("/demo");
+        // 注冊监听器
+        ctx.addListener("lg.UserListener");
+        FilterRegistration.Dynamic userFilter = ctx.addFilter("userFilter", UserFilter.class);
+        // userFilter.addMappingForServletNames(); // 专门拦截xxx Servlet
+        userFilter.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*"); // 按路径拦截
+    }
+}
+
+interface Hello {
+}
+
+class Demo implements Hello {
+    public Demo() {
+        System.out.println("Demo");
+    }
+}
+// 这是演示错误的servlet。正确的需要public 修饰！！
+class Demos extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.getWriter().write("!@#");
+    }
+}
+```
+
+> Servlet实现类
+
+```java
+package lg;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+public class UserServlet extends HttpServlet implements Hello {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.getWriter().write("UserServlet");
+    }
+}
+```
+
+> Filter实现类
+
+```java
+package lg;
+
+import javax.servlet.*;
+import java.io.IOException;
+
+public class UserFilter implements Filter {
+
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+        System.out.println("UserFilter init");
+    }
+
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        System.out.println("UserFilter doFilter");
+        chain.doFilter(request, response);
+    }
+
+    @Override
+    public void destroy() {
+        System.out.println("UserFilter destroy");
+    }
+}
+```
+
+> ServletContextListener实现类
+
+```java
+package lg;
+
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+public class UserListener implements ServletContextListener, Hello {
+
+    @Override
+    public void contextInitialized(ServletContextEvent sce) {
+        System.out.println("UserListener init");
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
+        System.out.println("UserListener destroy");
+    }
+}
+```
+
+## SpringMVC
 
