@@ -2629,7 +2629,7 @@ Shared libraries（共享库） / `runtimes pluggability`（运行时插件能�
 
      `META-INF/services/javax.servlet.ServletContainerInitializer`
 
-    指定的实现类，启动并运行这个实现类的方法；传入感兴趣的类型。SpringMVC也是通过这种原理来实现的！！！
+    指定的实现类，启动并运行这个实现类的方法；传入感兴趣的类型。`SpringMVC`也是通过这种原理来实现的！！！
 
 **代码示例**
 
@@ -2813,5 +2813,444 @@ public class UserListener implements ServletContextListener, Hello {
 }
 ```
 
-## SpringMVC
+# Spring注解--SpringMVC
+
+## 概述
+
+SpringMVC文件中指定了SpringServletContainerInitializer
+
+<img src="../pics/Spring/SpringMVC_config.png" syle="color:float:left">
+
+用监听器启动Spring的配置（配置ContextLoaderListener加载Spring的配置启动Spring容器）
+启动SpringMVC的配置（配置DispatcherServlet启动SpringMVC，配好映射）
+
+看一下`SpringServletContainerInitializer`的源码：
+
+```java
+@HandlesTypes(WebApplicationInitializer.class) // 对WebApplicationInitializer及其子类感兴趣
+public class SpringServletContainerInitializer implements ServletContainerInitializer {
+
+	@Override
+	public void onStartup(Set<Class<?>> webAppInitializerClasses, ServletContext servletContext) throws ServletException {
+
+		List<WebApplicationInitializer> initializers = new LinkedList<WebApplicationInitializer>();
+
+		if (webAppInitializerClasses != null) {
+            // 拿到感兴趣的类型集合，挨个遍历
+			for (Class<?> waiClass : webAppInitializerClasses) {
+				// Be defensive: Some servlet containers provide us with invalid classes,
+                //【防止抽象类，接口啥的吧】
+				// no matter what @HandlesTypes says...
+				if (!waiClass.isInterface() && !Modifier.isAbstract(waiClass.getModifiers()) &&
+						WebApplicationInitializer.class.isAssignableFrom(waiClass)) {
+					try {
+						initializers.add((WebApplicationInitializer) waiClass.newInstance());
+					}
+					catch (Throwable ex) {
+						throw new ServletException("Failed to instantiate WebApplicationInitializer class", ex);
+					}
+				}
+			}
+		}
+
+		if (initializers.isEmpty()) {
+			servletContext.log("No Spring WebApplicationInitializer types detected on classpath");
+			return;
+		}
+
+		servletContext.log(initializers.size() + " Spring WebApplicationInitializers detected on classpath");
+		AnnotationAwareOrderComparator.sort(initializers);
+		for (WebApplicationInitializer initializer : initializers) {
+			initializer.onStartup(servletContext);
+		}
+	}
+
+}
+```
+
+---
+
+**梳理一下：**
+
+1.web容器在启动的时候，会扫描每个jar包下的 META-INFO/services/javax.servlet.ServletContainerInitializer
+
+2.加载这个文件指定的类`SpringServletContainerInitializer`
+
+3.Spring应用一启动就会加载感兴趣的WebAppleicationInitializer下的所有组件
+
+4.并且为这些组件创建对象（组件不是接口，不是抽象类，从源码里看的哦），下面让我看看WebAppleicationInitializer的子类。
+
+- ```java
+    public abstract class AbstractContextLoaderInitializer{}
+    // 作用是createRootApplicationContext() 创建根容器
+    ```
+
+- ```java
+    public abstract class AbstractContextLoaderInitializer{}
+    ```
+
+- ```java
+    public abstract class AbstractDispatcherServletInitializer{} 
+    // 看registerDispatcherServlet方法里的代码
+    // 创建一个web的ioc容器：createServletApplicationContext
+    // 创建一个DispatcherServlet：createDispatcherServlet
+    // 然后根据ServletContext的api，把创建的Servlet添加到web容器中/ 将创建的DispatcherServlet添加到Servletcontext中
+    ```
+
+    - ```java
+        // 注解方式的配置的DispatcherServlet初始化器
+        public abstract class AbstractAnnotationConfigDispatcherServletInitializer{
+        	// 创建根容器：createRootApplicationContext
+        	protected WebApplicationContext createRootApplicationContext() {
+                // 获得配置类
+        		Class<?>[] configClasses = getRootConfigClasses();
+        		if (!ObjectUtils.isEmpty(configClasses)) {
+        			AnnotationConfigWebApplicationContext rootAppContext = new AnnotationConfigWebApplicationContext();
+                    // 把配置类注册到根容器中
+        			rootAppContext.register(configClasses);
+        			return rootAppContext;
+        		}
+        		else {
+        			return null;
+        		}
+        	}
+            // 创建Web的ioc容器
+            protected WebApplicationContext createServletApplicationContext() {
+                AnnotationConfigWebApplicationContext servletAppContext = new AnnotationConfigWebApplicationContext();
+                Class<?>[] configClasses = getServletConfigClasses();
+                if (!ObjectUtils.isEmpty(configClasses)) {
+                    servletAppContext.register(configClasses);
+                }
+                return servletAppContext;
+            }
+        }
+        ```
+
+**总结**
+
+以注解方式来启动SpringMVC；继承AbstractAnnotationConfigDispatcherServletInitializer；实现抽象方法指定DispatcherServlet的配置信息。
+
+## 基本整合
+
+[SpringMVC文档](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-servlet-context-hierarchy)
+
+> **简单介绍**
+
+- org.example.config
+    - AppConfig.java	配置controller的扫描
+    - MyWebApplicationInitializer.java   Web容器启动的时候创建对象；调用方法来初始化容器前端控制器
+    - RootConfig.java  根容器的配置。也就是Spring的，如配置datasource，service，middle-tier
+- controller
+    - HelloController.java
+- service
+    - HelloService.java
+
+### 配置文件代码
+
+> **AppConfig代码**
+
+```java
+package org.example.config;
+
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.stereotype.Controller;
+
+// Spring容器不扫描 controller
+// useDefaultFilters = false 禁用默认的过滤规则，默认是扫描所有的。
+@ComponentScan(basePackages = "org.example", includeFilters = {
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = Controller.class)
+},useDefaultFilters = false)
+public class AppConfig {
+}
+```
+
+>**MyWebApplicationInitializer代码**
+
+```java
+package org.example.config;
+
+import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
+
+// Web容器启动的时候创建对象；调用方法来初始化容器前端控制器
+public class MyWebApplicationInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+    // 获取根容器的配置类; （以前是利用Spring的配置文件的方式，创建出一个父容器）
+    protected Class<?>[] getRootConfigClasses() {
+
+        return new Class[]{RootConfig.class};
+    }
+
+    // 获取web容器的配置类，相当于SpringMVC配置文件。
+    protected Class<?>[] getServletConfigClasses() {
+        return new Class[]{AppConfig.class};
+    }
+
+    // 获取DispatcherServlet的映射信息
+    protected String[] getServletMappings() {
+        // /    拦截所有资源，包括静态文件，但是不包括*.jsp
+        // /*    拦截所有资源，包括静态文件和*.jsp；jsp页面是tomcat的jsp引擎解析的。
+        return new String[]{"/"};
+    }
+}
+```
+
+> **RootConfig代码**
+
+```java
+package org.example.config;
+
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.stereotype.Controller;
+
+/**
+ * 这个是 Root WebApplicationContext；根容器的配置。也就是Spring的
+ * 如datasource、services、middle-tier
+ */
+@ComponentScan(basePackages = "org.example", excludeFilters = {
+        // 排除所有的Controller
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = {Controller.class})
+})
+public class RootConfig {
+}
+```
+
+### 其他代码
+
+> HelloService代码
+
+```java
+package org.example.service;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class HelloService {
+    public String sayHello(String name) {
+        return "Hello " + name;
+    }
+}
+```
+
+> **HelloController代码**
+
+```java
+package org.example.controller;
+
+import org.example.service.HelloService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+@Controller
+public class HelloController {
+
+    @Autowired
+    HelloService helloService;
+
+    @ResponseBody
+    @RequestMapping("/hello")
+    public String hello() {
+        String tomcat = helloService.sayHello("tomcat");
+        return tomcat;
+    }
+}
+```
+
+## mvc定制整合
+
+### 概述
+
+> **xml配置方式**
+
+```xml
+<!-- 将SpringMVC处理不了的请求交给tomcat；专门针对静态资源的，用这个配置，静态资源就可以访问了。 -->
+<mvc:default-servlet-handler />
+<!-- SpringMVC的高级功能开启 -->
+<mvc:annotation-drivern />
+<!-- 拦截器 -->
+<mvc:interceptors></mvc:interceptors>
+<mvc:view-controller path="" />
+```
+
+> **注解配置方式**
+
+[SpringMVC 注解配置官方文档](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-config)
+
+1）`@EnableWebMvc`：开启SpringMVC定制配置功能；相当于xml中的`<mvc:annotation-drivern />`
+
+2）配置组件（视图解析器、视图映射、静态资源映射、拦截器...）
+
+3）实现`WebMvcConfigurer`类，但是这个类的所有方法都要实现，有时候我们用不了这么多方法！怎么办？？
+
+- SpringMVC在这里用了一个设计模式，有一个实现了`WebMvcConfigurer`的抽象子类`WebMvcConfigurerAdapter`，这个子类实现了它的所有方法，不过都是空方法！我们可以继承这个类哦！
+
+4）具体代码看github吧。不贴代码了。
+
+> **SpringMVC maven目录结构说明**
+
+1）java目录放的java文件；最后都是输出到classes文件夹下
+
+2）resources放的资源文件；最后也是输出到classes文件夹下
+
+3）webapp是web目录；WEB-INF目录下的最后是输出到WEB-INF。static与webapp的WEB-INF同级，那么它也会与最终输出文件的WEB-INF同级。
+
+<img src="../pics/spring/maven_mvc.png" style="float:left">
+
+<img src="../pics/spring/maven_mvc2.png" style="float:left">
+
+# Servlet 3.0异步请求
+
+## 概述
+
+<img src="../pics/spring/servlet3.0_async.png" style="float:left">
+
+## 代码
+
+```java
+package org.example;
+
+
+import javax.servlet.AsyncContext;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.concurrent.TimeUnit;
+
+@WebServlet(urlPatterns = "/async", asyncSupported = true)
+public class AsyncController extends HttpServlet {
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+         // 不设置响应类型就无法异步
+        resp.setContentType("text/html");
+        
+        // 1. 支持异步处理 asyncSupported = true
+        // 2. 开启异步模式
+        AsyncContext asyncContext = req.startAsync(req, resp);
+        asyncContext.start(() -> {
+            try {
+                PrintWriter writer = asyncContext.getResponse().getWriter();
+                for (int i = 0; i < 10; i++) {
+                    TimeUnit.SECONDS.sleep(1);
+                    writer.write("123"); writer.flush();
+                }
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                asyncContext.complete();
+            }
+        });
+    }
+}
+```
+
+# SpringMVC异步请求
+
+##  返回Callable
+
+```java
+@Controller
+public class AsyncController {
+
+    @ResponseBody
+    @RequestMapping("/async")
+    /**
+     * 1、控制器返回Callable
+     * 2、Spring异步处理，将Callable 提交道TaskExecutor 使用一个隔离的线程进行执行。
+     * 3、DispatcherServlet和所有的Filter退出web容器的线程，但是response 保持打开状态。
+     * 4、Callable返回结果，SpringMVC将重新发送请求。
+     * 5、根据Callable返回的结果。SpringMVC继续进行视图渲染流程等。（从收请求 -> 视图渲染）
+     *
+     * 控制台输出 验证了上述的说法
+     * preHandle
+     * 主线程开始是...http-nio-8080-exec-2 ==> 1611740780382
+     * 主线程结束是...http-nio-8080-exec-2 ==> 1611740780382
+     * ===============DispatcherServlet及所有的Filter退出线程===============
+     *
+     * ===============等待Callable执行完成===============
+     * 副线程是...MvcAsync1 ==> 1611740780394
+     * 副线程是...MvcAsync1 ==> 1611740782395
+     *
+     * ===============Callable执行完成后又发送了一次请求===============
+     * preHandle
+     * postHandle
+     * afterCompletion
+     *
+     *
+     * -----------------------------
+     * 异步请求拦截器：
+     *      - 原生api：AsyncListener
+     *      - SpringMVC；实现AsyncHandlerInterceptor
+     */
+    public Callable<String> async() {
+        System.out.println(String.format("主线程开始是...%s ==> %s", Thread.currentThread().getName(), System.currentTimeMillis()));
+        Callable<String> callable = () -> {
+            System.out.println(String.format("副线程是...%s ==> %s", Thread.currentThread().getName(), System.currentTimeMillis()));
+            TimeUnit.SECONDS.sleep(2);
+            System.out.println(String.format("副线程是...%s ==> %s", Thread.currentThread().getName(), System.currentTimeMillis()));
+            return "Callable<String> async";
+        };
+        System.out.println(String.format("主线程结束是...%s ==> %s", Thread.currentThread().getName(), System.currentTimeMillis()));
+        return callable;
+    }
+}
+```
+
+## 真实场景用法
+
+```java
+package org.example.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.context.request.async.DeferredResult;
+
+import java.util.Queue;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedDeque;
+
+@Controller
+public class GroundTrueAsyncController {
+
+    @RequestMapping("/createOrder")
+    @ResponseBody
+    public DeferredResult<Object> createOrder() {
+        // 假设我们是指定了3秒内要完成，没完成就抛出错误 create fail
+        // 他需要有人设置值才算成功         deferredResult.setResult("value")
+        DeferredResult<Object> deferredResult = new DeferredResult<>(10000L, "create fail");
+        DeferredResultQueue.save(deferredResult);
+        return deferredResult;
+    }
+
+    @RequestMapping("/create")
+    @ResponseBody
+    public String create() {
+        // 生成订单id
+        String s = UUID.randomUUID().toString();
+        DeferredResult<Object> deferredResult = DeferredResultQueue.get();
+        // 存入订单id
+        deferredResult.setResult(s);
+        return "success==>" + s;
+    }
+}
+
+class DeferredResultQueue {
+    private static Queue<DeferredResult<Object>> queue = new ConcurrentLinkedDeque<>();
+
+    public static void save(DeferredResult<Object> deferredResult) {
+        queue.add(deferredResult);
+    }
+
+    public static DeferredResult<Object> get() {
+        return queue.poll();
+    }
+}
+```
 
