@@ -1496,12 +1496,13 @@ $\sigma ^2 = \frac{\sum{(X-\mu)^2}}{N}$    $\sigma 为总体方差，X为变量�
 
 ## 概述
 
-最小化损失函数的最常用的方法。
+**最小化损失函数的最常用的方法。**
 
 - 不是一个机器学习算法
 - 是一种基于搜索的最优化方法
 - 作用：最小化一个损失函数
 - 梯度上升法：最大化一个效用函数
+- 凸优化问题，梯度法是可以找到最优解的。
 
 -----
 
@@ -1514,76 +1515,100 @@ $\sigma ^2 = \frac{\sum{(X-\mu)^2}}{N}$    $\sigma 为总体方差，X为变量�
 
 <img src="../pics/ML/gradient_elute/gradient_elute01.png" style="float:left">
 
-$-\eta \frac{dJ}{d\theta}$
-
 导数小于0，$-\eta \frac{dJ}{d\theta} \gt 0$  向$\theta$增大的方向移动，找他的极值点
 
 导数大于0，$-\eta \frac{dJ}{d\theta} \lt 0$  向$\theta$减小的方向移动，找他的极值点
 
+直到两次迭代之间的差值足够小，则说明已经到达局部最小值。
+
+<span  style="color:green">**直观解释如下：**</span>
+
+**梯度下降，向梯度相反的方向移动。 梯度$\frac{dJ}{d\theta}<0$ 则向梯度的反方向移动，即向x轴正向走。梯度$\frac{dJ}{d\theta}>0$ 则向梯度的反方向移动，即向x轴负向走。$x \leftarrow  x- \eta \frac{dJ}{d \theta}$ 就会变小**
+
+梯度下降，下降，所以是 $-\eta \frac{dJ}{d\theta}$吗？梯度上升就是$+\eta \frac{dJ}{d\theta}$吗？
+
+<span  style="color:green">**$\eta$的解释和取值**</span>
+
 - $\eta$称为学习率（learning rate）
 - $\eta$的取值影响获得最优解的速度
 - $\eta$取值不合适，甚至得不到最优解
+    - $\eta$太小，收敛速度太慢
+    - $\eta$过大，可能导致不收敛
 - $\eta$是梯度下降法的一个超参数
 
-----
-
 - 并不是所有函数都有唯一的极值点
-- 解决方案
+
+- 解决方案（SGD随机梯度下降）
   - 多次运行，随机初始化点
   - 梯度下降法的初始点也是一个超参数
 
 ----
 
-## 线性回归中使用GD
-
-**GD：梯度下降**
-
-<img src="../pics/ML/gradient_elute/question.png" style="float:left">
+## 模拟梯度下降
 
 线性回归法的损失函数具有唯一的最优解。
+
+<img src="../pics/ML/gradient_elute/question.png" style="float:left">
 
 ```python
 import numpy as np
 import matplotlib.pyplot as plt
 
-"""求导，你居然手动求导！！"""
-def dJ(theta):
-    return 2 * (theta - 2.5)
+"""
+J对x求导
+dJ/dx = 2(x-2.5)
+"""
+plt_x = np.linspace(-1, 6, 100)
+# 我们要求plt_y的最小值，ptl_y的表达式就是需要最小化的，即损失函数
+plt_y = (plt_x - 2.5) ** 2
 
-"""损失函数的公式是已知的"""
-def J(theta):
-    try:
-        return (theta - 2.5) ** 2 - 1
-    except:
-        return float('inf')
+
+def show():
+    plt.plot(plt_x, plt_y)
+    plt.show()
+
+
+def dJ(x):
+    return 2 * (x - 2.5)
+
+
+def loss(x):
+    return (x - 2.5) ** 2 - 1
+
+
+def train():
+    # 初始化x的值，即梯度下降的起始点进行梯度下降
+    x = 0.0
+    # 学习率
+    eta = 0.8
+    # 梯度接近这个值是 说明我们基本到最小值了
+    epsilon = 1e-8
+    # 记录损失值的历史记录
+    loss_history = [x]
+    while True:
+        gradient = dJ(x)
+        last_x = x
+        x = x - eta * gradient
+        loss_history.append(x)
+        # 直到两次迭代之间的差值足够小，则说明已经到达局部最小值。
+        if abs(loss(x) - loss(last_x)) < epsilon:
+            break
+    print(x)
+    print(loss(x))
+    plt.plot(plt_x, loss(plt_x))
+    plt.plot(np.array(loss_history), loss(np.array(loss_history)), color='r', marker='+')
+    plt.show()
+
 
 if __name__ == '__main__':
-    plot_x = np.linspace(-1, 6, 140)
-    plot_y = (plot_x - 2.5) ** 2 - 1
-    theta = 0.0
-    eta = 0.01
-    epsilon = 1e-8
-    # 查看梯度的变化
-    theta_history = []
-    while True:
-        gradient = dJ(theta)
-        last_theta = theta
-        theta = theta - eta * gradient
-        theta_history.append(theta)
-        if abs(J(theta) - J(last_theta)) < epsilon:
-            break
-    print(theta)
-    print(J(theta))
-    plt.plot(plot_x, J(plot_x), c='r')
-    plt.plot(np.array(theta_history), J(np.array(theta_history)), c='b', marker='+')
-    plt.show()
+    train()
 ```
 
 ----
 
-## 梯度下降
+## 线性回归中的梯度下降法
 
-梯度就是$J$对每一个方向求偏导。数一考题：求梯度，，，不就是求偏导，然后偏导组成向量吗。。
+**梯度就是$J$对每一个方向求偏导。数一考题：求梯度，，，不就是求偏导，然后偏导组成向量吗。。**
 
 <img src="../pics/ML/gradient_elute/gd01.png" style="float:left">
 
@@ -1593,6 +1618,83 @@ if __name__ == '__main__':
 
 ----
 
-我们为了形式上的统一，又引入了一个$X_0 \equiv 1$. $\theta_0 * X_0 = \theta_0$，把$\theta 与 X_{i}$的乘积变成了向量形式
+<span style="color:red">我们为了形式上的统一，又引入了一个$X_0 \equiv 1$. $\theta_0 * X_0 = \theta_0$，把$\theta 与 X_{i}$的乘积变成了向量形式</span>
 
 <img src="../pics/ML/gradient_elute/demo02.png" style="float:left">
+
+<img src="../pics/ML/gradient_elute/demo03.png" style="float:left">
+
+再次说明！！$X_1^{(i)}$的值都是1，是为了形式上的统一，好写出向量的乘法！！
+
+```python
+# 代码
+"""
+在线性回归中使用梯度下降法
+"""
+import numpy as np
+import matplotlib.pyplot as plt
+
+np.random.seed(1)
+x = 2 * np.random.random(size=100)
+y = x * 3. + 4. + np.random.normal(size=100)
+
+# 变成 100行 1列
+X = x.reshape(-1, 1)
+Y = y.reshape(-1, 1)
+
+plt.scatter(X, Y)
+plt.show()
+
+# 照着图片的公式敲代码
+def loss(theta, X_b, y):
+    try:
+        return np.sum((y - X_b.dot(theta)) ** 2) / len(X_b)
+    except:
+        return float('inf')
+
+
+def dJ(theta, X_b, y):
+    """J对每一个维度求偏导"""
+    retVal = np.empty(len(theta))
+    retVal[0] = np.sum(X_b.dot(theta) - y)
+    for i in range(1, len(theta)):
+        retVal[i] = (X_b.dot(theta) - y).dot(X_b[:, i])
+    return retVal * 2 / len(X_b)
+
+
+def gradient_descent(X_b, y, initial_theta, eta, n_iters=1e4, epsilon=1e-9):
+    theta = initial_theta
+    i_iter = 0
+    theta_history = [initial_theta]
+    while i_iter < n_iters:
+        gradient = dJ(theta, X_b, y)
+        last_theta = theta
+        theta = theta - eta * gradient
+
+        if abs(loss(theta, X_b, y) - loss(last_theta, X_b, y)) < epsilon:
+            break
+        i_iter += 1
+    return theta
+
+
+def train():
+    X_b = np.hstack([np.ones((len(x), 1)), x.reshape(-1, 1)])
+    initial_theta = np.zeros(X_b.shape[1])
+    eta = 0.0005
+
+    theta = gradient_descent(X_b, y, initial_theta, eta)
+    print(theta)
+
+
+if __name__ == '__main__':
+    train()
+```
+
+## 数据标准化
+
+在训练前进行数据标准化
+
+## 随机梯度下降法
+
+直接使用sklearn的SGD了。
+

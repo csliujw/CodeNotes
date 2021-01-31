@@ -208,11 +208,197 @@ public class RequestMappingHeaderController {
 
 ----
 
+> <span style="color:green">**@RequestMapping 中的 consumes和produces**</span>
+
+- consumes：只接受内容类型是哪种的请求，规定请求头中的Content-Type
+- produces：告诉浏览器返回的内容类型是说明，给响应头中加上Content-Type
+    - text/html;charset=utf-8
+
+----
+
+## ant风格的URL
+
+**URL地址可以写模糊的通配符**
+
+ * ？ 能替代任意一个字符
+ * * 能替代任意多个字符，和一层路径
+ * ** 能替代多层路径
+
+```java
+package cn.payphone.controller;
+
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * 模糊匹配功能
+ * URL地址可以写模糊的通配符
+ * ？ 能替代任意一个字符
+ * * 能替代任意多个字符，和一层路径
+ * ** 能替代多层路径
+ */
+@RestController
+@RequestMapping("/ant")
+public class AntController {
+
+    @RequestMapping("/antTest01")
+    public String antTest1() {
+        return "antTest01";
+    }
+
+    // antTest01 antTest02 antTest03 都是走这个方法
+    // antTest011就不行了，antTest0?中的问号只能匹配一个字符
+    // 有精确的肯定优先匹配精确的
+    @RequestMapping("/antTest0?")
+    public String antTest2() {
+        return "antTest?";
+    }
+
+    // 先匹配精确一点的antTest0? 在匹配模糊一点的antTest0*
+    @RequestMapping("/antTest0*")
+    public String antTest3() {
+        return "antTest0*";
+    }
+
+    // * 匹配一层路径
+    @RequestMapping("/a/*/antTest01")
+    public String antTest4() {
+        return "一层路径";
+    }
+
+    // ** 匹配多层路径
+    @RequestMapping("/a/**/antTest01")
+    public String antTest5() {
+        return "两层路径";
+    }
+}
+```
+
+
+
 ## @PathVariable
+
+**获取请求路径占位符中的值**
+
+- @PathVariable 获取请求路径中占位符的值
+- 占位符的名称和方法中的参数名称一致，就不用在注解里设置占位符的名称
+- 占位符的名称和方法中的参数名称不一致，就要在注解里设置占位符的名称
+
+```java
+package cn.payphone.controller;
+
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class PathVariableController {
+
+    // {id}是占位符
+    @RequestMapping("/user/{id}")
+    // @PathVariable 获取请求路径中占位符的值
+    public String pathVariableTest(@PathVariable("id") String id) {
+        return id;
+    }
+
+    // 占位符的名称和方法中的参数名称一致就不用在注解里设置别名
+    @RequestMapping("/user/info/{id}")
+    public String pathVariableTest2(@PathVariable String id) {
+        return id;
+    }
+
+    // 占位符的名称和方法中的参数名称不一致就要在注解里设置
+    @RequestMapping("/user/infos/{id}")
+    public String pathVariableTest3(@PathVariable("id") String ids) {
+        return ids;
+    }
+}
+```
+
+----
 
 ## Rest风格
 
+### 概述
+
+Rest--->Representational State Transfer。（资源）表现层状态转化。是目前最流行的一种互联网软件架构。【前段时间提出了一种新的软件架构，是图的】
+
+- 资源（Resource）：网络上的一个实体，或者说是网络上的一个具体信息。
+    - URI：统一资源标识符
+    - URL：统一资源定位符
+- 表现层（Representation）：把资源具体呈现出来的形式，叫做它的表现层。如文本可用txt格式表现，也可用html格式、xml格式、json格式表现。。
+- 状态转化（State Transfer）：HTTP协议是无状态的，所有状态都保存在服务器端。所谓的表现层状态转化就是HTTP协议里面，四个表示操作方式的动词：GET、POST、PUT、DELETE。
+    - GET：获取资源
+    - POST：新建资源
+    - PUT：更新资源
+    - DELETE：删除资源
+
+### 简单举例
+
+- /book/1 	：GET请求 表示查询1号图书
+- /book        ：POST请求 表示添加1号图书
+- /book/1     ：PUT请求 表示更新1号图书
+- /book/1     ：DELETE 表示删除1号图书
+
+Rest推荐；
+
+<span style="color:green">**url地址这么起名； /资源名/资源标识符**</span>
+
+问题：从页面上只能发起两种请求：GET、POST，其他请求没法使用。
+
+别慌，Spring提供了对Rest风格的支持。
+
+- 1）SpringMVC中有一个Filter，他可以把普通的请求，转化为规定形式的请求。配置Filter。这个Filter叫做，`HiddenHttpMethodFilter`,它的url-pattern写`/*`
+
+- 2）如何发起其他形式的请求？
+
+    - 按照以下要求：
+
+    - 创建post类型的表单
+
+    - 表单项中携带一个`_method`的参数，`_method`的值就是所要的请求形式。
+
+    - ```html
+        <form action="book/1" method="post">
+            <input name="_method" value="delete">
+            <input type="submit" value="删除">
+        </form>
+        ```
+
+为什么那个Filter可以实现这个功能？？请看源码！
+
+```java
+private String methodParam = DEFAULT_METHOD_PARAM;
+@Override
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    throws ServletException, IOException {
+
+    HttpServletRequest requestToUse = request;
+    // 请求方式是POST 且获取的表单参数_method 有值
+    if ("POST".equals(request.getMethod()) && request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE) == null) {
+        String paramValue = request.getParameter(this.methodParam);
+        if (StringUtils.hasLength(paramValue)) {
+            String method = paramValue.toUpperCase(Locale.ENGLISH);
+            if (ALLOWED_METHODS.contains(method)) {
+                // 创建了一个新的request对象
+                // 重写了request.getMethod()  获取到的是重写的值
+                requestToUse = new HttpMethodRequestWrapper(request, method);
+            }
+        }
+    }
+    filterChain.doFilter(requestToUse, response);
+}
+```
+
+----
+
 # SpringMVC---请求处理
+
+## 概述
+
+SpringMVC获取请求带来的各种信息
+
+- 
 
 #  SpringMVC---数据输出
 
