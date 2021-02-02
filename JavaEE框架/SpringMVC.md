@@ -780,266 +780,179 @@ public void ModelAttribute(Model model) {
 
 
 
-# 六、SpringMVC---源码解析
+# 六、SpringMVC---前端控制器源码解析
 
-SpringMVC源码
+## 6.1 如何看SpringMVC源码
 
-- SpringMVC源码如何看？
+**SpringMVC源码如何看？**
+
 - SpringMVC所有的请求都会被前端控制器拦截到，所以看SpringMVC怎么处理请求的，就看前端控制器的处理流程，如何处理请求的。
 - 只要是finally块的，一般就是清东西。
 - try起来的一般是重要的代码。 
+
+## 6.2 梳理流程
+
+### 6.2.1 文字分析
+
+**文字描述：**
+
+请求一进来，应该是来到HttpServlet的doPost或doGet方法。
+
+我们根据官网的描述知道，前端控制器DispatcherServlet是负责请求转发的，所以我们从它开始入手。
+
+1）我们发现DispatcherServlet的继承关系如图所示：
+
+<img src="../pics/SpringMVC/DispatcherServlet_UML.png" style="float:left">
+
+2）我们知道Servlet的方法是从Service方法开始的，于是我们去找这些类重写的Service方法
+
+- HttpServletBean未重写Service方法，接下来看他的子类FrameworkServlet。
+- FrameworkServlet重写了service方法！！！
+
+```java
+@Override
+protected void service(HttpServletRequest request, HttpServletResponse response)
+    throws ServletException, IOException {
+
+    HttpMethod httpMethod = HttpMethod.resolve(request.getMethod());
+    if (httpMethod == HttpMethod.PATCH || httpMethod == null) {
+        // 内部执行了processRequest方法。见名知意，这个是处理请求的，我们继续看该类的processRequest方法！！
+        processRequest(request, response);
+    }
+    else {
+        super.service(request, response);
+    }
+}
+```
+
+3）FrameworkServlet的service方法内部执行了processRequest方法。见名知意，这个是处理请求的，我们继续看该类的processRequest方法！！
+
+```java
+protected final void processRequest(HttpServletRequest request, HttpServletResponse response)
+    throws ServletException, IOException {
+    // do something
+    try {
+        // 被try进来的说明是非常重要的方法，从方法的命名也看出，这是处理请求的！！但是我们发现，doService在FrameworkServlet中是一个抽象类，所以要去看它子类的对应实现！！！
+        doService(request, response);
+    }
+    catch (ServletException | IOException ex) {
+        failureCause = ex;
+        throw ex;
+    }
+    catch (Throwable ex) {
+        failureCause = ex;
+        throw new NestedServletException("Request processing failed", ex);
+    }
+
+    finally {
+		// do something
+    }
+}
+```
+
+4）被try进来的说明是非常重要的方法，从方法的命名也看出，这是处理请求的！！但是我们发现，doService在FrameworkServlet中是一个抽象类，所以要去看它子类的对应实现！！！即看DispatcherServlet！！
+
+```java
+@Override
+protected void doService(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    logRequest(request);
+	// do something
+    try {
+        // 这个方法，被try进来说明很重要！！
+        doDispatch(request, response);
+    }
+    finally {
+        // do something
+    }
+}
+```
+
+于是我们继续点进该类（）的doDispatcher方法一探究竟！
+
+```java
+// 源码注释上写，处理对处理程序的实际调度！！我们就对doDispatch方法进行debug!
+protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+	// doing something
+}
+```
+
+源码注释上写，处理对处理程序的实际调度！！而且，该类中调用了类中的很多方法，再根据这些被调用方法的名字，我们猜测doDispatch就是调度的核心方法，于是我们对它进行debug！！！
+
+### 6.2.2 总结
+
+**图示总结**
 
 梳理完流程后，发现执行流程大概是这样的。
 
 <img src="../pics/SpringMVC/mvc_process5.png" style="float:left">
 
-**文字描述：**
+**文字概述**
 
-# 不知名笔记
+1）先看了类与类之间的继承关系，顺着继承关系找doXX方法的重写
 
+2）**HttpServletBean**并未重写**doPost/doGet**这些方法，**HttpServletBeand**的子类**FrameworkServlet**实现了相应的方法。
 
-让我们看看createView方法
+3）**FrameworkServlet**相应的方法内部调用的是**processRequest**;
+
+4）**processRequest**;内部调用了**doService**方法，而该方法在**FrameworkServlet**中并未实现，但从**FrameworkServlet**的子类**DispatcherServlet**找到了对应的实现。
+
+5）**DispatcherServlet**中的**Service**方法调用了**doDispatch**;方法
+
+6）**doDispatch**;方法内部调用了**DispatcherServlet**中的很多方法
+
+7）**doDispatch**调用的方法中，我们根据单词意思和方法上的注释推断出这个方法就是我们要找的入口！于是对其进行**debug**！！
+
+## 6.2 阅读源码
+
+###  6.2.1 走马观花
+
+<span style="color:green">**看每个方法的大致功能**</span>
+
+1）WebAsyncUtils.getAsyncManager(request); 异步管理
+
+2）checkMultipart(request); 文件上传相关
+
+3）getHandler(processedRequest);  获得对应请求的处理器
+
+4）getHandlerAdapter(mappedHandler.getHandler()); 获得处理器对应的适配器（适配器执行方法哦！）
+
+5）mv = ha.handle(processedRequest, response, mappedHandler.getHandler()); 执行@RequestMapping标记的方法！！
+
+6）processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);  页面放行！
+
+<span style="color:green">**大致的阅读路线**</span>
+
+==> 查看 DispatcherServlet类中的 doDispatch()方法中每个方法的功能
+
+​	==> getHandler /  getHandlerAdapter方法
+
+​	==> getHandlerAdapter方法负责执行打了@RequestMapping的方法。
+
+==> 看getHandler()细节；怎么根据当前请求就能找到那个类能来处理。
+
+​	==>  mappedHandler = getHandler(processedRequest);// mappedHandler的类型是HandlerExecutionChain
+
+​	==>看了getHandler的源码，知道如何根据当前请求就能找到那个类能来处理了。
+
+==> 看完getHandler() 细节 接下来就是看 getHandlerAdapter() 的细节了。
+
+​	==> 因为getHandler只是拿到要处理的请求，真正的处理还是交由对应的适配器来做！
+
+​	==> 所以接下来是看如何找到目标处理器类的适配器！！<span style="color:red">**【补适配器模式！！】**</span>
+
+​	==> 最后发现适配器的查找也是遍历。
+
+==> 看完如何找到 getHandlerAdapter() 后就看适配器如何执行方法了！mv = ha.handle()
+
+​	==> handle() 方法中调用了 handleInternal() 方法
+
+​	==> handleInternal() 方法 中的这句代码 mav = invokeHandlerMethod(request, response, handlerMethod); 执行方法，返回执行后需要跳转的视图。
+
+-----
+
+<span style="color:green">**源码阅读笔记**</span>
 
 ```java
-@Override
-protected View createView(String viewName, Locale locale) throws Exception {
-   // If this resolver is not supposed to handle the given view,
-   // return null to pass on to the next resolver in the chain.
-   if (!canHandle(viewName, locale)) {
-      return null;
-   }
-
-   // Check for special "redirect:" prefix.
-   // 如果是redirect前缀 则xxx
-   if (viewName.startsWith(REDIRECT_URL_PREFIX)) {
-      String redirectUrl = viewName.substring(REDIRECT_URL_PREFIX.length());
-      RedirectView view = new RedirectView(redirectUrl,
-            isRedirectContextRelative(), isRedirectHttp10Compatible());
-      String[] hosts = getRedirectHosts();
-      if (hosts != null) {
-         view.setHosts(hosts);
-      }
-      return applyLifecycleMethods(REDIRECT_URL_PREFIX, view);
-   }
-
-   // Check for special "forward:" prefix.
-   if (viewName.startsWith(FORWARD_URL_PREFIX)) {
-      String forwardUrl = viewName.substring(FORWARD_URL_PREFIX.length());
-      InternalResourceView view = new InternalResourceView(forwardUrl);
-      return applyLifecycleMethods(FORWARD_URL_PREFIX, view);
-   }
-
-   // Else fall back to superclass implementation: calling loadView.
-   return super.createView(viewName, locale);
-}
-```
-
-返回View对象。
-
-1）视图解析器得到View对象的流程就是，所有配置的视图解析器都来尝试根据视图名（返回值）得到View对象；如果能得到就返回，得不到就换下一个视图解析器。
-
-2）调用View对象的render方法。
-
-
-
-一句话：
-
-视图解析器只是为了得到视图对象；视图对象才能真正的<span style="color:red">转发（将模型数据全部放在请求域中）或者重定向到页面</span>视图对象才能真正的<span style="color:red">渲染视图</span>。
-
--------
-
-# Other
-
-**携带数据给页面**
-
-mvc如何把数据带到页面？
-
-1）可以在方法处传入Map、或Model或者ModelMap
-
-这些参数都会存放在域中。可以在页面获取。（request域）
-
-${pageScope.msg}
-
-${requestScope.msg}
-
-${sessionScope.msg}
-
-
-
-- Map<String,String>
-- Model
-- ModelMap
-
-
-
-Map Model都是接口，ModelMap是具体的实现类
-
-ModelMap extends java.util.LinkedHashMap
-
-
-
-获得Map、Model、ModelMap形参的getClass()发现他是org.springframework.validation.support.BindingAwareModelMap类型。
-
-
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9704)﻿
-
-
-
-
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9707)﻿
-
-
-
-\-------------------------------------------
-
-2）方法的返回值可以变为ModelAndView类型
-
-即包含视图信息（页面地址）也包含模型数据（给页面）
-
-而且数据是放在请求域中。
-
-public ModelAndView handle(){
-
-​	ModelAndViewmv = new ModelAndView("success");
-
-​	mv.addObject("msg","你好哦")
-
-​	return mv；
-
-}
-
-\-------------------------------------------
-
-3）数据暂存到Session域中
-
-使用一个注解 @SessionAttributes(只能标在类上)
-
-@SessionAttributes(value="msg"):
-
-​	给BindingAwareModelMap中保存的数据,同时给session中放一份。
-
-​	value指定保存数据时要给session中存放的数据的key。
-
-
-
-@SessionAttributes(value={"msg"},types={String.class}})
-
-
-
-- value={“msg”} 只要保存的是这种key的数据，给Session中放一份。
-- types={String.class} 只要保存的是这种类型的数据，给Session中也放一份。
-- 所以会两大份！！用value比较多，精确指定。
-- 但是我们不推荐用@SessionAttributes，还是用原生API吧。注解的话可能会引发异常，且移除session麻烦。
-
-
-
-4）ModelAttribute 方法入参标注该注解后，入参的对象就会放到数据模型中。
-
-使用场景：书城修改为例。
-
-- 如何保证全字段更新的时候，只更新了页面携带的数据？
-- 修改dao
-- book对象是如何封装的？
-- SpringMVC创建一个book对象
-- 将请求中所有与book对应的属性一一设置过去。
-- 调用全字段更新就有问题。
-- ModelAndView，将数据库中的存起来，用原有的值覆盖mvc封装的null值。
-- springmvc要封装请求参数的Book对象不应该是自己new出来的。而应该是【从数据库】拿到的准备好的对象。
-- 再来使用这个对象封装请求参数
-
-
-
-modelattribute：
-
-​	参数：取出刚才保存的数据
-
-
-
-​	方法位置：这个方法就会提取于目标方法先运行。
-
-​			可以在这里提前查出数据库中图书的信息。
-
-​			将这个图书信息保存起来（方便下一个方法还能使用）
-
-​			参数Map就是BindAwareMap
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9804)﻿
-
-
-
-
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9806)﻿
-
-
-
-
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9808)﻿
-
-
-
-
-
-======================================
-
-SpringMVC源码
-
-- SpringMVC源码如何看？
-- SpringMVC所有的请求都会被前端控制器拦截到，所以看SpringMVC怎么处理请求的，就看前端控制器的处理流程，如何处理请求的。
-
-
-
-梳理完流程后，发现执行流程大概是这样的。
-
-
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9818)﻿
-
-
-
-
-
-下面写代码验证以下猜想。
-
-
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9819)﻿
-
-
-
-
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9820)﻿
-
-
-
-**我们看DispatcherServlet的源码**，对它进行debug，看流程。
-
-- ha.handle(processedRequest, response, mappedHandlerxx) 执行目标方法 945行
-- processDispatchResult(xxx) 页面放行。  959行
-
-
-
-```
 protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
    HttpServletRequest processedRequest = request;
    HandlerExecutionChain mappedHandler = null;
@@ -1130,39 +1043,36 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 }
 ```
 
-\---------------
+<span style="color:green">**文字总结**</span>
 
-**文字总结**
+1）所以有请求都要经过DispathcherServlet，DispathcherServlet收到请求
 
+2）调用doDispatch() 方法进行处理
 
+- getHandler()  根据当前请求地址找到能处理这个请求的目标处理器类（处理器）
+- <span style="color:red">getHandlerAdapter()  根据2当前处理器类获取到能执行这个处理器方法的适配器。</span>
+- <span style="color:red">使用刚才获取到的适配器（AnnotationMethodHandlerAdapter）执行目标方法。</span>
+- <span style="color:red">目标方法执行后返回一个ModelAndView对象。</span>
+- <span style="color:red">根据ModelAndView的信息转发到具体的页面，并可以在请求域中取出ModelAndView中的模型数据。</span>
 
+### 6.2.2 细致阅读
 
+#### 6.2.2.1 getHandler方法
 
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9835)﻿
+1）读了doDispatch（）方法，大致猜了每个方法的作用。现在来细看getHandler（）方法的细节。
 
+-----------------------------------
 
+**getHandler是如何找到那个类可以处理请求的。**
 
-\-------------------
-
-**DispatcherServlet中的一个方法getHandler() 如何找到那个类可以处理请求的。**
-
+```java
+// mappedHandler的类型是HandlerExecutionChain
+mappedHandler = getHandler(processedRequest);
 ```
- mappedHandler = getHandler(processedRequest);// mappedHandler的类型是HandlerExecutionChain
-```
 
+getHandler源码
 
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9836)﻿
-
-
-
-debug的时候，直接放行到下一个断点，加快阅读速度。
-
-
-
-```
+```java
 protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
    if (this.handlerMappings != null) {
       // HandlerMapping：处理器映射；他里面保存了每一个处理器能处理那些请求的映射信息。【标了注解】
@@ -1177,48 +1087,36 @@ protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Ex
 }
 ```
 
+debug发现，有三种类别的handlerMappings（Spring 5.x），使用的是RequestMappingHandlerMapping@6585（因为我们是打的RequestMapping这个注解！）
 
+<img src="../pics/SpringMVC/getHandler_01.png" style="float:left">
 
+最后返回的handler的值是 被打上注解，要执行的方法的：<span style="color:red">**全类名#方法名**</span>
 
+<img src="../pics/SpringMVC/getHandler_02.png" style="float:left">
 
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9837)﻿
+**我们再回过头来看看this.handlerMappings中RequestMappingHandlerMapping的成员变量：**
 
+mappingRegistry：ioc容器启动创建Controller对象的时候扫描每个处理器都能处理什么请求，保存在mappingRegistry属性的registry中。下一次请求过来，就来看那个handlerMapping中有这个请求的映射信息就好了。
 
+<img src="../pics/SpringMVC/getHandler_03.png" style="float:left">
 
-```
-BeanNameUrlHandlerMapping // 以前用xml方式配置
-DefaultAnnotationHandlerMapping // 现在用注解方式了
-  - 看里面的handlerMap属性。
-  - private final Map<String, Object> handlerMap = new LinkedHashMap<String, Object>(); 超类的属性。the registered path as key and the handler object (or handler bean name in case of a lazy-init handler) as value.【即里面保存了对应的请求谁能处理】
-```
+#### 6.2.2.2 getHandlerAdapter方法
 
+2）细看 getHandler() 方法的细节，接下来看getHandlerAdapter() 方法的细节。
 
+--------
 
+getHandler() 方法找到处理对象，getHandlerAdapter() 用来执行要处理的对象！
 
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9838)﻿
-
-
-
-我们刚刚看了
-
- DispatcherServlet 的--> doDispatch()方法的流程--->然后细看了里面的getHandler()方法。
-
-接着我们看下getHandlerAdapter()方法，也是doDispatch里的方法。
-
-为什么我们要看getHandlerAdapter方法？因为：
-
-我拿到处理器还不够，还需要获得适配器！！为什么？（因为是适配器执行目标方法呀！）
-
-如何找到目标处理器类的适配器。（我们要拿适配器执行目标方法！！！补适配器模式！！）
-
-```
+```java
 // 方法源码如下：
 protected HandlerAdapter getHandlerAdapter(Object handler) throws ServletException {
    if (this.handlerAdapters != null) {
       // 找适配器，又是遍历适配器，看那个合适。
       for (HandlerAdapter adapter : this.handlerAdapters) {
-         // 如果支持这个处理器就返回，不支持就继续找，没找到就抛异常。
+          // 如果支持这个处理器就返回，不支持就继续找，没找到就抛异常。
+          //RequestMappingHandlerAdapter的supports总是返回true
          if (adapter.supports(handler)) {
             return adapter;
          }
@@ -1229,77 +1127,86 @@ protected HandlerAdapter getHandlerAdapter(Object handler) throws ServletExcepti
 }
 ```
 
+**下面我们看看this.handlerAdapters里有多少适配器：有四个！四种类型的适配器！**
 
+这四个适配器中那个有用？我们猜测是注解那个有用。**RequestMappingHandlerAdapter**，因为我们打的是RequestMapping注解！
 
+**RequestMappingHandlerAdapter能解析注解方法的适配器；处理器类中只要有标了注解的这些方法就能用。**
 
+<img src="../pics/SpringMVC/getHandlerAdapter_01.png" style="float:left">
 
-**下面我们看看this.handlerAdapters里有多少适配器：有三个！三种类型的适配器！**
+#### 6.2.2.3 handle方法
 
-这三个适配器中那个有用？我们猜测是注解那个有用。**AnnotationMethodHandlerAdapter**，因为我们打的是注解！
+```java
+@Override
+@Nullable
+public final ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler)
+      throws Exception {
+   return handleInternal(request, response, (HandlerMethod) handler);
+}
 
-**AnnotationMethodHandlerAdapter能解析注解方法的适配器；处理器类中只要有标了注解的这些方法就能用。**
+@Override
+protected ModelAndView handleInternal(HttpServletRequest request,
+                                      HttpServletResponse response, HandlerMethod handlerMethod) throws Exception {
 
+    ModelAndView mav;
+    checkRequest(request);
 
+    // Execute invokeHandlerMethod in synchronized block if required.
+    if (this.synchronizeOnSession) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            Object mutex = WebUtils.getSessionMutex(session);
+            synchronized (mutex) {
+                // 执行方法！！并得到执行方法后需要返回的视图页面！
+                mav = invokeHandlerMethod(request, response, handlerMethod);
+            }
+        }
+        else {
+            // No HttpSession available -> no mutex necessary
+            mav = invokeHandlerMethod(request, response, handlerMethod);
+        }
+    }
+    else {
+        // No synchronization on session demanded at all...
+        mav = invokeHandlerMethod(request, response, handlerMethod);
+    }
 
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9878)﻿
+    if (!response.containsHeader(HEADER_CACHE_CONTROL)) {
+        if (getSessionAttributesHandler(handlerMethod).hasSessionAttributes()) {
+            applyCacheSeconds(response, this.cacheSecondsForSessionAttributeHandlers);
+        }
+        else {
+            prepareResponse(response);
+        }
+    }
 
+    return mav;
+}
+```
 
+## 6.3 阅读总结
 
+1）运行流程挑简单的。
 
+2）确定方法每个参数的值
 
+- 标注解：保存注解的信息；最终得到这个注解应该对应解析的值。
+- 没标注解：
+    - 看是否是原生API
+    - 看是否是Model或者是Map，xxx
+    - 都不是，看是否是简单类型；paramName
+    - 给attrName赋值；attrName（参数标了@ModelAttribute("") 就是指定的，没标就是“”）
+    - 确定自定义类型参数
+        - attrName使用参数的类型首字母小写；或者使用之前@ModelAttribute("") 的值
+        - 先看隐含模型中每个这个attrName作为key对应的值；如果有就从隐含模型中获取并赋值
+        - 看是否是@SessionAttributes(value="haha")；标注的属性，如果是就从session中拿；如果拿不到就会抛异常。
+        - 不是@SessionAttributes标注的，就利用反射创建一个对象
+    - 拿到之前创建好的对象，使用数据绑定器（WebDataBinder）将请求中的每个数据绑定到这个对象中。
 
+# 七、SpringMVC---九大组件
 
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9880)﻿
-
-
-
-
-
-
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9881)﻿
-
-
-
-
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9882)﻿
-
-
-
-
-
-==================================
-
-我们已经找到了适配器，接下来就是看适配器如何执行目标方法了！！！
-
-- mv = ha.handle(xxx) 这里调用的方法，我们点进去看。
-- ﻿![img](https://api.bilibili.com/x/note/image?image_id=9888)﻿
-- 他的返回值 invokeHandlerMethod执行的方法，我们再点进去看
-- ﻿![img](https://api.bilibili.com/x/note/image?image_id=9889)﻿
-- 走到下图的 methodInvoker.invokeHandlerMethod就执行了
-- ﻿![img](https://api.bilibili.com/x/note/image?image_id=9890)﻿
-- 
-
-=========================
-
-**springMvc的九大组件**
-
-上次内容的回顾
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9917)﻿
-
-
-
-
+## 7.1 组件概述
 
 DispatcherServet中有几个引用类型的属性；SpringMVC的九大组件。
 
@@ -1309,7 +1216,7 @@ SpringMVC在工作的时候，关键位置都是由这些组件完成的；
 
 SpringMVC的九大组件工作原理：大佬级别。
 
-```
+```java
 /** 文件上传解析器 **/
 @Nullable
 private MultipartResolver multipartResolver;
@@ -1347,13 +1254,9 @@ private FlashMapManager flashMapManager;
 private List<ViewResolver> viewResolvers;
 ```
 
+**九大组件初始化的地方**
 
-
-DispatcherServlet中九大组件初始化的地方
-
-
-
-```
+```java
 @Override
 protected void onRefresh(ApplicationContext context) {
    initStrategies(context);
@@ -1376,9 +1279,17 @@ protected void initStrategies(ApplicationContext context) {
 }
 ```
 
-============================
+----
 
-```
+组件的初始化：
+
+- 有些组件在容器中是使用类型找的，有些组件是使用id找的。
+- 就是去容器中找这个组件，如果没有就用默认的配置。
+- 这是教怎么看各大组件的，具体的流程自己去看。
+
+----
+
+```java
 private void initHandlerMappings(ApplicationContext context) {
    this.handlerMappings = null;
    // 探查所有的HandlerMapping
@@ -1421,17 +1332,111 @@ private void initHandlerMappings(ApplicationContext context) {
 }
 ```
 
-组件的初始化：
+# 八、视图解析
 
-- 有些组件在容器中是使用类型找的，有些组件是使用id找的。
-- 就是去容器中找这个组件，如果没有就用默认的配置。
-- 这是教怎么看各大组件的，具体的流程自己去看。
+## 8.1 视图解析的应用
+
+**return "forward:/hello.jsp"//  转发到页面地址。**
+
+- **forward：转发到一个页面**
+- **/hello.jsp 转发当前项目下的hello**
+- **一定要加/  如果不加/就是相对路径。容易出问题。**
+- **forward:/hello.jsp 不会有给你拼串，有前缀的转发，不会由我们配置的视图解析器拼串。**
+
+**forward可以转发到页面，也可以转发到一个请求上。 forward:/hello 转发到hello请求**
 
 
 
-================================
+**redirect重定向【重定向的地址由浏览器进行解析】**
 
-**锁定目标方法的执行。**
+- 有前缀的转发和重定向不会有视图解析器的拼串操作。
+- 原生的servlet重定向需要加上项目名才能重定向。
+- springmvc无需写项目名，会为我们自动拼接上项目名。
+- returen "redirect:/hello.jsp";
+
+
+
+
+
+**SpringMVC视图解析器原理**
+
+- 1、方法执行后的返回值会作为页面地址参考，转发或者重定向到页面
+- 2、视图解析器可能会进行页面地址的拼串
+
+\--------------------------
+
+1）任何方法的返回值，最终都会被包装成ModelAndView对象。
+
+2）处理页面的方法 processDispatchResult() 
+
+视图渲染流程：将域中的数据在页面展示；页面就是用来渲染模型数据的。
+
+3）调用render(mv, reuqest, response);渲染页面
+
+4）View 与 ViewResolver；
+
+- ViewResolver的作用是根据视图名（方法的返回值）得到View对象。
+
+5）怎么根据方法的返回值（视图名）得到View对象？
+
+
+
+
+
+# 不知名笔记
+
+
+让我们看看createView方法
+
+```java
+@Override
+protected View createView(String viewName, Locale locale) throws Exception {
+   // If this resolver is not supposed to handle the given view,
+   // return null to pass on to the next resolver in the chain.
+   if (!canHandle(viewName, locale)) {
+      return null;
+   }
+
+   // Check for special "redirect:" prefix.
+   // 如果是redirect前缀 则xxx
+   if (viewName.startsWith(REDIRECT_URL_PREFIX)) {
+      String redirectUrl = viewName.substring(REDIRECT_URL_PREFIX.length());
+      RedirectView view = new RedirectView(redirectUrl,
+            isRedirectContextRelative(), isRedirectHttp10Compatible());
+      String[] hosts = getRedirectHosts();
+      if (hosts != null) {
+         view.setHosts(hosts);
+      }
+      return applyLifecycleMethods(REDIRECT_URL_PREFIX, view);
+   }
+
+   // Check for special "forward:" prefix.
+   if (viewName.startsWith(FORWARD_URL_PREFIX)) {
+      String forwardUrl = viewName.substring(FORWARD_URL_PREFIX.length());
+      InternalResourceView view = new InternalResourceView(forwardUrl);
+      return applyLifecycleMethods(FORWARD_URL_PREFIX, view);
+   }
+
+   // Else fall back to superclass implementation: calling loadView.
+   return super.createView(viewName, locale);
+}
+```
+
+返回View对象。
+
+1）视图解析器得到View对象的流程就是，所有配置的视图解析器都来尝试根据视图名（返回值）得到View对象；如果能得到就返回，得不到就换下一个视图解析器。
+
+2）调用View对象的render方法。
+
+
+
+一句话：
+
+视图解析器只是为了得到视图对象；视图对象才能真正的<span style="color:red">转发（将模型数据全部放在请求域中）或者重定向到页面</span>视图对象才能真正的<span style="color:red">渲染视图</span>。
+
+-------
+
+# Other
 
 给你三天，写一个可以执行任意方法的反射工具类。？？
 
@@ -1500,15 +1505,9 @@ ServletHandlerMethodInvoker methodInvoker = new ServletHandlerMethodInvoker(meth
 }
 ```
 
-
-
-===========================
-
 ModelAttribute标注的方法提前运行
 
 **164.17、【源码】-ModelAttribute标注的方法提前运行并且把执行P164 - 01:33**
-
-
 
 方法执行细节
 
@@ -1569,38 +1568,7 @@ public final Object invokeHandlerMethod(Method handlerMethod, Object handler,
 }
 ```
 
-
-
-```
-// 如果没有注解：
-// 1）先看是否普通参数；就是确定当前的参数是否是原生API。
-resolveCommonArgument
-// 2）是否有默认值  看不下去了，放弃，太难了。我要看书。
-```
-
-====================
-
-确定POJO的值
-
-
-
-**源码总结**
-
-
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9966)﻿
-
-
-
-
-
-=============================================================================
-
 **SpringMVC Day03**
-
-
 
 **视图解析的应用**
 
@@ -1613,18 +1581,12 @@ resolveCommonArgument
 
 **forward可以转发到页面，也可以转发到一个请求上。 forward:/hello 转发到hello请求**
 
-
-
 **redirect重定向【重定向的地址由浏览器进行解析】**
 
 - 有前缀的转发和重定向不会有视图解析器的拼串操作。
 - 原生的servlet重定向需要加上项目名才能重定向。
 - springmvc无需写项目名，会为我们自动拼接上项目名。
 - returen "redirect:/hello.jsp";
-
-
-
-
 
 **SpringMVC视图解析器原理**
 
@@ -1635,56 +1597,22 @@ resolveCommonArgument
 
 1）任何方法的返回值，最终都会被包装成ModelAndView对象。
 
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9976)﻿
-
-
-
 2）处理页面的方法 processDispatchResult() 
 
 视图渲染流程：将域中的数据在页面展示；页面就是用来渲染模型数据的。
 
-
-
 3）调用render(mv, reuqest, response);渲染页面
-
-
 
 4）View 与 ViewResolver；
 
 - ViewResolver的作用是根据视图名（方法的返回值）得到View对象。
 
-
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9978)﻿
-
-
-
 5）怎么根据方法的返回值（视图名）得到View对象？
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9979)﻿
-
-
 
 想知道怎么初始化视图解析器的话，取看initViewResolvers方法
 
 - 找到的话，就用我们配置的。
 - 没找到的话，就用默认的。
-
-
-
-﻿![img](https://api.bilibili.com/x/note/image?image_id=9980)﻿
-
-
-
-
-
-
 
 ```
 @Nullable
