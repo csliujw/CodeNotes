@@ -1,4 +1,4 @@
-# SpringBoot整合JDBC
+# 整合JDBC
 
 ## 概述
 
@@ -75,7 +75,7 @@ spring.datasource.driver-class-name=com.mysql.jdbc.Driver
 
 
 
-# SpringBoot整合Druid
+# 整合Druid
 
 ## 概述
 
@@ -225,7 +225,7 @@ public class DruidConfig {
 
 
 
-# SpringBoot整合MyBatis
+# 整合MyBatis
 
 ## 概述
 
@@ -443,7 +443,7 @@ public class ArticleController {
 
 
 
-# SpringBoot 整合MVC
+# 整合MVC
 
 ## 概述
 
@@ -602,7 +602,7 @@ public class DemoController {
 
 
 
-# SpringBoot整合SpringMVC，MyBatis
+# 整合MVC&MyBatis
 
 ## 概述
 
@@ -870,15 +870,69 @@ public class WebMvcConfig implements WebMvcConfigurer {
         <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bbxx.boot02.mapper.ArticleMapper">
 
-
 </mapper>
 ```
 
+# 整合Redis
 
+## 
 
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
+</dependency>
+```
 
+```properties
+# redis配置信息
+spring.redis.host=localhost
+spring.redis.port=6379
+```
 
-# SpringBoot 整合Redis
+```java
+package cn.baobaoxuxu.community;
 
-# Spring整合Spring Security
+import cn.baobaoxuxu.community.pojo.Role;
+import cn.baobaoxuxu.community.repository.RoleRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import java.util.List;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest(classes = CommunityApplication.class)
+public class RedisTest {
+
+    @Autowired
+    RoleRepository dao;
+
+    @Autowired
+    RedisTemplate<String, String> redisTemplate;
+
+    @Test
+    public void test1() throws JsonProcessingException {
+        // 1. 从redis拿数据
+        String s = redisTemplate.boundValueOps("user.findAll").get();
+        if (s == null) {
+            List<Role> all = dao.findAll();
+            ObjectMapper objectMapper = new ObjectMapper();
+            String s1 = objectMapper.writeValueAsString(all);
+            redisTemplate.boundValueOps("user.findAll").set(s1);
+            System.out.println("从数据库拿了 存到了redis");
+        }else{
+            System.out.println("直接從redis拿");
+        }
+        //2. 判断redis是否存在数据
+    }
+}
+```
+
+# Spring Security
 

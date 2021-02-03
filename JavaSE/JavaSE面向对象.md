@@ -1,3 +1,304 @@
+# 第一部分 入门
+
+## 第二章 Java语言开环境
+
+### 2.1 Java虚拟机
+
+- JVM：Java虚拟机。Java代码是运行在虚拟机上的。
+- 跨平台：代码运行在虚拟机上，不同版的OS（linux，windows，mac）对应不同的虚拟机。虚拟机本身不具备跨平台功能，每个OS下都有不同版本的虚拟机。【可理解为，各个OS下的虚拟机都是采用一套编码指令集】
+
+### 2.2 JRE和JDK
+
+- JRE (Java Runtime Environment):Java程序的运行时环境，包含JVM和运行时所需要的核心类库
+- JDK(Java Development Kit):是Java程序开发的工具包，包含JRE和开发人员使用的工具。
+- 运行Java程序有jre就行，开发Java程序需要JDK。
+- Windows会把%CC% CC当作变量进行翻译
+
+## 第三章 HelloWorld入门程序
+
+### 3.1 程序开发步骤说明
+
+- 编写、编译、运行
+- Java源程序-->Java字节码文件-->JVM运行
+- Javac.exe 编译器 处理后 字节码
+- Java.exe 解释器 解释字节码的内容
+
+## 第四章 常量
+
+- 常量；在程序运行期间固定不变的量。
+- 常量的分类
+    - 字符串常量：凡是用双引号引起来的部分叫字符串常量。“asdfas”，可以是空串
+    - 整数常量：直接写上数字的，没有小数点。
+    - 浮点数常量：直接写上数字的，有小数点。
+    - 字符常量：用单引号引起来的 ‘A’，不能是空字符‘’。
+    - 布尔常量：只有量中取值。true，false
+    - 空常量：null，代表没有任何数据。不能直接用来打印。syso(null)是错的。
+
+## 第五章 变量和数据类型
+
+### 5.1 数据类型
+
+#### 5.1.1 基本数据类型
+
+- 整数
+    - byte  1个字节
+    - short 2个字节
+    - int   4个字节
+    - long  8个字节
+- 浮点数
+    - float     4个字节
+    - double    8个字节
+- 字符型
+    - char      2个字节
+- 布尔型
+    - boolean   1个字节
+
+>**Java中默认类型：整型是int，浮点类型是double**
+>想要精确的数字不推荐用double，用BigDemical吧。
+
+#### 5.1.2 引用数据类型
+
+> **字符串，数组，类，接口，Lambda**
+
+注意事项：
+
+- 字符串不是基本数据类型
+- 浮点数可能是一个近似值
+- 数据范围与字节数不一定相关。如float数据范围比long更大，但float是4字节，long是8字节
+- 浮点数默认是double，如果一定要用float，需要加上一个后缀F(推荐大写)
+- 如果是整数，默认为int，如果一定要用long，需要加上一个后缀L(推荐大写)
+
+### 5.2 变量
+
+- 变量：程序运行期间，内容可以发生改变的量
+- 编译原理，左值与右值
+
+### 5.3 强制数据类型转换 ▲
+
+- 强制类型转换一般不推荐使用，因为可能发生精度损失
+- byte，short，char这三种数据类型可发生数学运算。
+- byte，short，char在运算时都会被首先提升为int类型，然后再计算。
+
+```java
+byte num1 = 40;
+byte num2 = 50;
+//byte + byte --> int + int
+int result = num1 + num2;
+//如果用 byte接收 需要强转
+byte result = (byte)(num1 + num2);
+short同理
+```
+
+### 5.4 ASCII码表
+
+```
+0 -- 48
+A -- 65
+a -- 97
+```
+
+### 5.5 数字和字符的对照关系表（编码表）
+
+```java
+ASCII码表：American Standard Code for Information Interchange
+Unicode码表：万国码。也是数字和符号对照关系，开头0-127部分和ASCII完全一样，但是从128开始包含更多字符。
+```
+
+## 第六章 常用运算
+
+- 一元运算符：只需要一个数据就可以进行操作的运算符。
+
+    - 取反
+    - 自增
+    - etc
+
+- 二元运算符：需要两个数据才可以进行操作的运算符。
+
+    - 加法
+    - 减法
+    - 赋值
+
+- 三元运算符：需要三个数据才可以进行的运算符。
+
+    - 变量名称 = 条件判断?表达式A : 表达式B;
+    - int max = a > b ? a : b;
+
+- 拓展
+
+    - 对于byte/short/char三种类型来说，如果右侧赋值的数值没有超过范围，那么java编译器会自动隐含地为我们补上一个(byte)(short)(char).
+
+    ```
+    short = 5 + 8;(都要是常量才行)
+    等同于
+    short = 13;
+    先计算出的结果在进行赋值的
+    称为编译器的常量优化。
+    ```
+
+## 第七章 基本语法
+
+### 7.1 switch语句使用的注意事项
+
+- 多个case后面的数值不可以重复
+- switch后面小括号中只能是下列数据类型
+    - 基本数据类型 byte/short/char/int
+    - 引用数据类型 String字符串、enum枚举
+
+### 7.2 循环概述
+
+- for循环
+
+```java
+for( 一 ; 二 ; 四 ){
+    三
+}
+
+for(初始化表达1 ; 布尔表达式2 ; 步进表达式4){
+    循环体3
+}
+流程 1 2 3 4 --> 2 3 4 --> 2 3 4 -->直到2不满足为止。
+初始化语句只会执行一次。
+```
+
+- 增强for循环 foreach
+
+```java
+for(float x : f){
+    System.out.println(x);
+}
+将每一个f的元素赋值给x
+```
+
+### 7.3 方法重载与重写
+
+- 方法调用的三种格式
+
+```java
+1.单独调用：方法名称(参数)
+2.打印调用：System.out.println(方法名称(参数))
+3.赋值调用：数据类型 变量名称 = 方法名称(参数)
+```
+
+- 方法重载 Overload ▲
+
+    - ==方法重载== ：指在同一个类中，允许存在一个以上的同名方法，只要它们的参数列表不同即可，与修饰符和返回值类型无关。
+    - 参数列表：个数不同，数据类型不同，顺序不同。
+    - 重载方法调用：JVM通过方法的参数列表，调用不同的方法。
+
+    ```java
+    以下参数顺序不一样也是重载！
+    public static void test(int a, short b){
+    
+    }
+    public static void test(short b,int a){
+    
+    }
+    ```
+
+    - 实际上，println就是一个被重载的函数
+
+- 方法重写 Overrider 
+
+    - 子类中出现和父类中一模一样的方法(包括返回值类型,方法名,参数列表）
+    - 1.重写的方法必须要和父类一模一样(包括返回值类型,方法名,参数列表)
+    - 2.重写的方法可以使用@Override注解来标识
+
+#### 7.3.1 重载的注意事项▲
+
+```java
+public static void f1(short i){
+    System.out.println("f1(short)");
+}
+public static void f1(byte i){
+    System.out.println("f1(byte)");
+}
+public static void f1(int i){
+    System.out.println("f1(int)");
+}
+public static void main(String[] args) {
+    short i = 5;
+    byte ii = 6;
+    int iii = 7;
+    f1(1);  // f1(int)
+    f1(1);	// f1(int)
+    f1(1);	// f1(int)
+    System.out.println("==========华丽的分割线==========");
+    f1(i);	// f1(short)
+    f1(ii);	// f1(byte)
+    f1(iii);// f1(int)
+}
+```
+
+### 7.4 数组
+
+#### 7.4.1 数组得初始化
+
+- 动态初始化 -- 指定数组长度
+
+```java
+int [] array = new int[300];
+```
+
+- 静态初始化 -- 指定数组内容
+
+```
+int [] array = new int[]{1,2,3,4,5,6}; // 标准格式
+int [] array = {1,2,3,4,5,6}; // 省略格式
+静态初始化不能拆分成
+int [] array;
+array = {1,2,34};
+这样是错误得
+```
+
+- 总结
+
+```
+动态初始化有默认值的过程，
+整型 默认为 0
+浮点 默认为 0.0
+字符 默认为 '\u0000'
+布尔 默认为 false
+引用 默认为 null
+
+静态初始化也有，不过系统自动马上将默认值替换为了大括号当中的具体数值。
+```
+
+#### 7.4.2 数组作为参数，返回值
+
+```java
+public static void cals(int[] arr){
+    xxxx
+}
+
+public static int[] calculate(int a,int b){
+    int [] array = {a,b};
+    return array;
+}
+
+数组作为参数，作为返回值其实都是数组的地址值
+```
+
+### 7.5 Java内存划分
+
+- 1.栈（stack）：存放的都是方法中的局部变量。方法的运行一定要在栈中运行
+    - 局部变量：方法的参数，或者方法{}内部的变量
+    - 作用域：一旦超出作用域，立刻从栈内存当中消失
+- 2.堆（heap）：凡是new出来的东西都在堆中
+    - 堆里面的数据都有默认值。默认值同上
+- 3.方法区（method area）：存储.class相关信息，包含方法的信息。
+- 4.本地方法栈（native method stack）：与操作系统相关
+- 5.寄存器（register）：与CPU相关
+
+### 7.6 常见异常
+
+> ArrayIndexOfBoundsException
+
+> NullPointException
+
+> OutOfMemmory
+
+# 第二部分 基础
+
 ## 第一章 面向对象概述
 
 ### 类与类之间的关系
@@ -1112,7 +1413,7 @@ public class ExtendInnerClass2 extends WithInner2{
 
 ```
 
-## 第十一章 Object/System/日期
+## 第十一章
 
 ### 11.1 Object
 
@@ -1234,8 +1535,6 @@ public void fn6(){
     }
 }
 ```
-
-
 
 ## 第十二章 集合框架
 
@@ -1589,7 +1888,7 @@ public class Student implements Comparable {
 
   > `HashTable`的子类。常用于存储一些配置信息。回忆`properties`文件，好像是的。还有一个properties流？果不其然，有load方法传入的对象是输入流！
 
-   
+  -----
   
   ```java
   public void fn3(){
@@ -1677,7 +1976,7 @@ public class myxx implements Comparator{
 
 ## 第十四章 注解
 
-## 第十五章 IO流▲
+## 第十五章 IO流
 
 > IO流可大致分为字节流和字符流。字节是按字节进行输入输出的，适用于各种文件。字符流是按字符进行输入输出的，适用于文本文件。
 
@@ -2355,7 +2654,7 @@ public class PropertiesDemo {
 }
 ```
 
-## 第十六章 线程▲
+## 第十六章 线程
 
 > **进程与线程的概念，看操作系统课本！看以前做的笔记，画的思维导图。**
 
@@ -2589,7 +2888,7 @@ public class SaleTicket implements Runnable {
 - 有东西了，可以拿了就notify() == 【应该是随机唤醒一个等待的线程，可以指定唤醒某个吗？】
 - 明天写！ 吃饭了！
 
-## 第十七章 网络编程▲
+## 第十七章 网络编程
 
 ### 17.1 网络编程入门
 
@@ -3077,7 +3376,7 @@ public void refelectDemo() throws Exception {
 
 
 
-## 第十九章 函数式编程【Lambda表达式】
+## 第十九章 函数式编程
 
 ### 19.1 体验Lambda表达式
 
@@ -3253,7 +3552,7 @@ public class InterDemo {
 - Lambda调用方法的形参必须是接口
 - 匿名内部类编译时会生成一个单独的class文件。lambda表达式不会，它对应的字节码会在运行时动态生成。
 
-## 第20章 接口组成更新（补充内容）
+## 第二十章 接口组成更新
 
 #### **概述：接口的组成**
 
@@ -3851,6 +4150,1092 @@ public void fn8() {
     stream1.forEach( s -> System.out.println(s.getKey() + ":" + s.getValue()) );
 }
 ```
+
+# 第三部分 加强
+
+## 第一章 枚举
+
+### 1.1 枚举的使用Demo
+
+下面看一段骚气的代码
+
+```java
+public String judge(String str){
+    if("AAA".equals(str)){
+        return "AAA";
+    }else if("BBB".equals(str)){
+        return "BBB";
+    }else if("CCC".equals(str)){
+        return "CCC";
+    }else if("DDD".equals(str)){
+        return "DDD";
+    }
+}
+```
+
+- 条件一多 就要该源码【扩展性弱】，有没有解决办法
+- 代码看起来不优雅，有没有解决办法
+
+**枚举！**
+
+> **第一版，用枚举替代if else**
+
+```java
+// 直接用枚举
+enum RoleOperation1 {
+    ADMIN_POWER,
+    NORMAL_POWER,
+    SUPER_POWER
+}
+
+// 因为有返回值 所以这样定义
+enum RoleOperation2 {
+    ADMIN_POWER() {
+        @Override
+        public String toString() {
+            return "Admin power";
+        }
+    },
+    NORMAL_POWER() {
+        @Override
+        public String toString() {
+            return "Normal power";
+        }
+    },
+    SUPER_POWER() {
+        @Override
+        public String toString() {
+            return "Super power";
+        }
+    }
+}
+
+// 因为有统一的方法，所以用接口定义规则
+interface Operation {
+    String op();
+}
+
+//  漂亮的枚举代码，虽然看起来长，复杂，但是拓展性特别强！
+// 下面就是见证奇迹的时刻，优雅地用枚举替代if else。
+public enum RoleOperation implements Operation {
+    ADMIN_POWER() {
+        @Override
+        public String op() {
+            return "Admin power";
+        }
+    },
+    NORMAL_POWER() {
+        @Override
+        public String op() {
+            return "Normal power";
+        }
+    },
+    SUPER_POWER() {
+        @Override
+        public String op() {
+            return "Super power";
+        }
+    }
+}
+```
+
+```java
+public class Demo1 {
+    // 如此优雅的代码！！
+    // 还有用工厂模式 策略模式的。感觉都不如枚举来的优雅。
+    public String judge(String role) {
+        return RoleOperation.valueOf(role).op();
+    }
+}
+```
+
+### 1.2 枚举的常用方法
+
+| values()    | 以数组形式返回枚举类型的所有成员 |
+| ----------- | -------------------------------- |
+| valueOf()   | 将普通字符串转换为枚举实例       |
+| compareTo() | 比较两个枚举成员在定义时的顺序   |
+| ordinal()   | 获取枚举成员的索引位置           |
+
+```java
+package org.example.enumeration;
+
+import org.junit.jupiter.api.Test;
+
+// 枚举中一些常用方法
+public class SomeFunc {
+    @Test
+    public void func1() {
+        Color[] values = Color.values();
+        for (Color c : values) {
+            System.out.println(c);
+        }
+    }
+
+    @Test
+    public void func2() {
+        //  将普通字符串实例转换为枚举
+        Color blue = Color.valueOf("BLUE");
+        System.out.println(blue);
+    }
+
+    @Test
+    public void func3() {
+        System.out.println(Color.BLUE.ordinal());
+    }
+
+
+    /**
+     *     public final int compareTo(E o) {
+     *         Enum<?> other = (Enum<?>)o;
+     *         Enum<E> self = this;
+     *         if (self.getClass() != other.getClass() && // optimization
+     *             self.getDeclaringClass() != other.getDeclaringClass())
+     *             throw new ClassCastException();
+     *         return self.ordinal - other.ordinal;
+     *     }
+     */
+    @Test
+    public void func4() {
+        // RED 和 BLUE比较， RED小于BLUE 返回负数 ；equals返回0；大于返回 正数
+        System.out.println(Color.RED.compareTo(Color.BLUE)); // -1
+        System.out.println(Color.RED.compareTo(Color.GREEN));// -2
+    }
+
+    @Test
+    public void func() {
+        System.out.println(Color.RED);
+        // output RED
+    }
+
+}
+
+enum Color {
+    RED, BLUE, GREEN
+}
+```
+
+## 第二章 比较对象
+
+**Comparator和Comparable**
+
+Comparable接口/ Comparator接口
+
+- Comparator  函数式接口 jdk1.8引入
+- Comparable 普通接口
+
+## 第三章 单元测试
+
+### 3.1 单元测试的优点
+
+保证的程序代码的正确性【语法上了逻辑上】。
+
+### 3.2单元测试的使用
+
+@Test
+
+- @Before 无论Test是否出现异常，都会执行 【初始化资源】
+- @After 无论Test是否出现异常，都会执行 【销毁资源】
+
+```java
+public class JunitDemo {
+    private OutputStream outputStream;
+
+    @Before
+    public void init() throws FileNotFoundException {
+        System.out.println("IO 流初始化完毕了");
+        outputStream = new FileOutputStream("junit.txt");
+    }
+
+    @Test
+    /**
+     * 单元测试判断数据的正确性
+     * 一般用Assert里面的方法
+     */
+    public void fn1(){
+        // 断言不为null  不是null则成功
+        Assert.assertNotNull(outputStream);
+    }
+
+    @After
+    public void destory() throws IOException {
+        System.out.println("IO 流关闭了");
+        outputStream.close();
+    }
+}
+```
+
+### 3.3 单元测试原理
+
+## 第四章 反射
+
+### 4.1 反射概述
+
+反射可以把类的各个组成部分封装为其他对象。
+
+反射，Java的高级特性，流行的框架基本都是基于反射的思想写成的。
+
+Java反射机制是在程序的运行过程中，对于任何一个类，都能够知道它的所有属性和方法；对于任意一个对象，都能够知道它的所有属性和方法，**<span style="color:green">这种动态获取信息以及动态调用对象方法的功能称为Java语言的反射机制。</span>**
+
+Java反射机制主要提供了以下这几个功能：
+
+- 在运行时判断任意一个对象所属的类
+- 在运行时构造任意一个类的对象
+- 在运行时判断任意一个类所有的成员变量和方法
+- 在运行时调用任意一个对象的方法
+
+### 4.2 反射的基本操作
+
+#### 4.2.1 获取成员变量
+
+- `File[] getFileds()` // **获得所有公有字段，包括继承的**
+- `Filed getFiled(String name)` // 获取指定name的
+- `Filed[] getDeclaredFileds() `// 获取该类自己声明的，包括私有
+- `Filed[] getDeclaredFileds(String name)` // 获取指定名称的
+
+#### 4.2.2 获取构造方法
+
+- `Constructor<?>[] getConstructors()` // 获得所有公有构造器
+
+- `Constructor<?> getConstructor(Class<?>...parameterTypes)` //获得指定参数的公有构造器
+- `Constructor<?>[]getDeclaredConstructors()`// 获得所有私有构造器
+- `Constructor<T>[]getDeclaredConstructors()`//  得指定参数的构造器【包括public~~~private 】
+
+#### 4.2.3 获取成员方法
+
+- `Method[] getMethods()` // **获得所有public修饰的方法，包括继承的**
+
+- `Method getMethod(String name, Class<?>... parameterTypes)` // 获得指定名称和参数类型的public修饰的方法
+- `Method[] getDeclaredMethods()` //获得所有的私有方法
+- `Method getDeclaredMethod(String name, Class<?>... parameterTypes)` // 获得指定名称和参数类型的方法
+
+#### 4.2.4 获取类名
+
+- `String getName()` // 获得类全名`com.bbxx.junits.Son`
+
+#### 4.2.5 几个重要的类
+
+> **Class类**
+
+每定义一个`java` `class` 实体都会产生一个Class对象。我们编写一个类，编译完成后，在生成的 `.class`文件中，就会产生一个Class对象，这个Class对象用于表示这个类的类型信息。Class中没有公共构造器，即Class对象不能被实例化。
+
+> **Field类**
+
+Field类提供类或接口中单独字段的信息，以及对单独字段的动态访问。
+
+> **Method类**
+
+```java
+invoke(Object obj, Object... args)
+```
+
+> **`ClassLoader`类**
+
+**<span style="color:green">ClassLoader类加载器！类加载器用来把类（class）装载进JVM的。ClassLoader使用的双亲委派模型来搜索加载类的，这个模型也就是双亲委派模型。</span>**
+
+**`ClassLoader`的类继承图如下：**
+
+<img src="D:\69546\Documents\pics\JavaStrengthen\classLoader.png" style="float:left">
+
+### 4.3 动态代理
+
+#### 4.3.1 作用
+
+运行时，动态创建一组指定的接口的实现类对象！（在运行时，创建实现了指定的一组接口的对象）
+
+动态代理对比其他方法增强方式
+
+<img src="D:\69546\Documents\pics\JavaStrengthen\proxy.png" style="float:left">
+
+#### 4.3.2 基本Demo
+
+```java
+interface A{    
+}
+interface B{
+}
+Object o = 方法(new Class[]{ A.class, B.class })
+o 它实现了A和B两个接口！
+```
+
+```java
+Object proxyObject = Proxy.newProxyInstance(ClassLoader classLoader, Class[] interfaces, InvocationHandler h);
+```
+
+- 方法的作用：动态创建实现了interfaces数组中所有指定接口的实现类对象！
+- `ClassLoader`：类加载器！
+    - 它是用来加载器的，把.class文件加载到内存，形成Class对象！
+- `Class[ ] interfaces`：指定要实现的接口们。
+- `InvocationHandler`：代理对象的所有方法（个别不执行，一般`nativate`方法不会执行，但是`hashCode`却会执行，好奇怪）都会调用`InvocationHadnler`的`invoke()`方法
+- 动态代理的作用
+    - 最终是学习`AOP`（面向切面编程），它与装饰者模式有点相似，它比装饰者模式更灵活（潜在含义，动态代理更难！）
+
+**动态代理基本Demo**
+
+```java
+interface IBase {
+    public void say();
+
+    public void sleep();
+
+    public String getName();
+}
+```
+
+```java
+public class Person implements IBase {
+    public void say() {
+        System.out.println("hello");
+    }
+
+    public void sleep() {
+        System.out.println("sleep");
+    }
+
+    public String getName() {
+        return "getName";
+    }
+}
+```
+
+```java
+public class ProxyDemo1 {
+    public static void main(String[] args) {
+
+        Person person = new Person();
+        // 获得类加载器
+        ClassLoader classLoader = person.getClass().getClassLoader();
+        // 获得被代理对象实现的接口
+        Class[] interfaces = person.getClass().getInterfaces();
+        // 实例化一个处理器 用于增强方法用的
+        InvocationHandler h = new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                method.invoke(person, args);
+                return null;
+            }
+        };
+        IBase p = (IBase) Proxy.newProxyInstance(classLoader, interfaces, h);
+        // 获得代理类的名称 com.sun.proxy.$Proxy0
+        System.out.println(p.getClass().getName());
+        p.say();
+    }
+}
+```
+
+#### 4.3.3 invoke解释
+
+```java
+public Object invoke(Object proxy, Method method, Object[] args)
+```
+
+**这个invoke什么时候被调用？**
+
+- 在调用代理对象所实现接口中的方法时被调用！
+
+**参数解释**
+
+- `Object proxy`：当前对象，即代理对象！在调用谁的方法！
+- `Method method`：当前被调用的方法（目标方法）
+- `Object [ ] args`：实参
+- 返回的是方法的返回值。
+
+<img src="D:\69546\Documents\pics\JavaStrengthen\invoke_explain.png" style="float:left">
+
+----
+
+```java
+public class ProxyDemo2 {
+    public static void main(String[] args) {
+        Person person = new Person();
+        ClassLoader classLoader = person.getClass().getClassLoader();
+        Class[] interfaces = person.getClass().getInterfaces();
+        System.out.println(interfaces.length);
+        InvocationHandler h = new InvocationHandler() {
+            @Override
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                Object retVal = method.invoke(person, args);
+                 // 这个返回了，方法才有返回值 
+                return retVal; 
+            }
+        };
+        IBase p = (IBase) Proxy.newProxyInstance(classLoader, interfaces, h);
+        p.say();
+        // invoke返回null的话，这里的输出就是null
+        System.out.println(p.getName());
+    }
+}
+```
+
+### 4.4 模拟`AOP`
+
+`Spring AOP`，感受一下什么叫增强内容可变！
+
+- `ProxyFactory` 代理工厂
+- `IBeforeAdvice` 前置通知接口【方法执行前调用前置】
+- `IAfterAdvice` 后置通知接口【方法执行后调用后置】
+- `IWaiter` 服务员类接口
+- `ManWaiterImple` 具体的服务员类【对他进行增强】
+
+## 第五章 注解
+
+**注解也叫元数据**。是一种代码级别的说明，JDK1.5引入的特性，与类，接口，枚举是在同一层次。**可声明在包，类，字段，方法，局部变量，方法参数等的前面**，对这些元素进行说明。
+
+**作用分类：**
+
+1.代码分析，通过代码里标识的元数据对代码进行分析【结合反射技术】
+
+2.编译检查，通过代码里标识的元数据让编译器能够实现机泵的编译检查【Override】
+
+3.编写文档，通过代码里标识的元数据生成文档【生成文档doc文档】
+
+### 5.1 内置注解
+
+- `Override`：检测被标注的是否继承自父类
+- `Deprecated`：表示方法过时
+- `SuppressWarnings`：压制警告
+    - 一般传递参数all
+
+### 5.2 自定义注解
+
+> **元注解`public @interface annotationName{}`**
+
+反编译发现，本质就是一个接口。
+
+```java
+import java.lang.annotation.Annotation;
+
+public interface Annotation extends Annotation {
+}
+```
+
+#### 5.2.1 属性的返回值
+
+**基本数据类型	String	枚举	注解	以上类型的数组**
+
+#### 5.2.2 赋值问题
+
+设置默认值`String sex() default "1";`
+
+使用注解，数组类型的赋值 `str={xx,xx,xx}`，若数组中只有一个，大括号可省略。回忆Spring中注解
+
+```
+* 基本数据类型
+		* String
+		* 枚举
+		* 注解
+		* 以上类型的数组
+```
+
+### 5.3 元注解
+
+> **用于描述注解的注解**
+
+`@Target`：描述注解的位置
+
+- `ElementType`取值
+    - TYPE：可以作用于类上
+    - METHOD：可以作用于方法上
+    - FIELD：可以作用于成员变量上
+
+`@Retention`：描述注解是被保留的阶段
+
+`@Retention(RetentionPolicy.RUNTIME)`：当前被描述的注解，会保留到class字节码文件中，并被`JVM`读取到
+
+`@Documented`：描述注解是否被抽取到api文档中
+
+`@Inherited`：描述注解是否被子类继承
+
+### 5.4 注解的解析
+
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Pro {
+    String className();
+    String methodName();
+}
+
+@Pro(className = "com.bbxx.Demo1",methodName = "show1")
+public class RefelectDemo {
+    public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, InstantiationException {
+        /**
+         * 解析注解
+         */
+        Class<RefelectDemo> refelectDemoClass = RefelectDemo.class;
+        Pro annotation = refelectDemoClass.getAnnotation(Pro.class);
+        String s = annotation.className();
+        String s1 = annotation.methodName();
+        Class<?> aClass = Class.forName(s);
+        Object o = aClass.newInstance();
+        Method declaredMethod = aClass.getDeclaredMethod(s1);
+        declaredMethod.setAccessible(true);
+        declaredMethod.invoke(o);
+    }
+}
+```
+
+## 第六章 类加载器
+
+### 6.1 分类
+
+`ClassLoad`分类
+
+- 引导 类加载器----->负责加载类库 rt中的jar 【最高，Bootstrap】
+- 扩展 类加载器----->负责加载扩展jar包  ext下的都是扩展jar
+- 系统 类加载器----->应用下的类，包含开发人员写的类和三方jar包【最低】
+
+`ClassLoad`有个双亲委派模型，会先问父   类加载器/上级类加载器，向上级委托，没有就自己加载，没找到就抛出`ClassNotFound`。永远不会出现类库中的类被系统加载器加载，应用下的类 被引导加载。
+
+委托父加载器加载，父可以加载就让父加载。父无法加载时再自己加载。
+
+- 可避免类的重复加载，父类加载器已经加载了该类时，就没必要子`ClassLoader`再加载一次了/
+- 考虑到安全因素，`java`核心`api`中定义类型不会被随意替换。
+
+### 6.2 类加载的顺序
+
+```java
+class MyApp{
+    public static void main(String[]args){ // 系统加载
+        // 也由系统加载
+        A a = new A(); 
+        // 也由系统加载 （从系统开始匹配，最终会委托上去， ...由引导加载）
+        String s = new String();
+    }
+}
+
+class String{ // 引导加载， String类，类库中的
+    private Integer i;// 直接引导加载，毕竟无法委托了！
+}
+```
+
+其实还得分线程，每个线程都有一个当前的类加载器来负责加载类。
+
+### 6.3 流程
+
+基础阶段 **了解**，中级阶段 **熟悉**，高级阶段，**不清楚**。
+
+继承`ClassLoader`类完成自定义类加载器。自定义类加载器一般是为了加载网络上的类，class在网络中传输，为了安全，那么class需要加密，需要自定义类加载器来加载（对class做解密工作）
+
+`ClassLoader`加载类都是通过==`loadClass()`==方法来完成的。`loadClass()`方法的工作流程如下：
+
+- 调用==`findLoadedClass()`==方法查看该类是否已经被加载过了，如果该类没有加载过，那么这个方法返回null。
+- 判断`findLoadedClass()`返回的是否为null,如果不是null那么直接返回，可避免同一个类被加载两次。
+- 如果`findLoadedClass()`返回的是null, 那么就启动代理模式（委托机制），即调用上级的`loadClass()`方法，获取上级的方法是`getParent()`，当然上级可能还有上级，这个动作就一直向上走；（==双亲委派机制==，tomcat破坏了双亲委派模型）
+- 如果`getParent().loadClass()`返回的不是null，这说明上级加载成功了，那么就加载结果；
+- 如果上级返回的是null，说明需要自己出手，`loadClass()`方法会调用本类的`findClass()`方法来加载类
+- 这说明我们只需要重写`ClassLoader`的`findClass()`方法，这就可以了！如果重写了`loadClass()`方法覆盖了代理模式！
+
+我们要自定义一个类加载器，只需要继承`ClassLoader`类。然后重写它的`findClass()`方法即可。在`findClass()`中我们需要完成如下的工作！
+
+- 找到class文件，把它加载到一个byte[]中
+- 调用`defineClass()`方法，把byte[]传递给这个方法即可
+
+### 6.4 自定义类加载器
+
+>**文件类加载器**
+
+```java
+public class MyClassLoader extends ClassLoader {
+    private String directory;
+
+    public MyClassLoader(String _directory, ClassLoader paraent) {
+        super(paraent);
+        this.directory = _directory;
+    }
+
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        try {
+            // 把类名转为目录
+            String file = directory + File.separator + name.replace(".", File.separator) + ".class";
+            // 构建输入流
+            InputStream fis = new FileInputStream(file);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buf = new byte[1024];
+            int len = -1;
+            while ((len = fis.read(buf)) != -1) {
+                baos.write(buf, 0, len);
+            }
+            byte[] byteArray = baos.toByteArray();
+            fis.close();
+            baos.close();
+
+            return defineClass(name, byteArray, 0, byteArray.length);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+热部署，越过双亲委派，就是不用`loadClass` 用`findClass`
+
+> **复杂例子**
+
+```java
+package org.example.classloader;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.lang.reflect.Method;
+
+/**
+ * 类加载器学习
+ * 注意maven中的单元测试只能写在 test下面！
+ * 字节码文件请自己生成一个 然后调用对应的方法哦！！
+ */
+public class ClassLoaderDemo extends ClassLoader {
+
+    // 类加载器的地盘，指明加载那个地方的class文件
+    private String classpath;
+
+    public ClassLoaderDemo() {
+    }
+
+    public ClassLoaderDemo(String classpath) {
+        this.classpath = classpath;
+    }
+
+    public static void main(String[] args) throws Exception {
+        ClassLoaderDemo classLoaderDemo = new ClassLoaderDemo();
+        classLoaderDemo.fun2();
+    }
+
+    // 执行字节码的非静态方法
+    public void fun1() throws Exception {
+        ClassLoaderDemo classLoaderDemo = new ClassLoaderDemo("D:\\");
+        Class<?> clazz = classLoaderDemo.loadClass("org.example.classloader.ClassLoaderTest");
+        // loaderSay是一个非静态方法，需要一个实例调用
+        Method loaderSay = clazz.getMethod("loaderSay");
+        ClassLoaderTest o = (ClassLoaderTest) clazz.newInstance();
+        // 非静态方法需要一个实例进行调用
+        loaderSay.invoke(o);
+    }
+
+
+    // 执行字节码的静态方法
+    public void fun2() throws Exception {
+        ClassLoaderDemo classLoaderDemo = new ClassLoaderDemo("D:\\");
+        Class<?> clazz = classLoaderDemo.loadClass("org.example.classloader.ClassLoaderTest");
+        // loaderSay是一个非静态方法，需要一个实例调用
+        Method loaderSay = clazz.getMethod("loaderStaticFunction");
+        // 静态方法不用实例
+        String result = (String) loaderSay.invoke(null);
+        System.out.println(result);
+    }
+
+
+    // 重写这个方法即可
+    @Override
+    public Class<?> findClass(String name) throws ClassNotFoundException {
+        try {
+            // 自定义的方法，通过类名找到class文件，把文件加载到一个字节数组中
+            byte[] datas = getClassData(name);
+            if (datas == null) {
+                throw new ClassNotFoundException("类没有找到：" + name);
+            }
+            return this.defineClass(name, datas, 0, datas.length);
+
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            throw new ClassNotFoundException("类找不到:" + name);
+        }
+    }
+
+    private byte[] getClassData(String name) {
+        // 把名字换成文件夹的名字
+        name = name.replace(".", "\\") + ".class";
+        File classFile = new File(classpath, name);
+        System.out.println(classFile.getAbsoluteFile());
+        return readClassData(classFile);
+    }
+
+    private byte[] readClassData(File classFile) {
+        if (!classFile.exists()) return null;
+        byte[] bytes = null;
+        try {
+            FileInputStream fis = new FileInputStream(classFile);
+            bytes = fis.readAllBytes();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return bytes;
+    }
+}
+```
+
+### 6.5 Tomcat类加载器
+
+tomcat提供了两种类加载器。
+
+**第一种 服务器类加载器**
+
+- ${CATALINA-HOME}\lib\，tomcat类加载器，它负责加载下面的类
+
+**第二种 应用类加载器**
+
+- ${CONTEXT}\WEB-INF\lib  
+- ${CONTEXT}\WEB-INF\classes
+
+**总结**
+
+tomcat破坏了双亲委派模型
+
+引导
+
+扩展
+
+系统
+
+服务器类加载器：先自己动手，然后再去委托
+
+应用类加载器：先自己动手，然后再去委托
+
+<img src="D:\69546\Documents\pics\JavaStrengthen\tomcat_classLoader.png" style="float:left">
+
+## 第七章 并发
+
+### 7.1 注意
+
+> **不要调用Thread类或Runnable对象的run方法**。直接调用run方法会在同一个线程中执行----不会启动新的线程。调用`Thread.start()`方法会创建一个执行run方法的新线程。
+
+> **线程的六种状态**
+
+- New：新建
+- Runnable：可运行【可能在运行 或 准备运行】
+- Blocked：【阻塞】
+- Waiting：【等待】
+- Timed waiting：【具有指定等待时间的等待线程的线程状态。一个线程处于定时等待状态，这是由于调用了以下方法中的一种，具有指定的正等待时间】
+- Terminated：【终止】
+
+```java
+//Thread内部的枚举类
+public enum State {
+    NEW,
+    RUNNABLE,
+    BLOCKED,
+    WAITING,
+    TIMED_WAITING,
+    TERMINATED;
+}
+```
+
+> **lock和unlock，unlock要放在finally中，确保锁可以被释放。**
+
+> **可重入锁，获得锁的方法（代码）可以调用持有相同锁的方法**
+
+> **`ReentrantLock()`**
+
+- 公平锁和非公平锁。
+- 公平锁倾向于选择等待时间长的线程，这种策略可能严重影响性能。
+- 一般选择非公平锁。
+
+> <span style="color:green">**Condition，用`ReentrantLock()`的实例对象获得Condition对象**</span>
+
+- `await()` 将该线程放在这个条件的等待集中，<span style="color:green">**并放弃锁！**</span>
+- `singalAll()` 激活等待这个条件的所有线程，把他们从等待集中移出，让他们重新成为可运行的线程！
+- `singal()` 从该条件的等待集中随机选取一个从等待集中移出，让他们重新成为可运行的线程！
+- <span style="color:green">**用if做条件判断不合适，存在虚假唤醒的问题，用while。【`JDK`注释中有说明】**</span>
+
+> **synchronized**
+
+> **线程就是一个单独的资源类，没有任何附属的操作。**
+
+> **线程局部变量 `ThreadLocal`**
+
+- `ThreadLocal.withInitial()`为函数式编程提供的方法
+
+**Unsafe类啊！**
+
+## 第八章 网络编程
+
+采用windows的`telent`工具作为客户端进行发起连接。
+
+### 8.1 入门
+
+> **Client**
+
+```java
+/**
+ * 测试服务器连接
+ */
+public class SocketTest {
+
+    public static void fun1() {
+        // jdk 7 try catch用法
+        try (var socket = new Socket("time-a.nist.gov", 13)) {
+            var scanner = new Scanner(socket.getInputStream());
+            while (scanner.hasNextLine()) {
+                System.out.println(scanner.nextLine() + "==");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void fun2() throws UnknownHostException, UnsupportedEncodingException {
+        String host = "www.bilibili.com";
+        InetAddress[] localhosts = InetAddress.getAllByName(host);
+        for (InetAddress tmp : localhosts) {
+            System.out.println(tmp.getHostAddress());
+            System.out.println(tmp);
+        }
+    }
+
+    public static void fun3() throws IOException {
+        Socket socket = new Socket();
+        socket.connect(new InetSocketAddress("time-a.nist.gov", 13), 10000);
+        Scanner scanner = new Scanner(socket.getInputStream());
+        // Scanner类不是很熟悉
+        while (scanner.hasNextLine()) {
+            System.out.println(scanner.nextLine());
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        fun3();
+    }
+}
+```
+
+> **Server**
+
+```java
+public class EchoServer {
+    /**
+     * 服务器端的 inputStream 和 outPutStream
+     * inPutStream 输入流，输入到Server
+     * outPutStream 输出流，输出到client
+     *
+     * @param args
+     * @throws IOException
+     */
+    public static void main(String[] args) throws IOException {
+        ServerSocket serverSocket = new ServerSocket(8189);
+        Socket accept = serverSocket.accept();
+        // 控制台读入数据
+        Scanner in = new Scanner(accept.getInputStream(), StandardCharsets.UTF_8);
+        // 输出 IO流还是不熟悉 类的组合太复杂了
+        // PrintWriter out = new PrintWriter(new OutputStreamWriter(accept.getOutputStream(), StandardCharsets.UTF_8), true);
+        OutputStreamWriter out = new OutputStreamWriter(accept.getOutputStream(), StandardCharsets.UTF_8);
+        out.write("connected");
+        out.flush();
+
+        boolean done = false;
+        while (!done && in.hasNextLine()) {
+            // 控制台输入数据
+            String line = in.nextLine();
+            // 输出到客户端
+            out.write("Echo:" + line);
+            out.flush();
+            if ("BYE".equals(line.trim())) done = true;
+        }
+    }
+}
+```
+
+---
+
+## 第九章 `Servlet3.0`
+
+- 注解
+- 文件上传
+- 异步处理 需要 `asyncSupported=true`，有过滤器的话，过滤器也要设置`asyncSupported = true`
+
+使用型特性就是在保护你的Java职业生涯。
+
+### 9.1 注解替代`xml`
+
+```java
+@WebServlet("/index.do")
+public class IndexServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setAttribute("data", fakeData());
+        request.getRequestDispatcher("/demo.jsp").forward(request, response);
+    }
+
+    public ArrayList<User> fakeData() {
+        ArrayList<User> users = new ArrayList<>();
+        users.addAll(Arrays.asList(
+                new User("111", "111"),
+                new User("222", "222"),
+                new User("333", "333")));
+        users.forEach(System.out::println);
+        return users;
+    }
+}
+```
+
+### 9.2 异步响应
+
+异步响应如果不设置编码格式 可能会导致异步失败（有乱码，异步可能会失败；主要是告诉它响应文本是什么。）测试了一下，的确是设置好响应文本即可。
+
+异步响应如果过滤器这些东西没有设置为异步状态，也会导致异步失败
+
+```text
+ * 类型 异常报告
+ * 消息 当前链的筛选器或servlet不支持异步操作。
+ * 描述 服务器遇到一个意外的情况，阻止它完成请求
+ 
+ 错误的原因就是过滤器没有设置  asyncSupported = true
+```
+
+**代码案例**
+
+```java
+@WebServlet(urlPatterns = "/async", asyncSupported = true)
+public class AsyncServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        doGet(request, response);
+    }
+
+    private char[] getOutPutChar(String str) {
+        return str == null ? "   2020年 10月24日，祝各位程序员节日快乐！ 2020-1024=996，想不到吧！".toCharArray() : null;
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // 不加设置响应的类型的话，就无法异步。
+        response.setContentType("text/html");
+        AsyncContext asyncContext = request.startAsync(request, response);
+        threadOutPut(asyncContext, response, getOutPutChar(null));
+    }
+
+    /**
+     * @param asyncContext
+     * @param response
+     * @param outputStr    需要输出给浏览器的数据
+     */
+    private void threadOutPut(AsyncContext asyncContext, HttpServletResponse response, char[] outputStr) {
+        asyncContext.start(() -> {
+            try {
+                PrintWriter print = response.getWriter();
+                TimeUnit.MILLISECONDS.sleep(600);
+                for (char c : outputStr) {
+                    TimeUnit.MILLISECONDS.sleep(180);
+                    print.print(c); print.flush();
+                }
+                asyncContext.complete();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                asyncContext.complete();
+            }
+        });
+    }
+}
+```
+
+### 9.3 文件上传
+
+> **几个重要的API**
+
+```java
+- request.getPart("file_name") // 获得文件对象Part
+- part.getName() // 获得文件上传时的 name <input name="xx"> 中的name
+- part.getSize() // 获得文件的大小
+- part.getSubmittedFileName() // 获得提交的文件的名字。上传的是 demo.txt 那么得到的就是 demo.txt
+- part.getInputStream(); // 获得文件输入流。
+
+获取文件输入流后，在用输出流 存入磁盘。
+```
+
+**文件上传的简单Demo**
+
+文件上传用绝对路径【公司】
+
+```java
+@WebServlet("/upload")
+@MultipartConfig // 表示它支持文件上传
+public class FileUpload extends HttpServlet {
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Part part = request.getPart("file_name");
+        System.out.println(part.getName());
+        System.out.println(part.getSize());
+        System.out.println(part.getSubmittedFileName());
+        InputStream inputStream = part.getInputStream();
+        // new FileOutputStream("filename") 这样是无法定位位置的，不能正常存储？
+        //D:\citespace.projects.txt
+        FileOutputStream fos = new FileOutputStream("D://" + part.getSubmittedFileName());
+        // citespace.projects.txt
+        // FileOutputStream fos = new FileOutputStream(part.getSubmittedFileName());
+        byte[] bys = new byte[1024];
+        int len = 0;
+        while ((len = inputStream.read(bys)) != -1) {
+            fos.write(bys, 0, len);
+        }
+        inputStream.close();
+        fos.close();
+    }
+}
+```
+
+```html
+<html>
+<head>
+    <title>Title</title>
+</head>
+<body>
+    enctype 说明有文件要提交过去
+<form action="/Tomcat/upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file_name">
+    <input type="submit">
+</form>
+</body>
+</html>
+```
+
+# 第四部分 源码阅读
+
+- 修改idea配置
+    - Build，Execution，Deployment --> Debugger --> Stepping 的Do not step into the classes不要勾选
+
+- 把jdk的源码，解压，然后放在项目的目录下，不要放在src下就行，非项目目录也可以，然后idea源码关联改成我们解压后的那些文件，这样就可以修改源码注释了。
+
+----
+
+<span style="color:red">**JDK8核心源码目录说明**</span>
+
+- java.applet：applet所必须的类
+- java.awt：创建用户界面和绘制图形图像的所有类
+- java.beans：包含与开发javabeans有关的类
+
+- <span style="color:red">**java.lang：**</span>Java基础类【类装载（Class等）】、反射、字符串、线程类
+- java.math：主要是BigInteger、BigDecimal这两个的源码
+- java.net：网络应用出现提供类（阻塞式）
+- <span style="color:red">**java.nio：**</span>多路的、无阻塞的I/O
+- java.rmi：远程方法调用相关
+- java.security：安全框架类和接口
+- java.sql：操作数据库，闲得无聊可以看看
+- <span style="color:red">**java.util：**</span>重要的有：集合、JUC（Atomic、Lock、concurrent）、Stream（函数式操作）、工具类
+- java.text：处理文本、日期、数字和消息的类和接口（常见DataFormat、SimpleDataFormat）
+- java.time：日期时间工具库
+- javax.java：java扩展包，为了保持版本兼容，但有了更好的解决方案。如swing
+- launcher：和底层交互的c代码
+- org：其他企业组织提供的java类库，大部分不是oracle公司提供的。如w3c提供的对xml解析类和接口
+- com.sun：hotspot虚拟机中java.* 和javax.*的实现类，其他jdk中没有，这些类可能不向后兼容。
+
+Java native方法是用c c++实现的，无法查看到代码~要看的话去下open jdk的源码
+
+<span style="color:red">**用open jdk的源码。**</span>
+
+- corba：不流行的多语言、分布式通讯接口
+- hotspot：Java虚拟机
+- hotspot-cpu：CPU相关代码（汇编器、模版解释器、部分runtime函数）
+- hotspot-os：操作系统相关代码
+- hotspot-os_cpu：操作系统+CPU的代码
+- hotspot-share：平台无关的通用代码
+- jaxp：xml处理
+- jaxws：一组XML web services的Java API
+- <span style="color:green">**jdk**</span>：Java开发工具包（share\class Java的实现 share\native目录里的是C++的实现）
+- langtools：Java语言工具
+- nashorn：JVM上的JavaScript运行时
+
+
 
 
 

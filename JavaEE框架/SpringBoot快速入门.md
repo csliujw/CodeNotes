@@ -1,5 +1,5 @@
-# SpringBoot笔记Day01
-## 创建SpringBoot项目
+# 创建SpringBoot项目
+
 - IDEA创建项目总是出错，于是直接取官网选好依赖，下载过来，导入到IDEA中。
 - 导入后 用maven的Reload All Maven Projects 导入所有的依赖
 - 导入后发现下面这个报错
@@ -19,7 +19,8 @@
   ```
 - resources下的文件最终都会被部署到classpath文件下
 
-## 一些代码和配置信息的说明
+# 信息的说明
+
 - 启动类说明
 ```java
 @SpringBootApplication // 标明这是一个引导类。也可以不在这里的，没事。 
@@ -43,7 +44,8 @@ public class CommunityApplication {
 </dependency>
 ```
 
-## SpringBoot原理分析
+# SpringBoot原理分析
+
 - 父坐标parent
 ```xml
 <parent>
@@ -62,7 +64,8 @@ public class CommunityApplication {
   </parent>
 ```
 
-## SpringBoot自动配置
+# SpringBoot自动配置
+
 - 注解的层次关系，从最开始指定启动类那个@SpringBootApplication开始.
 - @SpringBootApplication上有这些注解
     - @SpringBootConfiguration
@@ -144,24 +147,26 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 }
 ```
 
-## 配置信息的加载顺序
+# 配置信息的加载顺序
+
 - 先加载yml
 - 再加载yaml
 - 再加载properties
 - 后加载的覆盖先加载的哦~
 ```xml
-  <resource>
+<resource>
     <directory>${basedir}/src/main/resources</directory>
     <filtering>true</filtering>
     <includes>
-      <include>**/application*.yml</include>
-      <include>**/application*.yaml</include>
-      <include>**/application*.properties</include>
+        <include>**/application*.yml</include>
+        <include>**/application*.yaml</include>
+        <include>**/application*.properties</include>
     </includes>
-  </resource>
+</resource>
 ```
 
-## yml语法
+# yml语法
+
 通过空格隔开key和value的
 ```yaml
 # 普通数据配置
@@ -199,7 +204,8 @@ map:
     key2: value2
 ```
 
-## 获得yml的配置数据
+# 获得yml的配置数据
+
 - 使用@Value映射
 ```java
 package cn.baobaoxuxu.community.controller;
@@ -233,7 +239,8 @@ public class YamlController {
 }
 ```
 
-## SpringBoot配置MyBatis
+# SpringBoot配置MyBatis
+
 - Mapper接口上要加Mapper注解。或者应用启动哪里加个@MapperScan("mapper的文件名")
 ```properties
 server.port=8080
@@ -251,7 +258,8 @@ mybatis.type-aliases-package=cn.baobaoxuxu.community.pojo
 mybatis.configuration.map-underscore-to-camel-case=true 
 ```
 
-## SpringBoot集成JUnit
+# SpringBoot集成JUnit
+
 - 导入测试依赖
 ```xml
 <dependency>
@@ -275,7 +283,7 @@ public class MyBatisTest {
 }
 ```
 
-## SpringBoot集成JPA
+# SpringBoot集成JPA
 
 ```xml
 <!--jdk9需要导入这种依赖-->
@@ -379,7 +387,7 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
 }
 ```
 
-## SpringBoot集成Redis
+# SpringBoot集成Redis
 
 ```xml
 <dependency>
@@ -437,4 +445,3 @@ public class RedisTest {
     }
 }
 ```
-

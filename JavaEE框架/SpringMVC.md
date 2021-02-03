@@ -780,7 +780,7 @@ public void ModelAttribute(Model model) {
 
 
 
-# 六、SpringMVC---前端控制器源码解析
+# 六、SpringMVC---前端控制器源码
 
 ## 6.1 如何看SpringMVC源码
 
@@ -1379,11 +1379,47 @@ private void initHandlerMappings(ApplicationContext context) {
 
 5）怎么根据方法的返回值（视图名）得到View对象？
 
+----
 
+# 九、跨域访问
 
+## 可跨域访问
 
+- 配置类
 
-# 不知名笔记
+```java
+package com.baobaoxuxu.config;
+
+/**
+ * @author payphone
+ * @date 2020/7/8 17:13
+ * @Description 项目跨域配置。
+ */
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class CrossConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("*")
+                .allowedMethods("GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowCredentials(true)
+                .maxAge(3600)
+                .allowedHeaders("*");
+    }
+}
+```
+
+- 在每个Controller类上，加上类级别的注解@CrossOrigin
+- PS：我不知道是不是两个要一起用，还是任意一个就可以 - -。当时浏览器有缓存，浏览器控制台一直报跨域的错误。后面就没深究了~~~
+
+# 源码阅读 待整理
+
+-----------------
 
 
 让我们看看createView方法
@@ -1433,10 +1469,6 @@ protected View createView(String viewName, Locale locale) throws Exception {
 一句话：
 
 视图解析器只是为了得到视图对象；视图对象才能真正的<span style="color:red">转发（将模型数据全部放在请求域中）或者重定向到页面</span>视图对象才能真正的<span style="color:red">渲染视图</span>。
-
--------
-
-# Other
 
 给你三天，写一个可以执行任意方法的反射工具类。？？
 
