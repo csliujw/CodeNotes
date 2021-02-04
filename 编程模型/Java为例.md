@@ -36,7 +36,7 @@ public static void main(String[] args) {
 }
 ```
 
-## 可边长参数
+## 可变长参数
 
 如果我们需要一个数组，我们可以通过以下方式获得。
 

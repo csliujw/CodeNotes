@@ -1,4 +1,4 @@
-# Docker
+# Docker概述
 
 ## Docker三大要素
 
@@ -273,7 +273,7 @@ sudo docker run -d --name web_site training/webapp python app.py
 sudo docker run -d --name db training/postgres
 ```
 
-# Dockerfile创建镜像☆☆☆
+# Dockerfile创建镜像
 
 ## 基本结构
 
@@ -327,13 +327,7 @@ service apache2 start
 
 用ssh远程连接docker中运行的Linux容器，并详细介绍了两种创建容器的方法：基于docker commit命令创建和基于Dockerfile创建。
 
-# Web服务器
 
-
-
-# 数据库
-
-# 编程语言
 
 
 

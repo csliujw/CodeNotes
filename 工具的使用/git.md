@@ -1,4 +1,4 @@
-# git版本控制软件
+# git配置&简单命令
 
 ## 命令
 
@@ -98,7 +98,7 @@ git pull origin master
 初始化git
 
 ```powershell
-Git init
+git init
 ```
 
 上传修改的文件：(*可替换成具体要上传的文件名，*表示提交所有有变化的文件)
