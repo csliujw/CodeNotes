@@ -38,8 +38,10 @@
 
 - **支持html css修饰**
 
+- [mermaid语法](https://mermaid-js.github.io/mermaid/#/)
 
-- <a href="https://zhuanlan.zhihu.com/p/149579648">如何画流程图</a>
+
+- [如何画流程图](https://zhuanlan.zhihu.com/p/149579648)
 - <a href="https://www.jianshu.com/p/5221380c65db">时序图</a>
-- <a href="https://blog.csdn.net/liuchunming033/article/details/106034799?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param">UML图</a>
+- [UML图](https://blog.csdn.net/liuchunming033/article/details/106034799?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.channel_param)
 

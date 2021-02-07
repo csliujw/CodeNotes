@@ -1336,16 +1336,80 @@ private void initHandlerMappings(ApplicationContext context) {
 
 ## 8.1 视图解析的应用
 
-**return "forward:/hello.jsp"//  转发到页面地址。**
+### 8.1.1 概述
 
-- **forward：转发到一个页面**
-- **/hello.jsp 转发当前项目下的hello**
-- **一定要加/  如果不加/就是相对路径。容易出问题。**
-- **forward:/hello.jsp 不会有给你拼串，有前缀的转发，不会由我们配置的视图解析器拼串。**
+<span style="color:green">**转发 forward**</span>
 
-**forward可以转发到页面，也可以转发到一个请求上。 forward:/hello 转发到hello请求**
+1）地址栏不发生变化，显示的是上一个页面的地址。在服务器端进行的跳转，
 
+2）请求次数：只有一次。
 
+3）根目录：http://localhost:8080/项目地址/转发地址
+
+4） 请求域中数据会不丢失（request请求域的生命周期是一次转发！）
+
+**API：**
+
+```java
+request.getRequestDispatcher("/地址").forward(request, response);
+```
+
+<span style="color:green">**重定向 redireect**</span>
+
+1）地址栏发生变化，显示新的地址；浏览器端进行的跳转。
+
+2）请求次数：2次
+
+3）可重定向到其他项目或其他网址
+
+4）请求域中的数据会丢失，因为是2次请求。request请求域的生命周期只是一次请求内有效！
+
+### 8.1.2 转发 forward
+
+> **废话少说上代码**
+
+```java
+@Controller
+class DemoController{
+    @RequestMapping("/forward")
+    public String forward(){
+        // 转发到项目的hello.jsp 
+        // eg 项目根目录是 localhost:8080/demo
+        // 则该亲求会转发到 localhost:8080/demo/hello.jsp
+		return "forward:/hello.jsp" 
+    }
+}
+```
+
+> **详细解释**
+
+- forward：转发到一个页面
+- /hello.jsp 转发当前项目下的hello
+- 一定要加 /  如果不加 / 就是相对路径。容易出问题。
+- forward:/hello.jsp <span style="color:red">不会有给你拼串，有前缀的转发，不会经由我们配置的视图解析器拼串。看看源码的流程就知道</span>
+    - 先判断路径中是否含前缀，含有就用对应前缀的方式进行操作。
+    - 没有就用我们的配置的视图解析器进行操作。
+
+forward可以转发到页面，也可以转发到一个请求上。 forward:/hello 转发到hello请求
+
+### 8.1.3 重定向 redirect
+
+> **废话少说上代码**
+
+```java
+@Controller
+class DemoController{
+    @RequestMapping("/redirect")
+    public String forward(){
+        // 转发到项目的hello.jsp 
+        // eg 项目根目录是 localhost:8080/demo
+        // 则该亲求会转发到 localhost:8080/demo/hello.jsp
+		return "redirect:/hello.jsp" 
+    }
+}
+```
+
+> **详细解释**
 
 **redirect重定向【重定向的地址由浏览器进行解析】**
 
@@ -1354,7 +1418,108 @@ private void initHandlerMappings(ApplicationContext context) {
 - springmvc无需写项目名，会为我们自动拼接上项目名。
 - returen "redirect:/hello.jsp";
 
+## 8.2 视图解析器原理
 
+### 8.2.1 概述
+
+==>先根据当前请求，找到那个类能处理。
+
+​	`mappedHandler = getHandler(processedRequest);`
+
+==>找到适配器
+
+​	`HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());`
+
+==>目标方法执行，执行完会有一个返回值，返回值会被包装成一个ModelAndView，ModelAndView对象中包含视图名。
+
+​	`mv = ha.handle(processedRequest, response, mappedHandler.getHandler());`
+
+==>来到页面
+
+​	`processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);`
+
+----
+
+1、方法执行后的返回值会作为页面地址参考，转发或重定向到页面。
+
+2、视图解析器可能会进行页面地址的拼串。
+
+​	1）任何方法的返回值，最终都会被包装成ModelAndView对象。
+
+​	2）处理页面的方法 processDispatchResult() 
+
+​		视图渲染流程：将域中的数据在页面展示；页面就是用来渲染模型数据的。
+
+​	3）调用render(mv, reuqest, response);渲染页面
+
+​	4）View 与 ViewResolver；
+
+​		ViewResolver的作用是根据视图名（方法的返回值）得到View对象。
+
+​	5）怎么根据方法的返回值（视图名）得到View对象？
+
+想知道怎么初始化视图解析器的话，取看initViewResolvers方法
+
+- 找到的话，就用我们配置的。
+- 没找到的话，就用默认的。
+
+```java
+@Nullable
+protected View resolveViewName(String viewName, @Nullable Map<String, Object> model,
+      Locale locale, HttpServletRequest request) throws Exception {
+
+   if (this.viewResolvers != null) {
+      for (ViewResolver viewResolver : this.viewResolvers) {
+         // 根据视图名，得到view对象。 点进对应的方法去看
+         View view = viewResolver.resolveViewName(viewName, locale);
+         if (view != null) {
+            return view;
+         }
+      }
+   }
+   return null;
+}
+```
+
+aabb
+
+```java
+// resolveViewName细节实现
+@Override
+@Nullable
+public View resolveViewName(String viewName, Locale locale) throws Exception {
+   if (!isCache()) {
+      return createView(viewName, locale);
+   }
+   else {
+      Object cacheKey = getCacheKey(viewName, locale);
+      View view = this.viewAccessCache.get(cacheKey);
+      if (view == null) {
+         synchronized (this.viewCreationCache) {
+            view = this.viewCreationCache.get(cacheKey);
+            if (view == null) {
+               // Ask the subclass to create the View object.
+               // 根据方法的返回值创建出视图对象。debug进去看看。
+               view = createView(viewName, locale);
+               if (view == null && this.cacheUnresolved) {
+                  view = UNRESOLVED_VIEW;
+               }
+               if (view != null && this.cacheFilter.filter(view, viewName, locale)) {
+                  this.viewAccessCache.put(cacheKey, view);
+                  this.viewCreationCache.put(cacheKey, view);
+               }
+            }
+         }
+      }
+      else {
+         if (logger.isTraceEnabled()) {
+            logger.trace(formatKey(cacheKey) + "served from cache");
+         }
+      }
+      return (view != UNRESOLVED_VIEW ? view : null);
+   }
+}
+```
 
 
 
@@ -1378,6 +1543,354 @@ private void initHandlerMappings(ApplicationContext context) {
 - ViewResolver的作用是根据视图名（方法的返回值）得到View对象。
 
 5）怎么根据方法的返回值（视图名）得到View对象？
+
+### 8.2.2 流程解析
+
+><span  style="color:green">**先根据当前请求，找到那个类能处理**</span>
+
+```java
+mappedHandler = getHandler(processedRequest);
+```
+
+> <span  style="color:green">**找到可处理当前请求的适配器**</span>
+
+```java
+HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
+```
+
+> <span  style="color:green">**执行目标方法**</span>
+
+```java
+mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
+```
+
+执行完目标方法后，其返回值会被包装成一个ModelAndView，而ModelAndView对象中包含视图名。如图：
+
+<img src="../pics/SpringMVC/ModelAndView.png">
+
+> <span  style="color:green">**来到页面**</span>
+
+```java
+processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
+```
+
+视图渲染流程；将域中的数据在页面展示；我们可以认为，页面的功能就是用来渲染模型数据的。
+
+看processDispatchResult源码发现里面是调用render(mv,request,response)进行渲染的
+
+
+
+```java
+private void processDispatchResult(HttpServletRequest request, HttpServletResponse response,
+                                   @Nullable HandlerExecutionChain mappedHandler, @Nullable ModelAndView mv,
+                                   @Nullable Exception exception) throws Exception {
+
+    boolean errorView = false;
+
+    if (exception != null) {
+        if (exception instanceof ModelAndViewDefiningException) {
+            logger.debug("ModelAndViewDefiningException encountered", exception);
+            mv = ((ModelAndViewDefiningException) exception).getModelAndView();
+        }
+        else {
+            Object handler = (mappedHandler != null ? mappedHandler.getHandler() : null);
+            mv = processHandlerException(request, response, handler, exception);
+            errorView = (mv != null);
+        }
+    }
+
+    // Did the handler return a view to render?
+    if (mv != null && !mv.wasCleared()) {
+        render(mv, request, response);
+        if (errorView) {
+            WebUtils.clearErrorRequestAttributes(request);
+        }
+    }
+    else {
+        if (logger.isTraceEnabled()) {
+            logger.trace("No view rendering, null ModelAndView returned.");
+        }
+    }
+
+    if (WebAsyncUtils.getAsyncManager(request).isConcurrentHandlingStarted()) {
+        // Concurrent handling started during a forward
+        return;
+    }
+
+    if (mappedHandler != null) {
+        // Exception (if any) is already handled..
+        mappedHandler.triggerAfterCompletion(request, response, null);
+    }
+}
+```
+
+> <span  style="color:green">**调用processDispatchResult里的render进行渲染**</span>
+
+发现内部有个View类型的变量。
+
+其中`view = resolveViewName(viewName, mv.getModelInternal(), locale, request);`的作用是根据视图名（即目标方法的返回值）得到View对象
+
+- viewName  视图的名称
+- mv.getModelInternal() 隐含模型中的数据
+
+```java
+protected void render(ModelAndView mv, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    // Determine locale for request and apply it to the response.
+    Locale locale =
+        (this.localeResolver != null ? this.localeResolver.resolveLocale(request) : request.getLocale());
+    response.setLocale(locale);
+
+    View view;
+    String viewName = mv.getViewName();
+    if (viewName != null) {
+        // We need to resolve the view name.
+        view = resolveViewName(viewName, mv.getModelInternal(), locale, request);
+        if (view == null) {
+            throw new ServletException("Could not resolve view with name '" + mv.getViewName() +
+                                       "' in servlet with name '" + getServletName() + "'");
+        }
+    }
+    else {
+        // No need to lookup: the ModelAndView object contains the actual View object.
+        view = mv.getView();
+        if (view == null) {
+            throw new ServletException("ModelAndView [" + mv + "] neither contains a view name nor a " +
+                                       "View object in servlet with name '" + getServletName() + "'");
+        }
+    }
+
+    // Delegate to the View object for rendering.
+    if (logger.isTraceEnabled()) {
+        logger.trace("Rendering view [" + view + "] ");
+    }
+    try {
+        if (mv.getStatus() != null) {
+            response.setStatus(mv.getStatus().value());
+        }
+        view.render(mv.getModelInternal(), request, response);
+    }
+    catch (Exception ex) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Error rendering view [" + view + "]", ex);
+        }
+        throw ex;
+    }
+}
+```
+
+> <span  style="color:green">**如何根据方法的返回值得到View对象？**</span>
+
+查看resolveViewName的源码，发现是视图解析器更具视图名得到视图对象，并返回。
+
+- viewName  视图的名称
+- mv.getModelInternal() 隐含模型中的数据
+
+this.viewResolvers中的数据如图：
+
+<img style="float:left" src="../pics/SpringMVC/viewResolvers.png">
+
+我们配了视图解析器就用，没配就用默认的。
+
+想知道怎么初始化视图解析器的话，取看initViewResolvers方法
+
+- 找到的话，就用我们配置的。
+- 没找到的话，就用默认的。
+
+```java
+@Nullable
+protected View resolveViewName(String viewName, @Nullable Map<String, Object> model,
+                               Locale locale, HttpServletRequest request) throws Exception {
+
+    if (this.viewResolvers != null) {
+        // 遍历所有的ViewResolver
+        for (ViewResolver viewResolver : this.viewResolvers) {
+            View view = viewResolver.resolveViewName(viewName, locale);
+            if (view != null) {
+                return view;
+            }
+        }
+    }
+    return null;
+}
+```
+
+><span  style="color:green">**如何得到View对象，即resolveViewName如何实现的？**</span>
+
+先从缓存中拿，没有就创建。
+
+根据方法的返回值创建出视图对象
+
+view = createView(viewName, locale);
+
+```java
+@Override
+@Nullable
+public View resolveViewName(String viewName, Locale locale) throws Exception {
+    if (!isCache()) {
+        return createView(viewName, locale);
+    }
+    else {
+        Object cacheKey = getCacheKey(viewName, locale);
+        View view = this.viewAccessCache.get(cacheKey);
+        if (view == null) {
+            synchronized (this.viewCreationCache) {
+                view = this.viewCreationCache.get(cacheKey);
+                if (view == null) {
+                    // Ask the subclass to create the View object.
+                    // 根据方法的返回值创建出视图对象
+                    view = createView(viewName, locale);
+                    if (view == null && this.cacheUnresolved) {
+                        view = UNRESOLVED_VIEW;
+                    }
+                    if (view != null && this.cacheFilter.filter(view, viewName, locale)) {
+                        this.viewAccessCache.put(cacheKey, view);
+                        this.viewCreationCache.put(cacheKey, view);
+                    }
+                }
+            }
+        }
+        else {
+            if (logger.isTraceEnabled()) {
+                logger.trace(formatKey(cacheKey) + "served from cache");
+            }
+        }
+        return (view != UNRESOLVED_VIEW ? view : null);
+    }
+}
+```
+
+> <span  style="color:green">**创建View对象的方法createView**</span>
+
+```java
+@Override
+protected View createView(String viewName, Locale locale) throws Exception {
+   // If this resolver is not supposed to handle the given view,
+   // return null to pass on to the next resolver in the chain.
+   if (!canHandle(viewName, locale)) {
+      return null;
+   }
+
+   // Check for special "redirect:" prefix.
+   if (viewName.startsWith(REDIRECT_URL_PREFIX)) {
+      String redirectUrl = viewName.substring(REDIRECT_URL_PREFIX.length());
+      RedirectView view = new RedirectView(redirectUrl,
+            isRedirectContextRelative(), isRedirectHttp10Compatible());
+      String[] hosts = getRedirectHosts();
+      if (hosts != null) {
+         view.setHosts(hosts);
+      }
+      return applyLifecycleMethods(REDIRECT_URL_PREFIX, view);
+   }
+
+   // Check for special "forward:" prefix.
+   if (viewName.startsWith(FORWARD_URL_PREFIX)) {
+      String forwardUrl = viewName.substring(FORWARD_URL_PREFIX.length());
+      // 
+      InternalResourceView view = new InternalResourceView(forwardUrl);
+      return applyLifecycleMethods(FORWARD_URL_PREFIX, view);
+   }
+
+   // 如果没有前缀  就用父类默认创建一个view对象
+   return super.createView(viewName, locale);
+}
+```
+
+返回View对象；
+
+视图解析器得到View对象的流程就是，所有配置的视图解析器都来尝试根据视图名（返回值）得到View（视图对象）；如果能得到就返回，得不到就换下一个视图解析器；
+
+调用View对象的render方法
+
+```java
+@Override
+public void render(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    if (logger.isTraceEnabled()) {
+        logger.trace("Rendering view with name '" + this.beanName + "' with model " + model +
+                     " and static attributes " + this.staticAttributes);
+    }
+
+    Map<String, Object> mergedModel = createMergedOutputModel(model, request, response);
+    prepareResponse(request, response);
+    renderMergedOutputModel(mergedModel, getRequestToExpose(request), response);
+}
+```
+
+```java
+@Override
+protected void renderMergedOutputModel(
+    Map<String, Object> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
+
+    // Expose the model object as request attributes.
+    // 将模型中的数据放在请求域中
+    exposeModelAsRequestAttributes(model, request);
+
+    // Expose helpers as request attributes, if any.
+    exposeHelpers(request);
+
+    // Determine the path for the request dispatcher.
+    // 拿到要转发的路径
+    String dispatcherPath = prepareForRendering(request, response);
+
+    // Obtain a RequestDispatcher for the target resource (typically a JSP).
+    RequestDispatcher rd = getRequestDispatcher(request, dispatcherPath);
+    if (rd == null) {
+        throw new ServletException("Could not get RequestDispatcher for [" + getUrl() +
+                                   "]: Check that the corresponding file exists within your web application archive!");
+    }
+
+    // If already included or response already committed, perform include, else forward.
+    if (useInclude(request, response)) {
+        response.setContentType(getContentType());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Including resource [" + getUrl() + "] in InternalResourceView '" + getBeanName() + "'");
+        }
+        rd.include(request, response);
+    }
+
+    else {
+        // Note: The forwarded resource is supposed to determine the content type itself.
+        if (logger.isDebugEnabled()) {
+            logger.debug("Forwarding to resource [" + getUrl() + "] in InternalResourceView '" + getBeanName() + "'");
+        }
+        rd.forward(request, response);
+    }
+}
+```
+
+将隐含模型中的数据合并到request请求域中
+
+```java
+protected void exposeModelAsRequestAttributes(Map<String, Object> model, HttpServletRequest request) throws Exception {
+    for (Map.Entry<String, Object> entry : model.entrySet()) {
+        String modelName = entry.getKey();
+        Object modelValue = entry.getValue();
+        if (modelValue != null) {
+            request.setAttribute(modelName, modelValue);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Added model object '" + modelName + "' of type [" + modelValue.getClass().getName() +
+                             "] to request in view with name '" + getBeanName() + "'");
+            }
+        }
+        else {
+            request.removeAttribute(modelName);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Removed model object '" + modelName +
+                             "' from request in view with name '" + getBeanName() + "'");
+            }
+        }
+    }
+}
+```
+
+一句话：视图解析器只是为了得到视图对象；视图对象才能真正的转发（将模型数据全部放在请求域中）或者重定向要页面，视图对象才能真正的<span style="color:red">渲染视图</span>
+
+### 8.2.3 流程图
+
+<img src="../pics/SpringMVC/viewResolversFlow.png">
+
+视图对象才是真正的渲染页面
+
+ViewResolver只是一个中介商，用于得到视图对象
 
 ----
 
