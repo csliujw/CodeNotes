@@ -1422,127 +1422,29 @@ class DemoController{
 
 ### 8.2.1 概述
 
-==>先根据当前请求，找到那个类能处理。
+==> 先根据当前请求，找到那个类能处理。
 
 ​	`mappedHandler = getHandler(processedRequest);`
 
-==>找到适配器
+==> 找到适配器
 
 ​	`HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());`
 
-==>目标方法执行，执行完会有一个返回值，返回值会被包装成一个ModelAndView，ModelAndView对象中包含视图名。
+==>  目标方法执行，执行完会有一个返回值，返回值会被包装成一个ModelAndView，ModelAndView对象中包含视图名。
 
 ​	`mv = ha.handle(processedRequest, response, mappedHandler.getHandler());`
 
-==>来到页面
+==> 来到页面
 
 ​	`processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);`
 
-----
+==> 调用processDispatchResult里的render进行渲染
 
-1、方法执行后的返回值会作为页面地址参考，转发或重定向到页面。
+==> 如何根据方法的返回值得到View对象
 
-2、视图解析器可能会进行页面地址的拼串。
-
-​	1）任何方法的返回值，最终都会被包装成ModelAndView对象。
-
-​	2）处理页面的方法 processDispatchResult() 
-
-​		视图渲染流程：将域中的数据在页面展示；页面就是用来渲染模型数据的。
-
-​	3）调用render(mv, reuqest, response);渲染页面
-
-​	4）View 与 ViewResolver；
-
-​		ViewResolver的作用是根据视图名（方法的返回值）得到View对象。
-
-​	5）怎么根据方法的返回值（视图名）得到View对象？
-
-想知道怎么初始化视图解析器的话，取看initViewResolvers方法
-
-- 找到的话，就用我们配置的。
-- 没找到的话，就用默认的。
-
-```java
-@Nullable
-protected View resolveViewName(String viewName, @Nullable Map<String, Object> model,
-      Locale locale, HttpServletRequest request) throws Exception {
-
-   if (this.viewResolvers != null) {
-      for (ViewResolver viewResolver : this.viewResolvers) {
-         // 根据视图名，得到view对象。 点进对应的方法去看
-         View view = viewResolver.resolveViewName(viewName, locale);
-         if (view != null) {
-            return view;
-         }
-      }
-   }
-   return null;
-}
-```
-
-aabb
-
-```java
-// resolveViewName细节实现
-@Override
-@Nullable
-public View resolveViewName(String viewName, Locale locale) throws Exception {
-   if (!isCache()) {
-      return createView(viewName, locale);
-   }
-   else {
-      Object cacheKey = getCacheKey(viewName, locale);
-      View view = this.viewAccessCache.get(cacheKey);
-      if (view == null) {
-         synchronized (this.viewCreationCache) {
-            view = this.viewCreationCache.get(cacheKey);
-            if (view == null) {
-               // Ask the subclass to create the View object.
-               // 根据方法的返回值创建出视图对象。debug进去看看。
-               view = createView(viewName, locale);
-               if (view == null && this.cacheUnresolved) {
-                  view = UNRESOLVED_VIEW;
-               }
-               if (view != null && this.cacheFilter.filter(view, viewName, locale)) {
-                  this.viewAccessCache.put(cacheKey, view);
-                  this.viewCreationCache.put(cacheKey, view);
-               }
-            }
-         }
-      }
-      else {
-         if (logger.isTraceEnabled()) {
-            logger.trace(formatKey(cacheKey) + "served from cache");
-         }
-      }
-      return (view != UNRESOLVED_VIEW ? view : null);
-   }
-}
-```
+==> 由View对象进行视图的相关操作
 
 
-
-**SpringMVC视图解析器原理**
-
-- 1、方法执行后的返回值会作为页面地址参考，转发或者重定向到页面
-- 2、视图解析器可能会进行页面地址的拼串
-
-\--------------------------
-
-1）任何方法的返回值，最终都会被包装成ModelAndView对象。
-
-2）处理页面的方法 processDispatchResult() 
-
-视图渲染流程：将域中的数据在页面展示；页面就是用来渲染模型数据的。
-
-3）调用render(mv, reuqest, response);渲染页面
-
-4）View 与 ViewResolver；
-
-- ViewResolver的作用是根据视图名（方法的返回值）得到View对象。
-
-5）怎么根据方法的返回值（视图名）得到View对象？
 
 ### 8.2.2 流程解析
 
@@ -1577,8 +1479,6 @@ processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchExc
 视图渲染流程；将域中的数据在页面展示；我们可以认为，页面的功能就是用来渲染模型数据的。
 
 看processDispatchResult源码发现里面是调用render(mv,request,response)进行渲染的
-
-
 
 ```java
 private void processDispatchResult(HttpServletRequest request, HttpServletResponse response,
@@ -1894,7 +1794,439 @@ ViewResolver只是一个中介商，用于得到视图对象
 
 ----
 
+## 8.3 国际化
+
+没记，有空再补。
+
+一定要过SpringMVC的视图解析流程，人家会创建一个jstlView帮你快速国际化。
+
+转发、重定向导致国际化失败的原因如下·：
+
+通过阅读源码可知转发和重定向缺少了国际化local这个参数，即不会进行国际化！
+
+```java
+@Override
+protected View createView(String viewName, Locale locale) throws Exception {
+   // If this resolver is not supposed to handle the given view,
+   // return null to pass on to the next resolver in the chain.
+   if (!canHandle(viewName, locale)) {
+      return null;
+   }
+
+   // Check for special "redirect:" prefix.
+   if (viewName.startsWith(REDIRECT_URL_PREFIX)) {
+      String redirectUrl = viewName.substring(REDIRECT_URL_PREFIX.length());
+      RedirectView view = new RedirectView(redirectUrl,
+            isRedirectContextRelative(), isRedirectHttp10Compatible());
+      String[] hosts = getRedirectHosts();
+      if (hosts != null) {
+         view.setHosts(hosts);
+      }
+      return applyLifecycleMethods(REDIRECT_URL_PREFIX, view);
+   }
+
+   // Check for special "forward:" prefix.
+   if (viewName.startsWith(FORWARD_URL_PREFIX)) {
+      String forwardUrl = viewName.substring(FORWARD_URL_PREFIX.length());
+      // 
+      InternalResourceView view = new InternalResourceView(forwardUrl);
+      return applyLifecycleMethods(FORWARD_URL_PREFIX, view);
+   }
+
+   // 如果没有前缀  就用父类默认创建一个view对象
+   return super.createView(viewName, locale);
+}1
+```
+
+## 8.4 自定义视图解析器
+
+### 8.4.1 步骤
+
+自定义视图和视图解析器的步骤
+
+1）编写自定义的视图解析器，和视图实现类
+
+2）视图解析器必须在IOC容器中。
+
+```java
+@Controller
+public class MyViewResovlerController{
+    
+    @RequeestMapping("/handleplus")
+    public String handleplus(){
+        return "meinv:/gaoqing"
+    }
+}
+```
+
+自定义视图解析器
+
+```java
+I
+```
+
+# 九、CRUD案例
+
+修改数据需要注意的地方：
+
+1）可以在修改前 用@ModelAttribute标注的方法先把数据查出来。
+
+## 9.1 概述
+
+做一个符合Rest风格的CRUD
+
+C：Create 创建
+
+R：Retrieve 查询
+
+U：Update 更新
+
+D：Delete 删除
+
+增删改查的URL地址； /资源名/资源标识
+
+/emp/1	GET	查询
+
+/emp/1	PUT	更新
+
+/emp/1	DELETE	删除
+
+/emp		POST	新增
+
+## 9.2 静态资源放行
+
+Spring MVC allows for mapping the `DispatcherServlet` to `/` (thus overriding the mapping of the container’s default Servlet), while still allowing static resource requests to be handled by the container’s default Servlet. It configures a `DefaultServletHttpRequestHandler` with a URL mapping of `/**` and the lowest priority relative to other URL mappings.
+
+This handler forwards all requests to the default Servlet. Therefore, it must remain last in the order of all other URL `HandlerMappings`. That is the case if you use ``. Alternatively, if you set up your own customized `HandlerMapping` instance, be sure to set its `order` property to a value lower than that of the `DefaultServletHttpRequestHandler`, which is `Integer.MAX_VALUE`.
+
+The following example shows how to enable the feature by using the default setup:
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
+        // 这样就不会拦截静态资源了
+        // SpringMVC 前端控制器的拦截路径配置是：/
+        configurer.enable();
+    }
+}
+```
+
+# 十、数据转换/格式化/校验
+
+## 10.1 概述
+
+SpringMVC封装自定义类型对象的时候
+
+1）页面提交的都是字符串。
+
+牵扯到以下操作：
+
+1）数据绑定期间的数据类型转换。
+
+- String --> Integer
+- String --> Boolean
+
+2）数据绑定期间的数据格式化问题。
+
+- birth=2017-12-15 -->Date 2017/12/15  2017.12.15
+
+3）数据校验
+
+- 我们提交的数据必须是合法的
+- 前端校验：JS+正则表达式（防君子不防小人）
+- 后端校验：重要数据也是必须进行后端校验
+
+---
+
+数据绑定器
+
+WebDataBinder：数据绑定器负责数据绑定工作；
+
+ConversionService组件负责数据类型的转换以及格式化。
+
+## 10.2 数据绑定流程
+
+Spring MVC 通过反射机制对目标处理方法进行解析，将请求消息绑定到处理方法的入参中。数据绑定的核心部件是 DataBinder，运行机制如下：
+
+<img src="../pics/SpringMVC/WebDataBinderFlow.png" style="float:left">
+
+## 10.3 自定义数据类型转换
+
+ConversionService接口
+
+有三种方式
+
+- Converter<S,T> 将S类型对象转为T类型对象
+- ConverterFactory：将相同系列多个“同质”Converter封装在一起。
+- GenericConverter：会根据源类对象及目标类对象所在的宿主类中的上下文信息进行类型转换。
+
+基本只用第一种方式
+
+---
+
+**步骤**
+
+ConversionService：是一个接口，它里面有Converter（转换器）进行工作
+
+1）实现Converter接口，写一个自定义的类型转换器
+
+2）Converter是ConversionService中的组件；
+
+- 你的Converter得放进ConversionService中。
+- 将WebDataBinder中的ConversionService设置成我们这个加了自定义类型转换器的ConversionService
+
+3）配置出ConversionService；告诉SpringMVC别用默认的ConversionService，用我们自己定义的。
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        DateTimeFormatterRegistrar registrar = new DateTimeFormatterRegistrar();
+        registrar.setUseIsoFormat(true);
+        registrar.registerFormatters(registry);
+    }
+}
+```
+
+总结三步：
+
+1）实现Converter接口，做一个自定义类型的转换器。
+
+- 自定义一个类实现这个接口
+
+2）将这个Converter配置在ConversionService中。
+
+- 注解版本的 2 和 3 是一起的。
+
+3）告诉SpringMVC使用我们的ConversionService。
+
+4）debug发现有很多String-->其他类型  的转换器，要那个？只有一个是从String到Person，所以用它。
+
+> **Java代码示例**
+
+```java
+// 自定义转换器示例
+import org.springframework.core.convert.converter.Converter;
+
+public class MyStringToPersonConverter implements Converter<String, Person> {
+    @Override
+    public Person convert(String source) {
+        Person person = new Person();
+        System.out.println("提交过来的字符串是" + source);
+        if (source.contains("-")) {
+            String[] split = source.split("-");
+            person.setName(split[0]);
+            person.setAge(Integer.valueOf(split[1]));
+        }
+        return person;
+    }
+
+    @Override
+    public <U> Converter<String, U> andThen(Converter<? super Person, ? extends U> after) {
+        return null;
+    }
+}
+```
+
+---
+
+```java
+// 配置代码示例
+@Configuration
+@EnableWebMvc
+@ComponentScan(basePackages = "org.example", includeFilters = {
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = Controller.class)
+}, useDefaultFilters = false)
+public class WebConfig implements WebMvcConfigurer {
+    
+    // 添加我们自己实现的转换器
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        MyStringToPersonConverter conv = new MyStringToPersonConverter();
+        registry.addConverter(conv);
+    }
+
+     // 视图解析器
+    public void configureViewResolvers(ViewResolverRegistry registry) {
+        // 注册一个视图解析器
+        registry.viewResolver(new MyViewResolver());
+        registry.jsp("/WEB-INF/views/", ".jsp");
+    }
+
+    @Override
+    public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
+        // DefaultServletHandling 不拦截静态资源
+        configurer.enable();
+    }
+}
+
+```
+
+
+
+## 10.4 EnableWebMvc解析
+
+use the `@EnableWebMvc` annotation to enable MVC configuration。
+
+使用EnableWebMvc注解开启mvc配置。相当于xml中的
+
+```xml
+<mvc:annotation-driven/>
+```
+
+点进EnableWebMvc的源码，最后发现注册了一堆东西。
+
+`<mvc:annotation-driven />` 会自动注册
+
+- RequestMappingHandlerMapping 、
+- RequestMappingHandlerAdapter 
+- ExceptionHandlerExceptionResolver
+
+既然EnableWebMvc是注解版的`<mvc:annotation-driven />` ，那么作用应该一样吧。
+
+还将提供以下支持：
+
+- 支持使用 ConversionService 实例对表单参数进行类型转换
+
+- 支持使用 @NumberFormat annotation、@DateTimeFormat 注解完成数据类型的格式化 
+
+- 支持使用 @Valid 注解对 JavaBean 实例进行 JSR 303 验证  
+
+- 支持使用 @RequestBody 和 @ResponseBody 注解 
+
+---
+
+既没有配置 <mvc:default-servlet-handler/> 也没有配置 <mvc:annotation-driven/>
+
+<img src="../pics/SpringMVC/mvc_driver_01.png">
+
+配置了 <mvc:default-servlet-handler/>  但没有配置 <mvc:annotation-driven/>
+
+<img src="../pics/SpringMVC/mvc_driver_02.png">
+
+既配置了 <mvc:default-servlet-handler/>  又配置 <mvc:annotation-driven/>
+
+<img src="../pics/SpringMVC/mvc_driver_03.png">
+
+
+
+## 10.5 格式化
+
+1）日期格式化
+
+@DateFormat注解，可以用在字段上，方法形参上。
+
+2）数字格式化
+
+@NumberFormat注解，可以用在字段上，方法形参上。
+
+```java
+@RequestMapping("/date")
+@ResponseBody
+// birth=2019-11-11才行
+public String date(@DateTimeFormat(pattern = "yyyy-MM-dd") Date birth) {
+    return birth.toString();
+}
+
+@RequestMapping("/number")
+@ResponseBody
+// 这样 提交工资的时候可以用逗号隔开了 #,# 逗号分隔开来！！
+public String number(@NumberFormat(pattern = "#,###,###.##") Double number) {
+    return number.toString();
+}
+```
+
+## 10.6 数据校验
+
+### 10.6.1 概述
+
+只做前端校验不安全！！他们可以直接绕过前端验证！！重要数据一定要加上后端验证。
+
+### 10.6.2 准备
+
+SpringMVC：可以用JSR303来做数据校验
+
+JDBC：规范---实现（各个厂商的驱动包）
+
+JSR303：规范---Hibernate Validator（第三方校验框架）
+
+需要如下jar包（有几个带el的jar不导入：因为tomcat中有；如果tomcat的版本是7.0以下，则需要导入）
+
+- hibernate-validator-5.0.0.CR2.jar
+- hibernate-validator-annotation-processor-5.0.0.CR2.jar
+- classmate-0.8.0.jar
+- jboss-logging-3.1.1.GA.jar
+- validation-api-1.1.0.CR1.jar
+
+### 10.6.3 校验
+
+给JavaBean的属性添加上校验注解。
+
+在SpringMVC封装对象的时候，告诉SpringMVC这个JavaBean需要校验。
+
+如何知道校验结果：
+
+- 给需要校验的JavaBean后面紧跟一个BindingResult。这个BindingResult就是封装前一个Bean的校验结果。
+- <form:error path="lastName"> 显示lastName自带的错误（提交数据的表单好像也的是SpringMVC带的标签库）
+
+```java
+@NotEmpty
+@Lenght(min=6,max=18)
+private String lastName
+
+@Email
+private String email
+    
+public String add(@Valid Employee employee,BindingResut result){
+    boolean hasErrors = result.hasErrors()
+    //do something
+}
+```
+
+---
+
+用原生表单怎么办？
+
+result获取相关信息即可。
+
+----
+
+自定义错误信息（国际化的好麻烦，也用不到，不记了）
+
+```java
+@NotEmpty(message="不能为空")
+@Lenght(min=6,max=18)
+private String lastName
+```
+
+
+
+# 十一、ajax、上传、拦截器
+
+## 11.1 ajax
+
+返回数据是json就ok。
+
+导入对应的json包，SpringMVC默认用的jackson！我们导入这个就好啦！
+
+如果想要忽略某个字段的json输出，那么给这个字段加上注解`@JsonIgnore`即可。
+
+---
+
+如果浏览器发送给服务器的是json数据，那么需要设置
+
+平时我们是用表单提交的，所以没问题。
+
 # 九、跨域访问
+
+
 
 ## 可跨域访问
 
@@ -2179,40 +2511,3 @@ protected View resolveViewName(String viewName, @Nullable Map<String, Object> mo
 
 
 
-```
-// resolveViewName细节实现
-@Override
-@Nullable
-public View resolveViewName(String viewName, Locale locale) throws Exception {
-   if (!isCache()) {
-      return createView(viewName, locale);
-   }
-   else {
-      Object cacheKey = getCacheKey(viewName, locale);
-      View view = this.viewAccessCache.get(cacheKey);
-      if (view == null) {
-         synchronized (this.viewCreationCache) {
-            view = this.viewCreationCache.get(cacheKey);
-            if (view == null) {
-               // Ask the subclass to create the View object.
-               // 根据方法的返回值创建出视图对象。debug进去看看。
-               view = createView(viewName, locale);
-               if (view == null && this.cacheUnresolved) {
-                  view = UNRESOLVED_VIEW;
-               }
-               if (view != null && this.cacheFilter.filter(view, viewName, locale)) {
-                  this.viewAccessCache.put(cacheKey, view);
-                  this.viewCreationCache.put(cacheKey, view);
-               }
-            }
-         }
-      }
-      else {
-         if (logger.isTraceEnabled()) {
-            logger.trace(formatKey(cacheKey) + "served from cache");
-         }
-      }
-      return (view != UNRESOLVED_VIEW ? view : null);
-   }
-}
-```
