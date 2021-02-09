@@ -1,10 +1,10 @@
-# 一、SpringMVC---概述
+# 一、概述
 
 不太适合如门用哦！
 
 我看到雷丰阳的SpringMVC视频，17年的。但是我用的是JavaConfig风格的配置。没用视频中的xml配置。
 
-# 二、SpringMVC---基本原理
+# 二、基本原理
 
 ## 2.1 运行流程
 
@@ -66,7 +66,7 @@
      *  /* 直接是拦截所有请求。所以我们写  / ,写 / 也是为了迎合rest风格的url地址
      *  springmvc是先经过前端控制器的，看有没有配对的，没有就报错。
 
-# 三、SpringMVC---常用注解
+# 三、常用注解
 
 ## 3.1 常用注解归纳
 
@@ -401,7 +401,7 @@ protected void doFilterInternal(HttpServletRequest request, HttpServletResponse 
 
 ----
 
-# 四、SpringMVC---请求处理
+# 四、请求处理
 
 ## 4.1 概述
 
@@ -641,7 +641,7 @@ public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherS
 
 
 
-#  五、SpringMVC---数据输出
+#  五、数据输出
 
 把数据携带给页面。
 
@@ -780,7 +780,7 @@ public void ModelAttribute(Model model) {
 
 
 
-# 六、SpringMVC---前端控制器源码
+# 六、前端控制器源码
 
 ## 6.1 如何看SpringMVC源码
 
@@ -1204,7 +1204,7 @@ protected ModelAndView handleInternal(HttpServletRequest request,
         - 不是@SessionAttributes标注的，就利用反射创建一个对象
     - 拿到之前创建好的对象，使用数据绑定器（WebDataBinder）将请求中的每个数据绑定到这个对象中。
 
-# 七、SpringMVC---九大组件
+# 七、九大组件
 
 ## 7.1 组件概述
 
@@ -2206,9 +2206,7 @@ result获取相关信息即可。
 private String lastName
 ```
 
-
-
-# 十一、ajax、上传、拦截器
+# 十一、ajax/下载/上传
 
 ## 11.1 ajax
 
@@ -2218,17 +2216,194 @@ private String lastName
 
 如果想要忽略某个字段的json输出，那么给这个字段加上注解`@JsonIgnore`即可。
 
+----
+
+@ResponseBody：将请求的数据放在响应体；也可以定制响应体！自行百度哦！
+
+```java
+@ResponseBody // 可以把对象转为json数据，返回给浏览器。
+@RequestMapping("/")
+public String body(Employee ee){
+    return ee;
+} 
+```
+
 ---
 
-如果浏览器发送给服务器的是json数据，那么需要设置
+@RequestBody：
 
-平时我们是用表单提交的，所以没问题。
+- 获取请求体
 
-# 九、跨域访问
+- 接受json数据，封装为对象。
+
+```java
+@ResponseBody
+@RequestMapping("/1")
+public String test1(@RequestBody String str){
+    return str;
+}
+
+@ResponseBody
+@RequestMapping("/2")
+public String test2(@RequestBody Person person){
+    return person
+}
+```
+
+HttpEntity：Http实体
+
+- 如果参数位置写HttpEtity<String> 比@RequestBody更强，可以拿到请求头
+
+```java
+// some annotation
+public String test3(HttpEntity<String> str){
+    return str;
+}
+```
+
+## 11.2 下载
+
+### 11.2.1 Serlvet 3.0
+
+```java
+public class DownServlet extends HttpServlet {
+    public void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        //客户端传递的需要下载的文件名
+        String file = request.getParameter("file"); 
+        //默认认为文件在当前项目的根目录
+        String path = request.getServletContext().getRealPath("")+"/"+file; 
+        FileInputStream fis = new FileInputStream(path);
+        response.setCharacterEncoding("utf-8");
+        response.setHeader("Content-Disposition", "attachment; filename="+file);
+        ServletOutputStream out = response.getOutputStream();
+        byte[] bt = new byte[1024];
+        int length = 0;
+        while((length=fis.read(bt))!=-1){
+            out.write(bt,0,length);
+        }
+        out.close();
+    }
+}
+```
+
+### 11.2.2 SpringMVC下载
+
+还不如原生api好用。
+
+[博客地址](https://www.cnblogs.com/wyq178/p/6921164.html)
+
+## 11.3 上传
+
+### 11.3.1 Servlet 3.0
+
+> 表单设置
+
+```html
+<form action="up" method="post"  enctype="multipart/form-data">
+    <input type="file" name="myfile">
+    <input type="submit" value="上传文件">
+</form>
+```
+
+> **Servlet 3.0 文件上传的写法**
+
+```java
+@WebServlet("/up")
+@MultipartConfig  
+//使用MultipartConfig注解标注改servlet能够接受文件上传的请求
+public class UploadServlet extends HttpServlet {
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        Part part = req.getPart("myfile");
+        // 现在的api可以直接获取 文件名 后缀什么的了，不用截断了
+        String disposition = part.getHeader("Content-Disposition");
+        String suffix = disposition.substring(disposition.lastIndexOf("."),disposition.length()-1);
+          //随机的生存一个32的字符串
+        String filename = UUID.randomUUID()+suffix;
+          //获取上传的文件名
+        InputStream is = part.getInputStream();
+        //动态获取服务器的路径
+        String serverpath = req.getServletContext().getRealPath("upload");
+        FileOutputStream fos = new FileOutputStream(serverpath+"/"+filename);
+        byte[] bty = new byte[1024];
+        int length =0;
+        while((length=is.read(bty))!=-1){
+            fos.write(bty,0,length);
+        }
+        fos.close();
+        is.close();
+    }
+}
+```
+
+### 11.3.2 SpringMVC上传
+
+[博客地址](https://www.cnblogs.com/wyq178/p/6921164.html)
+
+配置文件上传组件。
+
+- 单文件：单个对象
+- 多文件：数组
+
+# 十二、拦截器/跨域
+
+## 12.1 拦截器
+
+> 自定义拦截器流程
+
+1）实现HandlerInterceptor接口。
+
+2）配置到IOC容器中。(WebConfig中配置？)
+
+- 拦截什么请求？默认是拦截所有。
+
+3）拦截器的执行顺序是什么？
+
+- preHandle ：目标方法运行之前
+
+- postHandle：目标方法运行之后（方法出错的话，不会执行。）
+
+- afterCompletion：页面来到之后（来到页面就行，不管什么页面，报错页面也是页面。只要放行了，afterCompletion就会执行）
+
+- <span style="color:green">**正常运行流程：**</span>拦截器的preHandle----目标方法----拦截器的postHandle---页面---拦截器的afterCompletion
+
+    ```shell
+    MyFirstInterceptor...preHandle...
+    test01
+    MyFirstInterceptor...postHandle...
+    success.jsp
+    MyFirstInterceptor...afterCompletion...
+    ```
+
+> 运行流程
+
+<span style="color:green">**正常运行流程：**</span>拦截器的preHandle----目标方法----拦截器的postHandle---页面---拦截器的afterCompletion
+
+<span style="color:green">**多个拦截器：**</span>
+
+流程：和filter的流程一样
+
+拦截器的preHandle：是按照<span style="color:red">顺序</span>执行的
+
+拦截器的postHandle：是按照<span style="color:red">逆序</span>执行的
+
+拦截器的afterCompletion：是按照<span style="color:red">逆序</span>执行的
+
+<span style="color:green">**出现异常：**</span>
+
+已经放行了的拦截器的afterCompletion总会执行（因为有报错页面），未放行的无法执行！postHandle，在方法报错时是不会执行的。
+
+> 什么时候用过滤器什么时候用拦截器
+
+如果过滤请求非常复杂，需要用ioc容器中的对象，那么用拦截器。
+
+过滤器是javaweb的，要想从ioc容器中拿对象很麻烦。
 
 
 
-## 可跨域访问
+## 12.2 跨域
 
 - 配置类
 
@@ -2262,7 +2437,75 @@ public class CrossConfig implements WebMvcConfigurer {
 - 在每个Controller类上，加上类级别的注解@CrossOrigin
 - PS：我不知道是不是两个要一起用，还是任意一个就可以 - -。当时浏览器有缓存，浏览器控制台一直报跨域的错误。后面就没深究了~~~
 
-# 源码阅读 待整理
+# 十三、异常处理
+
+Spring MVC 通过 HandlerExceptionResolver  处理程序的异常，包括 Handler 映射、数据绑定以及目标方法执行时发生的异常。
+SpringMVC 提供的 HandlerExceptionResolver 的实现类
+
+
+
+HandlerExceptionResolver
+
+DispatcherServlet  默认装配的 HandlerExceptionResolver ：
+
+
+
+ExceptionHandlerExceptionResolver
+
+主要处理 Handler 中用 @ExceptionHandler 注解定义的方法。
+@ExceptionHandler 注解定义的方法优先级问题：例如发生的是NullPointerException，但是声明的异常有 RuntimeException 和 Exception，此候会根据异常的最近继承关系找到继承深度最浅的那个 @ExceptionHandler 注解方法，即标记了 RuntimeException 的方法
+ExceptionHandlerMethodResolver 内部若找不到@ExceptionHandler 注解的话，会找 @ControllerAdvice 中的@ExceptionHandler 注解方法
+
+
+
+ResponseStatusExceptionResolver
+
+在异常及异常父类中找到 @ResponseStatus 注解，然后使用这个注解的属性进行处理。
+定义一个 @ResponseStatus 注解修饰的异常类
+若在处理器方法中抛出了上述异常：若ExceptionHandlerExceptionResolver 不解析述异常。由于触发的异常 UnauthorizedException 带有@ResponseStatus 注解。因此会被ResponseStatusExceptionResolver 解析到。最后响应HttpStatus.UNAUTHORIZED 代码给客户端。HttpStatus.UNAUTHORIZED 代表响应码401，无权限。 关于其他的响应码请参考 HttpStatus 枚举类型源码。
+
+
+
+DefaultHandlerExceptionResolver
+
+对一些特殊的异常进行处理，比如NoSuchRequestHandlingMethodException、HttpRequestMethodNotSupportedException、HttpMediaTypeNotSupportedException、HttpMediaTypeNotAcceptableException等。
+
+
+
+SimpleMappingExceptionResolver
+
+如果希望对所有异常进行统一处理，可以使用 SimpleMappingExceptionResolver，它将异常类名映射为视图名，即发生异常时使用对应的视图报告异常
+
+# 十四、扫尾
+
+## 14.1 运行流程
+
+<img src="../pics/SpringMVC/mvc_flow.png">
+
+## 14.2 Spring与MVC
+
+在 Spring 的环境下使用 SpringMVC。
+
+Spring 的 IOC 容器不应该扫描 SpringMVC 中的 bean, 对应的 SpringMVC 的 IOC 容器不应该扫描 Spring 中的 bean
+
+<img src="../pics/SpringMVC/spring_with_mvc.png">
+
+
+
+<img src="../pics/SpringMVC/spring_with_mvc2.png">
+
+
+
+在 Spring MVC 配置文件中引用业务层的 Bean
+
+多个 Spring IOC 容器之间可以设置为父子关系，以实现良好的解耦。
+Spring MVC WEB 层容器可作为 “业务层” Spring 容器的子容器：即 WEB 层容器可以引用业务层容器的 Bean，而业务层容器却访问不到 WEB 层容器的 Bean
+
+<img src="../pics/SpringMVC/spring_with_mvc3.png">
+
+
+
+# 源码阅读
 
 -----------------
 
