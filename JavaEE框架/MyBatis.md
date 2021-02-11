@@ -1,3 +1,7 @@
+# MyBatis概述
+
+MyBatis3.4x版本，把他内部需要的三方jar都整合在一起了。
+
 # 快捷键基础篇
 
 ## 前言
@@ -447,7 +451,7 @@ class A{
   - `UNPOOLED`：采用传统的获取连接的方式，虽然也实现`Javax.sql.DataSource`接口，但是并没有使用池的思想。
   - `JNDI`：采用服务器提供的`JNDI`技术实现，来获取`DataSource`对象，不同的服务器所能拿到`DataSource`是不一样。
     		   注意：如果不是web或者`maven`的`war`工程，是不能使用的。
-      		  使用`tomcat`服务器的话，采用连接池就是`dbcp`连接池。
+          		  使用`tomcat`服务器的话，采用连接池就是`dbcp`连接池。
 
 ### `MyBatis`中的事务
 

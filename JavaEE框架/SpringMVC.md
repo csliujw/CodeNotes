@@ -1598,8 +1598,7 @@ this.viewResolvers中的数据如图：
 
 ```java
 @Nullable
-protected View resolveViewName(String viewName, @Nullable Map<String, Object> model,
-                               Locale locale, HttpServletRequest request) throws Exception {
+protected View resolveViewName(String viewName, @Nullable Map<String, Object> model,Locale locale, HttpServletRequest request) throws Exception {
 
     if (this.viewResolvers != null) {
         // 遍历所有的ViewResolver
@@ -1859,10 +1858,100 @@ public class MyViewResovlerController{
 }
 ```
 
+自定义视图
+
+```java
+package org.example.view;
+
+import org.springframework.web.servlet.View;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Map;
+// 自定义视图，定义视图的返回数据类型
+public class MyView implements View {
+    @Override
+    public String getContentType() {
+        // 返回的数据类型
+        return "text/html";
+    }
+
+    @Override
+    public void render(Map<String, ?> model, HttpServletRequest request, HttpServletResponse response) throws Exception {
+        System.out.println("之前存的数据" + model);
+        // 过滤器替我们设置好了编码格式
+        response.setContentType("text/html");
+        response.getWriter().write("精彩内容 马上出现！哈哈哈！");
+    }
+}
+```
+
+
+
 自定义视图解析器
 
 ```java
-I
+package org.example.view;
+
+import org.springframework.core.Ordered;
+import org.springframework.web.servlet.View;
+import org.springframework.web.servlet.ViewResolver;
+
+import java.util.Locale;
+
+public class MyViewResolver implements ViewResolver, Ordered {
+
+    @Override
+    public View resolveViewName(String viewName, Locale locale) throws Exception {
+        // 根据视图名返回视图对象
+        if (viewName.startsWith("meinv")) {
+            return new MyView();
+        } else {
+            // 不能处理返回null即可
+            return null;
+        }
+    }
+
+    @Override
+    public int getOrder() {
+        // 解析器的获取优先级。数字越小优先级越高
+        return 0;
+    }
+}
+```
+
+将自定义的视图解析器加入IOC容器中
+
+```java
+
+@Configuration
+@EnableWebMvc
+@ComponentScan(basePackages = "org.example", includeFilters = {
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = Controller.class)
+}, useDefaultFilters = false)
+public class WebConfig implements WebMvcConfigurer {
+    /**
+     * 视图解析器 加入IOC容器中
+     * @param registry
+     */
+    public void configureViewResolvers(ViewResolverRegistry registry) {
+        // 注册一个视图解析器
+        registry.viewResolver(new MyViewResolver());
+        registry.jsp("/WEB-INF/views/", ".jsp");
+    }
+
+    @Override
+    public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
+        // DefaultServletHandling 不拦截静态资源
+        configurer.enable();
+    }
+
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        MyStringToPersonConverter myStringToPersonConverter = new MyStringToPersonConverter();
+        registry.addConverter(myStringToPersonConverter);
+    }
+}
 ```
 
 # 九、CRUD案例
@@ -2027,11 +2116,6 @@ public class MyStringToPersonConverter implements Converter<String, Person> {
         }
         return person;
     }
-
-    @Override
-    public <U> Converter<String, U> andThen(Converter<? super Person, ? extends U> after) {
-        return null;
-    }
 }
 ```
 
@@ -2068,8 +2152,6 @@ public class WebConfig implements WebMvcConfigurer {
 }
 
 ```
-
-
 
 ## 10.4 EnableWebMvc解析
 
@@ -2114,8 +2196,6 @@ use the `@EnableWebMvc` annotation to enable MVC configuration。
 既配置了 <mvc:default-servlet-handler/>  又配置 <mvc:annotation-driven/>
 
 <img src="../pics/SpringMVC/mvc_driver_03.png">
-
-
 
 ## 10.5 格式化
 
@@ -2401,20 +2481,12 @@ public class UploadServlet extends HttpServlet {
 
 过滤器是javaweb的，要想从ioc容器中拿对象很麻烦。
 
-
-
 ## 12.2 跨域
 
 - 配置类
 
 ```java
-package com.baobaoxuxu.config;
-
-/**
- * @author payphone
- * @date 2020/7/8 17:13
- * @Description 项目跨域配置。
- */
+package com.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -2439,40 +2511,170 @@ public class CrossConfig implements WebMvcConfigurer {
 
 # 十三、异常处理
 
-Spring MVC 通过 HandlerExceptionResolver  处理程序的异常，包括 Handler 映射、数据绑定以及目标方法执行时发生的异常。
-SpringMVC 提供的 HandlerExceptionResolver 的实现类
+## 13.1 概述
 
+Spring MVC通过<span style="color:red">HandlerExceptionResolver</span>处理程序的异常，包括Handler映射、数据绑定以及目标方法执行时发生的异常。
 
+SpringMVC提供的 HandlerExceptionResolver的实现类
+
+前端控制器中有九个成员变量（即SpringMVC的九大组件，其中异常处理解析器就是其中一个）
+
+```java
+/** List of HandlerExceptionResolvers used by this servlet. */
+@Nullable
+private List<HandlerExceptionResolver> handlerExceptionResolvers;
+```
+
+我们去看下DispatcherServlet如何初始化<span style="color:red">HandlerExceptionResolver</span>
 
 HandlerExceptionResolver
 
 DispatcherServlet  默认装配的 HandlerExceptionResolver ：
 
+```java
+private void initHandlerExceptionResolvers(ApplicationContext context) {
+    this.handlerExceptionResolvers = null;
 
+    if (this.detectAllHandlerExceptionResolvers) {
+        
+        Map<String, HandlerExceptionResolver> matchingBeans = BeanFactoryUtils
+            .beansOfTypeIncludingAncestors(context, HandlerExceptionResolver.class, true, false);
+        if (!matchingBeans.isEmpty()) {
+            this.handlerExceptionResolvers = new ArrayList<>(matchingBeans.values());
+            AnnotationAwareOrderComparator.sort(this.handlerExceptionResolvers);
+        }
+    }
+    else {
+        try {
+            HandlerExceptionResolver her =
+                context.getBean(HANDLER_EXCEPTION_RESOLVER_BEAN_NAME, HandlerExceptionResolver.class);
+            this.handlerExceptionResolvers = Collections.singletonList(her);
+        }
+        catch (NoSuchBeanDefinitionException ex) {
+            // Ignore, no HandlerExceptionResolver is fine too.
+        }
+    }
 
-ExceptionHandlerExceptionResolver
+	// 如果没有则使用默认设置。
+    if (this.handlerExceptionResolvers == null) {
+        this.handlerExceptionResolvers = getDefaultStrategies(context, HandlerExceptionResolver.class);
+        if (logger.isTraceEnabled()) {
+            logger.trace("No HandlerExceptionResolvers declared in servlet '" + getServletName() +
+                         "': using default strategies from DispatcherServlet.properties");
+        }
+    }
+}
+```
+
+默认的配置属性，在spring-webmvc jar包中的 org.springframework.web.servlet中，对应的文件名是`DispatcherServlet.properties`，该文件中对应的内容是：
+
+```properties
+# 异常处理解析的默认配置
+org.springframework.web.servlet.HandlerExceptionResolver=org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver,\
+	org.springframework.web.servlet.mvc.annotation.ResponseStatusExceptionResolver,\
+	org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver
+```
+
+页面渲染之前有异常会先处理异常。
+
+如果异常解析器都不能处理就直接抛出去。
+
+**那么，默认的那三个异常处理解析器可以处理什么异常呢？有何使用环境？**
+
+ExceptionHandlerExceptionResolver：@ExceptionHandler
+
+ResponseStatusExceptionResolver：@ResponseStatus
+
+DefaultHandlerExceptionResolver：判断是否SpringMVC自带的异常
+
+----
+
+## 13.2 异常解析器的使用场景
+
+>**ExceptionHandlerExceptionResolver**
 
 主要处理 Handler 中用 @ExceptionHandler 注解定义的方法。
 @ExceptionHandler 注解定义的方法优先级问题：例如发生的是NullPointerException，但是声明的异常有 RuntimeException 和 Exception，此候会根据异常的最近继承关系找到继承深度最浅的那个 @ExceptionHandler 注解方法，即标记了 RuntimeException 的方法
 ExceptionHandlerMethodResolver 内部若找不到@ExceptionHandler 注解的话，会找 @ControllerAdvice 中的@ExceptionHandler 注解方法
 
+**示例代码：**
 
+```java
+// some function
+/*
+* 告诉SpringMVC这个方法专门处理这个类发生的异常。
+* 	value = {NullPointerException.class}
+* 	专门处理空指针异常。
+* 	如果图省事，那么直接Exception即可
+* 
+* 1.给方法随便写一个Exception，用来接受发生的异常。
+* 2.如果要要携带异常信息的话，不能给参数位置写Model（不能把异常信息存储到Model中）
+* 3.我们返回ModelAndView即可
+* 4.如果有多个@ExceptionHandler都能处理这个异常，精确优先。
+*/
+@ExceptionHandler(value = {NullPointerException.class})
+public ModelAndView handleException01(Exception e){
+    
+    ModelAndView view = new ModelAndView("myerror");
+    view.addObject("ex",exception);
+    // 视图解析器拼串 来到我们自己定义的错误页面：myerror页面
+    return view;
+}
+```
 
-ResponseStatusExceptionResolver
+**每个类都有异常，分散的写很鸡肋，不合理。我们可以把所有的异常都集中起来！**
+
+1、集中处理所有异常的类需要加入到IOC容器中才可被识别。
+
+```java
+@ControllerAdvice // 这是一个专门处理异常的
+public class MyExceptionHandle{
+    
+    @ExceptionHandler(value = {NullPointerException.class})
+    public ModelAndView handleException01(Exception e){
+
+        ModelAndView view = new ModelAndView("myerror1");
+        view.addObject("ex",exception);
+        // 视图解析器拼串 来到我们自己定义的错误页面：myerror页面
+        return view;
+    }
+    
+    @ExceptionHandler(value = {ArithmeticException.class})
+    public ModelAndView handleException01(Exception e){
+
+        ModelAndView view = new ModelAndView("myerror2");
+        view.addObject("ex",exception);
+        // 视图解析器拼串 来到我们自己定义的错误页面：myerror页面
+        return view;
+    }
+}
+```
+
+> **ResponseStatusExceptionResolver** 
+
+这个注解是加在类上的。
+
+```java
+@ResponseStatusExceptionResolver 
+public class XX xxOO{}
+
+public class XXController{
+    public String me(){
+        //xxx
+        throw new XX();
+    }
+}
+```
 
 在异常及异常父类中找到 @ResponseStatus 注解，然后使用这个注解的属性进行处理。
 定义一个 @ResponseStatus 注解修饰的异常类
 若在处理器方法中抛出了上述异常：若ExceptionHandlerExceptionResolver 不解析述异常。由于触发的异常 UnauthorizedException 带有@ResponseStatus 注解。因此会被ResponseStatusExceptionResolver 解析到。最后响应HttpStatus.UNAUTHORIZED 代码给客户端。HttpStatus.UNAUTHORIZED 代表响应码401，无权限。 关于其他的响应码请参考 HttpStatus 枚举类型源码。
 
-
-
-DefaultHandlerExceptionResolver
+> **DefaultHandlerExceptionResolver**
 
 对一些特殊的异常进行处理，比如NoSuchRequestHandlingMethodException、HttpRequestMethodNotSupportedException、HttpMediaTypeNotSupportedException、HttpMediaTypeNotAcceptableException等。
 
-
-
-SimpleMappingExceptionResolver
+>**SimpleMappingExceptionResolver**
 
 如果希望对所有异常进行统一处理，可以使用 SimpleMappingExceptionResolver，它将异常类名映射为视图名，即发生异常时使用对应的视图报告异常
 
@@ -2482,7 +2684,67 @@ SimpleMappingExceptionResolver
 
 <img src="../pics/SpringMVC/mvc_flow.png">
 
+<span style="color:green">**1、所有请求，前端前端控制器（DispatcherServlet）收到请求，调用doDispatch进行处理**</span>
+
+<span style="color:green">**2、根据HandlerMapping中保存的请求映射信息找到，处理当前请求的，处理器执行链（包含拦截器）**</span>
+
+<span style="color:green">**3、根据当前处理器找到他的HandlerAdapter（适配器）**</span>
+
+<span style="color:green">**4、拦截器的preHandle先执行**</span>
+
+<span style="color:green">**5、适配器执行目标方法，并返回ModelAndView**</span>
+
+- ModelAttribute注解标注的方法提前运行
+- 执行目标方法的时候（确定目标方法用的参数）
+    - 有注解
+    - 没注解
+        - 看是否是Model、Map以及其他的
+        - 如果是自定义类型
+            - 从隐含模型中看有没有，如果有就从隐含模型中拿
+            - 如果没有，再看是否SessionAttributes标注的属性，如果是从Session中拿，如果拿不到会抛异常。
+            - 都不是1，就利用反射创建对象。
+
+<span style="color:green">**6、拦截器的postHandle执行**</span>
+
+<span style="color:green">**7、处理结果；（页面渲染流程）**</span>
+
+- <span style="color:green">**如果有异常使用异常解析器处理异常；处理完后还会返回ModelAndView**</span>
+- <span style="color:green">**调用render进行页面渲染**</span>
+    - 视图解析器根据视图名得到视图对象；
+    - 视图对象调用render方法；
+- <span style="color:green">**执行拦截器的afterCompletion**</span>
+
+<span style="color:red">知道加粗部分的即可。</span>
+
 ## 14.2 Spring与MVC
+
+### 14.2.1 概述
+
+Spring和SpringMVC整合的目的：分工明确
+
+SpringMVC的配置文件就来配置和网站转发逻辑以及网站功能有关的（视图解析器，文件上传解析器，支持ajax，xxx）；
+
+Spring的配置文件来配置和业务有关的（事务控制，数据源，xxx）；
+
+### 14.2.2 整合
+
+> **方式一：**
+
+- spring.xml 配置了Spring相关的信息
+- springmvc.xml 配置了mvc相关的信息
+- 在springmvc.xml文件中引入spring.xml
+
+这种配置方式只会启动一个IOC容器。
+
+> **方式二：**
+
+springmvc和spring分容器，各司其职。
+
+- spring管理业务逻辑组件； 
+
+- springmvc管理控制器组件； 如：Controller，ControllerAdvice
+
+如果扫多了会出现类被创建两次。spring容器中把所有类创建了一次，springmvc容器中把类创建了一次。
 
 在 Spring 的环境下使用 SpringMVC。
 
@@ -2500,6 +2762,10 @@ Spring 的 IOC 容器不应该扫描 SpringMVC 中的 bean, 对应的 SpringMVC 
 
 多个 Spring IOC 容器之间可以设置为父子关系，以实现良好的解耦。
 Spring MVC WEB 层容器可作为 “业务层” Spring 容器的子容器：即 WEB 层容器可以引用业务层容器的 Bean，而业务层容器却访问不到 WEB 层容器的 Bean
+
+
+
+Spring容器是作为父容器的，SpringMVC容器是作为子容器的。子容器的Controller要用父容器的Service没问题。但是如果父容器要拿子容器的，就不行！！
 
 <img src="../pics/SpringMVC/spring_with_mvc3.png">
 
