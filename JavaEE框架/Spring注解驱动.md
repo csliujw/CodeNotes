@@ -2384,8 +2384,6 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 }
 ```
 
-
-
 # Spring注解--扩展原理
 
 ## `BeanFactoryPostProcessor`

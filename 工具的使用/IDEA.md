@@ -31,6 +31,7 @@
 14）Ctrl + Q：转至上一个编辑位置
 
 Java编辑器 转至上一个成员 Ctrl+Shift+↑
+
 Java编辑器 转至下一个成员 Ctrl+Shift+↓
 
 文本编辑器 转至行 Ctrl+L
@@ -46,19 +47,32 @@ Ctrl + F8 设置/取消断点
 Ctrl + Shift + F8 查看所有断点
 
 作用域 功能 快捷键
+
 全局 保存 Ctrl+X Ctrl+S
+
 全局 打印 Ctrl+P
+
 全局 关闭 Ctrl+F4
+
 全局 全部保存 Ctrl+Shift+S
+
 全局 全部关闭 Ctrl+Shift+F4
+
 全局 属性 Alt+Enter
+
 全局 新建 Ctrl+N
 
 
 
 作用域 功能 快捷键
+
 全局 撤销重构 Alt+Shift+Z
+
 全局 抽取方法 Alt+Shift+M
+
 全局 抽取局部变量 Alt+Shift+L
+
 全局 内联 Alt+Shift+I
+
 全局 重命名 Alt+Shift+R
+

@@ -28,7 +28,7 @@
 
 ### 2.3.1 tomcat的拦截规则
 
-<img src="../pics/SpringMVC/DispatcherServlet.png" style="float:left">
+<img src="../pics/SpringMVC/DispatcherServlet.png" style="float:left" width="100%">
 
 在使用tomcat的基本api进行开发时，资源的拦截规则，默认用的是tomcat中web.xml中的配置。
 
@@ -50,7 +50,9 @@
 
 ### 2.3.2 前端控制器的拦截规则
 
-前端控制器的拦截规则相当于继承自tomcat的那个web.xml的配置，并重写了拦截方式。
+前端控制器的拦截规则相当于继承自tomcat的那个web.xml的配置，并重写了拦截方式。相关内容SpringMVC文档中有说明。
+
+[官方文档的说明](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc)
 
  *  <span style="color:green">**DefaultServlet是tomcat处理静态资源的**</span>
      *  除jsp和servlet，其他的都是静态资源；index.html也是静态资源；如果静态资源让tomcat来处理的话，tomcat就会在服务器下找到这个资源并返回。
@@ -229,9 +231,9 @@ public class RequestMappingHeaderController {
 
 **URL地址可以写模糊的通配符**
 
- * ？ 能替代任意一个字符
- * * 能替代任意多个字符，和一层路径
- * ** 能替代多层路径
+ * `？` 能替代任意一个字符
+ * `*`能替代任意多个字符，和一层路径
+ * `**` 能替代多层路径
 
 ```java
 package cn.payphone.controller;
@@ -349,30 +351,28 @@ Rest--->Representational State Transfer。（资源）表现层状态转化。�
 - /book/1     ：PUT请求 表示更新1号图书
 - /book/1     ：DELETE 表示删除1号图书
 
-Rest推荐；
+Rest推荐：<span style="color:green">**url地址这么起名； /资源名/资源标识符**</span>
 
-<span style="color:green">**url地址这么起名； /资源名/资源标识符**</span>
-
-问题：从页面上只能发起两种请求：GET、POST，其他请求没法使用。
+<span style="color:red">问题：从页面上只能发起两种请求：GET、POST，其他请求没法使用。</span>
 
 别慌，Spring提供了对Rest风格的支持。
 
-- 1）SpringMVC中有一个Filter，他可以把普通的请求，转化为规定形式的请求。配置Filter。这个Filter叫做，`HiddenHttpMethodFilter`,它的url-pattern写`/*`
+**1）**SpringMVC中有一个Filter，他可以把普通的请求，转化为规定形式的请求。配置Filter。这个Filter叫做，`HiddenHttpMethodFilter`,它的url-pattern写`/*`
 
-- 2）如何发起其他形式的请求？
+**2）**如何发起其他形式的请求？
 
-    - 按照以下要求：
+- 按照以下要求：
 
-    - 创建post类型的表单
+- 创建post类型的表单;
 
-    - 表单项中携带一个`_method`的参数，`_method`的值就是所要的请求形式。
+- 表单项中携带一个`_method`的参数，`_method`的值就是所要的请求形式。
 
-    - ```html
-        <form action="book/1" method="post">
-            <input name="_method" value="delete">
-            <input type="submit" value="删除">
-        </form>
-        ```
+- ```html
+    <form action="book/1" method="post">
+        <input name="_method" value="delete">
+        <input type="submit" value="删除">
+    </form>
+    ```
 
 为什么那个Filter可以实现这个功能？？请看源码！
 
@@ -398,6 +398,24 @@ protected void doFilterInternal(HttpServletRequest request, HttpServletResponse 
     filterChain.doFilter(requestToUse, response);
 }
 ```
+
+### 3.4.3 高版本tomcat
+
+高版本tomcat只支持get，pos，header请求，不支持其他的，执行其他的会报错。如何解决？
+
+```jsp
+<%@ page contentType="text/html;charset=UTF-8" language="java" isErrorPage="true" %>
+<html>
+<head>
+    <title>Title</title>
+</head>
+<body>
+	给jsp添加isErrorPage属性并设置为true
+</body>
+</html>
+```
+
+
 
 ----
 
@@ -500,13 +518,11 @@ public String getSession(@SessionAttribute("user") String user) {
 }
 ```
 
-Session还是用原生API获取的好。
+**Session还是用原生API获取的好。**
 
 ## 4.3 POJO自动赋值
 
-<span style="color:red">**注意**</span>
-
-返回对象类型的POJO要映入json库，我用的jackson。
+<span style="color:red">**注意**</span>：返回对象类型的POJO要引入json库，我用的jackson。
 
 ```xml
 <dependencies>
@@ -538,6 +554,7 @@ Session还是用原生API获取的好。
 @ResponseBody
 @RequestMapping("/params/pojo")
 public User pojo(User user) {
+    // 引入json库后，会自动帮我们把user对象转成json格式字符串返回
     return user;
 }
 ```
@@ -550,25 +567,46 @@ public User pojo(User user) {
 
 ### 4.5.1 请求乱码
 
-GET请求：改server.xml 在8080端口处 URIEncoding="UTF-8"
+**GET   请求乱码：**改server.xml 在8080端口处 URIEncoding="UTF-8"
 
-POST 请求：
+**POST 请求乱码：**
 
-- 在第一次获取请求参数之前设置，request.setCharacterEncoding("UTF-8")
-- 可以自己写一个filter进行过滤：springmvc有这个filter `CharacterEncodingFilter`
+- 在第一次获取请求参数之前设置，`request.setCharacterEncoding("UTF-8")`
 
-印象中可以修改tomcat的默认配置的编码来解决一个乱码问题。具体解决那个忘了。高版本tomcat好像默认是UTF-8的编码格式。
+- 可以自己写一个filter进行过滤：springmvc有这个filter `CharacterEncodingFilter` <span style="color:red">解决请求乱码</span>  
+
+    ```java
+    class CharacterEncodingFilter extends OncePerRequestFilter{
+        // 见名知意
+    }
+    ```
+
+- **注意！！字符编码Filter要在其他Filter之前！！！为什么！！因为我们要先设置，让设置生效，之后的操作才有效！！**
 
 ### 4.5.2 响应乱码
 
 response.setContentType("text/html;charset=utf-8")
+
+在SpringMVC中解决响应乱码的话，可以这样
+
+- 方式一，在@RequestMapping中加上，**produces="text/html;charset=utf-8"**
+
+- 方式二，配置HttpMessageConverter，配置代码如下：
+
+    ```java
+    // 防止响应乱码。响应数据的编码格式这里默认是IOS-8859
+    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+        // response，响应数据使用UTF_8格式
+        converters.add(new StringHttpMessageConverter(StandardCharsets.UTF_8));
+    }
+    ```
+
+### 4.5.3 总结
+
 * 使用SpringMVC前端控制器 写完就直接写字符编码过滤器
 * Tomcat一装上，上手就是server.xml的8080处添加URIEncoding=”UTF-8“
-* 注意！！字符编码Filter要在其他Filter之前！！！为什么！！因为我们要先设置，让设置生效，之后的操作才有效！！
 
 ### 4.5.3 实例配置
-
-Java Config方式的配置！！
 
 **Spring IOC那块的配置**
 
@@ -596,7 +634,6 @@ public class WebConfig implements WebMvcConfigurer {
         // 这样  视图解析器会自动拼串
         registry.jsp("/WEB-INF/views/", ".jsp");
     }
-
 }
 ```
 
@@ -631,6 +668,7 @@ public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherS
     protected Filter[] getServletFilters() {
         // 验证字符编码过滤器生效，试验后，真的有效了
         // CharacterEncodingFilter characterEncodingFilter = new CharacterEncodingFilter("ISO-8859-1", true);
+        // 解决请求乱码
         CharacterEncodingFilter characterEncodingFilter = new CharacterEncodingFilter("UTF-8", true);
         characterEncodingFilter.setForceRequestEncoding(true);
         characterEncodingFilter.setForceResponseEncoding(true);
@@ -639,15 +677,9 @@ public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherS
 }
 ```
 
-
-
 #  五、数据输出
 
-把数据携带给页面。
-
-前面直接通过响应的方式把数据响应给了浏览器。
-
-但是如果使用的是模板引擎一类的，需要我们携带数据给页面。
+数据输出即把数据携带给页面。前面直接通过响应的方式把数据响应给了浏览器。但是如果使用的是模板引擎一类的，需要我们携带数据给页面。
 
 ## 5.1 Map、Model、ModelMap
 
@@ -669,7 +701,7 @@ ModelMap extends java.util.LinkedHashMap
 
 **类之间的简化后的UML关系如图**
 
-<img style="float:left" src="../pics/SpringMVC/BindingAwareModelMapUML.png">
+<img style="float:left" src="../pics/SpringMVC/BindingAwareModelMapUML.png" width="100%">
 
 ----
 
@@ -702,6 +734,8 @@ public class CarryController {
         return "carry";
     }
 }
+// 最后发现，
+// 无论是传入Map还是Model还是ModelMap 最终的数据类型都是 BindingAwareModelMap
 ```
 
 ## 5.2 ModelAndView
@@ -737,7 +771,7 @@ public ModelAndView handle(){
 - value={“msg”} 只要保存的是这种key的数据，给Session中放一份。
 - types={String.class} 只要保存的是这种类型的数据，给Session中也放一份。
 - 所以会存两大份！！用value指定的比较多，因为可以精确指定。
-- 但是我们不推荐用@SessionAttributes，还是用原生API吧。注解的话可能会引发异常，且移除session麻烦。
+- **但是我们不推荐用@SessionAttributes，还是用原生API吧。注解的话可能会引发异常，且移除session麻烦。**
 
 ## 5.4 ModelAttribute方法
 
@@ -778,8 +812,6 @@ public void ModelAttribute(Model model) {
 
 <img src="../pics/SpringMVC/ModelAttribute.png" style="float:left">
 
-
-
 # 六、前端控制器源码
 
 ## 6.1 如何看SpringMVC源码
@@ -800,11 +832,11 @@ public void ModelAttribute(Model model) {
 
 我们根据官网的描述知道，前端控制器DispatcherServlet是负责请求转发的，所以我们从它开始入手。
 
-1）我们发现DispatcherServlet的继承关系如图所示：
+**1）我们发现DispatcherServlet的继承关系如图所示：**
 
 <img src="../pics/SpringMVC/DispatcherServlet_UML.png" style="float:left">
 
-2）我们知道Servlet的方法是从Service方法开始的，于是我们去找这些类重写的Service方法
+**2）我们知道Servlet的方法是从Service方法开始的，于是我们去找这些类重写的Service方法**
 
 - HttpServletBean未重写Service方法，接下来看他的子类FrameworkServlet。
 - FrameworkServlet重写了service方法！！！
@@ -825,7 +857,7 @@ protected void service(HttpServletRequest request, HttpServletResponse response)
 }
 ```
 
-3）FrameworkServlet的service方法内部执行了processRequest方法。见名知意，这个是处理请求的，我们继续看该类的processRequest方法！！
+**3）FrameworkServlet的service方法内部执行了processRequest方法。见名知意，这个是处理请求的，我们继续看该类的processRequest方法！！**
 
 ```java
 protected final void processRequest(HttpServletRequest request, HttpServletResponse response)
@@ -850,7 +882,7 @@ protected final void processRequest(HttpServletRequest request, HttpServletRespo
 }
 ```
 
-4）被try进来的说明是非常重要的方法，从方法的命名也看出，这是处理请求的！！但是我们发现，doService在FrameworkServlet中是一个抽象类，所以要去看它子类的对应实现！！！即看DispatcherServlet！！
+**4）被try进来的说明是非常重要的方法，从方法的命名也看出，这是处理请求的！！但是我们发现，doService在FrameworkServlet中是一个抽象类，所以要去看它子类的对应实现！！！即看DispatcherServlet！！**
 
 ```java
 @Override
@@ -922,31 +954,31 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 
 <span style="color:green">**大致的阅读路线**</span>
 
-==> 查看 DispatcherServlet类中的 doDispatch()方法中每个方法的功能
+**==>** 查看 DispatcherServlet类中的 doDispatch()方法中每个方法的功能
 
-​	==> getHandler /  getHandlerAdapter方法
+​	**|==>** getHandler /  getHandlerAdapter方法
 
-​	==> getHandlerAdapter方法负责执行打了@RequestMapping的方法。
+​	**|==>** getHandlerAdapter方法负责执行打了@RequestMapping的方法。
 
-==> 看getHandler()细节；怎么根据当前请求就能找到那个类能来处理。
+**==>** 看getHandler()细节；怎么根据当前请求就能找到那个类能来处理。
 
-​	==>  mappedHandler = getHandler(processedRequest);// mappedHandler的类型是HandlerExecutionChain
+​	**|==>**  mappedHandler = getHandler(processedRequest);// mappedHandler的类型是HandlerExecutionChain
 
-​	==>看了getHandler的源码，知道如何根据当前请求就能找到那个类能来处理了。
+​	**|==>** 看了getHandler的源码，知道如何根据当前请求就能找到那个类能来处理了。
 
-==> 看完getHandler() 细节 接下来就是看 getHandlerAdapter() 的细节了。
+**==>** 看完getHandler() 细节 接下来就是看 getHandlerAdapter() 的细节了。
 
-​	==> 因为getHandler只是拿到要处理的请求，真正的处理还是交由对应的适配器来做！
+​	**|==>** 因为getHandler只是拿到要处理的请求，真正的处理还是交由对应的适配器来做！
 
-​	==> 所以接下来是看如何找到目标处理器类的适配器！！<span style="color:red">**【补适配器模式！！】**</span>
+​	**|==>** 所以接下来是看如何找到目标处理器类的适配器！！<span style="color:red">**【补适配器模式！！】**</span>
 
-​	==> 最后发现适配器的查找也是遍历。
+​	**|==>** 最后发现适配器的查找也是遍历。
 
-==> 看完如何找到 getHandlerAdapter() 后就看适配器如何执行方法了！mv = ha.handle()
+**==>** 看完如何找到 getHandlerAdapter() 后就看适配器如何执行方法了！mv = ha.handle()
 
-​	==> handle() 方法中调用了 handleInternal() 方法
+​	**|==>** handle() 方法中调用了 handleInternal() 方法
 
-​	==> handleInternal() 方法 中的这句代码 mav = invokeHandlerMethod(request, response, handlerMethod); 执行方法，返回执行后需要跳转的视图。
+​	**|==>** handleInternal() 方法 中的这句代码 mav = invokeHandlerMethod(request, response, handlerMethod); 执行方法，返回执行后需要跳转的视图。
 
 -----
 
@@ -1204,6 +1236,8 @@ protected ModelAndView handleInternal(HttpServletRequest request,
         - 不是@SessionAttributes标注的，就利用反射创建一个对象
     - 拿到之前创建好的对象，使用数据绑定器（WebDataBinder）将请求中的每个数据绑定到这个对象中。
 
+视图解析器只是为了得到视图对象；视图对象才能真正的<span style="color:red">转发（将模型数据全部放在请求域中）或者重定向到页面</span>视图对象才能真正的<span style="color:red">渲染视图</span>。
+
 # 七、九大组件
 
 ## 7.1 组件概述
@@ -1281,7 +1315,7 @@ protected void initStrategies(ApplicationContext context) {
 
 ----
 
-组件的初始化：
+**组件的初始化：**
 
 - 有些组件在容器中是使用类型找的，有些组件是使用id找的。
 - 就是去容器中找这个组件，如果没有就用默认的配置。
@@ -1338,7 +1372,7 @@ private void initHandlerMappings(ApplicationContext context) {
 
 ### 8.1.1 概述
 
-<span style="color:green">**转发 forward**</span>
+> <span style="color:green">**转发 forward**</span>
 
 1）地址栏不发生变化，显示的是上一个页面的地址。在服务器端进行的跳转，
 
@@ -1354,7 +1388,7 @@ private void initHandlerMappings(ApplicationContext context) {
 request.getRequestDispatcher("/地址").forward(request, response);
 ```
 
-<span style="color:green">**重定向 redireect**</span>
+> <span style="color:green">**重定向 redireect**</span>
 
 1）地址栏发生变化，显示新的地址；浏览器端进行的跳转。
 
@@ -1422,29 +1456,27 @@ class DemoController{
 
 ### 8.2.1 概述
 
-==> 先根据当前请求，找到那个类能处理。
+**==>** 先根据当前请求，找到那个类能处理。
 
 ​	`mappedHandler = getHandler(processedRequest);`
 
-==> 找到适配器
+**==>** 找到适配器
 
 ​	`HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());`
 
-==>  目标方法执行，执行完会有一个返回值，返回值会被包装成一个ModelAndView，ModelAndView对象中包含视图名。
+**==>**  目标方法执行，执行完会有一个返回值，返回值会被包装成一个ModelAndView，ModelAndView对象中包含视图名。
 
 ​	`mv = ha.handle(processedRequest, response, mappedHandler.getHandler());`
 
-==> 来到页面
+**==>** 来到页面
 
 ​	`processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);`
 
-==> 调用processDispatchResult里的render进行渲染
+**==>** 调用processDispatchResult里的render进行渲染
 
-==> 如何根据方法的返回值得到View对象
+**==>** 如何根据方法的返回值得到View对象
 
-==> 由View对象进行视图的相关操作
-
-
+**==>** 由View对象进行视图的相关操作
 
 ### 8.2.2 流程解析
 
@@ -1841,7 +1873,7 @@ protected View createView(String viewName, Locale locale) throws Exception {
 
 ### 8.4.1 步骤
 
-自定义视图和视图解析器的步骤
+> 自定义视图和视图解析器的步骤
 
 1）编写自定义的视图解析器，和视图实现类
 
@@ -1858,7 +1890,7 @@ public class MyViewResovlerController{
 }
 ```
 
-自定义视图
+> 使用自定义视图进行页面跳转/转发
 
 ```java
 package org.example.view;
@@ -1886,9 +1918,7 @@ public class MyView implements View {
 }
 ```
 
-
-
-自定义视图解析器
+> 自定义视图解析器
 
 ```java
 package org.example.view;
@@ -1920,7 +1950,7 @@ public class MyViewResolver implements ViewResolver, Ordered {
 }
 ```
 
-将自定义的视图解析器加入IOC容器中
+> 将自定义的视图解析器加入IOC容器中
 
 ```java
 
@@ -1958,7 +1988,7 @@ public class WebConfig implements WebMvcConfigurer {
 
 修改数据需要注意的地方：
 
-1）可以在修改前 用@ModelAttribute标注的方法先把数据查出来。
+1）可以在修改前 用@ModelAttribute标注的方法先把数据查出来。这个感觉可以不看，因为有MyBatis的动态SQL！！
 
 ## 9.1 概述
 
@@ -2002,6 +2032,191 @@ public class WebConfig implements WebMvcConfigurer {
         configurer.enable();
     }
 }
+```
+
+## 9.3 Rest风格设置
+
+### 9.3.1 如何设置？
+
+<a href="https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-ann-initbinder">**HTTP Method Conversion**</a>
+
+Add this filter to your web.xml, and a POST with a hidden `method` parameter is converted into the corresponding HTTP method request.
+
+官网给的例子：用的Spring的表单。
+
+```html
+<form:form method="delete">
+    <p class="submit"><input type="submit" value="Delete Pet"/></p>
+</form:form>
+```
+
+如果是单纯的html怎么办？
+
+去看看这个过滤器的源码：
+
+```java
+public class HiddenHttpMethodFilter extends OncePerRequestFilter {
+
+	private static final List<String> ALLOWED_METHODS =
+			Collections.unmodifiableList(Arrays.asList(HttpMethod.PUT.name(),
+					HttpMethod.DELETE.name(), HttpMethod.PATCH.name()));
+
+	// 表单需要携带_method参数，_method的值是请求的
+	public static final String DEFAULT_METHOD_PARAM = "_method";
+
+	private String methodParam = DEFAULT_METHOD_PARAM;
+
+
+	/**
+	 * Set the parameter name to look for HTTP methods.
+	 * @see #DEFAULT_METHOD_PARAM
+	 */
+	public void setMethodParam(String methodParam) {
+		Assert.hasText(methodParam, "'methodParam' must not be empty");
+		this.methodParam = methodParam;
+	}
+
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
+
+		HttpServletRequest requestToUse = request;
+		// 要是POST方式提交 大小写有关系吗？ debug测一测
+		if ("POST".equals(request.getMethod()) && request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE) == null) {
+			String paramValue = request.getParameter(this.methodParam);
+			if (StringUtils.hasLength(paramValue)) {
+				String method = paramValue.toUpperCase(Locale.ENGLISH);
+				if (ALLOWED_METHODS.contains(method)) {
+					requestToUse = new HttpMethodRequestWrapper(request, method);
+				}
+			}
+		}
+
+		filterChain.doFilter(requestToUse, response);
+	}
+
+
+	/**
+	 * Simple {@link HttpServletRequest} wrapper that returns the supplied method for
+	 * {@link HttpServletRequest#getMethod()}.
+	 */
+	private static class HttpMethodRequestWrapper extends HttpServletRequestWrapper {
+
+		private final String method;
+
+		public HttpMethodRequestWrapper(HttpServletRequest request, String method) {
+			super(request);
+			this.method = method;
+		}
+
+		@Override
+		public String getMethod() {
+			return this.method;
+		}
+	}
+
+}
+```
+
+### 9.3.2 配置代码
+
+**JavaConfig**
+
+```java
+package cn.payphone.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.filter.CharacterEncodingFilter;
+import org.springframework.web.filter.HiddenHttpMethodFilter;
+import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
+
+import javax.servlet.Filter;
+
+@Configuration
+public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+    @Override
+    protected Class<?>[] getRootConfigClasses() {
+        return new Class[]{RootConfig.class};
+    }
+
+    @Override
+    protected Class<?>[] getServletConfigClasses() {
+        return new Class[]{WebConfig.class};
+    }
+
+    /**
+     * @return
+     */
+    @Override
+    protected String[] getServletMappings() {
+        return new String[]{"/"};
+    }
+
+    @Override
+    protected Filter[] getServletFilters() {
+        // CharacterEncodingFilter characterEncodingFilter = new CharacterEncodingFilter("ISO-8859-1", true);
+        CharacterEncodingFilter characterEncodingFilter = new CharacterEncodingFilter("UTF-8", true);
+        characterEncodingFilter.setForceRequestEncoding(true);
+        characterEncodingFilter.setForceResponseEncoding(true);
+        // 设置rest风格
+        HiddenHttpMethodFilter hiddenHttpMethodFilter = new HiddenHttpMethodFilter();
+        return new Filter[]{characterEncodingFilter, hiddenHttpMethodFilter};
+    }
+}
+```
+
+**Controller代码**
+
+```java
+package cn.payphone.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
+
+@Controller
+@RequestMapping("/rest")
+public class RestDemo {
+
+    @GetMapping("/")
+    public String index() {
+        return "rest";
+    }
+
+    @DeleteMapping("/delete/{id}")
+    @ResponseBody
+    public String delete(@PathVariable String id) {
+        return id + " delete";
+    }
+
+    @PutMapping("/put")
+    @ResponseBody
+    public String put() {
+        return "put success";
+    }
+}
+```
+
+**html代码**
+
+```html
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>Title</title>
+</head>
+<body>
+<form method="post" action="${pageContext.request.contextPath}/rest/delete/1">
+    <input hidden="hidden" type="text" name="_method" value="delete">
+    <input type="submit" value="DELETE">
+</form>
+<hr/>
+<hr/>
+<form method="post" action="${pageContext.request.contextPath}/rest/put">
+    <input hidden="hidden" type="text" name="_method" value="put">
+    <input type="submit" value="PUT">
+</form>
+</body>
+</html>
 ```
 
 # 十、数据转换/格式化/校验
@@ -2049,11 +2264,9 @@ ConversionService接口
 
 有三种方式
 
-- Converter<S,T> 将S类型对象转为T类型对象
+- <span style="color:red">**Converter<S,T> 将S类型对象转为T类型对象**</span><span style="color:green">**（基本只用这种方式）**</span>
 - ConverterFactory：将相同系列多个“同质”Converter封装在一起。
 - GenericConverter：会根据源类对象及目标类对象所在的宿主类中的上下文信息进行类型转换。
-
-基本只用第一种方式
 
 ---
 
@@ -2185,17 +2398,17 @@ use the `@EnableWebMvc` annotation to enable MVC configuration。
 
 ---
 
-既没有配置 <mvc:default-servlet-handler/> 也没有配置 <mvc:annotation-driven/>
+**既没有配置 <mvc:default-servlet-handler/> 也没有配置 <mvc:annotation-driven/>**
 
-<img src="../pics/SpringMVC/mvc_driver_01.png">
+<img src="../pics/SpringMVC/mvc_driver_01.png" width="100%">
 
-配置了 <mvc:default-servlet-handler/>  但没有配置 <mvc:annotation-driven/>
+**配置了 <mvc:default-servlet-handler/>  但没有配置 <mvc:annotation-driven/>**
 
-<img src="../pics/SpringMVC/mvc_driver_02.png">
+<img src="../pics/SpringMVC/mvc_driver_02.png" width="100%">
 
-既配置了 <mvc:default-servlet-handler/>  又配置 <mvc:annotation-driven/>
+**既配置了 <mvc:default-servlet-handler/>  又配置 <mvc:annotation-driven/>**
 
-<img src="../pics/SpringMVC/mvc_driver_03.png">
+<img src="../pics/SpringMVC/mvc_driver_03.png" width="100%">
 
 ## 10.5 格式化
 
@@ -2245,6 +2458,16 @@ JSR303：规范---Hibernate Validator（第三方校验框架）
 - jboss-logging-3.1.1.GA.jar
 - validation-api-1.1.0.CR1.jar
 
+实际上我就用了一个（Spring5.x）
+
+```xml
+<dependency>
+    <groupId>org.hibernate.validator</groupId>
+    <artifactId>hibernate-validator</artifactId>
+    <version>6.1.5.Final</version>
+</dependency>
+```
+
 ### 10.6.3 校验
 
 给JavaBean的属性添加上校验注解。
@@ -2275,6 +2498,25 @@ public String add(@Valid Employee employee,BindingResut result){
 用原生表单怎么办？
 
 result获取相关信息即可。
+
+```java
+@Controller
+@RequestMapping("/validation")
+public class Validation {
+
+    @RequestMapping("/val")
+    @ResponseBody
+    public String validation(@Valid User user, BindingResult result) {
+        boolean b = result.hasErrors();
+        List<ObjectError> allErrors = result.getAllErrors();
+        StringBuffer buffer = new StringBuffer();
+        for (ObjectError err : allErrors) {
+            buffer.append(err.getDefaultMessage());
+        }
+        return buffer.toString();
+    }
+}
+```
 
 ----
 
@@ -2483,11 +2725,93 @@ public class UploadServlet extends HttpServlet {
 
 ## 12.2 跨域
 
-- 配置类
+### 12.2.1 基本跨域配置
+
+如果只是局部的某些类或方法需要跨域配置，那么在对应的类或注解上加上注解`@CrossOrigin`即可。
+
+官方示例
 
 ```java
-package com.config;
+@RestController
+@RequestMapping("/account")
+public class AccountController {
 
+    @CrossOrigin
+    @GetMapping("/{id}")
+    public Account retrieve(@PathVariable Long id) {
+        // ...
+    }
+
+    @DeleteMapping("/{id}")
+    public void remove(@PathVariable Long id) {
+        // ...
+    }
+}
+
+//=========================================================
+@CrossOrigin(origins = "https://domain2.com", maxAge = 3600)
+@RestController
+@RequestMapping("/account")
+public class AccountController {
+
+    @GetMapping("/{id}")
+    public Account retrieve(@PathVariable Long id) {
+        // ...
+    }
+
+    @DeleteMapping("/{id}")
+    public void remove(@PathVariable Long id) {
+        // ...
+    }
+}
+
+//=========================================================
+@CrossOrigin(maxAge = 3600)
+@RestController
+@RequestMapping("/account")
+public class AccountController {
+
+    @CrossOrigin("https://domain2.com")
+    @GetMapping("/{id}")
+    public Account retrieve(@PathVariable Long id) {
+        // ...
+    }
+
+    @DeleteMapping("/{id}")
+    public void remove(@PathVariable Long id) {
+        // ...
+    }
+}
+```
+
+### 12.2.2 全局跨域配置
+
+官方示例代码
+
+```java
+
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+
+        registry.addMapping("/api/**")
+            .allowedOrigins("https://domain2.com")
+            .allowedMethods("PUT", "DELETE")
+            .allowedHeaders("header1", "header2", "header3")
+            .exposedHeaders("header1", "header2")
+            .allowCredentials(true).maxAge(3600);
+
+        // Add more mappings...
+    }
+}
+```
+
+个人示例代码
+
+```java
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -2506,8 +2830,19 @@ public class CrossConfig implements WebMvcConfigurer {
 }
 ```
 
-- 在每个Controller类上，加上类级别的注解@CrossOrigin
-- PS：我不知道是不是两个要一起用，还是任意一个就可以 - -。当时浏览器有缓存，浏览器控制台一直报跨域的错误。后面就没深究了~~~
+ ‎若要从源中了解更多信息或进行高级自定义，请检查后面的代码：
+
+- `CorsConfiguration`
+
+- `CorsProcessor`
+
+- `DefaultCorsProcessor`
+
+- `AbstractHandlerMapping`
+
+## 12.3 跨域过滤器
+
+[官方文档](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-cors-filter)
 
 # 十三、异常处理
 
@@ -2559,8 +2894,7 @@ private void initHandlerExceptionResolvers(ApplicationContext context) {
     if (this.handlerExceptionResolvers == null) {
         this.handlerExceptionResolvers = getDefaultStrategies(context, HandlerExceptionResolver.class);
         if (logger.isTraceEnabled()) {
-            logger.trace("No HandlerExceptionResolvers declared in servlet '" + getServletName() +
-                         "': using default strategies from DispatcherServlet.properties");
+            logger.trace("No HandlerExceptionResolvers declared in servlet '" + getServletName() +"': using default strategies from DispatcherServlet.properties");
         }
     }
 }
@@ -2589,7 +2923,7 @@ DefaultHandlerExceptionResolver：判断是否SpringMVC自带的异常
 
 ----
 
-## 13.2 异常解析器的使用场景
+## 13.2 异常解析器
 
 >**ExceptionHandlerExceptionResolver**
 
@@ -2678,6 +3012,163 @@ public class XXController{
 
 如果希望对所有异常进行统一处理，可以使用 SimpleMappingExceptionResolver，它将异常类名映射为视图名，即发生异常时使用对应的视图报告异常
 
+## 13.3 not found异常
+
+<span style="color:red">**如何自定义404异常？有如下三种方式！**</span>
+
+> **方法一，根据SpringMVC的精确匹配优先的规则**
+
+```java
+@Controller
+public class NotFound {
+	// 如果最后来带这个页面，说明是404错误！
+    @RequestMapping("*")
+    public String notFound() {
+        return "404";
+    }
+}
+```
+
+> **方法二，重写前端控制器的noHandlerFound方法**
+
+404即前端控制器没找到可以处理改请求的方法，通过查看源码可知：
+
+```java
+protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    HttpServletRequest processedRequest = request;
+    HandlerExecutionChain mappedHandler = null;
+    boolean multipartRequestParsed = false;
+
+    WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
+
+    try {
+        ModelAndView mv = null;
+        Exception dispatchException = null;
+
+        try {
+            processedRequest = checkMultipart(request);
+            multipartRequestParsed = (processedRequest != request);
+
+            // Determine handler for the current request.
+            mappedHandler = getHandler(processedRequest);
+            if (mappedHandler == null) {
+                // 没有处理当前request请求的话，执行moHandlerFound方法
+                noHandlerFound(processedRequest, response);
+                return;
+            }
+        }
+        // ............
+    }
+}
+// 找不到request对应的处理方法时执行
+protected void noHandlerFound(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    if (pageNotFoundLogger.isWarnEnabled()) {
+        pageNotFoundLogger.warn("No mapping for " + request.getMethod() + " " + getRequestUri(request));
+    }
+    if (this.throwExceptionIfNoHandlerFound) {
+        throw new NoHandlerFoundException(request.getMethod(), getRequestUri(request),
+                                          new ServletServerHttpRequest(request).getHeaders());
+    }
+    else {
+        response.sendError(HttpServletResponse.SC_NOT_FOUND);
+    }
+}
+```
+
+我们重写改方法，找不到时，直接重定向到404页面即可。那么到底如何重写呢？搜博客发现都是一些xml配置文件的写法，没什么JavaConfig的写法。下面给出JavaConfig的写法
+
+```java
+@Configuration
+public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+    @Override
+    protected Class<?>[] getRootConfigClasses() {
+        return new Class[]{RootConfig.class};
+    }
+
+    @Override
+    protected Class<?>[] getServletConfigClasses() {
+        return new Class[]{WebConfig.class};
+    }
+
+    /**
+     * @return
+     */
+    @Override
+    protected String[] getServletMappings() {
+        return new String[]{"/"};
+    }
+
+    @Override
+    protected Filter[] getServletFilters() {
+        // CharacterEncodingFilter characterEncodingFilter = new CharacterEncodingFilter("ISO-8859-1", true);
+        CharacterEncodingFilter characterEncodingFilter = new CharacterEncodingFilter("UTF-8", true);
+        characterEncodingFilter.setForceRequestEncoding(true);
+        characterEncodingFilter.setForceResponseEncoding(true);
+        // 设置rest风格
+        HiddenHttpMethodFilter hiddenHttpMethodFilter = new HiddenHttpMethodFilter();
+        return new Filter[]{characterEncodingFilter, hiddenHttpMethodFilter};
+    }
+	
+    // 我看源码发现 
+    // AbstractAnnotationConfigDispatcherServletInitializer的父类
+    // AbstractDispatcherServletInitializer的createDispatcherServlet
+    // 里创建的前端控制器，我们重写这个方法，把里面的new DispatcherServlet(...)
+    // 换成我们自己的new MyDispatcherServlet(...);
+    // 在自己的MyDispatcherServlet里，重写noHandlerFound方法
+    @Override
+    protected FrameworkServlet createDispatcherServlet(WebApplicationContext servletAppContext) {
+        System.out.println("MyDispatcherServlet start222");
+        return new MyDispatcherServlet(servletAppContext);
+    }
+}
+
+class MyDispatcherServlet extends DispatcherServlet {
+    public MyDispatcherServlet(WebApplicationContext webApplicationContext) {
+        super(webApplicationContext);
+        setDispatchOptionsRequest(true);
+        System.out.println("MyDispatcherServlet start111");
+    }
+
+    @Override
+    protected void noHandlerFound(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        response.sendRedirect(request.getContextPath() + "/error.jsp");
+    }
+}
+```
+
+> **方法三，利用web容器提供的error-page**
+
+还记得之前提到的web容器会提供一个404的默认界面吗？
+
+其实我们完全可以替换成我们自己的界面，那么看起来这种方法应该是最简单的了。
+
+只需要在web.xml文件中写上如下代码就可以了：
+
+```xml
+<error-page>
+    <error-code>404</error-code>
+    <location>/resource/view/404.htm</location>
+</error-page>
+```
+
+不过值得注意的是，这里配置的的location其实会被当成一个请求来访问。
+
+那么我们的DispatcherServlet会拦截这个请求而造成无法访问，此时的结果是用户界面一片空白。
+
+所以这里的404.htm其实是一个静态资源，我们需要用访问静态资源的方式去访问。
+
+而在我的Spring MVC里，resource目录下的文件都是不会被拦截的
+
+> **小结**
+
+- 最方便：那肯定是第三种了，我们只需要提供一个静态页面即可
+
+- 最快捷：第一种肯定最慢，因为它会发起2个请求。第二种和第三种应该差不多
+
+- 最灵活：从灵活性上来看，第三种肯定是最缺乏的，但是其实对于404来说并不是需要经常变化的，不过也保不准可能可以允许用户自定义404界面等，这里一、二两种方式则提供了灵活性。
+
+- 通用性：第三种应该是最通用了，而一、二 两种则要依赖Spring MVC
+
 # 十四、扫尾
 
 ## 14.1 运行流程
@@ -2728,7 +3219,7 @@ Spring的配置文件来配置和业务有关的（事务控制，数据源，xx
 
 ### 14.2.2 整合
 
-> **方式一：**
+> <span style="color:green">**方式一：**</span>
 
 - spring.xml 配置了Spring相关的信息
 - springmvc.xml 配置了mvc相关的信息
@@ -2736,7 +3227,7 @@ Spring的配置文件来配置和业务有关的（事务控制，数据源，xx
 
 这种配置方式只会启动一个IOC容器。
 
-> **方式二：**
+> <span style="color:green">**方式二：**</span>
 
 springmvc和spring分容器，各司其职。
 
@@ -2752,271 +3243,198 @@ Spring 的 IOC 容器不应该扫描 SpringMVC 中的 bean, 对应的 SpringMVC 
 
 <img src="../pics/SpringMVC/spring_with_mvc.png">
 
-
-
 <img src="../pics/SpringMVC/spring_with_mvc2.png">
-
-
 
 在 Spring MVC 配置文件中引用业务层的 Bean
 
 多个 Spring IOC 容器之间可以设置为父子关系，以实现良好的解耦。
 Spring MVC WEB 层容器可作为 “业务层” Spring 容器的子容器：即 WEB 层容器可以引用业务层容器的 Bean，而业务层容器却访问不到 WEB 层容器的 Bean
 
-
-
 Spring容器是作为父容器的，SpringMVC容器是作为子容器的。子容器的Controller要用父容器的Service没问题。但是如果父容器要拿子容器的，就不行！！
 
-<img src="../pics/SpringMVC/spring_with_mvc3.png">
+<img src="../pics/SpringMVC/spring_with_mvc3.png" width="100%">
 
+# 十五、乱码处理
 
+[参考博客](https://blog.csdn.net/c17315377559/article/details/101940087?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.control)  博客中用的xml方式进行处理的，我采用的JavaConfig方式处理的。
 
-# 源码阅读
+##  15.1 请求乱码
 
------------------
+### 15.1.1 post请求乱码
 
+> **在web.xml中配置过滤器**
 
-让我们看看createView方法
+这种方式适用于**Post**中文乱码处理。在web.xml中配置过滤器，这是Springmvc为我们写好的类，可以，通过指定编码格式，从而有效控制Post请求乱码，但是处理不了Get请求方式的乱码。
+
+```xml
+<filter>
+    <filter-name>characterEncodingFilter</filter-name>
+    <filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+    <init-param>
+        <param-name>encoding</param-name>
+        <param-value>utf-8</param-value>
+    </init-param>
+</filter>
+```
+
+> **JavaConfig的配置方式解决POST请求乱码**
 
 ```java
-@Override
-protected View createView(String viewName, Locale locale) throws Exception {
-   // If this resolver is not supposed to handle the given view,
-   // return null to pass on to the next resolver in the chain.
-   if (!canHandle(viewName, locale)) {
-      return null;
-   }
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.filter.CharacterEncodingFilter;
+import org.springframework.web.filter.HiddenHttpMethodFilter;
+import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
-   // Check for special "redirect:" prefix.
-   // 如果是redirect前缀 则xxx
-   if (viewName.startsWith(REDIRECT_URL_PREFIX)) {
-      String redirectUrl = viewName.substring(REDIRECT_URL_PREFIX.length());
-      RedirectView view = new RedirectView(redirectUrl,
-            isRedirectContextRelative(), isRedirectHttp10Compatible());
-      String[] hosts = getRedirectHosts();
-      if (hosts != null) {
-         view.setHosts(hosts);
-      }
-      return applyLifecycleMethods(REDIRECT_URL_PREFIX, view);
-   }
+import javax.servlet.Filter;
 
-   // Check for special "forward:" prefix.
-   if (viewName.startsWith(FORWARD_URL_PREFIX)) {
-      String forwardUrl = viewName.substring(FORWARD_URL_PREFIX.length());
-      InternalResourceView view = new InternalResourceView(forwardUrl);
-      return applyLifecycleMethods(FORWARD_URL_PREFIX, view);
-   }
+@Configuration
+public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+    @Override
+    protected Class<?>[] getRootConfigClasses() {
+        return new Class[]{RootConfig.class};
+    }
 
-   // Else fall back to superclass implementation: calling loadView.
-   return super.createView(viewName, locale);
+    @Override
+    protected Class<?>[] getServletConfigClasses() {
+        return new Class[]{WebConfig.class};
+    }
+
+    /**
+     * @return
+     */
+    @Override
+    protected String[] getServletMappings() {
+        return new String[]{"/"};
+    }
+
+    @Override
+    protected Filter[] getServletFilters() {
+        // 看了下源码，CharacterEncodingFilter extends OncePerRequestFilter
+        // 在RequestFilter请求之前进行了编码设置
+        CharacterEncodingFilter characterEncodingFilter = new CharacterEncodingFilter("UTF-8", true);
+        characterEncodingFilter.setForceRequestEncoding(true);
+        characterEncodingFilter.setForceResponseEncoding(true);
+        // 设置rest风格 HiddenHttpMethodFilter也是请求之前进行
+        HiddenHttpMethodFilter hiddenHttpMethodFilter = new HiddenHttpMethodFilter();
+        return new Filter[]{characterEncodingFilter, hiddenHttpMethodFilter};
+    }
 }
 ```
 
-返回View对象。
+> **解决Get和Post请求乱码一劳永逸的办法**
 
-1）视图解析器得到View对象的流程就是，所有配置的视图解析器都来尝试根据视图名（返回值）得到View对象；如果能得到就返回，得不到就换下一个视图解析器。
+在**~\apache-tomcat-7.0.90\conf\server.xml中处理**
 
-2）调用View对象的render方法。
+打开server.xml，大约在65行左右的位置
 
-
-
-一句话：
-
-视图解析器只是为了得到视图对象；视图对象才能真正的<span style="color:red">转发（将模型数据全部放在请求域中）或者重定向到页面</span>视图对象才能真正的<span style="color:red">渲染视图</span>。
-
-给你三天，写一个可以执行任意方法的反射工具类。？？
-
-```
-mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
+```xml
+<Connector connectionTimeout="20000" port="8080" protocol="HTTP/1.1" redirectPort="8443"/>
 ```
 
-debug进去看 进入到handle方法
+在Connector中加上**URIEncoding="UTF-8"**
 
+```xml
+<Connector URIEncoding="UTF-8" connectionTimeout="20000" port="8080" protocol="HTTP/1.1" redirectPort="8443"/>
 ```
-@Override
-public ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler)
-      throws Exception {
 
-   Class<?> clazz = ClassUtils.getUserClass(handler);
-   Boolean annotatedWithSessionAttributes = this.sessionAnnotatedClassesCache.get(clazz);
-   if (annotatedWithSessionAttributes == null) {
-      // 用注解工具找这个类有没有SessionAttributes注解
-      annotatedWithSessionAttributes = (AnnotationUtils.findAnnotation(clazz, SessionAttributes.class) != null);
-      this.sessionAnnotatedClassesCache.put(clazz, annotatedWithSessionAttributes);
-   }
+此种方式可以处理，Get与Post请求方式的乱码。配完之后，便不需要在考虑中文乱码的问题
 
-   if (annotatedWithSessionAttributes) {
-      checkAndPrepare(request, response, this.cacheSecondsForSessionAttributeHandlers, true);
-   }
-   else {
-      checkAndPrepare(request, response, true);
-   }
+## 15.2 响应乱码
 
-   // Execute invokeHandlerMethod in synchronized block if required.
-   if (this.synchronizeOnSession) {
-      HttpSession session = request.getSession(false);
-      if (session != null) {
-         Object mutex = WebUtils.getSessionMutex(session);
-         synchronized (mutex) {
-            return invokeHandlerMethod(request, response, handler);
-         }
-      }
-   }
-   // 再点击这个去看
-   return invokeHandlerMethod(request, response, handler);
+> 方式一，在@RequestMapping中加上，**produces="text/html;charset=utf-8"**
+
+```java
+@ResponseBody
+/**
+	   produces = "text/plain"
+	   produces = {"text/plain", "application/*"}
+	   produces = MediaType.TEXT_PLAIN_VALUE
+	   produces = "text/plain;charset=UTF-8"
+*/
+@RequestMapping(value="/test01.action",produces="text/html;charset=utf-8")
+public String test03() throws Exception {
+    return "我爱你中国";
 }
 ```
 
-\---------------
+通过，此种方式设置响应编码格式为**utf-8。**但是，此种方式，意味着，如果需要向页面返回中文，则就需要书写，过于麻烦。所以，请看第二种方式。
 
+>**方式二、在Springmvc.xml配置文件中书写**
+
+```xml
+<mvc:annotation-driven>
+    <mvc:message-converters>
+        <!-- 处理响应中文内容乱码 -->
+        <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+            <property name="defaultCharset" value="UTF-8" />
+            <property name="supportedMediaTypes">
+                <list>
+                    <value>text/html</value>
+                    <value>application/json</value>
+                </list>
+            </property>
+        </bean>
+    </mvc:message-converters>
+</mvc:annotation-driven>  
 ```
-protected ModelAndView invokeHandlerMethod(HttpServletRequest request, HttpServletResponse response, Object handler)
-      throws Exception {
-   // 拿到方法解析器
-   ServletHandlerMethodResolver methodResolver = getMethodResolver(handler);
-   // 方法解析器根据当前请求地址找到这个请求用什么方法执行
-   Method handlerMethod = methodResolver.resolveHandlerMethod(request);
-   // 创建一个方法执行器（做什么都整一个xx器）   
-ServletHandlerMethodInvoker methodInvoker = new ServletHandlerMethodInvoker(methodResolver);
-   // 包装原生的request、response
-   ServletWebRequest webRequest = new ServletWebRequest(request, response);
-   // 创建了一个BindingAwareModelMap 隐含模型【源码重点内容！！】
-   ExtendedModelMap implicitModel = new BindingAwareModelMap();
-   // 这是真正执行目标方法的。目标方法利用反射执行期间确定参数值，提前执行modelattribute等所有的操作都在这个方法中。
-   Object result = methodInvoker.invokeHandlerMethod(handlerMethod, handler, webRequest, implicitModel);
-   ModelAndView mav =
-         methodInvoker.getModelAndView(handlerMethod, handler.getClass(), result, implicitModel, webRequest);
-   methodInvoker.updateModelAttributes(handler, (mav != null ? mav.getModel() : null), implicitModel, webRequest);
-   return mav;
+
+将上述配置，放入到Springmvc,xml配置文件中，便可以对相应乱码进行全站处理。
+
+我更喜欢JavaConfig的配置方式
+
+```java
+@EnableWebMvc // 开启mvc的高级配置
+@Configuration
+@ComponentScan(basePackages = "cn.payphone", includeFilters = {
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = {Controller.class})
+}, useDefaultFilters = false)
+public class WebConfig implements WebMvcConfigurer {
+
+    public void configureViewResolvers(ViewResolverRegistry registry) {
+        // 这样  视图解析器会自动拼串
+        registry.jsp("/WEB-INF/views/", ".jsp");
+    }
+
+    // 防止响应乱码。响应数据的编码格式这里默认是IOS-8859
+    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+        converters.add(new StringHttpMessageConverter(StandardCharsets.UTF_8));
+    }
 }
 ```
 
-ModelAttribute标注的方法提前运行
+在源码中查看默认的编码格式  默认是ISO_8859_1
 
-**164.17、【源码】-ModelAttribute标注的方法提前运行并且把执行P164 - 01:33**
+```java
+public class StringHttpMessageConverter extends AbstractHttpMessageConverter<String> {
 
-方法执行细节
+	private static final MediaType APPLICATION_PLUS_JSON = new MediaType("application", "*+json");
 
-```
-public final Object invokeHandlerMethod(Method handlerMethod, Object handler,
-      NativeWebRequest webRequest, ExtendedModelMap implicitModel) throws Exception {
-   // 找到我们要执行的目标方法
-   Method handlerMethodToInvoke = BridgeMethodResolver.findBridgedMethod(handlerMethod);
-   try {
-      boolean debug = logger.isDebugEnabled();
-      // 获取真正的SessionAttribute注解的名字。我们类上没加什么SessionAttribute，所以没什么关系。
-      // 如果加了的话，就遍历每一个，把key对应的value查询出来（retrieve查询），塞在隐含模型中。
-      for (String attrName : this.methodResolver.getActualSessionAttributeNames()) {
-         // 
-         Object attrValue = this.sessionAttributeStore.retrieveAttribute(webRequest, attrName);
-         if (attrValue != null) {
-            // 如果我们标了SessionAttribute，那么这些数据值会被放在隐含模型中
-            implicitModel.addAttribute(attrName, attrValue);
-         }
-      }
-      for (Method attributeMethod : this.methodResolver.getModelAttributeMethods()) {
-         Method attributeMethodToInvoke = BridgeMethodResolver.findBridgedMethod(attributeMethod);
-         Object[] args = resolveHandlerArguments(attributeMethodToInvoke, handler, webRequest, implicitModel);
-         if (debug) {
-            logger.debug("Invoking model attribute method: " + attributeMethodToInvoke);
-         }
-         String attrName = AnnotationUtils.findAnnotation(attributeMethod, ModelAttribute.class).value();
-         if (!"".equals(attrName) && implicitModel.containsAttribute(attrName)) {
-            continue;
-         }
-         ReflectionUtils.makeAccessible(attributeMethodToInvoke);
-         Object attrValue = attributeMethodToInvoke.invoke(handler, args);
-         if ("".equals(attrName)) {
-            Class<?> resolvedType = GenericTypeResolver.resolveReturnType(attributeMethodToInvoke, handler.getClass());
-            attrName = Conventions.getVariableNameForReturnType(attributeMethodToInvoke, resolvedType, attrValue);
-         }
-         if (!implicitModel.containsAttribute(attrName)) {
-            implicitModel.addAttribute(attrName, attrValue);
-         }
-      }
-      Object[] args = resolveHandlerArguments(handlerMethodToInvoke, handler, webRequest, implicitModel);
-      if (debug) {
-         logger.debug("Invoking request handler method: " + handlerMethodToInvoke);
-      }
-      ReflectionUtils.makeAccessible(handlerMethodToInvoke);
-      return handlerMethodToInvoke.invoke(handler, args);
-   }
-   catch (IllegalStateException ex) {
-      // Internal assertion failed (e.g. invalid signature):
-      // throw exception with full handler method context...
-      throw new HandlerMethodInvocationException(handlerMethodToInvoke, ex);
-   }
-   catch (InvocationTargetException ex) {
-      // User-defined @ModelAttribute/@InitBinder/@RequestMapping method threw an exception...
-      ReflectionUtils.rethrowException(ex.getTargetException());
-      return null;
-   }
+	/**
+	 * The default charset used by the converter.
+	 */
+    // 默认是ISO_8859_1
+	public static final Charset DEFAULT_CHARSET = StandardCharsets.ISO_8859_1;
+
+	@Nullable
+	private volatile List<Charset> availableCharsets;
+
+	private boolean writeAcceptCharset = false;
+
+	/**
+	 * A default constructor that uses {@code "ISO-8859-1"} as the default charset.
+	 * @see #StringHttpMessageConverter(Charset)
+	 */
+	public StringHttpMessageConverter() {
+		this(DEFAULT_CHARSET);
+	}
 }
 ```
 
-**SpringMVC Day03**
+----
 
-**视图解析的应用**
+# 开始看书
 
-**return "forward:/hello.jsp"//  转发到页面地址。**
+看透SpringMVC
 
-- **forward：转发到一个页面**
-- **/hello.jsp 转发当前项目下的hello**
-- **一定要加/  如果不加/就是相对路径。容易出问题。**
-- **forward:/hello.jsp 不会有给你拼串，有前缀的转发，不会由我们配置的视图解析器拼串。**
-
-**forward可以转发到页面，也可以转发到一个请求上。 forward:/hello 转发到hello请求**
-
-**redirect重定向【重定向的地址由浏览器进行解析】**
-
-- 有前缀的转发和重定向不会有视图解析器的拼串操作。
-- 原生的servlet重定向需要加上项目名才能重定向。
-- springmvc无需写项目名，会为我们自动拼接上项目名。
-- returen "redirect:/hello.jsp";
-
-**SpringMVC视图解析器原理**
-
-- 1、方法执行后的返回值会作为页面地址参考，转发或者重定向到页面
-- 2、视图解析器可能会进行页面地址的拼串
-
-\--------------------------
-
-1）任何方法的返回值，最终都会被包装成ModelAndView对象。
-
-2）处理页面的方法 processDispatchResult() 
-
-视图渲染流程：将域中的数据在页面展示；页面就是用来渲染模型数据的。
-
-3）调用render(mv, reuqest, response);渲染页面
-
-4）View 与 ViewResolver；
-
-- ViewResolver的作用是根据视图名（方法的返回值）得到View对象。
-
-5）怎么根据方法的返回值（视图名）得到View对象？
-
-想知道怎么初始化视图解析器的话，取看initViewResolvers方法
-
-- 找到的话，就用我们配置的。
-- 没找到的话，就用默认的。
-
-```
-@Nullable
-protected View resolveViewName(String viewName, @Nullable Map<String, Object> model,
-      Locale locale, HttpServletRequest request) throws Exception {
-
-   if (this.viewResolvers != null) {
-      for (ViewResolver viewResolver : this.viewResolvers) {
-         // 根据视图名，得到view对象。 点进对应的方法去看
-         View view = viewResolver.resolveViewName(viewName, locale);
-         if (view != null) {
-            return view;
-         }
-      }
-   }
-   return null;
-}
-```
-
-
+## 第一章
 

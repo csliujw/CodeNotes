@@ -1663,7 +1663,7 @@ public class Listener implements ServletContextListener {
 - `cn.itcast.service`：这个包中存放的是与业务相关的类，对应着`javaweb`三层架构中的业务层；
 - `cn.itcast.web.servlet`：这个包中存放的是用来处理请求的`servlet`，对应着`javaweb`三层架构的web层。
 
-# 10、Ajax和JSON
+# 十、Ajax和JSON
 
 ## 10.1 Ajax
 
@@ -2028,5 +2028,42 @@ public class JsonDemo {
 }
 ```
 
+# 十一、杂记
 
+## 11.1 令牌机制
 
+**令牌机制(一次性)**
+
+  **原理:在页面加载时,一个token放在session中,另一个用form提交传递到后台,**
+
+​     **后台接收到两个token进行对比,相同则是第一次提交,清空token**
+**1.在Servlet代码**
+
+```java
+ // 判断是否是重复提交:
+String token1 = (String)request.getSession().getAttribute("token");
+String token2 = request.getParameter("token");
+// 清空session中的令牌:
+request.getSession().removeAttribute("token");
+if(!token2.equals(token1)){
+    request.setAttribute("msg", "亲！您已经提交过！请不要重复提交了!");
+    request.getRequestDispatcher("/jsp/msg.jsp").forward(request, response);
+    return;
+}
+```
+
+**2.在页面中代码()**
+
+```jsp
+<h1>添加商品的页面</h1>
+<%
+String token = UUIDUtils.getUUID();
+session.setAttribute("token", token);
+%>
+<form action="${ pageContext.request.contextPath }/ProductAddServlet" method="post">
+    <input type="hidden" name="token" value="${ token }"/>
+</form>
+```
+
+     <form action="${ pageContext.request.contextPath }/ProductAddServlet" method="post">
+     <input type="hidden" name="token" value="${ token }"/>
