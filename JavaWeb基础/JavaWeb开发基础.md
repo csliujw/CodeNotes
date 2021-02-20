@@ -674,7 +674,7 @@ login.html中form表单的action路径的写法
 
 虚拟目录+Servlet的资源路径
 
-如： /blog/login.do    ==》 项目名为blog的login.do  Servlet
+如： /blog/login.do===>项目名为blog的login.do  Servlet
 
 ## 4.5 BeanUtils工具类
 
