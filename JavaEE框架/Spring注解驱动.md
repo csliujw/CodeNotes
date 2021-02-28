@@ -9,16 +9,29 @@
   - 组件注入
   - `AOP`
   - 声明式事务
+  
 - 扩展原理
   - `BeanFactoryPostProcessor`
   - `BeanDefinitionRegistryPostProcessor`
   - `ApplicationListener`
   - Spring容器创建过程
+  
 - web
   - `servlet3.0`请求
   - 异步请求
 
 - <a href="https://docs.spring.io/spring-framework/docs/current/spring-framework-reference/core.html#beans-factory-extension">如何扩展Spring的功能</a>
+
+- 配置文件注意点
+
+  - 配置文件需要放在源码文件夹，这样合并的时候才会出现在bin目录下
+  - eg，目录层级关系
+
+   src|
+
+  ​	|com 类所在的包名
+
+  conf 配置文件所在的文件夹，与src目录同级别
 
 ## maven报错
 
@@ -42,7 +55,7 @@
 </dependency>
 ```
 
-# Spring注解--组件注解
+# 组件注解
 
 ## 导包
 
@@ -1008,7 +1021,7 @@ public interface BeanFactory {
 }
 ```
 
-# Spring注解--生命周期
+# 生命周期
 
 ## Bean指定初始化和销毁方法
 
@@ -1331,7 +1344,7 @@ class BeanPostProcessDemo implements BeanPostProcessor {
 }
 ```
 
-# Spring注解--属性赋值
+# 属性赋值
 
 ## `@Value`
 
@@ -1592,7 +1605,7 @@ public @interface PropertySource {
   }
   ```
 
-# Spring注解--自动装配
+# 自动装配
 
 ## 自动装配概述
 
@@ -2118,7 +2131,19 @@ class ProfileDemo implements EmbeddedValueResolverAware {
     }
     ```
 
-# Spring注解--IOC小结
+# 带泛型的DI
+
+父类类型 com.xxx.xxx.BaseService
+
+带泛型的父类类型	com.xxx.xxx.BaseService<com.xx.Book>
+
+Spring可以用带泛型的父类类型来确定这个子类的类型
+
+obj.getClass.getGeneriSuperclass()
+
+泛型依赖注入，注入一个组件的时候，他的泛型也是参考标准。
+
+# IOC小结
 
 ## 容器
 
@@ -2163,9 +2188,98 @@ class ProfileDemo implements EmbeddedValueResolverAware {
 - `ApplicationListener`
 - `Spring容器创建过程`
 
-# Spring注解--AOP
+## 其他
+
+IOC是一个容器，棒我们管理所有的组件
+
+1）依赖注入：@Autowired 自动赋值
+
+2）某个组件要使用Spring提供的更多（IOC、AOP）必须加入到容器中
+
+3）容器启动。创建所有单实例Bean
+
+4）autowired自动装配的时候，是从容器中找这些符合要求的bean。
+
+5）ioc.getBean("bookServlet")；也是从容器中找到这个bean
+
+6）容器中包含了所有的bean
+
+7）探索，单实例的bean都保存到了哪个map中了。【源码-扩展】
+
+8）源码调试思路：
+
+​	从HelloWorld开始；给HelloWorld每一个关键步骤打上断点，进去看里面都做了些什么工作。
+
+​	怎么知道哪些方法都是干什么的
+
+​	1、翻译方法名称，猜猜是做什么的
+
+​	2、放行这个方法，看控制台
+
+​	3、看方法注释
+
+学到的一点：1）规范注释；2）规范方法和类名
+
+9）创建Java对象做了那些事？
+
+ - 实例化
+   	- 在堆空间中申请一块空间，对象的属性值都是默认的。
+ - 初始化
+   	- 填充属性
+   	- 调用初始化方法
+   	- 
+
+# AOP
 
 ## 概述
+
+AOP：面向切面编程
+
+OOP：面向对象编程
+
+面向切面编程：基于OOP基础之上新的编程思想；
+
+指在程序运行期间，<span style="color:red">将某段代码</span><span style="color:green">动态的切入</span>到<span style="color:red">指定方法</span>的<span style="color:red">指定位置</span>进行运行的这种编程方式，面向切面编程；
+
+使用场景：
+
+==>日志记录
+
+==>事务控制
+
+## AOP概念
+
+> 几种通知
+
+```java
+try{
+    @Before
+    method.invoke(obj,args);
+    @AfterReturning
+}catch(e){
+    @AftreThrowing
+}finally{
+    @After
+}
+/*
+通知注解
+@Before：在目标方法之前运行				前置通知
+@After：在目标方法结束之后				后置通知
+@AfterReturning：在目标方法正常返回之后		返回通知
+@AftreThrowing：在目标方法抛出异常之后运行	异常通知
+@Around：环绕							环绕通知
+*/
+```
+
+通知只是告知执行的时机，那到底在那些方法上进行增强呢？
+
+用切入点表达式告知对那些方法进行增强。
+
+> 重要概念图
+
+<img src="../pics/Spring/SpringAOP.png" style="float:left">
+
+## AOP代码
 
 > **如何使用注解AOP？**
 
@@ -2295,6 +2409,88 @@ class LogAspects {
 }
 ```
 
+AOP创建的是代理对象 不是创建原有的Object对象，而是创建它的代理对象ObjectProxy。IOC中有代理对象，但是没有原对象！
+
+## 通知方法的执行顺序
+
+正常执行：@Before（前置通知）---- @After（后置通知）---- @AfterReturning（正常返回）
+
+异常执行：@Before（前置通知）---- @After（后置通知）---- @AfterThrowing（方法异常）
+
+## 其他细节
+
+> JoinPoint获取目标方法的信息
+
+> throwing return接收返回值
+
+```java
+@AfterReturning注解上赋值
+```
+
+> 告诉Spring哪个参数是用来接受异常
+
+```java
+// JoinPoint在第一位！ Exception用最大的异常来接收！
+public static void sfasf(JoinPoint join, Exception ex){
+    // do somethings
+}
+```
+
+> 环绕通知
+
+其实就是动态代理的一次简单封装
+
+```java
+/*
+@Around：环绕
+try{
+	// 前置通知
+	method.invoke(obj,args);
+	// 返回通知
+}cache(e){
+	// 异常通知
+}finally{
+	// 后置通知
+}
+// 四合一就是环绕通知！
+*/
+```
+
+环绕通知和其他通知共同作用的情况下：
+
+环绕通知先运行，且环绕通知把异常处理了，其他方法就感受不到异常了！为了能让外界知道这个异常，这个异常一定要抛出去！`throw new RuntimeException()`
+
+要是写动态代理的话，可以用环绕通知。
+
+执行顺序总结：（前置的执行顺序可能不一样，无所谓）
+
+```java
+[普通前置]
+{
+    try{
+        环绕前置
+        环绕执行
+        环绕返回
+    }catch(){
+        环绕出现异常
+    }finally{
+        环绕后置
+    }
+}
+[普通后置]
+[普通方法返回/方法异常]
+```
+
+多切面运行的话，可以用@Order注解改变切面顺序！
+
+```java
+@Aspect
+@Component
+@Order(1)//使用Order改变切面顺序
+```
+
+<img src="../pics/Spring/advices.png">
+
 ## AOP源码解析
 
 ### 概述
@@ -2306,9 +2502,6 @@ class LogAspects {
 - 2）`AspectJAutoProxyRegistrar`
 - 3）`AnnotationAspectJA`
 - 4）`AnnotationAwareAspect`
-- 5）
-- 6）
-- 7）
 
 ### @EnableAspectJAutoProxy注解
 
@@ -2384,9 +2577,207 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 }
 ```
 
-# Spring注解--扩展原理
+# 事务控制
 
-## `BeanFactoryPostProcessor`
+## 声明式事务概述
+
+告诉Spring哪个方法是事务即可。
+
+Spring自动进行事务控制。
+
+## 编程式事务概述
+
+```java
+// 用过滤器控制事务！秒啊！
+TransactionFilter{
+    try{
+        // 获取连接
+        // 设置非自动提交
+        chain.doFilter();
+        // 提交
+    }catch(Exception e){
+        // 回滚
+    }finally{
+        // 提交
+    }
+}
+```
+
+事务管理代码的固定模式作为一种横切关注点，可以通过AOP方法模块化，进而借助Spring AOP框架实现声明式事务管理。
+
+​	自己要写这个切面还是很麻烦；
+
+​	且这个切面已经有了；（事务切面，事务管理）
+
+## 事务控制
+
+> Spring支持的事务控制
+
+<img src="../pics/Spring/transactionManager.png" style="float:left">
+
+```java
+package com.atguigu.service;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.atguigu.dao.BookDao;
+
+@Service
+public class BookService {
+	
+	@Autowired
+	BookDao bookDao;
+	
+//	@Autowired
+//	BookService bookService;
+	
+	/**
+	 * 事务细节：
+	 * isolation-Isolation：事务的隔离级别;
+	 * 
+	 * 
+	 * 
+	 * noRollbackFor-Class[]：哪些异常事务可以不回滚
+	 * noRollbackForClassName-String[]（String全类名）:
+	 * 
+	 * rollbackFor-Class[]:哪些异常事务需要回滚；
+	 * rollbackForClassName-String[]:
+	 * 
+	 * 异常分类：
+	 * 		运行时异常（非检查异常）：可以不用处理；默认都回滚；
+	 * 		编译时异常（检查异常）：要么try-catch，要么在方法上声明throws
+	 * 				默认不回滚；
+	 * 
+	 * 事务的回滚：默认发生运行时异常都 回滚，发生编译时异常不会回滚；
+	 * noRollbackFor:哪些异常事务可以不回滚;（可以让原来默认回滚的异常给他不回滚）
+	 * 	noRollbackFor={ArithmeticException.class,NullPointerException.class}
+	 * noRollbackForClassName
+	 * 
+	 * rollbackFor：原本不回滚（原本编译时异常是不回滚的）的异常指定让其回滚；
+	 * 
+	 * readOnly-boolean：设置事务为只读事务：
+	 * 		可以进行事务优化；
+	 * 		readOnly=true：加快查询速度；不用管事务那一堆操作了。
+	 * 
+	 * timeout-int（秒为单位）：超时：事务超出指定执行时长后自动终止并回滚
+	 * @throws FileNotFoundException 
+	 * 
+	 * 
+	 * propagation-Propagation：事务的传播行为;
+	 * 	传播行为（事务的传播+事务的行为）；
+	 * 		如果有多个事务进行嵌套运行，子事务是否要和大事务共用一个事务；
+	 * 传播行为:
+	 * AService{
+	 * 		tx_a(){
+	 * 			//a的一些方法
+	 * 			tx_b(){
+	 * 			}
+	 * 			tx_c(){
+	 * 			}
+	 * 		}
+	 * }
+	 */
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
+	public void checkout(String username,String isbn){
+		//1、减库存
+		bookDao.updateStock(isbn);
+		
+		int price = bookDao.getPrice(isbn);
+//		try {
+//			Thread.sleep(3000);
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
+		//2、减余额
+		bookDao.updateBalance(username, price);
+		
+		//int i = 10/0;
+		//new FileInputStream("D://hahahahha.aa");
+	}
+	
+	@Transactional(propagation=Propagation.REQUIRES_NEW)
+	public void updatePrice(String isbn,int price){
+		bookDao.updatePrice(isbn, price);
+	}
+	
+	/**
+	 * 根据业务的特性；进行调整
+	 * isolation=Isolation.READ_UNCOMMITTED:读出脏数据
+	 * 
+	 * 
+	 * 		READ_COMMITTED；实际上业务逻辑中用的最多的也是这个；
+	 * 		REPEATABLEP_READ；
+	 * @param isbn
+	 * @return
+	 */
+	@Transactional(readOnly=true)
+	public int getPrice(String isbn){
+		return bookDao.getPrice(isbn);
+	}
+	
+	@Transactional
+	public void mulTx(){
+		
+		//ioc.getBean("BookSerice");
+		checkout("Tom", "ISBN-001");
+		
+		updatePrice("ISBN-002", 998);
+		
+		int i=10/0;
+	}
+}
+
+//===============================
+@Service
+public class MulService {
+	
+	@Autowired
+	private BookService bookService;
+	
+	@Transactional
+	public void mulTx(){
+		//都是可以设置的；
+		//传播行为来设置这个事务方法是不是和之前的大事务共享一个事务（使用同一条连接）；
+		//REQUIRED  
+		bookService.checkout("Tom", "ISBN-001");
+		
+		//REQUIRED   REQUIRES_NEW
+		bookService.updatePrice("ISBN-002", 998);
+		
+		//int i = 10/0;
+	}
+}
+```
+
+## 事务隔离级别
+
+数据库事务并发问题：
+1.脏读：读到了未提交的数据
+2.不可重复读：两次读取数据不一样（第一次读到了原来的数据；接下来数据更新了；第二次又读了这个数据，数据不一样了，因为更新了）
+3.幻读：多读了，或少读了数据
+
+事务的隔离级别 根据业务的特性进行调整
+
+```java
+@Transactional(isolation+Isolation.READ_UNCOMMITTED)
+```
+
+> 嵌套事务
+
+<img src="../pics/Spring/shiwu.png">
+
+本类方法的嵌套调用是一个事务
+
+# 扩展原理
+
+## BeanFactoryPostProcessor
 
 ### 概述
 
@@ -2415,7 +2806,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
         - 在初始化创建其他组件前面执行
 - 3）学到的一种写法，用接口表示排序规则，获取类时，查看它是否实现了xxx接口，以此判断执行顺序。
 
-## `BeanDefinitionegistryPostProcessor`
+## BeanDefinitionegistryPostProcessor
 
 ### 概述
 
@@ -2508,7 +2899,7 @@ class MyBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPos
     - 2、再来触发`postProcessBeanFactory()`方法【该方法位于`BeanFactoryPostProcessor`类里】
 - 4）再来从容器中找到`BeanFactoryPostProcessor`组件，然后依次触发`postProcessBeanFactory()`方法
 
-## `ApplicationListener`
+## ApplicationListener
 
 ### 概述
 
@@ -2598,11 +2989,11 @@ class MyApplicationEvent implements ApplicationListener<ApplicationEvent> {
 
 3）只要容器中有相关事件的发布，我们就能监听到这个事件。
 
-## `SmartInitializingSingleton`
+## SmartInitializingSingleton
 
 ## Spring容器的创建过程
 
-# Spring注解--源码总结
+# 源码总结
 
 # Servlet3.0
 
@@ -2811,7 +3202,7 @@ public class UserListener implements ServletContextListener, Hello {
 }
 ```
 
-# Spring注解--SpringMVC
+# SpringMVC
 
 ## 概述
 
@@ -3098,7 +3489,9 @@ public class HelloController {
 
 <img src="../pics/spring/maven_mvc2.png" style="float:left">
 
-# Servlet 3.0异步请求
+# 原生异步请求
+
+Servlet 3.0 异步请求
 
 ## 概述
 

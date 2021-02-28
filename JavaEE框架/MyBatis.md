@@ -2,6 +2,8 @@
 
 MyBatis3.4x版本，把他内部需要的三方jar都整合在一起了。
 
+所有有关MyBatis的笔记需要重新整理一下！包括代码！现在的笔记很杂乱，争取下礼拜整理好！
+
 # 快捷键基础篇
 
 ## 前言
@@ -342,8 +344,12 @@ public interface IUserDao {
         </set>
         where id=#{id}
     </update>
-
-    <insert id="insert">
+	<!--
+		让MyBatis自动地将自增id赋值给传入地employee对象的id属性。
+		useGeneratedKeys="true";原生jdbc获取自增主键的方法：
+			keyProperty="",将刚才自增的id封装给哪个属性。
+	-->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         insert into users(username, birthday, address)
         values (#{username}, #{birthday}, #{address})
     </insert>
@@ -360,6 +366,373 @@ public interface IUserDao {
     </select>
 </mapper>
 ```
+
+## MyBatis的一些用法
+
+```xml
+<!--
+	Caused by: org.apache.ibatis.binding.BindingException:
+	Parameter 'id' not found
+	Available parameters are [0, 1, param1, param2]
+-->
+<!-- public Employee getXX(Integer id, String name) -->
+<select id="getXX" resultType="com.xx.xx.Employee">
+	select * from xxx where id=#{param1} and name=#{param2}
+</select>
+<!-- 
+	要么写#{0} #{1} 要么写#{param1} #{param2} 
+	只有一个形参的话写什么都行#{asf} #{haha}都行
+	原因：只要传入了多个参数；MyBatis会自动的将这些参数封装在一个map中；封装的时候使用的key就是参数的索引和参数的第几个表示
+	Map<String,Object> map = new HashMap<>();
+	map.put("1","传入的值1");
+	map.put("2","传入的值2");
+	如果我们不想这样做，想指定key，那么我们如何指定封装时使用的key？
+-->
+
+```
+
+> 如果我们不想这样做，想指定key，那么我们如何指定封装时使用的key？
+
+```java
+Employee getXX(@Param("id")Integer id, @Param("enmName")String empName);
+```
+
+```xml
+<select id="getXX" resultType="com.xx.xx.Employee">
+	select * from xxx where id=#{id} and name=#{empName}
+    <!-- 这个id是因为@Pamra注解的value是id；这个empName是因为@Param注解的value是empName -->
+</select>
+```
+
+## MyBatis 取值总结
+
+1）单个参数
+
+​	基本类型：
+
+​		取值：#{随便写}
+
+​	传入POJO
+
+​		取值：#{POJO字段名称}
+
+2）多个参数：
+
+​	public Employee getXXX(Integer id, String name)
+
+​	取值：#{参数名}是无效了
+
+​	可用：0，1（参数索引）或param1,param2（第几个参数paramN）
+
+​	原因：只要传入了多个参数；MyBatis会自动的将这些参数封装在一个map中；封装时使用的key就是参数的索引和参数的第几个表示
+
+​	Map<String,Object> map = new HashMap<>()
+
+​	map.put("1","传入的值1");
+
+​	map.put("2","传入的值2");
+
+​	#{key}就是从这个map取值
+
+3）@Para,为参数指定key；命名参数；我们以后也推荐这么做
+
+​	我们可以告诉MyBatis，封装参数map的时候别乱来，使用我们指定的key
+
+4）传入了POJO（JavaBean）
+
+​	取值#{POJO}属性
+
+5）传入了Map：将多个要使用的参数封装起来
+
+​	取值#{key}
+
+6）扩展：多个参数；自动封装map。
+
+```java
+public XX method(@Param("id")Integer id, String empName,Employee employee);
+Integer id ==> #{id}
+String empName ==> #{param2}
+Employee employee（取出它的email）==> #{param3.email}
+```
+
+无论传入什么参数都要能正确的取出值；
+
+#{key/属性名}
+
+​	id=#{id, JdbcType=INT}
+
+​	javaType、jdbcType、mode、numericScale、resultMap、typeHandler
+
+​	只有jdbcType才可能需要被指定；
+
+​		默认不指定jdbcType：mysql没问题；oracle没问题；
+
+​		万一传入的数据是null
+
+​		mysql插入null没问题；oracle不知道null到底是什么类型
+
+实际上mybatis中有两种取值方式
+
+#{属性名}：是参数预编译的方式，参数的位置都是用？替代，参数后来都是预编译设置进去的，安全，不会有sql注入问题。
+
+${属性名}：不是参数预编译，而是直接和sql语句进行拼串，不安全
+
+​	eg：id=1 or 1 = 1 and empname=
+
+​	传入一个1 or 1=1 or
+
+## 查询返回map
+
+> 常规情况
+
+```java
+public Map<String, Object> getEmpByIdReturnMap(Integer id);
+// key是列名，value是字段对应的值。
+id	name	email
+1	a		afsdf
+2	b		afsf
+// 此处 id就是列名，1，2就是value
+// 这个如果查询出的是多条数据，value应该会是一个集合。
+```
+
+```xml
+<!-- pamramater一般可以不写。 -->
+<select id="getEmpByIdReturnMap" resultType="map">
+    select * from emplate where id=#{id}
+</select>
+```
+
+> POJO情况
+
+```java
+// key	 就是这个记录的主键
+// value 就是这条记录封装好的对象
+// 把查询记录的id的值作为key封装这个map（注解@MapKey）
+@MapKey("id")
+public Map<String, Employee> getAllEmp();
+```
+
+```xml
+<!-- 查询多个返回一个map，查询多个情况下，集合里面写元素类型 视频P252 10分30秒左右 -->
+<select id="getAllEmp" resultType="com.xx.xx.Employee">
+	select * from employee;
+</select>
+```
+
+## 自定义结果集
+
+type：指定为哪个javaBean自定义封装规则；全类名。
+
+id：唯一标识符，让别名在后面引用
+
+```xml
+<resultMap type="com.xx.xx.Cat" id="mycat">
+    <!--
+	column="id"：指定哪一列是主键列
+	property=""：指定cat的哪个属性封装id这一列数据
+	-->
+    <!-- 主键列 -->
+	<id property="pojoid" column="id">
+    <!-- 普通列 -->
+    <result property="" column=""></result>
+</resultMap>
+<!--
+	resultMap="mycat"：查出数据封装结果的时候，使用mycat自定义的规则。
+-->
+<select id="getAllCat" resultMap="mycat">
+	select * from cat where id=#{id} 
+</select>
+```
+
+## 一对一查询
+
+**association**：只是表示对象
+
+## 一对多查询
+
+**collection**
+
+collection：定义集合元素的封装
+
+property：指定哪个属性是集合属性
+
+javaType：指定对象类型
+
+ofType：指定集合里面元素的类型
+
+```xml
+<!-- 这个property应该是用注解标记了，使用keys作为property -->
+<collection property="keys" ofType="com.xx.Key">
+	<id></id>
+    <result></result>
+</collection>
+```
+
+## 分步查询
+
+```xml
+<select id="getXX" resultMap="mykey02">
+	select * from key where id=#{id}
+</select>
+<!--
+	告诉mybatis自己去调用一个查询
+	select:指定一个查询sql的唯一标识；mybatis自动调用指定的sql将查询出的lock封装起来
+		public Lock getLockByIdSimple(Integer id); 需要传入锁子id
+	column:指定将哪一列的数据传递过去。
+		getLockByIdSimple(Integer id)不是需要一个查询条件 id吗，column就是把指定列的数据传递过去。
+-->
+<resultMap type="com.xx.key" id="mykey02">
+    <id></id>
+    <result></result>
+    <association property="lock" select="getLockByIdSimple" column="lockid"></association>
+</resultMap>
+```
+
+分布查询，两个查询都会执行，即便没有用到第二个查询的数据。这样严重浪费了数据库的性能。
+
+我们可以采用按需加载，需要的时候再去查询：全局开启按需加载策略！
+
+## 按需加载
+
+```xml
+<settings>
+    <!-- 开启延迟加载开关 -->
+	<setting name="lazyLoadingEnable" value="true"></setting>
+    <!-- 开启属性按需加载 -->
+    <setting name="aggressiveLazyLoading" value="true"></setting>
+</settings>
+
+<!-- Mapper xml文件中按需加载的写法 -->
+<!-- fetchType	可选的。有效值为 lazy 和 eager。 指定属性后，将在映射中忽略全局配置参数 lazyLoadingEnabled，使用属性的值 -->
+<association xx fetchType="eager"></association>
+```
+
+## 动态SQL
+
+> where标签
+
+where标签可以帮我们去除掉前面的and
+
+> trim标签
+
+```xml
+<!--
+	prefix=""	前缀：为我们下面的sql整体添加一个前缀
+	prefixOverrides	取出整体字符串前面多余的字符
+	suffix	为整体添加一个后缀
+	suffixOverrides	后面哪个多了可以去掉
+-->
+<trim prefix="where" prefixOverrides="and">
+	<if test="id!=null">
+    	id > #{id} and
+    </if>
+    <!--
+		有些字符是xml的标记，所以需要转义
+	-->
+    <if test="name != null &amp;&amp; !name.equals(&quot;&quot;)">
+    	teacherName like #{name} and
+    </if>
+    <if test="birth != null">
+    	birth_date &lt; #{birth} and
+    </if>
+</trim>
+```
+
+> foreach
+
+```xml
+select xxxxx where id in
+<!--
+	collection	指定要遍历的集合的key
+	close		以什么结束
+	open		以什么开始
+	index		索引
+		如果遍历的是一个list，index指定的变量保存了当前索引
+		如果遍历的是一个map，index 指定的变量就是保存了当前遍历元素的key
+	item		变量名
+	separator	每次遍历元素的分隔符
+	(#{id_item},#{id_item},#{id_item})
+	这里collection可以用ids 是因为 用了@Param("ids")为key重新命名了。没有这个的话，List类型默认用的key是list
+-->
+<foreach collection="ids" item="id_item" separator="," open="(" close=")">
+    #{id_item}
+</foreach>
+```
+
+> choose选择
+
+用到的时候查文档吧，感觉很少会用到。
+
+> 抽取sql片段
+
+```xml
+<sql id="selectSql">
+	select xxx sfaf
+</sql>
+<select id="xx" xx>
+	<include refid="selectSql"></include>
+    where id=#{id}
+</select>
+```
+
+## 缓存机制
+
+暂时存储一些数据；加快系统的查询速度
+
+MyBatis缓存机制：Map；能保存查询出的一些数据；
+
+一级缓存：线程级别的缓存；本地缓存；SqlSession级别的缓存
+
+二级缓存：全局范围的缓存；除过当前线程；SqlSession能用外其他也可以用
+
+### 一级缓存失效
+
+看下MyBatis缓存部分的源码就知道，这个缓存机制真的很弱鸡。
+
+一级缓存是SqlSession级别的缓存
+
+1）不同的sqlSession，使用不同的一级缓存
+
+​	只有在同一个sqlSession期间查询到的数据会保存在这个sqlSession的缓存中。
+
+​	下次使用这个sqlSession查询会从缓存中拿
+
+2）同一个方法，不同的参数，由于可能之前没查询过，所以还有发新的sql；
+
+3）在这个sqlSession期间执行任何一次增删改操作，增删改都会把缓存清空。（不管你改的是不是我的数据，我都清空）
+
+4）手动清空缓存 openSession.clearCache()
+
+MyBatis缓存是在
+
+Cache类 - org.apache.ibatis.cache
+
+	- PerpetualCache变量中
+
+```java
+/**
+ * @author Clinton Begin
+ */
+public class PerpetualCache implements Cache {
+
+  private final String id;
+	
+  // 所谓的缓存其实就是一个Map
+  private Map<Object, Object> cache = new HashMap<Object, Object>();
+
+  // some method
+}
+```
+
+### 二级缓存失效
+
+全局作用域缓存
+
+二级缓存默认不开启，需要手动配置
+
+MyBatis提供二级缓存的接口及其实现，缓存实现要求POJO实现Serializable接口
+
+这些 用不到，不想记，要用再说。
 
 ## #和$
 
