@@ -567,7 +567,7 @@ public User pojo(User user) {
 
 ### 4.5.1 请求乱码
 
-**GET   请求乱码：**改server.xml 在8080端口处 URIEncoding="UTF-8"
+**GET请求乱码：**改server.xml 在8080端口处 URIEncoding="UTF-8"
 
 **POST 请求乱码：**
 
@@ -1556,7 +1556,7 @@ private void processDispatchResult(HttpServletRequest request, HttpServletRespon
 }
 ```
 
-> <span  style="color:green">**调用processDispatchResult里的render进行渲染**</span>
+> <span  style="color:green">调用processDispatchResult里的render进行渲染</span>
 
 发现内部有个View类型的变量。
 

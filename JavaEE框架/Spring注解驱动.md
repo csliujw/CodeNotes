@@ -1613,7 +1613,7 @@ public @interface PropertySource {
 
 * 1、`@AutoWired`：自动注入【Spring定义的】
     * 默认按照类型去容器中找对应的组件 `applicationContext.getBean(BookService.class)`，找到就赋值
-    * 如果找到相同类型的组件，再将属性的名称作为组件的id去容器中查找      `applicationContext.getBean("bookDao")`
+    * 如果找到相同类型的组件，再将属性的名称作为组件的id去容器中查找`applicationContext.getBean("bookDao")`
 * 2、`@Qualifier("bookDao")`：使用该注解来指定需要装配的组件的id，而不是使用属性名
 * 3、自动装配默认一定要将属性赋值好，没有就会报错，可通过在`Autowire`的注解中将required=false来使该配置设置为非必需
 * 4、`@Primary`：让Spring进行自动装配的时候，默认使用首选的bean,也可以继续使用@Qualifier来指定需要装配的bean
@@ -2226,7 +2226,7 @@ IOC是一个容器，棒我们管理所有的组件
    	- 在堆空间中申请一块空间，对象的属性值都是默认的。
  - 初始化
    	- 填充属性
-   	- 调用初始化方法
+      	- 调用初始化方法
    	- 
 
 # AOP
