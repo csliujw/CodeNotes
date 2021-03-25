@@ -1,15 +1,8 @@
 # git配置&简单命令
 
-## 命令
+## 安装及配置
 
-```powershell
-git add: # 将本地文件 增加到暂存区
-git commit # 将暂存区的内容 提交到 本地仓库
-git push # 将本地仓库的内容 推送到 远程仓库
-git pull # 将远程仓库的内容 拉取到 本地仓库
-```
-
-## 安装
+### 安装
 
 安装时：Use git from git bash only...其他默认下一步。
 
@@ -17,22 +10,19 @@ git pull # 将远程仓库的内容 拉取到 本地仓库
 配置github
 
 - 点击右键 选择Git bash
-
 - 配置全局变量
+- git config -- global user.name "username" 如：git config -- global user.name "csxx"
+- git config --global user.email "邮箱" 如：git config --global user.email "12312331@qq.com"
 
-- git config -- global user.name "liujiaweiReal"
-
-- git config --global user.email "695466632@qq.com"
-
-## 配置免密登录
+### 配置免密登录
 
 配置ssh：先在本地配置，发送给远程
 
 输入以下命令
-ssh-keygen -t rsa -C 695466632@qq.com
+ssh-keygen -t rsa -C 邮箱 如：ssh-keygen -t rsa -C 324234234@qq.com
 然后一直回车
 
-打开github网站 找到setting -- new ssh - title任意/key输入本地生成的pubkey（公钥）
+打开github网站 找到setting --> new ssh - title任意/key输入本地生成的pubkey（公钥）,pubkey的存放地址请仔细看git控制台的输出。
 
 测试连通性
 
@@ -41,15 +31,27 @@ ssh -T git@github.com[写死]
 本地和远程成功通信 则可以izai/.ssh中发现known_hosts文件
 出错就多试几次 可能是网路问题。不行就检测建立ssh时输入的pub key
 
+## 基本使用命令
+
+```powershell
+git add: # 将本地文件 增加到暂存区
+git commit # 将暂存区的内容 提交到 本地仓库
+git push # 将本地仓库的内容 推送到 远程仓库
+git pull # 将远程仓库的内容 拉取到 本地仓库
+```
+
 ## Git练习
+
+> 基本命令介绍
 
 ```powershell
 # 初始化git项目
 git init
 
 # 关联git仓库
-git remote add origin git项目的免密地址
+git remote add origin 项目的免密地址
 # 例如
+git remote add origin git@github.com:csliujw/JavaEE.git
 
 # 添加
 git add .
@@ -74,6 +76,8 @@ git push origin master
 # 从仓库中拉取项目
 git pull
 ```
+
+> 使用案例
 
 ```powershell
 # 第一次下载项目（远程-本地）

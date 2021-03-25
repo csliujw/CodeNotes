@@ -1,8 +1,14 @@
 # MyBatis概述
 
+## 杂谈
+
 MyBatis3.4x版本，把他内部需要的三方jar都整合在一起了。
 
 所有有关MyBatis的笔记需要重新整理一下！包括代码！现在的笔记很杂乱，争取下礼拜整理好！
+
+## 解决的问题
+
+`MyBatis`解决了持久层重复代码多的问题，简化了持久层的开发，减少了持久层的代码量。
 
 # 快捷键基础篇
 
@@ -33,9 +39,9 @@ MyBatis3.4x版本，把他内部需要的三方jar都整合在一起了。
 
 相对路径 `src/java/main/文件名.xml`
 
-读配置文件：①用类加载器，读类路径下的
+读配置文件 ①用类加载器，读类路径下的
 
-​					 ②用`Servlet Context`对象的`getRealPath`
+​		  ②用`Servlet Context`对象的`getRealPath`
 
 创建工程`MyBatis`用了构建者模式。告诉需求，根据需求创建我们想要的。
 
@@ -49,19 +55,19 @@ build.build(in) // in形式下创建的工厂，多了几个类，操作看起�
 
 在看`MyBatis`源码的时候，通过一些类的名称大概知道了`MyBatis`用到了什么技术。`MyBatis`解析的时候应该用到了词法分析，分析字符串。在动态生成代理类的时候用到了字节码增强技术。
 
-# `MyBatis` 基础篇
+# `MyBatis`基础篇
 
 ## 基本环境搭建
 
-> **Maven工程使用`MyBatis`的时候，配置文件需要放在`resrouces`目录下，否则无法找到。**
+> Maven工程使用`MyBatis`的时候，配置文件需要放在`resrouces`目录下，否则无法找到。
 
-> **Maven整合Druid的时候，需要的是数据源，需要我们手动new出Druid的数据源。**
+> Maven整合Druid的时候，需要的是数据源，需要我们手动new出Druid的数据源。
 
 - 基本配置文件
 - mapper文件
 - 日志文件
 
-**maven的`pom`文件**
+maven的`pom`文件
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -111,11 +117,10 @@ build.build(in) // in形式下创建的工厂，多了几个类，操作看起�
             <version>8.0.21</version>
         </dependency>
     </dependencies>
-
 </project>
 ```
 
-**`SqlConfig`配置文件**
+`SqlConfig`配置文件
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -153,7 +158,7 @@ build.build(in) // in形式下创建的工厂，多了几个类，操作看起�
 </configuration>
 ```
 
-**mapper文件示例**
+mapper文件示例
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -167,6 +172,73 @@ build.build(in) // in形式下创建的工厂，多了几个类，操作看起�
 	</select>
 </mapper>
 ```
+
+## 集成Druid
+
+集成Druid只需要在前面的基础上修改一点东西即可。
+
+- 新建一个类，继承自`UnpooledDataSourceFactory`类（MyBatis官方文档的示例）
+
+```java
+public class DataSourceDruid extends UnpooledDataSourceFactory {
+
+    @Override
+    public DataSource getDataSource() {
+        DruidDataSource druidDataSource = new DruidDataSource();
+        // Druid的配置信息。看的源码知道的，可以通过这种方式进行配置。
+        druidDataSource.setUrl("jdbc:mysql://localhost:3306/mybatis?serverTimezone=UTC");
+        druidDataSource.setUsername("root");
+        druidDataSource.setPassword("root");
+        druidDataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        return druidDataSource;
+    }
+}
+```
+
+- SqlConfig文件进行一小部分修改
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <typeAliases>
+        <package name="com.bbxx.pojo"/>
+    </typeAliases>
+    <!-- 配置 mybatis 的环境 -->
+    <environments default="mysql">
+        <!-- 配置 mysql 的环境 -->
+        <environment id="mysql">
+            <!-- 配置事务的类型 -->
+            <transactionManager type="JDBC"></transactionManager>
+            <!-- 配置连接数据库的信息：用的是Druid数据源(连接池) 这个类是我们自己定义的，且重写了getDataSource方法！-->
+            <dataSource type="com.bbxx.utils.DataSourceDruid">
+                <property name="driver" value="com.mysql.cj.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/mybatis?serverTimezone=UTC"/>
+                <property name="username" value="root"/>
+                <property name="password" value="root"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <!-- 告知 mybatis 映射配置的位置 -->
+    <mappers>
+        <mapper resource="com/bbxx/dao/UserDao.xml"/>
+    </mappers>
+</configuration>
+```
+
+- pom文件中添加
+
+```xml
+<dependency>
+    <groupId>com.alibaba</groupId>
+    <artifactId>druid</artifactId>
+    <version>1.2.5</version>
+</dependency>
+```
+
+
 
 ## 日志相关
 
@@ -212,7 +284,7 @@ log4j.appender.stdout.layout.ConversionPattern=%5p [%t] - %m%n
 
 Mapper映射文件放在maven工程resource下com/daily/mapper也是resource的子目录
 
-1、用文件路径引入
+> 1、用文件路径引入
 
 ```xml
 <mappers>
@@ -222,7 +294,7 @@ Mapper映射文件放在maven工程resource下com/daily/mapper也是resource的�
 </mappers>
 ```
 
-2、用包名引入
+> 2、用包名引入★
 
 这种引入方式相当于批量引入一个包下的所有映射器。此种方式要求xml和接口名称一致？
 
@@ -232,7 +304,7 @@ Mapper映射文件放在maven工程resource下com/daily/mapper也是resource的�
 </mappers>
 ```
 
-3、用类注册引入
+> 3、用类注册引入
 
 ```xml
 <mappers>
@@ -242,7 +314,7 @@ Mapper映射文件放在maven工程resource下com/daily/mapper也是resource的�
 </mappers>
 ```
 
-4、使用URL方式引入
+> 4、使用URL方式引入
 
 ```xml
 <mappers>
@@ -250,7 +322,15 @@ Mapper映射文件放在maven工程resource下com/daily/mapper也是resource的�
 </mappers>
 ```
 
-maven的resource是项目的资源根目录哦！
+一般我喜欢使用`包名引入`。
+
+maven项目下，所有的非`*.java`文件都要放在resources目录下。resources是项目的`资源根目录！`
+
+如：src/main/java目录下的包和类都是以classes为根目录进行发布。resources下的资源也是以classes为根目录。
+
+<img src="../pics/mybatis/maven.png">
+
+
 
 `mybatis` 多对多 是两个一对一组成的哦
 
@@ -264,26 +344,19 @@ maven的resource是项目的资源根目录哦！
 
 <a href="https://github.com/csliujw/MyBatis-Study">项目地址</a>
 
-# `MyBatis`(一)
-
-## 解决的问题
-
-`MyBatis`解决了持久层重复代码多的问题，简化了持久层的开发，减少了持久层的代码量。
-
 ## 简单的CURD
 
 ```java
 package com.bbxx.dao;
 
 import com.bbxx.pojo.UserVO;
-
 import java.util.List;
 
 public interface IUserDao {
 
     // 查询所有
     List<UserVO> findAll();
-
+    
     // 条件查询
     List<UserVO> findCondition(UserVO vo);
 
@@ -367,31 +440,59 @@ public interface IUserDao {
 </mapper>
 ```
 
-## MyBatis的一些用法
+## 参数占位符用法
+
+> #{}等同于占位符？
+
+注意细节。
+
+- 只有一个形式参数时：
+
+```java
+public Employee getXX(Integer id);
+```
+
+```xml
+<select id="getXX" resultType="com.xx.xx.Employee">
+	select * from xxx where id=#{随便写什么} <!-- 建议还是见名知意奥 -->
+</select>
+```
+
+- 有多个形参时：
+
+```java
+public Employee getXX(Integer id, String name);
+```
 
 ```xml
 <!--
+	直接用id，name作为#{}的话，会报错。
 	Caused by: org.apache.ibatis.binding.BindingException:
 	Parameter 'id' not found
 	Available parameters are [0, 1, param1, param2]
 -->
-<!-- public Employee getXX(Integer id, String name) -->
 <select id="getXX" resultType="com.xx.xx.Employee">
 	select * from xxx where id=#{param1} and name=#{param2}
 </select>
-<!-- 
-	要么写#{0} #{1} 要么写#{param1} #{param2} 
-	只有一个形参的话写什么都行#{asf} #{haha}都行
-	原因：只要传入了多个参数；MyBatis会自动的将这些参数封装在一个map中；封装的时候使用的key就是参数的索引和参数的第几个表示
-	Map<String,Object> map = new HashMap<>();
-	map.put("1","传入的值1");
-	map.put("2","传入的值2");
-	如果我们不想这样做，想指定key，那么我们如何指定封装时使用的key？
--->
-
+<!-- 或者是 -->
+<select id="getXX" resultType="com.xx.xx.Employee">
+	select * from xxx where id=#{0} and name=#{1}
+</select>
 ```
 
+> 总结
+
+- 要么写#{0} #{1} 要么写#{param1} #{param2} 
+- 只有一个形参的话写什么都行#{asf} #{haha}都行
+- 原因：只要传入了多个参数；MyBatis会自动的将这些参数封装在一个map中；封装的时候使用的key就是参数的索引和参数的第几个表示
+- Map<String,Object> map = new HashMap<>();
+  	map.put("1","传入的值1");
+  	map.put("2","传入的值2");
+- 如果我们不想这样做，想指定key，那么我们如何指定封装时使用的key？
+
 > 如果我们不想这样做，想指定key，那么我们如何指定封装时使用的key？
+
+- 使用注解`@Param`指定map的key的值！具体看看源码。
 
 ```java
 Employee getXX(@Param("id")Integer id, @Param("enmName")String empName);
@@ -434,7 +535,7 @@ Employee getXX(@Param("id")Integer id, @Param("enmName")String empName);
 
 ​	#{key}就是从这个map取值
 
-3）@Para,为参数指定key；命名参数；我们以后也推荐这么做
+3）@Param,为参数指定key；命名参数；我们以后也推荐这么做
 
 ​	我们可以告诉MyBatis，封装参数map的时候别乱来，使用我们指定的key
 
@@ -480,6 +581,105 @@ ${属性名}：不是参数预编译，而是直接和sql语句进行拼串，�
 ​	eg：id=1 or 1 = 1 and empname=
 
 ​	传入一个1 or 1=1 or
+
+## MyBatis取值源码分析
+
+MapperMethod类
+
+```java
+public Object execute(SqlSession sqlSession, Object[] args) {
+    Object result;
+    switch (command.getType()) {
+        case INSERT: {
+            Object param = method.convertArgsToSqlCommandParam(args);
+            result = rowCountResult(sqlSession.insert(command.getName(), param));
+            break;
+        }
+        case UPDATE: {
+            Object param = method.convertArgsToSqlCommandParam(args);
+            result = rowCountResult(sqlSession.update(command.getName(), param));
+            break;
+        }
+        case DELETE: {
+            Object param = method.convertArgsToSqlCommandParam(args);
+            result = rowCountResult(sqlSession.delete(command.getName(), param));
+            break;
+        }
+        case SELECT:
+            if (method.returnsVoid() && method.hasResultHandler()) {
+                executeWithResultHandler(sqlSession, args);
+                result = null;
+            } else if (method.returnsMany()) {
+                result = executeForMany(sqlSession, args);
+            } else if (method.returnsMap()) {
+                result = executeForMap(sqlSession, args);
+            } else if (method.returnsCursor()) {
+                result = executeForCursor(sqlSession, args);
+            } else {
+                // 我用的 UserVO selectOne(String name);
+                // 转换为SQL参数
+                Object param = method.convertArgsToSqlCommandParam(args);
+                result = sqlSession.selectOne(command.getName(), param);
+            }
+            break;
+        case FLUSH:
+            result = sqlSession.flushStatements();
+            break;
+        default:
+            throw new BindingException("Unknown execution method for: " + command.getName());
+    }
+    if (result == null && method.getReturnType().isPrimitive() && !method.returnsVoid()) {
+        throw new BindingException("Mapper method '" + command.getName() 
+                                   + " attempted to return null from a method with a primitive return type (" + method.getReturnType() + ").");
+    }
+    return result;
+}
+```
+
+继续看method.convertArgsToSqlCommandParam(args);【MapperMethod类中】
+
+```java
+public Object convertArgsToSqlCommandParam(Object[] args) {
+    return paramNameResolver.getNamedParams(args);
+}
+```
+
+点进去，进入了ParamNameResolver类
+
+```java
+public Object getNamedParams(Object[] args) {
+    // names存放的是key-value
+    //			  key的取值是0，1，2的取值
+    //			  value如果没有用注解的话，就是0，1，2的取值，如果用了注解，就是注解中的值。
+    final int paramCount = names.size();
+    if (args == null || paramCount == 0) {
+        return null;
+    } else if (!hasParamAnnotation && paramCount == 1) { // 只有一个参数且没有加注解，则直接返回这个参数的值。
+        return args[names.firstKey()];
+    } else {
+        final Map<String, Object> param = new ParamMap<Object>();
+        int i = 0;
+        for (Map.Entry<Integer, String> entry : names.entrySet()) {
+            param.put(entry.getValue(), args[entry.getKey()]);
+            // add generic param names (param1, param2, ...)
+            // GENERIC_NAME_PREFIX = "param";
+            final String genericParamName = GENERIC_NAME_PREFIX + String.valueOf(i + 1);
+            // ensure not to overwrite parameter named with @Param
+            if (!names.containsValue(genericParamName)) {
+                param.put(genericParamName, args[entry.getKey()]);
+            }
+            i++;
+        }
+        return param;
+    }
+}
+```
+
+
+
+
+
+# `MyBatis`中级篇
 
 ## 查询返回map
 
@@ -1386,3 +1586,179 @@ select * from user where id = #{uid}
 - 注解配置
 - 注解开发
 - 注解动态`SQL`
+
+# MyBatis源码阅读
+
+## MyBatis生成Mapper
+
+测试语句`select * from users where id=4`
+
+方法代码`List<UserVO> findByCondition(UserVO vo);`
+
+- MapperRegister类的getMapper方法
+
+  ```java
+  public <T> T getMapper(Class<T> type, SqlSession sqlSession) {
+      // 从hashmap中看是否有此类型的，有就可以创建，无就抛出异常。
+      final MapperProxyFactory<T> mapperProxyFactory = (MapperProxyFactory<T>) knownMappers.get(type);
+      if (mapperProxyFactory == null) {
+          throw new BindingException("Type " + type + " is not known to the MapperRegistry.");
+      }
+      try {
+          // 通过sqlSession创建代理对象
+          return mapperProxyFactory.newInstance(sqlSession);
+      } catch (Exception e) {
+          throw new BindingException("Error getting mapper instance. Cause: " + e, e);
+      }
+  }
+  ```
+
+- 继续看`mapperProxyFactory.newInstance(sqlSession);` 位于MapperProxyFactory类中
+
+  ```java
+  public T newInstance(SqlSession sqlSession) {
+      final MapperProxy<T> mapperProxy = new MapperProxy<T>(sqlSession, mapperInterface, methodCache);
+      return newInstance(mapperProxy);
+  }
+  ```
+
+- 点进`new MapperProxy<T>(sqlSession, mapperInterface, methodCache)`一看
+
+  ```java
+  public class MapperProxy<T> implements InvocationHandler, Serializable {
+  
+    private static final long serialVersionUID = -6424540398559729838L;
+    private final SqlSession sqlSession;
+    private final Class<T> mapperInterface;
+    private final Map<Method, MapperMethod> methodCache;
+  
+    public MapperProxy(SqlSession sqlSession, Class<T> mapperInterface, Map<Method, MapperMethod> methodCache) {
+      this.sqlSession = sqlSession;
+      this.mapperInterface = mapperInterface;
+      this.methodCache = methodCache;
+    }
+      // 当我们执行代理对象.method的时候会执行到这个方法
+      public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+          try {
+              if (Object.class.equals(method.getDeclaringClass())) {
+                  return method.invoke(this, args);
+              } else if (isDefaultMethod(method)) {
+                  return invokeDefaultMethod(proxy, method, args);
+              }
+          } catch (Throwable t) {
+              throw ExceptionUtil.unwrapThrowable(t);
+          }
+          // 查看缓存有没有，没有就添加，再从缓存中拿数据。
+          final MapperMethod mapperMethod = cachedMapperMethod(method);
+          // 这里 执行的sql语句。
+          return mapperMethod.execute(sqlSession, args);
+      }
+    // ...
+  }
+  ```
+
+- 点击mapperMethod.excute方法一看。(MapperMethod方法中的)
+
+  ```java
+  public Object execute(SqlSession sqlSession, Object[] args) {
+      Object result;
+      switch (command.getType()) {
+          case INSERT: {
+              Object param = method.convertArgsToSqlCommandParam(args);
+              result = rowCountResult(sqlSession.insert(command.getName(), param));
+              break;
+          }
+          case UPDATE: {
+              Object param = method.convertArgsToSqlCommandParam(args);
+              result = rowCountResult(sqlSession.update(command.getName(), param));
+              break;
+          }
+          case DELETE: {
+              Object param = method.convertArgsToSqlCommandParam(args);
+              result = rowCountResult(sqlSession.delete(command.getName(), param));
+              break;
+          }
+          case SELECT:
+              // 方法返回值，结果集处理器。结果可能是单条记录或多条记录。
+              if (method.returnsVoid() && method.hasResultHandler()) {
+                  executeWithResultHandler(sqlSession, args);
+                  result = null;
+              // 判断多条记录是 根据返回值来的？当前sql之能查询到一条数据，
+              // returnsMany=True，应该是按返回值的类型来的。
+              } else if (method.returnsMany()) {
+                  // 执行此方法
+                  result = executeForMany(sqlSession, args);
+              } else if (method.returnsMap()) {
+                  result = executeForMap(sqlSession, args);
+              } else if (method.returnsCursor()) {
+                  result = executeForCursor(sqlSession, args);
+              } else {
+                  Object param = method.convertArgsToSqlCommandParam(args);
+                  result = sqlSession.selectOne(command.getName(), param);
+              }
+              break;
+          case FLUSH:
+              result = sqlSession.flushStatements();
+              break;
+          default:
+              throw new BindingException("Unknown execution method for: " + command.getName());
+      }
+      if (result == null && method.getReturnType().isPrimitive() && !method.returnsVoid()) {
+          throw new BindingException("Mapper method '" + command.getName() 
+                                     + " attempted to return null from a method with a primitive return type (" + method.getReturnType() + ").");
+      }
+      return result;
+  }
+  ```
+
+- 看`executeForMany方法`
+
+  ```java
+  private <E> Object executeForMany(SqlSession sqlSession, Object[] args) {
+      List<E> result;
+      Object param = method.convertArgsToSqlCommandParam(args);
+      if (method.hasRowBounds()) {
+          RowBounds rowBounds = method.extractRowBounds(args);
+          result = sqlSession.<E>selectList(command.getName(), param, rowBounds);
+      } else {
+          result = sqlSession.<E>selectList(command.getName(), param);
+      }
+      // issue #510 Collections & arrays support
+      if (!method.getReturnType().isAssignableFrom(result.getClass())) {
+          if (method.getReturnType().isArray()) {
+              return convertToArray(result);
+          } else {
+              return convertToDeclaredCollection(sqlSession.getConfiguration(), result);
+          }
+      }
+      return result;
+  }
+  ```
+
+- 点进`selectList`方法
+
+  ```java
+  public <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
+      try {
+          // 这段看不懂，没事
+          MappedStatement ms = configuration.getMappedStatement(statement);
+          // 这个是关键
+          return executor.query(ms, wrapCollection(parameter), rowBounds, Executor.NO_RESULT_HANDLER);
+      } catch (Exception e) {
+          throw ExceptionFactory.wrapException("Error querying database.  Cause: " + e, e);
+      } finally {
+          ErrorContext.instance().reset();
+      }
+  }
+  ```
+
+- 点进`query`方法
+
+  ```java
+  public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
+      // 获得解析后的SQL语句
+      BoundSql boundSql = ms.getBoundSql(parameterObject);
+      CacheKey key = createCacheKey(ms, parameterObject, rowBounds, boundSql);
+      return query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
+  }
+  ```

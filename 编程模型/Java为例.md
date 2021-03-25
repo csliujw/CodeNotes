@@ -2,19 +2,15 @@
 
 Java自发布以来一直都在不断的发展，有语法层面的扩展，类库方面的优化，编译器方面的性能优化，这些优化使得我们对某些功能可以有更多的实现 甚至是创造新的编程模型。
 
-断断续续学习Java这么久了，自己也有一些感受。
-
-Java的一些常用类的命名很好，基本上见名知意，源码上的注释也写的很不错，基本可以通过阅读注释知道该方法的使用方法，应用场景。
-
 Java是纯面向对象的语言，这也注定了Java源码的阅读不会轻松，各种设计模式，类与类的各种组合方式，“眼花缭乱”，用或许很简单，但源码的阅读却是艰难的（会用只是起点，了解为什么设计，如何实现才是重点）。
 
-看过一些`JVM`的书，对`JVM`也有所了解，了解的越多，愈发觉得`JVM`强大。`JVM`的编译优化做的很优秀，一些性能差的地方也随着版本的更替越来越快。Java从运行速度慢，到其效率可与`CPP`媲美（得益于`JIT`和程序的局部性原理）尤其是主流的商用虚拟机引入了`JIT`，热点代码直接翻译成机器码，无需中转。【`JIT`默认是启用的，`JVM` 读入.class文件解释后发给`JIT`编译器，然后它将字节码编译成本机机器代码】
+`JVM`的编译优化做的很优秀，一些性能差的地方也随着版本的更替越来越快。Java从运行速度慢，到其效率可与`CPP`媲美（得益于`JIT`和程序的局部性原理）尤其是主流的商用虚拟机引入了`JIT`，热点代码直接翻译成机器码，无需中转。【`JIT`默认是启用的，`JVM` 读入.class文件解释后发给`JIT`编译器，然后它将字节码编译成本机机器代码】
 
 Java生态圈优秀，有很多优秀的工具类，开发人员多，学习资料多，相应的成本也较低。
 
 Java发展的越来越好，也越来越“臃肿”，相同的功能，众多的实现方式，虽然灵活，但是也变相加大了学习的难度和应用难度，有些甚至需要足够理解`JVM`才能知道如何抉择。最初的Java抛弃了`CPP`的很多繁琐的特征，但是随着不断的发展Java也变得越来越繁琐。
 
-Java的`GC`是它的亮点也是痛点。优秀的`CPP`工程师需要懂得硬件知识，优秀的Java工程师需要懂得`JVM`。`JVM`->内存自动管理，调优->懂得`JVM`，懂得`JVM`->看`JVM`设计，`JVM`设计->看`HotSpot`源码。【优秀的Java工程师也需要熟悉`CPP`】
+Java的`GC`是它的亮点也是痛点。
 
 ----
 
@@ -79,14 +75,14 @@ public static String XX(String path) throws IOException {
 
 **<span style="color:green">泛型命名规则</span>**
 
-- E：Element (used extensively by the Java Collections Framework)
-- K：Key
-- N：Number
-- T：Type
-- V：Value
-- S，U，V：etc. -2nd, 3rd, 4th types
-- R：Result
-- A：Accumulator
+- `E：Element` (used extensively by the Java Collections Framework)
+- `K：Key`
+- `N：Number`
+- `T：Type`
+- `V：Value`
+- `S，U，V：etc. -2nd, 3rd, 4th types`
+- `R：Result`
+- `A：Accumulator`
 
 ```java
 package org.example.video.generic;
