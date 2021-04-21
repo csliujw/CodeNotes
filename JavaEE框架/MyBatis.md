@@ -442,7 +442,7 @@ public interface IUserDao {
 
 ## 参数占位符用法
 
-> #{}等同于占位符？
+> #{}等同于占位符"?"
 
 注意细节。
 
@@ -487,7 +487,7 @@ public Employee getXX(Integer id, String name);
 - 原因：只要传入了多个参数；MyBatis会自动的将这些参数封装在一个map中；封装的时候使用的key就是参数的索引和参数的第几个表示
 - Map<String,Object> map = new HashMap<>();
   	map.put("1","传入的值1");
-  	map.put("2","传入的值2");
+    	map.put("2","传入的值2");
 - 如果我们不想这样做，想指定key，那么我们如何指定封装时使用的key？
 
 > 如果我们不想这样做，想指定key，那么我们如何指定封装时使用的key？

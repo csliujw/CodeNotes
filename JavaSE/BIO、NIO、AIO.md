@@ -74,9 +74,9 @@ Java AIO(NIO.2) ： 异步 异步非阻塞，服务器实现模式为一个有�
 
 ## 3.3 传统的BIO编程实例回顾
 
- 网络编程的基本模型是Client/Server模型，也就是两个进程之间进行相互通信，其中服务端提供位置信（绑定IP地址和端口），客户端通过连接操作向服务端监听的端口地址发起连接请求，基于TCP协议下进行三次握手连接，连接成功后，双方通过网络套接字（Socket）进行通信。
+网络编程的基本模型是Client/Server模型，也就是两个进程之间进行相互通信，其中服务端提供位置信（绑定IP地址和端口），客户端通过连接操作向服务端监听的端口地址发起连接请求，基于TCP协议下进行三次握手连接，连接成功后，双方通过网络套接字（Socket）进行通信。
 
- 传统的同步阻塞模型开发中，服务端ServerSocket负责绑定IP地址，启动监听端口；客户端Socket负责发起连接操作。连接成功后，双方通过输入和输出流进行同步阻塞式通信。 基于BIO模式下的通信，客户端 - 服务端是完全同步，完全耦合的。
+传统的同步阻塞模型开发中，服务端ServerSocket负责绑定IP地址，启动监听端口；客户端Socket负责发起连接操作。连接成功后，双方通过输入和输出流进行同步阻塞式通信。 基于BIO模式下的通信，客户端 - 服务端是完全同步，完全耦合的。
 
 ### 客户端案例如下
 
@@ -232,8 +232,6 @@ import java.net.Socket;
  */
 public class ServerDemo {
     public static void main(String[] args) throws Exception {
-        String s = "886";
-        System.out.println("886".equals(s));
         System.out.println("==服务器的启动==");
         //（1）注册端口
         ServerSocket serverSocket = new ServerSocket(8888);
@@ -248,6 +246,8 @@ public class ServerDemo {
         while((line = br.readLine())!=null){
             System.out.println("服务端收到："+line);
         }
+        bufferedReader.close();
+        inputStream.close();
     }
 }
 ```
@@ -270,12 +270,9 @@ public class ServerDemo {
 ```java
 /**
     目标: Socket网络编程。
-
     功能1：客户端可以反复发，一个服务端可以接收无数个客户端的消息！！
-
     小结：
          服务器如果想要接收多个客户端，那么必须引入线程，一个客户端一个线程处理！！
-
  */
 public class ClientDemo {
     public static void main(String[] args) throws Exception {
@@ -301,44 +298,60 @@ public class ClientDemo {
 ### 服务端案例代码如下
 
 ```java
-/**
-    服务端
- */
-public class ServerDemo {
-    public static void main(String[] args) throws Exception {
-        System.out.println("==服务器的启动==");
-        // （1）注册端口
-        ServerSocket serverSocket = new ServerSocket(7777);
-        while(true){
-            //（2）开始在这里暂停等待接收客户端的连接,得到一个端到端的Socket管道
-            Socket socket = serverSocket.accept();
-            new ServerReadThread(socket).start();
-            System.out.println(socket.getRemoteSocketAddress()+"上线了！");
+package io.v4;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+// 服务器端 因为只一次accept 只接受到了一个客户端的请求，所以只能接受到一个客户端的消息。
+// 我们为每个客户端创建一个线程，就可以一个服务器 连接多个客户端了！
+public class BIOServer {
+    public static void main(String[] args) throws IOException {
+        System.out.println("========服务端启动========");
+        // 1. 定义一个ServerSocket对象进行服务器的端口注册
+        ServerSocket serverSocket = new ServerSocket(9999);
+        while (true) {
+            // 2. 开始在这里暂停等待接收客户端的连接,得到一个端到端的Socket管道
+            Socket accept = serverSocket.accept();
+            new Thread(new DealClient(accept)).start();
         }
     }
 }
 
-class ServerReadThread extends Thread{
-    private Socket socket;
+class DealClient implements Runnable {
+    private Socket socket = null;
 
-    public ServerReadThread(Socket socket){
+    public DealClient(Socket socket) {
         this.socket = socket;
     }
 
     @Override
     public void run() {
-        try{
-            //（3）从Socket管道中得到一个字节输入流。
-            InputStream is = socket.getInputStream();
-            //（4）把字节输入流包装成自己需要的流进行数据的读取。
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
-            //（5）读取数据
-            String line ;
-            while((line = br.readLine())!=null){
-                System.out.println("服务端收到："+socket.getRemoteSocketAddress()+":"+line);
+        InputStream inputStream = null;
+        BufferedReader bufferedReader = null;
+        try {
+            // 3. 从Socket管道中得到一个字节输入流。
+            inputStream = socket.getInputStream();
+            // 4. 把字节输入流包装成自己需要的流进行数据的读取。
+            bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            // 5. 读取数据
+            String msg = "";
+            while ((msg = bufferedReader.readLine()) != null) {
+                System.out.println("服务器端接收到：" + socket.getRemoteSocketAddress() + ":\t" + msg);
             }
-        }catch (Exception e){
-            System.out.println(socket.getRemoteSocketAddress()+"下线了！");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                bufferedReader.close();
+                inputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
@@ -370,108 +383,119 @@ class ServerReadThread extends Thread{
 ### 客户端源码分析
 
 ```java
+package io.v5;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.net.Socket;
+import java.util.Scanner;
+
+// 客户端 启动多个客户端 给通过一个服务器发送消息
 public class Client {
-   public static void main(String[] args) {
-      try {
-         // 1.简历一个与服务端的Socket对象：套接字
-         Socket socket = new Socket("127.0.0.1", 9999);
-         // 2.从socket管道中获取一个输出流，写数据给服务端 
-         OutputStream os = socket.getOutputStream() ;
-         // 3.把输出流包装成一个打印流 
-         PrintWriter pw = new PrintWriter(os);
-         // 4.反复接收用户的输入 
-         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-         String line = null ;
-         while((line = br.readLine()) != null){
-            pw.println(line);
-            pw.flush();
-         }
-      } catch (Exception e) {
-         e.printStackTrace();
-      }
-   }
-}
-```
-
-### 线程池处理类
-
-```java
-// 线程池处理类
-public class HandlerSocketThreadPool {
-   
-   // 线程池 
-   private ExecutorService executor;
-   
-   public HandlerSocketThreadPool(int maxPoolSize, int queueSize){
-      
-      this.executor = new ThreadPoolExecutor(
-            3, // 8
-            maxPoolSize,  
-            120L, 
-            TimeUnit.SECONDS,
-            new ArrayBlockingQueue<Runnable>(queueSize) );
-   }
-   
-   public void execute(Runnable task){
-      this.executor.execute(task);
-   }
+    public static void main(String[] args) throws IOException {
+        // 1.建立一个与服务端的Socket对象：套接字
+        Socket socket = new Socket("127.0.0.1", 8888);
+        // 2.从socket管道中获取一个输出流，写数据给服务端
+        OutputStream outputStream = socket.getOutputStream();
+        // 3.把输出流包装成一个打印流 
+        PrintStream printStream = new PrintStream(outputStream);
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.println("please input:");
+            String msg = scanner.nextLine();
+            printStream.println(msg);
+            printStream.flush();
+        }
+    }
 }
 ```
 
 ### 服务端源码分析
 
 ```java
+package io.v5;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 实现伪异步通信架构
+ */
 public class Server {
-   public static void main(String[] args) {
-      try {
-         System.out.println("----------服务端启动成功------------");
-         ServerSocket ss = new ServerSocket(9999);
-
-         // 一个服务端只需要对应一个线程池
-         HandlerSocketThreadPool handlerSocketThreadPool =
-               new HandlerSocketThreadPool(3, 1000);
-
-         // 客户端可能有很多个
-         while(true){
-            Socket socket = ss.accept() ; // 阻塞式的！
-            System.out.println("有人上线了！！");
-            // 每次收到一个客户端的socket请求，都需要为这个客户端分配一个
-            // 独立的线程 专门负责对这个客户端的通信！！
-            handlerSocketThreadPool.execute(new ReaderClientRunnable(socket));
-         }
-
-      } catch (Exception e) {
-         e.printStackTrace();
-      }
-   }
-
+    public static void main(String[] args) throws IOException {
+        // 1、注册端口
+        ServerSocket serverSocket = new ServerSocket(8888);
+        // 把socket对象包装成一个任务，交给线程池进行处理。
+        HandlerSocketServerPool handlerSocketServerPool = new HandlerSocketServerPool(6, 10);
+        // 初始化一个线程池对象
+        while (true) {
+            // 2、定义一个循环接收客户端的Socket链接请求
+            Socket accept = serverSocket.accept();
+            // 3、把socket封装成任务对象，交由线程池处理
+            ServerRunnableTarget serverRunnableTarget = new ServerRunnableTarget(accept);
+            // 线程池一旦有空闲的线程，就会执行。
+            handlerSocketServerPool.execute(serverRunnableTarget);
+        }
+    }
 }
-class ReaderClientRunnable implements Runnable{
 
-   private Socket socket ;
+class HandlerSocketServerPool {
+    // 1、创建一个线程池的成员变量用于存储一个线程池对象。
+    private ExecutorService executorService;
 
-   public ReaderClientRunnable(Socket socket) {
-      this.socket = socket;
-   }
+    /**
+     * public ThreadPoolExecutor(int corePoolSize, 核心线程的数目
+     * int maximumPoolSize, 最大线程数量
+     * long keepAliveTime,    线程的空闲时间
+     * TimeUnit unit, 空闲时间的时间单位
+     * BlockingQueue<Runnable> workQueue) { 任务队列
+     *
+     * @param maxThreadNumber
+     * @param taskQueueSize
+     */
+    public HandlerSocketServerPool(int maxThreadNumber, int taskQueueSize) {
+        // 最多三个线程。
+        // 阻塞队列的最大数目为 taskQueueSize
+        executorService = new ThreadPoolExecutor(3, maxThreadNumber,
+                120, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<Runnable>(taskQueueSize));
+    }
 
-   @Override
-   public void run() {
-      try {
-         // 读取一行数据
-         InputStream is = socket.getInputStream() ;
-         // 转成一个缓冲字符流
-         Reader fr = new InputStreamReader(is);
-         BufferedReader br = new BufferedReader(fr);
-         // 一行一行的读取数据
-         String line = null ;
-         while((line = br.readLine())!=null){ // 阻塞式的！！
-            System.out.println("服务端收到了数据："+line);
-         }
-      } catch (Exception e) {
-         System.out.println("有人下线了");
-      }
+    public void execute(Runnable target) {
+        executorService.execute(target);
+    }
+}
 
-   }
+class ServerRunnableTarget implements Runnable {
+    private Socket socket;
+
+    public ServerRunnableTarget(Socket socket) {
+        this.socket = socket;
+    }
+
+    @Override
+    public void run() {
+        // 处理接收到的客户端Socket通信需求
+        try {
+            InputStream inputStream = socket.getInputStream();
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            String msg;
+            while ((msg = bufferedReader.readLine()) != null) {
+                System.out.println("服务端接收到：" + msg);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
 ```
 
@@ -489,37 +513,33 @@ class ReaderClientRunnable implements Runnable{
 ### 客户端开发
 
 ```java
-package com.itheima.file;
+package io.bio.v6;
 
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.net.Socket;
 
 /**
-    目标：实现客户端上传任意类型的文件数据给服务端保存起来。
-
+ * 实现任意文件的上传
  */
 public class Client {
     public static void main(String[] args) {
-        try(
-                InputStream is = new FileInputStream("C:\\Users\\dlei\\Desktop\\BIO,NIO,AIO\\文件\\java.png");
-        ){
-            //  1、请求与服务端的Socket链接
-            Socket socket = new Socket("127.0.0.1" , 8888);
-            //  2、把字节输出流包装成一个数据输出流
-            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-            //  3、先发送上传文件的后缀给服务端
-            dos.writeUTF(".png");
-            //  4、把文件数据发送给服务端进行接收
+        try {
+            // 1. 请求与服务端的socket连接
+            Socket socket = new Socket("127.0.0.1", 9999);
+            DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+            dataOutputStream.writeUTF(".pdf");
+            FileInputStream inputStream = new FileInputStream("D:\\file.pdf");
             byte[] buffer = new byte[1024];
             int len;
-            while((len = is.read(buffer)) > 0 ){
-                dos.write(buffer , 0 , len);
+            while ((len = inputStream.read(buffer)) != -1) {
+                dataOutputStream.write(buffer, 0, len);
             }
-            dos.flush();
-            Thread.sleep(10000);
-        }catch (Exception e){
+            dataOutputStream.flush();
+            // 流正常关闭就行，不必非得shutdownOutput()
+            socket.shutdownOutput();
+            dataOutputStream.close();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -529,63 +549,33 @@ public class Client {
 ### 服务端开发
 
 ```java
-package com.itheima.file;
+package io.bio.v6;
 
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-/**
-    目标：服务端开发，可以实现接收客户端的任意类型文件，并保存到服务端磁盘。
- */
 public class Server {
-    public static void main(String[] args) {
-        try{
-            ServerSocket ss = new ServerSocket(8888);
-            while (true){
-                Socket socket = ss.accept();
-                // 交给一个独立的线程来处理与这个客户端的文件通信需求。
-                new ServerReaderThread(socket).start();
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-}
-package com.itheima.file;
+    public static void main(String[] args) throws IOException {
+        ServerSocket serverSocket = new ServerSocket(9999);
+        while (true) {
+            Socket accept = serverSocket.accept();
+            new Thread(() -> {
+                try {
+                    DataInputStream dataInputStream = new DataInputStream(accept.getInputStream());
+                    String suffix = dataInputStream.readUTF();
+                    FileOutputStream fileOutputStream = new FileOutputStream("D:\\demo" + suffix);
+                    byte[] buffer = new byte[1024];
+                    int len = 0;
+                    while ((len = dataInputStream.read(buffer)) != -1) {
+                        fileOutputStream.write(buffer, 0, len);
+                    }
+                    fileOutputStream.close();
+                    dataInputStream.close();
+                } catch (Exception e) {
 
-import java.io.DataInputStream;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.util.UUID;
-
-public class ServerReaderThread extends Thread {
-    private Socket socket;
-    public ServerReaderThread(Socket socket){
-        this.socket = socket;
-    }
-    @Override
-    public void run() {
-        try{
-            // 1、得到一个数据输入流读取客户端发送过来的数据
-            DataInputStream dis = new DataInputStream(socket.getInputStream());
-            // 2、读取客户端发送过来的文件类型
-            String suffix = dis.readUTF();
-            System.out.println("服务端已经成功接收到了文件类型：" + suffix);
-            // 3、定义一个字节输出管道负责把客户端发来的文件数据写出去
-            OutputStream os = new FileOutputStream("C:\\Users\\dlei\\Desktop\\BIO,NIO,AIO\\文件\\server\\"+
-                    UUID.randomUUID().toString()+suffix);
-            // 4、从数据输入流中读取文件数据，写出到字节输出流中去
-            byte[] buffer = new byte[1024];
-            int len;
-            while((len = dis.read(buffer)) > 0){
-                os.write(buffer,0, len);
-            }
-            os.close();
-            System.out.println("服务端接收文件保存成功！");
-
-        }catch (Exception e){
-            e.printStackTrace();
+                }
+            }).start();
         }
     }
 }
