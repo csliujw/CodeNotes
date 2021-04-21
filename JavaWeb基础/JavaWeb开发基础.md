@@ -309,14 +309,14 @@ Java定制规范，提供接口，其他厂商根据规范和接口进行实际�
 </servlet-mapping>
 ```
 
-## 3.2 `Servlet`执行原理
+## 3.2 Servlet执行原理
 
-- 当服务器接受到客户端浏览器的请求后，会解析请求URL路径，获取访问的Servlet的资源路径
+- 当服务器接受到客户端浏览器的请求后，会解析请求URL路径，获取访问的`Servlet`的资源路径
 - 查找`web.xml`文件，是否有对应的<url-pattern>标签体内容。
 - 如果有，则在找到对应的<servlet-class>全类名
 - tomcat会将==字节码文件==加载进内存，并且创建其对象
 - 调用其方法
-  - **servlet** 的service方法是一定会调用的，
+  - `servlet`的`service`方法是一定会调用的，
 
 ## 3.3 Servlet生命周期方法
 
@@ -335,7 +335,7 @@ Java定制规范，提供接口，其他厂商根据规范和接口进行实际�
     <load-on-startup>的值为0或正整数
     ```
 
-- Servlet的init方法，只执行一次，说明一个Servlet在内存中只存在一个对象，Servlet是单例的
+- 初始化：init方法，只执行一次，说明一个Servlet在内存中只存在一个对象，Servlet是单例的
   - 多个用户同时访问时，可能存在线程安全问题。
   - 解决：尽量不要在Servlet中定义成员变量。即使定义了成员变量，也不要对修改值
 
@@ -353,8 +353,8 @@ Java定制规范，提供接口，其他厂商根据规范和接口进行实际�
 
 ## 3.4 Servlet3.0
 
-* 好处：
-	
+> 优点：
+
 * 支持注解配置。可以不需要web.xml了。
 	
 * 步骤：
@@ -406,7 +406,7 @@ public @interface WebServlet {
 - IDEA会为每一个tomcat部署的项目单独建立一份配置文件
 - 工作空间项目和tomcat部署的web项目
   - tomcat真正访问的是“tomcat部署的web项目”，"tomcat部署的web项目"对应着"工作空间项目" 的web目录下的所有资源
-  - WEB-INF目录下的资源不能被浏览器直接访问。
+  - `WEB-INF目录下的资源不能被浏览器直接访问。`
 - **WEB-INF目录下的资源不能被浏览器直接访问。**
 
 ## 3.5 Servlet继承关系
@@ -421,8 +421,8 @@ public @interface WebServlet {
 - GenericServlet：将Servlet接口中其他的方法做了默认空实现，只将service()方法作为抽象
   - 将来定义Servlet类时，可以继承GenericServlet，实现service()方法即可
 - HttpServlet：对http协议的一种封装，简化操作
-  - 定义类继承HttpServlet
-  - 复写doGet/doPost方法
+  - 定义类，类继承于HttpServlet
+  - 覆写doGet/doPost方法
 
 ### 3.5.2 Servlet相关配置
 
@@ -430,7 +430,7 @@ public @interface WebServlet {
 
 - 一个Servlet可以定义多个访问路径 ： 
   
-- `@WebServlet({"/d4","/dd4","/ddd4"})`
+- `@WebServlet(urlPatterns={"/d4","/dd4","/ddd4"})`
   
 - 路径定义规则：
   - /xxx：路径匹配
@@ -550,20 +550,20 @@ public class Servlet3 extends HttpServlet {
 ----
 
 request对象继承体系结构：	
-	ServletRequest		--	接口
+	`ServletRequest`		--	接口
 		|	继承
-	HttpServletRequest	-- 接口
+	`HttpServletRequest`	-- 接口
 		|	实现
-	org.apache.catalina.connector.RequestFacade 类(tomcat)
+	`org.apache.catalina.connector.RequestFacade` 类(tomcat)
 
 ----
 
 response对象继承体系结构：	
-	ServletRequest		--	接口
+	`ServletRequest`		--	接口
 		|	继承
-	HttpServletResponse   -- 接口
+	`HttpServletResponse`   -- 接口
 		|	实现
-	org.apache.catalina.connector.ResponseFacade类(tomcat)
+	`org.apache.catalina.connector.ResponseFacade` 类(tomcat)
 
 ----
 
@@ -579,43 +579,47 @@ response对象继承体系结构：
 
 ### 4.2.1 获取请求消息数据
 
-- **获取请求行数据**
+> 获取请求行数据
+
 - GET /day14/demo1?name=zhangsan HTTP/1.1
 
 - **方法**
-  - 获取请求方式 ：`String getMethod()  ` == GET
+  - 获取请求方式 ：`String getMethod()  ` ==> GET
   - 获取虚拟目录：`String getContextPath()`==> /day14
   - 获取Servlet路径: `String getServletPath()`==> /demo1
   - 获取get方式请求参数：`String getQueryString()`==> name=zhangsan
   - 获取请求URI：/day14/demo1
     - `String getRequestURI():`	/day14/demo1	
     - `StringBuffer getRequestURL()`  :http://localhost/day14/demo1
-  - URL：统一资源定位符 ： http://localhost/day14/demo1
-  - URI：统一资源标识符 : /day14/demo1	
-  - 获取协议及版本：`String getProtocol()`==HTTP/1.1
+  - URL：统一资源定位符 [ 不单单定义资源，还定义了如何找资源] ： http://localhost/day14/demo1
+  - URI：统一资源标识符 [ 定位资源  ] : /day14/demo1	
+  - 获取协议及版本：`String getProtocol()`==>HTTP/1.1
   - 获取客户机的IP地址：`String getRemoteAddr()`
 
 ----
 
-- **获取请求头数据:**
+> 获取请求头数据
+
 - 方法:
-  - `String getHeader(String name):`通过请求头的名称获取请求头的值
-  - `Enumeration<String> getHeaderNames():`获取所有的请求头名称
+  - `String getHeader(String name):`  通过请求头的名称获取请求头的值
+  - `Enumeration<String> getHeaderNames():`  获取所有的请求头名称
 
 ----
 
-- **获取请求体数据:**
-  - 请求体：只有POST请求方式，才有请求体，在请求体中封装了POST请求的请求参数
-  - `BufferedReader getReader()：`获取字符输入流，只能操作字符数据
-  - `ServletInputStream getInputStream()：`获取字节输入流，可以操作所有类型数据
+> 获取请求体数据
+
+- 请求体：只有POST请求方式，才有请求体，在请求体中封装了POST请求的请求参数
+- `BufferedReader getReader()：`获取字符输入流，只能操作字符数据
+- `ServletInputStream getInputStream()：`获取字节输入流，可以操作所有类型数据
 
 ----
 
-- **其他功能：**
-  - `String getParameter(String name):`根据参数名称获取参数值    
-  - `String[] getParameterValues(String name):`根据参数名称获取参数值的数组  hobby=xx&hobby=game【复选框】
-  - Enumeration<String> getParameterNames():获取所有请求的参数名称.
-  - Map<String,String[]> getParameterMap():获取所有参数的map集合.
+> 其他功能
+
+- `String getParameter(String name):`  根据参数名称获取参数值    
+- `String[] getParameterValues(String name):`  根据参数名称获取参数值的数组  hobby=xx&hobby=game【复选框】
+- `Enumeration<String> getParameterNames():`  获取所有请求的参数名称.
+- `Map<String,String[]> getParameterMap():`  获取所有参数的map集合.
 
 ----
 
@@ -630,9 +634,7 @@ response对象继承体系结构：
   - 只能转发到当前服务器内部资源中。
   - 转发是一次请求
 
-**转发地址的写法！**
-
-> **request.getRequestDispatcher("/requestDemo9").forward(request,response);**
+**转发地址的写法！**：`request.getRequestDispatcher("/requestDemo9").forward(request,response);`
 
 ### 4.2.3 共享数据
 
@@ -666,7 +668,24 @@ ServletInputStream is = request.getInputStream();
 
 - get方式：tomcat 8 已经将get方式乱码问题解决了
 - post方式：会乱码
+  
   - 解决：在获取参数前，设置request的编码`request.setCharacterEncoding("utf-8");`
+  
+      ```java
+      /**
+           * Overrides the name of the character encoding used in the body of this
+           * request. This method must be called prior to reading request parameters
+           * or reading input using getReader(). Otherwise, it has no effect.
+           * 
+           * @param env <code>String</code> containing the name of
+           * the character encoding.
+           *
+           * @throws UnsupportedEncodingException if this ServletRequest is still
+           * in a state where a character encoding may be set,
+           * but the specified encoding is invalid
+           */
+      public void setCharacterEncoding(String env) throws UnsupportedEncodingException;
+      ```
 
 ## 4.4 表单路径写法
 
@@ -759,7 +778,7 @@ response.sendRedirect("/blog/xx.do")
 
 - 规则：找到当前资源和目标资源之间的相对位置关系
 
-  - **./：当前目录**
+  - ./：当前目录
 
     ```html
     当前资源：http://localhost:8080/day15/location.html
@@ -771,7 +790,7 @@ response.sendRedirect("/blog/xx.do")
     ./可以省略
     ```
 
-  - **../:后退一级目录**
+  - ../:后退一级目录
 
 - **绝对路径：通过绝对路径可以确定唯一资源**
 
@@ -794,7 +813,7 @@ response.sendRedirect("/blog/xx.do")
 
 ### 4.6.7 Response输出
 
-> **response获取地流在一次响应后会自动关闭流，销毁对象。**
+==response获取地流在一次响应后会自动关闭流，销毁对象。==
 
 > response输出流不刷新也可以把数据写出到浏览器
 
@@ -802,19 +821,23 @@ response.sendRedirect("/blog/xx.do")
 
 response流是我们获取出来的，不是new出来的。如果是new出来的，编码是和当前操作系统一致的。但是现在的流是tomcat提供的，和tomcat中配置的编码是一样的。tomcat默认是IOS-8859-1。
 
-在获取流对象之前设置编码，让流以这个编码进行。
-
-> **response.setCharacterEncoding("utf-8");**
-
-告诉浏览器，服务器发送的消息体数据的编码，建议浏览器使用该编码进行解码。【这个建议了，浏览器就会照做】
-
+```java
+// 在获取流对象之前设置编码，让流以这个编码进行。即设置缓冲区编码为UTF-8编码形式
+response.setCharacterEncoding("utf-8");
+// 告诉浏览器，服务器发送的消息体数据的编码，建议浏览器使用该编码进行解码。【这个建议了，浏览器就会照做】
 response.setHeader("content-type","text/html;character=utf-8");
+// 其实写了上面那句，就不用写response.setCharacterEncoding("utf-8");了
+```
 
-其实写了上面那句，就不用写response.setCharacterEncoding("utf-8");了。
+----
 
-简单的形式，设置编码，是在获取流之前设置
+简单设置编码的写法，是在获取流之前设置
 
-**response.setContentType("text/html;charset=utf-8");**
+```java
+response.setContentType("text/html;charset=utf-8");
+```
+
+> 最终的解决乱码的方式
 
 ```java
 // 解决乱码的代码
@@ -824,7 +847,7 @@ response.getWriter().write("你好");
 
 ----
 
-# 五、ServletContext对象
+# 五、`ServletContext`对象
 
 > **代表整个web应用，可以和程序的容器(服务器)来通信**
 
@@ -889,8 +912,6 @@ public class DownLoadUtils {
     }
 }
 
-
-
 @WebServlet("/downloadServlet")
 public class DownloadServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -923,17 +944,13 @@ public class DownloadServlet extends HttpServlet {
         while((len = fis.read(buff)) != -1){
             sos.write(buff,0,len);
         }
-
         fis.close();
-
-
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         this.doPost(request,response);
     }
 }
-
 ```
 
 ### 5.3.1 中文乱码解决思路
@@ -962,15 +979,13 @@ public class DownLoadUtils {
 }
 ```
 
-
-
 ----
 
 # 六、Cookie&Session
 
 ## 6.1 会话技术
 
-> **会话：一次会话中包含多次请求和响应。**
+==会话：一次会话中包含多次请求和响应。==
 
 > 一次会话：浏览器第一次给服务器资源发送请求，会话建立，直到有一方断开【浏览器关闭了，服务器关掉了】为止
 
@@ -980,7 +995,7 @@ public class DownLoadUtils {
 
 ## 6.2 会话跟踪
 
-> **在用户访问的一个会话内，web服务器保存客户的学校，称为会话跟踪。**
+==在用户访问的一个会话内，web服务器保存客户的信息，称为会话跟踪。==
 
 ## 6.3 会话跟踪方式
 
@@ -1021,31 +1036,65 @@ public class DownLoadUtils {
 
 ### 6.4.3 Cookie细节
 
-> **高版本tomcat的cookie不能有空格**
+> 高版本tomcat的cookie不能有空格
 
 - 一次可不可以发送多个cookie?
   - 可以
-- **cookie能不能存中文？**
-  - 在tomcat 8 之前 cookie中不能直接存储中文数据。
-    - 需要将中文数据转码---一般采用URL编码(%E3)
-  - 在tomcat 8 之后，cookie支持中文数据。特殊字符还是不支持，建议使用URL编码存储，URL解码解析
 
-- **cookie共享问题？**
-  - 假设在一个tomcat服务器中，部署了多个web项目，那么在这些web项目中cookie能不能共享？
-    - 默认情况下cookie不能共享
-  - setPath(String path):设置cookie的获取范围。默认情况下，设置当前的虚拟目录
-    - 如果要共享，则可以将path设置为"/"
-    - setPath("/") //当前服务器的根目录
-    - setPath("/day") //day项目才可以访问
-- **不同的tomcat服务器间cookie共享问题？**
-  - setDomain(String path):如果设置一级域名相同，那么多个服务器之间cookie可以共享
-  -  setDomain(".baidu.com"),那么tieba.baidu.com和news.baidu.com中cookie可以共
-    - .baidu.com是一级域名
-    - tieba是二级域名
+>cookie能不能存中文？
+
+- 在tomcat 8 之前 cookie中不能直接存储中文数据。
+  - 需要将中文数据转码---一般采用URL编码(%E3)
+- 在tomcat 8 之后，cookie支持中文数据。特殊字符还是不支持，建议使用URL编码存储，URL解码解析
+
+> cookie共享问题？
+
+- 假设在一个tomcat服务器中，部署了多个web项目，那么在这些web项目中cookie能不能共享？
+  - 默认情况下cookie不能共享
+- setPath(String path):设置cookie的获取范围。默认情况下，设置当前的虚拟目录
+  - 如果要共享，则可以将path设置为"/"
+  - setPath("/") //当前服务器的根目录
+  - setPath("/day") //day项目才可以访问
+
+> 不同的tomcat服务器间cookie共享问题？
+
+```java
+/**
+     *
+     * Specifies the domain within which this cookie should be presented.
+     *
+     * <p>The form of the domain name is specified by RFC 2109. A domain
+     * name begins with a dot (<code>.foo.com</code>) and means that
+     * the cookie is visible to servers in a specified Domain Name System
+     * (DNS) zone (for example, <code>www.foo.com</code>, but not 
+     * <code>a.b.foo.com</code>). By default, cookies are only returned
+     * to the server that sent them.
+     *
+     * @param domain the domain name within which this cookie is visible;
+     * form is according to RFC 2109
+     *
+     * @see #getDomain
+     */
+public void setDomain(String domain) {
+    this.domain = domain.toLowerCase(Locale.ENGLISH); // IE allegedly needs this
+}
+```
+
+- setDomain(String path):如果设置域名相同，那么多个服务器之间cookie可以共享
+-  setDomain(".baidu.com"),那么tieba.baidu.com和news.baidu.com中cookie可以共享 【`这里应该是设置的一级二级域名相同，则可共享cookie`】
+  - .baidu.com是一级域名 【`此处应该是com是一级域名，baidu是二级域名`】
+  - tieba是二级域名 【`tieba和news是三级域名`】
+
+- 域名的划分
+    - mail.cctv.com
+    - com是顶级域名
+    - cctv是二域名
+    - mail是三级域名
+    - 所有培训机构的域名说法是错误的。【参考教材：谢希仁《计算机网络》（第六版）】
 
 ## 6.5 Session
 
-> 服务器端会话技术，在一次会话的多次请求间共享数据，将数据保存在服务器端的对象中。HttpSession.
+> 服务器端会话技术，在一次会话的多次请求间共享数据，将数据保存在服务器端的对象中。HttpSession。
 
 ### 6.5.1 Session快速入门
 
@@ -1088,7 +1137,7 @@ public class DownLoadUtils {
 
   - session对象调用invalidate() 
 
-  - session默认失效时间 30分钟【tomcat的web.xml配置文件中】
+  - session默认失效时间 30分钟【tomcat的`web.xml`配置文件中】
 
     ```xml
     <session-config>
@@ -1106,6 +1155,31 @@ public class DownLoadUtils {
   - session存储数据在服务器端，Cookie在客户端
   - session没有数据大小限制，Cookie有
   - session数据安全，Cookie相对于不安全
+
+```java
+就servlet规范本身，servlet可以再三个不同的作用域存储数据，分别是：
+Request对象、Session对象和getServletContext（）方法返回的servletContext对象中保存。以下是本人对他们之间区别的分析：
+
+1 首先从作用范围来说
+    Request       保存的键值仅在下一个request对象中可以得到。
+    Session        它是一个会话范围，相当于一个局部变量，从Session第一次创建知道关闭，数据都一直 保存，每一个客户都有一个Session，所以它可以被客户一直访问，只要Session没有关闭和超时即浏览器关闭。
+    servletContext    它代表了servlet环境的上下文，相当于一个全局变量，即只要某个web应用在启动中，这个对象就一直都有效的存在，所以它的范围是最大的，存储的数据可以被所有用户使用，只要服务器不关闭，数据就会一直都存在。
+
+
+2 它们的优缺点：
+request：
+好处：用完就仍，不会导致资源占用的无限增长。
+弊处：数据只能被下一个对象获取，所以在写程序时会因为无法共享数据导致每次要用都从数据库中取，多做操作，自然会对性能有一些影响。
+    
+session：
+好处：是一个局部变量，可以保存用户的信息并直接取出，不用每次都去数据库抓，少做操作，极大的方便了程序的编写。
+弊处：每个客户都有一个session，只能自己使用，不同session可能保存大量重复数据； 可能耗费大量服务器内存； 另外session构建在cookie和url重写的基础上，所以用session实现会话跟踪，会用掉一点点服务器带宽和客户端保持联络， 当然session越多，耗费的带宽越多，理论上也会对性能造成影响。 集群的session同步会是个问题。
+
+servletContext：
+好处：不用每次都去数据库抓，少做操作。 存储的数据所有客户都可以用。 可减少重复在内存中存储数据造成的开销
+```
+
+
 
 ----
 
@@ -1667,33 +1741,32 @@ public class Listener implements ServletContextListener {
 
 ## 10.1 Ajax
 
-> **概念：Asynchronous JavaScript And XML 异步的JavaScript和xml。**【这里说的同步异步与线程关系不大】
+> 概念：Asynchronous JavaScript And XML 异步的JavaScript和xml。【这里说的同步异步与线程关系不大】
 
 ----
 
-### 10.1.1 原生JS实现
+### 10.1.1 原生JavaScript实现
 
-- 原生JS实现方式==快速入门==
+- 原生JavaScript实现方式==快速入门==
 
 ```html
 <script>
     var button = document.getElementById("ss");
     button.onclick = function() {
         console.log(123)
-        // 发送异步请求
-        // 1.创建核心对象
+        // 发送异步请求 考虑了浏览器兼容 1.创建核心对象
         var xmlhttp;
         if (window.XMLHttpRequest) {
             xmlhttp = new XMLHttpRequest();
         } else {
-            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP"); // IE的ajax用法
         }
         // 2.发送请求
         /**
-		 * 1.请求方式：GET POST
-		 *    get：参数拼接在URL上
-		 *    post：参数在send方法中定义
-		 */
+	*  请求方式：GET POST
+	*  get：参数拼接在URL上
+	*  post：参数在send方法中定义
+	*/
         xmlhttp.open("GET", "demo.json", true);
         xmlhttp.onreadystatechange = function() {
             if(xmlhttp.readyState==4 && xmlhttp.status==200){
@@ -1704,6 +1777,33 @@ public class Listener implements ServletContextListener {
         xmlhttp.send();
     }
 </script>
+```
+
+---
+
+```js
+var request = new XMLHttpRequest(); // 创建XMLHttpRequest对象
+
+//ajax是异步的，设置回调函数
+request.onreadystatechange = function () { // 状态发生变化时，函数被回调
+    if (request.readyState === 4) { // 成功完成
+        // 判断响应状态码
+        if (request.status === 200) {
+            // 成功，通过responseText拿到响应的文本:
+            return success(request.responseText);
+        } else {
+            // 失败，根据响应码判断失败原因:
+            return fail(request.status);
+        }
+    } else {
+        // HTTP请求还在继续...
+    }
+}
+
+// 发送请求:
+request.open('GET', '/api/categories');
+request.setRequestHeader("Content-Type", "application/json")  //设置请求头
+request.send();	//到这一步，请求才正式发出
 ```
 
 ### 10.1.2 `JQuery`实现
@@ -1751,7 +1851,7 @@ $.post("demo.json", {
 }, "json");
 ```
 
-## 10.2 `JSON`
+## 10.2 JSON
 
 > `**JSON`是`JS`对象的字符串表示法，它使用文本表示一个`JS`对象信息，本质是一个字符串！**
 
@@ -1819,9 +1919,8 @@ $.post("demo.json", {
       }
   }
   console.log(json5.data.key1);
-  /**
-  * JSON数据的遍历
-  */
+  
+  // JSON数据的遍历
   var person = {"name": "张三",age: 23,'gender': true};
   
   var ps = [
@@ -1953,9 +2052,7 @@ public class JsonDemo {
     }
 
     @Test
-    /**
-     * 简单对象转JSON
-     */
+     // 简单对象转JSON
     public void ObjectToJSON() throws JsonProcessingException {
         //String name, String age, String sex, int weight, String birthday
         Person person = new Person("刘家伟", "18", "nan", 88, "1997-11-11");
@@ -1963,9 +2060,7 @@ public class JsonDemo {
         System.out.println(s);
     }
 
-    /**
-     * map转JSON
-     */
+    // map转JSON
     @Test
     public void MapToJSON() throws JsonProcessingException {
         Map<String,String> map = new HashMap<String,String>();
@@ -1974,9 +2069,7 @@ public class JsonDemo {
         System.out.println(obj.writeValueAsString(map));
     }
 
-    /**
-     * 复杂map转json
-     */
+    // 复杂map转json
     @Test
     public void ComplexMapToJSON() throws JsonProcessingException {
         Map<String,Person> map = new HashMap<String,Person>();
@@ -1985,10 +2078,7 @@ public class JsonDemo {
         System.out.println(obj.writeValueAsString(map));
     }
 
-    /**
-     * list转json
-     * [{},{},{}]
-     */
+   // list转json [{},{},{}]
     @Test
     public void listToJSON() throws JsonProcessingException {
         Person p1 = new Person("1", "18", "nan", 88, "1997-11-11");
@@ -2001,9 +2091,7 @@ public class JsonDemo {
         System.out.println(obj.writeValueAsString(list));
     }
 
-    /**
-     * 写入文本中
-     */
+   // 写入文本中
     @Test
     public void writeToFile() throws IOException {
         Person p1 = new Person("1", "18", "nan", 88, "1997-11-11");
@@ -2016,9 +2104,7 @@ public class JsonDemo {
         obj.writeValue(new File("demo.json"),list);
     }
 
-    /**
-     * json转对象
-     */
+     // json转对象
     @Test
     public void jsonToObject() throws JsonProcessingException {
         String str = "{\"name\":\"1\",\"age\":\"18\",\"sex\":\"nan\",\"weight\":88,\"birthday\":\"1997-11-11\"}";
@@ -2028,16 +2114,35 @@ public class JsonDemo {
 }
 ```
 
-# 十一、杂记
+# 十一、验证机制（杂记）
 
-## 11.1 令牌机制
+## 11.1验证机制
 
-**令牌机制(一次性)**
+> 令牌机制
 
-  **原理:在页面加载时,一个token放在session中,另一个用form提交传递到后台,**
+为了防止客户端重复提交同样的数据（如订单成功提交后，返回再次提交，显然很不合理）。
 
-​     **后台接收到两个token进行对比,相同则是第一次提交,清空token**
-**1.在Servlet代码**
+> 验证码机制
+
+防止有人恶意适用机器人暴力攻击。
+
+## 11.2令牌机制
+
+令牌是一次性的，用过一次就废弃了，再用需要生成新的令牌。
+
+> 原理
+
+在页面加载时，一个token放在session中，另一个用form提交传递到后台。后台接收到两个token进行对比，相同则是第一次提交，token在使用完毕后需要清除。
+
+> 使用方式
+
+使用方式有很多种。
+
+1）方式一，页面（jsp页面）生成token，然后讲token存入session，在传递数据到服务器的时候，讲生成的token一起传入。
+
+服务器接收到页面请求的时候，从session中拿出token，将其于前端页面传递过来的token进行比对，相同则进行数据的相关操作（如：新增数据），不同则提示，操作非法。
+
+- `Java代码`
 
 ```java
  // 判断是否是重复提交:
@@ -2052,9 +2157,9 @@ if(!token2.equals(token1)){
 }
 ```
 
-**2.在页面中代码()**
+- `JSP代码`
 
-```jsp
+```java
 <h1>添加商品的页面</h1>
 <%
 String token = UUIDUtils.getUUID();
@@ -2065,5 +2170,88 @@ session.setAttribute("token", token);
 </form>
 ```
 
-     <form action="${ pageContext.request.contextPath }/ProductAddServlet" method="post">
-     <input type="hidden" name="token" value="${ token }"/>
+## 11.3验证码机制
+
+用别人的库。
+
+# 十二、Axios
+
+一款非常强大的ajax工具。写法总体来说我感觉比jquery舒服一点。
+
+## 12.1安装
+
+- 使用 npm安装
+
+`npm install axios`
+
+- 使用bower
+
+`bower install axios`
+
+- 使用cdn
+
+`<script src="https://unpkg.com/axios/dist/axios.min.js"></script>`
+
+## 12.2 基本用法
+
+### 12.2.1 Get请求
+
+```js
+// 为给定 ID 的 user 创建请求
+axios.get('/user?ID=12345')
+  .then(function (response) {
+    console.log(response);
+  })
+  .catch(function (error) {
+    console.log(error);
+  });
+
+// 可选地，上面的请求可以这样做
+axios.get('/user', {
+    params: {
+      ID: 12345
+    }
+  })
+  .then(function (response) {
+    console.log(response);
+  })
+  .catch(function (error) {
+    console.log(error);
+  });
+```
+
+### 12.2.2 Post请求
+
+```js
+axios.post('/user', {
+    firstName: 'Fred',
+    lastName: 'Flintstone'
+  })
+  .then(function (response) {
+    console.log(response);
+  })
+  .catch(function (error) {
+    console.log(error);
+  });
+```
+
+### 12.2.3 多个并发请求
+
+```js
+function getUserAccount() {
+  return axios.get('/user/12345');
+}
+
+function getUserPermissions() {
+  return axios.get('/user/12345/permissions');
+}
+
+axios.all([getUserAccount(), getUserPermissions()])
+  .then(axios.spread(function (acct, perms) {
+    // 两个请求现在都执行完成
+  }));
+```
+
+## 12.3详细用法
+
+<a href="https://www.kancloud.cn/yunye/axios/234845">中文文档</a>
