@@ -203,7 +203,7 @@ public @interface AnnotationDemo{
 - ElementType的值，每个值的含义看注释即可
 - RetentionPolicy中的值（指定作用范围）
   - `SOURCE` 不编译Annotation到类文件中，有效范围最小，仅一个查看作用？？
-  - `CLASS` 表示编译Annotation到类文件中，但是在运行时不加载Annotation到JVM中
+  - `CLASS` 表示编译Annotation到类文件中，但是在运行时不加载Annotation到`JVM`中
   - `RUNTIME` <span style="color:green">**表示在运行时加载Annotation到JVM中，有效范围最大，一般就是用这个**</span>
 
 ### 注解与反射
