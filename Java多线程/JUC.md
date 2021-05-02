@@ -197,8 +197,6 @@ public class Resource {
     }
 }
 
-
-
 public class MainDemo {
     public static void main(String[] args) {
         Resource resource = new Resource();
@@ -795,13 +793,15 @@ public class SemaphoreDemo
 }
 ```
 
-# 七、读写锁`ReentrantReadWriteLock`
+# 七、读写锁
 
->**读-读 可以共存！** 
+`ReentrantReadWriteLock`
 
->**读-写 不能共存！** 
+>读-读 可以共存！
 
->**写-写 不能共存！**
+>读-写 不能共存！
+
+>写-写 不能共存！
 
 ```java
 package com.bbxx.callable;

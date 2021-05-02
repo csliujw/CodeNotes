@@ -29,8 +29,46 @@ ThreadLocal，线程局部变量，每个线程都绑定了自己的值，互不
 # 二、API使用
 
 - set
+
 - get
-- initialValue.在获取时，若发现没有数据，则会调用initalValue方法
+
+- `initialValue`.在获取时，若发现没有数据，则会调用`initalValue`方法,`initalValue`方法源码如下：
+
+  ```java
+  protected T initialValue() {
+      return null;
+  }
+  ```
+
+- ThreadLocal的内部结构如下：
+
+- ThreadLocal
+   - ThreadLocalMap：静态内部类，多线程共享。为什么是安全的？
+
+     ```java
+     static class ThreadLocalMap {
+     
+             /**
+              * The entries in this hash map extend WeakReference, using
+              * its main ref field as the key (which is always a
+              * ThreadLocal object).  Note that null keys (i.e. entry.get()
+              * == null) mean that the key is no longer referenced, so the
+              * entry can be expunged from table.  Such entries are referred to
+              * as "stale entries" in the code that follows.
+              */
+             static class Entry extends WeakReference<ThreadLocal<?>> {
+                 /** The value associated with this ThreadLocal. */
+                 Object value;
+     
+                 Entry(ThreadLocal<?> k, Object v) {
+                     super(k);
+                     value = v;
+                 }
+             }
+     }
+     ```
+
+     
 
 # 三、使用场景
 
