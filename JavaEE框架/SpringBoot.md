@@ -918,6 +918,58 @@ Spring Boot Actuator
 
 # 走向自动装配
 
+## Spring Framework手动配置
+
+- 定义：一种用于声明在`应用`中扮演“组件”角色的注解
+- 举例：@Component、@Service、@Configuration[标注这是一个配置]
+- 装配：`<context:component=scan>` 或 @ComponentScan
+
+### Spring @Enable模块装配
+
+Spring Framework 3.1开始支持“@Enable模块驱动”。所谓“模块”是具备相同领域的功能组件集合。组合所形成一个独立的单元。比如Web MVC模块、AspectJ模块、Caching（缓存）模块、JMX（Java管理扩展）模块、Async（异步处理）模块等。
+
+- 定义：具备相同领域的功能组件集合，组合所形成一个独立的单元
+- 举例：@EnableWevMvc、@EnableAutoConfiguration等
+- 实现：注解方式、编程方式
+
+> @Enable注解模块举例
+
+| 框架实现         | @Enable注解模块                | 激活模块           |
+| ---------------- | ------------------------------ | ------------------ |
+| Spring Framework | @EnableMvc                     | Web MVC模块        |
+|                  | @EnableTransactionManagement   | 事务管理模块       |
+|                  | @EnableCaching                 | Caching模块        |
+|                  | @EnableMBeanExport             | JMX模块            |
+|                  | @EnableAsnyc                   | 异步处理模块       |
+|                  | EnableWebFlux                  | Web Flux模块       |
+|                  | @EnableAspectJAutoProxy        | AspectJ 代理模块   |
+|                  |                                |                    |
+| Spring Boot      | @EnableAutoConfiguration       | 自动装配模块       |
+|                  | @EnableManagementContext       | Actuator管理模块   |
+|                  | @EnableConfigurationProperties | 配置属性绑定模块   |
+|                  | @EnableOAuth2Sso               | OAuth2单点登录模块 |
+|                  |                                |                    |
+| Spring Cloud     | @EnableEurekaServer            | Eureka服务模块     |
+|                  | @EnableConfigServer            | 配置服务模块       |
+|                  | @EnableFeignClients            | Feign客户端模块    |
+|                  | @EnableZuulProxy               | 服务网关Zuul模块   |
+|                  | @EnableCircuitBreaker          | 服务熔断模块       |
+
+### Spring 条件装配
+
+从Spring Framework 3.1开始，允许在Bean装配时增加前置条件判断。
+
+- 定义：Bean装配的前置判断
+- 举例：@Profile、@Conditional
+- 实现：注解方式、编程方式
+
+> 条件注解举例
+
+| Spring注解   | 场景说明       | 起始版本 |
+| ------------ | -------------- | -------- |
+| @Profile     | 配置化条件装配 | 3.1      |
+| @Conditional | 编程条件装配   | 4.0      |
+
 ## Spring 模式注解装配
 
 ### 模式注解
@@ -966,15 +1018,595 @@ public class SpringConfig {
 
 ### 自定义模式注解
 
+@Component“派生性”
+
+```java
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Repository(value = "firstLevelRepository")
+public @interface FirstLevelRepository {
+    String value() default "";
+}
+
+```
+
+- @Component
+  - @Repository
+    - FirstLevelRepository
+
+@Component“层次性”
+
+```java
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@FirstLevelRepository(value = "secondLevelRepository")
+public @interface SecondLevelRepository {
+}
+```
+
+- @Component
+  - @Repository
+    - FirstLevelRepository
+      - SecondLevelRepository
+
+## Spring@Enable模块装配
+
+### 模块举例@Enable注解
+
+### 实现方式
+
+#### 注解驱动方式
+
+```java
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Documented
+@Import(DelegatingWebMvcConfiguration.class)
+public @interface EnableWebMvc {
+}
+```
+
+----
+
+```java
+public class WebMvcConfigurationSupport implements ApplicationContextAware, ServletContextAware {
+	//...
+}
+```
+
+#### 接口编程方式
+
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+// 注意@Import注解，及CachingConfigurationSelector.class
+@Import(CachingConfigurationSelector.class)
+public @interface EnableCaching {
+
+	/**
+	 * Indicate whether subclass-based (CGLIB) proxies are to be created as opposed
+	 * to standard Java interface-based proxies. The default is {@code false}. <strong>
+	 * Applicable only if {@link #mode()} is set to {@link AdviceMode#PROXY}</strong>.
+	 * <p>Note that setting this attribute to {@code true} will affect <em>all</em>
+	 * Spring-managed beans requiring proxying, not just those marked with {@code @Cacheable}.
+	 * For example, other beans marked with Spring's {@code @Transactional} annotation will
+	 * be upgraded to subclass proxying at the same time. This approach has no negative
+	 * impact in practice unless one is explicitly expecting one type of proxy vs another,
+	 * e.g. in tests.
+	 */
+	boolean proxyTargetClass() default false;
+
+	/**
+	 * Indicate how caching advice should be applied.
+	 * <p><b>The default is {@link AdviceMode#PROXY}.</b>
+	 * Please note that proxy mode allows for interception of calls through the proxy
+	 * only. Local calls within the same class cannot get intercepted that way;
+	 * a caching annotation on such a method within a local call will be ignored
+	 * since Spring's interceptor does not even kick in for such a runtime scenario.
+	 * For a more advanced mode of interception, consider switching this to
+	 * {@link AdviceMode#ASPECTJ}.
+	 */
+	AdviceMode mode() default AdviceMode.PROXY;
+
+	/**
+	 * Indicate the ordering of the execution of the caching advisor
+	 * when multiple advices are applied at a specific joinpoint.
+	 * <p>The default is {@link Ordered#LOWEST_PRECEDENCE}.
+	 */
+	int order() default Ordered.LOWEST_PRECEDENCE;
+
+}
+```
+
+----
+
+```java
+public class CachingConfigurationSelector extends AdviceModeImportSelector<EnableCaching> {
+
+	private static final String PROXY_JCACHE_CONFIGURATION_CLASS =
+			"org.springframework.cache.jcache.config.ProxyJCacheConfiguration";
+
+	private static final String CACHE_ASPECT_CONFIGURATION_CLASS_NAME =
+			"org.springframework.cache.aspectj.AspectJCachingConfiguration";
+
+	private static final String JCACHE_ASPECT_CONFIGURATION_CLASS_NAME =
+			"org.springframework.cache.aspectj.AspectJJCacheConfiguration";
 
 
+	private static final boolean jsr107Present;
+
+	private static final boolean jcacheImplPresent;
+
+	static {
+		ClassLoader classLoader = CachingConfigurationSelector.class.getClassLoader();
+		jsr107Present = ClassUtils.isPresent("javax.cache.Cache", classLoader);
+		jcacheImplPresent = ClassUtils.isPresent(PROXY_JCACHE_CONFIGURATION_CLASS, classLoader);
+	}
 
 
-## Spring Framework手动配置
+	/**
+	 * Returns {@link ProxyCachingConfiguration} or {@code AspectJCachingConfiguration}
+	 * for {@code PROXY} and {@code ASPECTJ} values of {@link EnableCaching#mode()},
+	 * respectively. Potentially includes corresponding JCache configuration as well.
+	 */
+	@Override
+	public String[] selectImports(AdviceMode adviceMode) {
+		switch (adviceMode) {
+			case PROXY:
+				return getProxyImports();
+			case ASPECTJ:
+				return getAspectJImports();
+			default:
+				return null;
+		}
+	}
 
-- 定义：一种用于声明在`应用`中扮演“组件”角色的注解
-- 举例：@Component、@Service、@Configuration[标注这是一个配置]
-- 装配：`<context:component=scan>` 或 @ComponentScan
+	/**
+	 * Return the imports to use if the {@link AdviceMode} is set to {@link AdviceMode#PROXY}.
+	 * <p>Take care of adding the necessary JSR-107 import if it is available.
+	 */
+	private String[] getProxyImports() {
+		List<String> result = new ArrayList<>(3);
+		result.add(AutoProxyRegistrar.class.getName());
+		result.add(ProxyCachingConfiguration.class.getName());
+		if (jsr107Present && jcacheImplPresent) {
+			result.add(PROXY_JCACHE_CONFIGURATION_CLASS);
+		}
+		return StringUtils.toStringArray(result);
+	}
 
-### 
+	/**
+	 * Return the imports to use if the {@link AdviceMode} is set to {@link AdviceMode#ASPECTJ}.
+	 * <p>Take care of adding the necessary JSR-107 import if it is available.
+	 */
+	private String[] getAspectJImports() {
+		List<String> result = new ArrayList<>(2);
+		result.add(CACHE_ASPECT_CONFIGURATION_CLASS_NAME);
+		if (jsr107Present && jcacheImplPresent) {
+			result.add(JCACHE_ASPECT_CONFIGURATION_CLASS_NAME);
+		}
+		return StringUtils.toStringArray(result);
+	}
+
+}
+```
+
+---
+
+```java
+public interface ImportSelector {
+
+	/**
+	 * Select and return the names of which class(es) should be imported based on
+	 * the {@link AnnotationMetadata} of the importing @{@link Configuration} class.
+	 * @return the class names, or an empty array if none
+	 */
+	String[] selectImports(AnnotationMetadata importingClassMetadata);
+
+	/**
+	 * Return a predicate for excluding classes from the import candidates, to be
+	 * transitively applied to all classes found through this selector's imports.
+	 * <p>If this predicate returns {@code true} for a given fully-qualified
+	 * class name, said class will not be considered as an imported configuration
+	 * class, bypassing class file loading as well as metadata introspection.
+	 * @return the filter predicate for fully-qualified candidate class names
+	 * of transitively imported configuration classes, or {@code null} if none
+	 * @since 5.2.4
+	 */
+	@Nullable
+	default Predicate<String> getExclusionFilter() {
+		return null;
+	}
+
+}
+```
+
+### 自定义@Enable模块
+
+#### 基于注解驱动实现
+
+@EnableHelloWorld
+
+#### 基于接口驱动实现
+
+@EnableServer
+
+HelloWorldImportSelector->HelloWorldConfiguration->HelloWorld
+
+- HelloWorldImportSelector自定义一个类，实现ImportSelector接口
+- HelloWorldConfiguration是一个配置类，用于获取Bean-HelloWorld
+- HelloWorld是一个字符串类
+- 定义注解EnableHelloWorld
+
+>HelloWorldImportSelector类
+
+实现ImportSelector接口。自定义ImportSelector可以在里面书写一些配置逻辑，满足则配置，不满足就不配置，写法灵活~
+
+```java
+/**
+ * HelloWorld {@link org.springframework.context.annotation.ImportSelector} 实现
+ */
+public class HelloWorldImportSelector implements ImportSelector {
+    @Override
+    public String[] selectImports(AnnotationMetadata importingClassMetadata) {
+//        return new String[]{"com.example.demo.config.HelloWorldConfig"};
+        //getName 类全名
+        return new String[]{HelloWorldConfig.class.getName()};
+
+    }
+}
+```
+
+>HelloWorldConfiguration配置类
+
+```java
+@Configuration
+public class HelloWorldConfiguration {
+    @Bean
+    public String helloWorld() {
+        return "Hello World";
+    }
+}
+```
+
+> EnableHelloWorld注解
+
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Import(HelloWorldImportSelector.class)
+public @interface EnableHelloWorld {
+}
+```
+
+> 启动运行
+
+```java
+@EnableHelloWorld // 开启Enable注解，HelloWorldConfiguration中定义的Bean都可获取到~
+@ComponentScan(basePackages = "com.example.demo.bootstrap")
+public class EnableHelloWorldApplication {
+    public static void main(String[] args) {
+        ConfigurableApplicationContext context = new SpringApplicationBuilder(EnableHelloWorldApplication.class)
+                .web(WebApplicationType.NONE)
+                .run(args);
+        String str = context.getBean("helloWorld", String.class);
+        System.out.println(str);
+        context.close();
+    }
+}
+```
+
+## Spring 条件配置
+
+### 条件注解举例
+
+| Spring注解   | 场景说明       | 起始版本 |
+| ------------ | -------------- | -------- |
+| @Profile     | 配置化条件装配 | 3.1      |
+| @Conditional | 编程条件装配   | 4.0      |
+
+### 实现方式
+
+#### 配置方式
+
+`@Profile`
+
+Spring Framework 4.0后Profile采用的Condition进行实现的。
+
+#### 编程方式
+
+`@Conditional`
+
+```java
+@Target({ ElementType.TYPE, ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Conditional(OnClassCondition.class)
+public @interface ConditionalOnClass {
+
+	/**
+	 * The classes that must be present. Since this annotation is parsed by loading class
+	 * bytecode, it is safe to specify classes here that may ultimately not be on the
+	 * classpath, only if this annotation is directly on the affected component and
+	 * <b>not</b> if this annotation is used as a composed, meta-annotation. In order to
+	 * use this annotation as a meta-annotation, only use the {@link #name} attribute.
+	 * @return the classes that must be present
+	 */
+	Class<?>[] value() default {};
+
+	/**
+	 * The classes names that must be present.
+	 * @return the class names that must be present.
+	 */
+	String[] name() default {};
+
+}
+```
+
+---
+
+```java
+@FunctionalInterface
+public interface Condition {
+
+	/**
+	 * Determine if the condition matches.
+	 * @param context the condition context
+	 * @param metadata the metadata of the {@link org.springframework.core.type.AnnotationMetadata class}
+	 * or {@link org.springframework.core.type.MethodMetadata method} being checked
+	 * @return {@code true} if the condition matches and the component can be registered,
+	 * or {@code false} to veto the annotated component's registration
+	 */
+	boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata);
+
+}
+```
+
+### 自定义条件装配
+
+#### 基于配置方式
+
+计算服务，多整数求和
+
+`@Prifile("Java7")：for循环实现`
+
+`@Prifile("Java8")：lambda实现`
+
+`启动类设置好Prifiles属性`
+
+```java
+public interface Calculate {
+    Integer sum(Integer... val);
+}
+
+@Profile("Java7")
+@Service
+public class Java7Calculate implements Calculate {
+    @Override
+    public Integer sum(Integer... val) {
+        System.out.println("==================Java7==================");
+        int sum = 0;
+        for (Integer integer : val) {
+            sum += integer;
+        }
+        return sum;
+    }
+}
+
+@Profile("Java8")
+@Service
+public class Java8Calculate implements Calculate {
+    @Override
+    public Integer sum(Integer... val) {
+        System.out.println("==================Java8==================");
+        return Stream.of(val).reduce(0, Integer::sum);
+    }
+}
+```
+
+---
+
+```java
+@ComponentScan(basePackages = "com.example.demo")
+public class ProfileApplication {
+    public static void main(String[] args) {
+        ConfigurableApplicationContext context = new SpringApplicationBuilder(ProfileApplication.class)
+                .web(WebApplicationType.NONE)
+                .profiles("Java8")
+                .run();
+        Calculate bean = context.getBean(Calculate.class);
+        System.out.println(bean.sum(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+
+    }
+}
+```
+
+#### 基于编程方式
+
+自定义注解`@ConditionalOnProperty`判断Spring应用上下文xx配置是否存在/匹配
+
+Condition实现类`OnSystemPropertyCondition`定义条件，符合条件则触发，不符合则不触发
+
+```java
+/**
+ * Java系统属性判断
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE, ElementType.METHOD})
+@Documented
+@Conditional(OnSystemPropertyCondition.class)
+public @interface ConditionalOnSystemProperty {
+    // java系统属性名
+    String name();
+
+    // java系统属性值
+    String value();
+}
+```
+
+----
+
+```java
+public class OnSystemPropertyCondition implements Condition {
+
+    @Override
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+        // 获取元信息.获得ConditionalOnSystemProperty的原信息（name和value的值）
+        Map<String, Object> annotationAttributes = metadata.getAnnotationAttributes(ConditionalOnSystemProperty.class.getName());
+        assert annotationAttributes != null;
+        String name = String.valueOf(annotationAttributes.get("name"));
+        String value = String.valueOf(annotationAttributes.get("value"));
+        return name.equals(value);
+    }
+}
+```
+
+---
+
+```java
+@SpringBootApplication(scanBasePackages = "com.example.demo")
+public class ConditionalOnSystemPropertyApplication {
+
+    // 条件满足产生类"hello",不满足则不产生。
+    @Bean
+    @ConditionalOnSystemProperty(name = "java", value = "java")
+    public String hello() {
+        return "hello";
+    }
+
+    public static void main(String[] args) {
+        ConfigurableApplicationContext context = new SpringApplicationBuilder(EnableHelloWorldApplication.class)
+                .web(WebApplicationType.NONE)
+                .run(args);
+        String str = context.getBean("hello", String.class);
+        System.out.println(str);
+        context.close();
+    }
+}
+```
+
+## Spring Boot自动装配
+
+WebMvcAutoConfiguration
+
+```java
+@Configuration(proxyBeanMethods = false) // 模式注解。是Component的“派生”注解
+@ConditionalOnWebApplication(type = Type.SERVLET) // 实际上是Spring 4的Condition注解实现的
+@ConditionalOnClass({ Servlet.class, DispatcherServlet.class, WebMvcConfigurer.class })
+@ConditionalOnMissingBean(WebMvcConfigurationSupport.class)
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE + 10)
+@AutoConfigureAfter({ DispatcherServletAutoConfiguration.class, TaskExecutionAutoConfiguration.class,
+		ValidationAutoConfiguration.class })
+public class WebMvcAutoConfiguration {
+    
+}
+```
+
+- 定义：基于约定大于配置的原则，实现Spring组件自动装配的目的。
+- 装配：模式注解、@Enable模块、条件装配、工厂加载机制
+- 实现：激活自动装配、实现自动装配、配置自动装配的实现
+
+### 底层装配技术
+
+- Spring 模式注解装配
+- Spring `@Enable`模块装配
+- Spring 条件装配
+- Spring 工厂加载机制
+  - 实现类：`SpringFactoriesLoader`
+  - 配置资源：`META-INF/spring.factories`
+
+### 自动装配举例
+
+参考`META-INF/spring.factories`
+
+### 实现方法
+
+1.激活自动装配：`@EnableAutoConfiguration`
+
+2.实现自动装配：`XXXAutoConfiguration`
+
+3.配置自动装配实现：`META-INF/spring.factories`
+
+### 自定义自动装配
+
+- 我们自定义的HelloWorldAutoConfig，有条件判断注解，条件判断为True
+  - 条件判断：name == key
+  - 模式注解：`@Configuration`
+  - `@Enable`模块：`@EnableHelloWorld` 会加载-->`HelloWorldImportSelector`会加载-->`HelloWorldConfig`-->最终生成一个bean
+
+---
+
+> 自定义自动装配流程如下：
+
+- 自定义一个`HelloWorldAutoConfiguration`配置类。
+
+- 在`resources`下新建`META-INF`目录，在`META-INF`目录下创建文件`spring.factories`,在该目录下配置自动装配信息
+
+  ```properties
+  # Auto Configure
+  org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.example.demo.config.HelloWorldAutoConfiguration
+  ```
+
+- 这样一个最简单的自动装配就完成啦！
+- 如果想要更复杂的配置，可以加Condition判断，自定义的@EnableXX等等~
+
+----
+
+> 一个自定义自动装配的Demo
+
+- 配置类
+
+  ```java
+  @Configuration
+  public class HelloWorldAutoConfiguration {
+      @Bean
+      public Object getObj() {
+          return new Object();
+      }
+  }
+  ```
+
+- resource/META-INF/spring.factories
+
+  ```properties
+  # Auto Configure
+  org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.example.demo.config.HelloWorldAutoConfiguration
+  ```
+
+- 运行
+
+  ```java
+  /**
+   * {@link EnableAutoConfiguration}
+   * 自动装配
+   */
+  @EnableAutoConfiguration
+  public class EnableAutoConfigurationApplication {
+      public static void main(String[] args) {
+          ConfigurableApplicationContext context = new SpringApplicationBuilder(EnableAutoConfigurationApplication.class)
+                  .web(WebApplicationType.NONE)
+                  .run(args);
+          System.out.println(context.getBean("getObj", Object.class));
+          context.close();
+      }
+  }
+  ```
+
+# Web MVC核心
+
+- 理解 Spring Web MVC架构
+- 认识 Spring Web MVC
+- 简化 Spring Web MVC
+
+## 理解Web MVC架构
+
+## 认识Web MVC
+
+## 简化Web MVC
 
