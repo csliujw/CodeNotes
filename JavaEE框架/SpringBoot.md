@@ -1,5 +1,9 @@
 # SpringBoot
 
+主要看小马哥的SpringBoot
+
+雷丰阳的作为补充：(https://www.bilibili.com/video/BV19K4y1L7MT?spm_id_from=333.788.b_765f64657363.1)
+
 ## 学习内容
 
 - SpringBoot如何基于Spring Framework逐步走向自动装配。
@@ -1606,7 +1610,181 @@ public class WebMvcAutoConfiguration {
 
 ## 理解Web MVC架构
 
+### 基础架构：Servlet
+
+Web Browser 发送HTTP请求给Web Server  --> Web Server 服务把请求转发到Servlet容器中。--> Servlet容器进行一系列操作。
+
+### Servlet特点
+
+- 请求/响应式（Request/Response）
+- 屏蔽网络通讯的细节
+- 完整的生命周期
+
+### Servlet职责
+
+- 处理请求
+- 资源管理
+- 视图渲染
+
+### Web MVC架构
+
+> 核心架构：前端控制器（Front Controller）
+
+<img src="../pics/springboot/FCMainClass.gif">
+
+- 资源：[Core J2EE Patterns](http://www.corej2eepatterns.com/FrontController.htm)
+- 实现：Spring Web MVC DispatcherServlet
+  - [DispatcherServlet (Spring Framework)](https://docs.spring.io/spring-framework/docs/1.0.0/javadoc-api/org/springframework/web/servlet/DispatcherServlet.html)
+  - [DispatcherServlet (Spring Framework 5.0.0.RELEASE API)](https://docs.spring.io/spring-framework/docs/5.0.0.RELEASE/javadoc-api/org/springframework/web/servlet/DispatcherServlet.html)
+
 ## 认识Web MVC
+
+### 一般认识
+
+Spring Framework时代的一般认识 
+
+- 实现Controller
+
+```java
+@Controller
+public class Hello{
+    @RequestMapping("")
+    public String index(){
+        return "Hello";
+    }
+}
+```
+
+- 配置 Web MVC组件
+
+```xml
+<context:component-scan base-package="xxx.xx.web"/>
+
+<bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"/>
+
+<bea class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter"/>
+
+<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+	<property name="viewClass" value="org.springframework.web.servlet.view.JstlView"></property>
+    <property name="prefix" value="/WEB-INF/views/"></property>
+    <property name="suffix" value=".jsp"></property>
+</bean>
+```
+
+- 部署DispatcherServlet [在web.xml中配置]
+
+```xml
+<servlet>
+    <servlet-name>app</servlet-name>
+    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+    <init-param>
+        <param-name>contextConfigLocation</param-name>
+        <param-value>/WEB-INF/app-context.xml</param-value>
+    </init-param>
+   <!--  --> 
+    <load-on-startup>1</load-on-startup>
+</servlet>
+<servlet-mapping>
+    <servlet-name>app</servlet-name>
+    <url-pattern>/</url-pattern>
+</servlet-mapping>
+```
+
+- 使用可执行Tomcat Maven插件 [这个好像可以打包成jar包, 我们可以直接运行这个jar包！]
+
+```xml
+<plugin>
+    <groupId>org.apache.tomcat.maven</groupId>
+    <artifactId>tomcat7-maven-plugin</artifactId>
+    <version>2.2</version>
+    <executions>
+        <execution>
+            <id>tomcat-run</id>
+            <goals>
+                <goal>exec-war-only</goal>
+            </goals>
+            <phase>package</phase>
+            <configuration>
+                <!-- ServletContext path-->
+                <path>/</path>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+
+==`小提示：`==SpringBoot spring-boot-starter-parent 中的 spring-boot-dependencies 有定义各个包需要的版本！
+
+`maven命令 [打包]：mvn -Dmaven.test.skpi -u clean package`
+
+### 重新认识
+
+Spring Framework时代的重新认识。[]
+
+- Web MVC核心组件
+- Web MVC注解驱动
+- Web MVC自动装配
+
+#### Web MVC核心组件
+
+- 处理器管理
+  - 映射：handlerMapping [ RequestMappingHandlerMapping ]，用于处理映射
+  - 适配：HandlerAdapter
+  - 执行：HandlerExecutionChain [ 处理器的执行链 ]
+- 页面渲染
+  - 视图解析器：ViewResolver
+  - 国际化：LocaleResolver、LocaleContextResolver
+  - 个性化：ThemeResolver
+- 异常处理
+  - 异常解析：HandlerExceptionResolver
+
+| Bean type                                                    | Explanation                                                  |
+| :----------------------------------------------------------- | :----------------------------------------------------------- |
+| `HandlerMapping`                                             | 映射请求（Request）到处理器（Handler）加上器关联的拦截器（HandlerInterceptor）列表，其映射关系基于不同的`HandlerMapping`实现的一些标注细节。其中两种主要`HandlerMapping`实现，RequestMappingHandlerMapping支持标注`@RequestMapping`的方法，`SimpleUrlHandlerMapping`维护精确的URI路径与处理器的映射。 |
+| `HandlerAdapter`                                             | ‎帮助`DispatcherServlet`调用请求处理器（Handler），无需关注其中实际的调用细节。比如，调用注解实现的`Controller`需要解析其关联的注解。`HandlerAdapter`的主要目的是为了屏蔽与`DispatcherServlet`之间的诸多细节。 |
+| [`HandlerExceptionResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-exceptionhandlers) | 解析异常，可能策略是将异常处理映射到其他处理器（Handlers）、或到某个HTML错误页面，或者其他。 |
+| [`ViewResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-viewresolver) | 从处理器（Handler）返回字符类型的逻辑视图名称解析出实际的View对象，该对象将渲染后的内容输出到HTTP响应中。 |
+| [`LocaleResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-localeresolver), [LocaleContextResolver](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-timezone) | 从客户端解析出Locale，为其实现国际化视图。                   |
+| [`MultipartResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-multipart) | 解析多部分请求（如Web浏览器文件上传）的抽象实现。            |
+
+Spring Web MVC的运行流程参看MVC相关笔记。
+
+#### Web MVC注解驱动
+
+> 基本配置步骤：具体看我的MVC笔记奥
+
+- 注解配置：@Configuration（Spring范式注解）
+- 组件激活：@EnableWebMvc（Spring模块装配）
+- 自定义组件：WebMvcConfigurer（Spring Bean）
+
+> 常用注解
+
+- 模型属性：@ModelAttribute
+- 请求头：@RequestHeader
+- Cookie：@CookieValue
+- 校验参数：@Valid、@Validated
+- 注解处理：@ExceptionHandler
+- 切面通知：@ControllerAdvice
+  - @Component的专门化，用于声明@ExceptionHandler、@InitBinder或@ModelAttribute方法的类，以便在多个@Controller类之间共享。
+  - 结合@ModelAttribute注解使用。具体看MVC相关笔记。
+    - 印象中，@ModelAttribute修饰的方法数据会放在ModelAndView里。
+
+#### Web MVC自动装配
+
+- Servlet 依赖 3.0+
+- Servlet SPI：ServletContainerInitializer
+- Spring适配：SpringServletContainerInitializer
+- Spring SPI：WebApplicationInitializer
+- 编程驱动：AbstractDispatcherServletInitializer
+- 注解驱动：AbstractAnnotationConfigDispatcherServletInitializer
+
+##### Servlet SPI
+
+##### Spring适配
+
+##### Spring SPI
+
+##### 示例重构
 
 ## 简化Web MVC
 
