@@ -1778,13 +1778,179 @@ Spring Web MVC的运行流程参看MVC相关笔记。
 - 编程驱动：AbstractDispatcherServletInitializer
 - 注解驱动：AbstractAnnotationConfigDispatcherServletInitializer
 
+Servlet 3.1 规范：Servlet启动的时候，onStartup方法会被回调。什么意思呢？看看SPI接口。
+
+```java
+public interface ServletContainerInitializer {
+    // ServletContext：动态添加一些功能，如addServlet addJspFile
+    void onStartup(Set<Class<?>> var1, ServletContext var2) throws ServletException;
+}
+```
+
+----
+
+SpringServletcontainerInitializer实现了这个接口
+
+```java
+// 筛选器 实现了WebApplicationInitializer的类才会被调用onStartup方法
+@HandlesTypes(WebApplicationInitializer.class) 
+public class SpringServletContainerInitializer implements ServletContainerInitializer {
+
+	/**
+	 * Delegate the {@code ServletContext} to any {@link WebApplicationInitializer}
+	 * implementations present on the application classpath.
+	 * <p>Because this class declares @{@code HandlesTypes(WebApplicationInitializer.class)},
+	 * Servlet 3.0+ containers will automatically scan the classpath for implementations
+	 * of Spring's {@code WebApplicationInitializer} interface and provide the set of all
+	 * such types to the {@code webAppInitializerClasses} parameter of this method.
+	 * <p>If no {@code WebApplicationInitializer} implementations are found on the classpath,
+	 * this method is effectively a no-op. An INFO-level log message will be issued notifying
+	 * the user that the {@code ServletContainerInitializer} has indeed been invoked but that
+	 * no {@code WebApplicationInitializer} implementations were found.
+	 * <p>Assuming that one or more {@code WebApplicationInitializer} types are detected,
+	 * they will be instantiated (and <em>sorted</em> if the @{@link
+	 * org.springframework.core.annotation.Order @Order} annotation is present or
+	 * the {@link org.springframework.core.Ordered Ordered} interface has been
+	 * implemented). Then the {@link WebApplicationInitializer#onStartup(ServletContext)}
+	 * method will be invoked on each instance, delegating the {@code ServletContext} such
+	 * that each instance may register and configure servlets such as Spring's
+	 * {@code DispatcherServlet}, listeners such as Spring's {@code ContextLoaderListener},
+	 * or any other Servlet API componentry such as filters.
+	 * @param webAppInitializerClasses all implementations of
+	 * {@link WebApplicationInitializer} found on the application classpath
+	 * @param servletContext the servlet context to be initialized
+	 * @see WebApplicationInitializer#onStartup(ServletContext)
+	 * @see AnnotationAwareOrderComparator
+	 */
+	@Override
+	public void onStartup(@Nullable Set<Class<?>> webAppInitializerClasses, ServletContext servletContext)
+			throws ServletException {
+
+		List<WebApplicationInitializer> initializers = Collections.emptyList();
+
+		if (webAppInitializerClasses != null) {
+			initializers = new ArrayList<>(webAppInitializerClasses.size());
+			for (Class<?> waiClass : webAppInitializerClasses) {
+				// Be defensive: Some servlet containers provide us with invalid classes,
+				// no matter what @HandlesTypes says...
+				if (!waiClass.isInterface() && !Modifier.isAbstract(waiClass.getModifiers()) &&
+						WebApplicationInitializer.class.isAssignableFrom(waiClass)) {
+					try {
+						initializers.add((WebApplicationInitializer)
+								ReflectionUtils.accessibleConstructor(waiClass).newInstance());
+					}
+					catch (Throwable ex) {
+						throw new ServletException("Failed to instantiate WebApplicationInitializer class", ex);
+					}
+				}
+			}
+		}
+
+		if (initializers.isEmpty()) {
+			servletContext.log("No Spring WebApplicationInitializer types detected on classpath");
+			return;
+		}
+
+		servletContext.log(initializers.size() + " Spring WebApplicationInitializers detected on classpath");
+		AnnotationAwareOrderComparator.sort(initializers);
+		for (WebApplicationInitializer initializer : initializers) {
+			initializer.onStartup(servletContext);
+		}
+	}
+
+}
+```
+
+@HandlesTypes的解释<a href="https://www.cnblogs.com/hello-shf/p/10926271.html">相关博客</a>
+
+　　简单来说，当实现了Servlet3.0规范的容器（比如tomcat7及以上版本）启动时，通过SPI扩展机制自动扫描所有已添加的jar包下的META-INF/services/javax.servlet.ServletContainerInitializer中指定的全路径的类，并实例化该类，然后回调META-INF/services/javax.servlet.ServletContainerInitializer文件中指定的ServletContainerInitializer的实现类的onStartup方法。 如果该类存在@HandlesTypes注解，并且在@HandlesTypes注解中指定了我们感兴趣的类，所有实现了这个类的onStartup方法将会被调用。
+
+　　再直白一点来说，存在web.xml的时候，Servlet容器会根据web.xml中的配置初始化我们的jar包（也可以说web.xml是我们的jar包和Servlet联系的中介）。而在Servlet3.0容器初始化时会调用jar包META-INF/services/javax.servlet.ServletContainerInitializer中指定的类的实现（javax.servlet.ServletContainerInitializer中的实现替代了web.xml的作用，而所谓的在@HandlesTypes注解中指定的感兴趣的类，可以理解为具体实现了web.xml的功能，当然也可以有其他的用途）
+
 ##### Servlet SPI
+
+配合@HandlesType
 
 ##### Spring适配
 
+SpringServletContainerInitializer
+
 ##### Spring SPI
+
+基础接口：WebApplicationinitializer [直接实现裸接口]
+
+编程驱动：AbstractDispatcherServletInitializer
+
+注解驱动：AbstractAnnotationConfigDispatcherServletInitializer
 
 ##### 示例重构
 
+```java
+/**
+ * DispatcherServlet配置类，配置扫描web（Controller类）包
+ */
+@ComponentScan(basePackages = "com.example.demo.controller")
+public class DispatcherServletConfiguration {
+}
+```
+
+----
+
+```java
+public class DefaultAnnotationConfigDispatcherServletInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+
+    @Override
+    protected Class<?>[] getRootConfigClasses() {
+        return new Class[0];
+    }
+
+    @Override
+    protected Class<?>[] getServletConfigClasses() {
+        return new Class[]{DispatcherServletConfiguration.class};
+    }
+
+    @Override
+    protected String[] getServletMappings() {
+        return new String[0];
+    }
+
+}
+```
+
 ## 简化Web MVC
+
+SpringBoot时代的简化
+
+- 完全自动装配
+- 装配条件
+- 外部化配置
+
+### 完全自动装配
+
+- DispatcherServlet：DispatcherServletAutoConfiguration
+- 替换@EnableWebMvc：WebMvcAutoConfiguration
+- Servlet容器：ServletWebServerFactoryAutoConfiguration（通过Spring Bean的方式运行）
+
+把这几个类的源码看一下。
+
+#### 理解自动装配顺序性
+
+绝对顺序：@AtuoConfigureOrder
+
+相对顺序：@AutoConfigureAfter
+
+### 装配条件
+
+- Web类型：Servlet
+- API依赖：Servlet、Spring Web MVC
+- Bean依赖：WebMvcConfigurationSupport
+
+### 外部化配置
+
+- Web MVC配置：WebMvcProperties
+- 资源配置：ResourceProperties
+
+
+
+
 
