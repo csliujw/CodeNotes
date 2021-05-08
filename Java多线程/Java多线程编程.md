@@ -108,9 +108,98 @@ HappenBefore规则
 - 线程的中断（interrupt()）先于被中断线程的代码。
 - 对象的构造函数的执行、结束先于finalize()方法。
 
+## Java与线程
+
+并发不一定要依赖多线程（如`PHP`中很常见的多进程并发），但是在Java里面谈论并发，基本上都与线程脱不开关系.
+
+### 线程的实现
+
+主流的操作系统都提供了线程实现，Java语言则提供了在不同硬件和操作系统平台下对线程操作的统一处理.
+
+实现线程主要有三种方式：
+
+- 使用内核线程实现（`1：1`实现），
+- 使用用户线程实现（`1：N`实现），
+- 使用用户线程加轻量级进程混合实现（`N：M`实现）
+
+### Java与协程
+
+Java的线程大多数都是1-1模型,切换成本高!在当今的局势下,劣势很明显!以前可能是长连接,长时间使用,现在分布式,负载均衡,有些是短时间的连接,线程间的切换开销十分大!
+
+## 线程安全与锁优化
+
+方法级别的锁,普通成员方法上加synchronized,锁的是this对象?静态方法,方法上加synchronized锁的是字节码对象!
+
+### Java中的线程安全
+
+**可将Java语言中各种操作共享的数据分为以下五类：**
+
+- 不可变
+    - 只要一个不可变的对象被正确地构建出来（即没有发生this引用逃逸的情况），那其外部的可见状态永远都不会改变，永远都不会看到它在多个线程之中处于不一致的状态。“不可变”带来的安全性是最直接、最纯粹的。
+- 绝对线程安全:
+    - vector方法上加的是 synchronized 锁的是this对象
+    - 静态方法上的synchronized 锁的是字节码对象
+- 相对线程安全、
+- 线程兼容和线程对立。
+
+
+### 锁升级
+
+锁的4中状态：无锁状态、偏向锁状态、轻量级锁状态、重量级锁状态（级别从低到高）
+
+#### 偏向锁：
+
+> 为什么要引入偏向锁？
+
+因为经过`HotSpot`的作者大量的研究发现，大多数时候是不存在锁竞争的，常常是一个线程多次获得同一个锁，因此如果每次都要竞争锁会增大很多没有必要付出的代价，为了降低获取锁的代价，才引入的偏向锁。
+
+> 偏向锁的升级
+
+线程访问代码并获取锁对象时，会先进行对比是不是偏向锁记录的对象，是的话就无需加锁，直接运行。如果不是，且原来的线程还存在，说明有竞争就会升级为轻量级锁。如果不存在竞争，就当前进程设置为偏向锁。
+
+当线程1访问代码块并获取锁对象时，会在Java对象头和栈帧中记录偏向的锁的`threadID`，因为偏向锁不会主动释放锁，因此以后线程1再次获取锁的时候，需要比较当前线程的`threadID`和Java对象头中的`threadID`是否一致，如果一致（还是线程1获取锁对象），则无需使用CAS来加锁、解锁；如果不一致（其他线程，如线程2要竞争锁对象，而偏向锁不会主动释放因此还是存储的线程1的`threadID`），那么需要查看Java对象头中记录的线程1是否存活，如果没有存活，那么锁对象被重置为无锁状态，其它线程（线程2）可以竞争将其设置为偏向锁；如果存活，那么立刻查找该线程（线程1）的栈帧信息，如果还是需要继续持有这个锁对象，那么暂停当前线程1，撤销偏向锁，升级为轻量级锁，如果线程1 不再使用该锁对象，那么将锁对象状态设为无锁状态，重新偏向新的线程。
+
+> 偏向锁的取消
+
+偏向锁是默认开启的，而且开始时间一般是比应用程序启动慢几秒，如果不想有这个延迟，那么可以使用`-XX:BiasedLockingStartUpDelay=0`；
+
+如果不想要偏向锁，那么可以通过`-XX:-UseBiasedLocking = false`来设置；
+
+#### 轻量级锁
+
+> 为什么要引入轻量级锁？
+
+轻量级锁考虑的是竞争锁对象的线程不多，而且线程持有锁的时间也不长的情景。因为阻塞线程需要CPU从用户态转到内核态，代价较大，如果刚刚阻塞不久这个锁就被释放了，那这个代价就有点得不偿失了，因此这个时候就干脆不阻塞这个线程，让它自旋这等待锁释放。
+
+> 轻量级锁什么时候升级为重量级锁？
+
+线程1获取轻量级锁时会先把锁对象的对象头MarkWord复制一份到线程1的栈帧中创建的用于存储锁记录的空间（称为DisplacedMarkWord），然后使用CAS把对象头中的内容替换为线程1存储的锁记录（DisplacedMarkWord）的地址；
+
+如果在线程1复制对象头的同时（在线程1CAS之前），线程2也准备获取锁，复制了对象头到线程2的锁记录空间中，但是在线程2CAS的时候，发现线程1已经把对象头换了，线程2的CAS失败，那么线程2就尝试使用自旋锁来等待线程1释放锁。
+
+但是如果自旋的时间太长也不行，因为自旋是要消耗CPU的，因此自旋的次数是有限制的，比如10次或者100次，如果自旋次数到了线程1还没有释放锁，或者线程1还在执行，线程2还在自旋等待，这时又有一个线程3过来竞争这个锁对象，那么这个时候轻量级锁就会膨胀为重量级锁。重量级锁把除了拥有锁的线程都阻塞，防止CPU空转。
+
+注意：为了避免无用的自旋，轻量级锁一旦膨胀为重量级锁就不会再降级为轻量级锁了；偏向锁升级为轻量级锁也不能再降级为偏向锁。一句话就是锁可以升级不可以降级，但是偏向锁状态可以被重置为无锁状态。
+
+> 这几种锁的优缺点（偏向锁、轻量级锁、重量级锁）
+
+<img src="https://img-blog.csdn.net/2018032217003676" />
+
+### 锁粗化
+
+按理来说，同步块的作用范围应该尽可能小，仅在共享数据的实际作用域中才进行同步，这样做的目的是为了使需要同步的操作数量尽可能缩小，缩短阻塞时间，如果存在锁竞争，那么等待锁的线程也能尽快拿到锁。 
+但是加锁解锁也需要消耗资源，如果存在一系列的连续加锁解锁操作，可能会导致不必要的性能损耗。 
+锁粗化就是将多个连续的加锁、解锁操作连接在一起，扩展成一个范围更大的锁，避免频繁的加锁解锁操作。
+
+### 锁消除
+
+Java虚拟机在JIT编译时(可以简单理解为当某段代码即将第一次被执行时进行编译，又称即时编译)，通过对运行上下文的扫描，经过逃逸分析，去除不可能存在共享资源竞争的锁，通过这种方式消除没有必要的锁，可以节省毫无意义的请求锁时间
+
+
+
 # 线程基础
 
-## 线程的所有状态
+## 线程的状态
 
 Java中的。
 
@@ -139,6 +228,461 @@ Java中的。
 
 - 继承Thread
 - 实现Runnable
+- Callable&FutureTask [ Callable结合FutureTask使用 ]
+    - 定义类MyCallable实现Callable接口
+    - `FutureTask task = new FutureTask(new MyCallable())`
+    - `new Thread(task).start()`
+
+- 线程池
+    - jdk提供的线程池（自带的线程池它的阻塞队列大小太大，容易OOM）
+    - 自定义线程池（一般用自定义线程池）
+
+----
+
+因为多数代码都比较简单，所以只写用的少的那部分。
+
+> 线程代码编写示例
+
+线程应该与资源分离
+
+```java
+public class CreateByThread02 {
+    public static void main(String[] args) throws InterruptedException {
+        // 实例化资源类
+        Resource resource = new Resource();
+        MyThread myThread = new MyThread(resource);
+        Thread thread = new Thread(myThread);
+        thread.start();
+        thread.join();
+        System.out.println(resource.getCount());
+
+    }
+}
+
+class Resource {
+    private int count = 0;
+
+    public int getCount() {
+        return count;
+    }
+
+    public void increase() {
+        count++;
+    }
+}
+
+class MyThread extends Thread {
+    private Resource resource;
+
+    public MyThread(Resource resource) {
+        this.resource = resource;
+    }
+
+    @Override
+    public void run() {
+        for (int i = 0; i <10; i++) {
+            resource.increase();
+        }
+    }
+}
+```
+
+> `Callable&FutureTask`
+
+```java
+// 可以用lambda简写
+public class CreateByFutureTask {
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
+        MyCallable myCallable = new MyCallable();
+        FutureTask futureTask = new FutureTask(myCallable);
+        Thread thread = new Thread(futureTask);
+        thread.start();
+        // get拿到执行完成后的数据，拿不到会在此处阻塞。我看源码用的是yeild,到底是什么原理，后面再补充。
+        System.out.println(futureTask.get());
+        // 前面的sout语句无法执行，后面的也无法执行，因为都是同一个main线程中执行！！
+        System.out.println(123);
+    }
+}
+
+// 对比Runnable而已，增加了返回值功能。
+class MyCallable implements Callable<Integer> {
+
+    @Override
+    public Integer call() throws Exception {
+        Integer count = 0;
+        for (int i = 0; i < 20; i++) {
+            TimeUnit.SECONDS.sleep(1);
+            count = (count + i) % Integer.MAX_VALUE;
+        }
+        return count;
+    }
+}
+```
+
+> 线程池创建
+
+具体用法后期线程池这章中会具体阐述。
+
+jdk提供好的线程池有如下几个：
+
+- ==newFixedThreadPool()方法：==`返回一个固定线程数量的线程池`。`线程池中的线程数量始终不变`。有新的任务提交时,`若有空闲线程，则立即执行`。`若没有，则任务被暂存在一个任务队列中`，待有线程空闲时，再处理任务队列中的任务。
+- ==newSingleThreadExecutor()方法：==返回一个`只有一个线程的线程池`。多余任务被提交到该线程池时会被保存在一个任务队列中，`待线程空闲，按先入先出的顺序执行队列中的任务。`
+- ==newCachedThreadPool()方法：==`返回一个可根据实际情况调整线程数量的线程池`。线程池的线程数量不确定，但若有空闲线程可以复用，则会优先使用可复用的线程。若所有线程均在工作，又有新的任务提交，则会创建新的线程处理任务。所有线程在当前任务执行完毕后，将返回线程池进行复用。
+- ==newSingleThreadScheduledExecutor()方法：==返回一个ScheduledExecutorService对象，线程池大小为1。定时器，如在某个固定的延时之后执行，或者周期性执行某个任务。
+- ==newScheduledThreadPool()方法：==返回一个ScheduledExecutorService对象，但该线程池可以指定线程数量。
+
+```java
+public class CreateByThreadPool {
+
+    public static void fixedThreadPool() {
+        // 创建固定大小的线程池。允许最多执行2个任务，多余的任务会放入阻塞队列中。
+        // 阻塞队列的大小为 Integer.MAX_VALUE
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+        executorService.execute(() -> {
+            while (true) {
+                System.out.println(Thread.currentThread().getName());
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        executorService.execute(() -> {
+            while (true) {
+                System.out.println(Thread.currentThread().getName());
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    public static void cachedThreadPool() {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        executorService.execute(() -> {
+            System.out.println(123);
+        });
+        executorService.shutdown();
+    }
+
+    public static void scheduledThreadPool() {
+        ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(10);
+        // 周期执行。
+        ScheduledFuture<?> schedule1 = scheduledThreadPool.scheduleAtFixedRate(() -> {
+            System.out.println(1);
+        }, 10, 10, TimeUnit.SECONDS);
+    }
+
+
+    public static void main(String[] args) {
+        scheduledThreadPool();
+    }
+}
+```
+
+### 终止线程
+
+终止线程的方式有如下几种：
+
+- stop()：废弃。
+    - Thread.stop()方法在结束线程时，会直接终止线程，并立即释放这个线程所持有的锁，而这些锁恰恰是用来维持对象一致性的。
+    - stop()方法过于暴力，强行把执行到一半的线程终止，可能会引起一些数据不一致的问题。
+
+### 线程中断
+
+#### 简述
+
+stop强行结束线程可能会引起数据不一致。如过我们把线程执行到一个安全点后再终止则可避免这种问题。线程中断就是这种思想。设置线程需要被中断的标记，具体何时中断由我们自己控制。
+
+----
+
+#### API
+
+- `public void interrupt() // 中断线程`
+- `public boolean Thread.isInterrupted() // 判断线程是否被中断`
+- `public static boolean Thread.interrupted() //  判断线程是否被中断，并清除当前中断状态`
+
+#### 示例
+
+`线程中断并不会使线程立即退出，而是给线程发送一个通知，告知目标线程，有人希望你退出啦！至于目标线程接到通知后如何处理，则完全由目标线程自行决定。这点很重要，如果中断后，线程立即无条件退出，我们就又会遇到stop()方法的老问题。`
+
+> interrupt方法
+
+一个实例方法。它通知目标线程中断，也就是设置中断标志位。`仅仅是设置一个标志位~`并不会导致线程停止，想要线程停止可对标志位进行判断，然后进行其他操作
+
+```java
+public class InterruptDemo {
+    public static void testInterrupt() throws InterruptedException {
+        Thread thread = new Thread(() -> {
+            while (true)
+                Thread.yield();
+        });
+        thread.start();
+        Thread.sleep(2000);
+        // thread.interrupt() 仅仅只是设置中断标志位
+        thread.interrupt();
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        // 死循环。
+        testInterrupt();
+    }
+}
+```
+
+> Thread.isInterrupted()方法
+
+一个静态方法。判断当前线程是被设置了中断状态。所以我们可以对设置了中断状态的线程进行需要的操作，`如：当前线程被设置了中断状态，那么在某个时刻，我们就让线程退出执行！`
+
+```java
+import java.util.concurrent.TimeUnit;
+
+    public static void testIsInterrupted() throws InterruptedException {
+        Thread thread = new Thread(() -> {
+            int count = 0;
+            while (true) {
+                count = (int) (Math.random() * 100_000);
+                System.out.println(count);
+                if (Thread.currentThread().isInterrupted() && count > 99_997) {
+                    System.out.println("break current thread");
+                    break;
+                }
+                // 放弃cpu执行权限
+                Thread.yield();
+            }
+        });
+        thread.start();
+        thread.interrupt();
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        testIsInterrupted();
+    }
+}
+```
+
+>Thread.interrupted()方法
+
+判断线程是否被中断，并清除当前中断状态
+
+### 线程通信
+
+线程通信的方式有如下几种
+
+> 基本通信方式
+
+- wait - notify/notifyAll：wait线程阻塞并释放锁，notify/notifyAll唤醒线程/所有线程；需要获得监视器monitor，简单说就是要sync加锁
+- suspend - resume（废弃）：suspend挂起线程、resume唤醒；需要获得监视器monitor，简单说就是要像sync加锁
+- join - yeild：join等待线程结束、yeild谦让
+
+> 高级通信方式
+
+- LockSupport
+- AQS
+- ReentrantLock
+- ReentrantRead/WriteLock
+- Semaphore
+- CyclicBarrier
+- CountDownLatch
+- StampedLock
+
+#### suspend-resume
+
+使用不当会造成死锁，且死锁后的线程状态还是Runnable！！这个才是最坑的，我觉得就是因为这个才被废弃的！！
+
+`suspend挂起线程，不释放资源！！`
+
+`resume唤醒线程！！`
+
+`如果resume()方法操作意外地在suspend()方法前就执行了，那么被挂起的线程可能很难有机会被继续执行。而且！！对于被挂起的线程，从它的线程状态上看，居然还是Runnable，这会严重影响我们对系统当前状态的判断。`
+
+LockSupport比这个好！！
+
+#### wait-notify
+
+- wait：阻塞线程并释放锁。
+    - 如果一个线程调用了object.wait()方法，那么它就会进入object对象的等待队列。这个等待队列中，可能会有多个线程，因为系统运行多个线程同时等待某一个对象。
+
+- notify：唤醒阻塞队列中的某个线程。
+    - 当object.notify()方法被调用时，它就会从这个等待队列中随机选择一个线程，并将其唤醒。
+    - PS：选择唤醒某个线程，这个选择是不公平的，完全随机！
+
+- notifyAll：唤醒阻塞队列中的所有线程。
+- `注意：Thread.sleep是不会释放锁的！`
+
+#### join-yeild
+
+用于线程之间的协作。
+
+- join()
+- join(long millis)
+- yeild让出CPU资源，但是让出后还会继续竞争。
+
+```java
+public class JoinDemo {
+    public static void main(String[] args) throws InterruptedException {
+        Thread th1 = new Thread(() -> {
+            while (true) {
+                try {
+                    TimeUnit.SECONDS.sleep(1);
+                    System.out.println(Thread.currentThread().getName());
+                    System.out.println("========================");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        th1.start();
+        // 主线程Main 愿意等th1执行完6秒后再执行。不写数值的话，就是主线程等th1执行完毕后再执行。
+        th1.join(6000);
+        System.out.println("Over!");
+    }
+}
+```
+
+## volatile&JMM
+
+### volatile
+
+#### 概述
+
+volatile：可变的，易变的。
+
+- <span style="color:green">轻量级同步机制，能保证数据的可见性和有序性，</span><span style="color:red">无法保证原子性</span>
+- <span style="color:green">可禁止指令重排序</span>
+
+- 当你用关键字volatile声明一个变量时，就等于告诉了虚拟机，这个变量极有可能会被某些程序或者线程修改。为了确保这个变量被修改后，应用程序范围内的所有线程都能够“看到”这个改动，<span style="color:green">虚拟机就必须采用一些特殊的手段，保证这个变量的可见性等特点。</span>而这个手段就是：
+    - A线程修改了值，<span style="color:green">这个值改变后会立即更新到主内存中，其他线程工作内存中的这个值会失效，要再次使用时只能从主内存中拿数据，把数据copy到自己的工作内存中，</span>这样就保证了变量对其他线程来说是可见的了。
+
+#### 解释
+
+> 假定i被volatile修饰
+
+```mermaid
+graph LR
+线程1工作内存,副本i=0==>主内存i=0
+线程2工作内存,副本i=0==>主内存i=0
+```
+
+线程1把i自增到1，然后写入主内存。
+
+线程2因为是在线程1把数据写入到主内存前就拿到了数据，所以不会被强制刷新数据。volatile保证的是，数据写回主内存，其他线程工作内存中的值失效！其他线程要用这个数据时，不得不重新拿过！但是这里的线程2是数据已经压栈进行操作了！！不用从自己的工作内存中拿值了，i值失效了也没关系！
+
+线程2把i自增到1，然后写入主内存。
+
+正确结果应该是2，最后的结果却是1.
+
+> 简而言之
+
+volatile只是保证你读取的时候一定是从主内存中拿数据.
+
+但是在操作的时候,不保证这个值是与主内存中同步更新的.
+
+且Java的一些操纵如:+ - * /不是原子性的,所以可能会出现并发问题.
+
+> 请看下方的部分汇编代码
+
+```java
+javap -c 字节码指令
+
+public static void increase():
+	Code:
+		Stack=2, Locals=0, Args_size=0
+        0:	getstatic  #13;  //Field race:I   就是数据压栈！
+		3:  iconst_1
+		4:  iadd
+		5:  putstatic #13;  //Field race:I
+		8:  return
+    LineNumberTable:
+		line 14: 0
+        line 15: 8
+```
+
+使用字节码分析并发问题并不严谨,因为字节码指令也不一定是原子性的.但是这里用字节码足以说明问题了!
+
+<span style="color:green">volatile保证了getstatic取值到栈顶的时候数据是正确的，但是在执行iconst_1、iadd这些指令的时候，其他线程可能已经把数据的值增大了，栈顶的数据也就变成了过期的数据。</span>
+
+#### 使用场景
+
+由于volatile变量只能保证可见性，在不符合以下两条规则的运算场景中，我们仍然要通过加锁（使用synchronized、java.util.concurrent中的锁或原子类）来保证原子性：
+
+- 运算结果并不依赖变量的当前值，或者能够确保只有单一的线程修改变量的值。
+- 变量不需要与其他的状态变量共同参与不变约束。
+
+```java
+volatile boolean shutdownRequested;
+
+public void shutdown(){
+    shutdownRequest = true;
+}
+
+public void doWork(){
+    while(!shutdownRequested){
+        // 代码业务逻辑
+    }
+}
+```
+
+
+
+### JMM
+
+#### 科普
+
+衡量服务器性能的高低好坏：每秒事务处理数（Transactions Per Second，`TPS`）
+
+高速缓存一定程度上解决了速度不匹配问题，但是又引入了缓存一致性的问题。
+
+为了解决一致性的问题，需要各个处理器访问缓存时都遵循一些协议，在读写时要根据协议来进行操作。这类协议有：
+
+- `MSI`
+- `MESI`
+- `MOSI`
+- `Synapse`
+- `Firefly`
+- `Dragon Protocol`
+
+```mermaid
+graph LR
+处理器1==>高速缓存1==>缓存一致性协议==>主内存
+处理器2==>高速缓存2==>缓存一致性协议
+处理器3==>高速缓存3==>缓存一致性协议
+高速缓存1==>处理器1
+高速缓存2==>处理器2
+高速缓存3==>处理器3
+主内存==>缓存一致性协议
+```
+
+处理器内部的运算单元能尽量被充分利用，处理器可能会对输入代码进行乱序执行（Out-Of-Order Execution）优化，处理器会在计算之后将乱序执行的结果重组，保证该结果与顺序执行的结果是一致的，但并不保证程序中各个语句计算的先后顺序与输入代码中的顺序一致
+
+CPU现在多采用流水线执行的方式，会发生指令重排序的问题，目的是为了提高硬件资源的使用效率，但是有时候重排序会导致线程不安全（Java的`DCL`要使用volatile的原因，可以防止指令重排序。）
+
+#### 概述
+
+Java Memory Model（`JMM`），用以屏蔽掉各种硬件和操作系统的内存访问差异。以实现Java程序在各种平台下都能达到一致的内存访问效果。比`C/CPP`等使用硬件和OS自身的内存模型而言，编程人员无需考虑不同OS的不同内存模型，一套`JMM`可用于多种OS。
+
+#### 主内存与工作内存
+
+`Java内存模型规定了所有的变量都存储在主内存中`。每条`线程都有自己的工作内存`。`线程的工作内存保存了被该线程使用到的变量的主内存副本拷贝`，线程对变量的所有操作（读取，赋值等）都必须在工作内存中进行，不能直接读写主内存中的变量【分主内存，工作内存（每条线程有自己的工作内存），主内存数据赋值到工作内存后，线程才可对变量进行各种操作】
+
+PS：`JVM`规范规定了volatile变量依旧有工作内存的拷贝，当由于他特殊的操作顺序规定，看起来如同直接在主存中读写访问一样。
+
+<span style="color:red">都是双向箭头</span>
+
+```mermaid
+graph LR
+Java线程1==>工作内存1==>Save和Load操作==>主内存
+Java线程2==>工作内存2==>Save和Load操作
+Java线程3==>工作内存3==>Save和Load操作
+```
+
+这里所讲的主内存、工作内存与第2章所讲的Java内存区域中的Java堆、栈、方法区等并不是同一个层次的对内存的划分，这两者基本上是没有任何关系的。如果两者一定要勉强对应起来，那么从变量、主内存、工作内存的定义来看，<span style="color:red">主内存主要对应于Java堆中的对象实例数据部分</span>，而<span style="color:red">工作内存则对应于虚拟机栈中的部分区域</span>。从更基础的层次上说，主内存直接对应于物理硬件的内存，而<span style="color:red">为了获取更好的运行速度，虚拟机（或者是硬件、操作系统本身的优化措施）可能会让工作内存优先存储于寄存器和高速缓存中，因为程序运行时主要访问的是工作内存。</span>
+
+## 锁机制
 
 
 
