@@ -585,46 +585,69 @@ public class Server {
 
 客户端怎么发，服务端就怎么接收
 
-## 3.9 Java BIO模式下的端口转发思想
+## 3.8 Java BIO模式下的端口转发思想
 
-需求：需要实现一个客户端的消息可以发送给所有的客户端去接收。（群聊实现）
+需求：需要实现一个客户端的消息可以发送给所有的客户端去接收。（类似于群聊实现）
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20210323142048139.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3VuaXF1ZV9wZXJmZWN0,size_16,color_FFFFFF,t_70)
+
+大致流程梳理：
+
+- 客户端发送一条数据过去，服务端接收到后需要转发给所有的客户端。 
+
+- 如何转发呢？
+
+- 客户端发送数据，所有的客户端socket都在一个集合里，服务端遍历集合，把数据一个一个发过去就行。 
 
 ### 客户端开发
 
 ```java
-package com.itheima.file;
+package io.bio.v8;
 
-import java.io.DataOutputStream;
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.net.Socket;
+import java.util.Scanner;
 
-/**
-    目标：实现客户端上传任意类型的文件数据给服务端保存起来。
-
- */
 public class Client {
     public static void main(String[] args) {
-        try(
-                InputStream is = new FileInputStream("C:\\Users\\dlei\\Desktop\\BIO,NIO,AIO\\文件\\java.png");
-        ){
-            //  1、请求与服务端的Socket链接
-            Socket socket = new Socket("127.0.0.1" , 8888);
-            //  2、把字节输出流包装成一个数据输出流
-            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-            //  3、先发送上传文件的后缀给服务端
-            dos.writeUTF(".png");
-            //  4、把文件数据发送给服务端进行接收
-            byte[] buffer = new byte[1024];
-            int len;
-            while((len = is.read(buffer)) > 0 ){
-                dos.write(buffer , 0 , len);
+        try {
+            // 1、创建于服务端的Socket链接
+            Socket socket = new Socket("127.0.0.1", 9999);
+            // 4、分配一个线程为客户端socket服务接收服务端发来的消息
+            new ClientReaderThread(socket).start();
+
+            // 2、从当前socket管道中得到一个字节输出流对应的打印流
+            PrintStream ps = new PrintStream(socket.getOutputStream());
+            // 3、接收用户输入的消息发送出去
+            Scanner sc = new Scanner(System.in);
+            while (true) {
+                String msg = sc.nextLine();
+                ps.println("波妞：" + msg);
+                ps.flush();
             }
-            dos.flush();
-            Thread.sleep(10000);
-        }catch (Exception e){
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+class ClientReaderThread extends Thread {
+    private Socket socket;
+
+    public ClientReaderThread(Socket socket) {
+        this.socket = socket;
+    }
+
+    @Override
+    public void run() {
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            String msg;
+            while ((msg = br.readLine()) != null) {
+                System.out.println(msg);
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -633,120 +656,204 @@ public class Client {
 
 ### 服务端实现
 
+```java
+package io.bio.v8;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+
+/**
+ * 目标：BIO模式下的端口转发思想-服务端实现
+ * 服务端实现的需求：
+ * 1.注册端口
+ * 2.接收客户端的socket连接，交给一个独立的线程来处理
+ * 3.把当前连接的客户端socket存入到一个所谓的在线socket集合中保存
+ * 4.接收客户端的消息，然后推送给当前所有在线的socket接收
+ */
+public class Server {
+    public static ArrayList<Socket> onLineSocket = new ArrayList<>(16);
+
+    public static void main(String[] args) {
+        try {
+            ServerSocket serverSocket = new ServerSocket(9999);
+            while (true) {
+                Socket accept = serverSocket.accept();
+                // 把登录的客户端存入到一个在线集合中。
+                onLineSocket.add(accept);
+                // 为登录成功的socket分配一个线程进行处理
+                new Thread(new ServerReaderThread(accept)).start();
+            }
+        } catch (Exception e) {
+
+        }
+    }
+}
+
+class ServerReaderThread implements Runnable {
+    private Socket socket;
+
+    public ServerReaderThread() {
+
+    }
+
+    public ServerReaderThread(Socket socket) {
+        this.socket = socket;
+    }
+
+    @Override
+    public void run() {
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            String msg;
+            while ((msg = bufferedReader.readLine()) != null) {
+                // 服务端接收到数据后，把消息传给所有的在线用户
+                sendMsgToAllClient(msg);
+            }
+        } catch (Exception e) {
+            System.out.println("有人下线");
+            Server.onLineSocket.remove(socket);
+            e.printStackTrace();
+        }
+    }
+
+    private void sendMsgToAllClient(String msg) {
+        try {
+            for (Socket sk : Server.onLineSocket) {
+                if (sk == socket) continue;
+                // 包装一下，用PrintStream的方式传递数据。知道是哪个socket，就可以直接给这个socket发送数据了。
+                PrintStream printStream = new PrintStream(sk.getOutputStream());
+                printStream.println(msg);
+                printStream.flush();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+
+
 ### 小结
 
-## 3.10 基于BIO模式下即时通信
+## 3.9 基于BIO模式下即时通信
 
 基于BIO模式下的即时通信，我们需要解决客户端到客户端的通信，也就是需要实现客户端与客户端的端口消息转发逻辑。
 
-### 项目功能演示
+###  项目功能演示
 
 #### 项目案例说明
 
 本项目案例为即时通信的软件项目，适合基础加强的大案例，具备综合性。学习本项目案例至少需要具备如下Java SE技术点:
 
-- 1. Java 面向对象设计，语法设计。
-- 1. 多线程技术。
-- 1. IO流技术。
-- 1. 网络通信相关技术。
-- 1. 集合框架。
-- 1. 项目开发思维。
-- 1. Java 常用 api 使用。
+* 1. Java 面向对象设计，语法设计。
+* 2. 多线程技术。
+* 3. IO流技术。
+* 4. 网络通信相关技术。
+* 5. 集合框架。
+* 6. 项目开发思维。
+* 7. Java 常用 api 使用。
 
- ......
+​    ......
 
 #### 功能清单简单说明：
 
 **1.客户端登陆功能**
 
-- 可以启动客户端进行登录，客户端登陆只需要输入用户名和服务端ip地址即可。
+* 可以启动客户端进行登录，客户端登陆只需要输入用户名和服务端ip地址即可。
 
 **2.在线人数实时更新。**
 
-- 客户端用户户登陆以后，需要同步更新所有客户端的联系人信息栏。
+* 客户端用户户登陆以后，需要同步更新所有客户端的联系人信息栏。
 
 **3.离线人数更新**
 
-- 检测到有客户端下线后，需要同步更新所有客户端的联系人信息栏。
+* 检测到有客户端下线后，需要同步更新所有客户端的联系人信息栏。
 
 **4.群聊**
 
-- 任意一个客户端的消息，可以推送给当前所有客户端接收。
+* 任意一个客户端的消息，可以推送给当前所有客户端接收。
 
 **5.私聊**
 
-- 可以选择某个员工，点击私聊按钮，然后发出的消息可以被该客户端单独接收。
+* 可以选择某个员工，点击私聊按钮，然后发出的消息可以被该客户端单独接收。
 
 **6.@消息**
 
-- 可以选择某个员工，然后发出的消息可以@该用户，但是其他所有人都能
+* 可以选择某个员工，然后发出的消息可以@该用户，但是其他所有人都能
 
 **7.消息用户和消息时间点**
 
-- 服务端可以实时记录该用户的消息时间点，然后进行消息的多路转发或者选择。
+* 服务端可以实时记录该用户的消息时间点，然后进行消息的多路转发或者选择。
 
 #### 项目启动与演示
 
 **项目代码结构演示。**
 
-![image-20200223212913139](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAAAAACIM/FCAAACh0lEQVR4Ae3ch5W0OgyG4dt/mQJ2xgQPzJoM1m3AbALrxzrf28FzsoP0HykJEEAAAUQTBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEkKK0789+GK/I2ezfQB522PnS1qc8pGgXvr4tE4aY0XOUWlGImThWgyCk6DleixzE7qwBkg/MGiDPlVVAyp1VQGrPKiACDhFI6VkF5LmzCki+sg7IwDoglnVAil0IMkeG9CyUiwsxLFUVFzJJOQaKCjFCDN9RXMjIX7W6ztZXZDKKCyn8sWJvH+nca7WHDN9lROlAliPH9iRKCPI4cswFJQWxB46toLQgQ9jhn5QYZA9DOkoMUoQde5YapAxDWkoNYsOQR3KQd9CxUnIQF4S49CB9ENKlBxmDEKsFUgMCCCCAAHIrSF61f6153Ajy8nyiPr8L5MXnmm4CyT2fzN4DUvHZ+ntA2tOQBRBAAAEEEEAAAQQQ7ZBaC6TwSiDUaYHQ2yuB0MN+ft+43whyrs4rgVCjBUKTFshLC6TUAjGA3AxSaYFYLZBOC2RUAsk8h5qTg9QcbEoOsoQhQ2qQhsO5xCD5dgB5JQaZ+KBKGtKecvR81Ic0ZDjByKdDx0rSEDZ/djQbH+bkIdvfJFm98BfV8hD2zprfVdlu9PxVeyYAkciREohRAplJCaRSAplJCcQogTjSAdlyHRBvSAekJR0QRzogA+mADJkOiCPSAPEtqYBshlRAXC43hxix2QiOuEZkVERykGyNo9idIZKE0HO7XrG6OiMShlDWjstVzdPgXtUH9v0CEidAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQP4HgjZxTpdEii0AAAAASUVORK5CYII=)
+![image-20200223212913139](D:/大厂面试之IO模式详解资料/讲义/BIO、NIO、AIO.assets/image-20200223212913139.png)
 
 **项目启动步骤：**
 
-- 1.首先需要启动服务端，点击ServerChat类直接右键启动，显示服务端启动成功！
+* 1.首先需要启动服务端，点击ServerChat类直接右键启动，显示服务端启动成功！
 
-- 2.其次，点击客户端类ClientChat类，在弹出的方框中输入服务端的ip和当前客户端的昵称
+* 2.其次，点击客户端类ClientChat类，在弹出的方框中输入服务端的ip和当前客户端的昵称
 
-    ![image-20200223214123052](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAAAAACIM/FCAAACh0lEQVR4Ae3ch5W0OgyG4dt/mQJ2xgQPzJoM1m3AbALrxzrf28FzsoP0HykJEEAAAUQTBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEkKK0789+GK/I2ezfQB522PnS1qc8pGgXvr4tE4aY0XOUWlGImThWgyCk6DleixzE7qwBkg/MGiDPlVVAyp1VQGrPKiACDhFI6VkF5LmzCki+sg7IwDoglnVAil0IMkeG9CyUiwsxLFUVFzJJOQaKCjFCDN9RXMjIX7W6ztZXZDKKCyn8sWJvH+nca7WHDN9lROlAliPH9iRKCPI4cswFJQWxB46toLQgQ9jhn5QYZA9DOkoMUoQde5YapAxDWkoNYsOQR3KQd9CxUnIQF4S49CB9ENKlBxmDEKsFUgMCCCCAAHIrSF61f6153Ajy8nyiPr8L5MXnmm4CyT2fzN4DUvHZ+ntA2tOQBRBAAAEEEEAAAQQQ7ZBaC6TwSiDUaYHQ2yuB0MN+ft+43whyrs4rgVCjBUKTFshLC6TUAjGA3AxSaYFYLZBOC2RUAsk8h5qTg9QcbEoOsoQhQ2qQhsO5xCD5dgB5JQaZ+KBKGtKecvR81Ic0ZDjByKdDx0rSEDZ/djQbH+bkIdvfJFm98BfV8hD2zprfVdlu9PxVeyYAkciREohRAplJCaRSAplJCcQogTjSAdlyHRBvSAekJR0QRzogA+mADJkOiCPSAPEtqYBshlRAXC43hxix2QiOuEZkVERykGyNo9idIZKE0HO7XrG6OiMShlDWjstVzdPgXtUH9v0CEidAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQP4HgjZxTpdEii0AAAAASUVORK5CYII=)
+  ![image-20200223214123052](D:/大厂面试之IO模式详解资料/讲义/BIO、NIO、AIO.assets/image-20200223214123052.png)
 
-- 3.登陆进入后的聊天界面如下，即可进行相关操作。
+* 3.登陆进入后的聊天界面如下，即可进行相关操作。
 
-    - 如果直接点击发送，默认发送群聊消息
+  * 如果直接点击发送，默认发送群聊消息
 
-- 如果选中右侧在线列表某个用户，默认发送@消息
+* 如果选中右侧在线列表某个用户，默认发送@消息
 
-    - 如果选中右侧在线列表某个用户，然后选择右下侧私聊按钮默，认发送私聊消息。
+  * 如果选中右侧在线列表某个用户，然后选择右下侧私聊按钮默，认发送私聊消息。
 
-    ![image-20200223214143465](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAAAAACIM/FCAAACh0lEQVR4Ae3ch5W0OgyG4dt/mQJ2xgQPzJoM1m3AbALrxzrf28FzsoP0HykJEEAAAUQTBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEkKK0789+GK/I2ezfQB522PnS1qc8pGgXvr4tE4aY0XOUWlGImThWgyCk6DleixzE7qwBkg/MGiDPlVVAyp1VQGrPKiACDhFI6VkF5LmzCki+sg7IwDoglnVAil0IMkeG9CyUiwsxLFUVFzJJOQaKCjFCDN9RXMjIX7W6ztZXZDKKCyn8sWJvH+nca7WHDN9lROlAliPH9iRKCPI4cswFJQWxB46toLQgQ9jhn5QYZA9DOkoMUoQde5YapAxDWkoNYsOQR3KQd9CxUnIQF4S49CB9ENKlBxmDEKsFUgMCCCCAAHIrSF61f6153Ajy8nyiPr8L5MXnmm4CyT2fzN4DUvHZ+ntA2tOQBRBAAAEEEEAAAQQQ7ZBaC6TwSiDUaYHQ2yuB0MN+ft+43whyrs4rgVCjBUKTFshLC6TUAjGA3AxSaYFYLZBOC2RUAsk8h5qTg9QcbEoOsoQhQ2qQhsO5xCD5dgB5JQaZ+KBKGtKecvR81Ic0ZDjByKdDx0rSEDZ/djQbH+bkIdvfJFm98BfV8hD2zprfVdlu9PxVeyYAkciREohRAplJCaRSAplJCcQogTjSAdlyHRBvSAekJR0QRzogA+mADJkOiCPSAPEtqYBshlRAXC43hxix2QiOuEZkVERykGyNo9idIZKE0HO7XrG6OiMShlDWjstVzdPgXtUH9v0CEidAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQP4HgjZxTpdEii0AAAAASUVORK5CYII=)
+  ![image-20200223214143465](D:/大厂面试之IO模式详解资料/讲义/BIO、NIO、AIO.assets/image-20200223214143465.png)
 
-    ![image-20200223214155975](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAAAAACIM/FCAAACh0lEQVR4Ae3ch5W0OgyG4dt/mQJ2xgQPzJoM1m3AbALrxzrf28FzsoP0HykJEEAAAUQTBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEkKK0789+GK/I2ezfQB522PnS1qc8pGgXvr4tE4aY0XOUWlGImThWgyCk6DleixzE7qwBkg/MGiDPlVVAyp1VQGrPKiACDhFI6VkF5LmzCki+sg7IwDoglnVAil0IMkeG9CyUiwsxLFUVFzJJOQaKCjFCDN9RXMjIX7W6ztZXZDKKCyn8sWJvH+nca7WHDN9lROlAliPH9iRKCPI4cswFJQWxB46toLQgQ9jhn5QYZA9DOkoMUoQde5YapAxDWkoNYsOQR3KQd9CxUnIQF4S49CB9ENKlBxmDEKsFUgMCCCCAAHIrSF61f6153Ajy8nyiPr8L5MXnmm4CyT2fzN4DUvHZ+ntA2tOQBRBAAAEEEEAAAQQQ7ZBaC6TwSiDUaYHQ2yuB0MN+ft+43whyrs4rgVCjBUKTFshLC6TUAjGA3AxSaYFYLZBOC2RUAsk8h5qTg9QcbEoOsoQhQ2qQhsO5xCD5dgB5JQaZ+KBKGtKecvR81Ic0ZDjByKdDx0rSEDZ/djQbH+bkIdvfJFm98BfV8hD2zprfVdlu9PxVeyYAkciREohRAplJCaRSAplJCcQogTjSAdlyHRBvSAekJR0QRzogA+mADJkOiCPSAPEtqYBshlRAXC43hxix2QiOuEZkVERykGyNo9idIZKE0HO7XrG6OiMShlDWjstVzdPgXtUH9v0CEidAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQP4HgjZxTpdEii0AAAAASUVORK5CYII=)
+  ![image-20200223214155975](D:/大厂面试之IO模式详解资料/讲义/BIO、NIO、AIO.assets/image-20200223214155975.png)
+
+
 
 #### 技术选型分析
 
 本项目案例涉及到Java基础加强的案例，具体涉及到的技术点如下：
 
-- 1. Java 面向对象设计，语法设计。
+* 1. Java 面向对象设计，语法设计。
 
-- 1. 多线程技术。
+* 2. 多线程技术。
 
-- 1. IO流技术。
+* 3. IO流技术。
 
-- 1. 网络通信相关技术。
+* 4. 网络通信相关技术。
 
-- 1. 集合框架。
+* 5. 集合框架。
 
-- 1. 项目开发思维。
+* 6. 项目开发思维。
 
-- 1. Java 常用 api 使用。
+* 7. Java 常用 api 使用。
 
-    ......
+  ......
 
 ### 服务端设计
 
 #### 服务端接收多个客户端逻辑
 
-##### 目标
+##### 目标 
 
 服务端需要接收多个客户端的接入。
 
 ##### 实现步骤
 
-- 1.服务端需要接收多个客户端，目前我们采取的策略是一个客户端对应一个服务端线程。
-- 2.服务端除了要注册端口以外，还需要为每个客户端分配一个独立线程处理与之通信。
+* 1.服务端需要接收多个客户端，目前我们采取的策略是一个客户端对应一个服务端线程。
+* 2.服务端除了要注册端口以外，还需要为每个客户端分配一个独立线程处理与之通信。
 
 ##### 代码实现
 
-- 服务端主体代码，主要进行端口注册，和接收客户端，分配线程处理该客户端请求
+* 服务端主体代码，主要进行端口注册，和接收客户端，分配线程处理该客户端请求
 
 ```java
 public class ServerChat {
@@ -772,7 +879,7 @@ public class ServerChat {
 }
 ```
 
-- 服务端分配的独立线程类负责处理该客户端Socket的管道请求。
+* 服务端分配的独立线程类负责处理该客户端Socket的管道请求。
 
 ```java
 class ServerReader extends Thread {
@@ -803,7 +910,7 @@ public class Constants {
 
 ##### 小结
 
- 本节实现了服务端可以接收多个客户端请求。
+​	本节实现了服务端可以接收多个客户端请求。
 
 #### 服务端接收登陆消息以及监测离线
 
@@ -813,14 +920,14 @@ public class Constants {
 
 ##### 实现步骤
 
-- 需要在服务端处理客户端的线程的登陆消息。
-- 需要注意的是，服务端需要接收客户端的消息可能有很多种。
-    - 分别是登陆消息，群聊消息，私聊消息 和@消息。
-    - 这里需要约定如果客户端发送消息之前需要先发送消息的类型，类型我们使用信号值标志（1，2，3）。
-        - 1代表接收的是登陆消息
-        - 2代表群发| @消息
-        - 3代表了私聊消息
-- 服务端的线程中有异常校验机制，一旦发现客户端下线会在异常机制中处理，然后移除当前客户端用户，把最新的用户列表发回给全部客户端进行在线人数更新。
+* 需要在服务端处理客户端的线程的登陆消息。
+* 需要注意的是，服务端需要接收客户端的消息可能有很多种。
+  * 分别是登陆消息，群聊消息，私聊消息 和@消息。
+  * 这里需要约定如果客户端发送消息之前需要先发送消息的类型，类型我们使用信号值标志（1，2，3）。
+    * 1代表接收的是登陆消息
+    * 2代表群发| @消息
+    * 3代表了私聊消息
+* 服务端的线程中有异常校验机制，一旦发现客户端下线会在异常机制中处理，然后移除当前客户端用户，把最新的用户列表发回给全部客户端进行在线人数更新。
 
 ##### 代码实现
 
@@ -904,7 +1011,7 @@ public class ServerReader extends Thread {
 
 ##### 小结
 
-- 此处实现了接收客户端的登陆消息，然后提取当前在线的全部的用户名称和当前登陆的用户名称发送给全部在线用户更新自己的在线人数列表。
+* 此处实现了接收客户端的登陆消息，然后提取当前在线的全部的用户名称和当前登陆的用户名称发送给全部在线用户更新自己的在线人数列表。
 
 #### 服务端接收群聊消息
 
@@ -914,13 +1021,13 @@ public class ServerReader extends Thread {
 
 ##### 实现步骤
 
-- 接下来要接收客户端发来的群聊消息。
-- 需要注意的是，服务端需要接收客户端的消息可能有很多种。
-    - 分别是登陆消息，群聊消息，私聊消息 和@消息。
-    - 这里需要约定如果客户端发送消息之前需要先发送消息的类型，类型我们使用信号值标志（1，2，3）。
-        - 1代表接收的是登陆消息
-        - 2代表群发| @消息
-        - 3代表了私聊消息
+* 接下来要接收客户端发来的群聊消息。
+* 需要注意的是，服务端需要接收客户端的消息可能有很多种。
+  * 分别是登陆消息，群聊消息，私聊消息 和@消息。
+  * 这里需要约定如果客户端发送消息之前需要先发送消息的类型，类型我们使用信号值标志（1，2，3）。
+    * 1代表接收的是登陆消息
+    * 2代表群发| @消息
+    * 3代表了私聊消息
 
 ##### 代码实现
 
@@ -1019,7 +1126,7 @@ public class ServerReader extends Thread {
 
 ##### 小结
 
-- 此处根据消息的类型判断为群聊消息，然后把群聊消息推送给当前在线的所有客户端。
+* 此处根据消息的类型判断为群聊消息，然后把群聊消息推送给当前在线的所有客户端。
 
 #### 服务端接收私聊消息
 
@@ -1029,14 +1136,14 @@ public class ServerReader extends Thread {
 
 ##### 实现步骤
 
-- 解决私聊消息的推送逻辑，私聊消息需要知道推送给某个具体的客户端
-- 我们可以接收到客户端发来的私聊用户名称，根据用户名称定位该用户的Socket管道，然后单独推送消息给该Socket管道。
-- 需要注意的是，服务端需要接收客户端的消息可能有很多种。
-    - 分别是登陆消息，群聊消息，私聊消息 和@消息。
-    - 这里需要约定如果客户端发送消息之前需要先发送消息的类型，类型我们使用信号值标志（1，2，3）。
-        - 1代表接收的是登陆消息
-        - 2代表群发| @消息
-        - 3代表了私聊消息
+* 解决私聊消息的推送逻辑，私聊消息需要知道推送给某个具体的客户端
+* 我们可以接收到客户端发来的私聊用户名称，根据用户名称定位该用户的Socket管道，然后单独推送消息给该Socket管道。
+* 需要注意的是，服务端需要接收客户端的消息可能有很多种。
+  * 分别是登陆消息，群聊消息，私聊消息 和@消息。
+  * 这里需要约定如果客户端发送消息之前需要先发送消息的类型，类型我们使用信号值标志（1，2，3）。
+    * 1代表接收的是登陆消息
+    * 2代表群发| @消息
+    * 3代表了私聊消息
 
 ##### 代码实现
 
@@ -1160,8 +1267,8 @@ public class ServerReader extends Thread {
 
 ##### 小结
 
-- 本节我们解决了私聊消息的推送逻辑，私聊消息需要知道推送给某个具体的客户端Socket管道
-- 我们可以接收到客户端发来的私聊用户名称，根据用户名称定位该用户的Socket管道，然后单独推送消息给该Socket管道。
+* 本节我们解决了私聊消息的推送逻辑，私聊消息需要知道推送给某个具体的客户端Socket管道
+* 我们可以接收到客户端发来的私聊用户名称，根据用户名称定位该用户的Socket管道，然后单独推送消息给该Socket管道。
 
 ### 客户端设计
 
@@ -1173,10 +1280,10 @@ public class ServerReader extends Thread {
 
 ##### 实现步骤
 
-- 客户端界面主要是GUI设计，主体页面分为登陆界面和聊天窗口，以及在线用户列表。
-- GUI界面读者可以自行复制使用。
-- 登陆输入服务端ip和用户名后，要请求与服务端的登陆，然后立即为当前客户端分配一个读线程处理客户端的读数据消息。因为客户端可能随时会接收到服务端那边转发过来的各种即时消息信息。
-- 客户端登陆完成，服务端收到登陆的用户名后，会立即发来最新的用户列表给客户端更新。
+* 客户端界面主要是GUI设计，主体页面分为登陆界面和聊天窗口，以及在线用户列表。
+* GUI界面读者可以自行复制使用。
+* 登陆输入服务端ip和用户名后，要请求与服务端的登陆，然后立即为当前客户端分配一个读线程处理客户端的读数据消息。因为客户端可能随时会接收到服务端那边转发过来的各种即时消息信息。
+* 客户端登陆完成，服务端收到登陆的用户名后，会立即发来最新的用户列表给客户端更新。
 
 ##### 代码实现
 
@@ -1423,7 +1530,7 @@ public class ClientReader extends Thread {
 
 ##### 小结
 
-- 此处说明了如果启动客户端界面，以及登陆功能后，服务端收到新的登陆消息后，会响应一个在线列表用户回来给客户端更新在线人数！
+* 此处说明了如果启动客户端界面，以及登陆功能后，服务端收到新的登陆消息后，会响应一个在线列表用户回来给客户端更新在线人数！
 
 #### 客户端发送消息逻辑
 
@@ -1433,11 +1540,11 @@ public class ClientReader extends Thread {
 
 ##### 实现步骤
 
-- 客户端启动后，在聊天界面需要通过发送按钮推送群聊消息，@消息，以及私聊消息。
-- ![image-20200223232406727](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAAAAACIM/FCAAACh0lEQVR4Ae3ch5W0OgyG4dt/mQJ2xgQPzJoM1m3AbALrxzrf28FzsoP0HykJEEAAAUQTBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEkKK0789+GK/I2ezfQB522PnS1qc8pGgXvr4tE4aY0XOUWlGImThWgyCk6DleixzE7qwBkg/MGiDPlVVAyp1VQGrPKiACDhFI6VkF5LmzCki+sg7IwDoglnVAil0IMkeG9CyUiwsxLFUVFzJJOQaKCjFCDN9RXMjIX7W6ztZXZDKKCyn8sWJvH+nca7WHDN9lROlAliPH9iRKCPI4cswFJQWxB46toLQgQ9jhn5QYZA9DOkoMUoQde5YapAxDWkoNYsOQR3KQd9CxUnIQF4S49CB9ENKlBxmDEKsFUgMCCCCAAHIrSF61f6153Ajy8nyiPr8L5MXnmm4CyT2fzN4DUvHZ+ntA2tOQBRBAAAEEEEAAAQQQ7ZBaC6TwSiDUaYHQ2yuB0MN+ft+43whyrs4rgVCjBUKTFshLC6TUAjGA3AxSaYFYLZBOC2RUAsk8h5qTg9QcbEoOsoQhQ2qQhsO5xCD5dgB5JQaZ+KBKGtKecvR81Ic0ZDjByKdDx0rSEDZ/djQbH+bkIdvfJFm98BfV8hD2zprfVdlu9PxVeyYAkciREohRAplJCaRSAplJCcQogTjSAdlyHRBvSAekJR0QRzogA+mADJkOiCPSAPEtqYBshlRAXC43hxix2QiOuEZkVERykGyNo9idIZKE0HO7XrG6OiMShlDWjstVzdPgXtUH9v0CEidAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQP4HgjZxTpdEii0AAAAASUVORK5CYII=)
-- 如果直接点击发送，默认发送群聊消息
-- 如果选中右侧在线列表某个用户，默认发送@消息
-- 如果选中右侧在线列表某个用户，然后选择右下侧私聊按钮默，认发送私聊消息。
+* 客户端启动后，在聊天界面需要通过发送按钮推送群聊消息，@消息，以及私聊消息。
+* ![image-20200223232406727](D:/大厂面试之IO模式详解资料/讲义/BIO、NIO、AIO.assets/image-20200223232406727.png)
+* 如果直接点击发送，默认发送群聊消息
+* 如果选中右侧在线列表某个用户，默认发送@消息
+* 如果选中右侧在线列表某个用户，然后选择右下侧私聊按钮默，认发送私聊消息。
 
 ##### 代码实现
 
@@ -1719,10 +1826,10 @@ class ClientReader extends Thread {
 
 ##### 小结
 
-- 此处实现了客户端发送群聊消息，@消息，以及私聊消息。
-- 如果直接点击发送，默认发送群聊消息
-- 如果选中右侧在线列表某个用户，默认发送@消息
-- 如果选中右侧在线列表某个用户，然后选择右下侧私聊按钮默，认发送私聊消息。
+* 此处实现了客户端发送群聊消息，@消息，以及私聊消息。
+* 如果直接点击发送，默认发送群聊消息
+* 如果选中右侧在线列表某个用户，默认发送@消息
+* 如果选中右侧在线列表某个用户，然后选择右下侧私聊按钮默，认发送私聊消息。
 
 # 第四章 JAVA NIO深入剖析
 
@@ -1732,7 +1839,7 @@ class ClientReader extends Thread {
 
 - Java NIO（New IO）也有人称之为 java non-blocking IO是从Java 1.4版本开始引入的一个新的IO API，可以替代标准的Java IO API。NIO与原来的IO有同样的作用和目的，但是使用的方式完全不同，NIO支持面**向缓冲区**的、基于**通道**的IO操作。NIO将以更加高效的方式进行文件的读写操作。NIO可以理解为非阻塞IO,传统的IO的read和write只能阻塞执行，线程在读写IO期间不能干其他事情，比如调用socket.read()时，如果服务器一直没有数据传输过来，线程就一直阻塞，而NIO中可以配置socket为非阻塞模式。
 - NIO 相关类都被放在 java.nio 包及子包下，并且对原 java.io 包中的很多类进行改写。
-- NIO 有三大核心部分：**Channel( 通道) ，Buffer( 缓冲区), Selector( 选择器)**
+- NIO 有三大核心部分：`Channel(通道)`，`Buffer(缓冲区)`，`Selector(选择器)`
 - Java NIO 的非阻塞模式，使一个线程从某通道发送请求或者读取数据，但是它仅能得到目前可用的数据，如果目前没有数据可用时，就什么都不会获取，而不是保持线程阻塞，所以直至数据变的可以读取之前，该线程可以继续做其他的事情。 非阻塞写也是如此，一个线程请求写入一些数据到某通道，但不需要等待它完全写入，这个线程同时可以去做别的事情。
 - 通俗理解：NIO 是可以做到用一个线程来处理多个操作的。假设有 1000 个请求过来,根据实际情况，可以分配20 或者 80个线程来处理。不像之前的阻塞 IO 那样，非得分配 1000 个。
 
@@ -2698,7 +2805,7 @@ public class Client {
 
 - Java AIO(NIO.2) ： 异步非阻塞，服务器实现模式为一个有效请求一个线程，客户端的I/O请求都是由OS先完成了再通知服务器应用去启动线程进行处理。
 
-```
+```java
 AIO
 异步非阻塞，基于NIO的，可以称之为NIO2.0
 BIO                         NIO                              		AIO        

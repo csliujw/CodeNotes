@@ -10,3 +10,7 @@
 - 看的下去就看这个 小马哥的 (https://www.bilibili.com/video/BV1AJ411R73o?from=search&seid=4348186481789239623)
 - 或者周阳的 (https://www.bilibili.com/video/BV1yE411x7Ky?from=search&seid=9907017489604690987)
 
+内容：SpringCloud + SpringCloud Alibaba
+
+技术要求：java8+git、github+Nginx+RabbitMQ+SpringBoot2.0
+
