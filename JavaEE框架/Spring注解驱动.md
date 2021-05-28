@@ -1326,8 +1326,6 @@ class BeanPostProcessDemo implements BeanPostProcessor {
 }
 ```
 
-
-
 ### 原理
 
 原理那两个视频没看，记得补 `P16&17`
@@ -1449,7 +1447,6 @@ public @interface Value {
   // output  Person{name='张三', age=15} 赋值成功
   ```
 
-  
 
 ## `@propertySource`
 
@@ -2227,7 +2224,7 @@ IOC是一个容器，棒我们管理所有的组件
  - 初始化
    	- 填充属性
       	- 调用初始化方法
-   	- 
+      	- 
 
 # AOP
 
