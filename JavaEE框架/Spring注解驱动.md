@@ -3642,3 +3642,21 @@ class DeferredResultQueue {
 }
 ```
 
+# Spring 5 新特性
+
+## 新功能
+
+- 代码基于Java8，运行时兼容Java 9，把不建议的代码、库删除了。
+
+- 自带通用日志封装
+  - Spring 5 移除了Log4jConfigListener，官方建议使用Log4j2
+  - Spring 5框架整合Log4j2
+
+- 核心容器
+  - 支持@Nullable注解
+    - 可以使用在方法、属性、参数上
+    - 方法：返回值可以为空
+    - 属性：属性可以为空
+    - 参数值：参数值可以为空
+- 
+
