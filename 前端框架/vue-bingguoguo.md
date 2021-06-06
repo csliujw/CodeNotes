@@ -252,6 +252,47 @@ Vue常见的过渡动画（不重要）
     - `mounted`：（第二个重要的函数，此时，页面刚被渲染出来；如果需要操作DOM元素，最好在这个阶段）
 - <img src="https://cn.vuejs.org/images/lifecycle.png" />
 
+> 代码示例
+
+```html
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
+		<title>生命周期</title>
+	</head>
+	<body>
+		<div id="app">
+			asf
+		</div>
+		<script>
+			const vm = new Vue({
+				el: '#app',
+				data: {
+					msg:"data_msg"
+				},
+				methods: {
+					say() {
+						console.log("Hello!");
+					}
+				},
+				created() {
+					// 这个函数非常重要，经常在这个created方法中发起页面的首批数据请求。
+					// 可以访问data，methods中的数据/方法
+					console.log("created==="+this.msg);
+				},
+				beforeCreate() {
+					console.log("beforeCreate==="+this.msg);
+				}
+			})
+		</script>
+	</body>
+</html>
+```
+
+
+
 
 
 ## 异步
