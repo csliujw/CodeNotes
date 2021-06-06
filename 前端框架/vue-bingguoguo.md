@@ -247,55 +247,146 @@ Vue常见的过渡动画（不重要）
 
 - 创建期间的生命周期函数：（特点：每个实例一辈子只执行一次）
     - `beforeCreate`：创建之前，此时data和methods尚未初始化
-    - `created`（第一个重要的函数，此时，data和methods已经创建好了，可以被访问了）
+    - ==created==（第一个重要的函数，此时，data和methods已经创建好了，可以被访问了，首页数据的请求一般在这里发起！）
     - `beforeMount`：挂在模板结构之前，此时，页面还没有被渲染到浏览器中（如果想初始化一些第三方的JS插件，必须在mounted中进行初始化。比如echarts，它需要在初始化完毕的dom中进行操作）
-    - `mounted`：（第二个重要的函数，此时，页面刚被渲染出来；如果需要操作DOM元素，最好在这个阶段）
-- <img src="https://cn.vuejs.org/images/lifecycle.png" />
+    - ==mounted==（第二个重要的函数，此时，页面刚被渲染出来；如果需要操作DOM元素，最好在这个阶段；如使用三方插件，该插件需要DOM初始化完毕！）
 
-> 代码示例
+- 运行期间的生命周期函数：（特点：按需被调用至少0次，最多N次）
+  - beforeUpdate：数据是最新的，页面是旧的。
+  - updated：页面和数据都是最新的。
+- 销毁期间的生命周期函数：（特点：每个实例一辈子只执行一次）
+  - beforeDestory：销毁之前，实例还是正常可用。
+  - destoryed：销毁之后，实例已经不在工作了。
 
-```html
-<!DOCTYPE html>
-<html>
-	<head>
-		<meta charset="utf-8">
-		<script src="js/vue.js" type="text/javascript" charset="utf-8"></script>
-		<title>生命周期</title>
-	</head>
-	<body>
-		<div id="app">
-			asf
-		</div>
-		<script>
-			const vm = new Vue({
-				el: '#app',
-				data: {
-					msg:"data_msg"
-				},
-				methods: {
-					say() {
-						console.log("Hello!");
-					}
-				},
-				created() {
-					// 这个函数非常重要，经常在这个created方法中发起页面的首批数据请求。
-					// 可以访问data，methods中的数据/方法
-					console.log("created==="+this.msg);
-				},
-				beforeCreate() {
-					console.log("beforeCreate==="+this.msg);
-				}
-			})
-		</script>
-	</body>
-</html>
+<img src="https://cn.vuejs.org/images/lifecycle.png" />
+
+## Promise、async、await
+
+### Promise
+
+> 概念：
+
+ES6中的新语法，Promise是一个构造函数；每个new出来的Promise实例对象，都代表一个异步操作。
+
+JS解析引擎是单线程的；宿主环境（浏览器、Node环境）是多线程的。
+
+异步的任务会放到异步回调函数的队列中。当js把自己栈中的任务执行完后，才会执行异步回调函数队列中的任务。
+
+> 作用
+
+解决了回调地狱的问题；
+
+- 回调地狱，指的是回调函数中，嵌套回调函数的代码形式；如果嵌套的层级很深，就是回调地狱。
+- 回调地狱，不利于代码的阅读、维护和后期的扩展。
+
+### Promise用法
+
+异步代码回顾
+
+```js
+/**
+JS解析引擎是单线程的；宿主环境（浏览器、Node环境）是多线程的。
+
+异步的任务会放到异步回调函数的队列中。当js把自己栈中的任务执行完后，才会执行异步回调函数队列中的任务。
+*/
+
 ```
 
+回调地狱代码示例：`node.js`
+
+```js
+const fs = require('fs')
+
+fs.readFile('./files/1.txt', 'utf-8', (err, dataStr1) => {
+    if (err) return console.log(err.message);
+    console.log(dataStr1);
+    fs.readFile('./files/2.txt', 'utf-8', (err, dataStr1) => {
+        if (err) return console.log(err.message);
+        console.log(dataStr1);
+        fs.readFile('./files/3.txt', 'utf-8', (err, dataStr1) => {
+            if (err) return console.log(err.message);
+            console.log(dataStr1);
+        })
+    })
+})
+
+```
+
+----
+
+Promise不会减少代码量，但是可以解决回调地狱的问题。
+
+创建形式上的异步操作
+
+```js
+const p = new Promise()
+```
+
+创建具体的异步操作；只要new了就会立即执行！
+
+```js
+// 只要new了，就会立即执行！
+const p = new Promise(function(successCb,errorCb){
+    // 定义具体的异步操作
+})
+// 定义成功和失败的回调
+p.then(successCallback,errorCallback);
+```
+
+---
+
+查看下Promise的原型链
+
+Promise
+
+- prototype
+  - ==catch==：function catch()
+  - constructor：function Promise()
+  - finally：function finally()
+  - ==then==：function then()  为Promise示例对象，指定 成功 和 失败的回调函数
+
+```js
+const fs = require('fs')
+
+//==================无效写法================
+function getContentByPath(fPath) {
+    // js主线程只负责new出这个Promise，具体的执行交给浏览器执行了
+    const p = new Promise(function () {
+        fs.readFile(fPath, 'utf-8', (err, dataStr1) => {
+            if (err) return console.log(err.message);
+            console.log(dataStr1);
+            // return dataStr1; 所以这个返回值是无效的。
+        })
+    })
+}
+getContentByPath('./files/1.txt')
+//==================无效写法================
 
 
+//==================有效写法================
+function getContentByPath2(fPath) {
+    // js主线程只负责new出这个Promise，具体的执行交给浏览器执行了.回调函数从哪里来？
+    const p = new Promise(function (successCallback, errorCallback) {
+        fs.readFile(fPath, 'utf-8', (err, dataStr1) => {
+            if (err) return errorCallback(err);
+            successCallback(dataStr1)
+        })
+    });
+    return p;
+}
 
+const r1 = getContentByPath2('./files/1.txt')
+// 成功回调  失败回调
+r1.then(function (info) { console.log(info); console.log("success"); }, function (err) { console.log(err); });
+//==================有效写法================
 
-## 异步
+```
+
+实际我们不会自己封装Promise，会使用其他人封装的方法。
+
+### async和await
+
+ES7中async和await可以简化Promise调用，提高Promise代码的阅读性和理解性
 
 ## axios
 
