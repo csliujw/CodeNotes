@@ -343,7 +343,8 @@ Promise
   - ==catch==：function catch()
   - constructor：function Promise()
   - finally：function finally()
-  - ==then==：function then()  为Promise示例对象，指定 成功 和 失败的回调函数
+  - ==then==：function then()  为Promise示例对象，.then()方法最多需要两个参数，成功 和 失败的回调函数；它的返回值是Promise对象。
+  - catch：function catch() 捕获前面所有.then()中发生的错误，集中处理。
 
 ```js
 const fs = require('fs')
@@ -386,9 +387,503 @@ r1.then(function (info) { console.log(info); console.log("success"); }, function
 
 ### async和await
 
-ES7中async和await可以简化Promise调用，提高Promise代码的阅读性和理解性
+> ES7中async和await可以简化Promise调用，提高Promise代码的阅读性和理解性。
+
+- 如果某个方法的返回值是 Promise 对象，那么，就可以用 await关键字，来修饰 promise 实例
+- 如果一个方法内部用了 await 那么这个方法必须修饰为 async 异步方法
+  - 精简：await 只能用在被 async 修饰的方法中
+
+```js
+function getContentByPath(fpath){
+    return new Promise(function(successCb,errorCb){
+        fs.readFile(fpath, 'utf-8',(err,data)=>{
+            if(err) return errorCb(err)
+            successCb(data)
+        })
+    })
+}
+
+const data = await getContentByPath("./fs.txt")
+
+// 如果一个方法内部用了await那么这个方法必须修饰为async
+async function test(){
+	const data = await getContentByPath("./fs.txt")
+}
+```
 
 ## axios
 
+> 之前发起请求的方式
+
+- 最开始封装XMLHttpRequest对象发起Ajax请求。
+- 使用Jquery中提供的工具函数：
+  - `$.ajax({配置对象})`
+  - `$.post(url地址, function(){})`
+  - `$.get(url地址，处理函数)`
+- 现在，用axios发起Ajax请求。
+  - 只支持get和post请求，无法发起JSONP请求。
+  - 如果设计到JSONP请求，让后端启用cors跨域资源共享即可。
+- 在Vue中使用 vue-resource 发起数据请求
+  - 支持get post jsonp ，vue官方不推荐。
+
+### axios的使用
+
+- 测试数据地址
+  - get 测试地址 http://www.liulongbin.top:3005/api/get
+  - post 测试地址 http://www.liulongbin.top:3005/api/post
+- 使用axios.get() 和 axios.post() 发起请求。
+- 使用拦截器实现loading效果
+- 使用 async 和 await 结合 axios 发起 Ajax请求 
+
+#### get请求
+
+> 使用axios发起get请求
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="js/vue.js"></script>
+    <script src="js/axios.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <button @click='getInfo'>GET</button>
+    </div>
+    <script>
+        const vm = new Vue({
+            el: '#app',
+            methods: {
+                getInfo() {
+                    const result = axios.get('http://www.liulongbin.top:3005/api/get', {
+                        params: {
+                            name: 'zs',
+                            age: 20
+                        }
+                    });
+                    result.then(function (res) {
+                        console.log(res);
+                    })
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+```
+
+> 结合async await
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="js/vue.js"></script>
+    <script src="js/axios.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <button @click='getInfo'>GET</button>
+    </div>
+    <script>
+        const vm = new Vue({
+            el: '#app',
+            methods: {
+                async getInfo() {
+                    const result = await axios.get('http://www.liulongbin.top:3005/api/get', {
+                        params: {
+                            name: 'zs',
+                            age: 20
+                        }
+                    });
+                    console.log(result);
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>
+```
+
+> 解构赋值
+
+```js
+const user = {
+    name: 'zs',
+    age: 20,
+    gender: 'man'
+}
+
+// 把name属性解放出来，当作常量去使用。
+// const { name } = user
+// console.log(name);
+
+// 给age取别名：userage
+const { name, age: userage } = user
+console.log(name, userage);
+```
+
+==这样我们获取数据的时候，就可以用解构赋值，得到我们想要的那部分数据了！==
+
+```js
+async function getInfo() {
+    const {data:retVal} = await axios.get('http://www.liulongbin.top:3005/api/get', {
+        params: {
+            name: 'zs',
+            age: 20
+        }
+    });
+    console.log(result);
+}
+```
+
+#### post请求
+
+```js
+async postInfo() {
+    const { data: retVal } = await axios.post('http://www.liulongbin.top:3005/api/post', { name: 'ls', gender: 'man' })
+    console.log(retVal.data);
+}
+```
+
+#### Vue推荐用法
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="js/vue.js"></script>
+    <script src="js/axios.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <button @click='getInfo'>GET</button>
+        <button @click='postInfo'>POST</button>
+    </div>
+    <script>
+        // 通过这个属性，全局设置 请求的 根路径。
+        axios.defaults.baseURL = 'http://www.liulongbin.top:3005'
+        Vue.prototype.$http = axios;
+        const vm = new Vue({
+            el: '#app',
+            methods: {
+                async getInfo() {
+                    // 请求数据的时候会。 baseURL + 路径 = 'http://www.liulongbin.top:3005' + '/api/get'
+                    const { data: retVal } = await this.$http.get('/api/get', {
+                        params: {
+                            name: 'zs',
+                            age: 20
+                        }
+                    });
+                    console.log(retVal.data);
+                },
+                async postInfo() {
+                    const { data: retVal } = await this.$http.post('/api/post', { name: 'ls', gender: 'man' })
+                    console.log(retVal.data);
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>
+```
+
+### axois的传参
+
+```js
+this.$http.get('/user/10',{params:{name:'zs',age:22}}) // ===> http://127.0.0.1:8080/user/10?name=zs&age=2
+```
+
 ## 案例
 
+带有数据库的品牌管理案例
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="js/vue.js"></script>
+    <script src="js/axios.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.css">
+</head>
+
+<body>
+    <div id="app">
+
+        <div class="panel panel-primary inline">
+            <div class="panel-heading inline">
+                <h3 class="panel-title">添加新品牌</h3>
+            </div>
+
+            <div class="panel-body form-inline">
+                <div class="input-group">
+                    <div class="input-group-addon">品牌名称</div>
+                    <input type="text" class="form-control" v-model='name'>
+                </div>
+
+                <div class="input-group">
+                    <button class="btn btn-primary" @click='add'>添加</button>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-group-addon">按名称搜索</div>
+                    <input type="text" class="form-control" v-model='keywords'>
+                </div>
+            </div>
+        </div>
+
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>name</th>
+                    <th>time</th>
+                    <th>operate</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 很巧妙啊 in search() search用来过滤 -->
+                <tr v-for="item in search()" :key='item.id'>
+                    <td>{{item.id}}</td>
+                    <td>{{item.name}}</td>
+                    <td>{{item.ctime | dataFormat}}</td>
+                    <td><a href="#" @click.prevent="remove(item.id)">删除</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+<script>
+    axios.defaults.baseURL = 'http://liulongbin.top:3005';
+    Vue.prototype.$http = axios;
+
+    // 定义全局过滤器
+    Vue.filter('dataFormat', function (originVal) {
+        const dt = new Date(originVal);
+        const y = dt.getFullYear();
+        const m = (dt.getMonth() + 1 + '').padStart(2, '0');
+        const d = (dt.getDay() + '').padStart(2, '0');
+        return `${y}-${m}-${d}`
+    })
+
+
+    const vm = new Vue({
+        el: '#app',
+        data: {
+            brandList: [],
+            name: '',
+            keywords: ''
+        },
+        created() {
+            //在created中发起首屏数据的请求
+            this.getBandList()
+        },
+        methods: {
+            async getBandList() {
+                const { data: res } = await this.$http.get('/api/getprodlist');
+                // console.log(res);
+                // return res.message; 返回的是一个promise对象。
+                // 应该这么写
+                this.brandList = res.message;
+            },
+            async add() {
+                const { data: res } = await this.$http.post('/api/addproduct', { name: this.name });
+                if (res.status !== 0) return alert('添加失败！');
+                this.getBandList();
+                this.name = '';
+            },
+            search() {
+                return this.brandList.filter(item=>item.name.includes(this.keywords))
+            },
+            async remove(id) {
+                const { data: res } = await this.$http.get('/api/delproduct/' + id);
+                if (res.status !== 0) return alert('删除失败');
+                else this.getBandList();
+            }
+        }
+    });
+</script>
+
+</html>
+```
+
+# Vue中的动画
+
+## 主要内容
+
+- Vue.js中的过渡动画
+- webpack的基本配置和使用
+- ES6模块化导入和导出
+  - CommonJS ==> 必须有 require，exports，module
+    - 导入模块：const fs = require('fs')
+    - 暴露模块：module.exports={}
+  - ES6模块化规范：
+    - import $ from 'jquery' ==> 从jquery包中导入 `$`
+
+## Vue中的动画
+
+- 都是简单的过渡动画。
+
+### 基本介绍
+
+> **每个动画分为两部分**
+
+- 入场动画：从不可见（flag=false）-> 可见（flag=true）
+- 离场动画：可见（flag=true）-> 不可见（flag=false）
+
+> 入场动画：两个时间点，一个时间段
+
+- v-enter：入场前的样式。(class名)
+- v-enter-to：入场完成以后的样式。(class名)
+- v-enter-active：入场的时间段，即中间过渡的时间段。(class名)
+
+>离场动画：两个时间点，一个时间段
+
+- v-leave：离场前的样式。(class名)
+- v-leave-to：离场完成以后的样式。(class名)
+- v-leave-active：离场的时间段，即中间过渡的时间段。(class名)
+
+<img src="../pics/vue/transition.png">
+
+### Demo
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="js/vue.js"></script>
+</head>
+<style>
+    /* 定义入场之前和离场之后的样式 */
+    .v-enter,
+    .v-leave-to {
+        transform: translateX(150px);
+    }
+
+    /* 定义入场阶段和离场阶段的样式 */
+    .v-enter-active,
+    .v-leave-active {
+        transition: all 0.8s ease;
+    }
+</style>
+
+<body>
+    <div id="app">
+        <button @click='flag=!flag'>toggle</button>
+        <!-- 1.使用vue提供的transition标签 包裹需要添加动画的元素 name默认以v为前缀。 -->
+        <transition name='v'>
+            <h3 v-if='flag'>asfaf</h3>
+        </transition>
+    </div>
+    <script>
+        const vm = new Vue({
+            el: '#app',
+            data: {
+                flag: true
+            },
+            methods: {
+
+            }
+        })
+    </script>
+</body>
+
+</html>
+```
+
+### 三方动画库
+
+==Vue不支持animate4.0==
+
+- 把需要添加动画的元素，使用v-if或v-show进行控制。
+- 把需要添加动画的元素，使用Vue提供的元素`<transition></transition>`包裹起来
+- 为`<transition></transition>`添加两个属性类`enter-active-class,leave-active-class`
+- 把需求添加动画的元素，添加一个class='animated'
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/animate.min.css">
+    <script src="js/vue.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <button @click='flag=!flag'>toggle</button>
+        <!-- 1.使用vue提供的transition标签 包裹需要添加动画的元素 -->
+        <transition enter-active-class="bounceInDown" leave-active-class="bounceOutDown">
+            <h3 v-show='flag' class="animated">aasffasfsasfasfsfaf</h3>
+        </transition>
+    </div>
+    <script>
+        const vm = new Vue({
+            el: '#app',
+            data: {
+                flag: true
+            }
+        })
+    </script>
+</body>
+
+</html>
+```
+
+### v-for的列表过渡
+
+- 把v-for循环渲染的元素，添加`:key`属性【注意：如果为列表项添加动画效果，一定要指定key，并且，key的值不能为索引】
+
+- 在v-for循环渲染的元素外层，包裹`<transition-group>`标签
+
+- 添加两组类即可：
+
+  ```css
+  .v-enter,
+  .v-leave-to{
+      opacity:0,
+      transform:translateY(100px);
+  }
+  
+  .v-enter-active,
+  .v-leave-active{
+      transition:all 0.8s ease;
+  }
+  ```
+
+  
