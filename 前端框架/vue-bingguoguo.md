@@ -886,4 +886,138 @@ this.$http.get('/user/10',{params:{name:'zs',age:22}}) // ===> http://127.0.0.1:
   }
   ```
 
-  
+> 具体Demo
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/animate.min.css">
+    <script src="js/vue.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <input v-model="name"> <button @click="add">添加</button>
+        <!-- 默认会用span 包裹 li。我们指定tag的话，就会用我们指定的tag包裹 -->
+        <transition-group tag='ul' enter-active-class="bounceInDown" leave-active-class="bounceOutDown">
+            <li v-for="item in list" :key="item.id" @click="del(item.id)" class="animated">{{item.name}}</li>
+        </transition-group>
+    </div>
+
+</body>
+<script>
+    const vm = new Vue({
+        el: "#app",
+        data: {
+            list: [
+                { "id": 1, "name": 'd1' },
+                { "id": 2, "name": 'd2' },
+                { "id": 3, "name": 'd3' }
+            ],
+            newId: 4,
+            name: "123"
+        },
+        methods: {
+            add() {
+                const newInfo = { "id": this.newId++, "name": this.name }
+                console.log(name);
+                this.list.push(newInfo);
+                this.name = ''
+            },
+            // 有问题，不过没事，就了解一下。
+            del(id) {
+                const i = this.list.findIndex(item=>item.id===id);
+                this.list.splice(i, 1);
+            }
+        },
+    })
+</script>
+
+</html>
+```
+
+# Webpack
+
+## 网页中常见静态资源
+
+- 样式表
+  - .css .less .scss
+- js文件
+  - .js	.ts	.coffee
+- 图片
+  - .jpg/.jpeg	.png	.gif	.bmp	.webp
+- 字体文件
+  - .ttf	.eot	.woff	.woff2	.svg
+- 模板文件
+  - .vue	.jsx
+
+> 引入静态资源多了？
+
+- 对网页性能不友好：要发起很多静态资源请求，降低页面的加载效率，用户体验差；
+- 对程序开发不友好：前端程序员要处理复杂的文件之间的依赖关系；
+
+> 如何解决上述问题？
+
+- 对于JS或CSS，可以压缩和合并；小图片适合转Base64格式的编码。
+  - 合并：减少发送请求次数
+  - 压缩：减小文件的传输量
+  - Base：把图片转换成了字符串，无需为图片发起请求。
+- 通过一些工具，让工具自动维护文件之间的依赖关系。
+
+## Webpack
+
+**Webpack：**前端项目的构建工具；前端的项目都是基于webpack进行构建和运行的。
+
+**为什么用Webpack：**
+
+- 1、如果项目使用webpack进行构建，我们可以书写高级的ES代码，且不用考虑兼容性。
+- 2、webpack能够优化项目的性能，比如合并、压缩文件等；
+- 3、基于webpack，程序员可以把自己的开发重心，放到功能上；
+
+**什么项目适合使用webpack：**
+
+- 单页面应用程序
+  - vue、react、angular只要用前端三大框架开发项目，必然会使用webpack工具。
+- 不太适合与多页面的普通网站结合使用
+- <a href="http://webpack.github.io/">官网</a>
+
+## webpack 流程
+
+<img src="..\pics\redis\image-20210627210139677.png">
+
+## 安装和配置webpack
+
+> 安装
+
+1、新建一个项目的空白目录，并在终端中，cd到项目根目录，指向==npm init -y==初始化项目
+
+2、装包：运行==npm i webpack webpack-cli -D== 安装项目构建所需要的webpack
+
+3、打开 package.json 文件，在scripts节点中，==新增一个dev的节点==：
+
+```shell
+"scripts":{
+	"test" : "echo \"Error: no test specified\" && exit 1",
+	"dev" : "webpack"
+}
+```
+
+4、在项目根目录中，新建一个webpack.config.js 配置文件，内容如下：
+
+```js
+// 这里用的 Node 语法， 向外导出一个 配置对象
+module.exports = {
+	mode: 'production' // production development
+}
+```
+
+5、在项目根目录中，新增一个src目录，并且在src目录中，新建一个 index.js 文件，作为 webpack 构建的入口；会把打包好的文件输出到 dist->main.js
+
+6、在终端中，==直接运行 npm run dev==启动 webpack进行项目构建；
+
