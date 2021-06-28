@@ -1,24 +1,22 @@
 # 第一章 BIO、NIO、AIO
 
-## 说明
+## 1.1 说明
 
 对于高性能场景，同步阻塞式I/O通信（BIO）性能低下。Java 2002年开始支持非阻塞式I/O通信技术（NIO）。
 
 通过大量案例，从最基础的BIO开始到NIO、AIO。清晰了解阻塞、同步、异步的现象、概念和特征及其优缺点。
 
-## 前置知识
+## 1.2 前置知识
 
 - 掌握JavaSE（Java多线程、Java IO流编程、Java网络基础知识），常用Java设计模式
 - 熟练掌握OOP。
 
-## 可解决的问题
+## 1.3 可解决的问题
 
 - 局域网内的通信要求
 - 多系统间底层消息传递机制
 - 高并发下、大数据量的通信场景需要
 - 游戏服务器端（手游、端游）
-
-
 
 # 第二章 IO演变
 
@@ -32,13 +30,13 @@
 
 客户端是否有数据传输，相应的线程都需要进行等待（阻塞了）
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20210323082329416.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3VuaXF1ZV9wZXJmZWN0,size_16,color_FFFFFF,t_70)
+<img src="../pics/JavaStrengthen/io/Java_BIO.png">
 
 ### Java NIO
 
 多路复用器会自动轮询所有的管道，去看那些管道有数据请求操作，有才会分配新的线程去处理管道通信，如果管道没有数据请求，那么线程可以去做其他的事情，不用等待。【依然需要轮询访问通道，但是通道无数据的时候，线程无需等待】
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20210323082552196.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3VuaXF1ZV9wZXJmZWN0,size_16,color_FFFFFF,t_70)
+<img src="../pics/JavaStrengthen/io/Java_NIO.png">
 
 ### Java AIO
 
@@ -46,7 +44,7 @@ Java AIO(NIO.2) ： 异步 异步非阻塞，服务器实现模式为一个有�
 
 客户端的数据都是通过OS进行处理，OS处理完数据后才会通知相应的服务端的线程进行数据的接收。
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20210323082936216.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3VuaXF1ZV9wZXJmZWN0,size_16,color_FFFFFF,t_70)
+<img src="../pics/JavaStrengthen/io/Java_AIO.png">
 
 ## 2.3 BIO、NIO、AIO适用场景
 
@@ -263,7 +261,7 @@ public class ServerDemo {
 
  在上述的案例中，一个服务端只能接收一个客户端的通信请求，**那么如果服务端需要处理很多个客户端的消息通信请求应该如何处理呢**，此时我们就需要在服务端引入线程了，也就是说客户端每发起一个请求，服务端就创建一个新的线程来处理这个客户端的请求，这样就实现了一个客户端一个线程的模型，图解模式如下：
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20210323082329416.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3VuaXF1ZV9wZXJmZWN0,size_16,color_FFFFFF,t_70)
+<img src="../pics/JavaStrengthen/io/Java_BIO.png">
 
 ### 客户端案例代码如下
 
@@ -374,7 +372,7 @@ class DealClient implements Runnable {
 
  图示如下:
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20210323141600962.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3VuaXF1ZV9wZXJmZWN0,size_16,color_FFFFFF,t_70)
+<img src="../pics/JavaStrengthen/io/fake_async.png">
 
 ### 线程池介绍
 
@@ -589,7 +587,7 @@ public class Server {
 
 需求：需要实现一个客户端的消息可以发送给所有的客户端去接收。（类似于群聊实现）
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20210323142048139.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3VuaXF1ZV9wZXJmZWN0,size_16,color_FFFFFF,t_70)
+<img src="../pics/JavaStrengthen/io/port_trans.png">
 
 大致流程梳理：
 
@@ -794,15 +792,14 @@ class ServerReaderThread implements Runnable {
 
 **项目代码结构演示。**
 
-![image-20200223212913139](D:/大厂面试之IO模式详解资料/讲义/BIO、NIO、AIO.assets/image-20200223212913139.png)
+<img src="../pics/JavaStrengthen/io/image-20200223212913139.png">
 
 **项目启动步骤：**
 
 * 1.首先需要启动服务端，点击ServerChat类直接右键启动，显示服务端启动成功！
-
 * 2.其次，点击客户端类ClientChat类，在弹出的方框中输入服务端的ip和当前客户端的昵称
 
-  ![image-20200223214123052](D:/大厂面试之IO模式详解资料/讲义/BIO、NIO、AIO.assets/image-20200223214123052.png)
+<img src="../pics/JavaStrengthen/io/image-20200223214123052.png">
 
 * 3.登陆进入后的聊天界面如下，即可进行相关操作。
 
@@ -812,9 +809,9 @@ class ServerReaderThread implements Runnable {
 
   * 如果选中右侧在线列表某个用户，然后选择右下侧私聊按钮默，认发送私聊消息。
 
-  ![image-20200223214143465](D:/大厂面试之IO模式详解资料/讲义/BIO、NIO、AIO.assets/image-20200223214143465.png)
+  <img src="../pics/JavaStrengthen/io/image-20200223214143465.png">
 
-  ![image-20200223214155975](D:/大厂面试之IO模式详解资料/讲义/BIO、NIO、AIO.assets/image-20200223214155975.png)
+  <img src="../pics/JavaStrengthen/io/image-20200223214155975.png">
 
 
 
@@ -1541,7 +1538,7 @@ public class ClientReader extends Thread {
 ##### 实现步骤
 
 * 客户端启动后，在聊天界面需要通过发送按钮推送群聊消息，@消息，以及私聊消息。
-* ![image-20200223232406727](D:/大厂面试之IO模式详解资料/讲义/BIO、NIO、AIO.assets/image-20200223232406727.png)
+* <img src="../pics/JavaStrengthen/io/image-20200223232406727.png">
 * 如果直接点击发送，默认发送群聊消息
 * 如果选中右侧在线列表某个用户，默认发送@消息
 * 如果选中右侧在线列表某个用户，然后选择右下侧私聊按钮默，认发送私聊消息。
@@ -1840,14 +1837,21 @@ class ClientReader extends Thread {
 - Java NIO（New IO）也有人称之为 java non-blocking IO是从Java 1.4版本开始引入的一个新的IO API，可以替代标准的Java IO API。NIO与原来的IO有同样的作用和目的，但是使用的方式完全不同，NIO支持面**向缓冲区**的、基于**通道**的IO操作。NIO将以更加高效的方式进行文件的读写操作。NIO可以理解为非阻塞IO,传统的IO的read和write只能阻塞执行，线程在读写IO期间不能干其他事情，比如调用socket.read()时，如果服务器一直没有数据传输过来，线程就一直阻塞，而NIO中可以配置socket为非阻塞模式。
 - NIO 相关类都被放在 java.nio 包及子包下，并且对原 java.io 包中的很多类进行改写。
 - NIO 有三大核心部分：`Channel(通道)`，`Buffer(缓冲区)`，`Selector(选择器)`
-- Java NIO 的非阻塞模式，使一个线程从某通道发送请求或者读取数据，但是它仅能得到目前可用的数据，如果目前没有数据可用时，就什么都不会获取，而不是保持线程阻塞，所以直至数据变的可以读取之前，该线程可以继续做其他的事情。 非阻塞写也是如此，一个线程请求写入一些数据到某通道，但不需要等待它完全写入，这个线程同时可以去做别的事情。
+- Java NIO 的非阻塞模式，使一个线程从某通道发送请求或者读取数据，但是它仅能得到目前可用的数据，如果目前没有数据可用时，就什么都不会获取，而不是保持线程阻塞，所以直至数据变的可以读取之前，该线程可以继续做其他的事情。 非阻塞写也是如此，一个线程请求写入一些数据到某通道，但不需要等待它完全写入，这个线程同时可以去做别的事情。`（基于通道进行数据读取的，通道中没有数据，线程不会进行阻塞，会去做其他事情，有数据时再来读取。很像OS的线程中断驱动I/O；DMA的I/O）`
+  * ==中断驱动I/O：==等待数据传输完成的过程中，CPU去做其他事。数据传输完成后，用中断进行通知。中断驱动I/O的缺点是I/O发生在每一个字符上。
+  * ==DMA的I/O：==DMA负责I/O请求，CPU不用管事。DMA速度比CPU执行速度慢很多，如果CPU在等待DMA的同时没有其他的事要做，那么采用中断驱动I/O或程序控制I/O可能会更好。
 - 通俗理解：NIO 是可以做到用一个线程来处理多个操作的。假设有 1000 个请求过来,根据实际情况，可以分配20 或者 80个线程来处理。不像之前的阻塞 IO 那样，非得分配 1000 个。
 
 ## 4.2 NIO 和 BIO 的比较
 
-- BIO 以流的方式处理数据,而 NIO 以块的方式处理数据,块 I/O 的效率比流 I/O 高很多
-- BIO 是阻塞的，NIO 则是非阻塞的
-- BIO 基于字节流和字符流进行操作，而 NIO 基于 Channel(通道)和 Buffer(缓冲区)进行操作，数据总是从通道 读取到缓冲区中，或者从缓冲区写入到通道中。Selector(选择器)用于监听多个通道的事件（比如：连接请求，数据到达等），因此使用单个线程就可以监听多个客户端通道
+* BIO 以流的方式处理数据,而 `NIO 以块的方式处理数据`,块 I/O 的效率比流 I/O 高很多
+  * 中断驱动I/O：一个字符一个字符产生中断
+  * DMA：一个块的传输结束后产生中断
+* BIO 是阻塞的，NIO 则是非阻塞的
+  * 程序控制I/O是阻塞的。
+  * 中断、DMA是非阻塞的。
+* BIO 基于字节流和字符流进行操作，而 NIO 基于 Channel(通道)和 Buffer(缓冲区)进行操作，数据总是从通道
+  读取到缓冲区中，或者从缓冲区写入到通道中。Selector(选择器)用于监听多个通道的事件（比如：连接请求，数据到达等），因此使用单个线程就可以监听多个客户端通道
 
 | NIO                       | BIO                 |
 | ------------------------- | ------------------- |
@@ -1855,11 +1859,13 @@ class ClientReader extends Thread {
 | 非阻塞（Non Blocking IO） | 阻塞IO(Blocking IO) |
 | 选择器（Selectors）       |                     |
 
+> NIO示意图
+
+<img src="../pics/JavaStrengthen/io/image-20210522103002504.png">
+
 ## 4.3 NIO 三大核心原理示意图
 
 NIO 有三大核心部分：**Channel( 通道) ，Buffer( 缓冲区), Selector( 选择器)**
-
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20210323145130359.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3VuaXF1ZV9wZXJmZWN0,size_16,color_FFFFFF,t_70)
 
 ### Buffer缓冲区
 
@@ -1873,7 +1879,7 @@ Java NIO的通道类似流，但又有些不同：既可以从通道中读取数
 
 Selector是 一个Java NIO组件，可以能够检查一个或多个 NIO 通道，并确定哪些通道已经准备好进行读取或写入。这样，一个单独的线程可以管理多个channel，从而管理多个网络连接，提高效率
 
-![image-20200619153658139](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAAAAACIM/FCAAACh0lEQVR4Ae3ch5W0OgyG4dt/mQJ2xgQPzJoM1m3AbALrxzrf28FzsoP0HykJEEAAAUQTBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEkKK0789+GK/I2ezfQB522PnS1qc8pGgXvr4tE4aY0XOUWlGImThWgyCk6DleixzE7qwBkg/MGiDPlVVAyp1VQGrPKiACDhFI6VkF5LmzCki+sg7IwDoglnVAil0IMkeG9CyUiwsxLFUVFzJJOQaKCjFCDN9RXMjIX7W6ztZXZDKKCyn8sWJvH+nca7WHDN9lROlAliPH9iRKCPI4cswFJQWxB46toLQgQ9jhn5QYZA9DOkoMUoQde5YapAxDWkoNYsOQR3KQd9CxUnIQF4S49CB9ENKlBxmDEKsFUgMCCCCAAHIrSF61f6153Ajy8nyiPr8L5MXnmm4CyT2fzN4DUvHZ+ntA2tOQBRBAAAEEEEAAAQQQ7ZBaC6TwSiDUaYHQ2yuB0MN+ft+43whyrs4rgVCjBUKTFshLC6TUAjGA3AxSaYFYLZBOC2RUAsk8h5qTg9QcbEoOsoQhQ2qQhsO5xCD5dgB5JQaZ+KBKGtKecvR81Ic0ZDjByKdDx0rSEDZ/djQbH+bkIdvfJFm98BfV8hD2zprfVdlu9PxVeyYAkciREohRAplJCaRSAplJCcQogTjSAdlyHRBvSAekJR0QRzogA+mADJkOiCPSAPEtqYBshlRAXC43hxix2QiOuEZkVERykGyNo9idIZKE0HO7XrG6OiMShlDWjstVzdPgXtUH9v0CEidAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQP4HgjZxTpdEii0AAAAASUVORK5CYII=)
+
 
 - 每个 channel 都会对应一个 Buffer
 - 一个线程对应Selector ， 一个Selector对应多个 channel(连接)
@@ -1889,7 +1895,7 @@ Selector是 一个Java NIO组件，可以能够检查一个或多个 NIO 通道�
 
 一个用于特定基本数据类 型的容器。由 java.nio 包定义的，所有缓冲区 都是 Buffer 抽象类的子类.。Java NIO 中的 Buffer 主要用于与 NIO 通道进行 交互，数据是从通道读入缓冲区，从缓冲区写入通道中的
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20210323153059284.png)
+<img src="../pics/JavaStrengthen/io/Buffer_PIC.png">
 
 ### **Buffer 类及其子类**
 
@@ -1919,7 +1925,7 @@ Buffer 中的重要概念：
 - **标记 (mark)与重置 (reset)**：标记是一个索引，通过 Buffer 中的 mark() 方法 指定 Buffer 中一个特定的 position，之后可以通过调用 reset() 方法恢复到这 个 position. **标记、位置、限制、容量遵守以下不变式： 0 <= mark <= position <= limit <= capacity**
 - **图示:**
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/2021032315392734.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3VuaXF1ZV9wZXJmZWN0,size_16,color_FFFFFF,t_70)
+<img src="../pics/JavaStrengthen/io/allocate_1.png">
 
 ### Buffer常见方法
 
@@ -2322,7 +2328,7 @@ public void test02() throws Exception {
 
 选择器（Selector） 是 SelectableChannle 对象的多路复用器，Selector 可以同时监控多个 SelectableChannel 的 IO 状况，也就是说，利用 Selector可使一个单独的线程管理多个 Channel。Selector 是非阻塞 IO 的核心
 
-![image-20200619230246145](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAAAAACIM/FCAAACh0lEQVR4Ae3ch5W0OgyG4dt/mQJ2xgQPzJoM1m3AbALrxzrf28FzsoP0HykJEEAAAUQTBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEkKK0789+GK/I2ezfQB522PnS1qc8pGgXvr4tE4aY0XOUWlGImThWgyCk6DleixzE7qwBkg/MGiDPlVVAyp1VQGrPKiACDhFI6VkF5LmzCki+sg7IwDoglnVAil0IMkeG9CyUiwsxLFUVFzJJOQaKCjFCDN9RXMjIX7W6ztZXZDKKCyn8sWJvH+nca7WHDN9lROlAliPH9iRKCPI4cswFJQWxB46toLQgQ9jhn5QYZA9DOkoMUoQde5YapAxDWkoNYsOQR3KQd9CxUnIQF4S49CB9ENKlBxmDEKsFUgMCCCCAAHIrSF61f6153Ajy8nyiPr8L5MXnmm4CyT2fzN4DUvHZ+ntA2tOQBRBAAAEEEEAAAQQQ7ZBaC6TwSiDUaYHQ2yuB0MN+ft+43whyrs4rgVCjBUKTFshLC6TUAjGA3AxSaYFYLZBOC2RUAsk8h5qTg9QcbEoOsoQhQ2qQhsO5xCD5dgB5JQaZ+KBKGtKecvR81Ic0ZDjByKdDx0rSEDZ/djQbH+bkIdvfJFm98BfV8hD2zprfVdlu9PxVeyYAkciREohRAplJCaRSAplJCcQogTjSAdlyHRBvSAekJR0QRzogA+mADJkOiCPSAPEtqYBshlRAXC43hxix2QiOuEZkVERykGyNo9idIZKE0HO7XrG6OiMShlDWjstVzdPgXtUH9v0CEidAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQAABBBBAAAEEEEAAAQQQQP4HgjZxTpdEii0AAAAASUVORK5CYII=)
+<img src="../pics/JavaStrengthen/io/selector_imp.png">
 
 - Java 的 NIO，用非阻塞的 IO 方式。可以用一个线程，处理多个的客户端连接，就会使用到 Selector(选择器)
 - Selector 能够检测多个注册的通道上是否有事件发生(注意:多个 Channel 以事件的方式可以注册到同一个 Selector)，如果有事件发生，便获取事件然后针对每个事件进行相应的处理。这样就可以只用一个单线程去管 理多个通道，也就是管理多个连接和请求。
@@ -2370,7 +2376,7 @@ int interestSet = SelectionKey.OP_READ|SelectionKey.OP_WRITE
 
 Selector可以实现： 一个 I/O 线程可以并发处理 N 个客户端连接和读写操作，这从根本上解决了传统同步阻塞 I/O 一连接一线程模型，架构的性能、弹性伸缩能力和可靠性都得到了极大的提升。
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20210323172636252.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3VuaXF1ZV9wZXJmZWN0,size_16,color_FFFFFF,t_70)
+<img src="../pics/JavaStrengthen/io/NIO_Three.png">
 
 ### 服务端流程
 

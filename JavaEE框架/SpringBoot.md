@@ -4,6 +4,15 @@
 
 雷丰阳的作为补充：(https://www.bilibili.com/video/BV19K4y1L7MT?spm_id_from=333.788.b_765f64657363.1)
 
+## SpringBoot 2.0介绍
+
+- 编程语言：Java 8+、Kotlin
+- 底层框架：Spring Framwork 5.0.x
+- 全新特性：Web Flux， 对Spring MVC的补充。
+  - 函数编程：Java 8 Lambda
+  - 响应式编程：Reactive Streams
+  - 异步编程：Servlet 3.1 或 Asyc NIO
+
 ## 学习内容
 
 - SpringBoot如何基于Spring Framework逐步走向自动装配。
@@ -59,6 +68,23 @@
 - 数据相关
 - 功能扩展
 - 运维管理
+
+## 快速入门案例
+
+> 场景说明
+
+- 定义用户模型，包括属性：用户ID和名称
+- 客户端发送POST请求，创建用户（Web MVC）
+- 客户端发送GET请求，获取所有用户（Web Flux）
+
+----
+
+NIO的reactor是同步非阻塞
+
+Web Flux的reactor是异步非阻塞的一个实现
+
+- Flux：0-n的对象
+- Mono：0-1的对象
 
 # 核心特性
 
