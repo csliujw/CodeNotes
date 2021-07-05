@@ -991,13 +991,17 @@ this.$http.get('/user/10',{params:{name:'zs',age:22}}) // ===> http://127.0.0.1:
 
 <img src="..\pics\redis\image-20210627210139677.png">
 
+vscode快捷键==li{这是第$个li}*9==
+
 ## 安装和配置webpack
 
 > 安装
 
 1、新建一个项目的空白目录，并在终端中，cd到项目根目录，指向==npm init -y==初始化项目
 
-2、装包：运行==npm i webpack webpack-cli -D== 安装项目构建所需要的webpack
+2、装包：运行==npm i webpack webpack-cli -D== 安装项目构建所需要的webpack。
+
+- 由于存在版本问题，所以推荐使用指定版本的工具==npm i webpack@4.17.1 webpack-cli==
 
 3、打开 package.json 文件，在scripts节点中，==新增一个dev的节点==：
 
@@ -1020,4 +1024,105 @@ module.exports = {
 5、在项目根目录中，新增一个src目录，并且在src目录中，新建一个 index.js 文件，作为 webpack 构建的入口；会把打包好的文件输出到 dist->main.js
 
 6、在终端中，==直接运行 npm run dev==启动 webpack进行项目构建；
+
+webpack学习失败。我直接上极客时间的Vue了。
+
+# 组件化Vue
+
+## ES6导入导出新语法
+
+一个模块可以同时使用按需导出和默认导出
+
+### 默认导入和导出
+
+```js
+//xxx.js
+let a = 10
+```
+
+----
+
+```js
+// 默认导入
+import m1 from './js/xxx.js'
+// 在webpack中，每个js文件都是独立的模块
+// 每个模块都有独立的作用域
+// 其他模块，默认无法直接访问当前模块中定义的成员。
+console.log(m1)
+```
+
+----
+
+```js
+//xxx.js
+let a = 10
+let b = 20
+// 这个export default{} 语法叫做默认导出。
+// 在一个模块中，仅允许导出一次
+export default {
+    a: a,
+    // 属性值和属性名一直可以简写。
+    b,
+    say(){
+        console.log("hello")
+    }
+}
+```
+
+### 按需导入和导出
+
+按需导入语法
+
+```js
+import { 成员名称 } from '模块名'
+
+//eg
+import m2,{xx} from "xxx.js"
+
+// as 取别名
+import m2,{test1 as myTest} from "xx.js"
+```
+
+按需导出语法
+
+```js
+export var a = 10
+```
+
+## 定义Vue组件
+
+### 模块化、组件化
+
+模块化：实现代码的复用；把可复用的代码 抽离为单独的模块；
+
+- 提供模块作用域的概念，防止全局变量污染
+- 提高了代码的复用率，方便了程序员之间共享代码
+
+组件化：把页面中可复用的UI结构，抽离为单独的组件。
+
+- 方便UI结构的重用
+- 可以直接使用第三方封装好的组件库
+- 更专注于业务逻辑
+
+### 定义全局组件
+
+> 语法
+
+- `Vue.component('组件名称',{组件的配置对象})`
+- 在组件的配置对象中：可以使用template属性指定当前组件要渲染的模板结构
+
+> 使用语法组件
+
+- 把组件的名称，以标签的形式，引入到页面上就行。
+
+> 注意
+
+- 从更抽象的角度来说，每个组件，就相对于一个自定义的元素；
+- 组件中的DOM结构，有且只能有唯一的根元素来进行包裹。
+
+### 组件定义data、methods以及生命周期函数
+
+day04--p8
+
+# 极客时间Vue
 

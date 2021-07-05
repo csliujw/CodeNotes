@@ -5324,6 +5324,56 @@ public class FileUpload extends HttpServlet {
 </html>
 ```
 
+## 第十章 双亲委派
+
+### 基本概念
+
+class文件通过**类加载器**装载至JVM中的。为了防止内存中存放在多份同样的字节码，使用了双亲委派机制（它不会自己去尝试加载类，而是把请求委托给父加载器去完成，依次向上，避免重复加载字节码）
+
+JDK中的本地方法类一般由根加载器（Bootstrap loader）装载；JDK中内部实现的扩展类一般由扩展加载器（ExtClassLoader）实现装载；而程序中的类文件则由系统加载器（AppClassLoader）实现装载。
+
+<img src="../pics/JavaStrengthen/jvm/ClassLoader.jpg">
+
+### 打破双亲委派机制
+
+只要加载类的时候，不是从 App ClassLoader --> Ext ClassLoader --> BootStrap ClassLoader 这个顺序查找，就是打破了双亲委派机制。
+
+加载class核心的方法在LoaderClass类的loadClass方法上（双亲委派机制的核心实现），只要我们定义个 ClassLoader，重写 loadClass 方法（不按照往上开始寻找类加载器），那就算是打破双亲委派机制了。
+
+> **Tomcat打破双亲委派机制**
+
+我们部署传统javaweb项目是，把war包放到tomcat的webapp下，这意味着一个tomcat可以运行多个web应用程序；
+
+----
+
+假设有两个Web应用程序，它们都有一个类，叫做User，并且它们的类全限定名都一样，如都是 `com.yyy.User`，但是他们的具体实现是不一样的。那么tomcat如何保证它们是不会冲突的？**tomcat为每个Web应用创建一个类加载实例（WebAppClassLoader），该加载器重写了 loadClass 方法，优先加载当前应用目录下的嘞，如果当前找不到了，才一层一层往上找**，这样就做到了Web应用层级的隔离。
+
+----
+
+并不是Web应用程序下的所有依赖都需要隔离的，比如 Redis 就可以 Web 应用之间共享（有需要的话），因为如果版本相同，没必要每个Web应用程序都独自加载一份。具体做法是：Tomcat 在 WebAppClassLoader 上加了个父类加载器 （Shared ClassLoader），**如果 WebAppClassLoader 自身没有加载到某个类，就委托 SharedClassLoader 去加载（把需要应用程序之间需要共享的类放到一个共享目录下，Share ClassLoader 读共享目录的类即可**）。
+
+为了隔绝Web应用程序与Tomcat本身的类，又有类加载器（CatalinaClassLoader）来装载 Tomcat 本身的依赖。如果 Tomcat 本身的依赖和 Web 应用还需要共享，那么还有类加载器（CommonClassLoader）来装载而达到共享。各个类加载器的加载目录可以到 Tomcat 的 catalina.properties 配置文件上查看。
+
+----
+
+> Tomcat的类加载结构图
+
+<img src="../pics/JavaStrengthen/jvm/Tomcat_ClassLoader.jpg">
+
+> JDBC破坏了双亲委派？
+
+JDBC定义了接口，具体实现类由各个厂商进行实现。
+
+类加载的规则如下：如果一个类由类加载器A加载，那么这个类的依赖类也是由相同的类加载器加载。
+
+使用JDBC的时候，是使用 DriverManager 进而获取 Connection，DriverManager 在 java.sql 包下，显然是由 BootStrap 类加载器进行装载。当我们使用 DriverManager.getConnection() 时，得到的一定是厂商实现的类，**但 BootStrap ClassLoader 无法加载到各个厂商实现的类**，因为这些实现类没在 java 包中。DriverManager 的解决方案时 在 DriverManager 初始化的时候， 得到**线程上下文加载器**，去获取 Connection 的时候，是使用线程上下文加载器去加载 Connection 的，**而这里的线程上下文加载器实际上还是 App ClassLoader**，所以在获取 Connection 的时候，还是先找 Ext ClassLoader 和 BootStrap ClassLoader，只不过这两加载器肯定加载不到的，最终会由App ClassLoader进行加载！
+
+有人觉得本应由 BootStrao ClassLoader 进行加载的 却改成 线程上下文加载器加载 就觉得破坏了。
+
+有人觉得虽然改成了线程上下文加载器 但是依旧遵守 依次往上找父类加载器进行加载，都找不到时才由自己加载，认为**原则**上时没变的。
+
+不重要好吧！理解为什么重要！
+
 # 第四部分 源码阅读
 
 - 修改idea配置
