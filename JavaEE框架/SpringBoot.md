@@ -86,6 +86,42 @@ Web Flux的reactor是异步非阻塞的一个实现
 - Flux：0-n的对象
 - Mono：0-1的对象
 
+# 理解SpringBoot
+
+SpringBoot应用可以是jar可以是war。jar和war是如何启动的？如何指定那个类为引导类。
+
+## jar文件结构
+
+- BOOT-INF/classes：目录存放应用编译后的 class 文件
+- BOOT-INF/lib：存放应用依赖的 jar 包
+- META-INF/：存放应用相关元信息，如 MANIFEST.MF 文件。
+- org/：存放 SpringBoot 相关的 class 文件
+
+java -jar 命令为何可以执行 FAT JAR文件？
+
+==符合java的标准就可以用 java -jar 执行 jar 包，Java官方文档规定，java -jar 命令引导的具体启动类必须配置在 MANIFEST.MF 资源的 Main-Class 属性中。==
+
+- MANIFEST.MF 文件内容
+
+    ```bash
+    Manifest-Version: 1.0
+    Created-By: Maven Jar Plugin 3.2.0
+    Build-Jdk-Spec: 11
+    Implementation-Title: demo
+    Implementation-Version: 0.0.1-SNAPSHOT
+    Main-Class: org.springframework.boot.loader.JarLauncher
+    Start-Class: com.example.demo.DemoApplication
+    Spring-Boot-Version: 2.5.2
+    Spring-Boot-Classes: BOOT-INF/classes/
+    Spring-Boot-Lib: BOOT-INF/lib/
+    Spring-Boot-Classpath-Index: BOOT-INF/classpath.idx
+    Spring-Boot-Layers-Index: BOOT-INF/layers.idx
+    ```
+
+- **Main-Class: org.springframework.boot.loader.JarLauncher** 指定了这是jar运行
+- **Main-Class: org.springframework.boot.loader.WarLauncher** 指定了这是war运行
+- 这两个类是 jar / war 的启动器，都是 org.springframework.boot.loader 中的类。
+
 # 核心特性
 
 ## Spring Boot三大特性
