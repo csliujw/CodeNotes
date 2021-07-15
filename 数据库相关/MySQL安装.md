@@ -64,7 +64,7 @@ cd C:\web\mysql-``8.0``.``11``\bin``mysqld --initialize-insecure
 
 当 MySQL 服务已经运行时, 我们可以通过 MySQL 自带的客户端工具登录到 MySQL 数据库中, 首先打开命令提示符, 输入以下格式的命名:
 
-```
+```shell
 mysql -h 主机名 -u 用户名 -p
 ```
 
@@ -127,7 +127,7 @@ mysql> show variables like 'default_password_lifetime';
 +---------------------------+-------+
 1 row in set (0.00 sec)
 
-# soga，原来如此。那么就修改密码呗
+# 原来如此。那么就修改密码呗
 
 alter user user() identified by "123456";
 ```
