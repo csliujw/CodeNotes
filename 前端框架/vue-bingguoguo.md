@@ -1029,6 +1029,12 @@ webpack学习失败。我直接上极客时间的Vue了。
 
 # 组件化Vue
 
+## 模块化和组件化
+
+模块化：从代码角度分析，把可复用的代码，抽离为单独的模块；==实现代码的复用。==
+
+组件化：从页面UI的角度分析，把页面中可复用的 UI 结构，抽离为单独的组件；==实现 UI 的复用。==
+
 ## ES6导入导出新语法
 
 一个模块可以同时使用按需导出和默认导出
@@ -1119,10 +1125,709 @@ export var a = 10
 
 - 从更抽象的角度来说，每个组件，就相对于一个自定义的元素；
 - 组件中的DOM结构，有且只能有唯一的根元素来进行包裹。
+- 组件其实就是封装了一些HMTL。
+
+> 完整代码示例
+
+```js
+import Vue from "./js/vue.js"
+// 名称尽量小写，中间用-隔开
+Vue.component("my-test", {
+    template: `<div> 这是我定义的组件 </div>`
+})
+const vm = new Vue({
+    el: '#app',
+    data: {
+        msg: 'hello '
+    }
+})
+```
+
+----
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+        <h5>{{msg}}</h5>
+        <my-test></my-test>
+    </div>
+</body>
+
+</html>
+```
+
+### 定义私有组件
+
+```js
+const vm = new Vue({
+	el: '#app2',
+	data: {
+		info: '000'
+	},
+	components: {
+		// '组件名称':{/* 组件配置对象 */}
+		'my-test2':{
+			tenplate: `<div>这是私有组件my-test2</div>`
+		}
+	}
+})
+```
+
+### 私有组件的data
+
+- 私有组件的data必须是一个function，且必须return一个数据对象。
+
+- vm 实例中，data 即可以方法 也可以是对象
+
+  ```js
+  const vm = new Vue({
+  	el: '#app2',
+  	data: {
+  		info: '000'
+  	}
+  }
+  ```
+
+```js
+Vue.component("my-test", {
+    template: `<div> 这是我定义的组件 {{d1}} </div>`,
+    data(){
+        return {
+            d1:'111'
+        }
+    }
+})
+```
 
 ### 组件定义data、methods以及生命周期函数
 
-day04--p8
+可以认为：**组件是特殊的Vue实例**
+
+组件和实例的相同和区别：
+
+- 组件的 data 必须是一个 function 并 return 一个 字面量对象； 在 Vue 实例中，实例的 data 既可以是对象，也可以是方法；
+- 组件中，直接通过 template 属性来指定组件的 UI 结构； 在 Vue 实例中，通过 el 属性来指定实例控制的区域；但是实例也可以使用 template；
+- 组件和实例，都有自己的生命周期函数，私有的过滤器，methods 处理函数；
+
+> 为什么组件中的 data 必须定义为一个方法并返回一个对象
+
+因为这样，能够保证每次创建的组件实例，都有自己的一块唯一的数据内存，防止组件之间数据的干扰。
+
+## Vue 文件结构说明
+
+每个 .Vue 文件，都是一个 vue 组件（叫做 单文件组件），它由三部分组成：
+
+- template 结构
+- script 行为
+- style 样式
+
+> 定义组件Demo
+
+```js
+<template>
+  <div>
+    <h3>这是组件Home {{ msg }}</h3>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "Home",
+  data() {
+    return {
+      msg: "hello vue"
+    }
+  },
+  methods: {},
+  filters: {}
+}
+</script>
+
+<style scoped>
+h3 {
+  color: bisque;
+}
+</style>
+```
+
+## Vue文件中定义组件
+
+- 声明一个Vue文件
+
+  ```js
+  <template>
+    <div>
+      <h3>这是Son 组件</h3>
+    </div>
+  </template>
+  
+  <script>
+  export default {
+    name: "Son"
+  }
+  </script>
+  
+  <style scoped>
+  
+  </style>
+  ```
+
+- 把这个组件 注册为全局组件或私有组件
+
+  **全局组件**
+
+  ```js
+  import Home from "@/components/Home";
+  import Vue from "vue";
+  
+  Vue.component('Home', Home)
+  ```
+
+  **私有组件**
+
+  ```js
+  import Son from "./Son"
+  
+  console.log(Son.name);
+  export default {
+    name: "Home",
+    data() {
+      return {
+        msg: "hello vue"
+      }
+    },
+    methods: {},
+    filters: {},
+    // 定义私有组件
+    components: {
+      'my-son': Son
+    }
+  }
+  ```
+
+## 组件样式控制
+
+父组件的样式会影响子组件，如何解决？
+
+默认情况下，组件中定义的样式是全局生效的。如何样式只在当前组件内生效？
+
+给 style 加上 scope 属性，即可。如何做到的？只要为组件添加了 scope 那么当前组件（不包括引入的组件）所有的 标签 都会使用同一个属性。
+
+```css
+<style scope>
+</style>
+```
+
+## 组件数据通信
+
+### 父传子
+
+在父组件中，以标签形式使用子组件时，可以通过属性绑定，为子组件传递数据。
+
+在子组件中，如果向父组件传递过来的数据，必须先定义 props 数组来接收
+
+接收完 props 数据，可以直接在子组件的 template 区域使用
+
+----
+
+> 代码
+
+**子组件**
+
+```js
+<template>
+  <div>
+    <br>
+
+    <button @click="objFromParent.a++">a自增</button>
+    <h1>子组件---->{{ infoFormParent }}-----> {{ objFromParent }}</h1>
+  </div>
+</template>
+
+<script>
+import _ from 'loadsh'
+
+export default {
+  name: "Son",
+  // 而 data 中的数据 可读可写
+  data() {
+    // 建议使用转存的数据，以便满足修改的请求。
+    // 对于对象类型的数据， 存储的是地址值，我们需要把数据拷贝一份，不修改源数据。
+    // 深拷贝 安装 lodash npm install lodash -S
+    return {
+      infoFormParent: this.pmsg,
+      objFromParent: _.cloneDeep(this.obj)
+    }
+  },
+  // 子组件需要使用 props 数组，接收外界传递过来的数据，接收到的数据可以直接在Son中使用
+  // 通过 props 接收的数据，是只读的。不要为它们重新赋值。
+  props: ['pmsg', 'obj']
+}
+</script>
+```
+
+**父组件**
+
+```js
+<template>
+  <div>
+    <h1>父组件</h1>
+    <button @click="sendData">发送数组给子组件</button>
+    <!--在使用组件的时候，通过 属性绑定，把数据传递给子组件-->
+    <my-son :pmsg="parentMsg" :obj="obj"></my-son>
+  </div>
+</template>
+
+<script>
+import Son from "@/components/Father2Son/Son";
+
+export default {
+  name: "Parent",
+  data() {
+    return {
+      parentMsg: '继承我的花呗',
+      obj: {
+        a: 10,
+        b: 20
+      }
+    }
+  },
+  methods: {
+    sendData() {}
+  },
+  components: {
+    'my-son': Son
+  }
+}
+</script>
+```
+
+**渲染调用**
+
+```js
+<template>
+  <div id="app">
+    <Parent></Parent>
+  </div>
+</template>
+
+<script>
+import Parent from "@/components/Father2Son/Parent";
+import Vue from "vue";
+Vue.component('Parent', Parent)
+
+export default {
+  components: {Parent}
+}
+
+</script>
+```
+
+### 子传父
+
+> 通过事件绑定机制，子传数据给父
+
+父为子绑定事件，然后子把自己的数据传递过去。
+
+父亲调用方法会接收到子的数据，这时候就得到了子的数据。
+
+> 代码Demo
+
+子组件
+
+```js
+<template>
+  <div>
+    <h1>子组件</h1>
+    <button @click="btnHandler">触发func事件</button>
+    <button @click="btnHandler2">触发func2事件，带参数</button>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "Son",
+  data() {
+    return {
+      msg: ': 我是子组件的值'
+    }
+  },
+  methods: {
+    btnHandler() {
+      //$emit表示触发事件 , 在子组件中，通过  this.$emit() 触发父组件 为子组件绑定的 func 事件。
+      // func 是父组件为子组件绑定的事件。
+      this.$emit('func') // 调用父组件给子组件的事件 func
+    },
+    btnHandler2() {
+      this.$emit('func2', this.msg) // 调用父组件给子组件的事件 func
+    }
+  }
+}
+</script>
+```
+
+父组件
+
+```js
+<template>
+  <div>
+    <h1>父组件</h1>
+    <!--在使用组件的时候，通过 属性绑定，把数据传递给子组件-->
+    <my-son @func="show" @func2="show2"></my-son>
+  </div>
+</template>
+
+<script>
+import Son from "@/components/Son2Father/Son";
+
+export default {
+  name: "Parent",
+  data() {
+    return {}
+  },
+  methods: {
+    show(){
+      console.log("有人调用了父组件的show方法！")
+    },
+    show2(args){
+      console.log("父组件的 show2 带有参数"+args)
+    }
+  },
+  components: {
+    'my-son': Son
+  }
+}
+</script>
+```
+
+### 兄弟传兄弟
+
+> 思路
+
+定义一个公共的Vue实例，如 bus.js 实例名称为 bus。
+
+数据发送方，调用 `bus.$emit()` 触发 bus 上的某个事件，从而把数据发送出去。
+
+在数据接收方，使用 `bus.$on()` 自定义事件，并指定事件处理函数。
+
+----
+
+> 代码示例
+
+**公共Vue实例 bus.js**
+
+```js
+import Vue from 'vue'
+
+const bus = new Vue()
+export default bus
+```
+
+**发送数据方**
+
+```vue
+<template>
+  <div>
+    <h1>哥哥</h1>
+    <button @click="sendMsgToDD">哥哥给弟弟数据</button>
+  </div>
+</template>
+
+<script>
+import bus from './bus'
+
+export default {
+  name: "GG",
+  data() {
+    return {
+      msg: '哥哥有糖给弟弟'
+    }
+  },
+  methods: {
+    sendMsgToDD() {
+      // 在数据发送方，调用bus.$emit() 触发 bus 上的某个事件，从而把数据发送出去
+      bus.$emit('ooo', this.msg)
+    }
+  }
+}
+</script>
+```
+
+**接收数据方**
+
+```vue
+<template>
+  <div>
+    <h3>弟弟</h3>
+  </div>
+</template>
+
+<script>
+import bus from './bus'
+
+export default {
+  name: "DD",
+  data() {
+    return {}
+  },
+  created() {
+    // 在数据接收方 使用 bus.$on 自定义事件，并指定事件处理函数
+    bus.$on('ooo', data => {
+      console.log("弟弟拿到了哥哥的数据，哥哥的数据是："+data)
+    })
+  }
+}
+</script>
+```
+
+# 操作DOM
+
+## 使用 this.$refs 来获取元素和组件
+
+> 基本使用
+
+1.把要获取的 DOM 元素，添加 ref 属性，创建一个 DOM 对象的引用，指定的值，就是引用的名称
+
+```html
+<p ref="myP">这是父组件</p>
+```
+
+2.如果要获取某个引用所对应的 DOM 对象，则直接使用 `this.$refs.引用名称`
+
+```js
+console.log(this.$refs.myP)
+```
+
+3.也可使用 ref 为组件添加引用；可以使用 `this.$refs.组件名称`，拿到组件的引用，从而调用组件上的方法和获取组件 data 上的数据
+
+> this.$refs 获取 DOM
+
+```vue
+<template>
+  <div>
+    <!--  通过 ref 获取到的 DOM 元素的引用，就是一个元素的 DOM 对象  -->
+    <h3 id="h3" @click="getContent" ref="myh3">123</h3>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "Home1",
+  methods: {
+    getContent() {
+      // 不要在vue中操作 DOM
+      // console.log(document.getElementById("h3").innerHTML);
+      console.log(this.$refs.myh3)
+    }
+  }
+}
+</script>
+```
+
+> ref 直接引用组件并调用组件的方法和数据 ★★★★★
+
+==可以使用 ref 属性直接调用子组件的方法属性！==
+
+实现父调用子的方法
+
+```vue
+<template>
+  <div>
+    <!--  通过 ref 获取到的 DOM 元素的引用，就是一个元素的 DOM 对象  -->
+    <h3 id="h3" @click="getContent" ref="myh3">123</h3>
+    <my-son ref="son"></my-son>
+  </div>
+</template>
+
+<script>
+import Son from "@/components/GetDocumnet/Son"
+
+export default {
+  name: "Home1",
+  methods: {
+    getContent() {
+      // 不要在vue中操作 DOM
+      // console.log(document.getElementById("h3").innerHTML);
+      console.log(this.$refs.myh3)
+      this.$refs.son.add()
+    }
+  },
+  components: {
+    "my-son": Son
+  }
+}
+</script>
+```
+
+---
+
+```vue
+<template>
+  <div>
+    <h3>这是Son组件 {{ sonMsg }}</h3>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "Son",
+  data() {
+    return {
+      sonMsg: 0
+    }
+  },
+  methods: {
+    add() {
+      this.sonMsg++;
+    }
+  }
+}
+</script>
+```
+
+## 使用霸道的 render 函数渲染组件
+
+只要在 vm 实例中，只当了 render 函数来渲染组件，那么 el 区域，就会被 render 中渲染的组件替换掉。
+
+```js
+import App from "@/components/App.vue"
+
+const vm = new Vue({
+	el: '#app',
+	data: {
+		msg: 'hello'
+	},
+    template: '<h6>{{msg}}<h6>',
+    // createElements 形参是一个方法，专门用于渲染一个组件，并替换掉 el 区域。
+    render: function(createElements){
+        return createElemens(App)
+    }
+})
+```
+
+render 简化写法
+
+```js
+const vm = new Vue({
+    el: '#app',
+    render: h=>{
+        return h(App)
+    }
+})
+```
+
+再简化
+
+```js
+const vm = new Vue({
+    el: '#app',
+    // render 终极形式 lambda 超级简化写法
+    render: h => h(App)
+})
+```
+
+**render 渲染的组件叫做根组件！**
+
+# SPA
+
+## component组件
+
+通过 component 的 is 属性，动态指定要渲染的组件。
+
+```vue
+<template>
+  <div id="app">
+    <h1>App 根组件</h1>
+    <!--  注意 是字符串 'GG' 按字符串名称来搜索的！  -->
+    <component :is="'GG'"></component>
+  </div>
+</template>
+
+<script>
+// import Parent from "@/components/Father2Son/Parent";
+import GG from '@/components/Son2Son/GG'
+import DD from '@/components/Son2Son/DD'
+import Vue from "vue";
+
+Vue.component('GG', GG)
+Vue.component('DD', DD)
+export default {}
+</script>
+```
+
+----
+
+```vue
+<template>
+  <div id="app">
+    <h1>App 根组件</h1>
+    <button @click="comName='GG'">GG</button> &nbsp;&nbsp;&nbsp;
+    <button @click="comName='DD'">DD</button>
+    <!--  注意 是字符串 'GG' 按字符串名称来搜索的！  -->
+    <component :is="comName"></component>
+  </div>
+</template>
+
+<script>
+// import Parent from "@/components/Father2Son/Parent";
+import GG from '@/components/Son2Son/GG'
+import DD from '@/components/Son2Son/DD'
+import Vue from "vue";
+
+Vue.component('GG', GG)
+Vue.component('DD', DD)
+export default {
+  data() {
+    return {
+      comName: 'GG'
+    }
+  },
+  methods: {}
+}
+</script>
+```
+
+## 锚链接及常规url的区别
+
+1.普通的 URL 地址：会刷新整个页面；会追加浏览历史记录；
+
+2.锚链接：不会触发页面的整体刷新；会追加浏览历史记录；（锚链接时页面内的跳转）
+
+## SPA相关概念
+
+- 概念定义：SPA --> Single Page Application，单页面应用程序；即只有一个Web页面的网站，网站的所有功能都在这个唯一的页面上进行展示与切换。
+- 特点
+  - 只有一个页面
+  - 浏览器一开始请求这个页面，必须加载对应的 HTML，CSS，JavaScript
+  - 用户的所有操作，都在这唯一的页面上完成
+  - 页面数据都是用Ajax请求回来的
+- 好处
+  - 实现了前后端分离开发，各司其职；提高了开发效率；
+  - 用户体验好、快，内容的改变无需重新加载整个页面；
+
+## 原始实现SPA
+
+
+
+# 路由
+
+# watch computed
+
+
+
+# vue-cli
+
+
 
 # 极客时间Vue
 
