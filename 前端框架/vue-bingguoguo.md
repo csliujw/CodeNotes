@@ -1814,20 +1814,797 @@ export default {
 - 好处
   - 实现了前后端分离开发，各司其职；提高了开发效率；
   - 用户体验好、快，内容的改变无需重新加载整个页面；
+- 缺点
+  - 对 SEO 不是很友好，因为页面数据是 Ajax 渲染出来的；（SSR）服务器端渲染；
+  - 刚开始的时候加载速度可能比较慢；项目开发完毕后，可以单独对首屏页面的加载时间做优化；
+  - 页面复杂的比较高，对程序员的能力要求较高；
 
 ## 原始实现SPA
 
+使用 component 标签的 `:is` 属性来切换组件
 
+总结：单页面应用程序中，实现组件切换的根本技术点，就是==监听 window.onhashchange 事件==；
+
+- window.location.hash 获得 hash 值
+- window.onhashchange 监听 hash 的变化
+- 能用 `=>` 函数就用，可以解决 `this` 的指向问题
 
 # 路由
 
+> 路由常用属性
+
+- path 要匹配的 hash 地址
+- component 要展示的组件
+- redirect 要重定向到的地址
+- props 开启 props 传参
+- children 嵌套路由
+
+```js
+import Vue from 'vue'
+import App from './App.vue'
+import VueRouter from 'vue-router'
+
+
+Vue.use(VueRouter)
+// 创建路由规则
+const router = new VueRouter({
+    // 路由规则的数组
+    routes: [
+        // 每一个路由规则，都是一个对象，这个对象中，必须有 path 属性和 component 属性
+        // 其中path 是 hash 地址，component 是前面 hash 地址对应要展示的组件。
+        {path: '/home', component: Home},
+        {path: '/about', component: About},
+        // 在某个路由规则中嵌套子路由规则？ path.component有个同级属性 children属性
+        {
+            path: '/movie',
+            component: Movie,
+            children: [{path: '/movie/tab1', component: tab1}, {path: '/movie/tab2', component: tab2}]
+        },
+        {path: '/', component: About},
+
+    ],
+    linkActiveClass: 'my-active'
+})
+```
+
+## 什么是路由
+
+路由就是对应关系；
+
+1. 后端路由的定义：URL 地址到后端处理函数之间的关系
+2. 前端路由的定义：hash 到组件之间的对应关系
+3. 前端路由的目的：为了实现单页面应用程序的开发
+4. 前端路由的三个组成部分
+   1. 链接
+   2. 组件
+   3. 链接 和 组件之间的对应关系
+
+## Vue中使用 vue-router ★
+
+> 安装导入并注册路由模块
+
+- 运行 npm i vue-router -S 安装路由模块
+
+- 在 index.js 导入并注册路由模块
+
+  ```js
+  // 导入路由模块
+  import VueRouter from 'vue-router'
+  // 注册路由模块
+  Vue.use(VueRouter)
+  ```
+
+> 创建路由链接
+
+```vue
+<!--  router-link 就是 第一步，创建路由的 hash 链接的  -->
+<!--  to 属性，表示点击此链接，要跳转到哪个 hash 地址，注意：to 属性中，大家不需要以 # 开头  -->
+<router-link to="/home">首页</router-link>
+<router-link to="/move">电影</router-link>
+```
+
+> 创建并在 main.js 中导入路由相关组件
+
+```js
+import Vue from 'vue'
+import App from './App.vue'
+
+import VueRouter from 'vue-router'
+import Home from '@/components/router/Home'
+import About from '@/components/router/About'
+import Movie from '@/components/router/Movie'
+
+Vue.use(VueRouter)
+// 创建路由规则
+const router = new VueRouter({
+    // 路由规则的数组
+    routes: [
+        // 每一个路由规则，都是一个对象，这个对象中，必须有 path 属性和 component 属性
+        // 其中path 是 hash 地址，component 是前面 hash 地址对应要展示的组件。
+        {path: '/home', component: Home},
+        {path: '/about', component: About},
+        {path: '/movie', component: Movie},
+        {path: '/', component: About},
+
+    ]
+})
+
+Vue.config.productionTip = false
+new Vue({
+    render: h => h(App),
+    // 指定路由规则对象
+    router: router
+}).$mount('#app')
+```
+
+> 创建路由规则
+
+```js
+// 创建路由规则
+const router = new VueRouter({
+    // 路由规则的数组
+    routes: [
+        // 每一个路由规则，都是一个对象，这个对象中，必须有 path 属性和 component 属性
+        // 其中path 是 hash 地址，component 是前面 hash 地址对应要展示的组件。
+        {path: '/home', component: Home},
+        {path: '/about', component: About},
+        {path: '/movie', component: Movie},
+        {path: '/', component: About},
+
+    ]
+})
+```
+
+> 在页面上放路由容器
+
+```vue
+<!-- 这是路由容器，将来通过路由规则，匹配到的组件，都会被展示到这个 容器中 -->
+<router-view></router-view>
+```
+
+----
+
+```vue
+<template>
+  <div id="app">
+    <h1>App 根组件</h1>
+    <hr>
+    <router-link to="/home">首页</router-link>
+    <router-link to="/about">关于</router-link>
+    <router-link to="/movie">电影</router-link>
+    <!--  路由容器组件，路由匹配到的组件 会被替换到 router-view里显示  -->
+    <router-view></router-view>
+  </div>
+</template>
+```
+
+> 路由高亮
+
+- 方法一：通过路由默认提供的 router-link-activate，为这个类添加自己的高亮样式即可
+
+```css
+<style scoped>
+.router-link-active {
+  color: red;
+  font-weight: bold;
+}
+</style>
+```
+
+- 方法二：通过路由构造函数，在传递路由配置对象的时候，==提供 linkActivateClass 属性==，来覆盖默认的高亮类样式。适用于：用到的 UI组件库中提供了默认的高亮效果。
+
+```js
+const router = new VueRouter({
+    // 路由规则的数组
+    routes: [
+        // 每一个路由规则，都是一个对象，这个对象中，必须有 path 属性和 component 属性
+        // 其中path 是 hash 地址，component 是前面 hash 地址对应要展示的组件。
+        {path: '/home', component: Home},
+        {path: '/about', component: About},
+        {path: '/movie', component: Movie},
+        {path: '/', component: About},
+
+    ],
+	// 用到的 UI组件库中提供了默认的高亮效果，用这个
+    linkActiveClass: 'my-active'
+})
+```
+
+## 嵌套路由
+
+App.vue有 `<router-link to="/movie">电影</router-link>`和`<router-view></router-view>`
+
+App.vue 下的 Move.vue 也有，那么路由的写法如下：
+
+```js
+import Vue from 'vue'
+import App from './App.vue'
+
+import VueRouter from 'vue-router'
+import Home from '@/components/router/Home'
+import About from '@/components/router/About'
+import Movie from '@/components/router/Movie'
+import tab1 from '@/components/router/tab/Tab1'
+import tab2 from '@/components/router/tab/Tab2'
+
+Vue.use(VueRouter)
+// 创建路由规则
+const router = new VueRouter({
+    // 路由规则的数组
+    routes: [
+        // 每一个路由规则，都是一个对象，这个对象中，必须有 path 属性和 component 属性
+        // 其中path 是 hash 地址，component 是前面 hash 地址对应要展示的组件。
+        {path: '/home', component: Home},
+        {path: '/about', component: About},
+        // 在某个路由规则中嵌套子路由规则？ path.component有个同级属性 children属性
+        {
+            path: '/movie',
+            component: Movie,
+            children: [{path: '/movie/tab1', component: tab1}, {path: '/movie/tab2', component: tab2}]
+        },
+        {path: '/', component: About},
+
+    ],
+    linkActiveClass: 'my-active'
+})
+
+Vue.config.productionTip = false
+new Vue({
+    render: h => h(App),
+    // 指定路由规则对象
+    router: router
+}).$mount('#app')
+```
+
+## redirect 重定向
+
+在路由规则中，通过 redirect 属性，指向一个新地址，就能够实现路由的重定向
+
+```js
+// 创建路由规则
+const router = new VueRouter({
+
+    routes: [
+        // 重定向，实现根地址的默认选择
+        {path: '/', redirect: '/home'},
+        {path: '/home', component: Home},
+        {path: '/about', component: About},
+        {
+            path: '/movie',
+            component: Movie,
+            redirect: '/move/tab1'
+            children: [{path: '/movie/tab1', component: tab1}, {path: '/movie/tab2', component: tab2}]
+        },
+    ],
+    linkActiveClass: 'my-active'
+})
+```
+
+## 路由传参
+
+在路由后面加上冒号实现路由传参。
+
+==当 router-link 的 to 地址，要动态进行拼接的时候，一定要把 to 设置呈属性绑定的形式==
+
+```vue
+<template>
+  <div>
+    <ul>
+      <router-link tag="li" v-for="item in mlist" :key="item.id" :to="'/mdetail/' +item.id">{{ item.name }} </router-link>
+    </ul>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "MoveList",
+  data() {
+    return {
+      mlist: [
+        {id: 1, name: '雷神'},
+        {id: 2, name: '死侍'},
+        {id: 3, name: '钢铁侠'},
+      ]
+    }
+  }
+}
+</script>
+<style scoped>
+li {
+  cursor: pointer;
+}
+</style>
+```
+
+---
+
+```js
+import Vue from 'vue'
+import App from './App.vue'
+
+import VueRouter from 'vue-router'
+import MoveList from "@/components/router/MoveList";
+import MoveDetail from "@/components/router/MoveDetail";
+
+Vue.use(VueRouter)
+
+const router = new VueRouter({
+    routes: [
+        {path: '/', component: MoveList},
+        // 把路由规则中，参数项位置，前面加上 : 表示这是一个参数项
+        {path: '/mdetail/:id', component: MoveDetail},
+    ]
+})
+Vue.config.productionTip = false
+new Vue({
+    render: h => h(App),
+    // 指定路由规则对象
+    router: router
+}).$mount('#app')
+```
+
+模板字符串传递参数
+
+```vue
+<router-link tag="li" v-for="item in mlist" :key="item.id" :to='`/mdetail/${item.id}/${item.name}`'>{{
+    item.name
+    }}
+</router-link>
+```
+
+```js
+const router = new VueRouter({
+    routes: [
+        {path: '/', component: MoveList},
+        {path: '/mdetail/:id', component: MoveDetail},
+        {path: '/mdetail/:id/:name', component: MoveDetail},
+    ]
+})
+```
+
+## 获得路由参数
+
+> 思路
+
+路由规则中开启路由传参数 ==props:true==
+
+页面设置 props 属性接收数据 ==props:['id','name']==
+
+props:[] 外界传递过来的数据，数据都是只读的。
+
+> 代码
+
+```js
+import Vue from 'vue'
+import App from './App.vue'
+
+import VueRouter from 'vue-router'
+import MoveList from "@/components/router/MoveList";
+import MoveDetail from "@/components/router/MoveDetail";
+
+Vue.use(VueRouter)
+
+const router = new VueRouter({
+    routes: [
+        {path: '/', component: MoveList},
+        // props true 表示，为当前路由规则，开启 props 传参
+        {path: '/mdetail/:id/:name', component: MoveDetail, props: true},
+    ]
+})
+Vue.config.productionTip = false
+new Vue({
+    render: h => h(App),
+    // 指定路由规则对象
+    router: router
+}).$mount('#app')
+```
+
+获得参数
+
+```vue
+<template>
+  <div>
+    电影详情
+    <h4>{{ id }}=={{ name }}</h4>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "MoveDetail",
+  // 接收 路由传递过来的参数
+  props: ['id', 'name']
+}
+</script>
+```
+
+> 其它方式：不推荐使用！
+
+直接使用 `this.$route.params` 来获取参数；写起来太麻烦，不推荐。
+
+## 命名路由
+
+什么是命名路由：就是为路由规则，添加了一个 name。
+
+> 思路
+
+为路由添加一个 name 属性，如`name:'movedetail'`
+
+在 router-link 添加 `:to="{name:'movedetail',params:{id:item.id,name:item.name}}"`
+
+> 代码示例
+
+```vue
+<router-link tag="li" v-for="item in mlist" :key="item.id"
+             :to="{name:'movedetail',params:{id:item.id,name:item.name}}">{{
+    item.name
+    }}
+</router-link>
+```
+
+----
+
+```js
+import Vue from 'vue'
+import App from './App.vue'
+
+import VueRouter from 'vue-router'
+import MoveList from "@/components/router/MoveList";
+import MoveDetail from "@/components/router/MoveDetail";
+
+Vue.use(VueRouter)
+
+const router = new VueRouter({
+    routes: [
+        {path: '/', component: MoveList},
+        // props true 表示，为当前路由规则，开启 props 传参
+        {path: '/mdetail/:id/:name', component: MoveDetail, props: true,name:'movedetail'},
+    ]
+})
+Vue.config.productionTip = false
+new Vue({
+    render: h => h(App),
+    // 指定路由规则对象
+    router: router
+}).$mount('#app')
+```
+
+## 编程式（JS）导航
+
+### 概念普及
+
+之前所学的 `router-link` 是标签跳转
+
+除了使用 `router-link` 是标签跳转之外，还可以使用 JavaScript 来实现路由的跳转
+
+----
+
+什么是编程式导航：使用 vue-router 提供的 JS API 实现路由跳转的方式，叫做编程式导航；
+
+编程式导航的用法：
+
+- `this.$router.push('路径的地址')`
+- `this.$router.go(n)`
+- `this.$router.forward()`
+- `this.$router.back()`
+
+----
+
+this.$route 路由参数对象
+
+this.$router 是路由导航对象
+
+vm 实例上的 router 属性，是来挂载路由对象的
+
+在 new VueRouter({/* 配置对象 */}) 的时候，配置对象中，有一个 routes 属性，是来创建路由规则的。
+
+### 跳转路由
+
+----
+
+> 思路
+
+为标签绑定点击事件：`@click="getDetail"`
+
+点击事件中使用：```this.$router.push(`/mdetail/${item.id}/${item.name}`)js``` /mdetail 是路由地址，后面的是传过去的参数
+
+参数接收的方式 还是通过 props
+
+> 代码
+
+```vue
+<template>
+  <div>
+    <li tag="li" v-for="item in mlist" :key="item.id" @click="getData(item)">{{ item.name }}
+    </li>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "JSDaoHan",
+  data() {
+    return {
+      mlist:
+          [{id: 1, name: '雷神'},
+            {id: 2, name: '死侍'},
+            {id: 3, name: '钢铁侠'},]
+    }
+  },
+  methods: {
+    getData(item) {
+      this.$router.push(`/mdetail/${item.id}/${item.name}`)
+    }
+  }
+}
+</script>
+```
+
+---
+
+```js
+const router = new VueRouter({
+    routes: [
+        {path: '/', component: JSDaoHan},
+        // props true 表示，为当前路由规则，开启 props 传参
+        {path: '/mdetail/:id/:name', component: MoveDetail, props: true},
+    ]
+})
+```
+
+### 路由后退
+
+- this.$router.back() 退后一步
+- this.$router.go(-1) -1 退后一步，-2 退后两步
+- this.$router.go(-1) -1 退后一步，-2 退后两步
+- this.$router.forward() 前进一步
+
+## 路由导航守卫
+
+### 介绍
+
+检测用户有无权限！提供了一层拦截！
+
+案例需求：只允许登录的情况下访问 后台首页，如果不登录，默认跳转回登录页面；
+
+API 语法
+
+```js
+const router = new VueRouter({
+    routes: [
+        {path: '/', component: JSDaoHan},
+        {path: '/mdetail/:id/:name', component: MoveDetail, props: true},
+    ]
+})
+// 在访问这个路由对象，每一个路由规则之前，都需要先调用 指定的回调函数，如果回调函数放行了，就看得到想看的组件，反之，就无法看到。
+// to: 是要去的哪个页面路由相关的参数
+// from: 从哪个页面即将离开
+// next: 一个函数，相对于 node 里面 express 中的 next 函数
+router.beforeEach( (to, from, next)=>{ /* 导航守卫 处理逻辑 */ } )
+```
+
+### 实现登录拦截
+
+路由代码
+
+```js
+import Vue from 'vue'
+import App from './App.vue'
+
+import VueRouter from 'vue-router'
+import Login from "@/components/routerShouWei/Login";
+import Home from "@/components/routerShouWei/Home";
+
+Vue.use(VueRouter)
+
+const router = new VueRouter({
+    routes: [
+        {path: '/', redirect: '/login'},
+        {path: '/login', component: Login},
+        {path: '/home', component: Home},
+    ]
+})
+router.beforeEach((to, from, next) => {
+    // to.path 表示我们下一刻要访问哪个地址
+    // from.path 表示我们上一刻，所访问的是哪个地址
+    // 如果访问 /login 说明要登录，没必要拦截
+    if (to.path === '/login') return next()
+    // 拿到 token 看用户是否登录
+    const token = window.sessionStorage.getItem('user')
+    // 未登录则跳转到登录页面
+    if (!token) return next('/login')
+    // 登录了则放行
+    next()
+
+})
+Vue.config.productionTip = false
+new Vue({
+    render: h => h(App),
+    // 指定路由规则对象
+    router: router
+}).$mount('#app')
+```
+
+登录页面
+
+```vue
+<template>
+  <div>
+    <p>姓名：<input type="text" v-model="name"></p>
+    <p>密码：<input type="text" v-model="password"></p>
+    <button @click="login">登录</button>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "Login",
+  data() {
+    return {
+      'name': '',
+      'password': ''
+    }
+  },
+  methods: {
+    login() {
+      if (this.name == "123" && this.password == "123") {
+        // 登录成功保存token
+        // eslint-disable-next-line no-unused-vars
+        const token = "sfasfjaskfaskfhaasjkfhasjkfhaskfasfs";
+        window.sessionStorage.setItem("user", token)
+        this.$router.push("/home")
+      } else {
+        alert("用户名 或 密码错误")
+      }
+    }
+  }
+}
+</script>
+```
+
+登录后的页面
+
+```vue
+<template>
+  <div>
+    <h3>后台主页，不等于不允许访问！</h3>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "Home"
+}
+</script>
+```
+
 # watch computed
 
+## watch 监听
 
+- watch 监听的特点：监听到**某个数据**的变化后，侧重于做某件事情
+  - 只要被监听的数据发生了变化，会自动触发 watch 中指定的处理函数
+- 案例：登录 **密码** 长度的检测
+- 密码长度小于 8 位，字体为红色；大于等于 8 位，字体位黑色；
+
+```vue
+<template>
+  <div>
+    <p>姓名：<input type="text" v-model="name"></p>
+    <p>密码：<input type="text" v-model="password" ref="pwdDOM"></p>
+    <button @click="login">登录</button>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "Login",
+  data() {
+    return {
+      'name': '',
+      'password': ''
+    }
+  },
+  // watch 是监听 data 中数据的变化，侧重于做某件事情。监听data中的 passowrd 数据的变化
+  watch: {
+    // eslint-disable-next-line no-unused-vars
+    password: function (newVal, oldVal) {
+      if (newVal.length < 8) {
+        this.$refs.pwdDOM.style.color = "red";
+      } else {
+        this.$refs.pwdDOM.style.color = "green";
+      }
+    }
+  }
+}
+</script>
+```
+
+## computed 计算属性
+
+- 计算属性特点：同时监听**多个数据**的变化后，**侧重于得到一个新的值**；
+  - 只要依赖的任何一个数据发生了变化，都会自动触发计算属性的重新求值
+  - 如：购物车求总价
+- 名称案例
+
+```vue
+<template>
+  <div id="app">
+    <h1>App 根组件</h1>
+    <hr>
+    <p>firstname: <input type="text" v-model="firstname"></p>
+    <p>lastname: <input type="text" v-model="lastname"></p>
+    <p>fullName: <input type="text" v-model="fullName"></p>
+    <hr>
+    <!--  路由容器组件，路由匹配到的组件 会被替换到 router-view里显示  -->
+    <router-view></router-view>
+  </div>
+</template>
+
+<script>
+
+export default {
+  data() {
+    return {
+      firstname: '',
+      lastname: ''
+    }
+  },
+  computed: {
+    // 定义一个计算属性，叫做 fullName
+    // 注意：所有的计算属性，在定义的时候，都要被定义为 function
+    // 但是，在页面上使用计算属性的时候，是直接当作普通的 变量 来使用的，而不是当作方法去调用的
+    // 特点：只要计算属性的 function 中，依赖的 任何一个数据发生了变化，都会对这个计算数学，重新求值
+    fullName: function () {
+      return this.firstname + '-' + this.lastname
+    }
+  }
+}
+</script>
+```
 
 # vue-cli
 
+## vue-cli 简介
 
+- 为什么要使用 vue-cli 创建项目
+
+  - 在终端运行一条简单的命令，即可创建出标准的 vue 骨架项目
+  - 不必自己手动搭建 vue 项目基本结构
+  - 不必关心 webpack 如何配置，只关注项目代码的开发
+
+- 安装 vue-cli
+
+  ```shell
+  npm install -g vue-cli
+  ```
+
+- 初始化项目
+
+  ```shell
+  vue init webpack my-project // 初始化项目
+  cd my-project	// 切换到项目根目录中
+  npm install	// 安装依赖包
+  npm run dev	// 一键运行项目
+  ```
+
+- @
+  - 实际上是 配置了 @ 指向 项目根目录中的 src 文件夹
+  - '@' : path.join( __dirname, './src' )
+
+# Vue骨架屏
+
+[Vue页面骨架屏 - SegmentFault 思否](https://segmentfault.com/a/1190000014963269) 可以用 vv-ui
+
+# 自定义指令
+
+# 组件 slot 插槽
+
+# element-ui
+
+# ESLint
+
+# 案例
 
 # 极客时间Vue
 
