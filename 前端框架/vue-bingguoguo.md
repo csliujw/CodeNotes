@@ -2598,11 +2598,182 @@ export default {
 
 # 自定义指令
 
+> 复习
+
+```js
+// Vue.filter("过滤器名称",function(originVal){ /* 过滤器对象 */ })
+// Vue.component('全局组件名称',{/* 指令的配置对象 */})
+// Vue.directive("focus", { /* 指令的配置对象 */ }
+```
+
+---
+
+> 自定义指令
+
+bind：只要指令被解析指令了，就会调用指令中的 bind 方法，其中 el 是 DOM 对象。bind 表示指令第一次被解析执行时候调用，此时，这个 DOM 元素，还没有被 append 到父节点中；
+
+inserted：inserted会在元素被插入到父节点后，执行，其中 el 是 DOM 对象。
+
+总结：CSS 样式这类操作写在 bind 中，JS 这类操作写在 inserted 中。
+
+```js
+Vue.directive("focus", {
+    bind: function (el) {
+        // el.focus();
+        // doing something
+        console.log(el)
+    },
+    inserted:function(el){
+        el.focus()
+    }
+})
+```
+
+> 自定义指令传参
+
+通过第二个占位符传递参数，获得参数的值通过 **.value** 获取
+
+```js
+Vue.directive("focus", {
+    bind: function (el, param) {
+        // el.focus();
+        // doing something
+        el.style.color = param.value
+    }
+})
+```
+
 # 组件 slot 插槽
+
+## 定义
+
+定义子组件的时候，在子组件内刨了一个坑，父组件想办法往坑里填内容。
+
+## 单个插槽（匿名插槽）
+
+- 1. 定义插槽：在子组件作用域中，使用`<slot></slot>`定义一个插槽
+- 2. 使用插槽：在父作用域中使用带有插槽的组件时，组件内容区域中的内容，会插入到插槽中显示
+- 3. **注意：在一个组件的定义中，只允许出现一次匿名插槽**
+
+默认情况下，在组件内容区域中，定义的信息，都会被显示到 匿名插槽中；
+
+<img src="../pics/vue/heima/single_slot.png" style="float:left">
+
+## 多个插槽（具名插槽）
+
+- 1. 定义具名插槽：**使用 name 属性为 slot 插槽定义具体名称；**
+- 2. 使用具名插槽：在父作用域中使用带有命名插槽的组件时，需要为内容指定 **slot='插槽name'** 来填充到指定名称的插槽。
+- 3. 匿名插槽和具名插槽可以混用，没指定 名称的 标签就填充匿名插槽，指定了名称的就填充对应名称的插槽
+
+```vue
+<slot name="xx"></slot> 定义的时候，指定名称
+
+<img src="afa" slot="xx" /> 为插槽填充内容的时候 指定插槽名称，就会给指定的插槽填充数据了 
+```
+
+## 作用域插槽（五颗♥）
+
+- 1. 定义作用域插槽：在子组件中，使用 slot 定义插槽的时候，可以通过属性传值的心酸，为插槽传递数据；在element ui 这类三方 ui 库中用的很多。
+
+- 2. 作用域插槽只能被使用一次，用多次，前面的会被覆盖掉，变得无效。如果过要接收作用域插槽中的数据，而且渲染为多个标签，则必须在多个标签之外，包裹一个父元素，接收插槽中的数据。
+
+     ```vue
+     <my-son>
+     	<h3 slot="s2" slot-scope="scope">{{scope.uinfo}}</h3> <!-- 这个不会显示 -->
+     	<h3 slot="s2" slot-scope="scope">{{scope.umsg}}</h3>  <!-- 这个才会显示 -->
+     </my-son>
+     <!-- 改造 -->
+     <my-son>
+         <template slot="s2" slot-scope="scope"> <!-- template 只起到包裹元素的作用，不会被渲染为任何标签 -->
+     		<h3>{{scope.uinfo}}</h3> <!-- 这个不会显示 -->
+     		<h3>{{scope.umsg}}</h3>  <!-- 这个才会显示 -->
+         </template>
+     </my-son>
+     ```
+
+----
+
+```vue
+// 定义插槽
+<template>
+	<h3>这是子组件</h3>
+	<slot smesg="hello slot"></slot>
+</template>
+
+// 为插槽填充内容，并使用定义插槽时，子组件my-son 预先设置的值。 "scope" 名称随意，但是推荐使用 scope 奥。
+<my-son>
+	<h6 slot-scope="scpoe">
+        {{scope.smesg}}
+    </h6>
+</my-son>
+```
+
+<img src="../pics/vue/heima/scope_slot.png" style="float:left">
+
+
 
 # element-ui
 
+## 安装
+
+> 安装element-ui
+
+```npm i element-ui -S```
+
+完整引入组件
+
+```js
+import Vue from 'vue';
+import ElementUI from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
+import App from './App.vue';
+// 把所有组件都安装到 vue 上
+Vue.use(ElementUI);
+```
+
+按需引入
+
+#### 按需引入
+
+借助 [babel-plugin-component](https://github.com/QingWei-Li/babel-plugin-component)，我们可以只引入需要的组件，以达到减小项目体积的目的。
+
+首先，安装 babel-plugin-component：
+
+```bash
+npm install babel-plugin-component -D
+```
+
+然后，将 .babelrc 修改为：，我们没有这个文件，我修改的是 babel.config.js 加了 plugins 的内容
+
+```json
+module.exports = {
+    presets: [
+        '@vue/cli-plugin-babel/preset'
+    ],
+    plugins: [
+        [
+            "component",
+            {
+                "libraryName": "element-ui",
+                "styleLibraryName": "theme-chalk"
+            }
+        ]
+    ]
+}
+```
+
 # ESLint
+
+- 声明但是未使用的变量会报错
+- 空行不能连续大于等于2
+- 在行结尾处，多余的空格不允许
+- 多余的分号，不允许
+- 字符串要使用单引号，不能使用双引号
+- 在方法名和形参列表的小括号之间，必须有一个空格
+- 在单行注释的 // 之后，必须有一个空格
+- 在每一个文件的结尾处，必须有一个空行
+- import 语句必须放到最顶部
+- etc...
 
 # 案例
 
