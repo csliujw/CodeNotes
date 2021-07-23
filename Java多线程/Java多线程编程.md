@@ -35,6 +35,20 @@ Java多线程编程。
 
 非阻塞的意思与之相反，它强调没有一个线程可以妨碍其他线程执行，所有的线程都会尝试不断前向执行。
 
+### 管程
+
+管程在 Java 中的体现就是字节码指令 **Monitor（监视器）** ， 就是我们所说的**锁**
+
+监视器是一种同步机制，保证同一时间，只有一个线程访问被保护的数据或代码。
+
+JVM 同步是基于进入和退出的，而进入和退出是使用管程对象实现的。
+
+
+
+
+
+
+
 ### 死锁、饥饿、活锁
 
 ==死锁==是多个线程彼此牵制都无法正常推进。
@@ -304,6 +318,8 @@ Java虚拟机在JIT编译时(可以简单理解为当某段代码即将第一次
 
 # 线程基础
 
+基本 `API` 的使用
+
 ## 线程的状态
 
 Java中的线程有如下六种状态。
@@ -322,14 +338,12 @@ Java中的线程有如下六种状态。
         TIMED_WAITING,
 	// 当线程执行完毕后，则进入TERMINATED状态，表示结束。
         TERMINATED;
-    }
+}
 ```
 
 `PS：从NEW状态出发后，线程不能再回到NEW状态，同理，处于TERMINATED状态的线程也不能再回到RUNNABLE状态。`
 
-## 基本API
-
-### 创建线程
+## 创建线程
 
 - 继承Thread
 - 实现Runnable
@@ -339,7 +353,7 @@ Java中的线程有如下六种状态。
     - `new Thread(task).start()`
 
 - 线程池
-    - jdk提供的线程池（自带的线程池它的阻塞队列大小太大，容易OOM）
+    - jdk 提供的线程池（自带的线程池它的阻塞队列大小太大，容易 OOM ）
     - 自定义线程池（一般用自定义线程池）
 
 ----
@@ -348,46 +362,63 @@ Java中的线程有如下六种状态。
 
 > 线程代码编写示例
 
-线程应该与资源分离
+线程应该与资源分离：一般按下面两个步骤走
+
+- 创建资源类，创建属性和操作方法
+- 在资源类操作方法
+  - 判断：判断是否符合条件
+  - 干活：符合就干活
+  - 通知：干完就通知，如 `notifyAll()`
+- 创建多线程调用资源类的方法
 
 ```java
-public class CreateByThread02 {
-    public static void main(String[] args) throws InterruptedException {
-        // 实例化资源类
-        Resource resource = new Resource();
-        MyThread myThread = new MyThread(resource);
-        Thread thread = new Thread(myThread);
-        thread.start();
-        thread.join();
-        System.out.println(resource.getCount());
+import java.util.concurrent.TimeUnit;
 
-    }
-}
-
-class Resource {
-    private int count = 0;
+class Ticket {
+    private int count = 100;
 
     public int getCount() {
         return count;
     }
 
-    public void increase() {
-        count++;
+    public void setCount(int count) {
+        this.count = count;
+    }
+
+    public Ticket(int count) {
+        this.count = count;
+    }
+
+    public Ticket() {
+
+    }
+
+    public synchronized void sale() {
+        if (this.count > 0) {
+            System.out.println("current Thread " + Thread.currentThread().getName() + " 还有" + (--count) + "张票");
+            try {
+                TimeUnit.MILLISECONDS.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
 
-class MyThread extends Thread {
-    private Resource resource;
+public class SaleTick {
+    public static void main(String[] args) {
+        Ticket ticket = new Ticket(1000);
+        Thread th1 = new Thread(() -> {
+            while (ticket.getCount() > 0)
+                ticket.sale();
+        }, "卖票窗口1");
+        Thread th2 = new Thread(() -> {
+            while (ticket.getCount() > 0)
+                ticket.sale();
+        }, "卖票窗口2");
 
-    public MyThread(Resource resource) {
-        this.resource = resource;
-    }
-
-    @Override
-    public void run() {
-        for (int i = 0; i <10; i++) {
-            resource.increase();
-        }
+        th1.start();
+        th2.start();
     }
 }
 ```
@@ -727,7 +758,7 @@ public class CreateByThreadPool {
 }
 ```
 
-### 终止线程
+## 终止线程
 
 终止线程的方式如下：
 
@@ -739,23 +770,21 @@ public class CreateByThreadPool {
 - interrupt中断线程【只是设置一个中断的标记，非立即中断】
     - <span style="color:green">在一个线程中调用另一个线程的interrupt()方法，即会向那个线程发出信号——线程中断状态已被设置。我们可以通过判断这个标记确定线程需不需要被中断，至于何时中断就由我们自己写代码决定了！</span>优于stop。
 
-### 线程中断
+## 线程中断
 
-#### 简述
+### 简述
 
 stop强行结束线程可能会引起数据不一致。如过我们把线程执行到一个安全点后再终止则可避免这种问题。线程中断就是这种思想。设置线程需要被中断的标记，具体何时中断由我们自己控制。==所以，严格来讲：线程中断并不会使线程立即退出，而是给线程发送一个通知，告知目标线程，有人希望你退出。==
 
 Thread.sleep()方法由于中断而抛出异常，此时，它会清除中断标记，需要后置处理。
 
-----
-
-#### API
+> API
 
 - `public void Thread.interrupt() // 中断线程`
 - `public boolean Thread.isInterrupted() // 判断线程是否被中断`
 - `public static boolean Thread.interrupted() //  判断线程是否被中断，并清除当前中断状态`
 
-#### 示例
+### 示例
 
 `线程中断并不会使线程立即退出，而是给线程发送一个通知，告知目标线程，有人希望你退出啦！至于目标线程接到通知后如何处理，则完全由目标线程自行决定。这点很重要，如果中断后，线程立即无条件退出，我们就又会遇到stop()方法的老问题。`
 
@@ -818,13 +847,13 @@ import java.util.concurrent.TimeUnit;
 
 判断线程是否被中断，并清除当前中断状态
 
-### 优雅退出
+## 优雅退出
 
 * stop方法可暴力终止线程，但是可能会使一些清理性工作无法完成！造成数据不完整！
 * 而interrupt可以在run中进行逻辑判断，需要中断了，在抛出中断异常之前，把扫尾工作完成！
 * ==推荐 interrupt + throw excetion的组合方式。检测到设置了中断标记，合理退出线程后抛出异常。==
 
-### 线程通信
+## 线程通信
 
 线程通信的方式有如下几种
 
@@ -849,7 +878,7 @@ import java.util.concurrent.TimeUnit;
 - CountDownLatch
 - StampedLock
 
-#### suspend-resume
+### suspend-resume
 
 使用不当会造成死锁，且死锁后的线程状态还是Runnable！！这个才是最坑的，我觉得就是因为这个才被废弃的！！
 
@@ -861,7 +890,7 @@ import java.util.concurrent.TimeUnit;
 
 LockSupport比这个好！！
 
-#### wait-notify
+### wait-notify
 
 - wait：阻塞线程并释放锁。
     - 如果一个线程调用了object.wait()方法，那么它就会进入object对象的等待队列。这个等待队列中，可能会有多个线程，因为系统运行多个线程同时等待某一个对象。
@@ -873,7 +902,7 @@ LockSupport比这个好！！
 - notifyAll：唤醒阻塞队列中的所有线程。
 - `注意：Thread.sleep是不会释放锁的！`
 
-#### join-yeild
+### join-yeild
 
 用于线程之间的协作。
 
@@ -903,6 +932,526 @@ public class JoinDemo {
 }
 ```
 
+## synchronized
+
+### 概述
+
+> 作用
+
+synchronized修饰的代码，里面的变量即可保证可见性，又可保证同步！简而言之，synchronized包裹的代码可以保证原子性。
+
+JDK1.5还是1.6后synchronized的效率得到了极大的提升，即sync有锁升级这个过程了【JVM优化了这个关键字】
+
+> 特点
+
+- 可见性：synchronized可以，volatile也可以确保变量可见【可见性就是，被那两个修饰的变量，会强制从公共内存读取变量的值。】
+- 原子性：被同步的代码块在同一时间只有一个线程在执行
+- 禁止代码重排序：synchronized可以，volatile也可以（synchronized真的可以禁止重排序嘛，感觉不用欸，感觉里面的操作重排序也没啥）
+- sync是可重入锁。同一线程中的锁可以被多次拿到。
+    - 有obj对象有A B C三个加锁修饰的方法。A内部调用了B方法，B内部调用了C方法，C B A这三个方法都可以正常执行。因为A拿到了锁，这个锁可以给B用【可重入】，B拿到了A的锁，这个锁又可以给C用！
+- 父类方法sync修饰，子类重写了没用sync修饰，则子类的该方法调用时不会获取锁，即不是同部方法。`简而言之，只有明确用sync修饰的方法才是同步方法`
+
+> `使用场景：`
+
+- 想要变量的值被修改时，让其他线程能取到最新的值时，就要对变量使用volatile
+- 多个线程操作一个实例对象时，想要确保线程安全，可使用synchronized关键字
+
+### 同步方法
+
+#### 线程不安全
+
+并发访问可能会造成数据的`“脏读”`【读不到期待的数据】
+
+共享的数据可能会有线程安全问题，非共享的数据不会出现线程安全问题！
+
+如：一个实例对象的成员变量被多个线程访问，这样可能会出现线程安全问题。 
+
+####  synchronized原理
+
+synchronized锁的是当前对象，或字节码对象！是用monitor实现的。
+
+<span style="color:red">方法级别的锁，采用了flag标记ACC_SYNCHRONIZED。如果方法设置了ACC_SYNCHRONIZED标记则执行线程先持有同步锁，再执行方法，方法完成时再释放锁！</span>
+
+```java
+ public static synchronized void say();
+    descriptor: ()V
+    flags: (0x0029) ACC_PUBLIC, ACC_STATIC, ACC_SYNCHRONIZED
+    Code:
+      stack=0, locals=0, args_size=0
+         0: return
+      LineNumberTable:
+        line 11: 0
+```
+
+<span style="color:red">同步代码块的锁。使用的时monitorenter和monitorexit指令进行同步处理</span>
+
+```java
+public static void hello();
+    descriptor: ()V
+    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=2, args_size=0
+         0: new           #2                  // class java/lang/Object
+         3: dup
+         4: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         7: dup
+         8: astore_0
+         9: monitorenter
+        10: getstatic     #3                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        13: ldc           #4                  // String hello
+        15: invokevirtual #5                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        18: aload_0
+        19: monitorexit
+        20: goto          28
+        23: astore_1
+        24: aload_0
+        25: monitorexit // 有两个exit是怕 第一个无法退出！
+        26: aload_1
+        27: athrow  // 这边抛出异常了
+        28: return
+      Exception table:
+         from    to  target type
+            10    20    23   any
+            23    26    23   any
+      .......
+```
+
+> PS:`多个线程多个锁`
+
+多个对象多个锁，不同锁的线程互不影响噢！
+
+####  带锁和不带锁的
+
+不带synchronized方法的运行不受带synchronized方法的影响！【两者是异步的！不必一前一后！不会因为A的阻塞，导致B无法运行】
+
+带锁的和不带锁的他们之间的运行是异步的。带锁的方法在运行，突然带锁的方法CPU时间到了，给不带锁的方法了！这个不带锁的可以正常运行！因为他的运行不需要拿锁！请看代码！
+
+----
+
+- A线程先持有obj对象的Lock锁，B线程可异步调用obj对象的非synchronized方法
+- A线程先持有obj对象的Lock锁，B线程调用obj对象的synchronized方法，需要等待，等到A线程释放锁，B拿到锁了才可以运行！这就是同步！
+- 方法声明处添加synchronized锁的不是方法而是当前类的对象！
+- 静态方法声明处加了锁的话，锁的是字节码对象！【简而言之，这个类的所有实例用的都是同一把锁！】
+
+> 脏读
+
+在读取变量时，此值被其他线程更改过了！
+
+#### 锁重入支持继承
+
+子类的锁声明方法可以调用父类锁声明的方法，调用过程中不会出现阻塞！
+
+#### 出现异常锁自动释放
+
+synchronized方法调用过程中出现异常，是会释放锁的
+
+注意：sleep()方法和suspend()方法被调用后不释放锁
+
+```java
+//  线程挂起的demo，不会释放锁！
+public class ReleaseLock extends Thread {
+
+    public synchronized void say() {
+        while (true) {
+            System.out.println("say~~~~~~~~");
+        }
+    }
+
+    public synchronized void hello() {
+        System.out.println("hello~~~~~~~~~");
+
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        ReleaseLock releaseLock = new ReleaseLock();
+        
+        Thread thread1 = new Thread(() -> {
+            releaseLock.say();
+        });
+        
+        thread1.start();
+        Thread.sleep(2000);
+        thread1.suspend();
+
+        Thread thread2 = new Thread(() -> {
+            releaseLock.hello();
+        });
+        thread2.start();
+    }
+}
+```
+
+### 同步语句块
+
+直接锁方法，锁的内容可能太多了，方法内的代码需要执行的时间越长，锁的时间就越长，其他同步方法等待的时间就越久。故可采用同步语句块缩小锁的范围。
+
+PS：==同步代码块中的方法同步执行，非同步代码块中的方法异步执行！==
+
+### 一些细节
+
+> synchronized同步代码块的一些细节
+
+- synchronized使用的对象监视器是同一个，即使用的锁是同一个！
+
+- synchronized(this)中的this是当前对象！
+
+- 也可以使用任意的对象作为(obj)，只要保证对象是一致的就可以了。
+- 方法之间的锁不同的话，它们之间的调用是异步的。
+
+> 何时需要同步?
+
+当多线程调用的方法之间有严格的执行顺序，则需要进行同步操作。
+
+操作需要一气呵成，不能被其他程序插入执行的时候，需要锁住他！
+
+####  各方面的比较
+
+> this与obj.class
+
+```java
+synchronized(this) 是把当前对象当锁来用
+synchronized(Obj.class) 是把字节码对象当锁来用。
+
+    this!= obj.class
+
+public class ThisAndClass {
+
+    public static void main(String[] args) {
+        Object o1 = new Object();
+        Object o2 = new Object();
+        System.out.println(o1==o1.getClass()); // false
+        System.out.println(o2==o2.getClass()); // false
+        System.out.println(o1.getClass()==o2.getClass()); // true
+        System.out.println(Object.class==o1.getClass()); // true
+    }
+}
+```
+
+> synchronized（this）
+
+锁的是当前实例对象的方法。
+
+> synchronized(obj.class)
+
+锁的是Obj字节码对象的方法。与this 不是同一把锁。
+
+`obj.class`可以被多个实例对象使用。即，这个类的多个实例对象，都用字节码对象这把锁，多个对象共用一把锁。
+
+> 静态与非静态修饰
+
+```java
+public static synchronized void say(){} // 这个是把字节码对象当锁【有static关键字】
+public synchronized void say(){} // 这个是把当前实例对象当锁【普通方法】
+```
+
+## Lock 锁
+
+对比 synchronized 而言，lock 锁更灵活。
+
+### sync 回顾
+
+synchronized 是 Java 中的关键字，是一种同步锁。它修饰的对象有以下几种：
+
+- 修饰一个代码块，被修饰的代码块称为同步语句块，其作用的范围是大括号{} 括起来的代码，作用的对象是调用这个代码块的对象；
+- 修饰一个方法，被修饰的方法称为同步方法，其作用的范围是整个方法，作用 的对象是调用这个方法的对象；
+  - 虽然可以使用 synchronized 来定义方法，但 synchronized 并不属于方法定 义的一部分，因此，synchronized 关键字不能被继承。如果在父类中的某个方 法使用了 synchronized 关键字，而在子类中覆盖了这个方法，在子类中的这 个方法默认情况下并不是同步的，而必须显式地在子类的这个方法中加上 synchronized 关键字才可以。当然，还可以在子类方法中调用父类中相应的方 法，这样虽然子类中的方法不是同步的，但子类调用了父类的同步方法，因此， 子类的方法也就相当于同步了。
+- 修改一个静态的方法，其作用的范围是整个静态方法，作用的对象是这个类的 所有对象；
+- 修改一个类，其作用的范围是 synchronized 后面括号括起来的部分，作用主 的对象是这个类的所有对象。
+
+----
+
+如果一个代码块被 synchronized 修饰了，当一个线程获取了对应的锁，并执 行该代码块时，其他线程便只能一直等待，等待获取锁的线程释放锁，而这里 获取锁的线程释放锁只会有两种情况：
+
+- 获取锁的线程执行完了该代码块，然后线程释放对锁的占有； 
+- 线程执行发生异常，此时 JVM 会让线程自动释放锁。
+
+获取锁的线程执行完了该代码块，然后线程释放对锁的占有； 2）线程执行发生异常，此时 JVM 会让线程自动释放锁。
+
+因此就需要有一种机制可以不让等待的线程一直无期限地等待下去（比如只等 待一定的时间或者能够响应中断），通过 Lock 就可以办到。
+
+### 什么是Lock
+
+Lock 锁实现提供了比使用同步方法和语句可以获得的更广泛的锁操作。它们允 许更灵活的结构，可能具有非常不同的属性，并且可能支持多个关联的条件对 象。Lock 提供了比 synchronized 更多的功能。
+
+> Lock 和 sync 的区别
+
+- Lock 不是 Java 语言内置的，synchronized 是 Java 语言的关键字，因此是内 置特性。Lock 是一个类，通过这个类可以实现同步访问； 
+-  Lock 和 synchronized 有一点非常大的不同，采用 synchronized 不需要用户 去手动释放锁，当 synchronized 方法或者 synchronized 代码块执行完之后， 系统会自动让线程释放对锁的占用；而 Lock 则必须要用户去手动释放锁，如 果没有主动释放锁，就有可能导致出现死锁现象。
+
+> Lock 接口
+
+```java
+public interface Lock {
+    void lock();
+    void lockInterruptibly() throws InterruptedException;
+    boolean tryLock();
+    boolean tryLock(long time, TimeUnit unit) throws InterruptedException;
+    void unlock();
+    Condition newCondition();
+}
+```
+
+> Lock 买票代码
+
+```java
+package com.baobao.demo5;
+
+import java.util.concurrent.locks.ReentrantLock;
+
+class LockTicket {
+    private final ReentrantLock lock = new ReentrantLock();
+    private int count = 100;
+
+    public int getCount() {
+        return count;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+    }
+
+    public LockTicket(int count) {
+        this.count = count;
+    }
+
+    public void sale() {
+        try {
+            lock.lock();
+            if (this.count > 0) {
+                System.out.println("current Thread " + Thread.currentThread().getName() + " 还有" + (--count) + "张票");
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+
+public class LockSaleTicket {
+    public static void main(String[] args) {
+        LockTicket ticket = new LockTicket(1000);
+        Thread th1 = new Thread(() -> {
+            while (ticket.getCount() > 0)
+                ticket.sale();
+        }, "卖票窗口1");
+        Thread th2 = new Thread(() -> {
+            while (ticket.getCount() > 0)
+                ticket.sale();
+        }, "卖票窗口2");
+
+        th1.start();
+        th2.start();
+    }
+}
+```
+
+# 线程提高
+
+高级点的 `API` 使用，原理，及并发编程写法。
+
+## 虚假唤醒
+
+虚假唤醒，意思就是唤醒了不满足条件的线程。下面是一个虚假唤醒的案例。
+
+incr  确保 number 为1；decr 确保 number 为0。
+
+- 线程A：incr 执行 此时 number !=0；等待
+- 线程B：decr 执行，此时 number = 0；
+- 线程C：incr 执行，此时 number ==0；number++，最后number = 1
+- 线程A：incr 恢复执行，此时 number == 1，但是由于是 if 判断，if 只会执行一次，所以恢复执行后不会再进行条件判断，此时 number = 2；不是我们想要的数据。
+
+解决虚假唤醒 将 if 判断改为 while 判断即可。
+
+```java
+package com.baobao.demo5;
+
+class Resource {
+    private int number = 0;
+
+    public synchronized void incr() throws InterruptedException {
+        if (number != 0) {
+            this.wait();
+        }
+        number++;
+        System.out.println(Thread.currentThread().getName() + "I am incr my number should be 1 but number=" + number);
+        this.notifyAll();
+    }
+
+    public synchronized void decr() throws InterruptedException {
+        if (number != 1) {
+            this.wait();
+        }
+        number--;
+        System.out.println(Thread.currentThread().getName() + "I am decr my number should be 0 but number=" + number);
+        this.notifyAll();
+    }
+}
+
+public class FakeWake {
+    public static void main(String[] args) {
+        Resource resource = new Resource();
+        Thread th1 = new Thread(() -> {
+            for (int i = 0; i < 50; i++) {
+                try {
+                    resource.incr();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        Thread th2 = new Thread(() -> {
+            for (int i = 0; i < 50; i++) {
+                try {
+                    resource.decr();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        Thread th3 = new Thread(() -> {
+            for (int i = 0; i < 50; i++) {
+                try {
+                    resource.decr();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        th1.start();
+        th2.start();
+        th3.start();
+    }
+}
+```
+
+## 线程间定制化通信
+
+> 启动三个线程，按照如下要求：
+
+AA 打印 5 次，BB 打印 10 次，CC 打印 15 次
+
+AA 打印 5 次，BB 打印 10 次，CC 打印 15 次
+
+.....
+
+进行 10 轮
+
+> 思路
+
+- 设置 flag，1，2，3，分别代表允许哪个线程打印数据。
+- `ReentrantLock` 的 Condition 精准唤醒
+
+> 代码
+
+```java
+package com.baobao.demo5;
+
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+
+/**
+ * 精准唤醒
+ */
+class AccWakeResource {
+    private ReentrantLock lock = new ReentrantLock();
+    private Condition c1 = lock.newCondition();
+    private Condition c2 = lock.newCondition();
+    private Condition c3 = lock.newCondition();
+    private int flag = 1;
+
+    // 打印5次 AA
+    public void print5(int loop) throws InterruptedException {
+        try {
+            lock.lock();
+            while (flag != 1) {
+                c1.await();
+            }
+            for (int i = 1; i <= 5; i++) {
+                System.out.println(Thread.currentThread().getName() + "第" + loop + "轮 ::AA");
+            }
+            flag = 2;
+            c2.signal(); // 通知 B线程
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    // 打印 10 次 BB
+    public void print10(int loop) throws InterruptedException {
+        try {
+            lock.lock();
+            while (flag != 2) {
+                c2.await();
+            }
+            for (int i = 1; i <= 10; i++) {
+                System.out.println(Thread.currentThread().getName() + "第" + loop + "轮 ::BB");
+            }
+            flag = 3;
+            c3.signal(); // 通知 C 线程
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    // 打印 10 次 BB
+    public void print15(int loop) throws InterruptedException {
+        try {
+            lock.lock();
+            while (flag != 3) {
+                c3.await();
+            }
+            for (int i = 1; i <= 15; i++) {
+                System.out.println(Thread.currentThread().getName() + "第" + loop + "轮 ::CC");
+            }
+            flag = 1;
+            c1.signal(); // 通知 A 线程
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+
+public class AccWake {
+    public static void main(String[] args) {
+        AccWakeResource resource = new AccWakeResource();
+        Thread th1 = new Thread(() -> {
+            for (int i = 0; i < 10; i++) {
+                try {
+                    resource.print5(i);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        Thread th2 = new Thread(() -> {
+            for (int i = 0; i < 10; i++) {
+                try {
+                    resource.print10(i);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        Thread th3 = new Thread(() -> {
+            for (int i = 0; i < 10; i++) {
+                try {
+                    resource.print15(i);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        th1.start();
+        th2.start();
+        th3.start();
+    }
+}
+```
+
+
+
 ## volatile&JMM
 
 ### volatile
@@ -915,7 +1464,7 @@ volatile：可变的，易变的。
 - <span style="color:green">可禁止指令重排序</span>
 
 - 当你用关键字volatile声明一个变量时，就等于告诉了虚拟机，这个变量极有可能会被某些程序或者线程修改。为了确保这个变量被修改后，应用程序范围内的所有线程都能够“看到”这个改动，<span style="color:green">虚拟机就必须采用一些特殊的手段，保证这个变量的可见性等特点。</span>而这个手段就是：
-    - A线程修改了值，<span style="color:green">这个值改变后会立即更新到主内存中，其他线程工作内存中的这个值会失效，要再次使用时只能从主内存中拿数据，把数据copy到自己的工作内存中，</span>这样就保证了变量对其他线程来说是可见的了。
+  - A线程修改了值，<span style="color:green">这个值改变后会立即更新到主内存中，其他线程工作内存中的这个值会失效，要再次使用时只能从主内存中拿数据，把数据copy到自己的工作内存中，</span>这样就保证了变量对其他线程来说是可见的了。
 
 #### 防止重排序
 
@@ -1164,218 +1713,6 @@ Java线程3==>工作内存3==>Save和Load操作
 
 这里所讲的主内存、工作内存与第2章所讲的Java内存区域中的Java堆、栈、方法区等并不是同一个层次的对内存的划分，这两者基本上是没有任何关系的。如果两者一定要勉强对应起来，那么从变量、主内存、工作内存的定义来看，<span style="color:red">主内存主要对应于Java堆中的对象实例数据部分</span>，而<span style="color:red">工作内存则对应于虚拟机栈中的部分区域</span>。从更基础的层次上说，主内存直接对应于物理硬件的内存，而<span style="color:red">为了获取更好的运行速度，虚拟机（或者是硬件、操作系统本身的优化措施）可能会让工作内存优先存储于寄存器和高速缓存中，因为程序运行时主要访问的是工作内存。</span>
 
-## synchronized
-
-### 概述
-
-> 作用
-
-synchronized修饰的代码，里面的变量即可保证可见性，又可保证同步！简而言之，synchronized包裹的代码可以保证原子性。
-
-JDK1.5还是1.6后synchronized的效率得到了极大的提升，即sync有锁升级这个过程了【JVM优化了这个关键字】
-
-> 特点
-
-- 可见性：synchronized可以，volatile也可以确保变量可见【可见性就是，被那两个修饰的变量，会强制从公共内存读取变量的值。】
-- 原子性：被同步的代码块在同一时间只有一个线程在执行
-- 禁止代码重排序：synchronized可以，volatile也可以（synchronized真的可以禁止重排序嘛，感觉不用欸，感觉里面的操作重排序也没啥）
-- sync是可重入锁。同一线程中的锁可以被多次拿到。
-    - 有obj对象有A B C三个加锁修饰的方法。A内部调用了B方法，B内部调用了C方法，C B A这三个方法都可以正常执行。因为A拿到了锁，这个锁可以给B用【可重入】，B拿到了A的锁，这个锁又可以给C用！
-- 父类方法sync修饰，子类重写了没用sync修饰，则子类的该方法调用时不会获取锁，即不是同部方法。`简而言之，只有明确用sync修饰的方法才是同步方法`
-
-> `使用场景：`
-
-- 想要变量的值被修改时，让其他线程能取到最新的值时，就要对变量使用volatile
-- 多个线程操作一个实例对象时，想要确保线程安全，可使用synchronized关键字
-
-### 同步方法
-
-#### 线程不安全
-
-并发访问可能会造成数据的`“脏读”`【读不到期待的数据】
-
-共享的数据可能会有线程安全问题，非共享的数据不会出现线程安全问题！
-
-如：一个实例对象的成员变量被多个线程访问，这样可能会出现线程安全问题。 
-
-####  synchronized原理
-
-synchronized锁的是当前对象，或字节码对象！是用monitor实现的。
-
-<span style="color:red">方法级别的锁，采用了flag标记ACC_SYNCHRONIZED。如果方法设置了ACC_SYNCHRONIZED标记则执行线程先持有同步锁，再执行方法，方法完成时再释放锁！</span>
-
-```java
- public static synchronized void say();
-    descriptor: ()V
-    flags: (0x0029) ACC_PUBLIC, ACC_STATIC, ACC_SYNCHRONIZED
-    Code:
-      stack=0, locals=0, args_size=0
-         0: return
-      LineNumberTable:
-        line 11: 0
-```
-
-<span style="color:red">同步代码块的锁。使用的时monitorenter和monitorexit指令进行同步处理</span>
-
-```java
-public static void hello();
-    descriptor: ()V
-    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
-    Code:
-      stack=2, locals=2, args_size=0
-         0: new           #2                  // class java/lang/Object
-         3: dup
-         4: invokespecial #1                  // Method java/lang/Object."<init>":()V
-         7: dup
-         8: astore_0
-         9: monitorenter
-        10: getstatic     #3                  // Field java/lang/System.out:Ljava/io/PrintStream;
-        13: ldc           #4                  // String hello
-        15: invokevirtual #5                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
-        18: aload_0
-        19: monitorexit
-        20: goto          28
-        23: astore_1
-        24: aload_0
-        25: monitorexit // 有两个exit是怕 第一个无法退出！
-        26: aload_1
-        27: athrow  // 这边抛出异常了
-        28: return
-      Exception table:
-         from    to  target type
-            10    20    23   any
-            23    26    23   any
-      .......
-```
-
-> PS:`多个线程多个锁`
-
-多个对象多个锁，不同锁的线程互不影响噢！
-
-####  带锁和不带锁的
-
-不带synchronized方法的运行不受带synchronized方法的影响！【两者是异步的！不必一前一后！不会因为A的阻塞，导致B无法运行】
-
-带锁的和不带锁的他们之间的运行是异步的。带锁的方法在运行，突然带锁的方法CPU时间到了，给不带锁的方法了！这个不带锁的可以正常运行！因为他的运行不需要拿锁！请看代码！
-
-----
-
-- A线程先持有obj对象的Lock锁，B线程可异步调用obj对象的非synchronized方法
-- A线程先持有obj对象的Lock锁，B线程调用obj对象的synchronized方法，需要等待，等到A线程释放锁，B拿到锁了才可以运行！这就是同步！
-- 方法声明处添加synchronized锁的不是方法而是当前类的对象！
-- 静态方法声明处加了锁的话，锁的是字节码对象！【简而言之，这个类的所有实例用的都是同一把锁！】
-
-> 脏读
-
-在读取变量时，此值被其他线程更改过了！
-
-#### 锁重入支持继承
-
-子类的锁声明方法可以调用父类锁声明的方法，调用过程中不会出现阻塞！
-
-#### 出现异常锁自动释放
-
-synchronized方法调用过程中出现异常，是会释放锁的
-
-注意：sleep()方法和suspend()方法被调用后不释放锁
-
-```java
-//  线程挂起的demo，不会释放锁！
-public class ReleaseLock extends Thread {
-
-    public synchronized void say() {
-        while (true) {
-            System.out.println("say~~~~~~~~");
-        }
-    }
-
-    public synchronized void hello() {
-        System.out.println("hello~~~~~~~~~");
-
-    }
-
-    public static void main(String[] args) throws InterruptedException {
-        ReleaseLock releaseLock = new ReleaseLock();
-        
-        Thread thread1 = new Thread(() -> {
-            releaseLock.say();
-        });
-        
-        thread1.start();
-        Thread.sleep(2000);
-        thread1.suspend();
-
-        Thread thread2 = new Thread(() -> {
-            releaseLock.hello();
-        });
-        thread2.start();
-    }
-}
-```
-
-### 同步语句块
-
-直接锁方法，锁的内容可能太多了，方法内的代码需要执行的时间越长，锁的时间就越长，其他同步方法等待的时间就越久。故可采用同步语句块缩小锁的范围。
-
-PS：==同步代码块中的方法同步执行，非同步代码块中的方法异步执行！==
-
-### 一些细节
-
-> synchronized同步代码块的一些细节
-
-- synchronized使用的对象监视器是同一个，即使用的锁是同一个！
-
-- synchronized(this)中的this是当前对象！
-
-- 也可以使用任意的对象作为(obj)，只要保证对象是一致的就可以了。
-- 方法之间的锁不同的话，它们之间的调用是异步的。
-
-> 何时需要同步?
-
-当多线程调用的方法之间有严格的执行顺序，则需要进行同步操作。
-
-操作需要一气呵成，不能被其他程序插入执行的时候，需要锁住他！
-
-####  各方面的比较
-
-> this与obj.class
-
-```java
-synchronized(this) 是把当前对象当锁来用
-synchronized(Obj.class) 是把字节码对象当锁来用。
-
-    this!= obj.class
-
-public class ThisAndClass {
-
-    public static void main(String[] args) {
-        Object o1 = new Object();
-        Object o2 = new Object();
-        System.out.println(o1==o1.getClass()); // false
-        System.out.println(o2==o2.getClass()); // false
-        System.out.println(o1.getClass()==o2.getClass()); // true
-        System.out.println(Object.class==o1.getClass()); // true
-    }
-}
-```
-
-> synchronized（this）
-
-锁的是当前实例对象的方法。
-
-> synchronized(obj.class)
-
-锁的是Obj字节码对象的方法。与this 不是同一把锁。
-
-`obj.class`可以被多个实例对象使用。即，这个类的多个实例对象，都用字节码对象这把锁，多个对象共用一把锁。
-
-> 静态与非静态修饰
-
-```java
-public static synchronized void say(){} // 这个是把字节码对象当锁【有static关键字】
-public synchronized void say(){} // 这个是把当前实例对象当锁【普通方法】
-```
-
 ## CAS
 
 这个放这里感觉过分了，但是想一想，这不是给啥都不会的人看的，也就觉得不过分了。
@@ -1482,9 +1819,9 @@ var5：就是我们从主内存中拷贝到工作内存中的值(每次都要从
 - var2：该对象值得引用地址
 - var4：需要变动的数量
 - var5：用var1和var2找到的内存中的真实值
-    - 用该对象当前的值与var5比较
-    - 如果相同，更新var5 + var4 并返回true
-    - 如果不同，继续取值然后再比较，直到更新完成
+  - 用该对象当前的值与var5比较
+  - 如果相同，更新var5 + var4 并返回true
+  - 如果不同，继续取值然后再比较，直到更新完成
 
 这里没有用synchronized，而用CAS，这样提高了并发性，也能够实现一致性，是因为每个线程进来后，进入的do while循环，然后不断的获取内存中的值，判断是否为最新，然后在进行更新操作。
 
@@ -1511,8 +1848,8 @@ CAS不加锁，保证一次性，但是需要多次比较
 
 - 循环时间长，开销大（因为执行的是do while，如果比较不成功一直在循环，最差的情况，就是某个线程一直取到的值和预期值都不一样，这样就会无限循环）
 - 只能保证一个共享变量的原子操作
-    - 当对一个共享变量执行操作时，我们可以通过循环CAS的方式来保证原子操作
-    - 但是对于多个共享变量操作时，循环CAS就无法保证操作的原子性，这个时候只能用锁来保证原子性
+  - 当对一个共享变量执行操作时，我们可以通过循环CAS的方式来保证原子操作
+  - 但是对于多个共享变量操作时，循环CAS就无法保证操作的原子性，这个时候只能用锁来保证原子性
 - 引出来ABA问题？
 
 #### ABA问题
@@ -1526,33 +1863,6 @@ CAS是compareAndSwap，比较当前工作内存中的值和主物理内存中的
 CAS有3个操作数，内存值V，旧的预期值A，要修改的更新值B。当且仅当预期值A和内存值V相同时，将内存值V修改为B，否者什么都不做
 
 是实现偏向锁、自旋锁的关键
-
-## AQS
-
-`AQS（AbstractQueuedSynchronizer）`抽象队列同步器。先知道有这么个东西。后面具体解释。
-
-## markword
-
-class字节码默认是采用8位对齐的。不够8位的话需要补齐。
-
-> markword 8个字节；class pointer 4个字节【压缩后】；默认开启了指针压缩。没有指针压缩的话，就不用花费4个字节对齐了，还是16个字节，算引用的话，共20个字节
-
-new Object() 占16个字节 引用Object o占4个字节【指针压缩从8-->4】共20个字节
-
-## JOL 
-
-JOL = Java Object Layout
-
-```xml
-<dependencies>
-    <!-- https://mvnrepository.com/artifact/org.openjdk.jol/jol-core -->
-    <dependency>
-        <groupId>org.openjdk.jol</groupId>
-        <artifactId>jol-core</artifactId>
-        <version>0.9</version>
-    </dependency>
-</dependencies>
-```
 
 ## 锁机制
 
@@ -1570,9 +1880,9 @@ JOL = Java Object Layout
 HotSpot对象头分为两部分信息：
 
 - 存储对象自身的运行时数据
-    - 哈希码
-    - GC分代年龄
-    - 这部分数据在32位和64位vm中分别为32bit和64bit。<span style="color:green">官方称为`mark word`【实现偏向锁和轻量级锁的关键】</span>
+  - 哈希码
+  - GC分代年龄
+  - 这部分数据在32位和64位vm中分别为32bit和64bit。<span style="color:green">官方称为`mark word`【实现偏向锁和轻量级锁的关键】</span>
 - 存储指向方法区对象类型数据的指针
 
 ---
@@ -1601,21 +1911,21 @@ HotSpot对象头分为两部分信息：
 
 - CAS操作只有启动类加载器（Bootstrap ClassLoader）加载的Class才能访问它。不采用反射的话，只能通过Java API间接使用
 
-    ```java
-    // AtomicInteger调用了CAS操作的代码
-    public final int incrementAndGet() {
-        return U.getAndAddInt(this, VALUE, 1) + 1;
-    }
-    
-    @HotSpotIntrinsicCandidate // hot spot vm热点代码候选（JIT）
-    public final int getAndAddInt(Object o, long offset, int delta) {
-        int v;
-        do {
-            v = getIntVolatile(o, offset);
-        } while (!weakCompareAndSetInt(o, offset, v, v + delta));
-        return v;
-    }
-    ```
+  ```java
+  // AtomicInteger调用了CAS操作的代码
+  public final int incrementAndGet() {
+      return U.getAndAddInt(this, VALUE, 1) + 1;
+  }
+  
+  @HotSpotIntrinsicCandidate // hot spot vm热点代码候选（JIT）
+  public final int getAndAddInt(Object o, long offset, int delta) {
+      int v;
+      do {
+          v = getIntVolatile(o, offset);
+      } while (!weakCompareAndSetInt(o, offset, v, v + delta));
+      return v;
+  }
+  ```
 
 CAS有个ABA问题。准备赋值检测时是A，中途被改为了B，后来有被改回了A。
 
@@ -1669,14 +1979,14 @@ why? <u>因为JVM虚拟机自己有一些默认启动的线程，里面有好多
 ### 升级过程梳理
 
 1. 如果有线程上锁
-    上偏向锁，指的就是，把markword的线程ID改为自己线程ID的过程
-    偏向锁不可重偏向 批量偏向 批量撤销
+   上偏向锁，指的就是，把markword的线程ID改为自己线程ID的过程
+   偏向锁不可重偏向 批量偏向 批量撤销
 2. ==如果有线程竞争==
-    撤销偏向锁，升级轻量级锁
-    线程在自己的线程栈生成LockRecord ，用CAS操作将markword设置为指向自己这个线程的LR的指针，设置成功者得到锁
+   撤销偏向锁，升级轻量级锁
+   线程在自己的线程栈生成LockRecord ，用CAS操作将markword设置为指向自己这个线程的LR的指针，设置成功者得到锁
 3. 如果竞争加剧
-    竞争加剧：有线程超过10次自旋， -XX:PreBlockSpin， 或者自旋线程数超过CPU核数的一半， 1.6之后，加入自适应自旋 Adapative Self Spinning ， JVM自己控制
-    升级重量级锁：-> 向操作系统申请资源，linux mutex , CPU从3级-0级系统调用，线程挂起，进入等待队列，等待操作系统的调度，然后再映射回用户空间。**JVM线程模型现在采用的多对多的线程模型；其实还是要看运行在上面操作系统上！**
+   竞争加剧：有线程超过10次自旋， -XX:PreBlockSpin， 或者自旋线程数超过CPU核数的一半， 1.6之后，加入自适应自旋 Adapative Self Spinning ， JVM自己控制
+   升级重量级锁：-> 向操作系统申请资源，linux mutex , CPU从3级-0级系统调用，线程挂起，进入等待队列，等待操作系统的调度，然后再映射回用户空间。**JVM线程模型现在采用的多对多的线程模型；其实还是要看运行在上面操作系统上！**
 
 (以上实验环境是JDK11，打开就是偏向锁，而JDK8默认对象头是无锁)
 
@@ -1695,6 +2005,263 @@ why? <u>因为JVM虚拟机自己有一些默认启动的线程，里面有好多
 自适应自旋锁意味着自旋的时间（次数）不再固定，而是由前一次在同一个锁上的自旋时间及锁的拥有者的状态来决定。如果在同一个锁对象上，自旋等待刚刚成功获得过锁，并且持有锁的线程正在运行中，那么虚拟机就会认为这次自旋也是很有可能再次成功，进而它将允许自旋等待持续相对更长的时间。如果对于某个锁，自旋很少成功获得过，那在以后尝试获取这个锁时将可能省略掉自旋过程，直接阻塞线程，避免浪费处理器资源。
 
 偏向锁由于有锁撤销的过程revoke，会消耗系统资源，所以，在锁争用特别激烈的时候，用偏向锁未必效率高。还不如直接使用轻量级锁。
+
+## 杂七杂八
+
+### AQS
+
+`AQS（AbstractQueuedSynchronizer）`抽象队列同步器。先知道有这么个东西。后面具体解释。
+
+### markword
+
+class字节码默认是采用8位对齐的。不够8位的话需要补齐。
+
+> markword 8个字节；class pointer 4个字节【压缩后】；默认开启了指针压缩。没有指针压缩的话，就不用花费4个字节对齐了，还是16个字节，算引用的话，共20个字节
+
+new Object() 占16个字节 引用Object o占4个字节【指针压缩从8-->4】共20个字节
+
+### JOL 
+
+JOL = Java Object Layout
+
+```xml
+<dependencies>
+    <!-- https://mvnrepository.com/artifact/org.openjdk.jol/jol-core -->
+    <dependency>
+        <groupId>org.openjdk.jol</groupId>
+        <artifactId>jol-core</artifactId>
+        <version>0.9</version>
+    </dependency>
+</dependencies>
+```
+
+#  常见对比分析
+
+## start与run
+
+- start是异步调用，是另外一个线程执行噢，start内部会调用run方法，但是run的调用时机未知。
+- run是同步调用，它只会在当前线程中，串行执行run()中的代码。
+- jdk源码中，只要当前线程的状态不是以0状态进行调用start，都会抛出IllegalThreadStateException异常，`所以start只能调用一次，多次调用会抛出异常`
+  - 第一次调用后状态改变，不是0（NEW）了，第二次调用就抛出异常了！
+
+```java
+public class StartAndRun {
+    public static void main(String[] args) {
+        StartAndRunThread startAndRunThread = new StartAndRunThread();
+        Thread thread = new Thread(startAndRunThread);
+        thread.start();
+    }
+}
+
+class StartAndRunThread implements Runnable{
+    @Override
+    public void run() {
+        System.out.println("I am run!");
+        System.out.println("当前线程为："+Thread.currentThread().getName());
+    }
+}
+
+// out put
+I am run!
+当前线程为：Thread-0
+
+// 调用run 将上述代码xxx.start()改成xxx.run()即可
+I am run!
+当前线程为：main
+```
+
+## resume与suspend
+
+- 暂停线程用 `suspend()`
+- 恢复线程用`resume()`
+- `两个 API 是过期的，也就是不建议使用的。`
+  - suspend() 在导致线程暂停的同时，并不会去释放任何锁资源。其他线程都无法访问被它占用的锁。
+  - 对应的线程执行 resume() 方法后，被挂起的线程才能继续，从而其它被阻塞在这个锁的线程才可以继续执行。
+  - 如果 resume() 操作出现在 suspend() 之前执行，那么线程将一直处于挂起状态，同时一直占用锁，这就产生了死锁。`而且，对于被挂起的线程，它的线程状态居然还是 Runnable，不好排查问题！！`
+
+都是独占资源的，可能会导致死锁。都是过期方法，不推荐使用。线程的暂停恢复推荐使用：
+
+- `wait`
+- `notify`
+- `notifyAll`
+
+## wait与notify
+
+一种线程通信机制。
+
+notify和wait都只能在`synchronzied`修饰的代码中使用。且在使用前都必须要保证已经获取到锁！获取到了锁才能执行notify/wait方法
+
+wait（）使当前指向wait()方法的线程等待！在wait所在的代码行处暂停执行并释放锁。直到接到通知或被中断。
+
+notify释放锁需要执行完synchronized修饰的代码才会释放锁！
+
+notifyAll唤醒线程的顺序是未知的（随机的）
+
+wait(long)等待long这么长的时间，在继续执行。注意，wait(long)也是会释放锁的，在过来long时间后，它想继续执行需要重新获得锁，才可以。
+
+## join(long)与sleep(long)
+
+x.join(long)方法的内部用的是wait来实现的。当线程x执行完long毫秒后，会调用wait释放锁。<br/>
+sleep则是通过synchronized来实现的，不会释放锁。
+
+这个可以深究一下
+
+```java
+// 网上的解释 是 this 指的是main线程。传入参数为0时，main线程不断放弃锁，想办法让one执行
+public final synchronized void join(long millis) throws InterruptedException {
+    long base = System.currentTimeMillis();
+    long now = 0L;
+    if (millis < 0L) {
+        throw new IllegalArgumentException("timeout value is negative");
+    } else {
+        if (millis == 0L) {
+            // 如果this所在的线程如果Alive 则一直释放锁，让其他线程执行
+            while(this.isAlive()) {
+                this.wait(0L); //理解释放锁？
+            }
+        } else {
+            while(this.isAlive()) {
+                long delay = millis - now;
+                if (delay <= 0L) {
+                    break;
+                }
+                this.wait(delay); // 等待 delay毫秒后释放锁
+                now = System.currentTimeMillis() - base;
+            }
+        }
+    }
+}
+```
+
+## println的安全问题
+
+```java
+/**
+ * @author payphone
+ * @date 2020/6/12 19:15
+ * @Description system.out.println()
+ */
+public class Other {
+    public static void main(String[] args) {
+        int i = 10;
+        // 非线程安全 只会打印方法，i自减这个操作不在锁的范围内
+        System.out.println(--i);
+        // 非线程安全 先进入打印方法，i自减这个操作不在锁的范围内
+        System.out.println(i--);
+    }
+}
+
+// System.out.println源码
+public void println(int x) {
+    synchronized(this) {
+        this.print(x);
+        this.newLine();
+    }
+}
+```
+
+## wait与sleep
+
+- sleep 是 Thread 的静态方法，wait 是 Object 的方法，任何对象实例都能调用。
+
+- sleep 不会释放锁，它也不需要占用锁。
+
+- wait 会释放锁，但调用它的前提是当前显存占用锁（即代码要在 synchronized 中）
+
+- 它们都可以被 interrupted 方法中断。
+
+> 来自不同的类
+
+wait==>Object
+
+sleep==>Thread
+
+> 关于锁的释放
+
+wait会释放锁，sleep是不会释放锁。
+
+> 使用范围不同
+
+wait必须在同步代码块中
+
+sleep可以在任何地方使用
+
+## Lock与synchronized
+
+> Lock锁和synchronized的区别
+
+1、synchronized 内置的Java关键字，Lock是一个类
+
+2、synchronized无法判断获取锁的状态，Lock可以判断是否获取到了锁
+
+3、synchronized可以自动释放锁，Lock必须要手动释放锁，如果不释放，可能会死锁。
+
+4、Synchronized 线程 1（获得锁，阻塞）、线程2（等待，傻傻的等）；Lock锁就不一定会等待下 去； 
+
+> tryLock 是防止自锁的一个重要方式。tryLock()方法是有返回值的，它表示用来尝试获取锁，如果获取成功，则返回true，如果获取失败（即锁已被其他线程获取），则返回false，这个方法无论如何都会立即返回。在拿不到锁时不会一直在那等待。
+
+5、Synchronized 可重入锁，不可以中断的，非公平；Lock ，可重入锁，可以 判断锁，非公平（可以 自己设置）；
+
+> 什么是 “可重入”，可重入就是说某个线程已经获得某个锁，可以再次获取锁而不会出现死锁。
+
+ 6、Synchronized 适合锁少量的代码同步问题，Lock 适合锁大量的同步代码！
+
+> **锁是什么，如何判断锁的是谁**
+
+“ 锁 ” 的 本 质 其 实 是 `monitorenter` 和 `monitorexit` 字 节 码 指 令 的 一个 Reference 类 型 的 参 数 ， 即 要 锁 定 和 解 锁 的 对 象 。 我 们 知 道 ， 使 用Synchronized 可 以 修 饰 不 同 的 对 象 ， 因 此 ， 对 应 的 对 象 锁 可 以 这 么 确定 。
+
+查看synchronized的汇编代码，可以发现，synchronized会被解释为`monitorenter` 和`monitorexit` 
+
+> synchronized vs Lock (CAS)
+
+```
+ 在高争用 高耗时的环境下synchronized效率更高
+ 在低争用 低耗时的环境下CAS效率更高
+ synchronized到重量级之后是等待队列（不消耗CPU）
+ CAS（等待期间消耗CPU）
+ 
+ 一切以实测为准
+```
+
+> 参考资料
+
+http://openjdk.java.net/groups/hotspot/docs/HotSpotGlossary.html
+
+----
+
+JVM是解释执行，翻译一句执行一句。
+
+JIT，直接把热点代码编译成机器语言，不在解释，提高效率。
+
+缓存对齐，访问速度会更快！NIO框架 netty采用的策略，高版本Java可用注解直接实现缓存行对齐。
+
+## 一篇优秀的博客
+
+**为什么wait,notify和notifyAll要与synchronized一起使用？**
+
+`Object.wait(),Object.notify(),Object.notifyAll()`都是Object的方法，换句话说，就是每个类里面都有这些方法。
+
+`Object.wait()`：释放当前对象锁，并进入阻塞队列
+`Object.notify()`：唤醒当前对象阻塞队列里的任一线程（并不保证唤醒哪一个）
+`Object.notifyAll()`：唤醒当前对象阻塞队列里的所有线程
+**为什么这三个方法要与synchronized一起使用呢？解释这个问题之前，我们先要了解几个知识点**
+
+==每一个对象都有一个与之对应的监视器==
+===每一个监视器里面都有一个该对象的锁和一个等待队列和一个同步队列==
+**wait()方法的语义有两个，一是释放当前对象锁，另一个是进入阻塞队列**，可以看到，这些操作都是与监视器相关的，当然要指定一个监视器才能完成这个操作了
+
+notify()方法也是一样的，用来唤醒一个线程，你要去唤醒，首先你得知道他在哪儿，所以必须先找到该对象，也就是获取该对象的锁，当获取到该对象的锁之后，才能去该对象的对应的等待队列去唤醒一个线程。值得注意的是，只有当执行唤醒工作的线程离开同步块，即释放锁之后，被唤醒线程才能去竞争锁。
+
+notifyAll()方法和notify()一样，只不过是唤醒等待队列中的所有线程
+
+**因wait()而导致阻塞的线程是放在阻塞队列中的，因竞争失败导致的阻塞是放在同步队列中的，notify()/notifyAll()实质上是把阻塞队列中的线程放到同步队列中去**
+
+为了便于理解，你可以把线程想象成一个个列车，对象想象成车站，每一个车站每一次能跑一班车，这样理解起来就比较容易了。
+
+> 值得提的一点是，synchronized是一个非公平的锁，如果竞争激烈的话，可能导致某些线程一直得不到执行。
+
+版权声明：本文为CSDN博主「Crazy丶Mark」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/qq_39907763/article/details/79301813
 
 # JUC同步锁
 
@@ -2435,227 +3002,31 @@ t2 invoked myUnlock()
 
 然后1秒后，t2线程启动，发现锁被t1占有，所有不断的执行 compareAndSet方法，来进行比较，直到t1释放锁后，也就是5秒后，t2成功获取到锁，然后释放
 
-#  常见对比分析
 
-## start与run
 
-- start是异步调用，是另外一个线程执行噢，start内部会调用run方法，但是run的调用时机未知。
-- run是同步调用，它只会在当前线程中，串行执行run()中的代码。
-- jdk源码中，只要当前线程的状态不是以0状态进行调用start，都会抛出IllegalThreadStateException异常，`所以start只能调用一次，多次调用会抛出异常`
-  - 第一次调用后状态改变，不是0（NEW）了，第二次调用就抛出异常了！
+# 高级`API`
 
-```java
-public class StartAndRun {
-    public static void main(String[] args) {
-        StartAndRunThread startAndRunThread = new StartAndRunThread();
-        Thread thread = new Thread(startAndRunThread);
-        thread.start();
-    }
-}
+> **`CopyOnWriteArrayList`**
 
-class StartAndRunThread implements Runnable{
-    @Override
-    public void run() {
-        System.out.println("I am run!");
-        System.out.println("当前线程为："+Thread.currentThread().getName());
-    }
-}
+写时复制技术。并发读，独立写。
 
-// out put
-I am run!
-当前线程为：Thread-0
-
-// 调用run 将上述代码xxx.start()改成xxx.run()即可
-I am run!
-当前线程为：main
-```
-
-## resume与suspend
-
-- 暂停线程用 `suspend()`
-- 恢复线程用`resume()`
-- `两个 API 是过期的，也就是不建议使用的。`
-  - suspend() 在导致线程暂停的同时，并不会去释放任何锁资源。其他线程都无法访问被它占用的锁。
-  - 对应的线程执行 resume() 方法后，被挂起的线程才能继续，从而其它被阻塞在这个锁的线程才可以继续执行。
-  - 如果 resume() 操作出现在 suspend() 之前执行，那么线程将一直处于挂起状态，同时一直占用锁，这就产生了死锁。`而且，对于被挂起的线程，它的线程状态居然还是 Runnable，不好排查问题！！`
-
-都是独占资源的，可能会导致死锁。都是过期方法，不推荐使用。线程的暂停恢复推荐使用：
-
-- `wait`
-- `notify`
-- `notifyAll`
-
-## wait与notify
-
-一种线程通信机制。
-
-notify和wait都只能在`synchronzied`修饰的代码中使用。且在使用前都必须要保证已经获取到锁！获取到了锁才能执行notify/wait方法
-
-wait（）使当前指向wait()方法的线程等待！在wait所在的代码行处暂停执行并释放锁。直到接到通知或被中断。
-
-notify释放锁需要执行完synchronized修饰的代码才会释放锁！
-
-notifyAll唤醒线程的顺序是未知的（随机的）
-
-wait(long)等待long这么长的时间，在继续执行。注意，wait(long)也是会释放锁的，在过来long时间后，它想继续执行需要重新获得锁，才可以。
-
-## join(long)与sleep(long)
-
-x.join(long)方法的内部用的是wait来实现的。当线程x执行完long毫秒后，会调用wait释放锁。<br/>
-sleep则是通过synchronized来实现的，不会释放锁。
-
-这个可以深究一下
+写的时候复制一份数据，然后在复制的数据上写入新内容，然后再把新内容复制给旧引用。这个过程会加锁。独立写，意思就是一次只有一个人可以写数据。
 
 ```java
-// 网上的解释 是 this 指的是main线程。传入参数为0时，main线程不断放弃锁，想办法让one执行
-public final synchronized void join(long millis) throws InterruptedException {
-    long base = System.currentTimeMillis();
-    long now = 0L;
-    if (millis < 0L) {
-        throw new IllegalArgumentException("timeout value is negative");
-    } else {
-        if (millis == 0L) {
-            // 如果this所在的线程如果Alive 则一直释放锁，让其他线程执行
-            while(this.isAlive()) {
-                this.wait(0L); //理解释放锁？
-            }
-        } else {
-            while(this.isAlive()) {
-                long delay = millis - now;
-                if (delay <= 0L) {
-                    break;
-                }
-                this.wait(delay); // 等待 delay毫秒后释放锁
-                now = System.currentTimeMillis() - base;
-            }
-        }
+// jdk1.8 用的 ReentrantLock 实现的。我用的 Java11 改为 sync 了。
+public boolean add(E e) {
+    synchronized(this.lock) {
+        Object[] es = this.getArray();
+        int len = es.length;
+        es = Arrays.copyOf(es, len + 1);
+        es[len] = e;
+        this.setArray(es);
+        return true; 
     }
 }
 ```
 
-## println的安全问题
 
-```java
-/**
- * @author payphone
- * @date 2020/6/12 19:15
- * @Description system.out.println()
- */
-public class Other {
-    public static void main(String[] args) {
-        int i = 10;
-        // 非线程安全 只会打印方法，i自减这个操作不在锁的范围内
-        System.out.println(--i);
-        // 非线程安全 先进入打印方法，i自减这个操作不在锁的范围内
-        System.out.println(i--);
-    }
-}
-
-// System.out.println源码
-public void println(int x) {
-    synchronized(this) {
-        this.print(x);
-        this.newLine();
-    }
-}
-```
-
-## wait与sleep
-
-1、来自不同的类
-
-wait==>Object
-
-sleep==>Thread
-
-2、关于锁的释放
-
-wait会释放锁，sleep是不会释放锁。
-
-3、使用范围不同
-
-wait必须在同步代码块中
-
-sleep可以在任何地方使用
-
-## Lock与synchronized
-
-> Lock锁和synchronized的区别
-
-1、synchronized 内置的Java关键字，Lock是一个类
-
-2、synchronized无法判断获取锁的状态，Lock可以判断是否获取到了锁
-
-3、synchronized可以自动释放锁，Lock必须要手动释放锁，如果不释放，可能会死锁。
-
-4、Synchronized 线程 1（获得锁，阻塞）、线程2（等待，傻傻的等）；Lock锁就不一定会等待下 去； 
-
-> tryLock 是防止自锁的一个重要方式。tryLock()方法是有返回值的，它表示用来尝试获取锁，如果获取成功，则返回true，如果获取失败（即锁已被其他线程获取），则返回false，这个方法无论如何都会立即返回。在拿不到锁时不会一直在那等待。
-
-5、Synchronized 可重入锁，不可以中断的，非公平；Lock ，可重入锁，可以 判断锁，非公平（可以 自己设置）；
-
-> 什么是 “可重入”，可重入就是说某个线程已经获得某个锁，可以再次获取锁而不会出现死锁。
-
- 6、Synchronized 适合锁少量的代码同步问题，Lock 适合锁大量的同步代码！
-
-> **锁是什么，如何判断锁的是谁**
-
-“ 锁 ” 的 本 质 其 实 是 `monitorenter` 和 `monitorexit` 字 节 码 指 令 的 一个 Reference 类 型 的 参 数 ， 即 要 锁 定 和 解 锁 的 对 象 。 我 们 知 道 ， 使 用Synchronized 可 以 修 饰 不 同 的 对 象 ， 因 此 ， 对 应 的 对 象 锁 可 以 这 么 确定 。
-
-查看synchronized的汇编代码，可以发现，synchronized会被解释为`monitorenter` 和`monitorexit` 
-
-> synchronized vs Lock (CAS)
-
-```
- 在高争用 高耗时的环境下synchronized效率更高
- 在低争用 低耗时的环境下CAS效率更高
- synchronized到重量级之后是等待队列（不消耗CPU）
- CAS（等待期间消耗CPU）
- 
- 一切以实测为准
-```
-
-> 参考资料
-
-http://openjdk.java.net/groups/hotspot/docs/HotSpotGlossary.html
-
-----
-
-JVM是解释执行，翻译一句执行一句。
-
-JIT，直接把热点代码编译成机器语言，不在解释，提高效率。
-
-缓存对齐，访问速度会更快！NIO框架 netty采用的策略，高版本Java可用注解直接实现缓存行对齐。
-
-## 一篇优秀的博客
-
-**为什么wait,notify和notifyAll要与synchronized一起使用？**
-
-`Object.wait(),Object.notify(),Object.notifyAll()`都是Object的方法，换句话说，就是每个类里面都有这些方法。
-
-`Object.wait()`：释放当前对象锁，并进入阻塞队列
-`Object.notify()`：唤醒当前对象阻塞队列里的任一线程（并不保证唤醒哪一个）
-`Object.notifyAll()`：唤醒当前对象阻塞队列里的所有线程
-**为什么这三个方法要与synchronized一起使用呢？解释这个问题之前，我们先要了解几个知识点**
-
-==每一个对象都有一个与之对应的监视器==
-===每一个监视器里面都有一个该对象的锁和一个等待队列和一个同步队列==
-**wait()方法的语义有两个，一是释放当前对象锁，另一个是进入阻塞队列**，可以看到，这些操作都是与监视器相关的，当然要指定一个监视器才能完成这个操作了
-
-notify()方法也是一样的，用来唤醒一个线程，你要去唤醒，首先你得知道他在哪儿，所以必须先找到该对象，也就是获取该对象的锁，当获取到该对象的锁之后，才能去该对象的对应的等待队列去唤醒一个线程。值得注意的是，只有当执行唤醒工作的线程离开同步块，即释放锁之后，被唤醒线程才能去竞争锁。
-
-notifyAll()方法和notify()一样，只不过是唤醒等待队列中的所有线程
-
-**因wait()而导致阻塞的线程是放在阻塞队列中的，因竞争失败导致的阻塞是放在同步队列中的，notify()/notifyAll()实质上是把阻塞队列中的线程放到同步队列中去**
-
-为了便于理解，你可以把线程想象成一个个列车，对象想象成车站，每一个车站每一次能跑一班车，这样理解起来就比较容易了。
-
-> 值得提的一点是，synchronized是一个非公平的锁，如果竞争激烈的话，可能导致某些线程一直得不到执行。
-
-版权声明：本文为CSDN博主「Crazy丶Mark」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。
-原文链接：https://blog.csdn.net/qq_39907763/article/details/79301813
-
-# 高级API
 
 ## ThreadLocal
 
@@ -3093,9 +3464,13 @@ private Node addWaiter(Node mode) {
 }
 ```
 
-#  四、不安全集合
+#  不安全集合
 
-## 4.1  `ArrayList`
+##  `ArrayList`
+
+> 小知识
+
+如果要在普通for循环里对集合元素进行删除操作，可能会出现问题，如果需要边遍历边删除则用迭代器进行遍历！
 
 > **ArrayList的扩容策略是：扩容为原来的1.5倍**
 
@@ -3114,13 +3489,15 @@ private void grow(int minCapacity) {
 }
 ```
 
-java.util.ConcurrentModificationException
+`java.util.ConcurrentModificationException`
 
-ArrayList在迭代的时候如果同时对其进行修改就会
+`ArrayList`在迭代的时候如果同时对其进行修改就会抛出`java.util.ConcurrentModificationException`异常==>并发修改异常
 
-抛出java.util.ConcurrentModificationException异常
+解决方案有：
 
-并发修改异常
+- Vector：线程安全的集合
+- Collections：将不安全的变为安全的
+- CopyOnWriterArrayList：写时复制
 
 ```java
 public class ListTest {
@@ -3161,7 +3538,7 @@ public boolean add(E e) {
 }
 ```
 
-## 4.2 `HashSet`
+## `HashSet`
 
 Set set = new HashSet();//线程不安全
 
@@ -3179,14 +3556,14 @@ private static final Object *PRESENT* = new Object();
 
 public boolean add(E e) { return map.put(e, *PRESENT*)==null;} ;}
 
-## 4.3 HashMap
+## `HashMap`
 
 ```java
 Map map = new HashMap();//线程不安全
 Map map = new ConcurrentHashMap();//线程安全
 ```
 
-# 五、线程八锁问题
+# 线程八锁问题
 
 1 标准访问，先打印短信还是邮件
 
@@ -3320,7 +3697,7 @@ public class Lock_8 {
 
 
 
-# 六、强软弱虚
+# 强软弱虚
 
 ## 强引用
 
@@ -3409,7 +3786,7 @@ override finalize()的主要风险在于Finalizer的Deamon线程运行的是否�
 
 ---
 
-# 七、生产者消费者
+# 生产者消费者
 
 **线程之间通信的典型问题。**
 

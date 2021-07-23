@@ -7,11 +7,9 @@ VSCode开发安装插件
 
 #  基本用法
 
-## 基本使用
-
 ## 双向数据绑定
 
-只要vm监听到data中任何一条数据的变化，都会重新执行el区域的所有指令！！
+v-model 指令双向数据绑定，只要vm监听到data中任何一条数据的变化，都会重新执行el区域的所有指令！！
 
 ## 插值表达式
 
@@ -20,29 +18,28 @@ VSCode开发安装插件
 > v-cloak 基本不用
 
 - 解决：插值表达式闪烁的问题（v-cloak指令来解决闪烁问题）
-
 - 应用：网络比较卡是，可以为最外层的元素添加v-cloak，防止用户看到插值表达式
 
-- ```html
-  <style>
-      [v-cloak]{
-          display: none;
-      }
-  </style>
-  <body>
-      <div id="app" v-cloak>
-          <h3>{{array[0]}}</h3>
-      </div>
-  </body>
-  <script>
-      const vm = new Vue({
-          el: '#app',
-          data: {
-              array: [1, 2, 3, 4, 5]
-          }
-      });
-  </script>
-  ```
+```html
+<style>
+    [v-cloak]{
+        display: none;
+    }
+</style>
+<body>
+    <div id="app" v-cloak>
+        <h3>{{array[0]}}</h3>
+    </div>
+</body>
+<script>
+    const vm = new Vue({
+        el: '#app',
+        data: {
+            array: [1, 2, 3, 4, 5]
+        }
+    });
+</script>
+```
 
 ## 常见指令
 
@@ -107,7 +104,7 @@ v-text不存在闪烁问题。
 </h3>
 ```
 
-> ==v-bind：==属性绑定；用的很频繁
+> ==v-bind：== 属性绑定；用的很频繁
 
 为html属性节点动态绑定数据的，如：
 
@@ -129,7 +126,7 @@ v-text不存在闪烁问题。
 
 `<div @click="show('hello')">按钮</div>`   **==简写==**
 
-> ==v-model==
+> ==v-model：== 双向数据绑定
 
 <a href="https://segmentfault.com/a/1190000006599500">几种实现双向绑定的做法</a>
 
@@ -191,7 +188,7 @@ Vue常见的过渡动画（不重要）
 
 > 全局过滤器代码示例
 
-```javascript
+```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -224,9 +221,7 @@ Vue常见的过渡动画（不重要）
             time: '2020-01-22 23:11:23'
         }
     });
-
 </script>
-
 </html>
 ```
 
@@ -289,7 +284,6 @@ JS解析引擎是单线程的；宿主环境（浏览器、Node环境）是多�
 
 异步的任务会放到异步回调函数的队列中。当js把自己栈中的任务执行完后，才会执行异步回调函数队列中的任务。
 */
-
 ```
 
 回调地狱代码示例：`node.js`
@@ -309,7 +303,6 @@ fs.readFile('./files/1.txt', 'utf-8', (err, dataStr1) => {
         })
     })
 })
-
 ```
 
 ----
@@ -380,7 +373,6 @@ const r1 = getContentByPath2('./files/1.txt')
 // 成功回调  失败回调
 r1.then(function (info) { console.log(info); console.log("success"); }, function (err) { console.log(err); });
 //==================有效写法================
-
 ```
 
 实际我们不会自己封装Promise，会使用其他人封装的方法。
@@ -461,12 +453,7 @@ async function test(){
             el: '#app',
             methods: {
                 getInfo() {
-                    const result = axios.get('http://www.liulongbin.top:3005/api/get', {
-                        params: {
-                            name: 'zs',
-                            age: 20
-                        }
-                    });
+                    const result = axios.get('http://www.liulongbin.top:3005/api/get', { params: { name: 'zs', age: 20 } });
                     result.then(function (res) {
                         console.log(res);
                     })
@@ -513,9 +500,7 @@ async function test(){
             }
         });
     </script>
-
 </body>
-
 </html>
 ```
 
@@ -604,9 +589,7 @@ async postInfo() {
             }
         });
     </script>
-
 </body>
-
 </html>
 ```
 
@@ -810,12 +793,8 @@ this.$http.get('/user/10',{params:{name:'zs',age:22}}) // ===> http://127.0.0.1:
     <script>
         const vm = new Vue({
             el: '#app',
-            data: {
-                flag: true
-            },
-            methods: {
-
-            }
+            data: { flag: true },
+            methods: { }
         })
     </script>
 </body>
@@ -1233,7 +1212,7 @@ Vue.component("my-test", {
 
 > 定义组件Demo
 
-```js
+```vue
 <template>
   <div>
     <h3>这是组件Home {{ msg }}</h3>
@@ -1244,9 +1223,7 @@ Vue.component("my-test", {
 export default {
   name: "Home",
   data() {
-    return {
-      msg: "hello vue"
-    }
+    return { msg: "hello vue" }
   },
   methods: {},
   filters: {}
@@ -1264,7 +1241,7 @@ h3 {
 
 - 声明一个Vue文件
 
-  ```js
+  ```vue
   <template>
     <div>
       <h3>这是Son 组件</h3>
@@ -1276,12 +1253,8 @@ h3 {
     name: "Son"
   }
   </script>
-  
-  <style scoped>
-  
-  </style>
   ```
-
+  
 - 把这个组件 注册为全局组件或私有组件
 
   **全局组件**
@@ -1302,9 +1275,7 @@ h3 {
   export default {
     name: "Home",
     data() {
-      return {
-        msg: "hello vue"
-      }
+      return { msg: "hello vue" }
     },
     methods: {},
     filters: {},
@@ -1324,8 +1295,7 @@ h3 {
 给 style 加上 scope 属性，即可。如何做到的？只要为组件添加了 scope 那么当前组件（不包括引入的组件）所有的 标签 都会使用同一个属性。
 
 ```css
-<style scope>
-</style>
+<style scope> </style>
 ```
 
 ## 组件数据通信
@@ -1344,11 +1314,9 @@ h3 {
 
 **子组件**
 
-```js
+```vue
 <template>
   <div>
-    <br>
-
     <button @click="objFromParent.a++">a自增</button>
     <h1>子组件---->{{ infoFormParent }}-----> {{ objFromParent }}</h1>
   </div>
@@ -1378,7 +1346,7 @@ export default {
 
 **父组件**
 
-```js
+```vue
 <template>
   <div>
     <h1>父组件</h1>
@@ -1396,10 +1364,7 @@ export default {
   data() {
     return {
       parentMsg: '继承我的花呗',
-      obj: {
-        a: 10,
-        b: 20
-      }
+      obj: { a: 10, b: 20 }
     }
   },
   methods: {
@@ -1414,7 +1379,7 @@ export default {
 
 **渲染调用**
 
-```js
+```vue
 <template>
   <div id="app">
     <Parent></Parent>
@@ -1445,7 +1410,7 @@ export default {
 
 子组件
 
-```js
+```vue
 <template>
   <div>
     <h1>子组件</h1>
@@ -1478,7 +1443,7 @@ export default {
 
 父组件
 
-```js
+```vue
 <template>
   <div>
     <h1>父组件</h1>
@@ -1921,11 +1886,10 @@ const router = new VueRouter({
     routes: [
         // 每一个路由规则，都是一个对象，这个对象中，必须有 path 属性和 component 属性
         // 其中path 是 hash 地址，component 是前面 hash 地址对应要展示的组件。
-        {path: '/home', component: Home},
-        {path: '/about', component: About},
-        {path: '/movie', component: Movie},
-        {path: '/', component: About},
-
+        { path: '/home', component: Home },
+        { path: '/about', component: About },
+        { path: '/movie', component: Movie },
+        { path: '/', component: About },
     ]
 })
 
@@ -1950,7 +1914,6 @@ const router = new VueRouter({
         {path: '/about', component: About},
         {path: '/movie', component: Movie},
         {path: '/', component: About},
-
     ]
 })
 ```
@@ -2003,7 +1966,6 @@ const router = new VueRouter({
         {path: '/about', component: About},
         {path: '/movie', component: Movie},
         {path: '/', component: About},
-
     ],
 	// 用到的 UI组件库中提供了默认的高亮效果，用这个
     linkActiveClass: 'my-active'
@@ -2066,14 +2028,14 @@ const router = new VueRouter({
 
     routes: [
         // 重定向，实现根地址的默认选择
-        {path: '/', redirect: '/home'},
-        {path: '/home', component: Home},
-        {path: '/about', component: About},
+        { path: '/', redirect: '/home' },
+        { path: '/home', component: Home },
+        { path: '/about', component: About },
         {
             path: '/movie',
             component: Movie,
             redirect: '/move/tab1'
-            children: [{path: '/movie/tab1', component: tab1}, {path: '/movie/tab2', component: tab2}]
+            children: [ { path: '/movie/tab1', component: tab1 }, { path: '/movie/tab2', component: tab2 } ]
         },
     ],
     linkActiveClass: 'my-active'
@@ -2088,11 +2050,7 @@ const router = new VueRouter({
 
 ```vue
 <template>
-  <div>
-    <ul>
-      <router-link tag="li" v-for="item in mlist" :key="item.id" :to="'/mdetail/' +item.id">{{ item.name }} </router-link>
-    </ul>
-  </div>
+  <div> <ul> <router-link tag="li" v-for="item in mlist" :key="item.id" :to="'/mdetail/' +item.id">{{ item.name }} </router-link> </ul> </div>
 </template>
 
 <script>
@@ -2101,9 +2059,9 @@ export default {
   data() {
     return {
       mlist: [
-        {id: 1, name: '雷神'},
-        {id: 2, name: '死侍'},
-        {id: 3, name: '钢铁侠'},
+        { id: 1, name: '雷神' },
+        { id: 2, name: '死侍' },
+        { id: 3, name: '钢铁侠' },
       ]
     }
   }
@@ -2130,9 +2088,9 @@ Vue.use(VueRouter)
 
 const router = new VueRouter({
     routes: [
-        {path: '/', component: MoveList},
+        { path: '/', component: MoveList },
         // 把路由规则中，参数项位置，前面加上 : 表示这是一个参数项
-        {path: '/mdetail/:id', component: MoveDetail},
+        { path: '/mdetail/:id', component: MoveDetail },
     ]
 })
 Vue.config.productionTip = false
@@ -2146,18 +2104,15 @@ new Vue({
 模板字符串传递参数
 
 ```vue
-<router-link tag="li" v-for="item in mlist" :key="item.id" :to='`/mdetail/${item.id}/${item.name}`'>{{
-    item.name
-    }}
-</router-link>
+<router-link tag="li" v-for="item in mlist" :key="item.id" :to='`/mdetail/${item.id}/${item.name}`'> {{ item.name }} </router-link>
 ```
 
 ```js
 const router = new VueRouter({
     routes: [
-        {path: '/', component: MoveList},
-        {path: '/mdetail/:id', component: MoveDetail},
-        {path: '/mdetail/:id/:name', component: MoveDetail},
+        { path: '/', component: MoveList },
+        { path: '/mdetail/:id', component: MoveDetail },
+        { path: '/mdetail/:id/:name', component: MoveDetail },
     ]
 })
 ```
@@ -2186,9 +2141,9 @@ Vue.use(VueRouter)
 
 const router = new VueRouter({
     routes: [
-        {path: '/', component: MoveList},
+        { path: '/', component: MoveList },
         // props true 表示，为当前路由规则，开启 props 传参
-        {path: '/mdetail/:id/:name', component: MoveDetail, props: true},
+        { path: '/mdetail/:id/:name', component: MoveDetail, props: true },
     ]
 })
 Vue.config.productionTip = false
@@ -2235,11 +2190,7 @@ export default {
 > 代码示例
 
 ```vue
-<router-link tag="li" v-for="item in mlist" :key="item.id"
-             :to="{name:'movedetail',params:{id:item.id,name:item.name}}">{{
-    item.name
-    }}
-</router-link>
+<router-link tag="li" v-for="item in mlist" :key="item.id" :to="{name:'movedetail',params:{id:item.id,name:item.name}}">{{item.name}}</router-link>
 ```
 
 ----
@@ -2256,9 +2207,9 @@ Vue.use(VueRouter)
 
 const router = new VueRouter({
     routes: [
-        {path: '/', component: MoveList},
+        { path: '/', component: MoveList },
         // props true 表示，为当前路由规则，开启 props 传参
-        {path: '/mdetail/:id/:name', component: MoveDetail, props: true,name:'movedetail'},
+        { path: '/mdetail/:id/:name', component: MoveDetail, props: true,name:'movedetail' },
     ]
 })
 Vue.config.productionTip = false
@@ -2314,10 +2265,7 @@ vm 实例上的 router 属性，是来挂载路由对象的
 
 ```vue
 <template>
-  <div>
-    <li tag="li" v-for="item in mlist" :key="item.id" @click="getData(item)">{{ item.name }}
-    </li>
-  </div>
+  <div> <li tag="li" v-for="item in mlist" :key="item.id" @click="getData(item)">{{ item.name }} </li> </div>
 </template>
 
 <script>
@@ -2326,7 +2274,7 @@ export default {
   data() {
     return {
       mlist:
-          [{id: 1, name: '雷神'},
+          [ {id: 1, name: '雷神'},
             {id: 2, name: '死侍'},
             {id: 3, name: '钢铁侠'},]
     }
@@ -2345,19 +2293,19 @@ export default {
 ```js
 const router = new VueRouter({
     routes: [
-        {path: '/', component: JSDaoHan},
+        { path: '/', component: JSDaoHan },
         // props true 表示，为当前路由规则，开启 props 传参
-        {path: '/mdetail/:id/:name', component: MoveDetail, props: true},
+        { path: '/mdetail/:id/:name', component: MoveDetail, props: true },
     ]
 })
 ```
 
 ### 路由后退
 
-- this.$router.back() 退后一步
-- this.$router.go(-1) -1 退后一步，-2 退后两步
-- this.$router.go(-1) -1 退后一步，-2 退后两步
-- this.$router.forward() 前进一步
+- this.$router.back()     退后一步
+- this.$router.go(-1)     -1 退后一步，-2 退后两步
+- this.$router.go(-1)     -1 退后一步，-2 退后两步
+- this.$router.forward()     前进一步
 
 ## 路由导航守卫
 
@@ -2372,8 +2320,8 @@ API 语法
 ```js
 const router = new VueRouter({
     routes: [
-        {path: '/', component: JSDaoHan},
-        {path: '/mdetail/:id/:name', component: MoveDetail, props: true},
+        { path: '/', component: JSDaoHan },
+        { path: '/mdetail/:id/:name', component: MoveDetail, props: true },
     ]
 })
 // 在访问这个路由对象，每一个路由规则之前，都需要先调用 指定的回调函数，如果回调函数放行了，就看得到想看的组件，反之，就无法看到。
@@ -2399,9 +2347,9 @@ Vue.use(VueRouter)
 
 const router = new VueRouter({
     routes: [
-        {path: '/', redirect: '/login'},
-        {path: '/login', component: Login},
-        {path: '/home', component: Home},
+        { path: '/', redirect: '/login' },
+        { path: '/login', component: Login },
+        { path: '/home', component: Home },
     ]
 })
 router.beforeEach((to, from, next) => {
@@ -2415,7 +2363,6 @@ router.beforeEach((to, from, next) => {
     if (!token) return next('/login')
     // 登录了则放行
     next()
-
 })
 Vue.config.productionTip = false
 new Vue({
@@ -2466,9 +2413,7 @@ export default {
 
 ```vue
 <template>
-  <div>
-    <h3>后台主页，不等于不允许访问！</h3>
-  </div>
+  <div> <h3>后台主页，不等于不允许访问！</h3> </div>
 </template>
 
 <script>
@@ -2776,6 +2721,216 @@ module.exports = {
 - etc...
 
 # 案例
+
+> 数据列表组件
+
+```vue
+<template>
+  <div>
+    <h1>品牌列表案例</h1>
+    <el-button type="primary" @click="addDialogShow">添加新品牌</el-button>
+    <!--  品牌列表数据  -->
+    <el-table :data="brandList" border stripe style="width:100%">
+      <el-table-column type="index" label="索引" width="100%"></el-table-column>
+      <el-table-column prop="id" label="编号"></el-table-column>
+      <el-table-column prop="name" label="品牌名称"></el-table-column>
+      <el-table-column prop="ctime" label="创建时间">
+        <template slot-scope="scope">
+          {{ scope.row.ctime | dataFormat }}
+        </template>
+      </el-table-column>
+
+      <el-table-column label="操作">
+        <template slot-scope="scope">
+          <!--    如果在 表格的 column 渲染数据，必须使用 作用域插槽才行    -->
+          <el-button type="primary" :search="scope.row.id">查询</el-button>
+          <el-button type="success" :search="scope.row.id">修改</el-button>
+          <el-button @click="deleteData(scope.row.id)" type="danger" :search="scope.row.id">删除</el-button>
+        </template>
+      </el-table-column>
+
+    </el-table>
+
+    <!--  添加新品牌的对话框  -->
+    <el-dialog title="添加品牌" :visible.sync="add" width="50%">
+      <el-form :model="addForm" :rules="addFormRules" ref="addFormRef" label-width="100px">
+        <el-form-item label="品牌名称" prop="name">
+          <el-input v-model="addForm.name" v-focus></el-input>
+        </el-form-item>
+      </el-form>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="add = false">取 消</el-button>
+        <el-button type="primary" @click="addNewBrand">确 定</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+export default {
+  name: "BrandList",
+  data() {
+    return {
+      // 品牌列表数据
+      brandList: [
+        {id: 1, name: '123', ctime: '2020-11-11'},
+        {id: 2, name: '1234', ctime: '2020-11-5'}
+
+      ],
+      add: false,
+      addForm: {
+        name: '',
+        ctime: new Date()
+      },
+      addFormRules: {
+        name: [
+          {required: true, message: '请输入活动名称', trigger: 'blur'},
+          {min: 2, max: 55, message: '长度在 2 到 55 个字符', trigger: 'blur'}
+        ]
+      }
+    }
+  },
+
+  methods: {
+    async getBrandList() {
+      const {data: res} = await this.$http.get("/api/getprodlist")
+      if (res.status != 0) return alert("数据获取失败")
+      // 数据获取成功
+      this.brandList = res.message
+    },
+    addDialogShow() {
+      this.add = true
+    },
+    addDialogClosed() {
+      this.$refs.addFormRef.resetFields()
+    },
+    addNewBrand() {
+      this.$refs.addFormRef.validate(async valid => {
+        if (!valid) return
+        const {data: res} = await this.$http.post('/api/addproduct', {name: this.addForm.name})
+        if (res.status !== 0) return this.$message.error("添加失败！")
+        this.$message.success("添加成功！")
+        this.add = false
+        this.getBrandList()
+      })
+    },
+    // 删除
+    async deleteData(id) {
+      const data = await this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err)
+      if (data !== 'confirm') return this.$message.error("取消删除")
+      const {data: res} = await this.$http.get("/api/delproduct/" + id)
+      if (res.status !== 0) return this.$message.error("删除失败")
+      this.$message.success("删除成功")
+      this.getBrandList()
+    }
+  },
+
+  created() {
+    this.getBrandList();
+  }
+}
+</script>
+
+<style scoped>
+.el-button {
+  margin-bottom: 10px;
+}
+</style>
+```
+
+> 根组件数据展示
+
+```vue
+<template>
+  <div id="app">
+    <router-view></router-view>
+  </div>
+</template>
+<script>
+export default {
+  name: 'App'
+}
+</script>
+```
+
+> 路由配置
+
+```js
+import Vue from 'vue'
+import App from './App.vue'
+import Router from "vue-router"
+import BrandList from "./components/BrandList";
+import axios from "axios"
+import ElementUI from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
+
+
+Vue.use(ElementUI);
+
+axios.defaults.baseURL = "http://www.liulongbin.top:3005"
+Vue.prototype.$http = axios
+Vue.use(Router)
+
+const routes = new Router({
+    routes: [
+        {path: '/', component: BrandList}
+    ],
+    mode: 'hash'
+})
+
+Vue.config.productionTip = false
+
+
+// 定义全局过滤器
+Vue.filter('dataFormat', (originVal) => {
+    const dt = new Date(originVal)
+
+    const y = dt.getFullYear();
+    const m = (dt.getMonth() + 1 + '').padStart(2, '0');
+    const d = (dt.getDate() + '').padStart(2, '0');
+    return `${y}-${m}-${d}`
+})
+
+// 定义全局聚焦指令
+Vue.directive('focus', {
+    // 当被绑定的元素插入到 DOM 中时……
+    inserted: function (el) {
+        // 聚焦元素
+        console.log(el);
+        el.children[0].focus()
+    }
+})
+
+new Vue({
+    render: h => h(App),
+    router: routes
+}).$mount('#app')
+```
+
+> app打包需要添加这个 vue.config.js
+
+防止打包后的页面一片空白。
+
+vue的路由模式需要改为 `mode: 'hash'`，保证路由可正确跳转。
+
+```js
+module.exports = {
+    assetsDir: 'static',
+    parallel: false,
+    publicPath: './',
+}
+```
+
+执行打包命令 `npm run build` 打包到了 dist 文件下，用 HBuilder 创建一个 H5+APP 的项目，把 dist 中的内容拷贝过去，然后打包为 app 。
+
+> 总的目录结构
+
+<img src="../pics/vue/heima/vue-content.png" style="float:left">
 
 # 极客时间Vue
 
