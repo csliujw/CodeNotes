@@ -14,7 +14,7 @@
 
 如果要在普通for循环里对集合元素进行删除操作，可能会出现问题：
 
-```
+```java
  1 public static void main(String[] args) {
  2     List<Integer> list = new ArrayList<Integer>();
  3     list.add(1);

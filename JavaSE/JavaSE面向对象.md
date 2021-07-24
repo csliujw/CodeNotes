@@ -91,7 +91,7 @@ short同理
 
 ### 5.4 ASCII码表
 
-```
+```shell
 0 -- 48
 A -- 65
 a -- 97
@@ -2991,7 +2991,7 @@ public synchronized void run() {} // 同步方法！ 看视频！
 
 ----
 
-### 16.4 Local锁
+### 16.4 Lock锁
 
 ```java
 public class SaleTicket implements Runnable {
@@ -3021,7 +3021,6 @@ public class SaleTicket implements Runnable {
 - 同时只能一个拿或一个放
 - 不能拿/放则等待 用wait()
 - 有东西了，可以拿了就notify() == 【应该是随机唤醒一个等待的线程，可以指定唤醒某个吗？】
-- 明天写！ 吃饭了！
 
 ## 第十七章 网络编程
 
@@ -3286,6 +3285,172 @@ public class ServerDemo {
         inputStream.close();
         accept.close();
         server.close();
+    }
+}
+```
+
+### 模拟Tomcat
+
+```java
+package com.bbxx.tomcat;
+
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.URL;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+/**
+ * 请求相应html文件
+ */
+public class BSDemo3 {
+    // 定义类路径
+    private static String WEB_ROOT;
+    // 定义默认的读取端口
+    private static String URL = "404.html";
+    // 默认端口
+    private static int PORT = 8888;
+    // 读取类信息
+    private static InputStream INPUTSTREAM = null;
+    // 读完WebContent下的静态文件
+    private static File FILE_STATIC = null;
+    // 状态码
+    private static int CODE = 404;
+
+    // 初始化信息
+    static {
+        WEB_ROOT = BSDemo3.class.getClassLoader().getResource("").getPath() + "WebContent";
+        try {
+            INPUTSTREAM = new FileInputStream(WEB_ROOT + "//web.properties");
+            System.out.println(WEB_ROOT);
+            FILE_STATIC = new File(WEB_ROOT);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        ServerSocket serverSocket = new ServerSocket(PORT);
+        Socket accept = serverSocket.accept();
+        URL = getURL(accept);
+        setCodeForStatic(URL);
+        publicResponse(accept.getOutputStream(),CODE);
+        FileResponse(accept.getOutputStream());
+    }
+
+
+    /**
+     * 获得请求的URL;
+     * 请求路径在这里 GET /4654 HTTP/1.1
+     * @param socket
+     * @return
+     */
+    public static String getURL(Socket socket) throws IOException {
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        String str = null;
+        while ((str = bufferedReader.readLine()) != null) {
+            if (str.contains("GET")) {
+                str = str.replace("GET", "").replace("HTTP/1.1", "").trim();
+                break;
+            }
+        }
+        return str;
+    }
+
+    /**
+     * @param outputStream
+     * @param code         状态码
+     */
+    public static void publicResponse(OutputStream outputStream, int code) {
+        String codeStr = null;
+        if (code == 200) codeStr = code + " OK";
+        if (code == 404) codeStr = code + " Not Found";
+        try {
+            outputStream.write(("HTTP/1.1 " + codeStr + "OK\n").getBytes());
+            outputStream.write("Content-Type:text/html;charset=utf-8".getBytes());
+            outputStream.write("Server:Apache-Coyote/1.1\n".getBytes());
+            outputStream.write("\n\n".getBytes());
+        } catch (Exception e) {
+            System.err.println("公共请求头输出失败！");
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 将文件传输到浏览器
+     * @param outputStream
+     */
+    public static void FileResponse(OutputStream outputStream) {
+        try (BufferedReader bf = new BufferedReader
+                (new InputStreamReader
+                        (new FileInputStream(WEB_ROOT + File.separator + URL)));) {
+            String content = null;
+            while ((content = bf.readLine()) != null) {
+                outputStream.write(content.getBytes());
+            }
+            bf.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 根据URL设置相应码
+     * @param url
+     * @return
+     */
+    public static void setCodeForStatic(String url) {
+        try {
+            Map<String, String> map = getURLMapStatic();
+            String s = map.get(url);
+            if (s == null) CODE = 404;
+            else CODE = 200;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 获得所有的静态URL， key是文件名称，value是绝对路径
+     *
+     * @return
+     */
+    public static Map<String, String> getURLMapStatic() throws IOException {
+        HashMap<String, String> URLMap = new HashMap<>();
+
+        File[] files = FILE_STATIC.listFiles();
+        for (File f : files) {
+            if (f.getName().contains("html")) {
+                URLMap.put(f.getName(), f.getAbsolutePath());
+                System.out.println(f.getAbsolutePath());
+            }
+        }
+        return URLMap;
+    }
+
+    /**
+     * 获得所有动态URL(Java代码),key是名称，value是包全名
+     */
+    public static Map<String, String> getURLMapDymical() {
+        HashMap<String, String> URLMap = new HashMap<>();
+        return URLMap;
+    }
+
+
+    /**
+     * 加载配置文件中的动态web文件信息 key是名称，value是类全名
+     *
+     * @param in
+     * @return
+     * @throws IOException
+     */
+    public static Properties getProperties(InputStream in) throws IOException {
+        Properties properties = new Properties();
+        properties.load(in);
+        return properties;
     }
 }
 ```
@@ -4286,6 +4451,249 @@ public void fn8() {
 }
 ```
 
+## 二十一 JDBC
+
+### C3P0
+
+在 src 下放配置文件 `c3p0-config.xml`
+
+```xml
+<c3p0-config>
+    <default-config>
+        <property name="driverClass">com.mysql.jdbc.Driver</property>
+        <property name="jdbcUrl">jdbc:mysql://localhost:3306/jdbc_demo</property>
+        <property name="user">root</property>
+        <property name="password">root</property>
+
+        <property name="initialPoolSize">5</property>
+        <property name="maxPoolSize">10</property>
+        <property name="maxStatements">0</property>
+    </default-config>
+</c3p0-config>
+```
+
+用 C3P0 获取数据库连接
+
+```java
+import com.mchange.v2.c3p0.ComboPooledDataSource;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+/*
+ */
+public class C3P0Demo {
+    private static ComboPooledDataSource dataSource = new ComboPooledDataSource();
+
+    public static void main(String[] args) throws SQLException {
+        Connection connection = dataSource.getConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement("select * from student");
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()){
+            System.err.println(resultSet.getString(1));
+        }
+    }
+}
+```
+
+### 使用 Druid
+
+配置文件 druid.properties
+
+```properties
+driverClassName=com.mysql.jdbc.Driver
+url=jdbc:mysql:///jdbc_demo
+username=root
+password=root
+initialSize=5
+maxActive=10
+maxWait=3000
+```
+
+用 Druid 获取数据库连接
+
+```java
+import com.alibaba.druid.pool.DruidDataSourceFactory;
+
+import javax.sql.DataSource;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.Properties;
+
+/**
+ *
+ */
+public class DruidDemo {
+
+    public static void main(String[] args) throws Exception {
+        Properties properties = new Properties();
+        InputStream is = DruidDemo.class.getClassLoader().getResourceAsStream("druid.properties");
+        properties.load(is);
+        DataSource dataSource = DruidDataSourceFactory.createDataSource(properties);
+        Connection connection = dataSource.getConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement("select * from student");
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()) {
+            System.out.println(resultSet.getString(1));
+        }
+        if (resultSet == null) resultSet.close();
+        if (preparedStatement == null) preparedStatement.close();
+        if (connection == null) connection.close();
+
+    }
+}
+```
+
+### Spring JDBC
+
+```java
+import com.alibaba.druid.pool.DruidDataSourceFactory;
+import com.bbxx.nature.Student;
+import org.junit.Assert;
+import org.junit.Test;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+/**
+ * Spring的jdbc模板操作
+ * 需要依赖一个数据源
+ */
+public class SprintJDBCTemplate {
+    public static JdbcTemplate jdbcTemplate = new JdbcTemplate(DataSourceUtils.getDataSource());
+
+    @Test
+    public void updateDemo() {
+        int update = jdbcTemplate.update("update student set name='xxx' where id=4");
+        Assert.assertEquals(1, update);
+    }
+
+    @Test
+    public void insertDemo() {
+        int update = jdbcTemplate.update("insert into student(name,phone,address) values(?,?,?)", "liuj", "11112312", "aor you kou");
+        Assert.assertEquals(1, update);
+    }
+
+    @Test
+    public void deleteDemo() {
+        int liuj = jdbcTemplate.update("delete from student where name=?", "liuj");
+        Assert.assertEquals(1, liuj);
+    }
+
+    @Test
+    /**
+     * 只能是单个数据。封装为map集合。key为字段名，value为字段值
+     */
+    public void querySingleForMap() {
+        Map<String, Object> map = jdbcTemplate.queryForMap("select * from student where id=?", 4);
+        System.out.println(map.keySet().size());
+    }
+
+    @Test
+    /**
+     * 多条结果集
+     * 每天结果都封装为map
+     */
+    public void queryListMap() {
+        List<Map<String, Object>> maps = jdbcTemplate.queryForList("select * from student");
+        maps.stream().forEach(System.out::println);
+    }
+
+
+    @Test
+    public void queryList() {
+        List<Student> query = jdbcTemplate.query("select * from student", new RowMapper<Student>() {
+            @Override
+            public Student mapRow(ResultSet resultSet, int i) throws SQLException {
+                Student student = new Student();
+                student.setId(resultSet.getInt("id"));
+                student.setAddress(resultSet.getString("address"));
+                student.setPhone(resultSet.getString("phone"));
+                student.setName(resultSet.getString("name"));
+                return student;
+            }
+        });
+        /**
+         * 函数式编程
+         */
+        List<Student> query1 = jdbcTemplate.query("select * from student", (resultSet,i)->{
+            Student student = new Student();
+            student.setId(resultSet.getInt("id"));
+            student.setName(resultSet.getString("name"));
+            student.setPhone(resultSet.getString("phone"));
+            student.setAddress(resultSet.getString("address"));
+            return student;
+        });
+
+        query1.stream().forEach(s->{
+            System.out.println(s.getName()+s.getPhone());
+        });
+    }
+
+    @Test
+    /**
+     * String sql, RowMapper<T> rowMapper
+     * 也可以传这个BeanPropertyRowMapper 用反射进行映射。
+     */
+    public void queryList2(){
+        List<Student> query = jdbcTemplate.query("select * from student", new BeanPropertyRowMapper<Student>(Student.class));
+        query.stream().forEach(s->{
+            System.out.println(s.getName());
+        });
+    }
+
+    @Test
+    public void queryForObject(){
+        Integer integer = jdbcTemplate.queryForObject("select count(1) from student", int.class);
+        System.out.println(integer);
+    }
+}
+
+class DataSourceUtils {
+    private static DataSource dataSource = null;
+    private static Properties properties = null;
+
+    static {
+        properties = new Properties();
+        InputStream is = DataSourceUtils.class.getClassLoader().getResourceAsStream("druid.properties");
+        try {
+            properties.load(is);
+            dataSource = DruidDataSourceFactory.createDataSource(properties);
+            if (is != null) is.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static DataSource getDataSource() {
+        if (dataSource == null) {
+            DataSource dataSource = null;
+            try {
+                dataSource = DruidDataSourceFactory.createDataSource(properties);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return dataSource;
+        }
+        return dataSource;
+    }
+
+}
+```
+
 # 第三部分 加强
 
 ## 第一章 枚举
@@ -5171,7 +5579,7 @@ public class EchoServer {
 
 ---
 
-## 第九章 `Servlet3.0`
+## 第九章 Servlet3.0
 
 - 注解
 - 文件上传
