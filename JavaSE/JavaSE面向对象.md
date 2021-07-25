@@ -6002,7 +6002,8 @@ HotSpot使用的是 计数器 的方式进行探测，为每个方法准备了�
     - 「解释」则是把字节码转换成操作系统可识别的执行指令，在JVM中会有字节码解释器和即时编译器。在解释时会对代码进行分析，查看是否为「热点代码」，如果为「热点代码」则触发JIT编译，下次执行时就无需重复进行解释，提高解释速度
     - 「执行」调用系统的硬件执行最终的程序指令
 
-- <img src="../pics/JavaStrengthen/jvm/From_Java2Class.jpg">
+  <img src="../pics/JavaStrengthen/jvm/From_Java2Class.jpg">
+  
 
 ### Java内存模型
 
