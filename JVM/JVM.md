@@ -1,4 +1,4 @@
-JVM - Nyima's Blog (gitee.io)](https://nyimac.gitee.io/2020/07/03/JVM学习/#三、垃圾回收)
+![image-20210728121729595](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20210728121729595.png)JVM - Nyima's Blog (gitee.io)](https://nyimac.gitee.io/2020/07/03/JVM学习/#三、垃圾回收)
 
 # 什么是JVM
 
@@ -545,11 +545,42 @@ System.out.println(x1 == x2); // false
 
 <img src="..\pics\JavaStrengthen\jvm\StringTableLocal.png">
 
-# P36
+> 验证代码
+
+```java
+/**
+ * jdk8设置：-Xmx10m -XX:-UseGCOverheadLimit
+ * jdk6设置：-XX:MaxPermSie=10m
+ */
+public class StringTableLocal {
+    /**
+     * Java 11 报异常：OutOfMemoryError: Java heap space 堆内存溢出了。说明StringTable在 heap 里面
+     * @param args
+     */
+    public static void main(String[] args) {
+        ArrayList<String> table = new ArrayList<>();
+        int i = 0;
+        try {
+            for (int j = 0; j < 260000000; j++) {
+                String.valueOf(j).intern();
+                i++;
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
+        } finally {
+            System.out.println(i);
+        }
+    }
+}
+```
+
+Java.lang.OutOfMemoryError: GC overhead limit exceeded => 超过 98% 的时间花在了GC上，但是回收了不到 2% 的 heap 内存，抛出此异常。
 
 ### StringTable 垃圾回收
 
-StringTable在内存紧张时，会发生垃圾回收
+也会受到垃圾回收的管理。在内存紧张的时候，未被引用的字符串常量回被 gc。
+
+jvm 参数：`-Xmx10m -XX:+PrintStringTableStatistics -XX:+PrintGCDetails -verbose:gc`
 
 ### StringTable调优
 
@@ -559,11 +590,54 @@ StringTable在内存紧张时，会发生垃圾回收
   -XX:StringTableSize=xxxxCopy
   ```
 
-  
+- 如果应用里有大量字符串并且存在很多重复的字符串，可以考虑使用intern()方法将字符串入池，而不是都存在Eden区中，这样字符串仅会占用较少的空间。
 
-- 考虑是否需要将字符串对象入池
+```java
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
-  可以通过**intern方法减少重复入池**
+/**
+ * 演示 intern 减少内存占用
+ * -XX:StringTableSize=200000 -XX:+PrintStringTableStatistics
+ * -Xsx500m -Xmx500m -XX:+PrintStringTableStatistics -XX:StringTableSize=200000
+ */
+public class StringTableBest2 {
+
+    public static void main(String[] args) throws IOException {
+
+        List<String> address = new ArrayList<>();
+        System.in.read();
+        // 重复放10次，这样就会有很多字符串
+        for (int i = 0; i < 10; i++) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream("linux.words"), "utf-8"))) {
+                String line = null;
+                long start = System.nanoTime();
+                while (true) {
+                    line = reader.readLine();
+                    if (line == null) {
+                        break;
+                    }
+                    // 一个不调用intern，一个调用intern放入池中。
+                    address.add(line.intern());
+                }
+                System.out.println("cost:" + (System.nanoTime() - start) / 1000000);
+            }
+        }
+        System.in.read();
+
+    }
+}
+```
+
+### 直接内存
+
+- 属于操作系统，常见于NIO操作时，**用于数据缓冲区**
+- 分配回收成本较高，但读写性能高
+- 不受JVM内存回收管理
 
 ## 直接内存
 
@@ -571,21 +645,182 @@ StringTable在内存紧张时，会发生垃圾回收
 - 分配回收成本较高，但读写性能高
 - 不受JVM内存回收管理
 
-### 文件读写流程
+### 文件读写
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150715.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150715.png)
+<img src="..\pics\JavaStrengthen\jvm\io.png" style="float:left">
 
-**使用了DirectBuffer**
+**使用DirectBuffer**
+
+<img src="..\pics\JavaStrengthen\jvm\directBufer.png style="float:left">
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150736.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150736.png)
 
 直接内存是操作系统和Java代码**都可以访问的一块区域**，无需将代码从系统内存复制到Java堆内存，从而提高了效率
 
+### 演示直接内存溢出
+
+```java
+
+/**
+ * 演示直接内存溢出
+ */
+public class Demo1_10 {
+    static int _100Mb = 1024 * 1024 * 100;
+
+    public static void main(String[] args) {
+        List<ByteBuffer> list = new ArrayList<>();
+        int i = 0;
+        try {
+            while (true) {
+                ByteBuffer byteBuffer = ByteBuffer.allocateDirect(_100Mb);
+                list.add(byteBuffer);
+                i++;
+            }
+        } finally {
+            System.out.println(i);
+        }
+        // 方法区是jvm规范， jdk6 中对方法区的实现称为永久代
+        //                  jdk8 对方法区的实现称为元空间
+    }
+}
+```
+
+### 释放直接内存
+
+ByteBuffer 的实现内部使用了 Cleaner（虚引用）来检测 ByteBuffer。一旦 ByteBuffer 被垃圾回收，那么会由 ReferenceHandler 来调用 Cleaner的clean 方法调用freeMemory来释放内存，进而实现 堆外内存的回收。
+
+```java
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
+/**
+ * 禁用显式回收对直接内存的影响
+ */
+public class Demo1_26 {
+    static int _1Gb = 1024 * 1024 * 1024;
+
+    /*
+     * -XX:+DisableExplicitGC 显式的
+     */
+    public static void main(String[] args) throws IOException {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(_1Gb);
+        System.out.println("分配完毕...");
+        System.in.read();
+        System.out.println("开始释放...");
+        byteBuffer = null;
+        System.gc(); // 显式的垃圾回收，Full GC
+        System.in.read();
+    }
+}
+```
+
+通过 unsafe 类显示回收内存，高版本 JDK 不支持 unsafe 类。
+
+```java
+import sun.misc.Unsafe;
+
+import java.io.IOException;
+import java.lang.reflect.Field;
+
+/**
+ * 直接内存分配的底层原理：Unsafe
+ */
+public class Demo1_27 {
+    static int _1Gb = 1024 * 1024 * 1024;
+
+    public static void main(String[] args) throws IOException {
+        Unsafe unsafe = getUnsafe();
+        // 分配内存
+        long base = unsafe.allocateMemory(_1Gb);
+        unsafe.setMemory(base, _1Gb, (byte) 0);
+        System.in.read();
+
+        // 释放内存
+        unsafe.freeMemory(base);
+        System.in.read();
+    }
+
+    public static Unsafe getUnsafe() {
+        try {
+            Field f = Unsafe.class.getDeclaredField("theUnsafe");
+            f.setAccessible(true);
+            Unsafe unsafe = (Unsafe) f.get(null);
+            return unsafe;
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
 ### 释放原理
 
-直接内存的回收不是通过JVM的垃圾回收来释放的，而是通过**unsafe.freeMemory**来手动释放
+堆外内存不归 JVM GC 管。所以需要手动释放。释放的方式有两种。
 
-通过
+- ByteBuffer的实现内部使用了Cleaner（虚引用）来检测ByteBuffer。一旦ByteBuffer被垃圾回收，那么会由ReferenceHandler来调用Cleaner的clean方法调用freeMemory来释放内存，进而实现 堆外内存的回收。
+- 直接通过 unsafe 类进行堆外内存的申请和释放。
+  - 申请内存：`unsafe.allocateMemory( );`
+  - 释放内存：`unsafe.freeMemory( );`
+
+> 源码分析
+
+- `ByteBuffer.allocateDirect( )`
+
+```java
+public static ByteBuffer allocateDirect(int capacity) {
+    return new DirectByteBuffer(capacity);
+}
+```
+
+- `DirectByteBuffer( )`
+
+```java
+DirectByteBuffer(int cap) {
+    super(-1, 0, cap, cap);
+    boolean pa = VM.isDirectMemoryPageAligned();
+    int ps = Bits.pageSize();
+    long size = Math.max(1L, (long)cap + (long)(pa ? ps : 0));
+    Bits.reserveMemory(size, cap);
+    long base = 0L;
+
+    try {
+        // 完成对内存的分配
+        base = UNSAFE.allocateMemory(size);
+    } catch (OutOfMemoryError var9) {
+        Bits.unreserveMemory(size, cap);
+        throw var9;
+    }
+
+    UNSAFE.setMemory(base, size, (byte)0);
+    if (pa && base % (long)ps != 0L) {
+        this.address = base + (long)ps - (base & (long)(ps - 1));
+    } else {
+        this.address = base;
+    }
+	// 关联了一个回调任务对象。 Cleaner是虚引用类型。
+    // public class Cleaner extends PhantomReference<Object> {/* ... */}
+    this.cleaner = Cleaner.create(this, new DirectByteBuffer.Deallocator(base, size, cap));
+    this.att = null;
+}
+```
+
+- 回调任务对象里有个 run 方法，进行内存释放。
+
+```java
+public void run() {
+    if (this.address != 0L) {
+        Buffer.UNSAFE.freeMemory(this.address);
+        this.address = 0L;
+        Bits.unreserveMemory(this.size, this.capacity);
+    }
+}
+```
+
+- 禁用显示的垃圾回收
+  - -XX:+DisableExplicitGC 关闭显示的垃圾回收，但是这样会影响 直接内存的回收，这样就只
+  - System.g() 就是显示的垃圾回收。触发的是 full gc。
+
+直接内存的回收不是通过JVM的垃圾回收来释放的，而是通过 **unsafe.freeMemory** 来手动释放
 
 ```
 //通过ByteBuffer申请1M的直接内存
@@ -672,21 +907,29 @@ public void run() {
 - 使用了Unsafe类来完成直接内存的分配回收，回收需要主动调用freeMemory方法
 - ByteBuffer的实现内部使用了Cleaner（虚引用）来检测ByteBuffer。一旦ByteBuffer被垃圾回收，那么会由ReferenceHandler来调用Cleaner的clean方法调用freeMemory来释放内存
 
-# 三、垃圾回收
+# 垃圾回收
+
+> 概述
+
+- 如何判断对象可以回收
+- 垃圾回收算法
+- 分代垃圾回收
+- 垃圾回收器
+- 垃圾回收调优
 
 ## 如何判断对象可以回收
 
 ### 引用计数法
 
-弊端：循环引用时，两个对象的计数都为1，导致两个对象都无法被释放
+弊端：循环引用时，两个对象的计数都为1，导致两个对象都无法被释放。不过可以用图论的算法判断是否有环，有就破环，解决循环引用。
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150750.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150750.png)
+<img src="..\pics\JavaStrengthen\jvm\ref_count" style="float:left">
 
 ### 可达性分析算法
 
 - JVM中的垃圾回收器通过**可达性分析**来探索所有存活的对象
-- 扫描堆中的对象，看能否沿着GC Root对象为起点的引用链找到该对象，如果**找不到，则表示可以回收**
-- 可以作为GC Root的对象
+- 扫描堆中的对象，看是否能沿着 GC Root 对象**为起点**的引用链找到该对象，如果**找不到，则表示可以回收**
+- 那些对象可以作为 GC Root？
   - 虚拟机栈（栈帧中的本地变量表）中引用的对象。　
   - 方法区中类静态属性引用的对象
   - 方法区中常量引用的对象
@@ -1140,7 +1383,7 @@ G1在老年代内存不足时（老年代所占内存超过阈值）
 
 ### 老年代调优
 
-# 四、类加载与字节码技术
+# 类加载与字节码技术
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151300.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151300.png)
 
@@ -2909,7 +3152,7 @@ private static int inflationThreshold = 15;Copy
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200614135011.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200614135011.png)
 
-# 五、内存模型
+# 内存模型
 
 内存模型内容详见 [JAVA并发 第四章](https://nyimac.gitee.io/2020/06/08/并发编程/#四、共享模型之内存)
 
