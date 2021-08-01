@@ -1,5 +1,9 @@
 https://nyimac.gitee.io/
 
+学习记录：
+
+2021-08-01：P96~P128 半天的视频学习量
+
 # 什么是JVM
 
 参考视频：[**解密JVM【黑马程序员出品】**](https://www.bilibili.com/video/BV1yE411Z7AP)
@@ -2161,7 +2165,10 @@ SourceFile: "HelloWorld.java"
 源代码
 
 ```java
-public class Demo3_1 {    
+public class Demo3_1 {
+    /**
+     * 演示 字节码指令 和 操作数栈、常量池的关系
+     */
 	public static void main(String[] args) {        
 		int a = 10;        
 		int b = Short.MAX_VALUE + 1;     // 本来是存在字节码里的，但是一旦超过了 Short的最大值，就会存储在常量池中。   我验证了下，还真的是这样的。
@@ -2268,25 +2275,30 @@ Constant pool:
 SourceFile: "Demo3_1.java"
 ```
 
-**常量池载入运行时常量池**
+#### **常量池载入运行时常量池**
 
-常量池也属于方法区，只不过这里单独提出来了
+常量池的数据会放入运行时常量池这个地方。运行时常量池，是属于方法区的一个部分，因为比较特殊，所以这里单独提了出来。
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151317.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151317.png)
+<img src="..\pics\JavaStrengthen\jvm\Constant pool.png" >
 
-**方法字节码载入方法区**
+#### **方法字节码载入方法区**
+
+字节码指令放入方法区。
+
+<img src="..\pics\JavaStrengthen\jvm\method_clazz.png">
+
+#### main 线程开始运行，分配栈帧内存
 
 （stack=2，locals=4）
 
-绿色的代表局部变量表，蓝色的代表操作数栈。
+- 绿色：局部变量表，locals = 4，因为就四个局部变量
+- 蓝色：操作数栈，stack 深度 = 2，因为就两个方法，main 和 print
 
- 对应操作数栈有2个空间（每个空间4个字节），局部变量表中有4个槽位
+<img src="..\pics\JavaStrengthen\jvm\main_clazz">
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151325.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151325.png)
+#### **执行引擎开始执行字节码**
 
-**执行引擎开始执行字节码**
-
-**bipush 10**
+**bipush 10**：将一个 byte 压入操作数栈（其长度会补齐 4 个字节）
 
 - 将一个 byte 压入操作数栈（其长度会补齐 4 个字节），类似的指令还有
 
@@ -2295,79 +2307,75 @@ SourceFile: "Demo3_1.java"
 - ldc2_w 将一个 long 压入操作数栈（**分两次压入**，因为 long 是 8 个字节）
 - 这里小的数字都是和字节码指令存在一起，**超过 short 范围的数字存入了常量池**
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151336.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151336.png)
+<img src="..\pics\JavaStrengthen\jvm\bipush.png">
 
 **istore 1**
 
-将操作数栈栈顶元素弹出，放入局部变量表的slot 1中
+- 将操作数栈栈顶元素弹出，放入局部变量表的slot 1中
 
-对应代码中的
+<img src="..\pics\JavaStrengthen\jvm\istore_before.png">
 
-```java
-a = 10
-```
-
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151346.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151346.png)
-
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151412.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151412.png)
+<img src="..\pics\JavaStrengthen\jvm\istore_after.png">
 
 **ldc #3**
 
-读取运行时常量池中#3，即32768(超过short最大值范围的数会被放到运行时常量池中)，将其加载到操作数栈中
+- 读取运行时常量池中#3，即32768(超过short最大值范围的数会被放到运行时常量池中)，将其加载到操作数栈中
 
-注意 Short.MAX_VALUE 是 32767，所以 32768 = Short.MAX_VALUE + 1 实际是在编译期间计算好的
+- 注意 Short.MAX_VALUE 是 32767，所以 32768 = Short.MAX_VALUE + 1 实际是在编译期间计算好的
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151421.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151421.png)
+<img src="..\pics\JavaStrengthen\jvm\ldc.png">
 
 **istore 2**
 
 将操作数栈中的元素弹出，放到局部变量表的2号位置
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151432.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151432.png)
+<img src="..\pics\JavaStrengthen\jvm\istore2_before.png">
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151441.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151441.png)
+<img src="..\pics\JavaStrengthen\jvm\istore2_after.png">
 
 **iload1 iload2**
 
-将局部变量表中1号位置和2号位置的元素放入操作数栈中
+- 将局部变量表中1号位置和2号位置的元素放入操作数栈中
 
-- 因为只能在操作数栈中执行运算操作
+- ==只能在操作数栈中执行运算操作==
+- iload1 把 1 槽位的值读取到操作数栈上
+- iload2 把 2 槽位的值读取到操作数栈上
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151450.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151450.png)
+<img src="..\pics\JavaStrengthen\jvm\iload1_.png">
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151459.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151459.png)
+<img src="..\pics\JavaStrengthen\jvm\iload2_.png">
 
 **iadd**
 
 将操作数栈中的两个元素**弹出栈**并相加，结果在压入操作数栈中
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151508.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151508.png)
+<img src="..\pics\JavaStrengthen\jvm\iadd_before.png">
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151523.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151523.png)
+<img src="..\pics\JavaStrengthen\jvm\iadd_after.png">
 
 **istore 3**
 
 将操作数栈中的元素弹出，放入局部变量表的3号位置
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151547.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151547.png)
+<img src="..\pics\JavaStrengthen\jvm\istore3_before.png">
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151555.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151555.png)
+<img src="..\pics\JavaStrengthen\jvm\istore3_after.png">
 
 **getstatic #4**
 
-在运行时常量池中找到#4，发现是一个对象
+- 在运行时常量池中找到#4，发现是一个对象
 
-在堆内存中找到该对象，并将其**引用**放入操作数栈中
+- 在堆内存中找到该对象，并将其**引用**放入操作数栈中
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151605.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151605.png)
+<img src="..\pics\JavaStrengthen\jvm\getstatic4_before.png">
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151613.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151613.png)
+<img src="..\pics\JavaStrengthen\jvm\getstatic4_after.png">
 
 **iload 3**
 
 将局部变量表中3号位置的元素压入操作数栈中
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151624.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151624.png)
+<img src="..\pics\JavaStrengthen\jvm\iload3.png">
 
 **invokevirtual 5**
 
@@ -2377,18 +2385,148 @@ a = 10
 
 传递参数，执行新栈帧中的字节码
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151632.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151632.png)
+<img src="..\pics\JavaStrengthen\jvm\invokevirtual5_before.png">
 
-执行完毕，弹出栈帧
 
-清除 main 操作数栈内容
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151640.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151640.png)
+- 执行完毕，弹出栈帧
+
+- 清除 main 操作数栈内容
+
+<img src="..\pics\JavaStrengthen\jvm\invokevirtual5_after.png">
 
 **return**
 完成 main 方法调用，弹出 main 栈帧，程序结束
 
-### 通过字节码指令来分析问题
+### 字节码指令来分析问题
+
+> 分析 a++
+
+```java
+public class Demo3_2 {
+    public static void main(String[] args) {
+        int a = 10;
+        // 10 + 12
+        // 22 + 12
+        int b = a++ + ++a + a--;
+        System.out.println(a);
+        System.out.println(b);
+    }
+}
+
+```
+
+```shell
+public class jvm.clazz.Demo3_2
+  minor version: 0
+  major version: 52
+  flags: (0x0021) ACC_PUBLIC, ACC_SUPER
+  this_class: #4                          // jvm/clazz/Demo3_2
+  super_class: #5                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 2, attributes: 1
+Constant pool:
+   #1 = Methodref          #5.#22         // java/lang/Object."<init>":()V
+   #2 = Fieldref           #23.#24        // java/lang/System.out:Ljava/io/PrintStream;
+   #3 = Methodref          #25.#26        // java/io/PrintStream.println:(I)V
+   #4 = Class              #27            // jvm/clazz/Demo3_2
+   #5 = Class              #28            // java/lang/Object
+   #6 = Utf8               <init>
+   #7 = Utf8               ()V
+   #8 = Utf8               Code
+   #9 = Utf8               LineNumberTable
+  #10 = Utf8               LocalVariableTable
+  #11 = Utf8               this
+  #12 = Utf8               Ljvm/clazz/Demo3_2;
+  #13 = Utf8               main
+  #14 = Utf8               ([Ljava/lang/String;)V
+  #15 = Utf8               args
+  #16 = Utf8               [Ljava/lang/String;
+  #17 = Utf8               a
+  #18 = Utf8               I
+  #19 = Utf8               b
+  #20 = Utf8               SourceFile
+  #21 = Utf8               Demo3_2.java
+  #22 = NameAndType        #6:#7          // "<init>":()V
+  #23 = Class              #29            // java/lang/System
+  #24 = NameAndType        #30:#31        // out:Ljava/io/PrintStream;
+  #25 = Class              #32            // java/io/PrintStream
+  #26 = NameAndType        #33:#34        // println:(I)V
+  #27 = Utf8               jvm/clazz/Demo3_2
+  #28 = Utf8               java/lang/Object
+  #29 = Utf8               java/lang/System
+  #30 = Utf8               out
+  #31 = Utf8               Ljava/io/PrintStream;
+  #32 = Utf8               java/io/PrintStream
+  #33 = Utf8               println
+  #34 = Utf8               (I)V
+{
+  public jvm.clazz.Demo3_2();
+    descriptor: ()V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+      LineNumberTable:
+        line 3: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   Ljvm/clazz/Demo3_2;
+
+  public static void main(java.lang.String[]);
+    descriptor: ([Ljava/lang/String;)V
+    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=3, args_size=1
+         0: bipush        10
+         2: istore_1			# 给 a 赋值为 10
+         3: iload_1				# 把 a 的值 放入操作数栈
+         4: iinc          1, 1  # 槽位，自增几。是对槽位中的数据自增，不是操作数栈。
+         7: iinc          1, 1
+        10: iload_1
+        11: iadd
+        12: iload_1
+        13: iinc          1, -1
+        16: iadd
+        17: istore_2
+        18: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        21: iload_1
+        22: invokevirtual #3                  // Method java/io/PrintStream.println:(I)V
+        25: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        28: iload_2
+        29: invokevirtual #3                  // Method java/io/PrintStream.println:(I)V
+        32: return
+      LineNumberTable:
+        line 5: 0
+        line 6: 3
+        line 7: 18
+        line 8: 25
+        line 9: 32
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      33     0  args   [Ljava/lang/String;
+            3      30     1     a   I
+           18      15     2     b   I
+}
+SourceFile: "Demo3_2.java"
+```
+
+分析：
+
+- 注意 iinc 指令是直接在局部变量 slot 上进行运算
+- istore 是从操作数栈中弹出数据存入 局部变量 slot 中
+- iload 是把 局部变量 slot 的数据 存入 操作数栈中
+- a++ 和 ++a 的区别是先执行 iload 还是先执行 iinc
+- 看着这个图思考就好
+
+==比如：a--，是先把 局部变量表 中的 a 的值加载到 操作数栈，然后 局部变量表 中的 a 再减减==
+
+++a，是先
+
+<img src="..\pics\JavaStrengthen\jvm\a++">
+
+> x = x++
 
 代码
 
@@ -2437,6 +2575,70 @@ Code:
        24: iload_2
        25: invokevirtual #3 // Method java/io/PrintStream.println:(I)V
        28: return
+```
+
+> 条件判断
+
+和以前学的汇编差不多。不特别记了。
+
+- byte，short，char 都会按 int 比较，因为操作数栈都是 4 字节
+- goto 用来进行跳转到指定行号的字节码
+
+```java
+public class EQ {
+    public static void main(String[] args) {
+        int a = 0;
+        if (a == 0) {
+            a = 10;
+        } else {
+            a = 20;
+        }
+    }
+}
+```
+
+```shell
+stack=1, locals=2, args_size=1
+    0: iconst_0
+    1: istore_1
+    2: iload_1
+    3: ifne          12 # 不等于就跳到12行
+    6: bipush        10
+    8: istore_1
+    9: goto          15
+    12: bipush        20
+    14: istore_1
+    15: return
+```
+
+以上比较指令中没有 long，float，double 的比较，那么它们要比较怎 么办？ 
+
+参考 https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html#jvms-6.5.lcmp
+
+> 循环控制
+
+while 和 for 的字节码是一样的。
+
+```java
+public class While {
+    public static void main(String[] args) {
+        int a = 0;
+        while (a < 10) {
+            a++;
+        }
+    }
+}
+```
+
+```shell
+0: iconst_0
+1: istore_1		# 存储数据到 局部变量表中
+2: iload_1		# 把局部变量 a 的值读取到操作数栈中。
+3: bipush        10
+5: if_icmpge     14
+8: iinc          1, 1
+11: goto          2
+14: return
 ```
 
 ### 构造方法
@@ -2535,28 +2737,30 @@ Code:
 ### 方法调用
 
 ```java
-public class Demo5 {
-	public Demo5() { }
+public class Method {
+    public Method() {
+    }
 
-	private void test1() {
-	}
+    private void test1() {
+    }
 
-	private final void test2() {
-	}
+    private final void test2() {
+    }
 
-	public void test3() {
-	}
+    public void test3() {
+    }
 
-	public static void test4() {
-	}
+    public static void test4() {
+    }
 
-	public static void main(String[] args) {
-		Demo5 demo5 = new Demo5();
-		demo5.test1();
-		demo5.test2();
-		demo5.test3();
-		Demo5.test4();
-	}
+    public static void main(String[] args) {
+        Method m = new Method();
+        m.test1();
+        m.test2();
+        m.test3();
+        m.test4();
+        Method.test4();
+    }
 }
 ```
 
@@ -2566,32 +2770,106 @@ public class Demo5 {
 - 普通成员方法在调用时，使用invokespecial指令。因为编译期间无法确定该方法的内容，只有在运行期间才能确定
 - 静态方法在调用时使用invokestatic指令
 
-```
-Code:
-      stack=2, locals=2, args_size=1
-         0: new           #2                  // class com/nyima/JVM/day5/Demo5 
-         3: dup
-         4: invokespecial #3                  // Method "<init>":()V
-         7: astore_1
-         8: aload_1
-         9: invokespecial #4                  // Method test1:()V
-        12: aload_1
-        13: invokespecial #5                  // Method test2:()V
-        16: aload_1
-        17: invokevirtual #6                  // Method test3:()V
-        20: invokestatic  #7                  // Method test4:()V
-        23: returnCopy
+```shell
+0: new           #2                  // class jvm/clazz/Method
+3: dup
+4: invokespecial #3                  // Method "<init>":()V
+7: astore_1
+8: aload_1
+9: invokespecial #4                  // Method test1:()V
+12: aload_1
+13: invokespecial #5                  // Method test2:()V
+16: aload_1
+17: invokevirtual #6                  // Method test3:()V
+20: aload_1
+21: pop
+22: invokestatic  #7                  // Method test4:()V
+25: invokestatic  #7                  // Method test4:()V
+28: return
 ```
 
 - new 是创建【对象】，给对象分配堆内存，执行成功会将【**对象引用**】压入操作数栈
 - dup 是赋值操作数栈栈顶的内容，本例即为【**对象引用**】，为什么需要两份引用呢，一个是要配合 invokespecial 调用该对象的构造方法 “init”:()V （会消耗掉栈顶一个引用），另一个要 配合 astore_1 赋值给局部变量
-- 最终方法（ﬁnal），私有方法（private），构造方法都是由 invokespecial 指令来调用，属于静态绑定
+- 最终方法（ﬁnal），私有方法（private），构造方法都是由 invokespecial 指令来调用，属于==静态绑定==，可以直接找到方法代码的执行地址，效率更高
 - 普通成员方法是由 invokevirtual 调用，属于**动态绑定**，即支持多态 
 - 成员方法与静态方法调用的另一个区别是，执行方法前是否需要【对象引用】
-- 比较有意思的是 d.test4(); 是通过【对象引用】调用一个静态方法，可以看到在调用 invokestatic 之前执行了 pop 指令，把【对象引用】从操作数栈弹掉了
+- **比较有意思的是 m.test4(); 是通过【对象引用】调用一个静态方法，可以看到在调用 invokestatic 之前执行了 pop 指令，把【对象引用】从操作数栈弹掉了**
 - 还有一个执行 invokespecial 的情况是通过 super 调用父类方法
 
 ### 多态原理
+
+#### 运行代码
+
+停止在 System.in.read() 方法上，这时运行 jps 获取进程 id
+
+```java
+/**
+ *  禁用指针压缩 方便查看地址。
+ *  -XX:-UseCompressedOops -XX:-UseCompressedClassPointers
+ */
+public class Demo3_3 {
+    public static void test(Animal animal) {
+        animal.eat();
+        System.out.println(animal.toString());
+    }
+
+    public static void main(String[] args) throws IOException {
+        test(new Cat());
+        test(new Dog());
+        System.in.read();
+    }
+}
+
+abstract class Animal {
+    public abstract void eat();
+
+    @Override
+    public String toString() {
+        return "我是" + this.getClass().getSimpleName();
+    }
+}
+
+class Dog extends Animal {
+    @Override
+    public void eat() {
+        System.out.println("啃骨头");
+    }
+}
+
+class Cat extends Animal {
+    @Override
+    public void eat() {
+        System.out.println("吃鱼");
+    }
+}
+```
+
+#### 运行 HSDB 工具
+
+HSDB位于C:\Program Files\Java\jdk1.8.0_212\lib里面，接下来启动HSDB；进入 JDK 安装目录，执行；
+
+PS：报错了，少dll文件，下载过来就行。
+
+```shell
+PS D:\Program Files\Java\jdk1.8.0_301\lib> java -cp .\sa-jdi.jar sun.jvm.hotspot.HSDB
+```
+
+----
+
+#### 使用 HSDB
+
+- 根据 jps 的 id 链接Java程序
+
+- tool --> Find Object by Query 
+  - `select d from jvm.clazz.Dog d `
+  - 查询 jvm.clazz包下的 Dog 类。 前后两个 d 应该是别名，要保持一致。
+- windows-->console
+  - 执行命令 `mem 0x000001c3710b83e0 2` 回车执行
+  - 以xx开始，查看 2 个 word 的数据
+
+Dog 对象的表示
+
+<img src="..\pics\JavaStrengthen\jvm\HSDB.png">
 
 因为普通成员方法需要在运行时才能确定具体的内容，所以虚拟机需要调用**invokevirtual**指令
 
