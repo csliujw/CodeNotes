@@ -1775,18 +1775,23 @@ GC 日志里没有竞争失败，并发失败，碎片过多的错误提示。�
 
 ## 类文件结构
 
-# p97
+这块基本就是带你查表看 16 进制数据的意思，没什么好记的。
 
-首先获得.class字节码文件
+> 从 HelloWorld 开始简述类文件结构
 
-方法：
+Java 代码
 
-- 在文本文档里写入java代码（文件名与类名一致），将文件类型改为.java
-- java终端中，执行javac X:...\XXX.java
-
-以下是字节码文件
-
+```java
+public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello World");
+    }
+}
 ```
+
+对应的 class 文件
+
+```shell
 0000000 ca fe ba be 00 00 00 34 00 23 0a 00 06 00 15 09 
 0000020 00 16 00 17 08 00 18 0a 00 19 00 1a 07 00 1b 07 
 0000040 00 1c 01 00 06 3c 69 6e 69 74 3e 01 00 03 28 29 
@@ -1827,142 +1832,440 @@ GC 日志里没有竞争失败，并发失败，碎片过多的错误提示。�
 0001120 00 00 02 00 14Copy
 ```
 
-根据 JVM 规范，**类文件结构**如下
+根据 JVM 规范，**类文件结构**如下：u4 u2代表的字节数。
 
-```
-u4 			 magic
-u2             minor_version;    
-u2             major_version;    
-u2             constant_pool_count;    
+```shell
+u4 			   magic 			# 前四个字节代表魔数
+u2             minor_version;   # 接下来两个字节表示小版本号    
+u2             major_version;    # 接下来两个字节表示主版本号 
+u2             constant_pool_count;    # 常量池信息
 cp_info        constant_pool[constant_pool_count-1];    
-u2             access_flags;    
-u2             this_class;    
-u2             super_class;   
-u2             interfaces_count;    
+u2             access_flags;    # 访问修饰
+u2             this_class;      # 类自己的包名，类名信息
+u2             super_class;     # 自己的父类信息
+u2             interfaces_count;    # 接口信息
 u2             interfaces[interfaces_count];   
-u2             fields_count;    
+u2             fields_count;    # 类中的成员变量
 field_info     fields[fields_count];   
-u2             methods_count;    
+u2             methods_count;    # 类中的方法信息
 method_info    methods[methods_count];    
-u2             attributes_count;    
+u2             attributes_count;    # 类的附加属性信息
 attribute_info attributes[attributes_count];Copy
 ```
 
 ### 魔数
 
-u4 magic
+u4   magic
 
-对应字节码文件的0~3个字节
+魔数：标识文件的类型。
+
+0~3 字节，表示它是否是【class】类型的文件。
 
 0000000 **ca fe ba be** 00 00 00 34 00 23 0a 00 06 00 15 09
 
 ### 版本
 
-u2 minor_version;
+u2 minor_version; u2 major_version
 
-u2 major_version;
+4~7 字节，表示类的版本 00 34（52） 表示是 Java 8
 
 0000000 ca fe ba be **00 00 00 34** 00 23 0a 00 06 00 15 09
 
-34H = 52，代表JDK8
-
 ### 常量池
 
-见资料文件
+| 1                           | 1    |
+| --------------------------- | ---- |
+| CONSTANT_Class              | 7    |
+| CONSTANT_Fieldref           | 9    |
+| CONSTANT_Methodref          | 10   |
+| CONSTANT_InterfaceMethodref | 11   |
+| CONSTANT_String             | 8    |
+| CONSTANT_Integer            | 3    |
+| CONSTANT_Float              | 4    |
+| CONSTANT_Long               | 5    |
+| CONSTANT_Double             | 6    |
+| CONSTANT_NameAndType        | 12   |
+| CONSTANT_Utf8               | 1    |
+| CONSTANT_MethodHandle       | 15   |
+| CONSTANT_MethodType         | 16   |
+| CONSTANT_InvokeDynamic      | 18   |
 
-…略
+8~9 字节，表示常量池长度，00 23 （35） 表示常量池有 #1~#34项，注意 #0 项不计入，也没有值 
+
+0000000 ca fe ba be 00 00 00 34 **00 23** 0a 00 06 00 15 09 
+
+----
+
+第#1项 0a 表示一个 Method 信息，00 06 和 00 15（21） 表示它引用了常量池中 #6 和 #21 项来获得 这个方法的【所属类】和【方法名】 
+
+0000000 ca fe ba be 00 00 00 34 00 23 **0a** <span style="color:red">00 06</span> <span style="color:green">00 15</span> 09
+
+----
+
+第#2项 09 表示一个 Field 信息，00 16（22）和 00 17（23） 表示它引用了常量池中 #22 和 # 23 项 来获得这个成员变量的【所属类】和【成员变量名】
+
+0000000 ca fe ba be 00 00 00 34 00 23 0a 00 06 00 15 **09**  09 表示一个 Filed信息
+
+0000020 **00 16 00 17** 08 00 18 0a 00 19 00 1a 07 00 1b 07
+
+----
+
+第#3项 08 表示一个字符串常量名称，00 18（24）表示它引用了常量池中 #24 项
+
+0000020 00 16 00 17 **08 00 18** 0a 00 19 00 1a 07 00 1b 07
+
+----
+
+第#4项 0a 表示一个 Method 信息，00 19（25） 和 00 1a（26） 表示它引用了常量池中 #25 和 #26 项来获得这个方法的【所属类】和【方法名】
+
+0000020 00 16 00 17 08 00 18 **0a**  <span style="color:red">**00 19**</span>  <span style="color:green">**00 1a**</span> 07 00 1b 07
+
+-----
+
+第#5项 **07** 表示一个 Class 信息，00 1b（27） 表示它引用了常量池中 #27 项
+
+0000020 00 16 00 17 08 00 18 0a 00 19 00 1a **07 00 1b** 07
+
+---
+
+第#6项 07 表示一个 Class 信息，00 1c（28） 表示它引用了常量池中 #28 项
+
+0000020 00 16 00 17 08 00 18 0a 00 19 00 1a 07 00 1b **07** 
+
+0000040 **00 1c** 01 00 06 3c 69 6e 69 74 3e 01 00 03 28 29
+
+----
+
+第#7项 01 表示一个 utf8 串，00 06 表示长度，3c 69 6e 69 74 3e 是【  】 
+
+0000040 00 1c **01** <span style="color:red">**00 06**</span> <span style="color:green">**3c 69 6e 69 74 3e**</span> 01 00 03 28 29
+
+---
+
+第#8项 01 表示一个 utf8 串，00 03 表示长度，28 29 56 是【()V】其实就是表示无参、无返回值 
+
+0000040 00 1c 01 00 06 3c 69 6e 69 74 3e **01 00 03 28 29** 
+
+0000060 **56** 01 00 04 43 6f 64 65 01 00 0f 4c 69 6e 65 4e
+
+----
+
+第#9项 01 表示一个 utf8 串，00 04 表示长度，43 6f 64 65 是【Code】
+
+0000060 56 **01** <span style="color:red">**00 04**</span> <span style="color:green">**43 6f 64 65**</span> 01 00 0f 4c 69 6e 65 4e
+
+----
+
+第#10项 01 表示一个 utf8 串，00 0f（15） 表示长度，4c 69 6e 65 4e 75 6d 62 65 72 54 61 62 6c 65 是【LineNumberTable】
+
+0000060 56 01 00 04 43 6f 64 65 **01** <span style="color:red">**00 0f**</span> <span style="color:grenn">**4c 69 6e 65 4e**</span> 
+
+0000100 <span style="color:green">**75 6d 62 65 72 54 61 62 6c 65**</span> 01 00 12 4c 6f 63
+
+----
+
+第#11项 01 表示一个 utf8 串，00 12（18） 表示长度，4c 6f 63 61 6c 56 61 72 69 61 62 6c 65 54 61 62 6c 65是【LocalVariableTable】
+
+0000100 75 6d 62 65 72 54 61 62 6c 65 **01** <span style="color:red">**00 12**</span> <span style="color:green">**4c 6f 63**</span>
+
+0000120 <span style="color:green">**61 6c 56 61 72 69 61 62 6c 65 54 61 62 6c 65**</span> 01
+
+----
+
+第#12项 01 表示一个 utf8 串，00 04 表示长度，74 68 69 73 是【this】
+
+0000120 61 6c 56 61 72 69 61 62 6c 65 54 61 62 6c 65 **01** 
+
+0000140 <span style="color:red">**00 04**</span> <span style="color:green">**74 68 69 73**</span> 01 00 1d 4c 63 6e 2f 69 74 63
+
+----
+
+第#13项 01 表示一个 utf8 串，00 1d（29） 表示长度，是【Lcn/itcast/jvm/t5/HelloWorld;】
+
+0000140 00 04 74 68 69 73 **01** <u>00 1d</u> <span style="color:green">**4c 63 6e 2f 69 74 63**</span>
+
+0000160 <span style="color:green">**61 73 74 2f 6a 76 6d 2f 74 35 2f 48 65 6c 6c 6f**</span>
+
+---
+
+第#14项 01 表示一个 utf8 串，00 04 表示长度，74 68 69 73 是【main】 
+
+0000200 57 6f 72 6c 64 3b **01** <u>00 04</u> 6d 61 69 6e 01 00 16
+
+----
+
+第#15项 01 表示一个 utf8 串，00 16（22） 表示长度，是【([Ljava/lang/String;)V】其实就是参数为 字符串数组，无返回值
+
+0000200 57 6f 72 6c 64 3b 01 00 04 6d 61 69 6e **01 00** 16 
+
+0000220 **28 5b 4c 6a 61 76 61 2f 6c 61 6e 67 2f 53 74 72** 
+
+0000240 **69 6e 67 3b 29 56** 01 00 04 61 72 67 73 01 00 13
+
+---
+
+第#16项 01 表示一个 utf8 串，00 04 表示长度，是 61 72 67 73【args】
+
+0000240 69 6e 67 3b 29 56 **01 00 04 61 72 67 73 01 00 13**
+
+----
+
+第#17项 01 表示一个 utf8 串，00 13（19） 表示长度，是【[Ljava/lang/String;】
+
+0000240 69 6e 67 3b 29 56 01 00 04 61 72 67 73 **01 00 13** 
+
+0000260 **5b 4c 6a 61 76 61 2f 6c 61 6e 67 2f 53 74 72 69** 
+
+0000300 **6e 67 3b** 01 00 10 4d 65 74 68 6f 64 50 61 72 61
+
+----
+
+第#18项 01 表示一个 utf8 串，00 10（16） 表示长度，是【MethodParameters】
+
+0000300 6e 67 3b 01 00 10 **4d 65 74 68 6f 64 50 61 72 61** 
+
+0000320 **6d 65 74 65 72 73** 01 00 0a 53 6f 75 72 63 65 46
+
+----
+
+第#19项 01 表示一个 utf8 串，00 0a（10） 表示长度，是【SourceFile】
+
+0000320 6d 65 74 65 72 73 01 00 0a **53 6f 75 72 63 65 46** 
+
+0000340 **69 6c 65** 01 00 0f 48 65 6c 6c 6f 57 6f 72 6c 64
+
+----
+
+第#20项 01 表示一个 utf8 串，00 0f（15） 表示长度，是【HelloWorld.java】
+
+0000340 69 6c 65 01 00 0f **48 65 6c 6c 6f 57 6f 72 6c 64** 
+
+0000360 **2e 6a 61 76 61** 0c 00 07 00 08 07 00 1d 0c 00 1e
+
+----
+
+第#21项 **0c** 表示一个 【名+类型】，00 07 00 08 引用了常量池中 #7 #8 两项
+
+0000360 2e 6a 61 76 61 **0c** 00 07 00 08 07 00 1d 0c 00 1e
 
 ## 字节码指令
 
-可参考
+可参考 https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5
 
-https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5
+public cn.itcast.jvm.t5.HelloWorld(); 构造方法的字节码指令
+
+```shell
+2a b7 00 01 b1
+```
+
+- 2a => aload_0 加载 slot 0 的局部变量 加载到操作数栈上，即 this，做为下面的 invokespecial 构造方法调用的参数
+- b7 => invokespecial 预备调用构造方法，哪个方法呢？
+- 00 01 引用常量池中 #1 项，即【 Method java/lang/Object."":()V 】
+- b1 表示返回 return = 177 (0xb1)
+
+另一个是 public static void main(java.lang.String[]); 主方法的字节码指令
+
+```shell
+b2 00 02 12 03 b6 00 04 b1
+```
+
+- b2 => getstatic 用来加载静态变量，哪个静态变量呢？ 
+- 00 02 引用常量池中 #2 项，即【Field java/lang/System.out:Ljava/io/PrintStream;】 
+- 12 => ldc 加载参数，哪个参数呢？ 
+- 03 引用常量池中 #3 项，即 【String hello world】 
+- b6 => invokevirtual 预备调用成员方法，哪个方法呢？ 
+- 00 04 引用常量池中 #4 项，即【Method java/io/PrintStream.println:(Ljava/lang/String;)V】 
+- b1 表示返回
 
 ### javap工具
 
 Oracle 提供了 **javap** 工具来反编译 class 文件
 
-```
-javap -v F:\Thread_study\src\com\nyima\JVM\day01\Main.classCopy
-F:\Thread_study>javap -v F:\Thread_study\src\com\nyima\JVM\day5\Demo1.class
-Classfile /F:/Thread_study/src/com/nyima/JVM/day5/Demo1.class
-  Last modified 2020-6-6; size 434 bytes
-  MD5 checksum df1dce65bf6fb0b4c1de318051f4a67e
-  Compiled from "Demo1.java"
-public class com.nyima.JVM.day5.Demo1
+```java
+javap -v HelloWorld.class
+Classfile /xx/xx/HelloWorld.class
+  Last modified 2021年8月1日; size 472 bytes
+  MD5 checksum ff4f83d433d0b2f25721b0ae24d93d54
+  Compiled from "HelloWorld.java"
+public class jvm.clazz.HelloWorld
   minor version: 0
-  major version: 52
-  flags: ACC_PUBLIC, ACC_SUPER
+  major version: 55
+  flags: (0x0021) ACC_PUBLIC, ACC_SUPER
+  this_class: #5                          // jvm/clazz/HelloWorld
+  super_class: #6                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 2, attributes: 1
 Constant pool:
-   #1 = Methodref          #6.#15         // java/lang/Object."<init>":()V
-   #2 = Fieldref           #16.#17        // java/lang/System.out:Ljava/io/PrintStream;
-   #3 = String             #18            // hello world
-   #4 = Methodref          #19.#20        // java/io/PrintStream.println:(Ljava/lang/String;)V
-   #5 = Class              #21            // com/nyima/JVM/day5/Demo1
-   #6 = Class              #22            // java/lang/Object
+   #1 = Methodref          #6.#17         // java/lang/Object."<init>":()V
+   #2 = Fieldref           #18.#19        // java/lang/System.out:Ljava/io/PrintStream;
+   #3 = String             #20            // Hello World
+   #4 = Methodref          #21.#22        // java/io/PrintStream.println:(Ljava/lang/String;)V
+   #5 = Class              #23            // jvm/clazz/HelloWorld
+   #6 = Class              #24            // java/lang/Object
    #7 = Utf8               <init>
    #8 = Utf8               ()V
    #9 = Utf8               Code
   #10 = Utf8               LineNumberTable
   #11 = Utf8               main
   #12 = Utf8               ([Ljava/lang/String;)V
-  #13 = Utf8               SourceFile
-  #14 = Utf8               Demo1.java
-  #15 = NameAndType        #7:#8          // "<init>":()V
-  #16 = Class              #23            // java/lang/System
-  #17 = NameAndType        #24:#25        // out:Ljava/io/PrintStream;
-  #18 = Utf8               hello world
-  #19 = Class              #26            // java/io/PrintStream
-  #20 = NameAndType        #27:#28        // println:(Ljava/lang/String;)V
-  #21 = Utf8               com/nyima/JVM/day5/Demo1
-  #22 = Utf8               java/lang/Object
-  #23 = Utf8               java/lang/System
-  #24 = Utf8               out
-  #25 = Utf8               Ljava/io/PrintStream;
-  #26 = Utf8               java/io/PrintStream
-  #27 = Utf8               println
-  #28 = Utf8               (Ljava/lang/String;)V
+  #13 = Utf8               MethodParameters
+  #14 = Utf8               args
+  #15 = Utf8               SourceFile
+  #16 = Utf8               HelloWorld.java
+  #17 = NameAndType        #7:#8          // "<init>":()V
+  #18 = Class              #25            // java/lang/System
+  #19 = NameAndType        #26:#27        // out:Ljava/io/PrintStream;
+  #20 = Utf8               Hello World
+  #21 = Class              #28            // java/io/PrintStream
+  #22 = NameAndType        #29:#30        // println:(Ljava/lang/String;)V
+  #23 = Utf8               jvm/clazz/HelloWorld
+  #24 = Utf8               java/lang/Object
+  #25 = Utf8               java/lang/System
+  #26 = Utf8               out
+  #27 = Utf8               Ljava/io/PrintStream;
+  #28 = Utf8               java/io/PrintStream
+  #29 = Utf8               println
+  #30 = Utf8               (Ljava/lang/String;)V
 {
-  public com.nyima.JVM.day5.Demo1();
+  public jvm.clazz.HelloWorld();
     descriptor: ()V
-    flags: ACC_PUBLIC
+    flags: (0x0001) ACC_PUBLIC
     Code:
       stack=1, locals=1, args_size=1
          0: aload_0
          1: invokespecial #1                  // Method java/lang/Object."<init>":()V
          4: return
       LineNumberTable:
-        line 7: 0
+        line 3: 0 // 3 代表的是 java代码的行号 0 代表的是字节码中的行号
 
   public static void main(java.lang.String[]);
     descriptor: ([Ljava/lang/String;)V
-    flags: ACC_PUBLIC, ACC_STATIC
+    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
     Code:
       stack=2, locals=1, args_size=1
          0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
-         3: ldc           #3                  // String hello world
+         3: ldc           #3                  // String Hello World
          5: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
-
          8: return
       LineNumberTable:
-        line 9: 0
-        line 10: 8
-}Copy
+        line 5: 0
+        line 6: 8
+    MethodParameters:
+      Name                           Flags
+      args
+}
+SourceFile: "HelloWorld.java"
 ```
 
 ### 图解方法执行流程
 
-代码
+源代码
 
-```
+```java
 public class Demo3_1 {    
 	public static void main(String[] args) {        
 		int a = 10;        
-		int b = Short.MAX_VALUE + 1;        
+		int b = Short.MAX_VALUE + 1;     // 本来是存在字节码里的，但是一旦超过了 Short的最大值，就会存储在常量池中。   我验证了下，还真的是这样的。
 		int c = a + b;        
 		System.out.println(c);   
     } 
-}Copy
+}
+```
+
+字节码
+
+```shell
+public class jvm.clazz.Demo3_1
+  minor version: 0
+  major version: 52
+  flags: (0x0021) ACC_PUBLIC, ACC_SUPER
+  this_class: #6                          // jvm/clazz/Demo3_1
+  super_class: #7                         // java/lang/Object
+  interfaces: 0, fields: 0, methods: 2, attributes: 1
+Constant pool:
+   #1 = Methodref          #7.#25         // java/lang/Object."<init>":()V
+   #2 = Class              #26            // java/lang/Short
+   #3 = Integer            32768
+   #4 = Fieldref           #27.#28        // java/lang/System.out:Ljava/io/PrintStream;
+   #5 = Methodref          #29.#30        // java/io/PrintStream.println:(I)V
+   #6 = Class              #31            // jvm/clazz/Demo3_1
+   #7 = Class              #32            // java/lang/Object
+   #8 = Utf8               <init>
+   #9 = Utf8               ()V
+  #10 = Utf8               Code
+  #11 = Utf8               LineNumberTable
+  #12 = Utf8               LocalVariableTable
+  #13 = Utf8               this
+  #14 = Utf8               Ljvm/clazz/Demo3_1;
+  #15 = Utf8               main
+  #16 = Utf8               ([Ljava/lang/String;)V
+  #17 = Utf8               args
+  #18 = Utf8               [Ljava/lang/String;
+  #19 = Utf8               a
+  #20 = Utf8               I
+  #21 = Utf8               b
+  #22 = Utf8               c
+  #23 = Utf8               SourceFile
+  #24 = Utf8               Demo3_1.java
+  #25 = NameAndType        #8:#9          // "<init>":()V
+  #26 = Utf8               java/lang/Short
+  #27 = Class              #33            // java/lang/System
+  #28 = NameAndType        #34:#35        // out:Ljava/io/PrintStream;
+  #29 = Class              #36            // java/io/PrintStream
+  #30 = NameAndType        #37:#38        // println:(I)V
+  #31 = Utf8               jvm/clazz/Demo3_1
+  #32 = Utf8               java/lang/Object
+  #33 = Utf8               java/lang/System
+  #34 = Utf8               out
+  #35 = Utf8               Ljava/io/PrintStream;
+  #36 = Utf8               java/io/PrintStream
+  #37 = Utf8               println
+  #38 = Utf8               (I)V
+{
+  public jvm.clazz.Demo3_1();
+    descriptor: ()V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+      LineNumberTable:
+        line 3: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   Ljvm/clazz/Demo3_1;
+
+  public static void main(java.lang.String[]);
+    descriptor: ([Ljava/lang/String;)V
+    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=4, args_size=1
+         0: bipush        10
+         2: istore_1
+         3: ldc           #3                  // int 32768
+         5: istore_2
+         6: iload_1
+         7: iload_2
+         8: iadd
+         9: istore_3
+        10: getstatic     #4                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        13: iload_3
+        14: invokevirtual #5                  // Method java/io/PrintStream.println:(I)V
+        17: return
+      LineNumberTable:
+        line 5: 0
+        line 6: 3
+        line 7: 6
+        line 8: 10
+        line 9: 17
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0      18     0  args   [Ljava/lang/String;
+            3      15     1     a   I
+            6      12     2     b   I
+           10       8     3     c   I
+}
+SourceFile: "Demo3_1.java"
 ```
 
 **常量池载入运行时常量池**
@@ -1973,7 +2276,11 @@ public class Demo3_1 {
 
 **方法字节码载入方法区**
 
-（stack=2，locals=4） 对应操作数栈有2个空间（每个空间4个字节），局部变量表中有4个槽位
+（stack=2，locals=4）
+
+绿色的代表局部变量表，蓝色的代表操作数栈。
+
+ 对应操作数栈有2个空间（每个空间4个字节），局部变量表中有4个槽位
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151325.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151325.png)
 
@@ -1981,14 +2288,12 @@ public class Demo3_1 {
 
 **bipush 10**
 
-- 将一个 byte 压入操作数栈
+- 将一个 byte 压入操作数栈（其长度会补齐 4 个字节），类似的指令还有
 
-  （其长度会补齐 4 个字节），类似的指令还有
-
-  - sipush 将一个 short 压入操作数栈（其长度会补齐 4 个字节）
-  - ldc 将一个 int 压入操作数栈
-  - ldc2_w 将一个 long 压入操作数栈（**分两次压入**，因为 long 是 8 个字节）
-  - 这里小的数字都是和字节码指令存在一起，**超过 short 范围的数字存入了常量池**
+- sipush 将一个 short 压入操作数栈（其长度会补齐 4 个字节）
+- ldc 将一个 int 压入操作数栈
+- ldc2_w 将一个 long 压入操作数栈（**分两次压入**，因为 long 是 8 个字节）
+- 这里小的数字都是和字节码指令存在一起，**超过 short 范围的数字存入了常量池**
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151336.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151336.png)
 
@@ -1998,8 +2303,8 @@ public class Demo3_1 {
 
 对应代码中的
 
-```
-a = 10Copy
+```java
+a = 10
 ```
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151346.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608151346.png)
@@ -2087,7 +2392,7 @@ a = 10Copy
 
 代码
 
-```
+```java
 public class Demo2 {
 	public static void main(String[] args) {
 		int i=0;
@@ -2096,39 +2401,51 @@ public class Demo2 {
 			x = x++;
 			i++;
 		}
-		System.out.println(x); //接过为0
+		System.out.println(x); // 结果为0
 	}
-}Copy
+}
 ```
 
-为什么最终的x结果为0呢？ 通过分析字节码指令即可知晓
+为什么最终的x结果为0呢？ 
 
-```
+x 代表局部变量表中的一个槽位，
+
+x++ 对应 
+
+- iload_x 把 0 读进操作数栈 此时 x = 0
+- iinc x 1 自增的结果 x = 1，自增完成后又执行了赋值操作。
+- 把操作数栈中的值取出来再覆盖掉本地变量表中的x。 
+
+通过分析字节码指令即可知晓
+
+```java
 Code:
      stack=2, locals=3, args_size=1	//操作数栈分配2个空间，局部变量表分配3个空间
-        0: iconst_0	//准备一个常数0
-        1: istore_1	//将常数0放入局部变量表的1号槽位 i=0
-        2: iconst_0	//准备一个常数0
-        3: istore_2	//将常数0放入局部变量的2号槽位 x=0	
-        4: iload_1		//将局部变量表1号槽位的数放入操作数栈中
-        5: bipush        10	//将数字10放入操作数栈中，此时操作数栈中有2个数
-        7: if_icmpge     21	//比较操作数栈中的两个数，如果下面的数大于上面的数，就跳转到21。这里的比较是将两个数做减法。因为涉及运算操作，所以会将两个数弹出操作数栈来进行运算。运算结束后操作数栈为空
-       10: iload_2		//将局部变量2号槽位的数放入操作数栈中，放入的值是0
-       11: iinc          2, 1	//将局部变量2号槽位的数加1，自增后，槽位中的值为1
-       14: istore_2	//将操作数栈中的数放入到局部变量表的2号槽位，2号槽位的值又变为了0
-       15: iinc          1, 1 //1号槽位的值自增1
-       18: goto          4 //跳转到第4条指令
-       21: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        0: iconst_0	// 准备一个常数0
+        1: istore_1	// 将常数0放入局部变量表的1号槽位 i=0
+        2: iconst_0	// 准备一个常数0
+        3: istore_2	// 将常数0放入局部变量的2号槽位 x=0	
+        4: iload_1	// 将局部变量表1号槽位的数放入操作数栈中
+        5: bipush 10 // 将数字10放入操作数栈中，此时操作数栈中有2个数
+        7: if_icmpge  21 //比较操作数栈中的两个数，如果下面的数大于上面的数，就跳转到21。这里的比较是将两个数做减法。因为涉及运算操作，所以会将两个数弹出操作数栈来进行运算。运算结束后操作数栈为空
+       10: iload_2	  // 将局部变量2号槽位的数放入操作数栈中，放入的值是0
+       11: iinc 2, 1 // 将局部变量2号槽位的数加1，自增后，槽位中的值为1
+       14: istore_2	 // 将操作数栈中的数放入到局部变量表的2号槽位，2号槽位的值又变为了0
+       15: iinc 1, 1 // 1号槽位的值自增1
+       18: goto 4 // 跳转到第4条指令
+       21: getstatic #2 // Field java/lang/System.out:Ljava/io/PrintStream;
        24: iload_2
-       25: invokevirtual #3                  // Method java/io/PrintStream.println:(I)V
-       28: returnCopy
+       25: invokevirtual #3 // Method java/io/PrintStream.println:(I)V
+       28: return
 ```
 
 ### 构造方法
 
-##### cinit()V
+#### cinit()V
 
-```
+每个类的构造方法
+
+```java
 public class Demo3 {
 	static int i = 10;
 
@@ -2143,12 +2460,12 @@ public class Demo3 {
 	public static void main(String[] args) {
 		System.out.println(i); //结果为30
 	}
-}Copy
+}
 ```
 
-编译器会按**从上至下**的顺序，收集所有 static 静态代码块和静态成员赋值的代码，**合并**为一个特殊的方法 cinit()V ：
+<span style="color:green">**编译器会按**从上至下**的顺序，收集所有 static 静态代码块和静态成员赋值的代码，**合并**为一个特殊的方法 cinit()V ：**</span>
 
-```
+```shell
 stack=1, locals=0, args_size=0
          0: bipush        10
          2: putstatic     #3                  // Field i:I
@@ -2159,21 +2476,19 @@ stack=1, locals=0, args_size=0
         15: returnCopy
 ```
 
-##### init()V
+#### init()V
 
-```
+每个实例对象的构造方法
+
+```java
 public class Demo4 {
 	private String a = "s1";
 
-	{
-		b = 20;
-	}
+	{ b = 20; }
 
 	private int b = 10;
 
-	{
-		a = "s2";
-	}
+	{ a = "s2"; }
 
 	public Demo4(String a, int b) {
 		this.a = a;
@@ -2185,60 +2500,54 @@ public class Demo4 {
 		System.out.println(d.a);
 		System.out.println(d.b);
 	}
-}Copy
+}
 ```
 
 编译器会按**从上至下**的顺序，收集所有 {} 代码块和成员变量赋值的代码，**形成新的构造方法**，但**原始构造方法**内的代码**总是在后**
 
-```
+```shell
 Code:
      stack=2, locals=3, args_size=3
         0: aload_0
         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
         4: aload_0
-        5: ldc           #2                  // String s1
-        7: putfield      #3                  // Field a:Ljava/lang/String;
+        5: ldc           #2                  // <- "s1"
+        7: putfield      #3                  // -> this.a
        10: aload_0
-       11: bipush        20
-       13: putfield      #4                  // Field b:I
+       11: bipush        20					 // <- 20
+       13: putfield      #4                  //  -> this.b
        16: aload_0
-       17: bipush        10
-       19: putfield      #4                  // Field b:I
+       17: bipush        10					 // <- 10
+       19: putfield      #4                  // -> this.b
        22: aload_0
-       23: ldc           #5                  // String s2
-       25: putfield      #3                  // Field a:Ljava/lang/String;
+       23: ldc           #5                  // <- "s2"
+       25: putfield      #3                  // -> this.a
        //原始构造方法在最后执行
-       28: aload_0
-       29: aload_1
-       30: putfield      #3                  // Field a:Ljava/lang/String;
-       33: aload_0
-       34: iload_2
-       35: putfield      #4                  // Field b:I
-       38: returnCopy
+       28: aload_0							// -------------------------
+       29: aload_1							// <- slot 1(a) "s3"
+       30: putfield      #3                 // -> this.a
+       33: aload_0							
+       34: iload_2							// <- slot 2(b) 30
+       35: putfield      #4                 // -> this.b 															// -------------------------
+       38: return
 ```
 
 ### 方法调用
 
-```
+```java
 public class Demo5 {
-	public Demo5() {
-
-	}
+	public Demo5() { }
 
 	private void test1() {
-
 	}
 
 	private final void test2() {
-
 	}
 
 	public void test3() {
-
 	}
 
 	public static void test4() {
-
 	}
 
 	public static void main(String[] args) {
@@ -2248,7 +2557,7 @@ public class Demo5 {
 		demo5.test3();
 		Demo5.test4();
 	}
-}Copy
+}
 ```
 
 不同方法在调用时，对应的虚拟机指令有所区别
@@ -2276,8 +2585,11 @@ Code:
 
 - new 是创建【对象】，给对象分配堆内存，执行成功会将【**对象引用**】压入操作数栈
 - dup 是赋值操作数栈栈顶的内容，本例即为【**对象引用**】，为什么需要两份引用呢，一个是要配合 invokespecial 调用该对象的构造方法 “init”:()V （会消耗掉栈顶一个引用），另一个要 配合 astore_1 赋值给局部变量
-- 终方法（ﬁnal），私有方法（private），构造方法都是由 invokespecial 指令来调用，属于静态绑定
-- 普通成员方法是由 invokevirtual 调用，属于**动态绑定**，即支持多态 成员方法与静态方法调用的另一个区别是，执行方法前是否需要【对象引用】
+- 最终方法（ﬁnal），私有方法（private），构造方法都是由 invokespecial 指令来调用，属于静态绑定
+- 普通成员方法是由 invokevirtual 调用，属于**动态绑定**，即支持多态 
+- 成员方法与静态方法调用的另一个区别是，执行方法前是否需要【对象引用】
+- 比较有意思的是 d.test4(); 是通过【对象引用】调用一个静态方法，可以看到在调用 invokestatic 之前执行了 pop 指令，把【对象引用】从操作数栈弹掉了
+- 还有一个执行 invokespecial 的情况是通过 super 调用父类方法
 
 ### 多态原理
 
@@ -2295,7 +2607,7 @@ Code:
 
 #### try-catch
 
-```
+```java
 public class Demo1 {
 	public static void main(String[] args) {
 		int i = 0;
@@ -2305,12 +2617,12 @@ public class Demo1 {
 			i = 20;
 		}
 	}
-}Copy
+}
 ```
 
 对应字节码指令
 
-```
+```shell
 Code:
      stack=1, locals=3, args_size=1
         0: iconst_0
@@ -2325,7 +2637,7 @@ Code:
      //多出来一个异常表
      Exception table:
         from    to  target type
-            2     5     8   Class java/lang/ExceptionCopy
+            2     5     8   Class java/lang/Exception
 ```
 
 - 可以看到多出来一个 Exception table 的结构，[from, to) 是**前闭后开**（也就是检测2~4行）的检测范围，一旦这个范围内的字节码执行出现异常，则通过 type 匹配异常类型，如果一致，进入 target 所指示行号
@@ -2333,7 +2645,7 @@ Code:
 
 #### 多个single-catch
 
-```
+```java
 public class Demo1 {
 	public static void main(String[] args) {
 		int i = 0;
@@ -2345,12 +2657,12 @@ public class Demo1 {
 			i = 30;
 		}
 	}
-}Copy
+}
 ```
 
 对应的字节码
 
-```
+```shell
 Code:
      stack=1, locals=3, args_size=1
         0: iconst_0
@@ -2369,14 +2681,16 @@ Code:
      Exception table:
         from    to  target type
             2     5     8   Class java/lang/ArithmeticException
-            2     5    15   Class java/lang/ExceptionCopy
+            2     5    15   Class java/lang/Exception
 ```
 
 - 因为异常出现时，**只能进入** Exception table 中**一个分支**，所以局部变量表 slot 2 位置**被共用**
 
+#### multi-catch
+
 #### finally
 
-```
+```java
 public class Demo2 {
 	public static void main(String[] args) {
 		int i = 0;
@@ -2388,12 +2702,12 @@ public class Demo2 {
 			i = 30;
 		}
 	}
-}Copy
+}
 ```
 
 对应字节码
 
-```
+```java
 Code:
      stack=1, locals=4, args_size=1
         0: iconst_0
@@ -2424,7 +2738,7 @@ Code:
         from    to  target type
             2     5    11   Class java/lang/Exception
             2     5    21   any
-           11    15    21   anyCopy
+           11    15    21   any
 ```
 
 可以看到 ﬁnally 中的代码被**复制了 3 份**，分别放入 try 流程，catch 流程以及 catch剩余的异常类型流程
@@ -2433,7 +2747,7 @@ Code:
 
 #### finally中的return
 
-```
+```java
 public class Demo3 {
 	public static void main(String[] args) {
 		int i = Demo3.test();
@@ -2451,12 +2765,12 @@ public class Demo3 {
 			return i;
 		}
 	}
-}Copy
+}
 ```
 
 对应字节码
 
-```
+```shell
 Code:
      stack=1, locals=3, args_size=0
         0: bipush        10
@@ -2475,7 +2789,7 @@ Code:
        15: ireturn	//这里没有athrow了，也就是如果在finally块中如果有返回操作的话，且try块中出现异常，会吞掉异常！
      Exception table:
         from    to  target type
-            0     5    10   anyCopy
+            0     5    10   any
 ```
 
 - 由于 ﬁnally 中的 **ireturn** 被插入了所有可能的流程，因此返回结果肯定以ﬁnally的为准
@@ -2485,7 +2799,7 @@ Code:
 
 #### 被吞掉的异常
 
-```
+```java
 public class Demo3 {
    public static void main(String[] args) {
       int i = Demo3.test();
@@ -2505,14 +2819,14 @@ public class Demo3 {
          return i;
       }
    }
-}Copy
+}
 ```
 
 会发现打印结果为20，并未抛出异常
 
 #### finally不带return
 
-```
+```java
 public class Demo4 {
 	public static void main(String[] args) {
 		int i = Demo4.test();
@@ -2527,12 +2841,12 @@ public class Demo4 {
 			i = 20;
 		}
 	}
-}Copy
+}
 ```
 
 对应字节码
 
-```
+```shell
 Code:
      stack=1, locals=3, args_size=0
         0: bipush        10
@@ -2550,12 +2864,14 @@ Code:
        15: athrow //抛出异常
      Exception table:
         from    to  target type
-            3     5    10   anyCopy
+            3     5    10   any
 ```
 
 ### Synchronized
 
-```
+> **方法级别的 synchronized 不会在字节码指令中有所体现**
+
+```java
 public class Demo5 {
 	public static void main(String[] args) {
 		int i = 10;
@@ -2566,12 +2882,12 @@ public class Demo5 {
 	}
 }
 
-class Lock{}Copy
+class Lock{}
 ```
 
 对应字节码
 
-```
+```shell
 Code:
      stack=2, locals=5, args_size=1
         0: bipush        10
@@ -2603,33 +2919,32 @@ Code:
      Exception table:
         from    to  target type
            15    24    27   any
-           27    31    27   anyCopy
+           27    31    27   any
 ```
 
 ## 编译期处理
 
 所谓的 **语法糖** ，其实就是指 java 编译器把 *.java 源码编译为 \*.class 字节码的过程中，**自动生成**和**转换**的一些代码，主要是为了减轻程序员的负担，算是 java 编译器给我们的一个额外福利
 
-**注意**，以下代码的分析，借助了 javap 工具，idea 的反编译功能，idea 插件 jclasslib 等工具。另外， 编译器转换的**结果直接就是 class 字节码**，只是为了便于阅读，给出了 几乎等价 的 java 源码方式，并不是编译器还会转换出中间的 java 源码，切记。
+**注意**，以下代码的分析，借助了 javap 工具，idea 的反编译功能，idea 插件 **jclasslib** 等工具。另外， 编译器转换的**结果直接就是 class 字节码**，只是为了便于阅读，给出了 几乎等价 的 java 源码方式，并不是编译器还会转换出中间的 java 源码，切记。
 
 ### 默认构造函数
 
-```
+```java
 public class Candy1 {
-
-}Copy
+}
 ```
 
 经过编译期优化后
 
-```
+```java
 public class Candy1 {
    //这个无参构造器是java编译器帮我们加上的
    public Candy1() {
       //即调用父类 Object 的无参构造方法，即调用 java/lang/Object." <init>":()V
       super();
    }
-}Copy
+}
 ```
 
 ### 自动拆装箱
@@ -2638,18 +2953,18 @@ public class Candy1 {
 
 在JDK 5以后，它们的转换可以在编译期自动完成
 
-```
+```java
 public class Demo2 {
    public static void main(String[] args) {
       Integer x = 1;
       int y = x;
    }
-}Copy
+}
 ```
 
 转换过程如下
 
-```
+```java
 public class Demo2 {
    public static void main(String[] args) {
       //基本类型赋值给包装类型，称为装箱
@@ -2657,7 +2972,7 @@ public class Demo2 {
       //包装类型赋值给基本类型，称谓拆箱
       int y = x.intValue();
    }
-}Copy
+}
 ```
 
 ### 泛型集合取值
@@ -2671,7 +2986,7 @@ public class Demo3 {
       list.add(10);
       Integer x = list.get(0);
    }
-}Copy
+}
 ```
 
 对应字节码
@@ -2697,19 +3012,19 @@ Code:
 //这里进行了类型转换，将Object转换成了Integer
       27: checkcast     #7                  // class java/lang/Integer
       30: astore_2
-      31: returnCopy
+      31: return
 ```
 
 所以调用get函数取值时，有一个类型转换的操作
 
 ```
-Integer x = (Integer) list.get(0);Copy
+Integer x = (Integer) list.get(0);
 ```
 
 如果要将返回结果赋值给一个int类型的变量，则还有**自动拆箱**的操作
 
 ```
-int x = (Integer) list.get(0).intValue();Copy
+int x = (Integer) list.get(0).intValue();
 ```
 
 ### 可变参数
@@ -2725,7 +3040,7 @@ public class Demo4 {
    public static void main(String[] args) {
       foo("hello", "world");
    }
-}Copy
+}
 ```
 
 可变参数 **String…** args 其实是一个 **String[]** args ，从代码中的赋值语句中就可以看出来。 同 样 java 编译器会在编译期间将上述代码变换为：
@@ -2743,7 +3058,7 @@ public class Demo4 {
    public static void main(String[] args) {
       foo(new String[]{"hello", "world"});
    }
-}Copy
+}
 ```
 
 注意，如果调用的是foo()，即未传递参数时，等价代码为foo(new String[]{})，**创建了一个空数组**，而不是直接传递的null
@@ -2759,7 +3074,7 @@ public class Demo5 {
 			System.out.println(x);
 		}
 	}
-}Copy
+}
 ```
 
 编译器会帮我们转换为
@@ -2775,7 +3090,7 @@ public class Demo5 {
 			System.out.println(x);
 		}
 	}
-}Copy
+}
 ```
 
 **如果是集合使用foreach**
@@ -2788,7 +3103,7 @@ public class Demo5 {
          System.out.println(x);
       }
    }
-}Copy
+}
 ```
 
 集合要使用foreach，需要该集合类实现了**Iterable接口**，因为集合的遍历需要用到**迭代器Iterator**
@@ -2806,7 +3121,7 @@ public class Demo5 {
          System.out.println(x);
       }
    }
-}Copy
+}
 ```
 
 ### switch字符串
@@ -2826,7 +3141,7 @@ public class Demo6 {
             break;
       }
    }
-}Copy
+}
 ```
 
 在编译器中执行的操作
@@ -2870,7 +3185,7 @@ public class Demo6 {
             break;
       }
    }
-}Copy
+}
 ```
 
 过程说明：
@@ -2902,7 +3217,7 @@ public class Demo7 {
 
 enum SEX {
    MALE, FEMALE;
-}Copy
+}
 ```
 
 编译器中执行的代码如下
@@ -2944,7 +3259,7 @@ public class Demo7 {
 
 enum SEX {
    MALE, FEMALE;
-}Copy
+}
 ```
 
 ### 枚举类
@@ -2952,7 +3267,7 @@ enum SEX {
 ```
 enum SEX {
    MALE, FEMALE;
-}Copy
+}
 ```
 
 转换后的代码
@@ -2983,7 +3298,7 @@ public final class Sex extends Enum<Sex> {
         return Enum.valueOf(Sex.class, name);  
     } 
    
-}Copy
+}
 ```
 
 ### 匿名内部类
@@ -2998,7 +3313,7 @@ public class Demo8 {
          }
       };
    }
-}Copy
+}
 ```
 
 转换后的代码
@@ -3019,7 +3334,7 @@ final class Demo8$1 implements Runnable {
    public void run() {
       System.out.println("running...");
    }
-}Copy
+}
 ```
 
 如果匿名内部类中引用了**局部变量**
@@ -3035,7 +3350,7 @@ public class Demo8 {
          }
       };
    }
-}Copy
+}
 ```
 
 转化后代码
@@ -3065,7 +3380,7 @@ final class Demo8$1 implements Runnable {
    public void run() {
       System.out.println(val$x);
    }
-}Copy
+}
 ```
 
 ## 类加载阶段
@@ -3120,13 +3435,13 @@ final class Demo8$1 implements Runnable {
 - 先获得要查看的进程ID
 
 ```
-jpsCopy
+jps
 ```
 
 - 打开HSDB
 
 ```
-java -cp F:\JAVA\JDK8.0\lib\sa-jdi.jar sun.jvm.hotspot.HSDBCopy
+java -cp F:\JAVA\JDK8.0\lib\sa-jdi.jar sun.jvm.hotspot.HSDB
 ```
 
 - 运行时可能会报错，是因为**缺少一个.dll的文件**，我们在JDK的安装目录中找到该文件，复制到缺失的文件下即可
@@ -3145,7 +3460,7 @@ java -cp F:\JAVA\JDK8.0\lib\sa-jdi.jar sun.jvm.hotspot.HSDBCopy
 
 - 未解析时，常量池中的看到的对象仅是符号，未真正的存在于内存中
 
-```
+```java
 public class Demo1 {
    public static void main(String[] args) throws IOException, ClassNotFoundException {
       ClassLoader loader = Demo1.class.getClassLoader();
@@ -3162,7 +3477,7 @@ class C {
 
 class D {
 
-}Copy
+}
 ```
 
 - 打开HSDB
@@ -3289,7 +3604,7 @@ protected Class<?> loadClass(String name, boolean resolve)
         }
         return c;
     }
-}Copy
+}
 ```
 
 ### 自定义类加载器
@@ -3422,7 +3737,7 @@ C++是否为内联函数由自己决定，Java由**编译器决定**。Java不�
 ```
 public final void doSomething() {  
         // to do something  
-}Copy
+}
 ```
 
 总的来说，一般的函数都不会被当做内联函数，只有声明了final后，编译器才会考虑是不是要把你的函数变成内联函数
@@ -3435,22 +3750,22 @@ JVM内建有许多运行时优化。首先**短方法**更利于JVM推断。流�
 
 ```
 private int add4(int x1, int x2, int x3, int x4) { 
-		//这里调用了add2方法
-        return add2(x1, x2) + add2(x3, x4);  
-    }  
+	//这里调用了add2方法
+	return add2(x1, x2) + add2(x3, x4);  
+}  
 
-    private int add2(int x1, int x2) {  
-        return x1 + x2;  
-    }Copy
+private int add2(int x1, int x2) {  
+	return x1 + x2;  
+}
 ```
 
 方法调用被替换后
 
 ```
 private int add4(int x1, int x2, int x3, int x4) {  
-    	//被替换为了方法本身
-        return x1 + x2 + x3 + x4;  
-    }Copy
+    //被替换为了方法本身
+    return x1 + x2 + x3 + x4;  
+}
 ```
 
 ### 反射优化
@@ -3467,7 +3782,7 @@ public class Reflect1 {
          foo.invoke(null);
       }
    }
-}Copy
+}
 ```
 
 foo.invoke 前面 0 ~ 15 次调用使用的是 MethodAccessor 的 NativeMethodAccessorImpl 实现
@@ -3492,7 +3807,7 @@ public Object invoke(Object obj, Object... args)
         ma = acquireMethodAccessor();
     }
     return ma.invoke(obj, args);
-}Copy
+}
 ```
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200614133554.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200614133554.png)
@@ -3529,7 +3844,7 @@ class NativeMethodAccessorImpl extends MethodAccessorImpl {
     private static native Object invoke0(Method var0, Object var1, Object[] var2);
 }Copy
 //ReflectionFactory.inflationThreshold()方法的返回值
-private static int inflationThreshold = 15;Copy
+private static int inflationThreshold = 15;
 ```
 
 - 一开始if条件不满足，就会调用本地方法invoke0
@@ -3540,5 +3855,167 @@ private static int inflationThreshold = 15;Copy
 
 # 内存模型
 
-内存模型内容详见 [JAVA并发 第四章](https://nyimac.gitee.io/2020/06/08/并发编程/#四、共享模型之内存)
+## Java 内存模型
+
+Java 内存模型是 Java Memory Model（JMM）的意思。 关于它的权威解释，请<a href="https://download.oracle.com/otn-pub/jcp/memory_model-1.0-pfd-spec-oth-JSpec/memory_model-1_0-pfd-spec.pdf?AuthParam=1562811549_4d4994cbd5b59d964cd2907ea22ca08b">参考</a>
+
+ 
+
+简单的说，JMM 定义了一套在多线程读写共享数据时（成员变量、数组）时，对数据的可见性、有序 性、和原子性的规则和保障 
+
+### 原子性
+
+ 原子性在学习线程时讲过，下面来个例子简单回顾一下：
+
+问题提出，两个线程对初始值为 0 的静态变量一个做自增，一个做自减，各做 5000 次，结果是 0 吗？ 
+
+### 问题分析
+
+以上的结果可能是正数、负数、零。为什么呢？因为 Java 中对静态变量的自增，自减并不是原子操作。
+
+例如对于 i++ 而言（i 为静态变量），实际会产生如下的 JVM 字节码指令：
+
+```java
+getstatic i // 获取静态变量i的值
+iconst_1 // 准备常量1
+iadd // 加法
+putstatic i // 将修改后的值存入静态变量i
+```
+
+ 而对应 i-- 也是类似： 
+
+```java
+getstatic i // 获取静态变量i的值
+iconst_1 // 准备常量1
+isub // 减法
+putstatic i // 将修改后的值存入静态变量i
+```
+
+pic
+
+如果是单线程以上 8 行代码是顺序执行（不会交错）没有问题：
+
+```java
+// 假设i的初始值为0
+getstatic i // 线程1-获取静态变量i的值 线程内i=0
+iconst_1 // 线程1-准备常量1
+iadd // 线程1-自增 线程内i=1
+putstatic i // 线程1-将修改后的值存入静态变量i 静态变量i=1
+getstatic i // 线程1-获取静态变量i的值 线程内i=1
+iconst_1 // 线程1-准备常量1
+isub // 线程1-自减 线程内i=0
+putstatic i // 线程1-将修改后的值存入静态变量i 静态变量i=0
+```
+
+但多线程下这 8 行代码可能交错运行（为什么会交错？思考一下）： 出现负数的情况：
+
+```java
+// 假设i的初始值为0
+getstatic i // 线程1-获取静态变量i的值 线程内i=0
+getstatic i // 线程2-获取静态变量i的值 线程内i=0
+iconst_1 // 线程1-准备常量1
+iadd // 线程1-自增 线程内i=1
+putstatic i // 线程1-将修改后的值存入静态变量i 静态变量i=1
+iconst_1 // 线程2-准备常量1
+isub // 线程2-自减 线程内i=-1
+putstatic i // 线程2-将修改后的值存入静态变量i 静态变量i=-1
+```
+
+出现正数的情况：
+
+```java
+// 假设i的初始值为0
+getstatic i // 线程1-获取静态变量i的值 线程内i=0
+getstatic i // 线程2-获取静态变量i的值 线程内i=0
+iconst_1 // 线程1-准备常量1
+iadd // 线程1-自增 线程内i=1
+iconst_1 // 线程2-准备常量1
+isub // 线程2-自减 线程内i=-1
+putstatic i // 线程2-将修改后的值存入静态变量i 静态变量i=-1
+putstatic i // 线程1-将修改后的值存入静态变量i 静态变量i=1
+```
+
+### 解决方法
+
+```java
+synchronized( 对象 ) {
+	//要作为原子操作代码
+}
+```
+
+用 synchronized 解决并发问题：
+
+```java
+static int i = 0;
+static Object obj = new Object();
+public static void main(String[] args) throws InterruptedException {
+	Thread t1 = new Thread(() -> {
+		for (int j = 0; j < 5000; j++) {
+			synchronized (obj) {
+				i++;
+			}
+		}
+	});
+    Thread t2 = new Thread(() -> {
+        for (int j = 0; j < 5000; j++) {
+            synchronized (obj) {
+                i--;
+            }
+    	}
+    });
+    t1.start();
+    t2.start();
+    t1.join();
+    t2.join();
+	System.out.println(i);
+}
+```
+
+如何理解呢：你可以把 obj 想象成一个房间，线程 t1，t2 想象成两个人。 
+
+当线程 t1 执行到 synchronized(obj) 时就好比 t1 进入了这个房间，并反手锁住了门，在门内执行 count++ 代码。 
+
+这时候如果 t2 也运行到了 synchronized(obj) 时，它发现门被锁住了，只能在门外等待。 
+
+当 t1 执行完 synchronized{} 块内的代码，这时候才会解开门上的锁，从 obj 房间出来。t2 线程这时才 可以进入 obj 房间，反锁住门，执行它的 count-- 代码。 
+
+> 注意：上例中 t1 和 t2 线程必须用 synchronized 锁住同一个 obj 对象，如果 t1 锁住的是 m1 对 象，t2 锁住的是 m2 对象，就好比两个人分别进入了两个不同的房间，没法起到同步的效果。
+
+## 可进行
+
+### 退不出的循环
+
+先来看一个现象，main 线程对 run 变量的修改对于 t 线程不可见，导致了 t 线程无法停止：
+
+```java
+static boolean run = true;
+public static void main(String[] args) throws InterruptedException {
+    Thread t = new Thread(()->{
+        while(run){
+        // ....
+        }
+    });
+    t.start();
+    Thread.sleep(1000);
+    run = false; // 线程t不会如预想的停下来
+}
+```
+
+为什么呢？分析一下： 
+
+- 初始状态， t 线程刚开始从主内存读取了 run 的值到工作内存。
+
+pic
+
+- 因为 t 线程要频繁从主内存中读取 run 的值，JIT 编译器会将 run 的值缓存至自己工作内存中的高 速缓存中，减少对主存中 run 的访问，提高效率
+
+pic
+
+- 1 秒之后，main 线程修改了 run 的值，并同步至主存，而 t 是从自己工作内存中的高速缓存中读 取这个变量的值，结果永远是旧值
+
+pic
+
+### 解决办法
+
+
 
