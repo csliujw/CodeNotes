@@ -3159,11 +3159,56 @@ public class Demo5 {
 		}
 	}
 }
-
 class Lock{}
 ```
 
 对应字节码
+
+```java
+public static void main(java.lang.String[]);
+descriptor: ([Ljava/lang/String;)V
+flags: ACC_PUBLIC, ACC_STATIC
+Code:
+    stack=2, locals=4, args_size=1
+        0: new #2 // new Object
+        3: dup
+        4: invokespecial #1 // invokespecial <init>:()V
+        7: astore_1 // lock引用 -> lock
+        8: aload_1 // <- lock （synchronized开始）
+        9: dup
+        10: astore_2 // lock引用 -> slot 2
+        11: monitorenter // monitorenter(lock引用)
+        12: getstatic #3 // <- System.out
+        15: ldc
+        北京市昌平区建材城西路金燕龙办公楼一层 电话：400-618-9090
+        #4 // <- "ok"
+        注意
+        方法级别的 synchronized 不会在字节码指令中有所体现
+        17: invokevirtual #5 // invokevirtual println:
+        (Ljava/lang/String;)V
+        20: aload_2 // <- slot 2(lock引用)
+        21: monitorexit // monitorexit(lock引用)
+        22: goto 30
+        25: astore_3 // any -> slot 3
+        26: aload_2 // <- slot 2(lock引用)
+        27: monitorexit // monitorexit(lock引用)
+        28: aload_3
+        29: athrow
+        30: return
+    Exception table:
+        from to target type
+            12 22 25 any
+            25 28 25 any
+    LineNumberTable: ...
+    LocalVariableTable:
+        Start Length Slot Name Signature
+            0 31 0 args [Ljava/lang/String;
+            8 23 1 lock Ljava/lang/Object;
+    StackMapTable: ...
+MethodParameters: ...
+```
+
+
 
 ```shell
 Code:
@@ -3171,7 +3216,7 @@ Code:
         0: bipush        10
         2: istore_1
         3: new           #2                  // class com/nyima/JVM/day06/Lock
-        6: dup //复制一份，放到操作数栈顶，用于构造函数消耗
+        6: dup //复制一份对象引用，放到操作数栈顶，用于构造函数消耗
         7: invokespecial #3                  // Method com/nyima/JVM/day06/Lock."<init>":()V
        10: astore_2 //剩下的一份放到局部变量表的2号位置
        11: aload_2 //加载到操作数栈
@@ -3257,7 +3302,7 @@ public class Demo2 {
 
 泛型也是在 JDK 5 开始加入的特性，但 java 在**编译泛型代码后**会执行 **泛型擦除** 的动作，即泛型信息在编译为字节码之后就**丢失**了，实际的类型都当做了 **Object** 类型来处理：
 
-```
+```java
 public class Demo3 {
    public static void main(String[] args) {
       List<Integer> list = new ArrayList<>();
@@ -3267,9 +3312,23 @@ public class Demo3 {
 }
 ```
 
-对应字节码
+所以在取值时，编译器真正生成的字节码中，还要额外做一个类型转换的操作：
 
+```java
+// 需要将 Object 转为 Integer
+Integer x = (Integer)list.get(0);
 ```
+
+如果前面的 x 变量类型修改为 int 基本类型那么最终生成的字节码是：
+
+```java
+// 需要将 Object 转为 Integer, 并执行拆箱操作
+int x = ((Integer)list.get(0)).intValue()
+```
+
+擦除的是字节码上的泛型信息，可以看到 LocalVariableTypeTable 仍然保留了方法参数泛型的信息
+
+```shell
 Code:
     stack=2, locals=3, args_size=1
        0: new           #2                  // class java/util/ArrayList
@@ -3279,35 +3338,56 @@ Code:
        8: aload_1
        9: bipush        10
       11: invokestatic  #4                  // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
-      //这里进行了泛型擦除，实际调用的是add(Objcet o)
+      // 这里进行了泛型擦除，实际调用的是add(Objcet o)
       14: invokeinterface #5,  2            // InterfaceMethod java/util/List.add:(Ljava/lang/Object;)Z
 
       19: pop
       20: aload_1
       21: iconst_0
-      //这里也进行了泛型擦除，实际调用的是get(Object o)   
+      // 这里也进行了泛型擦除，实际调用的是get(Object o)   
       22: invokeinterface #6,  2            // InterfaceMethod java/util/List.get:(I)Ljava/lang/Object;
-//这里进行了类型转换，将Object转换成了Integer
+	  // checkcast 强制类型转换，将Object转换成了Integer
       27: checkcast     #7                  // class java/lang/Integer
       30: astore_2
       31: return
 ```
 
-所以调用get函数取值时，有一个类型转换的操作
+### 泛型反射
 
-```
-Integer x = (Integer) list.get(0);
+```java
+public class CandyReflect {
+
+    public static void main(String[] args) throws Exception {
+        List<Integer> list = new ArrayList<>();
+        list.add(10); // 实际调用的是 List.add(Object e)
+        Integer x = list.get(0); // 实际调用的是 Object obj = List.get(int index);
+
+        Method test = CandyReflect.class.getMethod("test", List.class, Map.class);
+        Type[] types = test.getGenericParameterTypes();
+        for (Type type : types) {
+            if (type instanceof ParameterizedType) {
+                ParameterizedType parameterizedType = (ParameterizedType) type;
+                System.out.println("原始类型 - " + parameterizedType.getRawType());
+                Type[] arguments = parameterizedType.getActualTypeArguments();
+                for (int i = 0; i < arguments.length; i++) {
+                    System.out.printf("泛型参数[%d] - %s\n", i, arguments[i]);
+                }
+            }
+
+        }
+    }
+
+    public Set<Integer> test(List<String> list, Map<Integer, Object> map) {
+        return null;
+    }
+}
 ```
 
-如果要将返回结果赋值给一个int类型的变量，则还有**自动拆箱**的操作
 
-```
-int x = (Integer) list.get(0).intValue();
-```
 
 ### 可变参数
 
-```
+```java
 public class Demo4 {
    public static void foo(String... args) {
       //将args赋值给arr，可以看出String...实际就是String[] 
@@ -3323,11 +3403,10 @@ public class Demo4 {
 
 可变参数 **String…** args 其实是一个 **String[]** args ，从代码中的赋值语句中就可以看出来。 同 样 java 编译器会在编译期间将上述代码变换为：
 
-```
+```java
 public class Demo4 {
    public Demo4 {}
 
-    
    public static void foo(String[] args) {
       String[] arr = args;
       System.out.println(arr.length);
@@ -3343,7 +3422,9 @@ public class Demo4 {
 
 ### foreach
 
-```
+> 数组使用 foreach
+
+```java
 public class Demo5 {
 	public static void main(String[] args) {
         //数组赋初值的简化写法也是一种语法糖。
@@ -3357,7 +3438,7 @@ public class Demo5 {
 
 编译器会帮我们转换为
 
-```
+```java
 public class Demo5 {
     public Demo5 {}
 
@@ -3371,9 +3452,11 @@ public class Demo5 {
 }
 ```
 
-**如果是集合使用foreach**
+> 集合使用foreach
 
-```
+虽然 foreach 的遍历最后会变成 迭代器 遍历，但是你调用 list.remove 移除元素，这个不会优化成 迭代器移除元素！
+
+```java
 public class Demo5 {
    public static void main(String[] args) {
       List<Integer> list = Arrays.asList(1, 2, 3, 4, 5);
@@ -3386,7 +3469,7 @@ public class Demo5 {
 
 集合要使用foreach，需要该集合类实现了**Iterable接口**，因为集合的遍历需要用到**迭代器Iterator**
 
-```
+```java
 public class Demo5 {
     public Demo5 {}
     
@@ -3404,7 +3487,13 @@ public class Demo5 {
 
 ### switch字符串
 
-```
+> 大致原理
+
+字符串的会变成两个 switch。
+
+第一个 switch 用 字符串的 哈希码对 flag 进行赋值用，然年第二个 switch 根据 flag 判断执行何种代码。
+
+```java
 public class Demo6 {
    public static void main(String[] args) {
       String str = "hello";
@@ -3424,7 +3513,7 @@ public class Demo6 {
 
 在编译器中执行的操作
 
-```
+```java
 public class Demo6 {
    public Demo6() {
       
@@ -3466,17 +3555,13 @@ public class Demo6 {
 }
 ```
 
-过程说明：
+可以看到，执行了两遍 switch，第一遍是根据字符串的 hashCode 和 equals 将字符串的转换为相应 byte 类型，第二遍才是利用 byte 执行进行比较。 
 
-- 在编译期间，单个的switch被分为了两个
-  - 第一个用来匹配字符串，并给x赋值
-    - 字符串的匹配用到了字符串的hashCode，还用到了equals方法
-    - 使用hashCode是为了提高比较效率，使用equals是防止有hashCode冲突（如BM和C.）
-  - 第二个用来根据x的值来决定输出语句
+为什么第一遍时必须既比较 hashCode，又利用 equals 比较呢？hashCode 是为了提高效率，减少可 能的比较；而 equals 是为了防止 hashCode 冲突，例如 BM 和 C. 这两个字符串的hashCode值都是 2123
 
 ### switch枚举
 
-```
+```java
 public class Demo7 {
    public static void main(String[] args) {
       SEX sex = SEX.MALE;
@@ -3500,7 +3585,7 @@ enum SEX {
 
 编译器中执行的代码如下
 
-```
+```java
 public class Demo7 {
    /**     
     * 定义一个合成类（仅 jvm 使用，对我们不可见）     
@@ -3542,7 +3627,9 @@ enum SEX {
 
 ### 枚举类
 
-```
+补一下枚举类的用法。
+
+```java
 enum SEX {
    MALE, FEMALE;
 }
@@ -3550,7 +3637,7 @@ enum SEX {
 
 转换后的代码
 
-```
+```java
 public final class Sex extends Enum<Sex> {   
    //对应枚举类中的元素
    public static final Sex MALE;    
@@ -3579,9 +3666,123 @@ public final class Sex extends Enum<Sex> {
 }
 ```
 
+### try-with-resources
+
+JDK 7 开始新增了对需要关闭的资源处理的特殊语法 try-with-resources`：
+
+```java
+try(资源变量 = 创建资源对象){
+    
+} catch( ) {
+    
+}
+```
+
+其中资源对象需要实现 AutoCloseable 接口，例如 InputStream 、 OutputStream 、 Connection 、 Statement 、 ResultSet 等接口都实现了 AutoCloseable ，使用 try-withresources 可以不用写 finally 语句块，编译器会帮助生成关闭资源代码，例如：
+
+```java
+public class Candy9 {
+    public static void main(String[] args) {
+        try (InputStream is = new FileInputStream("d:\\1.txt")) {
+            System.out.println(is);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+after
+
+```java
+public class Candy9 {
+    public Candy9() {
+    }
+    public static void main(String[] args) {
+        try {
+            FileInputStream is = new FileInputStream("d:\\1.txt");
+            try {
+                System.out.println(is);
+            } catch (Throwable var5) {
+                try {
+                    is.close();
+                } catch (Throwable var4) {
+                    // 如果 close 出现异常，作为被压制异常添加。这样两个异常都不会丢
+                    var5.addSuppressed(var4);
+                }
+                throw var5;
+            }
+            is.close();
+        } catch (IOException var6) {
+            var6.printStackTrace();
+        }
+    }
+}
+```
+
+
+
+
+
+
+
+
+
+### 方法重写是的桥接方法
+
+我们都知道，方法重写时对返回值分两种情况： 
+
+- 父子类的返回值完全一致 
+- 子类返回值可以是父类返回值的子类（比较绕口，见下面的例子）
+
+```java
+class A {
+    public Number m() {
+        return 1;
+    }
+}
+
+class B extends A {
+    @Override
+// 子类 m 方法的返回值是 Integer 是父类 m 方法返回值 Number 的子类
+    public Integer m() {
+        return 2;
+    }
+}
+```
+
+对于子类，Java 编译器会做如下处理
+
+```java
+class B extends A {
+    public Integer m() {
+        return 2;
+    }
+    // 此方法才是真正重写了父类 public Number m() 方法
+    public synthetic bridge Number m() {
+	// 调用 public Integer m()
+        return m();
+    }
+}
+```
+
+其中桥接方法比较特殊，仅对 java 虚拟机可见，并且与原来的 public Integer m() 没有命名冲突，可以 用下面反射代码来验证：
+
+```java
+public static void main(String[] args) {
+    for (Method m : B.class.getDeclaredMethods()) {
+        System.out.println(m);
+    }
+}
+/**
+ * public java.lang.Integer jvm.candy.B.m()
+ * public java.lang.Number jvm.candy.B.m()
+ */
+```
+
 ### 匿名内部类
 
-```
+```java
 public class Demo8 {
    public static void main(String[] args) {
       Runnable runnable = new Runnable() {
@@ -3596,7 +3797,7 @@ public class Demo8 {
 
 转换后的代码
 
-```
+```java
 public class Demo8 {
    public static void main(String[] args) {
       //用额外创建的类来创建匿名内部类对象
@@ -3617,7 +3818,7 @@ final class Demo8$1 implements Runnable {
 
 如果匿名内部类中引用了**局部变量**
 
-```
+```java
 public class Demo8 {
    public static void main(String[] args) {
       int x = 1;
@@ -3633,7 +3834,7 @@ public class Demo8 {
 
 转化后代码
 
-```
+```java
 public class Demo8 {
    public static void main(String[] args) {
       int x = 1;
@@ -3660,6 +3861,8 @@ final class Demo8$1 implements Runnable {
    }
 }
 ```
+
+为什么匿名内部类引用局部变量时，局部变量必须是 final 的：因为在创建 Candy11\$1 对象时，将 x 的值赋值给了 Candy11​\$1 对象的 val 属 性 ， 
 
 ## 类加载阶段
 
