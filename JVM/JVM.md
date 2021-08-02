@@ -3868,13 +3868,9 @@ final class Demo8$1 implements Runnable {
 
 ### 加载
 
-- 将类的字节码载入
+- 将类的字节码载入方法区（1.8后为元空间实现方法区，在本地内存中）中，内部采用 C++ 的 instanceKlass 描述 java 类，它的重要 ﬁeld 有：
 
-  方法区
-
-  （1.8后为元空间，在本地内存中）中，内部采用 C++ 的 instanceKlass 描述 java 类，它的重要 ﬁeld 有：
-
-  - _java_mirror 即 java 的类镜像，例如对 String 来说，它的镜像类就是 String.class，作用是把 klass 暴露给 java 使用
+  - _java_mirror 即 java 的类镜像，例如对 String 来说，它的镜像类就是 String.class，作用是把 klass 暴露给 java 使用。【Java 不能直接访问 instanceKlass对象，只能是先找到 String.class，String.class 实际上就是 instanceKlass 的镜像，两者相互持有对方的指针】
   - _super 即父类
   - _ﬁelds 即成员变量
   - _methods 即方法
@@ -3887,67 +3883,44 @@ final class Demo8$1 implements Runnable {
 
 - 加载和链接可能是**交替运行**的
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200611205050.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200611205050.png)
+<img src="../pics/JavaStrengthen/jvm/load_1.png">
 
-- instanceKlass保存在**方法区**。JDK 8以后，方法区位于元空间中，而元空间又位于本地内存中
-- _java_mirror则是保存在**堆内存**中
-- InstanceKlass和*.class(JAVA镜像类)互相保存了对方的地址
-- 类的对象在对象头中保存了*.class的地址。让对象可以通过其找到方法区中的instanceKlass，从而获取类的各种信息
+==**注意：**==
+
+- instanceKlass 这样的【元数据】是存储在方法区（1.8后方法区由元空间实现），但_java_mirror则是保存在**堆内存**中
+- 可以通过 HSDB 工具查看
+- InstanceKlass和*.class(JAVA镜像类)互相保存了对方的地址*
+- *类的对象在对象头中保存了*.class的地址。让对象可以通过其找到方法区中的instanceKlass，从而获取类的各种信息
 
 ### 链接
 
-#### 验证
-
-验证类是否符合 JVM规范，安全性检查
+- 验证：验证类是否符合 JVM 规范，安全性检查。
+  - 就是看字节码的格式是否正确。
+  - 比如我们修改了字节码的魔数，那么这个 字节码文件就无法通过验证阶段了。
 
 #### 准备
 
 为 static 变量分配空间，设置默认值
 
-- static变量在JDK 7以前是存储与instanceKlass末尾。但在JDK 7以后就存储在_java_mirror末尾了
-- static变量在分配空间和赋值是在两个阶段完成的。分配空间在准备阶段完成，赋值在初始化阶段完成
+- static变量在JDK 7以前是存储于 instanceKlass 末尾。但在 JDK 7 以后就存储在_java_mirror 末尾了
+- static 变量在分配空间和赋值是在两个阶段完成的。<span style="color:green">**分配空间在准备阶段完成，赋值在初始化阶段完成**</span>
 - 如果 static 变量是 ﬁnal 的**基本类型**，以及**字符串常量**，那么编译阶段值就确定了，**赋值在准备阶段完成**
 - 如果 static 变量是 ﬁnal 的，但属于**引用类型**，那么赋值也会在**初始化阶段完成**
 
 #### 解析
 
-**HSDB的使用**
-
-- 先获得要查看的进程ID
-
-```
-jps
-```
-
-- 打开HSDB
-
-```
-java -cp F:\JAVA\JDK8.0\lib\sa-jdi.jar sun.jvm.hotspot.HSDB
-```
-
-- 运行时可能会报错，是因为**缺少一个.dll的文件**，我们在JDK的安装目录中找到该文件，复制到缺失的文件下即可
-
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200611221703.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200611221703.png)
-
-- 定位需要的进程
-
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200611221857.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200611221857.png)
-
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200611222029.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200611222029.png)
-
-**解析的含义**
+> **解析的含义**
 
 将常量池中的符号引用解析为直接引用
 
 - 未解析时，常量池中的看到的对象仅是符号，未真正的存在于内存中
 
 ```java
-public class Demo1 {
+public class Load2{
    public static void main(String[] args) throws IOException, ClassNotFoundException {
-      ClassLoader loader = Demo1.class.getClassLoader();
+      ClassLoader loader = Load2.class.getClassLoader();
       //只加载不解析
-      Class<?> c = loader.loadClass("com.nyima.JVM.day8.C");
-      //用于阻塞主线程
+      Class<?> c = loader.loadClass("jvm.load.C");
       System.in.read();
    }
 }
@@ -3957,7 +3930,6 @@ class C {
 }
 
 class D {
-
 }
 ```
 
@@ -4003,13 +3975,184 @@ class D {
 
 以下情况不会初始化
 
-- 访问类的 static ﬁnal 静态常量（基本类型和字符串）
+- 访问类的 static ﬁnal 静态常量（基本类型和字符串）不会触发初始化。它是在类链接的准备阶段初始化的。
 - 类对象.class 不会触发初始化
 - 创建该类对象的数组
 - 类加载器的.loadClass方法
 - Class.forNamed的参数2为false时
 
-**验证类是否被初始化，可以看改类的静态代码块是否被执行**
+**验证类是否被初始化，可以看该类的静态代码块是否被执行**
+
+```java
+package jvm.load;
+
+class A {
+    static int a = 0;
+
+    static {
+        System.out.println("a init");
+    }
+}
+
+class B extends A {
+    final static double b = 5.0;
+    static boolean c = false;
+
+    static {
+        System.out.println("b init");
+    }
+}
+
+public class Load3 {
+    static {
+        System.out.println("main init");
+    }
+
+    public static void main(String[] args) throws ClassNotFoundException {
+// 1. 静态常量（基本类型和字符串）不会触发初始化
+        System.out.println(B.b);
+// 2. 类对象.class 不会触发初始化
+        System.out.println(B.class);
+// 3. 创建该类的数组不会触发初始化
+        System.out.println(new B[0]);
+// 4. 不会初始化类 B，但会加载 B、A
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        cl.loadClass("cn.itcast.jvm.t3.B");
+// 5. 不会初始化类 B，但会加载 B、A
+        ClassLoader c2 = Thread.currentThread().getContextClassLoader();
+        Class.forName("cn.itcast.jvm.t3.B", false, c2);
+// 1. 首次访问这个类的静态变量或静态方法时
+        System.out.println(A.a);
+// 2. 子类初始化，如果父类还没初始化，会引发
+        System.out.println(B.c);
+// 3. 子类访问父类静态变量，只触发父类初始化
+        System.out.println(B.a);
+// 4. 会初始化类 B，并先初始化类 A
+        Class.forName("cn.itcast.jvm.t3.B");
+    }
+}
+```
+
+#### 练习
+
+读代码，说结果
+
+> 练习1
+
+```java
+package jvm.load;
+
+public class Load4 {
+    public static void main(String[] args) {
+        System.out.println(E.a); // 不会初始化
+        System.out.println(E.b); // 不会初始化
+        System.out.println(E.c); // 会初始化
+        // 看看字节 可以知道为什么会这样。
+    }
+}
+
+class E {
+    public static final int a = 10;
+    public static final String b = "hello";
+    public static final Integer c = 20;
+
+    static {
+        System.out.println("init E");
+    }
+}
+```
+
+---
+
+```shell
+{
+  public static final int a;
+    descriptor: I
+    flags: (0x0019) ACC_PUBLIC, ACC_STATIC, ACC_FINAL
+    ConstantValue: int 10
+
+  public static final java.lang.String b;
+    descriptor: Ljava/lang/String;
+    flags: (0x0019) ACC_PUBLIC, ACC_STATIC, ACC_FINAL
+    ConstantValue: String hello
+
+  public static final java.lang.Integer c;
+    descriptor: Ljava/lang/Integer;
+    flags: (0x0019) ACC_PUBLIC, ACC_STATIC, ACC_FINAL
+
+  jvm.load.E();
+    descriptor: ()V
+    flags: (0x0000)
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+      LineNumberTable:
+        line 11: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   Ljvm/load/E;
+
+	# init 方法，初始化 c
+  static {};
+    descriptor: ()V
+    flags: (0x0008) ACC_STATIC
+    Code:
+      stack=2, locals=0, args_size=0
+         0: bipush        20
+         2: invokestatic  #2                  // Method java/lang/Integer.valueOf:(I)Ljava/lang/Integer;
+         5: putstatic     #3                  // Field c:Ljava/lang/Integer;
+         8: getstatic     #4                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        11: ldc           #5                  // String init E
+        13: invokevirtual #6                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        16: return
+      LineNumberTable:
+        line 14: 0
+        line 17: 8
+        line 18: 16
+}
+SourceFile: "Load4.java"
+```
+
+> 练习2
+
+```java
+package jvm.load;
+
+public class Load9 {
+    public static void main(String[] args) {
+        // 单纯调用这个方法，不会触发 INSTANCE 的初始化，因为是懒加载，用到是才初始化。
+        // Singleton.test();
+        // 第一次用到了，所以会触发 加载 链接 初始化
+        Singleton.getInstance();
+
+    }
+}
+// 懒汉式 线程安全，静态内部类的初始化由类加载器保证的线程安全。
+class Singleton {
+    public static void test() {
+        System.out.println("test");
+    }
+
+    private Singleton() {
+    }
+
+    private static class LazyHolder {
+        private static final Singleton INSTNACE = new Singleton();
+
+        static {
+            System.out.println("LazyHolder init");
+        }
+    }
+
+    public static Singleton getInstance() {
+        return LazyHolder.INSTNACE;
+    }
+}
+```
+
+
 
 ## 类加载器
 
@@ -4023,7 +4166,7 @@ Java虚拟机设计团队有意把类加载阶段中的**“通过一个类的�
 
 以JDK 8为例
 
-| 名称                                      | 加载的类              | 说明                            |
+| **名称**                                  | 加载的类              | 说明                            |
 | ----------------------------------------- | --------------------- | ------------------------------- |
 | Bootstrap ClassLoader（启动类加载器）     | JAVA_HOME/jre/lib     | 无法直接访问                    |
 | Extension ClassLoader(拓展类加载器)       | JAVA_HOME/jre/lib/ext | 上级为Bootstrap，**显示为null** |
@@ -4032,34 +4175,79 @@ Java虚拟机设计团队有意把类加载阶段中的**“通过一个类的�
 
 ### 启动类加载器
 
-可通过在控制台输入指令，使得类被启动类加器加载
+用 Bootstrap 类加载器加载类
+
+```java
+public class F {
+    static {
+        System.out.println("bootstrap F init");
+    }
+}
+```
+
+```java
+public class Load5_1 {
+    public static void main(String[] args) throws ClassNotFoundException {
+        Class<?> aClass = Class.forName("jvm.load.F");
+        System.out.println(aClass.getClassLoader());
+    }
+}
+```
+
+- D:\Code\JavaEE\JVM\target\classes 是字节码的目录
+- D:\Code\JavaEE\JVM\target\classes\jvm\load 是 class 所在的目录
+- 其中 jvm.load 是包名
+
+```shell
+D:\Code\JavaEE\JVM\target\classes>java -Xbootclasspath/a:. jvm.load.Load5
+bootstrap F init
+null
+```
+
+- Xbootclasspath 表示设置 bootclasspath 
+- 其中 /a:. 表示将当前目录追加至 bootclasspath 之后 
+- 可以用这个办法替换核心类 
+  - java -Xbootclasspath: \<new bootclasspath\>  直接用新的替换
+  - java -Xbootclasspath/a:<追加路径>  在前面追加
+  - java -Xbootclasspath/p:<追加路径>  在后面追加
 
 ### 拓展类加载器
 
-如果classpath和JAVA_HOME/jre/lib/ext 下有同名类，加载时会使用**拓展类加载器**加载。当应用程序类加载器发现拓展类加载器已将该同名类加载过了，则不会再次加载
+如果 classpath 和 JAVA_HOME/jre/lib/ext 下有同名类，加载时会使用**拓展类加载器**加载。当应用程序类加载器发现拓展类加载器已将该同名类加载过了，则不会再次加载。
+
+打 jar 包的命令
+
+```shell
+jar -cvf my.jar xx/xx/xx.class # 只把某个类打到 jar 里
+jar -cvf my.jar xx/xx/ # 把这个目录下的都打到 jar 里
+```
+
+- 把类打成jar 放到 ext 下就好
 
 ### 双亲委派模式
 
-双亲委派模式，即调用类加载器ClassLoader 的 loadClass 方法时，查找类的规则
+双亲委派模式，就是调用类加载器 ClassLoader 的 loadClass 方法时，查找类的规则
 
-loadClass源码
+==注意：这里的双亲，翻译为上级应该更合适，因为它们并没有继承关系。==
 
-```
+> **loadClass源码**
+
+```java
 protected Class<?> loadClass(String name, boolean resolve)
     throws ClassNotFoundException
 {
     synchronized (getClassLoadingLock(name)) {
-        // 首先查找该类是否已经被该类加载器加载过了
+        // 1.检查该类是否已经加载
         Class<?> c = findLoadedClass(name);
         //如果没有被加载过
         if (c == null) {
             long t0 = System.nanoTime();
             try {
-                //看是否被它的上级加载器加载过了 Extension的上级是Bootstarp，但它显示为null
                 if (parent != null) {
+                    // 2.有上级，就委托上级的 loadClass 进行加载
                     c = parent.loadClass(name, false);
                 } else {
-                    //看是否被启动类加载器加载过
+                    // 3.如果没有上级，就委派 BootstrapClassLoader
                     c = findBootstrapClassOrNull(name);
                 }
             } catch (ClassNotFoundException e) {
@@ -4069,12 +4257,9 @@ protected Class<?> loadClass(String name, boolean resolve)
             }
 
             if (c == null) {
-                //如果还是没有找到，先让拓展类加载器调用findClass方法去找到该类，如果还是没找到，就抛出异常
-                //然后让应用类加载器去找classpath下找该类
                 long t1 = System.nanoTime();
+                // 4.每一层找不到，调用 findClass 方法（每个类加载器自己扩展）来加载
                 c = findClass(name);
-
-                // 记录时间
                 sun.misc.PerfCounter.getParentDelegationTime().addTime(t1 - t0);
                 sun.misc.PerfCounter.getFindClassTime().addElapsedTimeFrom(t1);
                 sun.misc.PerfCounter.getFindClasses().increment();
@@ -4088,6 +4273,131 @@ protected Class<?> loadClass(String name, boolean resolve)
 }
 ```
 
+### 线程上下文类加载器
+
+我们在使用 JDBC 时，都需要加载 Driver 驱动，不知道你注意到没有，不写`Class.forName("com.mysql.jdbc.Driver")` 也能正确工作，让我们追踪一下源码：
+
+```java
+public class DriverManager {
+	// 注册驱动的集合
+	private final static CopyOnWriteArrayList<DriverInfo> registeredDrivers = new CopyOnWriteArrayList<>();
+	// 初始化驱动
+    static {
+    	loadInitialDrivers();
+    	println("JDBC DriverManager initialized");
+    }
+}
+```
+
+DriverManager 是 rt.jar 包下的，是启动类路径下的，所以它的类加载器实际上是 BootstrapClassLoader，会到 JAVA_HOME/jre/lib 下搜索类，但 JAVA_HOME/jre/lib 下显然没有 mysql-connector-java-5.1.47.jar 包，这样问题来了，在 DriverManager 的静态代码块中，怎么能正确加载 com.mysql.jdbc.Driver 呢？
+
+继续看 ensureDriversInitialized() 方法：
+
+- 问题就是 DriverManager 类加载器是 BootstrapClassLoad，但是 数据库 驱动包不在 rt.jar 下，那我们如何获得驱动？只能打破委派机制了。（的确是打破嘛？有争论，我们知道原理就好）
+
+```java
+private static void ensureDriversInitialized() {
+        if (driversInitialized) {
+            return;
+        }
+
+        synchronized (lockForInitDrivers) {
+            if (driversInitialized) {
+                return;
+            }
+            String drivers;
+            try {
+                drivers = AccessController.doPrivileged(new PrivilegedAction<String>() {
+                    public String run() {
+                        return System.getProperty(JDBC_DRIVERS_PROPERTY);
+                    }
+                });
+            } catch (Exception ex) {
+                drivers = null;
+            }
+            // 1、使用 ServiceLoader 机制来加载驱动，即 SPI
+            AccessController.doPrivileged(new PrivilegedAction<Void>() {
+                public Void run() {
+
+                    ServiceLoader<Driver> loadedDrivers = ServiceLoader.load(Driver.class);
+                    Iterator<Driver> driversIterator = loadedDrivers.iterator();
+                    try {
+                        while (driversIterator.hasNext()) {
+                            driversIterator.next();
+                        }
+                    } catch (Throwable t) {
+                        // Do nothing
+                    }
+                    return null;
+                }
+            });
+
+            println("DriverManager.initialize: jdbc.drivers = " + drivers);
+
+            // 2、使用 jdbc.drivers 定义的驱动名加载驱动
+            if (drivers != null && !drivers.equals("")) {
+                String[] driversList = drivers.split(":");
+                println("number of Drivers:" + driversList.length);
+                for (String aDriver : driversList) {
+                    try {
+                        println("DriverManager.Initialize: loading " + aDriver);
+                        // 这里的 ClassLoader.getSystemClassLoader() 就是应用程序类加载器
+                        Class.forName(aDriver, true,
+                                ClassLoader.getSystemClassLoader());
+                    } catch (Exception ex) {
+                        println("DriverManager.Initialize: load failed: " + ex);
+                    }
+                }
+            }
+
+            driversInitialized = true;
+            println("JDBC DriverManager initialized");
+        }
+    }
+```
+
+先看 2）发现它最后是使用 Class.forName 完成类的加载和初始化，关联的是应用程序类加载器，因此 可以顺利完成类加载 
+
+再看 1）它就是大名鼎鼎的 Service Provider Interface （SPI） 约定如下，在 jar 包的 META-INF/services 包下，以接口全限定名名为文件，文件内容是实现类名称
+
+<img src="..\pics\JavaStrengthen\jvm\SPI.png">
+
+按照这个约定去设计 jar 包，那么就可以配合 ServiceLoad 配合接口来找到它的实现类，并加以实例化。以此实现解耦。
+
+这样就可以使用
+
+```java
+// load 会找到接口的所有实现类。
+ServiceLoader<接口类型> allImpls = ServiceLoader.load(接口类型.class);
+Iterator<接口类型> iter = allImpls.iterator();
+while(iter.hasNext()) {
+	iter.next();
+}
+```
+
+来得到实现类，体现的是【面向接口编程+解耦】的思想，在下面一些框架中都运用了此思想： 
+
+- JDBC 
+- Servlet 初始化器 
+- Spring 容器 
+- Dubbo（对 SPI 进行了扩展） 
+
+接着看 ServiceLoader.load 方法：
+
+```java
+public static <S> ServiceLoader<S> load(Class<S> service) {
+	// 获取线程上下文类加载器。
+	ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	return ServiceLoader.load(service, cl);
+}
+```
+
+==线程上下文类加载器是当前线程使用的类加载器，默认就是应用程序类加载器==，它内部又是由 Class.forName 调用了线程上下文类加载器完成类加载，具体代码在 ServiceLoader 的内部类 LazyIterator 中：
+
+```java
+
+```
+
 ### 自定义类加载器
 
 #### 使用场景
@@ -4095,6 +4405,7 @@ protected Class<?> loadClass(String name, boolean resolve)
 - 想加载非 classpath 随意路径中的类文件
 - 通过接口来使用实现，希望解耦时，常用在框架设计
 - 这些类希望予以隔离，不同应用的同名类都可以加载，不冲突，常见于 tomcat 容器
+  - 一个类有多种不同的版本，希望新旧版本可以同时工作。
 
 #### 步骤
 
@@ -4104,6 +4415,43 @@ protected Class<?> loadClass(String name, boolean resolve)
 - 读取类文件的字节码
 - 调用父类的 deﬁneClass 方法来加载类
 - 使用者调用该类加载器的 loadClass 方法
+
+```java
+package jvm.load;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+public class Load7 {
+    public static void main(String[] args) throws ClassNotFoundException {
+        MyClassLoader myClassLoader = new MyClassLoader();
+        myClassLoader.loadClass("类名");
+
+    }
+}
+
+class MyClassLoader extends ClassLoader {
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        String path = "";
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            Files.copy(Paths.get(path), os);
+            byte[] bytes = os.toByteArray();
+            return defineClass(name, bytes, 0, bytes.length);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new ClassNotFoundException("类文件未找到", e);
+        }
+    }
+}
+```
+
+
+
+认为类是否完全一致：全限定类名和类加载器都一样
 
 ### 破坏双亲委派模式
 
@@ -4118,6 +4466,45 @@ protected Class<?> loadClass(String name, boolean resolve)
 
 ### 分层编译
 
+> 看个代码示例
+
+```java
+public class JIT1 {
+    public static void main(String[] args) {
+        for (int i = 0; i < 200; i++) {
+            long start = System.nanoTime();
+            for (int j = 0; j < 1000; j++) {
+                new Object();
+            }
+            long end = System.nanoTime();
+            System.out.printf("%d\t%d\n", i, (end - start));
+        }
+    }
+}
+```
+
+```shell
+0	27099
+1	29000
+2	47500
+3	30000
+4	27200
+5	27499
+6	24100
+7	51500
+......
+190	599
+191	500
+192	2200
+193	600
+194	499
+195	500
+196	501
+197	600
+198	501
+199	600
+```
+
 JVM 将执行状态分成了 5 个层次：
 
 - 0层：解释执行，用解释器将字节码翻译为机器码
@@ -4128,7 +4515,7 @@ JVM 将执行状态分成了 5 个层次：
 
 proﬁling 是指在运行过程中收集一些程序执行状态的数据，例如【方法的调用次数】，【循环的 回边次数】等
 
-#### 即时编译器（JIT）与解释器的区别
+> **即时编译器（JIT）与解释器的区别**
 
 - 解释器
   - 将字节码**解释**为机器码，下次即使遇到相同的字节码，仍会执行重复的解释
@@ -4137,11 +4524,13 @@ proﬁling 是指在运行过程中收集一些程序执行状态的数据，例
   - 将一些字节码**编译**为机器码，**并存入 Code Cache**，下次遇到相同的代码，直接执行，无需再编译
   - 根据平台类型，生成平台特定的机器码
 
-对于大部分的不常用的代码，我们无需耗费时间将其编译成机器码，而是采取解释执行的方式运行；另一方面，对于仅占据小部分的热点代码，我们则可以将其编译成机器码，以达到理想的运行速度。 执行效率上简单比较一下 Interpreter < C1 < C2，总的目标是发现热点代码（hotspot名称的由 来），并优化这些热点代码
+对于大部分的不常用的代码，我们无需耗费时间将其编译成机器码，而是采取解释执行的方式运行；另一方面，对于仅占据小部分的热点代码，我们则可以将其编译成机器码，以达到理想的运行速度。 执行效率上简单比较一下 Interpreter < C1 < C2，总的目标是发现热点代码（hotspot名称的由来），并优化这些热点代码。==C1提升5倍左右，C2提升10-100倍左右。==
 
-#### 逃逸分析
+> 逃逸分析
 
-逃逸分析（Escape Analysis）简单来讲就是，Java Hotspot 虚拟机可以分析新创建对象的使用范围，并决定是否在 Java 堆上分配内存的一项技术
+逃逸分析（Escape Analysis）简单来讲就是，Java Hotspot 虚拟机可以分析新创建对象的使用范围，并决定是否在 Java 堆上分配内存的一项技术。
+
+没有逸出线程栈时，对象的分配在栈上而不是在堆上，这样对象跟随栈消亡。栈上分配，确定逃逸的对象通过”标量替换“将该对象分解在栈上分配内存。
 
 逃逸分析的 JVM 参数如下：
 
@@ -4149,7 +4538,7 @@ proﬁling 是指在运行过程中收集一些程序执行状态的数据，例
 - 关闭逃逸分析：-XX:-DoEscapeAnalysis
 - 显示分析结果：-XX:+PrintEscapeAnalysis
 
-逃逸分析技术在 Java SE 6u23+ 开始支持，并默认设置为启用状态，可以不用额外加这个参数
+**逃逸分析技术在 Java SE 6u23+ 开始支持，并默认设置为启用状态，可以不用额外加这个参数**
 
 **对象逃逸状态**
 
@@ -4207,47 +4596,182 @@ proﬁling 是指在运行过程中收集一些程序执行状态的数据，例
 
 ### 方法内联
 
-#### **内联函数**
+>**内联函数**
 
-内联函数就是在程序编译时，编译器将程序中出现的内联函数的调用表达式用内联函数的函数体来直接进行替换
+内联函数就是在程序编译时，编译器将程序中出现的内联函数的调用表达式用内联函数的函数体来直接进行替换，减少了调用方法栈的开销。
 
-#### **JVM内联函数**
-
-C++是否为内联函数由自己决定，Java由**编译器决定**。Java不支持直接声明为内联函数的，如果想让他内联，你只能够向编译器提出请求: 关键字**final修饰** 用来指明那个函数是希望被JVM内联的，如
-
-```
-public final void doSomething() {  
-        // to do something  
+```java
+private static int square(final int i) {
+	return i * i;
 }
 ```
 
-总的来说，一般的函数都不会被当做内联函数，只有声明了final后，编译器才会考虑是不是要把你的函数变成内联函数
-
-JVM内建有许多运行时优化。首先**短方法**更利于JVM推断。流程更明显，作用域更短，副作用也更明显。如果是长方法JVM可能直接就跪了。
-
-第二个原因则更重要：**方法内联**
-
-如果JVM监测到一些**小方法被频繁的执行**，它会把方法的调用替换成方法体本身，如：
-
+```java
+System.out.println(square(9));
 ```
-private int add4(int x1, int x2, int x3, int x4) { 
-	//这里调用了add2方法
-	return add2(x1, x2) + add2(x3, x4);  
-}  
 
-private int add2(int x1, int x2) {  
-	return x1 + x2;  
+如果发现 square 是热点方法，并且长度不太长时，会进行内联，所谓的内联就是把方法内代码拷贝、 粘贴到调用者的位置：
+
+```java
+System.out.println(9 * 9); // 还能够进行常量折叠（constant folding）的优化
+```
+
+实验
+
+```java
+public class JIT2 {
+    // -XX:+UnlockDiagnosticVMOptions -XX:+PrintInlining （解锁隐藏参数）打印 inlining 信息 -XX:CompileCommand=dontinline,*JIT2.square 禁止某个方法 inlining
+    // -XX:+PrintCompilation 打印编译信息
+    public static void main(String[] args) {
+        int x = 0;
+        for (int i = 0; i < 500; i++) {
+            long start = System.nanoTime();
+            for (int j = 0; j < 1000; j++) {
+                x = square(9);
+            }
+            long end = System.nanoTime();
+            System.out.printf("%d\t%d\t%d\n", i, x, (end - start));
+        }
+    }
+
+    private static int square(final int i) {
+        return i * i;
+    }
 }
 ```
 
-方法调用被替换后
+- `-XX:CompileCommand=dontinline,*JIT2.square`  禁止任意包下的 JIT2这个类中的 square 方法内联 
 
+> **JVM内联函数**
+
+C++是否为内联函数由自己决定，Java由**编译器决定**。Java不支持直接声明为内联函数的，如果想让他内联，你只能够向编译器提出请求: 关键字**final修饰** 用来指明那个函数是希望被JVM内联的。
+
+总的来说，一般的函数都不会被当做内联函数，只有声明了final后，编译器才会考虑是不是要把你的函数变成内联函数。
+
+高版本 JDK @ForceInline 注解的方法（仅限于 JDK 内部方法），会被强制内联
+
+### 字段优化
+
+JMH 基准测试请参考：http://openjdk.java.net/projects/code-tools/jmh/ 
+
+- `@Warmup(iterations = 2, time = 1)`  程序预热
+- `@Measurement(iterations = 5, time = 1)`  进行几轮测试
+- `@State(Scope.Benchmark)` 
+
+创建 maven 工程，添加依赖如下
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.example</groupId>
+    <artifactId>JVM</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <encoding>UTF-8</encoding>
+        <java.version>1.8</java.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jmh.version>1.21</jmh.version>
+        <uberjar.name>benchmarks</uberjar.name>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>${jmh.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <version>${jmh.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>
 ```
-private int add4(int x1, int x2, int x3, int x4) {  
-    //被替换为了方法本身
-    return x1 + x2 + x3 + x4;  
+
+编写基准测试代码：
+
+```java
+package jvm.jit;
+
+import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
+
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+
+@Warmup(iterations = 2, time = 1)
+@Measurement(iterations = 5, time = 1)
+@State(Scope.Benchmark)
+public class JMH {
+    int[] elements = randomInts(1_000);
+
+    private static int[] randomInts(int size) {
+        Random random = ThreadLocalRandom.current();
+        int[] values = new int[size];
+        for (int i = 0; i < size; i++) {
+            values[i] = random.nextInt();
+        }
+        return values;
+    }
+
+    // 直接循环
+    @Benchmark
+    public void test1() {
+        for (int i = 0; i < elements.length; i++) {
+            doSum(elements[i]);
+        }
+    }
+	
+    
+    // 拷贝一份遍历
+    @Benchmark
+    public void test2() {
+        int[] local = this.elements;
+        for (int i = 0; i < local.length; i++) {
+            doSum(local[i]);
+        }
+    }
+
+    // 增强 for 遍历
+    @Benchmark
+    public void test3() {
+        for (int element : elements) {
+            doSum(element);
+        }
+    }
+
+    static int sum = 0;
+
+    @CompilerControl(CompilerControl.Mode.INLINE)
+    static void doSum(int x) {
+        sum += x;
+    }
+
+    public static void main(String[] args) throws RunnerException {
+        Options opt = new OptionsBuilder()
+                .include(Benchmark1.class.getSimpleName())
+                .forks(1)
+                .build();
+        new Runner(opt).run();
+    }
 }
 ```
+
+- 允许内联，速度差不读
+- 不允许内联
+
+# P167
 
 ### 反射优化
 
