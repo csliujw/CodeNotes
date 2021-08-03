@@ -4,7 +4,7 @@ https://nyimac.gitee.io/
 
 2021-08-01：P96~P128 半天的视频学习量
 
-# 什么是JVM
+# JVM概述
 
 参考视频：[**解密JVM【黑马程序员出品】**](https://www.bilibili.com/video/BV1yE411Z7AP)
 
@@ -1177,7 +1177,7 @@ public class WeakReferenceDemo {
 
 ### 标记-清除
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150813.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150813.png)
+<img src="..\pics\JavaStrengthen\jvm\mark_clean.png" style="width:70%">
 
 **定义**：标记清除算法顾名思义，是指在虚拟机执行垃圾回收的过程中，先采用标记算法确定可回收对象，然后垃圾收集器根据标识清除相应的内容，给堆内存腾出相应的空间
 
@@ -1187,27 +1187,25 @@ public class WeakReferenceDemo {
 
 ###  标记-整理
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150827.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150827.png)
+<img src="..\pics\JavaStrengthen\jvm\mark_compact.png" style="width:70%">
 
 标记-整理 会将不被GC Root引用的对象回收，清除其占用的内存空间。然后整理剩余的对象，可以有效避免因内存碎片而导致的问题，但是整理需要消耗一定的时间，所以效率较低
 
 ### 复制
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150842.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150842.png)
+<img src="..\pics\JavaStrengthen\jvm\copy1.png">
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150856.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150856.png)
+<img src="..\pics\JavaStrengthen\jvm\copy2.png">
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150907.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150907.png)
+<img src="..\pics\JavaStrengthen\jvm\copy3.png">
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150919.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150919.png)
+<img src="..\pics\JavaStrengthen\jvm\copy4.png">
 
 将内存分为等大小的两个区域，FROM和TO（TO中为空）。先将被GC Root引用的对象从FROM放入TO中，再回收不被GC Root引用的对象。然后交换FROM和TO。这样也可以避免内存碎片的问题，但是会占用双倍的内存空间。
 
 ## 分代回收
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150931.png)
-
-[](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200608150931.png)
+<img src="..\pics\JavaStrengthen\jvm\generational.png">
 
 - 对象首先分配在伊甸园区域
 - 新生代空间不足时，触发 minor gc，伊甸园和 from 存活的对象使用 copy 复制到 to 种，存活的对年龄+1并且交换 from to。
@@ -1861,7 +1859,7 @@ u2             attributes_count;    # 类的附加属性信息
 attribute_info attributes[attributes_count];Copy
 ```
 
-### 魔数
+> 魔数
 
 u4   magic
 
@@ -1871,190 +1869,13 @@ u4   magic
 
 0000000 **ca fe ba be** 00 00 00 34 00 23 0a 00 06 00 15 09
 
-### 版本
+> 版本
 
 u2 minor_version; u2 major_version
 
 4~7 字节，表示类的版本 00 34（52） 表示是 Java 8
 
 0000000 ca fe ba be **00 00 00 34** 00 23 0a 00 06 00 15 09
-
-### 常量池
-
-| 1                           | 1    |
-| --------------------------- | ---- |
-| CONSTANT_Class              | 7    |
-| CONSTANT_Fieldref           | 9    |
-| CONSTANT_Methodref          | 10   |
-| CONSTANT_InterfaceMethodref | 11   |
-| CONSTANT_String             | 8    |
-| CONSTANT_Integer            | 3    |
-| CONSTANT_Float              | 4    |
-| CONSTANT_Long               | 5    |
-| CONSTANT_Double             | 6    |
-| CONSTANT_NameAndType        | 12   |
-| CONSTANT_Utf8               | 1    |
-| CONSTANT_MethodHandle       | 15   |
-| CONSTANT_MethodType         | 16   |
-| CONSTANT_InvokeDynamic      | 18   |
-
-8~9 字节，表示常量池长度，00 23 （35） 表示常量池有 #1~#34项，注意 #0 项不计入，也没有值 
-
-0000000 ca fe ba be 00 00 00 34 **00 23** 0a 00 06 00 15 09 
-
-----
-
-第#1项 0a 表示一个 Method 信息，00 06 和 00 15（21） 表示它引用了常量池中 #6 和 #21 项来获得 这个方法的【所属类】和【方法名】 
-
-0000000 ca fe ba be 00 00 00 34 00 23 **0a** <span style="color:red">00 06</span> <span style="color:green">00 15</span> 09
-
-----
-
-第#2项 09 表示一个 Field 信息，00 16（22）和 00 17（23） 表示它引用了常量池中 #22 和 # 23 项 来获得这个成员变量的【所属类】和【成员变量名】
-
-0000000 ca fe ba be 00 00 00 34 00 23 0a 00 06 00 15 **09**  09 表示一个 Filed信息
-
-0000020 **00 16 00 17** 08 00 18 0a 00 19 00 1a 07 00 1b 07
-
-----
-
-第#3项 08 表示一个字符串常量名称，00 18（24）表示它引用了常量池中 #24 项
-
-0000020 00 16 00 17 **08 00 18** 0a 00 19 00 1a 07 00 1b 07
-
-----
-
-第#4项 0a 表示一个 Method 信息，00 19（25） 和 00 1a（26） 表示它引用了常量池中 #25 和 #26 项来获得这个方法的【所属类】和【方法名】
-
-0000020 00 16 00 17 08 00 18 **0a**  <span style="color:red">**00 19**</span>  <span style="color:green">**00 1a**</span> 07 00 1b 07
-
------
-
-第#5项 **07** 表示一个 Class 信息，00 1b（27） 表示它引用了常量池中 #27 项
-
-0000020 00 16 00 17 08 00 18 0a 00 19 00 1a **07 00 1b** 07
-
----
-
-第#6项 07 表示一个 Class 信息，00 1c（28） 表示它引用了常量池中 #28 项
-
-0000020 00 16 00 17 08 00 18 0a 00 19 00 1a 07 00 1b **07** 
-
-0000040 **00 1c** 01 00 06 3c 69 6e 69 74 3e 01 00 03 28 29
-
-----
-
-第#7项 01 表示一个 utf8 串，00 06 表示长度，3c 69 6e 69 74 3e 是【  】 
-
-0000040 00 1c **01** <span style="color:red">**00 06**</span> <span style="color:green">**3c 69 6e 69 74 3e**</span> 01 00 03 28 29
-
----
-
-第#8项 01 表示一个 utf8 串，00 03 表示长度，28 29 56 是【()V】其实就是表示无参、无返回值 
-
-0000040 00 1c 01 00 06 3c 69 6e 69 74 3e **01 00 03 28 29** 
-
-0000060 **56** 01 00 04 43 6f 64 65 01 00 0f 4c 69 6e 65 4e
-
-----
-
-第#9项 01 表示一个 utf8 串，00 04 表示长度，43 6f 64 65 是【Code】
-
-0000060 56 **01** <span style="color:red">**00 04**</span> <span style="color:green">**43 6f 64 65**</span> 01 00 0f 4c 69 6e 65 4e
-
-----
-
-第#10项 01 表示一个 utf8 串，00 0f（15） 表示长度，4c 69 6e 65 4e 75 6d 62 65 72 54 61 62 6c 65 是【LineNumberTable】
-
-0000060 56 01 00 04 43 6f 64 65 **01** <span style="color:red">**00 0f**</span> <span style="color:grenn">**4c 69 6e 65 4e**</span> 
-
-0000100 <span style="color:green">**75 6d 62 65 72 54 61 62 6c 65**</span> 01 00 12 4c 6f 63
-
-----
-
-第#11项 01 表示一个 utf8 串，00 12（18） 表示长度，4c 6f 63 61 6c 56 61 72 69 61 62 6c 65 54 61 62 6c 65是【LocalVariableTable】
-
-0000100 75 6d 62 65 72 54 61 62 6c 65 **01** <span style="color:red">**00 12**</span> <span style="color:green">**4c 6f 63**</span>
-
-0000120 <span style="color:green">**61 6c 56 61 72 69 61 62 6c 65 54 61 62 6c 65**</span> 01
-
-----
-
-第#12项 01 表示一个 utf8 串，00 04 表示长度，74 68 69 73 是【this】
-
-0000120 61 6c 56 61 72 69 61 62 6c 65 54 61 62 6c 65 **01** 
-
-0000140 <span style="color:red">**00 04**</span> <span style="color:green">**74 68 69 73**</span> 01 00 1d 4c 63 6e 2f 69 74 63
-
-----
-
-第#13项 01 表示一个 utf8 串，00 1d（29） 表示长度，是【Lcn/itcast/jvm/t5/HelloWorld;】
-
-0000140 00 04 74 68 69 73 **01** <u>00 1d</u> <span style="color:green">**4c 63 6e 2f 69 74 63**</span>
-
-0000160 <span style="color:green">**61 73 74 2f 6a 76 6d 2f 74 35 2f 48 65 6c 6c 6f**</span>
-
----
-
-第#14项 01 表示一个 utf8 串，00 04 表示长度，74 68 69 73 是【main】 
-
-0000200 57 6f 72 6c 64 3b **01** <u>00 04</u> 6d 61 69 6e 01 00 16
-
-----
-
-第#15项 01 表示一个 utf8 串，00 16（22） 表示长度，是【([Ljava/lang/String;)V】其实就是参数为 字符串数组，无返回值
-
-0000200 57 6f 72 6c 64 3b 01 00 04 6d 61 69 6e **01 00** 16 
-
-0000220 **28 5b 4c 6a 61 76 61 2f 6c 61 6e 67 2f 53 74 72** 
-
-0000240 **69 6e 67 3b 29 56** 01 00 04 61 72 67 73 01 00 13
-
----
-
-第#16项 01 表示一个 utf8 串，00 04 表示长度，是 61 72 67 73【args】
-
-0000240 69 6e 67 3b 29 56 **01 00 04 61 72 67 73 01 00 13**
-
-----
-
-第#17项 01 表示一个 utf8 串，00 13（19） 表示长度，是【[Ljava/lang/String;】
-
-0000240 69 6e 67 3b 29 56 01 00 04 61 72 67 73 **01 00 13** 
-
-0000260 **5b 4c 6a 61 76 61 2f 6c 61 6e 67 2f 53 74 72 69** 
-
-0000300 **6e 67 3b** 01 00 10 4d 65 74 68 6f 64 50 61 72 61
-
-----
-
-第#18项 01 表示一个 utf8 串，00 10（16） 表示长度，是【MethodParameters】
-
-0000300 6e 67 3b 01 00 10 **4d 65 74 68 6f 64 50 61 72 61** 
-
-0000320 **6d 65 74 65 72 73** 01 00 0a 53 6f 75 72 63 65 46
-
-----
-
-第#19项 01 表示一个 utf8 串，00 0a（10） 表示长度，是【SourceFile】
-
-0000320 6d 65 74 65 72 73 01 00 0a **53 6f 75 72 63 65 46** 
-
-0000340 **69 6c 65** 01 00 0f 48 65 6c 6c 6f 57 6f 72 6c 64
-
-----
-
-第#20项 01 表示一个 utf8 串，00 0f（15） 表示长度，是【HelloWorld.java】
-
-0000340 69 6c 65 01 00 0f **48 65 6c 6c 6f 57 6f 72 6c 64** 
-
-0000360 **2e 6a 61 76 61** 0c 00 07 00 08 07 00 1d 0c 00 1e
-
-----
-
-第#21项 **0c** 表示一个 【名+类型】，00 07 00 08 引用了常量池中 #7 #8 两项
-
-0000360 2e 6a 61 76 61 **0c** 00 07 00 08 07 00 1d 0c 00 1e
 
 ## 字节码指令
 
@@ -2402,7 +2223,7 @@ SourceFile: "Demo3_1.java"
 **return**
 完成 main 方法调用，弹出 main 栈帧，程序结束
 
-### 字节码指令来分析问题
+### 字节码指令分析问题
 
 > 分析 a++
 
