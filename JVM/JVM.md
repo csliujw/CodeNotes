@@ -14,6 +14,10 @@ GC文档：https://docs.oracle.com/en/java/javase/12/gctuning/
 
 调优文档：https://docs.oracle.com/en/java/javase/11/tools/java.html
 
+JCStress：https://www.jb51.net/article/209076.htm
+
+JMH：http://openjdk.java.net/projects/code-tools/jmh/ 
+
 > 定义
 
 Java Virtual Machine，JAVA程序的**运行环境**（JAVA二进制字节码的运行环境）
@@ -4768,14 +4772,75 @@ public class JMH {
 }
 ```
 
-- 允许内联，速度差不读
-- 不允许内联
+首先启用 doSum 的方法内联，测试结果如下（每秒吞吐量，分数越高的更好）：
 
-# P167
+```shell
+Benchmark Mode Samples Score Score error Units
+t.Benchmark1.test1 thrpt 5 2420286.539 390747.467 ops/s
+t.Benchmark1.test2 thrpt 5 2544313.594 91304.136 ops/s
+t.Benchmark1.test3 thrpt 5 2469176.697 450570.647 ops/s
+```
+
+接下来禁用 doSum 方法内联
+
+```java
+@CompilerControl(CompilerControl.Mode.DONT_INLINE)
+static void doSum(int x) {
+	sum += x;
+}
+```
+
+测试结果如下：
+
+```shell
+Benchmark Mode Samples Score Score error Units
+t.Benchmark1.test1 thrpt 5 296141.478 63649.220 ops/s
+t.Benchmark1.test2 thrpt 5 371262.351 83890.984 ops/s
+t.Benchmark1.test3 thrpt 5 368960.847 60163.391 ops/s
+```
+
+分析： 在刚才的示例中，doSum 方法是否内联会影响 elements 成员变量读取的优化： 如果 doSum 方法内联了，刚才的 test1 方法会被优化成下面的样子（伪代码）：
+
+```java
+@Benchmark
+public void test1() {
+    // elements.length 首次读取会缓存起来 -> int[] local
+    for (int i = 0; i < elements.length; i++) { // 后续 999 次 求长度 <- local
+    	sum += elements[i]; // 1000 次取下标 i 的元素 <- local
+    }
+}
+```
+
+可以节省 1999 次 Field 读取操作 
+
+但如果 doSum 方法没有内联，则不会进行上面的优化 
+
+练习：在内联情况下将 elements 添加 volatile 修饰符，观察测试结果
+
+```shell
+Benchmark   Mode  Cnt        Score       Error  Units
+JMH.test1  thrpt    5   763325.521 ±  3321.309  ops/s
+JMH.test2  thrpt    5  3900578.659 ± 69077.379  ops/s
+JMH.test3  thrpt    5  3927754.284 ±  4166.415  ops/s
+```
 
 ### 反射优化
 
-```
+> 前置知识
+
+arthas-boot.jar 的使用。<a href="https://github.com/alibaba/arthas">github链接</a>
+
+jdk 版本要符合使用要求。开始我用 jdk 11 运行代码，它就报错，jdk 不匹配。
+
+`java -jar arthas-boot.jar` 启动
+
+`help` 查看使用帮助
+
+`jad sun.reflect.GeneratedMethodAccessor1`  生成字节码
+
+> 反射优化示例
+
+```java
 public class Reflect1 {
    public static void foo() {
       System.out.println("foo...");
@@ -4790,11 +4855,13 @@ public class Reflect1 {
 }
 ```
 
+前16次调用（0~15）性能比较低。但是第17次调用开始，性能开始变高。
+
 foo.invoke 前面 0 ~ 15 次调用使用的是 MethodAccessor 的 NativeMethodAccessorImpl 实现
 
 invoke方法源码
 
-```
+```java
 @CallerSensitive
 public Object invoke(Object obj, Object... args)
     throws IllegalAccessException, IllegalArgumentException,
@@ -4806,7 +4873,7 @@ public Object invoke(Object obj, Object... args)
             checkAccess(caller, clazz, obj, modifiers);
         }
     }
-    //MethodAccessor是一个接口，有3个实现类，其中有一个是抽象类
+    // MethodAccessor是一个接口，有3个实现类，其中有一个是抽象类
     MethodAccessor ma = methodAccessor;             // read volatile
     if (ma == null) {
         ma = acquireMethodAccessor();
@@ -4821,7 +4888,7 @@ public Object invoke(Object obj, Object... args)
 
 NativeMethodAccessorImpl源码
 
-```
+```java
 class NativeMethodAccessorImpl extends MethodAccessorImpl {
     private final Method method;
     private DelegatingMethodAccessorImpl parent;
@@ -4835,10 +4902,11 @@ class NativeMethodAccessorImpl extends MethodAccessorImpl {
 	//如果numInvocation>ReflectionFactory.inflationThreshold，则会调用本地方法invoke0方法
     public Object invoke(Object var1, Object[] var2) throws IllegalArgumentException, InvocationTargetException {
         if (++this.numInvocations > ReflectionFactory.inflationThreshold() && !ReflectUtil.isVMAnonymousClass(this.method.getDeclaringClass())) {
+            // // 使用 ASM 动态生成的新实现代替本地实现，速度较本地实现快 20 倍左右
             MethodAccessorImpl var3 = (MethodAccessorImpl)(new MethodAccessorGenerator()).generateMethod(this.method.getDeclaringClass(), this.method.getName(), this.method.getParameterTypes(), this.method.getReturnType(), this.method.getExceptionTypes(), this.method.getModifiers());
             this.parent.setDelegate(var3);
         }
-
+		// 调用本地实现
         return invoke0(this.method, var1, var2);
     }
 
@@ -4847,16 +4915,16 @@ class NativeMethodAccessorImpl extends MethodAccessorImpl {
     }
 
     private static native Object invoke0(Method var0, Object var1, Object[] var2);
-}Copy
+}
 //ReflectionFactory.inflationThreshold()方法的返回值
 private static int inflationThreshold = 15;
 ```
 
-- 一开始if条件不满足，就会调用本地方法invoke0
+- 一开始 if 条件不满足，就会调用本地方法 invoke0，本地方法的调用性能较低。
 - 随着numInvocation的增大，当它大于ReflectionFactory.inflationThreshold的值16时，就会本地方法访问器替换为一个运行时动态生成的访问器，来提高效率
   - 这时会从反射调用变为**正常调用**，即直接调用 Reflect1.foo()
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200614135011.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200614135011.png)
+<img src="..\pics\JavaStrengthen\jvm\arthas.png">
 
 # 内存模型
 
@@ -4870,9 +4938,7 @@ Java 内存模型是 Java Memory Model（JMM）的意思。 关于它的权威�
 
 ### 原子性
 
- 原子性在学习线程时讲过，下面来个例子简单回顾一下：
-
-问题提出，两个线程对初始值为 0 的静态变量一个做自增，一个做自减，各做 5000 次，结果是 0 吗？ 
+两个线程对初始值为 0 的静态变量一个做自增，一个做自减，各做 5000 次，结果是 0 吗？ 
 
 ### 问题分析
 
@@ -4880,64 +4946,66 @@ Java 内存模型是 Java Memory Model（JMM）的意思。 关于它的权威�
 
 例如对于 i++ 而言（i 为静态变量），实际会产生如下的 JVM 字节码指令：
 
-```java
-getstatic i // 获取静态变量i的值
-iconst_1 // 准备常量1
-iadd // 加法
-putstatic i // 将修改后的值存入静态变量i
+```shell
+getstatic i 		// 获取静态变量i的值
+iconst_1 			// 准备常量1
+iadd 				// 加法
+putstatic i 		// 将修改后的值存入静态变量i
 ```
 
  而对应 i-- 也是类似： 
 
-```java
-getstatic i // 获取静态变量i的值
-iconst_1 // 准备常量1
-isub // 减法
-putstatic i // 将修改后的值存入静态变量i
+```shell
+getstatic i 	// 获取静态变量i的值
+iconst_1 		// 准备常量1
+isub 			// 减法
+putstatic i 	// 将修改后的值存入静态变量i
 ```
 
-pic
+而 Java 的内存模型如下，完成静态遍历的自增。自减需要在主存和线程内存中进行数据交互。
+
+<img src="..\pics\JavaStrengthen\jvm\jmm_.png">
 
 如果是单线程以上 8 行代码是顺序执行（不会交错）没有问题：
 
 ```java
 // 假设i的初始值为0
-getstatic i // 线程1-获取静态变量i的值 线程内i=0
-iconst_1 // 线程1-准备常量1
-iadd // 线程1-自增 线程内i=1
-putstatic i // 线程1-将修改后的值存入静态变量i 静态变量i=1
-getstatic i // 线程1-获取静态变量i的值 线程内i=1
-iconst_1 // 线程1-准备常量1
-isub // 线程1-自减 线程内i=0
-putstatic i // 线程1-将修改后的值存入静态变量i 静态变量i=0
+getstatic i 		// 线程1-获取静态变量i的值 线程内i=0
+iconst_1 			// 线程1-准备常量1
+iadd 				// 线程1-自增 线程内i=1
+putstatic i 		// 线程1-将修改后的值存入静态变量i 静态变量i=1
+getstatic i 		// 线程1-获取静态变量i的值 线程内i=1
+iconst_1 			// 线程1-准备常量1
+isub 				// 线程1-自减 线程内i=0
+putstatic i 		// 线程1-将修改后的值存入静态变量i 静态变量i=0
 ```
 
 但多线程下这 8 行代码可能交错运行（为什么会交错？思考一下）： 出现负数的情况：
 
 ```java
 // 假设i的初始值为0
-getstatic i // 线程1-获取静态变量i的值 线程内i=0
-getstatic i // 线程2-获取静态变量i的值 线程内i=0
-iconst_1 // 线程1-准备常量1
-iadd // 线程1-自增 线程内i=1
-putstatic i // 线程1-将修改后的值存入静态变量i 静态变量i=1
-iconst_1 // 线程2-准备常量1
-isub // 线程2-自减 线程内i=-1
-putstatic i // 线程2-将修改后的值存入静态变量i 静态变量i=-1
+getstatic i 		// 线程1-获取静态变量i的值 线程内i=0
+getstatic i 		// 线程2-获取静态变量i的值 线程内i=0
+iconst_1 			// 线程1-准备常量1
+iadd 				// 线程1-自增 线程内i=1
+putstatic i 		// 线程1-将修改后的值存入静态变量i 静态变量i=1
+iconst_1 			// 线程2-准备常量1
+isub 				// 线程2-自减 线程内i=-1
+putstatic i 		// 线程2-将修改后的值存入静态变量i 静态变量i=-1
 ```
 
 出现正数的情况：
 
 ```java
 // 假设i的初始值为0
-getstatic i // 线程1-获取静态变量i的值 线程内i=0
-getstatic i // 线程2-获取静态变量i的值 线程内i=0
-iconst_1 // 线程1-准备常量1
-iadd // 线程1-自增 线程内i=1
-iconst_1 // 线程2-准备常量1
-isub // 线程2-自减 线程内i=-1
-putstatic i // 线程2-将修改后的值存入静态变量i 静态变量i=-1
-putstatic i // 线程1-将修改后的值存入静态变量i 静态变量i=1
+getstatic i 		// 线程1-获取静态变量i的值 线程内i=0
+getstatic i 		// 线程2-获取静态变量i的值 线程内i=0
+iconst_1 			// 线程1-准备常量1
+iadd 				// 线程1-自增 线程内i=1
+iconst_1 			// 线程2-准备常量1
+isub 				// 线程2-自减 线程内i=-1
+putstatic i 		// 线程2-将修改后的值存入静态变量i 静态变量i=-1
+putstatic i 		// 线程1-将修改后的值存入静态变量i 静态变量i=1
 ```
 
 ### 解决方法
@@ -4986,7 +5054,7 @@ public static void main(String[] args) throws InterruptedException {
 
 > 注意：上例中 t1 和 t2 线程必须用 synchronized 锁住同一个 obj 对象，如果 t1 锁住的是 m1 对 象，t2 锁住的是 m2 对象，就好比两个人分别进入了两个不同的房间，没法起到同步的效果。
 
-## 可进行
+## 可见行
 
 ### 退不出的循环
 
@@ -5008,19 +5076,316 @@ public static void main(String[] args) throws InterruptedException {
 
 为什么呢？分析一下： 
 
-- 初始状态， t 线程刚开始从主内存读取了 run 的值到工作内存。
+初始状态， t 线程刚开始从主内存读取了 run 的值到工作内存。
 
-pic
+<img src="..\pics\JavaStrengthen\jvm\thread_memory.png">
 
-- 因为 t 线程要频繁从主内存中读取 run 的值，JIT 编译器会将 run 的值缓存至自己工作内存中的高 速缓存中，减少对主存中 run 的访问，提高效率
+因为 t 线程要频繁从主内存中读取 run 的值，JIT 编译器会将 run 的值缓存至自己工作内存中的高速缓存中，减少对主存中 run 的访问，提高效率
 
-pic
+<img src="..\pics\JavaStrengthen\jvm\thread_cache.png">
 
-- 1 秒之后，main 线程修改了 run 的值，并同步至主存，而 t 是从自己工作内存中的高速缓存中读 取这个变量的值，结果永远是旧值
-
-pic
+1 秒之后，main 线程修改了 run 的值，并同步至主存，而 t 是从自己工作内存中的高速缓存中读 取这个变量的值，结果永远是旧值。
 
 ### 解决办法
 
+> volatile（可变的，易变的）
 
+它可以用来修饰成员变量和静态成员变量，他==可以避免线程从自己的工作缓存中查找变量的值，必须到主存中获取它的值==，线程操作 volatile 变量都是直接操作主存。
+
+### 可见性
+
+前面例子体现的实际就是可见性，它保证的是在多个线程之间，一个线程对 volatile 变量的修改对另一 个线程可见， 不能保证原子性，==仅用在一个写线程，多个读线程的情况==： 上例从字节码理解是这样的：
+
+```shell
+getstatic run // 线程 t 获取 run true
+getstatic run // 线程 t 获取 run true
+getstatic run // 线程 t 获取 run true
+getstatic run // 线程 t 获取 run true
+putstatic run // 线程 main 修改 run 为 false， 仅此一次
+getstatic run // 线程 t 获取 run false
+```
+
+比较一下之前我们将线程安全时举的例子：两个线程一个 i++ 一个 i-- ，只能保证看到最新值，不能解 决指令交错
+
+```shell
+getstatic i // 线程1-获取静态变量i的值 线程内i=0
+getstatic i // 线程2-获取静态变量i的值 线程内i=0
+iconst_1 // 线程1-准备常量1
+iadd // 线程1-自增 线程内i=1
+putstatic i // 线程1-将修改后的值存入静态变量i 静态变量i=1
+iconst_1 // 线程2-准备常量1
+isub // 线程2-自减 线程内i=-1
+putstatic i // 线程2-将修改后的值存入静态变量i 静态变量i=-1
+```
+
+注意 synchronized 语句块既可以保证代码块的原子性，也同时保证代码块内变量的可见性。但 缺点是synchronized是属于重量级操作，性能相对更低 
+
+如果在前面示例的死循环中加入 System.out.println() 会发现即使不加 volatile 修饰符，线程 t 也 能正确看到对 run 变量的修改了，想一想为什么？
+
+```java
+public class WhileTrue {
+    static boolean run = true;
+
+    public static void main(String[] args) throws InterruptedException {
+        Thread t = new Thread(() -> {
+            while (run) {
+                System.out.println(1);
+            }
+        });
+        t.start();
+        Thread.sleep(1000);
+        run = false; // 线程t不会如预想的停下来
+    }
+}
+```
+
+原因是 sout 方法加了 sync 关键字，sync 可以防止当前线程 从高速缓存中获取数据，强制让 t 线程读取主存中的数据。
+
+## 有序性
+
+### 诡异的结果
+
+```java
+package jvm.concurrence;
+
+public class Demo2 {
+    int num = 0;
+    boolean ready = false;
+
+    // 线程1 执行此方法
+    public void actor1(I_Result r) {
+        if (ready) {
+            r.r1 = num + num;
+        } else {
+            r.r1 = 1;
+        }
+    }
+
+    // 线程2 执行此方法
+    public void actor2(I_Result r) {
+        num = 2;
+        ready = true;
+    }
+}
+```
+
+I_Result 是一个对象，有一个属性 r1 用来保存结果，问，可能的结果有几种？ 
+
+有同学这么分析 
+
+情况1：线程1 先执行，这时 ready = false，所以进入 else 分支结果为 1 
+
+情况2：线程2 先执行 num = 2，但没来得及执行 ready = true，线程1 执行，还是进入 else 分支，结 果为1 
+
+情况3：线程2 执行到 ready = true，线程1 执行，这回进入 if 分支，结果为 4（因为 num 已经执行过 了）
+
+**结果还可能是0，原因是指令重排序**，是 JIT 编译器在运行时的一些优化，这个现象需要通过大量测试才能复现： 借助 java 并发压测工具 jcstress https://wiki.openjdk.java.net/display/CodeTools/jcstress
+
+创建 maven 项目，导入maven 依赖，并提供如下测试类。
+
+```xml
+<dependencies>
+    <!-- jcstress 核心包 -->
+    <dependency>
+        <groupId>org.openjdk.jcstress</groupId>
+        <artifactId>jcstress-core</artifactId>
+        <version>0.3</version>
+    </dependency>
+    <!-- jcstress测试用例包 -->
+    <dependency>
+        <groupId>org.openjdk.jcstress</groupId>
+        <artifactId>jcstress-samples</artifactId>
+        <version>0.3</version>
+    </dependency>
+</dependencies>
+```
+
+
+
+```java
+package jvm.concurrence;
+
+import org.openjdk.jcstress.annotations.*;
+import org.openjdk.jcstress.infra.results.I_Result;
+
+@JCStressTest
+// 检查感兴趣的结果。如果结果是 1 和 4 那么分类未 Expect.ACCEPTABLE
+@Outcome(id = {"1", "4"}, expect = Expect.ACCEPTABLE, desc = "ok")
+@Outcome(id = "0", expect = Expect.ACCEPTABLE_INTERESTING, desc = "!!!!")
+@State
+public class ConcurrencyTest {
+    int num = 0;
+    boolean ready = false;
+
+    @Actor
+    public void actor1(I_Result r) {
+        if (ready) {
+            r.r1 = num + num;
+        } else {
+            r.r1 = 1;
+        }
+    }
+
+    @Actor
+    public void actor2(I_Result r) {
+        num = 2;
+        ready = true;
+    }
+}
+```
+
+> maven 方式执行
+
+```shell
+mvn clean install
+java -jar target/jcstress.jar
+```
+
+会输出我们感兴趣的结果，摘录其中一次结果：
+
+```shell
+*** INTERESTING tests
+Some interesting behaviors observed. This is for the plain curiosity.
+2 matching test results.
+[OK] test.ConcurrencyTest
+(JVM args: [-XX:-TieredCompilation])
+Observed state Occurrences Expectation Interpretatio
+```
+
+可以看到，出现结果为 0 的情况有 638 次，虽然次数相对很少，但毕竟是出现了。
+
+> IDEA 配置方式执行
+
+配置程序的主类，`org.openjdk.jcstress.Main`是JCStress自带的一个启动类；然后可以配置-t参数设置需要测试的类，当然 -t 后面也可以指定包名，表示执行指定包下的所有测试类。如果不指定-t参数，默认会扫描项目下所有包的类。
+
+<img src="..\pics\JavaStrengthen\jvm\jcstress_cfg.png">
+
+```shell
+Observed state   Occurrences        Expectation  		Interpretation                                              
+  0			       89,788   	ACCEPTABLE_INTERESTING  	!!!!                                                        
+  1   			141,923,559			ACCEPTABLE  			ok                                                          
+  4    			60,659,403			ACCEPTABLE  			ok 
+```
+
+0 这个结果出现了 89788 次。
+
+加上 volatile 就不会受指令重排序的影响了。
+
+### 解决办法
+
+volatile 修饰的变量，可以禁用指令重排
+
+> DCL
+
+```java
+public final class Singleton {
+    private Singleton() { }
+    private static Singleton INSTANCE = null;
+    public static Singleton getInstance() {
+        // 实例没创建，才会进入内部的 synchronized代码块
+        if (INSTANCE == null) {
+        	synchronized (Singleton.class) {
+        		// 也许有其它线程已经创建实例，所以再判断一次
+        		if (INSTANCE == null) {
+        			INSTANCE = new Singleton();
+        		}
+        	}
+        }
+        return INSTANCE;
+    }
+}
+```
+
+以上的实现特点是： 
+
+- 懒惰实例化 
+- 首次使用 getInstance() 才使用 synchronized 加锁，后续使用时无需加锁 
+
+但在多线程环境下，上面的代码是有问题的， INSTANCE = new Singleton() 对应的字节码为：
+
+```shell
+17: new           #3                  // class jvm/concurrence/DCL
+20: dup
+21: invokespecial #4                  // Method "<init>":()V
+24: putstatic     #2                  // Field INSTANCE:Ljvm/concurrence/DCL;
+```
+
+21 和 24 的执行顺序是不确定的，也许 jvm 会优化未：先将引用地址赋值给 INSTANCE 变量后，再执行构造方法，如果两个线程 t1，t2 按如下时间序列执行：
+
+```shell
+时间1 t1 线程执行到 INSTANCE = new Singleton();
+时间2 t1 线程分配空间，为Singleton对象生成了引用地址（0 处）
+时间3 t1 线程将引用地址赋值给 INSTANCE，这时 INSTANCE != null（7 处）
+时间4 t2 线程进入getInstance() 方法，发现 INSTANCE != null（synchronized块外），直接
+返回 INSTANCE
+时间5 t1 线程执行Singleton的构造方法（4 处）
+```
+
+这时 t1 还未完全将构造方法执行完毕，如果在构造方法中要执行很多初始化操作，那么 t2 拿到的是将 是一个未初始化完毕的单例 
+
+对 INSTANCE 使用 volatile 修饰即可，可以禁用指令重排，但要注意在 JDK 5 以上的版本的 volatile 才 会真正有效
+
+### happens-before
+
+happens-before 规定了哪些写操作对其它线程的读操作可见，它是可见性与有序性的一套规则总结， 抛开以下 happens-before 规则，JMM 并不能保证一个线程对共享变量的写，对于其它线程对该共享变 量的读可见
+
+- 线程解锁 m 之前对变量的写，对于接下来对 m 加锁的其它线程对该变量的读可见
+
+```java
+static int x;
+static Object m = new Object();
+new Thread(()->{
+    synchronized(m) {
+    	x = 10;
+    }
+},"t1").start();
+new Thread(()->{
+    synchronized(m) {
+    	System.out.println(x);
+    }
+},"t2").start();
+```
+
+- 线程对 volatile 变量的写，对接下来其它线程对该变量的读可见
+
+```java
+volatile static int x;
+new Thread(()->{
+    x = 10;
+},"t1").start();
+new Thread(()->{
+    System.out.println(x);
+},"t2").start();
+```
+
+## synchronized 优化
+
+Java HotSpot 虚拟机中，每个对象都有对象头（包括 class 指针和 Mark Word）。Mark Word 平时存 储这个对象的 哈希码 、 分代年龄 ，当加锁时，这些信息就根据情况被替换为 标记位 、 线程锁记录指 针 、 重量级锁指针 、 线程ID 等内容
+
+### 轻量级锁
+
+ 如果一个对象虽然有多线程访问，但多线程访问的时间是错开的（也就是没有竞争），那么可以使用轻 量级锁来优化。这就好比： 
+
+学生（线程 A）用课本占座，上了半节课，出门了（CPU时间到），回来一看，发现课本没变，说明没 有竞争，继续上他的课。 如果这期间有其它学生（线程 B）来了，会告知（线程A）有并发访问，线程 A 随即升级为重量级锁，进入重量级锁的流程。 
+
+而重量级锁就不是那么用课本占座那么简单了，可以想象线程 A 走之前，把座位用一个铁栅栏围起来 
+
+假设有两个方法同步块，利用同一个对象加锁
+
+```java
+static Object obj = new Object();
+public static void method1() {
+	synchronized( obj ) {
+        // 同步块 A
+        method2();
+    }
+}
+public static void method2() {
+    synchronized( obj ) {
+    // 同步块 B
+    }
+}
+```
+
+每个线程都的栈帧都会包含一个锁记录的结构，内部可以存储锁定对象的 Mark Word
 
