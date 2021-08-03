@@ -184,13 +184,9 @@ The auto-configuration adds the following features on top of Spring’s defaults
 >
 > 不用@EnableWebMvc注解。使用`@Configuration` + `WebMvcConfigurer` 自定义规则
 
-
-
 > If you want to provide custom instances of `RequestMappingHandlerMapping`, `RequestMappingHandlerAdapter`, or `ExceptionHandlerExceptionResolver`, and still keep the Spring Boot MVC customizations, you can declare a bean of type `WebMvcRegistrations` and use it to provide custom instances of those components.
 >
 > 声明 `WebMvcRegistrations`改变默认底层组件
-
-
 
 > If you want to take complete control of Spring MVC, you can add your own `@Configuration` annotated with `@EnableWebMvc`, or alternatively add your own `@Configuration`-annotated `DelegatingWebMvcConfiguration` as described in the Javadoc of `@EnableWebMvc`.
 >
@@ -379,8 +375,6 @@ public class ResourceProperties {
      */
     private String[] staticLocations = CLASSPATH_RESOURCE_LOCATIONS;
 ```
-
-
 
 #### 欢迎页的处理规则
 

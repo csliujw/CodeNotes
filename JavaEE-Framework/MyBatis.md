@@ -1,4 +1,4 @@
-# MyBatis概述
+# `MyBatis`概述
 
 ## 杂谈
 
@@ -10,17 +10,13 @@ MyBatis3.4x版本，把他内部需要的三方jar都整合在一起了。
 
 `MyBatis`解决了持久层重复代码多的问题，简化了持久层的开发，减少了持久层的代码量。
 
-# 快捷键基础篇
+## 快捷键基础
 
-## 前言
-
-常用快捷键
-
-## w10快捷键
+> win10快捷键
 
 - Alt + Tab 选择活动窗口
 
-## idea快捷键
+> idea快捷键
 
 - ctrl + Tab 切换窗口
 - ctrl + E 最近编辑的窗口 
@@ -840,6 +836,10 @@ where标签可以帮我们去除掉前面的and
 
 > foreach
 
+`foreach` 元素的功能非常强大，它允许你指定一个集合，声明可以在元素体内使用的集合项（`item`）和索引（`index`）变量。它也允许你指定开头与结尾的字符串以及集合项迭代之间的分隔符。这个元素也不会错误地添加多余的分隔符，看它多智能！
+
+**提示** 你可以将任何可迭代对象（如 `List`、`Set` 等）、`Map` 对象或者数组对象作为集合参数传递给 `*foreach*`。当使用可迭代对象或者数组时，`index` 是当前迭代的序号，item 的值是本次迭代获取到的元素。当使用 `Map` 对象（或者 `Map.Entry` 对象的集合）时，`index` 是键，`item` 是值。
+
 ```xml
 select xxxxx where id in
 <!--
@@ -885,7 +885,25 @@ MyBatis缓存机制：Map；能保存查询出的一些数据；
 
 二级缓存：全局范围的缓存；除过当前线程；SqlSession能用外其他也可以用
 
+- 一级缓存
+  - 一级缓存是 `SqlSession` 范围的缓存，当调用 `SqlSession` 的修改，添加，删除，`commit()，close()`等方法时，就会清空一级缓存。
+- 二级缓存
+  - 二级缓存是 `mapper` 映射级别的缓存，多个 `SqlSession` 去操作同一个 `Mapper` 映射的 `sql` 语句，多个 `SqlSession` 可以共用二级缓存，二级缓存是跨 `SqlSession` 的
+
 ### 一级缓存失效
+
+一级缓存是 `SqlSession` 级别的缓存，只要 `SqlSession` 没有 flush 或 close，它就存在！
+
+```xml
+<mapper namespace="com.itheima.dao.IUserDao">
+<!-- 根据 id 查询 -->
+<select id="findById" resultType="UsEr" parameterType="int" useCache="true">
+select * from user where id = #{uid}
+</select>
+</mapper>
+```
+
+请自行编码验证！
 
 看下MyBatis缓存部分的源码就知道，这个缓存机制真的很弱鸡。
 
@@ -988,22 +1006,6 @@ class A{
 
 先空着
 
-# `MyBatis`(二)
-
-## 引言
-
-**主要介绍**
-
-- `mybatis`中的连接池及事务控制
-  - 连接池使用及分析
-  - 事务控制分析
-- `xml`的动态`SQL`
-- 多表操作
-  - 一对一
-  - 一对多
-  - 多对多（不常用，不会搞这么复杂的）
-    - 多对多需要一个中间表
-
 ## 连接池及事务控制
 
 ### 连接池介绍
@@ -1034,33 +1036,9 @@ class A{
 
 它是通过`sqlsession`对象的commit方法和rollback方法实现事务的提交和回滚
 
-## 动态`SQL`
-
-### if
-
-满足条件就会拼接`SQL`，不满足就不拼接
-
-### choose(when,otherwise)
 
 
 
-### trim(where,set)
-
-where多用于多条件查询，where标签会去除多余的and，<span style="color:red">**注意**and要写在最开始！</span>
-
-set常用于update操作，set标签会去除多余的逗号，<span style="color:red">**注意**逗号要写在最后面！！！！</span>
-
-### `foreach`
-
-循环操作。`foreach`的collection的取值有list，array。
-
-Map的话，查文档得知 index是key item是value
-
-> **官方原文，具体还得看源码**
-
-`*foreach*` 元素的功能非常强大，它允许你指定一个集合，声明可以在元素体内使用的集合项（`item`）和索引（`index`）变量。它也允许你指定开头与结尾的字符串以及集合项迭代之间的分隔符。这个元素也不会错误地添加多余的分隔符，看它多智能！
-
-**提示** 你可以将任何可迭代对象（如 `List`、`Set` 等）、`Map` 对象或者数组对象作为集合参数传递给 `*foreach*`。当使用可迭代对象或者数组时，`index` 是当前迭代的序号，item 的值是本次迭代获取到的元素。当使用 `Map` 对象（或者 `Map.Entry` 对象的集合）时，`index` 是键，`item` 是值。
 
 ### 动态`SQL`全部代码
 
@@ -1277,8 +1255,6 @@ public class Demo {
 }
 ```
 
-
-
 ## 多表操作
 
 如果POJO字段的名称和数据库的名称不对应则采用
@@ -1316,117 +1292,10 @@ public class Demo {
 </resultMap>
 ```
 
-### `javaType`和`ofType`
+## `javaType`和`ofType`
 
 `JavaType`和`ofType`都是用来指定对象类型的，但是`JavaType`是用来指定`pojo`中属性的类型，而`ofType`指定的是映射到list集合属性中`pojo`的类型。
 
-### 一对一
-
-**一对一的`POJO`如下**
-
-```java
-public class User{
-    private Integer id;
-    private String userName;
-    private Role role;
-}
-/**
- * 一个用户 对应 一个 角色。 一对一
-*/
-```
-
-**`MyBatis`中一对一采用**
-
-```xml
-<mapper namespace="com.itheima.dao.IAccountDao">
-<!-- 建立对应关系 -->
-    <resultMap type="User" id="userMap">
-        <id column="id" property="id"/>
-        <result column="user_name" property="userName"/>
-    	<!-- 它是用于指定从表方的引用实体属性的 -->
-        <association property="role" javaType="Role">
-            <id column="id" property="id"/>
-            <result column="role_name" property="roleName"/>
-            <result column="role_desc" property="roleDesc"/>
-        </association>
-    </resultMap>
-	<select id="findAll" resultMap="userMap">
-		SQL语句
-    </select>
-</mapper>
-```
-
-PS：简单，所以没有例子。
-
-### 一对多
-
-**一对多的`POJO`**
-
-```java
-public class RoleVO implements Serializable {
-    private Integer id;
-
-    private String roleName;
-
-    private String roleDesc;
-    
-    private List<UserVO> userList;
-}
-```
-
-**`xml`**
-
-```xml
-<mapper namespace="com.bbxx.dao.IRoleDao">
-
-    <resultMap id="roleMap" type="RoleVO">
-        <id property="id" column="id"/>
-        <result property="roleName" column="role_name"/>
-        <result property="roleDesc" column="role_desc"/>
-        <collection property="userList" ofType="UserVO" >
-            <!-- 有两个id 确保不出错，不这样会出错的，查询的数据会不对。 -->
-            <id column="u.id" property="id"></id>
-            <result column="username" property="username"/>
-            <result column="birthday" property="birthday"/>
-            <result column="address" property="address"/>
-        </collection>
-    </resultMap>
-
-    <select id="findByPrimaryKey" resultMap="roleMap">
-        select r.id, r.role_desc, r.role_name, u.id, u.username, u.address, u.birthday
-        from users as u,
-             role as r,
-             middle as m
-        where r.id = #{value}
-          and m.u_id = u.id
-          and m.r_id = r.id
-    </select>
-
-</mapper>
-```
-
-### 多对多
-
-一个用户对应多种角色
-
-一个角色对应多个用户
-
-用户与角色间多对多关系。
-
-多对多关系需要中间表（middle），数据库系统概论中学过的。
-
-不会，数据库方面有欠缺，先鸽了，看完书后再补，不过代码里我给了一个我认为正确的简单的多对多。
-
-# `MyBatis`(三)
-
-## 引言
-
-- 延迟加载
-  - 需要用的时候再加载数据
-- 一级缓存
-  - 一级缓存是 `SqlSession` 范围的缓存，当调用 `SqlSession` 的修改，添加，删除，`commit()，close()`等方法时，就会清空一级缓存。
-- 二级缓存
-  - 二级缓存是 `mapper` 映射级别的缓存，多个 `SqlSession` 去操作同一个 `Mapper` 映射的 `sql` 语句，多个 `SqlSession` 可以共用二级缓存，二级缓存是跨 `SqlSession` 的
 
 ## 延迟加载
 
@@ -1558,36 +1427,9 @@ IAccountDao的mapper文件
 </mapper>
 ```
 
-## 一级缓存
 
-一级缓存是 `SqlSession` 级别的缓存，只要 `SqlSession` 没有 flush 或 close，它就存在！
 
-```xml
-<mapper namespace="com.itheima.dao.IUserDao">
-<!-- 根据 id 查询 -->
-<select id="findById" resultType="UsEr" parameterType="int" useCache="true">
-select * from user where id = #{uid}
-</select>
-</mapper>
-```
-
-请自行编码验证！
-
-## 二级缓存
-
-好像基本不用，所有我不学，要的时候再看文档！
-
-# `MyBatis`(四)
-
-使用注解还是`xml`，看公司的使用习惯，目前看到的是用`xml`更多一些（看过四家公司，看过其中三家公司的代码，都是用的`xml`，没看到用注解的，只看到过个人开发用注解！）。
-
-## 引言
-
-- 注解配置
-- 注解开发
-- 注解动态`SQL`
-
-# MyBatis源码阅读
+# `MyBatis`高级篇
 
 ## MyBatis生成Mapper
 

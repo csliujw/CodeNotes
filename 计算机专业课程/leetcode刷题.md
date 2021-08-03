@@ -296,6 +296,3 @@ RPS=requests per second
 
 > **一致性hash算法**
 
-**看不懂**
-
-放弃
