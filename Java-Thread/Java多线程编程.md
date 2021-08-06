@@ -2101,7 +2101,7 @@ wait(long)等待long这么长的时间，在继续执行。注意，wait(long)�
 
 ## join(long)与sleep(long)
 
-x.join(long)方法的内部用的是wait来实现的。当线程x执行完long毫秒后，会调用wait释放锁。<br/>
+x.join(long)法的内部用的是wait来实现的。当线程x执行完long毫秒后，会调用wait释放锁。<br/>
 sleep则是通过synchronized来实现的，不会释放锁。
 
 这个可以深究一下

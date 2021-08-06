@@ -801,9 +801,7 @@ java -jar spring-boot-02-config-02-0.0.1-SNAPSHOT.jar --spring.config.location=G
     扫描所有jar包类路径下  META-INF/spring.factories
     把扫描到的这些文件的内容包装成properties对象
     从properties中获取到EnableAutoConfiguration.class类（类名）对应的值，然后把他们添加在容器中
-
-    ```
-
+  ```
 
 **将 类路径下  META-INF/spring.factories 里面配置的所有EnableAutoConfiguration的值加入到了容器中；**
 
@@ -2391,9 +2389,9 @@ insert的公共片段在div标签中
 原理：
 
 	可以参照ErrorMvcAutoConfiguration；错误处理的自动配置；
-
-  	给容器中添加了以下组件
-
+	
+	给容器中添加了以下组件
+	
 	1、DefaultErrorAttributes：
 
 ```java

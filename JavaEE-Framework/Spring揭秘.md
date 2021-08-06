@@ -39,49 +39,49 @@ newsProvider.getAndPersistNews();
 
 ### 管理对象之间的依赖
 
-- 直接编码方式
+直接编码方式
 
-  ```java
-  IoContainer container = ...;
-  container.register(FXNewsProvider.class,new FXNewsProvider());
-  container.register(IFXNewsListener.class,new DowJonesNewsListener());
-  ...
-  FXNewsProvider newsProvider = (FXNewsProvider)container.get(FXNewsProvider.class);
-  newProvider.getAndPersistNews(); 
-  ```
+```java
+IoContainer container = ...;
+container.register(FXNewsProvider.class,new FXNewsProvider());
+container.register(IFXNewsListener.class,new DowJonesNewsListener());
+...
+FXNewsProvider newsProvider = (FXNewsProvider)container.get(FXNewsProvider.class);
+newProvider.getAndPersistNews(); 
+```
 
-- 配置文件方式
+配置文件方式
 
-  ```xml
-  <bean id="newsProvider" class="..FXNewsProvider">
-   <property name="newsListener">
-   <ref bean="djNewsListener"/>
-   </property>
-   <property name="newPersistener">
-   <ref bean="djNewsPersister"/>
-   </property>
-  </bean>
-  <bean id="djNewsListener"
-   class="..impl.DowJonesNewsListener">
-  </bean>
-  <bean id="djNewsPersister"
-   class="..impl.DowJonesNewsPersister">
-  </bean> 
-  ```
+```xml
+<bean id="newsProvider" class="..FXNewsProvider">
+ <property name="newsListener">
+ <ref bean="djNewsListener"/>
+ </property>
+ <property name="newPersistener">
+ <ref bean="djNewsPersister"/>
+ </property>
+</bean>
+<bean id="djNewsListener"
+ class="..impl.DowJonesNewsListener">
+</bean>
+<bean id="djNewsPersister"
+ class="..impl.DowJonesNewsPersister">
+</bean> 
+```
 
-- 元数据方式
+元数据方式
 
-  ```java
-  public class FXNewsProvider{
-  	private IFXNewsListener newsListener;
-   	private IFXNewsPersister newPersistener;
-   	@Inject // 元数据配置方式~ 加注解~~
-  	public FXNewsProvider(IFXNewsListener listener,IFXNewsPersister persister){
-  		this.newsListener = listener;
-  		this.newPersistener = persister;
-  	}
-  } 
-  ```
+```java
+public class FXNewsProvider{
+	private IFXNewsListener newsListener;
+ 	private IFXNewsPersister newPersistener;
+ 	@Inject // 元数据配置方式~ 加注解~~
+	public FXNewsProvider(IFXNewsListener listener,IFXNewsPersister persister){
+		this.newsListener = listener;
+		this.newPersistener = persister;
+	}
+} 
+```
 
 ## `BeanFactory`
 
