@@ -1,6 +1,4 @@
-# 概述
-
-Java多线程编程。
+# ![image-20210810002945667](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20210810002945667.png)Java多线程编程
 
 - 线程的基本用法
 - 线程池
@@ -421,30 +419,7 @@ public class ThreadApplication {
 
 # 线程基础
 
-基本 `API` 的使用
-
-## 线程的状态
-
-Java中的线程有如下六种状态。
-
-```java
- public enum State {
-	// 表示刚刚创建的线程，这种线程还没开始执行。等到线程的start()方法调用时，才表示线程开始执行
-        NEW,
-	// 线程所需的一切资源都已经准备好了
-        RUNNABLE,
-	// 线程阻塞，暂停执行
-        BLOCKED,
-	// WAITING会进入一个无时间限制的等待
-        WAITING,
-	// TIMED_WAITING会进行一个有时限的等待
-        TIMED_WAITING,
-	// 当线程执行完毕后，则进入TERMINATED状态，表示结束。
-        TERMINATED;
-}
-```
-
-`PS：从NEW状态出发后，线程不能再回到NEW状态，同理，处于TERMINATED状态的线程也不能再回到RUNNABLE状态。`
+基本 `API` 的使用和基本原理
 
 ## 创建线程
 
@@ -984,28 +959,329 @@ Java Virtual Machine Stacks （Java 虚拟机栈）
 - 状态包括程序计数器、虚拟机栈中每个栈帧的信息，如局部变量、操作数栈、返回地址等 
 - Context Switch 频繁发生会影响性能
 
+### 图解线程
+
+𣏾以线程为单位分配相互独⽴, 每个 栈的栈内存相互独⽴。
+
+<img src="..\pics\JavaStrengthen\juc\thread_frame.png" style="width:100%">
+
 ## 线程API
 
-| 方法                                        | 说明                                                         |
-| ------------------------------------------- | ------------------------------------------------------------ |
-| public void start()                         | 启动一个新线程；Java虚拟机调用此线程的run方法                |
-| public void run()                           | 线程启动后调用该方法                                         |
-| public void setName(String name)            | 给当前线程取名字                                             |
-| public void getName()                       | 获取当前线程的名字 线程存在默认名称：子线程是Thread-索引，主线程是main |
-| public static Thread currentThread()        | 获取当前线程对象，代码在哪个线程中执行                       |
-| public static void sleep(long time)         | 让当前线程休眠多少毫秒再继续执行 **Thread.sleep(0)** : 让操作系统立刻重新进行一次cpu竞争 |
-| public static native void yield()           | 提示线程调度器让出当前线程对CPU的使用                        |
-| public final int getPriority()              | 返回此线程的优先级                                           |
-| public final void setPriority(int priority) | 更改此线程的优先级，常用1 5 10                               |
-| public void interrupt()                     | 中断这个线程，异常处理机制                                   |
-| public static boolean interrupted()         | 判断当前线程是否被打断，清除打断标记                         |
-| public boolean isInterrupted()              | 判断当前线程是否被打断，不清除打断标记                       |
-| public final void join()                    | 等待这个线程结束                                             |
-| public final void join(long millis)         | 等待这个线程死亡millis毫秒，0意味着永远等待                  |
-| public final native boolean isAlive()       | 线程是否存活（还没有运行完毕）                               |
-| public final void setDaemon(boolean on)     | 将此线程标记为守护线程或用户线程                             |
+### 常用汇总
 
-## 终止线程
+> 常用 API
+
+| 方法                                        | 说明         |注意|
+| ------------------------------------------- | ------------------------------------------------------------ | ---- |
+| public void start()                         | 启动一个新线程；Java虚拟机回调run方法                        | start 方法只是让线程进入就绪，里面代码不一定立刻 运行（CPU 的时间片还没分给它）。每个线程对象的 start方法只能调用一次，如果调用了多次会出现 IllegalThreadStateException |
+| public void run()                           | 线程启动后调用该方法                                         | 如果在构造 Thread 对象时传递了 Runnable 参数，则 线程启动后会调用 Runnable 中的 run 方法，否则默 认不执行任何操作。但可以创建 Thread 的子类对象， 来覆盖默认行为 |
+| public void setName(String name)            | 给当前线程取名字                                             |      |
+| public void getName()                       | 获取当前线程的名字 线程存在默认名称：子线程是Thread-索引，主线程是main |      |
+| public static Thread currentThread()        | 获取当前线程对象，代码在哪个线程中执行                       |      |
+| public static void sleep(long time)         | 让当前线程休眠多少毫秒再继续执行 **Thread.sleep(0)** : 让操作系统立刻重新进行一次cpu竞争 |      |
+| public static native void yield()           | 提示线程调度器让出当前线程对CPU的使用                        | 主要是为了测试和调试 |
+| public final int getPriority()              | 返回此线程的优先级                                           |      |
+| public final void setPriority(int priority) | 更改此线程的优先级                               | java中规定线程优先级是1~10 的整数，较大的优先级 能提高该线程被 CPU 调度的机率 |
+| public void interrupt()                     | 打断线程                               | 如果被打断线程正在 sleep，wait，join 会导致被打断 的线程抛出 InterruptedException，并清除 打断标 记 ；如果打断的正在运行的线程，则会设置 打断标 记 ；park 的线程被打断，也会设置 打断标记 |
+| public static boolean interrupted()         | 判断当前线程是否被打断                         | 清除打断标记 |
+| public boolean isInterrupted()              | 判断当前线程是否被打断，不清除打断标记                       | 不会清除 打断标记 |
+| public final void join()                    | 等待这个线程结束                                             | x.join()  就是等待 x 线程执行结束。 |
+| public final void join(long millis)         | 等待这个线程死亡millis毫秒，0意味着永远等待                  |      |
+| public final native boolean isAlive()       | 线程是否存活（还没有运行完毕）                               |      |
+| public final void setDaemon(boolean on)     | 将此线程标记为守护线程或用户线程                             |      |
+
+### start与run
+
+- 直接调用 run 是在主线程中执行了 run，没有启动新的线程 
+- 使用 start 是启动新的线程，通过新的线程间接执行 run 中的代码
+
+### sleep与yield
+
+#### sleep 
+
+- 调用 sleep 会让当前线程从 Running 进入 Timed Waiting 状态（阻塞） 
+- 其它线程可以使用 interrupt 方法打断正在睡眠的线程，这时 sleep 方法会抛出 InterruptedException 
+- 睡眠结束后的线程未必会立刻得到执行 
+- 建议用 TimeUnit 的 sleep 代替 Thread 的 sleep 来获得更好的可读性 
+
+#### yield
+
+- 调用 yield 会让当前线程从 Running 进入 Runnable 就绪状态，然后调度执行其它线程
+- 具体的实现依赖于操作系统的任务调度器
+- **会放弃 CPU 资源，锁资源不会释放**
+
+#### 线程优先级
+
+- 线程优先级会提示（hint）调度器优先调度该线程，但它仅仅是一个提示，调度器可以忽略它 
+- 如果 cpu 比较忙，那么优先级高的线程会获得更多的时间片，但 cpu 闲时，优先级几乎没作用
+
+### join 方法详解
+
+查阅 join 的源码可知 其原理为：调用者轮询检查线程 alive 状态，
+
+```java
+public final synchronized void join(long millis)
+    throws InterruptedException {
+    long base = System.currentTimeMillis();
+    long now = 0;
+
+    if (millis < 0) {
+        throw new IllegalArgumentException("timeout value is negative");
+    }
+
+    if (millis == 0) {
+        while (isAlive()) {
+            wait(0);
+        }
+    } else {
+        while (isAlive()) {
+            long delay = millis - now;
+            if (delay <= 0) {
+                break;
+            }
+            wait(delay);
+            now = System.currentTimeMillis() - base;
+        }
+    }
+}
+```
+
+- join 方法是被 synchronized 修饰的，本质上是一个对象锁，其内部的 wait 方法调用也是释放锁的，但是**释放的是当前线程的对象锁，而不是外面的锁**
+- t1 会强占 CPU 资源，直至线程执行结束，当调用某个线程的 join 方法后，该线程抢占到 CPU 资源，就不再释放，直到线程执行完毕
+
+线程同步：
+
+- join 实现线程同步，因为会阻塞等待另一个线程的结束，才能继续向下运行
+  - 需要外部共享变量，不符合面向对象封装的思想
+  - 必须等待线程结束，不能配合线程池使用
+- Future 实现（同步）：get() 方法阻塞等待执行结果
+  - main 线程接收结果
+  - get 方法是让调用线程同步等待
+
+### interrupt 方法详解
+
+- **打断 sleep、wait、join  的线程  会清空打断状态，打断状态会为 false**（你打断了，打断状态本该为 true，清空后就为 false 了）
+- **打断正常运行的线程，打断状态为 true**
+- 两阶段终止模式
+  - **在线程 T1 中优雅的终止线程 T2.**
+- park
+  - park 作用类似 sleep，打断 park 线程，不会清空打断状态（true）
+  - 如果打断标记已经是 true, 则 park 会失效，
+  - 可以使用 `Thread.interrupted()` 清除打断状态
+
+#### 打断 sleep、wait、join  的线程
+
+这几个方法都会让线程进入阻塞状态 打断 sleep、wait、join 的线程, 会清空打断状态，以 sleep 为例
+
+```java
+@Slf4j(topic = "c.InterruptSleep")
+public class InterruptSleep {
+    public static void main(String[] args) throws InterruptedException {
+        Thread th1 = new Thread(() -> {
+            try {
+                log.debug("sleep");
+                TimeUnit.SECONDS.sleep(40);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        th1.start();
+        // 确保 th1 线程开始运行
+        TimeUnit.SECONDS.sleep(1);
+        log.debug("interrupt");
+        th1.interrupt(); 
+        log.debug("打断标记:{}", th1.isInterrupted()); // false  打断标记被置为了 false
+    }
+}
+```
+
+以wait 为例
+
+```java
+@Slf4j(topic = "c.InterruptSleep")
+public class InterruptWait {
+    static Object lock = new Object();
+
+    public static void main(String[] args) throws InterruptedException {
+        Thread th1 = new Thread(() -> {
+            synchronized (lock) {
+                try {
+                    log.debug("wait");
+                    lock.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        th1.start();
+        TimeUnit.SECONDS.sleep(1);
+        th1.interrupt();
+        log.debug(String.valueOf(th1.isInterrupted())); // false  打断标记被置为了 false
+    }
+
+}
+```
+
+#### 打断正常运行的线程
+
+**打断正常运行的线程：不会清空打断状态（true）**
+
+```java
+@Slf4j(topic = "c.InterruptNormal")
+public class InterruptNormal {
+    static Object lock = new Object();
+
+    public static void main(String[] args) throws InterruptedException {
+        // 线程被打断后就不在运行
+        Thread th1 = new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) ;
+        });
+
+        th1.start();
+        TimeUnit.SECONDS.sleep(5);
+        th1.interrupt();
+        log.debug(String.valueOf(th1.isInterrupted())); // true
+    }
+
+}
+```
+
+#### 打断park
+
+打断 park 线程, 不会清空打断状态；如果打断标记已经是 true, 则 park 会失效
+
+#### 两阶段终止模式
+
+> 模式示意图
+
+<img src="..\pics\JavaStrengthen\juc\two_phase_termination.png" style="float:left">
+
+> Coding
+
+我们可以在任意时间打断线程，但是终止线程需要确定好何时终止。比如资源读取类线程，被打断了，我们不能立即终止线程，应该在资源读取完毕后，在根据打断标记决定是否终止。
+
+```java
+/**
+ * 两阶段终止模式。日志监控 Demo
+ */
+@Slf4j(topic = "c.TwoPhaseTermination")
+public class TwoPhaseTermination {
+    public static void main(String[] args) throws InterruptedException {
+        TwoPhaseTermination twoPhaseTermination = new TwoPhaseTermination();
+        twoPhaseTermination.start();
+        TimeUnit.SECONDS.sleep(10);
+        twoPhaseTermination.stop();
+    }
+
+    private Thread monitor;
+
+    public void stop() {
+        monitor.interrupt();
+    }
+
+    public void start() {
+        monitor = new Thread(() -> {
+            log.debug("start logging~~");
+            Thread current = Thread.currentThread();
+            while (true) {
+                if (current.isInterrupted()) {
+                    log.debug("over！");
+                    return;
+                }
+                try {
+                    TimeUnit.SECONDS.sleep(2);
+                    log.debug("start logging~~");
+                } catch (InterruptedException e) {
+                    // 睡眠过程中被打断。会走 exception。然后将打断标记置为  true。打断完一次 sleep 后再打断就是打断正常线程了。
+                    current.interrupt();
+                    log.debug("料理后事");
+                    e.printStackTrace();
+                }
+            }
+        });
+        monitor.start();
+    }
+}
+```
+
+
+
+### 废弃方法
+
+> 这些方法已过时，容易破坏同步代码块，造成线程死锁
+
+| 方法                        | 功能                 |
+| --------------------------- | -------------------- |
+| public final void stop()    | 停止线程运行         |
+| public final void suspend() | 挂起（暂停）线程运行 |
+| public final void resume()  | 恢复线程运行         |
+
+### 主线程与守护线程
+
+默认情况下，Java 进程需要等待所有线程都运行结束，才会结束。有一种特殊的线程叫做守护线程，只要其它非守 护线程运行结束了，即使守护线程的代码没有执行完，也会强制结束。
+
+- 垃圾回收器线程就是一种守护线程
+- Tomcat 中的 Acceptor 和 Poller 线程都是守护线程，所以 Tomcat 接收到 shutdown 命令后，不会等 待它们处理完当前请求
+
+## 线程的状态
+
+### 五种状态
+
+> 从 OS 层面来描述
+
+<img src="..\pics\JavaStrengthen\juc\os_thread_state.png">
+
+- 【初始状态】仅是在语言层面创建了线程对象，还未与操作系统线程关联 
+- 【可运行状态】（就绪状态）指该线程已经被创建（与操作系统线程关联），可以由 CPU 调度执行 
+- 【运行状态】指获取了 CPU 时间片运行中的状态 
+  - 当 CPU 时间片用完，会从【运行状态】转换至【可运行状态】，会导致线程的上下文切换 
+- 【阻塞状态】 
+  - 如果调用了阻塞 API，如 BIO 读写文件，这时该线程实际不会用到 CPU，会导致线程上下文切换，进入 【阻塞状态】 
+  - 等 BIO 操作完毕，会由操作系统唤醒阻塞的线程，转换至【可运行状态】 
+  - 与【可运行状态】的区别是，对【阻塞状态】的线程来说只要它们一直不唤醒，调度器就一直不会考虑 调度它们 
+- 【终止状态】表示线程已经执行完毕，生命周期已经结束，不会再转换为其它状态
+
+### 六种状态
+
+> 这是从 Java API 层面来描述的 
+
+根据 Thread.State 枚举，分为六种状态；
+
+`PS：从NEW状态出发后，线程不能再回到NEW状态，同理，处于TERMINATED状态的线程也不能再回到RUNNABLE状态。`
+
+```java
+ public enum State {
+	// 表示刚刚创建的线程，这种线程还没开始执行。等到线程的start()方法调用时，才表示线程开始执行
+        NEW,
+	// 线程所需的一切资源都已经准备好了
+        RUNNABLE,
+	// 线程阻塞，暂停执行
+        BLOCKED,
+	// WAITING会进入一个无时间限制的等待
+        WAITING,
+	// TIMED_WAITING会进行一个有时限的等待
+        TIMED_WAITING,
+	// 当线程执行完毕后，则进入TERMINATED状态，表示结束。
+        TERMINATED;
+}
+```
+
+
+
+<img src="..\pics\JavaStrengthen\juc\java_thread_state.png">
+
+- NEW 线程刚被创建，但是还没有调用 start() 方法 
+- RUNNABLE 当调用了 start() 方法之后，注意，Java API 层面的 RUNNABLE 状态涵盖了 操作系统 层面的 【可运行状态】、【运行状态】和【阻塞状态】（**由于 BIO 导致的线程阻塞，在 Java 里无法区分，仍然认为 是可运行**） 
+- **BLOCKED ， WAITING ， TIMED_WAITING 都是 Java API 层面对【阻塞状态】的细分**
+  - Blocked(锁阻塞)：当一个线程试图获取一个对象锁，而该对象锁被其他的线程持有，则该线程进入 Blocked 状态；当该线程持有锁时，该线程将变成 Runnable 状态。Blocked的线程是进入了 EntryList 等待队列。
+  - Waiting(无限等待)：一个线程在等待另一个线程执行一个（唤醒）动作时，该线程进入 Waiting 状态，进入这个状态后不能自动唤醒，必须等待另一个线程调用 notify 或者 notifyAll 方法才能唤醒。Waiting的线程是进入了 WaitSet 等待队列，WaitSet队列排队结束后，重新进入 EntryList 队列对锁进行竞争。
+  - TIMED_WAITING ：有几个方法有超时参数，调用将进入 Timed Waiting 状态，这一状态将一直保持到超时期满或者接收到唤醒通知。带有超时参数的常用方法有 Thread.sleep 、Object.wait
+- TERMINATED 当线程代码运行结束
+
+## 重点回顾
+
+### 终止线程
 
 终止线程的方式如下：
 
@@ -1017,9 +1293,7 @@ Java Virtual Machine Stacks （Java 虚拟机栈）
 - interrupt中断线程【只是设置一个中断的标记，非立即中断】
     - <span style="color:green">在一个线程中调用另一个线程的interrupt()方法，即会向那个线程发出信号——线程中断状态已被设置。我们可以通过判断这个标记确定线程需不需要被中断，至于何时中断就由我们自己写代码决定了！</span>优于stop。
 
-## 线程中断
-
-### 简述
+### 线程中断
 
 stop强行结束线程可能会引起数据不一致。如过我们把线程执行到一个安全点后再终止则可避免这种问题。线程中断就是这种思想。设置线程需要被中断的标记，具体何时中断由我们自己控制。==所以，严格来讲：线程中断并不会使线程立即退出，而是给线程发送一个通知，告知目标线程，有人希望你退出。==
 
@@ -1030,8 +1304,6 @@ Thread.sleep()方法由于中断而抛出异常，此时，它会清除中断标
 - `public void Thread.interrupt() // 中断线程`
 - `public boolean Thread.isInterrupted() // 判断线程是否被中断`
 - `public static boolean Thread.interrupted() //  判断线程是否被中断，并清除当前中断状态`
-
-### 示例
 
 `线程中断并不会使线程立即退出，而是给线程发送一个通知，告知目标线程，有人希望你退出啦！至于目标线程接到通知后如何处理，则完全由目标线程自行决定。这点很重要，如果中断后，线程立即无条件退出，我们就又会遇到stop()方法的老问题。`
 
@@ -1094,13 +1366,729 @@ import java.util.concurrent.TimeUnit;
 
 判断线程是否被中断，并清除当前中断状态
 
-## 优雅退出
+### 优雅退出
 
 * stop方法可暴力终止线程，但是可能会使一些清理性工作无法完成！造成数据不完整！
 * 而interrupt可以在run中进行逻辑判断，需要中断了，在抛出中断异常之前，把扫尾工作完成！
 * ==推荐 interrupt + throw excetion的组合方式。检测到设置了中断标记，合理退出线程后抛出异常。==
 
-## 线程通信
+## 小结
+
+重点在于
+
+- 线程创建 
+- 线程重要 api，如 start，run，sleep，join，interrupt 等 
+- 线程状态 
+- 应用方面 
+  - 异步调用：主线程执行期间，其它线程异步执行耗时操作 
+  - 提高效率：并行计算，缩短运算时间 
+  - 同步等待：join 
+  - 统筹规划：合理使用线程，得到最优效果 
+- 原理方面 
+  - 线程运行流程：栈、栈帧、上下文切换、程序计数器 
+  - Thread 两种创建方式 的源码 
+- 模式方面 
+  - 终止模式之两阶段终止
+
+# 管程
+
+## 线程安全问题
+
+两个线程对初始值为 0 的静态变量一个做自增，一个做自减，各做 10000 次，结果是 0 吗？
+
+```java
+@Slf4j(topic = "c.IncrementAndDecrement")
+public class IncrementAndDecrement {
+    static volatile int count = 0;
+
+    public static void main(String[] args) throws InterruptedException {
+        Thread th2 = new Thread(() -> {
+            for (int i = 0; i < 10000; i++) {
+                count++;
+            }
+        });
+        Thread th1 = new Thread(() -> {
+            for (int i = 0; i < 10000; i++) {
+                count--;
+            }
+        });
+
+        th1.start();
+        th2.start();
+        th1.join();
+        th2.join();
+        log.debug("{}", count);
+    }
+}
+```
+
+### 问题分析 
+
+以上的结果可能是正数、负数、零。为什么呢？因为 Java 中对静态变量的自增，自减并不是原子操作，要彻底理 解，必须从字节码来进行分析 
+
+例如对于 i++ 而言（i 为静态变量），实际会产生如下的 JVM 字节码指令：
+
+```shell
+getstatic i // 获取静态变量i的值
+iconst_1 // 准备常量1
+iadd // 自增
+putstatic i // 将修改后的值存入静态变量i
+```
+
+而对应 i-- 也是类似：
+
+```shell
+getstatic i // 获取静态变量i的值
+iconst_1 // 准备常量1
+isub // 自减
+putstatic i // 将修改后的值存入静态变量i
+```
+
+**而 Java 的内存模型如下，完成静态变量的自增，自减需要在主存和工作内存中进行数据交换：**
+
+<img src="..\pics\JavaStrengthen\juc\jmm_01.png">
+
+如果是单线程以上 8 行代码是顺序执行（不会交错）没有问题：
+
+<img src="..\pics\JavaStrengthen\juc\add.png" style="float:left">
+
+多线程下可能会出问题
+
+<img src="..\pics\JavaStrengthen\juc\add-mt.png" style="float:left">
+
+### 临界区 Critical Section
+
+- 一个程序运行多个线程本身是没有问题的 
+- 问题出在多个线程访问共享资源 
+  - 多个线程读共享资源其实也没有问题 
+  - 在多个线程对共享资源读写操作时发生指令交错，就会出现问题 
+- 一段代码块内如果存在对共享资源的多线程读写操作，称这段代码块为临界区
+
+```java
+static int counter = 0;
+static void increment() 
+// 临界区
+{ 
+ counter++;
+}
+static void decrement() 
+// 临界区
+{ 
+ counter--;
+}
+```
+
+
+
+### 竞态条件 Race Condition
+
+多个线程在临界区内执行，由于代码的执行序列不同而导致结果无法预测，称之为发生了竞态条件
+
+## synchronized 解决方案
+
+### 解决手段
+
+为了避免临界区的竞态条件发生，有多种手段可以达到目的。
+
+- 阻塞式的解决方案：synchronized，Lock
+- 非阻塞式的解决方案：原子变量
+
+此处使用阻塞式的解决方案：**synchronized**，来解决上述问题，即俗称的**【对象锁】**，它采用互斥的方式让同一 时刻至多只有一个线程能持有【对象锁】，其它线程再想获取这个【对象锁】时就会阻塞住(blocked)。这样就能保证拥有锁的线程可以安全的执行临界区内的代码，不用担心线程上下文切换。
+
+> ==注意：== 
+
+虽然 java 中互斥和同步都可以采用 synchronized 关键字来完成，但它们还是有区别的： 互斥是保证临界区的竞态条件发生，同一时刻只能有一个线程执行临界区代码 同步是由于线程执行的先后、顺序不同、需要一个线程等待其它线程运行到某个点
+
+### synchronized 语法
+
+```java
+synchronized(对象) {
+	//临界区
+}
+```
+
+```java
+static int counter = 0; 
+//创建一个公共对象，作为对象锁的对象
+static final Object room = new Object();
+ 
+public static void main(String[] args) throws InterruptedException {    
+	Thread t1 = new Thread(() -> {        
+    for (int i = 0; i < 5000; i++) {            
+        synchronized (room) {     
+        counter++;            
+       	 }       
+ 	   }    
+    }, "t1");
+ 
+    Thread t2 = new Thread(() -> {       
+        for (int i = 0; i < 5000; i++) {         
+            synchronized (room) {            
+            counter--;          
+            }    
+        } 
+    }, "t2");
+ 
+    t1.start();    
+    t2.start(); 
+    t1.join();   
+    t2.join();    
+    log.debug("{}",counter); 
+}
+```
+
+<img src="..\pics\JavaStrengthen\juc\sync_add.png" style="width:70%">
+
+思考 
+
+synchronized 实际是用**对象锁**保证了**临界区内代码的原子性**，临界区内的代码对外是不可分割的，不会被线程切换所打断。 
+
+请思考下面的问题
+
+- 如果把 synchronized(obj) 放在 for 循环的外面，如何理解？-- 强调的原子性。
+  - 锁粒度加大了。5000循环操作变为了一个原子性操作。
+  - 放在 for 循环外面，则会一次性执行完 加/减 在执行减/加。
+
+- 如果 t1 synchronized(obj1) 而 t2 synchronized(obj2) 会怎样运作？-- 强调的锁对象 
+  - 会出现并发问题，因为不是同一把锁，互不干扰。
+
+- 如果 t1 synchronized(obj) 而 t2 没有加会怎么样？如何理解？-- 强调的锁对象
+  - 不加 synchronized 的方法相当于违规进入。
+
+逃逸分析 逃出了作用域的范围。
+
+### synchronized 锁的内容
+
+`public synchronized void eat()`  -- 锁的实例对象
+
+`public static synchronized void eat()`  -- 锁的字节码对象
+
+`synchronized ` -- 锁的都是对象哦，他是在对象头上加了标记的。
+
+```java
+class Test{
+ public synchronized void test() {
+ 
+ }
+}
+等价于
+class Test{
+ public void test() {
+ synchronized(this) {
+ 
+ }
+ }
+}
+//===============
+class Test{
+ public synchronized static void test() {
+ }
+}
+等价于
+class Test{
+ public static void test() {
+ synchronized(Test.class) {
+ 
+ }
+ }
+}
+```
+
+### 不加 synchronized 的方法 
+
+不加 synchronzied 的方法就好比不遵守规则的人，不去老实排队（好比翻窗户进去的）
+
+### 线程八锁
+
+> 是考察 synchronized 锁住的是哪个对象
+
+网上找吧，没啥难度。
+
+## 变量的线程安全分析
+
+### 成员变量&静态变量
+
+- 如果它们没有共享，则线程安全
+- 如果它们被共享了，根据它们的状态是否能够改变，又分两种情况
+  - 如果只有读操作，则线程安全
+  - 如果有读写操作，则这段代码是临界区，需要考虑线程安全
+
+> 成员变量线程不安全示例
+
+```java
+/**
+ * 测试线程安全问题
+ */
+public class TestThreadSafe {
+    /**
+     * Index 0 out of bounds for length 0.
+     * add 了两次相同的位置，然后remove了两次，造成的索引越界
+     */
+    public static void main(String[] args) {
+        TestSafe testSafe = new TestSafe();
+        for (int i = 0; i < 2; i++) {
+            new Thread(() -> {
+                testSafe.method1();
+            }).start();
+        }
+    }
+}
+
+class TestSafe {
+    static int LOOP = 200;
+    private ArrayList<String> list = new ArrayList<>();
+
+    public void method1() {
+        for (int i = 0; i < LOOP; i++) {
+            add();
+            remove();
+        }
+    }
+
+    public void add() {
+        list.add("1");
+    }
+
+    public void remove(){
+        list.remove(0);
+    }
+}
+```
+
+### 局部变量
+
+- 局部变量是线程安全的
+- 但局部变量引用的对象则未必 （要看该对象是否被共享且被执行了读写操作）
+  - 如果该对象没有逃离方法的作用范围，它是线程安全的
+  - 如果该对象逃离方法的作用范围，需要考虑线程安全
+- 局部变量是线程安全的——每个方法都在对应线程的栈中创建栈帧，不会被其他线程共享
+- 访问修饰符，用 private 修饰，那么子类就不能用了，这样就可以避免子类开多线程调用这个方法，可以在一定程度上避免并发问题。
+
+### 常见线程安全类
+
+- String
+- Integer
+- StringBuﬀer
+- Random
+- Vector （List的线程安全实现类）
+- Hashtable （Hash的线程安全实现类）
+- java.util.concurrent 包下的类
+
+这里说它们是线程安全的是指，多个线程调用它们**同一个实例的某个方法时**，是线程安全的
+
+- 它们的每个方法是原子的（都被加上了synchronized）
+- 但注意它们**多个方法的组合不是原子的**，所以可能会出现线程安全问题。
+
+#### 线程安全类的组合
+
+```java
+Hashtable table = new HashTable();
+if( table.get("key")==null ){
+    table.put("key",value);
+}
+// 多个线程调用 这部分代码。
+// A 执行到了 if；B 执行到了 if
+// A put 了，B if 判断结束了，也 put了 ，B的put不符合条件！
+// 我们把 if 改为 while！
+```
+
+<img src="..\pics\JavaStrengthen\juc\hash_table.png">
+
+#### 不可变类
+
+String、Integer 等都是**不可变类**，因为其内部的状态不可以改变，因此它们的方法都是线程安全的
+
+有同学或许有疑问，String 有 replace，substring 等方法【可以】改变值啊，那么这些方法又是如何保证线程安 全的呢？
+
+这是因为这些方法的返回值都**创建了一个新的对象**，而不是直接改变String、Integer对象本身。
+
+> 以 String 的 substring 为例子进行分析
+
+如果 beginIndex 是0，就返回原来的字符串，如果不是则新建一个字符串对象！
+
+```java
+public String substring(int beginIndex, int endIndex) {
+    int length = length();
+    checkBoundsBeginEnd(beginIndex, endIndex, length);
+    int subLen = endIndex - beginIndex;
+    if (beginIndex == 0 && endIndex == length) {
+        return this;
+    }
+    return isLatin1() ? StringLatin1.newString(value, beginIndex, subLen)
+        : StringUTF16.newString(value, beginIndex, subLen);
+}
+```
+
+返回新建字符串对象的时候，它是Copy的原来的字符串！字符串是不可变的！所以这个源头不会变！Copy的时候也不会有安全问题！
+
+```java
+public static String newString(byte[] val, int index, int len) {
+    if (String.COMPACT_STRINGS) {
+        byte[] buf = compress(val, index, len);
+        if (buf != null) {
+            return new String(buf, LATIN1);
+        }
+    }
+    int last = index + len;
+    return new String(Arrays.copyOfRange(val, index << 1, last << 1), UTF16);
+}
+```
+
+### 实例分析
+
+> 例1
+
+```java
+public class MyServlet extends HttpServlet {
+    // 是否安全？ 不安全
+    Map<String, Object> map = new HashMap<>();
+    // 是否安全？ 安全
+    String S1 = "...";
+    // 是否安全？ 安全
+    final String S2 = "...";
+    // 是否安全？ 不安全
+    Date D1 = new Date();
+    // 是否安全？ 不安全
+    final Date D2 = new Date();
+
+    public void doGet(HttpServletRequest request, HttpServletResponse response) {
+        // 使用上述变量
+    }
+}
+```
+
+> 例2
+
+```java
+public class MyServlet extends HttpServlet {
+    // 是否安全？ 不安全。 Servlet 是单的，独一份。所以是多个线程 操作同一个 userService 实例
+    private UserService userService = new UserServiceImpl();
+
+    public void doGet(HttpServletRequest request, HttpServletResponse response) {
+        userService.update(...);
+    }
+}
+
+public class UserServiceImpl implements UserService {
+    // 记录调用次数
+    private int count = 0;
+
+    public void update() {
+        // ...
+        count++;
+    }
+}
+```
+
+> 例3
+
+```java
+@Aspect
+@Component
+public class MyAspect { // Spring 不指定多例 默认都是单例
+    // 是否安全？ 不安全，存在并发修改问题
+    private long start = 0L;
+
+    @Before("execution(* *(..))")
+    public void before() {
+        start = System.nanoTime();
+    }
+
+    @After("execution(* *(..))")
+    public void after() {
+        long end = System.nanoTime();
+        System.out.println("cost time:" + (end - start));
+    }
+}
+```
+
+> 例4
+
+```java
+public class MyServlet extends HttpServlet {
+    // 是否安全
+    private UserService userService = new UserServiceImpl();
+
+    public void doGet(HttpServletRequest request, HttpServletResponse response) {
+        userService.update(...);
+    }
+}
+
+public class UserServiceImpl implements UserService {
+    // 是否安全
+    private UserDao userDao = new UserDaoImpl();
+
+    public void update() {
+        userDao.update();
+    }
+}
+
+public class UserDaoImpl implements UserDao {
+    public void update() {
+        String sql = "update user set password = ? where username = ?";
+        // 是否安全
+        try (Connection conn = DriverManager.getConnection("", "", "")) {
+            // ...
+        } catch (Exception e) {
+            // ...
+        }
+    }
+}
+```
+
+> 例5
+
+```java
+public class MyServlet extends HttpServlet {
+    // 是否安全  线程安全的，update 方法是独立的
+    private UserService userService = new UserServiceImpl();
+
+    public void doGet(HttpServletRequest request, HttpServletResponse response) {
+        userService.update(...);
+    }
+}
+
+public class UserServiceImpl implements UserService {
+    // 是否安全
+    private UserDao userDao = new UserDaoImpl();
+
+    public void update() {
+        userDao.update();
+    }
+}
+
+public class UserDaoImpl implements UserDao {
+    // 是否安全
+    private Connection conn = null;
+
+    public void update() throws SQLException {
+        String sql = "update user set password = ? where username = ?";
+        conn = DriverManager.getConnection("", "", "");
+        // ...
+        conn.close();
+    }
+}
+```
+
+> 例6
+
+```java
+public class MyServlet extends HttpServlet {
+    // 是否安全
+    private UserService userService = new UserServiceImpl();
+
+    public void doGet(HttpServletRequest request, HttpServletResponse response) {
+        userService.update(...);
+    }
+}
+
+public class UserServiceImpl implements UserService {
+    public void update() {
+        // 线程安全，每次都是不同对象。局部变量，且没有逃逸。
+        UserDao userDao = new UserDaoImpl();
+        userDao.update();
+    }
+}
+
+public class UserDaoImpl implements UserDao {
+    // 是否安全
+    private Connection =null;
+
+    public void update() throws SQLException {
+        String sql = "update user set password = ? where username = ?";
+        conn = DriverManager.getConnection("", "", "");
+        // ...
+        conn.close();
+    }
+}
+```
+
+> 例7
+
+不想暴露的就设置成私有 或 final
+
+```java
+public abstract class Test {
+
+    public void bar() {
+        // 是否安全 不安全。
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        foo(sdf);
+    }
+
+    public abstract foo(SimpleDateFormat sdf);
+
+
+    public static void main(String[] args) {
+        new Test().bar();
+    }
+}
+```
+
+其中 foo 的行为是不确定的，可能导致不安全的发生，被称之为外星方法
+
+```java
+public void foo(SimpleDateFormat sdf) {
+    String dateStr = "1999-10-11 00:00:00";
+    for (int i = 0; i < 20; i++) {
+        new Thread(() -> {
+            try {
+                sdf.parse(dateStr);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+}
+```
+
+> 例8
+
+```java
+private static Integer i = 0;
+
+public static void main(String[] args) throws InterruptedException {
+    List<Thread> list = new ArrayList<>();
+    for (int j = 0; j < 2; j++) {
+        Thread thread = new Thread(() -> {
+            for (int k = 0; k < 5000; k++) {
+                synchronized (i) {
+                    i++;
+                }
+            }
+        }, "" + j);
+        list.add(thread);
+    }
+    list.stream().forEach(t -> t.start());
+    list.stream().forEach(t -> {
+        try {
+            t.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    });
+    log.debug("{}", i);
+}
+```
+
+## Monitor 概念
+
+Java 对象由对象头和成员变量啥的组成的。这个看看JVM。
+
+int 4字节
+
+Integer 8+4 字节
+
+### Java 对象头
+
+以 32 位 vm 为例
+
+> 普通对象
+
+`kclass` 指针指向对象所从属的 class
+
+<img src="..\pics\JavaStrengthen\juc\putong_obj.png">
+
+> 数组对象
+
+<img src="..\pics\JavaStrengthen\juc\array_obj.png">
+
+其中 Mark Word 结构为
+
+- age：垃圾回收的分代年龄，年龄大于一定值就放入老年代。
+- biased_lock 偏向锁状态
+- 01 表示加锁
+
+<img src="..\pics\JavaStrengthen\juc\mark_word.png">
+
+64 位虚拟机 Mark Word
+
+<img src="..\pics\JavaStrengthen\juc\64_mark_word.png" style="width:80%; float:left">
+
+==参考资料：== <a href="https://stackoverflow.com/questions/26357186/what-is-in-java-object-header">资料</a>
+
+32 位 vm，  int 占 4 个字节
+
+Integer 占 8+4 = 12 个字节
+
+64 位 vm 会启用指针压缩
+
+### Monitor原理
+
+Monitor 被翻译为监视器或管程
+
+每个 Java 对象都可以关联一个 Monitor 对象，如果使用 synchronized 给对象上锁（重量级）之后，该对象头的 Mark Word 中就被设置指向 Monitor 对象的指针
+
+Monitor 结构如下：
+
+<img src="..\pics\JavaStrengthen\juc\monitor.png">
+
+- 刚开始 Monitor 中 Owner 为 null
+- 当 Thread-2 执行 synchronized(obj) 就会将 Monitor 的所有者 Owner 置为 Thread-2，Monitor 中只能有一个 Owner
+- 在 Thread-2 上锁的过程中，如果 Thread-3，Thread-4，Thread-5 也来执行 synchronized(obj)，就会进入 EntryListBLOCKED
+- Thread-2 执行完同步代码块的内容，然后唤醒 EntryList 中等待的线程来竞争锁，竞争是非公平的
+- 图中 WaitSet 中的 Thread-0，Thread-1 是之前获得过锁，但条件不足进入 WAITING 状态的线程，具体分析看 wait-notify
+  - WaitSet 是因为 wait 而阻塞的，notify 唤醒后会重新进入 EntryList ，然后重新竞争锁。
+
+> **注意**
+
+- synchronized 必须是进入同一个对象的 monitor 才有上述的效果。
+- 不加 synchronized  的对象不会关联监视器，不遵从以上规则。
+
+### synchronized 原理
+
+```java
+public static void main(String[] args) {
+    Object lock = new Object();
+    synchronized (lock) {
+        System.out.println("ok");
+    }
+}
+```
+
+```shell
+public static void main(java.lang.String[]);
+	descriptor: ([Ljava/lang/String;)V
+    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=2, locals=4, args_size=1
+		0: 	new				#2		// new Object
+        3: 	dup
+        4: 	invokespecial 	#1 		// invokespecial <init>:()V，非虚方法
+        7: 	astore_1 				// lock引用 -> lock,存一份，用于以后的解锁
+        8: 	aload_1					// lock （synchronized开始）
+        9: 	dup						// 一份用来初始化，一份用来引用
+        10: astore_2 				// lock引用 -> slot 2
+        11: monitorenter 			// 将 lock对象 MarkWord 置为 Monitor 指针
+        12: getstatic 		#3		// System.out
+        15: ldc 			#4		// "ok"
+        17: invokevirtual 	#5 		// invokevirtual println:(Ljava/lang/String;)V
+        20: aload_2 				// slot 2(lock引用)
+        21: monitorexit 			// 将 lock对象 MarkWord 重置, 唤醒 EntryList。原来对象头存储的 hashcode，上锁后mark word 就不是hashcode了，是monitor指针了。
+        22: goto 30
+        25: astore_3 				// any -> slot 3
+        26: aload_2 				// slot 2(lock引用)
+        27: monitorexit 			// 将 lock对象 MarkWord 重置, 唤醒 EntryList
+        28: aload_3
+        29: athrow
+        30: return
+        Exception table: # 监测的范围内出现了异常，就会处理。
+            from to target type
+              12 22 25 		any
+              25 28 25 		any
+        LineNumberTable: ...
+        LocalVariableTable:
+            Start Length Slot Name Signature
+                0 	31 		0 args [Ljava/lang/String;
+                8 	23 		1 lock Ljava/lang/Object;
+```
+
+**说明：**
+
+- 通过异常 **try-catch 机制**，确保一定会被解锁
+- 方法级别的 synchronized 不会在字节码指令中有所体现
+
+# 线程通信
 
 线程通信的方式有如下几种
 
@@ -1179,7 +2167,7 @@ public class JoinDemo {
 }
 ```
 
-## synchronized
+# synchronized
 
 ### 概述
 
@@ -1391,7 +2379,7 @@ public static synchronized void say(){} // 这个是把字节码对象当锁【�
 public synchronized void say(){} // 这个是把当前实例对象当锁【普通方法】
 ```
 
-## Lock 锁
+#  Lock 锁
 
 对比 synchronized 而言，lock 锁更灵活。
 
