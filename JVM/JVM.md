@@ -1,9 +1,3 @@
-https://nyimac.gitee.io/
-
-学习记录：
-
-2021-08-01：P96~P128 半天的视频学习量
-
 # JVM概述
 
 参考视频：[**解密JVM【黑马程序员出品】**](https://www.bilibili.com/video/BV1yE411Z7AP)
@@ -824,9 +818,9 @@ public void run() {
 
 直接内存的回收不是通过JVM的垃圾回收来释放的，而是通过 **unsafe.freeMemory** 来手动释放
 
-```
+```java
 //通过ByteBuffer申请1M的直接内存
-ByteBuffer byteBuffer = ByteBuffer.allocateDirect(_1M);Copy
+ByteBuffer byteBuffer = ByteBuffer.allocateDirect(_1M);
 ```
 
 申请直接内存，但JVM并不能回收直接内存中的内容，它是如何实现回收的呢？
@@ -873,21 +867,23 @@ DirectByteBuffer(int cap) {   // package-private
 
 ```java
 public void clean() {
-       if (remove(this)) {
-           try {
-               this.thunk.run(); //调用run方法
-           } catch (final Throwable var2) {
-               AccessController.doPrivileged(new PrivilegedAction<Void>() {
-                   public Void run() {
-                       if (System.err != null) {
-                           (new Error("Cleaner terminated abnormally", var2)).printStackTrace();
-                       }
+    if (remove(this)) {
+        try {
+            this.thunk.run(); //调用run方法
+        } catch (final Throwable var2) {
+            AccessController.doPrivileged(new PrivilegedAction<Void>() {
+                public Void run() {
+                    if (System.err != null) {
+                        (new Error("Cleaner terminated abnormally", var2)).printStackTrace();
+                    }
 
-                       System.exit(1);
-                       return null;
-                   }
-               });
-           }
+                    System.exit(1);
+                    return null;
+                }
+            });
+        }
+    }
+}
 ```
 
 对应对象的run方法
@@ -1674,19 +1670,19 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.301-b09, mixed mode)
 
 首先排除减少因为自身编写的代码而引发的内存问题
 
-- 查看Full GC前后的内存占用，考虑以下几个问题
-  - 数据是不是太多？如：`resultSet = statement.executeQuery("select * from 大表 limit n")`
-  - 数据表示是否太臃肿
-    - 对象图，数据不需要全部都用，用到哪个查哪个
-    - 对象大小
-      -  `new Object() 占16个字节` 
-      - 包装对象 如 Integer 的一个对象头就 16 个字节。Integer 好像占 24 字节
-      - 能有基本类型就用基本类型？
-  - 是否存在内存泄漏
-    - static Map map = 不断放对象，不溢出。
-    - 建议用软、弱引用
-    - 缓存数据不太推荐用 Java 的，用三方缓存实现。
-    - Redis
+查看Full GC前后的内存占用，考虑以下几个问题
+- 数据是不是太多？如：`resultSet = statement.executeQuery("select * from 大表 limit n")`
+- 数据表示是否太臃肿
+  - 对象图，数据不需要全部都用，用到哪个查哪个
+  - 对象大小
+    -  `new Object() 占16个字节` 
+    - 包装对象 如 Integer 的一个对象头就 16 个字节。Integer 好像占 24 字节
+    - 能有基本类型就用基本类型？
+- 是否存在内存泄漏
+  - static Map map = 不断放对象，不溢出。
+  - 建议用软、弱引用
+  - 缓存数据不太推荐用 Java 的，用三方缓存实现。
+  - Redis
 
 ## 新生代调优
 
@@ -1782,82 +1778,6 @@ GC 日志里没有竞争失败，并发失败，碎片过多的错误提示。�
 ## 类文件结构
 
 这块基本就是带你查表看 16 进制数据的意思，没什么好记的。
-
-> 从 HelloWorld 开始简述类文件结构
-
-Java 代码
-
-```java
-public class HelloWorld {
-    public static void main(String[] args) {
-        System.out.println("Hello World");
-    }
-}
-```
-
-对应的 class 文件
-
-```shell
-0000000 ca fe ba be 00 00 00 34 00 23 0a 00 06 00 15 09 
-0000020 00 16 00 17 08 00 18 0a 00 19 00 1a 07 00 1b 07 
-0000040 00 1c 01 00 06 3c 69 6e 69 74 3e 01 00 03 28 29 
-0000060 56 01 00 04 43 6f 64 65 01 00 0f 4c 69 6e 65 4e 
-0000100 75 6d 62 65 72 54 61 62 6c 65 01 00 12 4c 6f 63 
-0000120 61 6c 56 61 72 69 61 62 6c 65 54 61 62 6c 65 01 
-0000140 00 04 74 68 69 73 01 00 1d 4c 63 6e 2f 69 74 63 
-0000160 61 73 74 2f 6a 76 6d 2f 74 35 2f 48 65 6c 6c 6f 
-0000200 57 6f 72 6c 64 3b 01 00 04 6d 61 69 6e 01 00 16 
-0000220 28 5b 4c 6a 61 76 61 2f 6c 61 6e 67 2f 53 74 72 
-0000240 69 6e 67 3b 29 56 01 00 04 61 72 67 73 01 00 13 
-0000260 5b 4c 6a 61 76 61 2f 6c 61 6e 67 2f 53 74 72 69 
-0000300 6e 67 3b 01 00 10 4d 65 74 68 6f 64 50 61 72 61 
-0000320 6d 65 74 65 72 73 01 00 0a 53 6f 75 72 63 65 46 
-0000340 69 6c 65 01 00 0f 48 65 6c 6c 6f 57 6f 72 6c 64
-0000360 2e 6a 61 76 61 0c 00 07 00 08 07 00 1d 0c 00 1e 
-0000400 00 1f 01 00 0b 68 65 6c 6c 6f 20 77 6f 72 6c 64 
-0000420 07 00 20 0c 00 21 00 22 01 00 1b 63 6e 2f 69 74 
-0000440 63 61 73 74 2f 6a 76 6d 2f 74 35 2f 48 65 6c 6c 
-0000460 6f 57 6f 72 6c 64 01 00 10 6a 61 76 61 2f 6c 61 
-0000500 6e 67 2f 4f 62 6a 65 63 74 01 00 10 6a 61 76 61 
-0000520 2f 6c 61 6e 67 2f 53 79 73 74 65 6d 01 00 03 6f 
-0000540 75 74 01 00 15 4c 6a 61 76 61 2f 69 6f 2f 50 72 
-0000560 69 6e 74 53 74 72 65 61 6d 3b 01 00 13 6a 61 76 
-0000600 61 2f 69 6f 2f 50 72 69 6e 74 53 74 72 65 61 6d 
-0000620 01 00 07 70 72 69 6e 74 6c 6e 01 00 15 28 4c 6a 
-0000640 61 76 61 2f 6c 61 6e 67 2f 53 74 72 69 6e 67 3b 
-0000660 29 56 00 21 00 05 00 06 00 00 00 00 00 02 00 01 
-0000700 00 07 00 08 00 01 00 09 00 00 00 2f 00 01 00 01 
-0000720 00 00 00 05 2a b7 00 01 b1 00 00 00 02 00 0a 00 
-0000740 00 00 06 00 01 00 00 00 04 00 0b 00 00 00 0c 00 
-0000760 01 00 00 00 05 00 0c 00 0d 00 00 00 09 00 0e 00 
-0001000 0f 00 02 00 09 00 00 00 37 00 02 00 01 00 00 00 
-0001020 09 b2 00 02 12 03 b6 00 04 b1 00 00 00 02 00 0a 
-0001040 00 00 00 0a 00 02 00 00 00 06 00 08 00 07 00 0b 
-0001060 00 00 00 0c 00 01 00 00 00 09 00 10 00 11 00 00 
-0001100 00 12 00 00 00 05 01 00 10 00 00 00 01 00 13 00 
-0001120 00 00 02 00 14Copy
-```
-
-根据 JVM 规范，**类文件结构**如下：u4 u2代表的字节数。
-
-```shell
-u4 			   magic 			# 前四个字节代表魔数
-u2             minor_version;   # 接下来两个字节表示小版本号    
-u2             major_version;    # 接下来两个字节表示主版本号 
-u2             constant_pool_count;    # 常量池信息
-cp_info        constant_pool[constant_pool_count-1];    
-u2             access_flags;    # 访问修饰
-u2             this_class;      # 类自己的包名，类名信息
-u2             super_class;     # 自己的父类信息
-u2             interfaces_count;    # 接口信息
-u2             interfaces[interfaces_count];   
-u2             fields_count;    # 类中的成员变量
-field_info     fields[fields_count];   
-u2             methods_count;    # 类中的方法信息
-method_info    methods[methods_count];    
-u2             attributes_count;    # 类的附加属性信息
-attribute_info attributes[attributes_count];Copy
-```
 
 > 魔数
 
@@ -3758,23 +3678,6 @@ class D {
 }
 ```
 
-- 打开HSDB
-  - 可以看到此时只加载了类C
-
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200611223153.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200611223153.png)
-
-查看类C的常量池，可以看到类D**未被解析**，只是存在于常量池中的符号
-
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200611230658.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200611230658.png)
-
-- 解析以后，会将常量池中的符号引用解析为直接引用
-
-  - 可以看到，此时已加载并解析了类C和类D
-
-  [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200611223441.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200611223441.png)
-
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200613104723.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200613104723.png)
-
 ### 初始化
 
 初始化阶段就是**执行类构造器clinit()方法的过程**，虚拟机会保证这个类的『构造方法』的线程安全
@@ -3859,8 +3762,6 @@ public class Load3 {
 ```
 
 #### 练习
-
-读代码，说结果
 
 > 练习1
 
@@ -3976,8 +3877,6 @@ class Singleton {
     }
 }
 ```
-
-
 
 ## 类加载器
 
@@ -4179,6 +4078,7 @@ private static void ensureDriversInitialized() {
             println("JDBC DriverManager initialized");
         }
     }
+}
 ```
 
 先看 2）发现它最后是使用 Class.forName 完成类的加载和初始化，关联的是应用程序类加载器，因此 可以顺利完成类加载 
@@ -4218,10 +4118,6 @@ public static <S> ServiceLoader<S> load(Class<S> service) {
 ```
 
 ==线程上下文类加载器是当前线程使用的类加载器，默认就是应用程序类加载器==，它内部又是由 Class.forName 调用了线程上下文类加载器完成类加载，具体代码在 ServiceLoader 的内部类 LazyIterator 中：
-
-```java
-
-```
 
 ### 自定义类加载器
 
@@ -4702,8 +4598,6 @@ public Object invoke(Object obj, Object... args)
     return ma.invoke(obj, args);
 }
 ```
-
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200614133554.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20200614133554.png)
 
 会由DelegatingMehodAccessorImpl去调用NativeMethodAccessorImpl
 
@@ -5390,4 +5284,3 @@ https://www.jianshu.com/p/9932047a89be
 https://www.cnblogs.com/sheeva/p/6366782.html 
 
 https://stackoverflow.com/questions/46312817/does-java-ever-rebias-an-individual-lock
-
