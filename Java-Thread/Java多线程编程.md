@@ -1,4 +1,4 @@
-![image-20210810002945667](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20210810002945667.png)Java多线程编程
+# Java多线程
 
 - 线程的基本用法
 - 线程池
@@ -6,6 +6,115 @@
 - 死锁&常见错误加锁
 - JMM
 - ThreadLocal
+
+---
+
+> **JMH 用法 Demo**
+
+```xml
+<dependency>
+    <groupId>org.openjdk.jmh</groupId>
+    <artifactId>jmh-core</artifactId>
+    <version>1.23</version>
+</dependency>
+<dependency>
+    <groupId>org.openjdk.jmh</groupId>
+    <artifactId>jmh-generator-annprocess</artifactId>
+    <version>1.23</version>
+    <scope>provided</scope>
+</dependency>
+```
+
+```java
+package monitor;
+
+import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
+
+import java.util.concurrent.TimeUnit;
+
+@Fork(1)
+@BenchmarkMode(Mode.AverageTime)
+@Warmup(iterations = 3)
+@Measurement(iterations = 5)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+public class WipeLock {
+    public static void main(String[] args) throws RunnerException {
+        Options opt = new OptionsBuilder()
+                .include(WipeLock.class.getSimpleName())
+                .forks(1)
+                .build();
+        new Runner(opt).run();
+    }
+
+    static int x = 0;
+
+    @Benchmark
+    public void a() throws Exception {
+        x++;
+    }
+
+    @Benchmark
+    public void b() throws Exception {
+        Object o = new Object();
+        synchronized (o) {
+            x++;
+        }
+    }
+}
+```
+
+> **jcstress 用法 Demo**
+
+```xml
+<!-- jcstress 核心包 -->
+<dependency>
+    <groupId>org.openjdk.jcstress</groupId>
+    <artifactId>jcstress-core</artifactId>
+    <version>0.3</version>
+</dependency>
+<!-- jcstress测试用例包 -->
+<dependency>
+    <groupId>org.openjdk.jcstress</groupId>
+    <artifactId>jcstress-samples</artifactId>
+    <version>0.3</version>
+</dependency>
+```
+
+IDEA 配置运行的主类 `org.openjdk.jcstress.Main`
+
+<img src="..\pics\JavaStrengthen\juc\jcstress.png" style="float:left">
+
+```java
+import org.openjdk.jcstress.annotations.*;
+import org.openjdk.jcstress.infra.results.I_Result;
+
+@JCStressTest
+// 检查感兴趣的结果。如果结果是 1 和 4 那么分类未 Expect.ACCEPTABLE
+@Outcome(id = {"1"}, expect = Expect.ACCEPTABLE, desc = "ok")
+@Outcome(id = {"0"}, expect = Expect.ACCEPTABLE_INTERESTING, desc = "!!!!")
+@State
+public class ConcurrencyTest {
+    int num = 2;
+    @Actor
+    public void actor1(I_Result r) {
+        if (DCL.getInstance() == DCL.getInstance()) {
+            r.r1 = 1;
+        } else {
+            r.r1 = 0;
+        }
+    }
+    @Actor
+    public void actor2(I_Result r) {
+        num = 2;
+    }
+}
+```
+
+
 
 ## 几个概念
 
@@ -1217,6 +1326,18 @@ public class TwoPhaseTermination {
 | public final void suspend() | 挂起（暂停）线程运行 |
 | public final void resume()  | 恢复线程运行         |
 
+> suspend & resume
+
+使用不当会造成死锁，且死锁后的线程状态还是Runnable！！这个才是最坑的，我觉得就是因为这个才被废弃的！！
+
+`suspend挂起线程，不释放资源！！resume唤醒线程！！；需要获得监视器monitor，简单说就是要像sync加锁;且suspend 在导致线程暂停的同时，并不会去释放任何资源。`
+
+`如果resume()方法操作意外地在suspend()方法前就执行了，那么被挂起的线程可能很难有机会被继续执行。而且！！对于被挂起的线程，从它的线程状态上看，居然还是Runnable，这会严重影响我们对系统当前状态的判断。`
+
+> stop
+
+暴力终止线程，会存在很多问题！
+
 ### 主线程与守护线程
 
 默认情况下，Java 进程需要等待所有线程都运行结束，才会结束。有一种特殊的线程叫做守护线程，只要其它非守 护线程运行结束了，即使守护线程的代码没有执行完，也会强制结束。
@@ -1999,7 +2120,7 @@ Integer 8+4 字节
 - biased_lock 偏向锁状态
 - 01 表示加锁
 
-<img src="..\pics\JavaStrengthen\juc\mark_word.png">
+<img src="..\pics\JavaStrengthen\juc\mark_word.png" style="width:100%">
 
 64 位虚拟机 Mark Word
 
@@ -2092,7 +2213,7 @@ public static void main(java.lang.String[]);
 
 ### 小故事
 
-- 老王 - JVM 
+- 老王 - JVM  nhu7
 - 小南 - 线程 
 - 小女 - 线程 
 - 房间 - 对象 
@@ -2287,11 +2408,11 @@ CAS 底层对应的也是以 lock 打头的指令，也会影响一定的性能�
 
 一个对象创建时： 
 
-- 如果开启了偏向锁（默认开启），那么对象创建后，markword 值为 0x05 即最后 3 位为 101，这时它的 thread、epoch、age 都为 0 
-- 偏向锁是默认是延迟的，不会在程序启动时立即生效，如果想避免延迟，可以加 VM 参数 - XX:BiasedLockingStartupDelay=0 来禁用延迟 
+- 如果开启了偏向锁（默认开启），那么对象创建后，**markword 值为 0x05 即最后 3 位为 101**（二进制数据的存储顺序？人工读阅读的顺序？），这时它的 thread、epoch、age 都为 0 
+- **偏向锁是默认是延迟的，不会在程序启动时立即生效，如果想避免延迟，可以加 VM 参数 -XX:BiasedLockingStartupDelay=0 来禁用延迟** 
 - 如果没有开启偏向锁，那么对象创建后，markword 值为 0x01 即最后 3 位为 001，这时它的 hashcode、 age 都为 0，第一次用到 hashcode 时才会赋值
 
-> 测试延迟特性
+> **测试延迟特性**
 
 利用 jol 第三方工具来查看对象头信息
 
@@ -2304,10 +2425,13 @@ CAS 底层对应的也是以 lock 打头的指令，也会影响一定的性能�
 ```
 
 ```java
+package monitor;
+
 import lombok.extern.slf4j.Slf4j;
 import org.openjdk.jol.info.ClassLayout;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 class Dog {
 }
@@ -2315,45 +2439,72 @@ class Dog {
 @Slf4j(topic = "c.TestBiased")
 public class TestBiased {
     // 添加虚拟机参数 -XX:BiasedLockingStartupDelay=0
-    public static void main(String[] args) throws IOException {
-        Dog d = new Dog();
-        ClassLayout classLayout = ClassLayout.parseInstance(d);
-        new Thread(() -> {
-            log.debug("synchronized 前");
-            log.debug(classLayout.parseInstance(d).toPrintable());
-            synchronized (d) {
-                log.debug("synchronized 中");
-                log.debug(classLayout.parseInstance(d).toPrintable());
-            }
-            log.debug("synchronized 后");
-            log.debug(classLayout.parseInstance(d).toPrintable());
-
-        }, "t1").start();
+    public static void main(String[] args) throws IOException, InterruptedException {
+        // 要解析的对象
+        log.debug(ClassLayout.parseInstance(new Object()).toPrintable());
+        TimeUnit.SECONDS.sleep(4);
+        log.debug(ClassLayout.parseInstance(new Object()).toPrintable());
     }
 }
 ```
 
-输出
+输出：
+
+一开始，偏向锁没有开启 0 0 1 \==> Normal
+
+程序运行几秒后，偏向锁开启了 <span style="color:red">**1**</span> 0 1\==> Biased
 
 ````shell
-asfs
+21:02:22.539 c.TestBiased [main] - java.lang.Object object internals:
+ OFFSET  SIZE   TYPE DESCRIPTION                               VALUE
+      0     4        (object header)                           01 00 00 00 (00000001 00000000 00000000 00000000) (1)
+      4     4        (object header)                           00 00 00 00 (00000000 00000000 00000000 00000000) (0)
+      8     4        (object header)                           e5 01 00 f8 (11100101 00000001 00000000 11111000) (-134217243)
+     12     4        (loss due to the next object alignment)
+Instance size: 16 bytes
+Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
+
+21:02:26.543 c.TestBiased [main] - java.lang.Object object internals:
+ OFFSET  SIZE   TYPE DESCRIPTION                               VALUE
+      0     4        (object header)                           05 00 00 00 (00000101 00000000 00000000 00000000) (5)
+      4     4        (object header)                           00 00 00 00 (00000000 00000000 00000000 00000000) (0)
+      8     4        (object header)                           e5 01 00 f8 (11100101 00000001 00000000 11111000) (-134217243)
+     12     4        (loss due to the next object alignment)
+Instance size: 16 bytes
+Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
 ````
 
 **注意** 处于偏向锁的对象解锁后，线程 id 仍存储于对象头中。
 
-> 测试禁用
+> **测试禁用**
 
 在上面测试代码运行时在添加 VM 参数 -XX:-UseBiasedLocking 禁用偏向锁。输出：
 
 ```shell
-123
+21:16:13.603 c.TestBiased [main] - java.lang.Object object internals:
+ OFFSET  SIZE   TYPE DESCRIPTION                               VALUE
+      0     4        (object header)                           01 00 00 00 (00000001 00000000 00000000 00000000) (1)
+      4     4        (object header)                           00 00 00 00 (00000000 00000000 00000000 00000000) (0)
+      8     4        (object header)                           e5 01 00 f8 (11100101 00000001 00000000 11111000) (-134217243)
+     12     4        (loss due to the next object alignment)
+Instance size: 16 bytes
+Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
+
+21:16:17.606 c.TestBiased [main] - java.lang.Object object internals:
+ OFFSET  SIZE   TYPE DESCRIPTION                               VALUE
+      0     4        (object header)                           01 00 00 00 (00000001 00000000 00000000 00000000) (1)
+      4     4        (object header)                           00 00 00 00 (00000000 00000000 00000000 00000000) (0)
+      8     4        (object header)                           e5 01 00 f8 (11100101 00000001 00000000 11111000) (-134217243)
+     12     4        (loss due to the next object alignment)
+Instance size: 16 bytes
+Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
 ```
 
-> 测试 hashCode
+> **测试 hashCode**
 
-正常状态对象一开始是没有 hashCode 的，第一次调用才生成
+正常状态对象一开始是没有 hashCode 的，第一次调用才生成。，同时我们开启偏向锁无延迟。
 
-##### 撤销-调用对象 hashCode
+> **撤销-调用对象 hashCode**
 
 调用了对象的 hashCode，但偏向锁的对象 MarkWord 中存储的是线程 id，如果调用 hashCode 会导致偏向锁被撤销 
 
@@ -2362,195 +2513,174 @@ asfs
 
 在调用 hashCode 后使用偏向锁，记得去掉 -XX:-UseBiasedLocking
 
-输出
+**代码**
 
-```shell
-adf
+```java
+package monitor;
+
+import lombok.extern.slf4j.Slf4j;
+import org.openjdk.jol.info.ClassLayout;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+class Dog {
+}
+
+@Slf4j(topic = "c.TestBiased")
+public class TestBiased {
+    // 测试hashCode -XX:+UseCompressedOops -XX:BiasedLockingStartupDelay=0
+    public static void main(String[] args) throws IOException, InterruptedException {
+        // 要解析的对象
+        Object obj = new Object();
+        obj.hashCode();
+        log.debug(ClassLayout.parseInstance(obj).toPrintable());
+    }
+}
 ```
 
-##### 撤销-其他线程使用对象
+**输出**
+
+```java
+21:20:34.687 c.TestBiased [main] - java.lang.Object object internals:
+ OFFSET  SIZE   TYPE DESCRIPTION                               VALUE
+      0     4        (object header)                           01 9b 29 7d (00000001 10011011 00101001 01111101) (2099878657)
+      4     4        (object header)                           56 00 00 00 (01010110 00000000 00000000 00000000) (86)
+      8     4        (object header)                           e5 01 00 f8 (11100101 00000001 00000000 11111000) (-134217243)
+     12     4        (loss due to the next object alignment)
+Instance size: 16 bytes
+Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
+```
+
+> **撤销-其他线程使用对象**
 
 当有其它线程使用偏向锁对象时，会将偏向锁升级为轻量级锁
 
+> **撤销-调用 wait/notify**
+
+> **批量重偏向**
+
+如果对象虽然被多个线程访问，但没有竞争，这时偏向了线程 T1 的对象仍有机会重新偏向 T2，重偏向会重置对象 的 Thread ID
+
+当撤销偏向锁阈值超过 20 次后，jvm 会这样觉得，我是不是偏向错了呢，于是会在给这些对象加锁时重新偏向至 加锁线程
+
+> **批量撤销**
+
+当撤销偏向锁阈值超过 40 次后，jvm 会这样觉得，自己确实偏向错了，根本就不该偏向。于是整个类的所有对象 都会变为不可偏向的，新建的对象也是不可偏向的
+
+> **锁消除**
+
 ```java
-private static void test2() throws InterruptedException {
- Dog d = new Dog();
- Thread t1 = new Thread(() -> {
- synchronized (d) {
- log.debug(ClassLayout.parseInstance(d).toPrintableSimple(true));
- }
- synchronized (TestBiased.class) {
- TestBiased.class.notify();
- }
- // 如果不用 wait/notify 使用 join 必须打开下面的注释
- // 因为：t1 线程不能结束，否则底层线程可能被 jvm 重用作为 t2 线程，底层线程 id 是一样的
- /*try {
- System.in.read();
- } catch (IOException e) {
- e.printStackTrace();
- }*/
- }, "t1");
- t1.start();
- Thread t2 = new Thread(() -> {
- synchronized (TestBiased.class) {
- try {
- TestBiased.class.wait();
- } catch (InterruptedException e) {
- e.printStackTrace();
- }
- }
- log.debug(ClassLayout.parseInstance(d).toPrintableSimple(true));
- synchronized (d) {
- log.debug(ClassLayout.parseInstance(d).toPrintableSimple(true));
- }
- log.debug(ClassLayout.parseInstance(d).toPrintableSimple(true));
- }, "t2");
- t2.start();
+package monitor;
+
+import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
+
+import java.util.concurrent.TimeUnit;
+
+@Fork(1)
+@BenchmarkMode(Mode.AverageTime)
+@Warmup(iterations = 3)
+@Measurement(iterations = 5)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+public class WipeLock {
+    public static void main(String[] args) throws RunnerException {
+        Options opt = new OptionsBuilder()
+                .include(WipeLock.class.getSimpleName())
+                .forks(1)
+                .build();
+        new Runner(opt).run();
+    }
+
+    static int x = 0;
+
+    @Benchmark
+    public void a() throws Exception {
+        x++;
+    }
+
+    @Benchmark
+    public void b() throws Exception {
+        Object o = new Object();
+        synchronized (o) {
+            x++;
+        }
+    }
 }
 ```
 
-输出
+测试结果：性能差不多，虽然 b 方法加了锁，但是有锁消除，所以性能是差不多的！
 
 ```shell
-[t1] - 00000000 00000000 00000000 00000000 00011111 01000001 00010000 00000101 
-[t2] - 00000000 00000000 00000000 00000000 00011111 01000001 00010000 00000101 
-[t2] - 00000000 00000000 00000000 00000000 00011111 10110101 11110000 01000000 
-[t2] - 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001 
+Benchmark   Mode  Cnt  Score   Error  Units
+WipeLock.a  avgt    5  1.304 ± 0.014  ns/op
+WipeLock.b  avgt    5  1.295 ± 0.029  ns/op
 ```
 
 
 
-##### 撤销-调用 wait/notify
+锁粗化；对相同对象多次加锁，导致线程发生多次重入，可以使用锁粗化方式来优化，这不同于之前讲的细分锁的粒度。
 
-```java
-public static void main(String[] args) throws InterruptedException {
- Dog d = new Dog();
- Thread t1 = new Thread(() -> {
- log.debug(ClassLayout.parseInstance(d).toPrintableSimple(true));
- synchronized (d) {
- log.debug(ClassLayout.parseInstance(d).toPrintableSimple(true));
- try {
- d.wait();
- } catch (InterruptedException e) {
- e.printStackTrace();
- }
- log.debug(ClassLayout.parseInstance(d).toPrintableSimple(true));
- }
- }, "t1");
- t1.start();
- new Thread(() -> {
- try {
- Thread.sleep(6000);
- } catch (InterruptedException e) {
- e.printStackTrace();
- }
- synchronized (d) {
- log.debug("notify");
- d.notify();
- }
- }, "t2").start();
-}
-```
+参考资料 
 
-输出
+https://github.com/farmerjohngit/myblog/issues/12 
 
-```shell
-[t1] - 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000101 
-[t1] - 00000000 00000000 00000000 00000000 00011111 10110011 11111000 00000101 
-[t2] - notify 
-[t1] - 00000000 00000000 00000000 00000000 00011100 11010100 00001101 11001010 
-```
+https://www.cnblogs.com/LemonFive/p/11246086.html 
 
+https://www.cnblogs.com/LemonFive/p/11248248.html 
 
+<a href="https://www.oracle.com/technetwork/java/biasedlocking-oopsla2006-wp-149958.pdf">偏向锁论文</a>
 
+## wait/notify
 
+### 原理
 
-##### 批量重偏向
-
-##### 批量撤销
-
-#### 锁消除
-
-# 线程通信
-
-
-
-线程通信的方式有如下几种
-
-> 基本通信方式
-
-- wait - notify/notifyAll：wait线程阻塞并释放锁，notify/notifyAll唤醒线程/所有线程；需要获得监视器monitor，简单说就是要sync加锁。
-  - sync锁是大家一起争夺，==拿不到锁的被迫阻塞自己==。
-  - wait是自己主动放弃权力，主动阻塞自己。
-  - notify/notifyAll是唤醒其他线程可以尝试获取锁了，如果线程获取到了锁，那么就可以执行了，没拿到锁的话，就执行不了。
-- suspend - resume（废弃）：suspend挂起线程、resume唤醒；需要获得监视器monitor，简单说就是要像sync加锁
-  - suspend 在导致线程暂停的同时，并不会去释放任何资源。
-- join - yeild：join等待线程结束、yeild谦让
-
-> 高级通信方式
-
-- AQS
-- LockSupport
-- ReentrantLock
-- ReentrantRead/WriteLock
-- Semaphore
-- CyclicBarrier
-- CountDownLatch
-- StampedLock
-
-### suspend-resume
-
-使用不当会造成死锁，且死锁后的线程状态还是Runnable！！这个才是最坑的，我觉得就是因为这个才被废弃的！！
-
-`suspend挂起线程，不释放资源！！`
-
-`resume唤醒线程！！`
-
-`如果resume()方法操作意外地在suspend()方法前就执行了，那么被挂起的线程可能很难有机会被继续执行。而且！！对于被挂起的线程，从它的线程状态上看，居然还是Runnable，这会严重影响我们对系统当前状态的判断。`
-
-LockSupport比这个好！！
-
-### wait-notify
+> 基本概念
 
 - wait：阻塞线程并释放锁。
-    - 如果一个线程调用了object.wait()方法，那么它就会进入object对象的等待队列。这个等待队列中，可能会有多个线程，因为系统运行多个线程同时等待某一个对象。
+  - 如果一个线程调用了object.wait()方法，那么它就会进入object对象的等待队列。这个等待队列中，可能会有多个线程，因为系统运行多个线程同时等待某一个对象。
 
 - notify：唤醒阻塞队列中的某个线程。
-    - 当object.notify()方法被调用时，它就会从这个等待队列中随机选择一个线程，并将其唤醒。
-    - PS：选择唤醒某个线程，这个选择是不公平的，完全随机！
+  - 当object.notify()方法被调用时，它就会从这个等待队列中随机选择一个线程，并将其唤醒。
+  - PS：选择唤醒某个线程，这个选择是不公平的，完全随机！
 
 - notifyAll：唤醒阻塞队列中的所有线程。
 - `注意：Thread.sleep是不会释放锁的！`
 
-### join-yeild
+----
 
-用于线程之间的协作。
+> 原理
 
-- join()
-- join(long millis)
-- yeild让出CPU资源，但是让出后还会继续竞争。
+<img src="..\pics\JavaStrengthen\juc\wait_theory.png" style="width:100%">
 
-```java
-public class JoinDemo {
-    public static void main(String[] args) throws InterruptedException {
-        Thread th1 = new Thread(() -> {
-            while (true) {
-                try {
-                    TimeUnit.SECONDS.sleep(1);
-                    System.out.println(Thread.currentThread().getName());
-                    System.out.println("========================");
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        th1.start();
-        // 主线程Main 愿意等th1执行完6秒后再执行。不写数值的话，就是主线程等th1执行完毕后再执行。
-        th1.join(6000);
-        System.out.println("Over!");
-    }
-}
-```
+- Owner 线程发现条件不满足，调用 wait 方法，即可进入 WaitSet 变为 WAITING 状态 
+- BLOCKED 和 WAITING 的线程都处于阻塞状态，不占用 CPU 时间片 
+- BLOCKED 线程会在 Owner 线程释放锁时唤醒 
+- WAITING 线程会在 Owner 线程调用 notify 或 notifyAll 时唤醒，但唤醒后并不意味者立刻获得锁，仍需进入 EntryList 重新竞争
+
+### API
+
+- `obj.wait()` 让进入 object 监视器的线程到 `waitSet` 等待 
+- `obj.notify()` 在 object 上正在 `waitSet` 等待的线程中挑一个唤醒 
+- `obj.notifyAll()` 让 object 上正在 `waitSet` 等待的线程全部唤醒
+
+它们都是线程之间进行协作的手段，都属于 Object 对象的方法。必须获得此对象的锁，才能调用这几个方法
+
+wait() 方法会释放对象的锁，进入 WaitSet 等待区，从而让其他线程就机会获取对象的锁。无限制等待，直到 notify 为止 
+
+wait(long n) 有时限的等待, 到 n 毫秒后结束等待，或是被 notify
+
+### 案例
+
+**描述：**
+
+- 小南，有烟干活，没烟，休息 2s。
+- 送烟人：送烟给小南。
+- 其他人：任何时候都可以干活。
+- 干活地点都是同一个。一次只能小南，其他人中的一个干活
 
 # synchronized
 
