@@ -2682,6 +2682,255 @@ wait(long n) 有时限的等待, 到 n 毫秒后结束等待，或是被 notify
 - 其他人：任何时候都可以干活。
 - 干活地点都是同一个。一次只能小南，其他人中的一个干活
 
+## 保护暂停
+
+### 定义
+
+即 Guarded Suspension，用在一个线程等待另一个线程的执行结果 
+
+要点 
+
+- 有一个结果需要从一个线程传递到另一个线程，让他们关联同一个 GuardedObject ，用 GuardedObject  协调两个线程的结果。如果有源源不断的结果送过来，那么就得用消息队列。
+  - response 是用来保存结果的。
+- 如果有结果不断从一个线程到另一个线程那么可以使用消息队列（见生产者/消费者） 
+- JDK 中，join 的实现、Future 的实现，采用的就是此模式 
+- 因为要等待另一方的结果，因此归类到同步模式
+
+<img src="..\pics\JavaStrengthen\juc\Guarded_Suspension.png">
+
+### 实现
+
+> 保护性暂停模式
+
+```java
+package application;
+
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+@Slf4j(topic = "c.GuardedSuspension")
+public class GuardedSuspension {
+
+    public static void main(String[] args) {
+        // 两个线程用同一个对象进行交互。
+        GuardedObject guardedObject = new GuardedObject();
+        Thread th1 = new Thread(() -> {
+            log.debug("等待结果");
+            List<String> list = (List<String>) guardedObject.get();// 等待结果
+            log.debug("结果大小：{}", list.size());
+        }, "th1");
+
+        Thread th2 = new Thread(() -> {
+            log.debug("执行下载");
+            List<String> response = DownLoad.downLoad();
+            log.debug("download complete");
+            guardedObject.complete(response);
+        }, "th2");
+        th1.start();
+        th2.start();
+    }
+}
+
+class GuardedObject {
+    // 等待的数据
+    private Object response;
+
+    public Object get() {
+        synchronized (this) {
+            try {
+                // 没有结果就一直等待；while 防止虚假唤醒。
+                while (response == null)
+                    this.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return response;
+        }
+    }
+
+    // 产生结果
+    public void complete(Object response) {
+        synchronized (this) {
+            this.response = response;
+            this.notifyAll();
+        }
+    }
+}
+
+class DownLoad {
+    public static final List<String> downLoad() {
+        HttpURLConnection conn = null;
+        ArrayList<String> lines = new ArrayList<>();
+        try {
+            conn = (HttpURLConnection) new URL("https://www.baidu.com/").openConnection();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    lines.add(line);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return lines;
+    }
+}
+```
+
+> join 实现
+
+```java
+static  List<String> data = null;
+
+public static void joinTest() {
+    Object o = new Object();
+
+    Thread th1 = new Thread(() -> {
+        synchronized (o) {
+            log.debug("等待结果");
+            while (data == null) {
+                try {
+                    o.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            log.debug("拿到了结果！大小为 {}", data.size());
+        }
+    });
+
+    Thread th2 = new Thread(() -> {
+        synchronized (o) {
+            log.debug("执行下载");
+            List<String> strings = DownLoad.downLoad();
+            data = strings;
+            log.debug("下载完成");
+            o.notifyAll();
+        }
+    });
+
+    th1.start();
+    th2.start();
+}
+```
+
+我感觉 保护暂停性模式 对比 join 就是封装了下变量，交互的变量不是全局的了，而是对象封装的。其他的还没什么感觉。
+
+### 增加超时
+
+等待时间那里，仔细看看为什么这么写！
+
+```java
+@Slf4j(topic = "c.GuardedSuspension")
+public class GuardedSuspension {
+
+    public static void main(String[] args) {
+        // 两个线程用同一个对象进行交互。
+        GuardedObject guardedObject = new GuardedObject();
+        Thread th1 = new Thread(() -> {
+            log.debug("等待结果");
+            Object response = guardedObject.get(2000);// 等待结果
+            log.debug("结果是{}", response);
+        }, "th1");
+
+        Thread th2 = new Thread(() -> {
+            log.debug("执行下载");
+            try {
+                TimeUnit.SECONDS.sleep(1);
+                guardedObject.complete(null);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }, "th2");
+        th1.start();
+        th2.start();
+    }
+}
+
+class GuardedObject {
+    // 等待的数据
+    private Object response;
+
+    // timeout 总共等几秒
+    public Object get(long timeout) {
+        synchronized (this) {
+            // 开始时间
+            long begin = System.currentTimeMillis();
+            // 经历的时间
+            long passedTime = 0;
+            try {
+                // 没有结果就一直等待；while 防止虚假唤醒。
+                while (response == null) {
+                    // 经历的时间超过了最大等待时间
+                    if (passedTime >= timeout) break;
+                    // 等了 passedTime 秒了，再等 timeout - passedTime 就可以了
+                    this.wait(timeout - passedTime);
+                    passedTime = System.currentTimeMillis() - begin;
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return response;
+        }
+    }
+
+    // 产生结果
+    public void complete(Object response) {
+        synchronized (this) {
+            this.response = response;
+            this.notifyAll();
+        }
+    }
+}
+```
+
+
+
+### join 原理
+
+join 应用了保护性暂停模式，暂停就是条件不满足时，进行 wait 等待。不过 join 是等待一个线程的结束，而我们写的是等待结果。
+
+```java
+public final synchronized void join(long millis)
+    throws InterruptedException {
+    long base = System.currentTimeMillis();
+    long now = 0;
+
+    if (millis < 0) {
+        throw new IllegalArgumentException("timeout value is negative");
+    }
+
+    if (millis == 0) {
+        // 如果线程还存活，就一直等待。
+        while (isAlive()) {
+            wait(0);
+        }
+    } else {
+        // 大于0的话，这不就是上面写的 保护性暂停模式的超时增强吗
+        while (isAlive()) {
+            long delay = millis - now;
+            if (delay <= 0) {
+                break;
+            }
+            wait(delay);
+            now = System.currentTimeMillis() - base;
+        }
+    }
+}
+```
+
+### 扩展-解耦等待和生产
+
+
+
 # synchronized
 
 ### 概述
