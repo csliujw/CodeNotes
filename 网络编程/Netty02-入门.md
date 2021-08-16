@@ -1,7 +1,5 @@
 # 二. Netty 入门
 
-
-
 ## 1. 概述
 
 ### 1.1 Netty 是什么？
@@ -13,15 +11,11 @@ for rapid development of maintainable high performance protocol servers & client
 
 Netty 是一个异步的、基于事件驱动的网络应用框架，用于快速开发可维护、高性能的网络服务器和客户端
 
-
-
 ### 1.2 Netty 的作者
 
 ![](img/0005.png)
 
 他还是另一个著名网络应用框架 Mina 的重要贡献者
-
-
 
 ### 1.3 Netty 的地位
 
@@ -39,8 +33,6 @@ Netty 在 Java 网络应用框架中的地位就好比：Spring 框架在 JavaEE
 * Spring 5.x - flux api 完全抛弃了 tomcat ，使用 netty 作为服务器端
 * Zookeeper - 分布式协调框架
 
-
-
 ### 1.4 Netty 的优势
 
 * Netty vs NIO，工作量大，bug 多
@@ -56,8 +48,6 @@ Netty 在 Java 网络应用框架中的地位就好比：Spring 框架在 JavaEE
     * 4.x 2013
     * 5.x 已废弃（没有明显的性能提升，维护成本高）
 
-
-
 ## 2. Hello World
 
 ### 2.1 目标
@@ -66,8 +56,6 @@ Netty 在 Java 网络应用框架中的地位就好比：Spring 框架在 JavaEE
 
 * 客户端向服务器端发送 hello, world
 * 服务器仅接收，不返回
-
-
 
 加入依赖
 
@@ -78,10 +66,6 @@ Netty 在 Java 网络应用框架中的地位就好比：Spring 框架在 JavaEE
     <version>4.1.39.Final</version>
 </dependency>
 ```
-
-
-
-
 
 ### 2.2 服务器端
 
@@ -119,8 +103,6 @@ new ServerBootstrap()
 
 * 6 处，SocketChannel 的业务处理器，使用上一个处理器的处理结果
 
-
-
 ### 2.3 客户端
 
 ```java
@@ -155,8 +137,6 @@ new Bootstrap()
 * 8 处，消息会经过通道 handler 处理，这里是将 String => ByteBuf 发出
 * 数据经过网络传输，到达服务器端，服务器端 5 和 6 处的 handler 先后被触发，走完一个流程
 
-
-
 ### 2.4 流程梳理
 
 ![](img/0040.png)
@@ -175,8 +155,6 @@ new Bootstrap()
 >   * 工人既可以执行 io 操作，也可以进行任务处理，每位工人有任务队列，队列里可以堆放多个 channel 的待处理任务，任务分为普通任务、定时任务
 >   * 工人按照 pipeline 顺序，依次按照 handler 的规划（代码）处理数据，可以为每道工序指定不同的工人
 
-
-
 ## 3. 组件
 
 ### 3.1 EventLoop
@@ -192,8 +170,6 @@ EventLoop 本质是一个单线程执行器（同时维护了一个 Selector）�
   * 提供了 boolean inEventLoop(Thread thread) 方法判断一个线程是否属于此 EventLoop
   * 提供了 parent 方法来看看自己属于哪个 EventLoopGroup
 
-
-
 事件循环组
 
 EventLoopGroup 是一组 EventLoop，Channel 一般会调用 EventLoopGroup 的 register 方法来绑定其中一个 EventLoop，后续这个 Channel 上的 io 事件都由此 EventLoop 来处理（保证了 io 事件处理时的线程安全）
@@ -201,8 +177,6 @@ EventLoopGroup 是一组 EventLoop，Channel 一般会调用 EventLoopGroup 的 
 * 继承自 netty 自己的 EventExecutorGroup
   * 实现了 Iterable 接口提供遍历 EventLoop 的能力
   * 另有 next 方法获取集合中下一个 EventLoop
-
-
 
 以一个简单的实现为例：
 
@@ -238,13 +212,9 @@ io.netty.channel.DefaultEventLoop@60f82f98
 io.netty.channel.DefaultEventLoop@35f983a6
 ```
 
-
-
 #### 💡 优雅关闭
 
 优雅关闭 `shutdownGracefully` 方法。该方法会首先切换 `EventLoopGroup` 到关闭状态从而拒绝新的任务的加入，然后在任务队列的任务都处理完成后，停止线程的运行。从而确保整体应用是在正常有序的状态下退出的
-
-
 
 #### 演示 NioEventLoop 处理 io 事件
 
@@ -308,8 +278,6 @@ public static void main(String[] args) throws InterruptedException {
 可以看到两个工人轮流处理 channel，但工人与 channel 之间进行了绑定
 
 ![](img/0042.png)
-
-
 
 再增加两个非 nio 工人
 
@@ -401,11 +369,7 @@ new ServerBootstrap()
 
 可以看到，nio 工人和 非 nio 工人也分别绑定了 channel（LoggingHandler 由 nio 工人执行，而我们自己的 handler 由非 nio 工人执行）
 
-
-
 ![](img/0041.png)
-
-
 
 #### 💡 handler 执行中如何换人？
 
@@ -436,8 +400,6 @@ static void invokeChannelRead(final AbstractChannelHandlerContext next, Object m
 * 如果两个 handler 绑定的是同一个线程，那么就直接调用
 * 否则，把要调用的代码封装为一个任务对象，由下一个 handler 的线程来调用
 
-
-
 #### 演示 NioEventLoop 处理普通任务
 
 NioEventLoop 除了可以处理 io 事件，同样可以向它提交普通任务
@@ -460,8 +422,6 @@ nioWorkers.execute(()->{
 ```
 
 > 可以用来执行耗时较长的任务
-
-
 
 #### 演示 NioEventLoop 处理定时任务
 
@@ -488,8 +448,6 @@ nioWorkers.scheduleAtFixedRate(() -> {
 
 > 可以用来执行定时任务
 
-
-
 ### 3.2 Channel
 
 channel 的主要作用
@@ -501,8 +459,6 @@ channel 的主要作用
 * pipeline() 方法添加处理器
 * write() 方法将数据写入
 * writeAndFlush() 方法将数据写入并刷出
-
-
 
 #### ChannelFuture
 
@@ -590,8 +546,6 @@ channelFuture.addListener((ChannelFutureListener) future -> {
 * 执行到 1 时，连接未建立，打印 `[id: 0x749124ba]`
 * ChannelFutureListener 会在连接建立时被调用（其中 operationComplete 方法），因此执行到 2 时，连接肯定建立了，打印 `[id: 0x749124ba, L:/127.0.0.1:57351 - R:/127.0.0.1:8080]`
 
-
-
 #### CloseFuture
 
 ```java
@@ -641,51 +595,19 @@ public class CloseFutureClient {
 }
 ```
 
-
-
-
-
 #### 💡 异步提升的是什么
 
 * 有些同学看到这里会有疑问：为什么不在一个线程中去执行建立连接、去执行关闭 channel，那样不是也可以吗？非要用这么复杂的异步方式：比如一个线程发起建立连接，另一个线程去真正建立连接
 
 * 还有同学会笼统地回答，因为 netty 异步方式用了多线程、多线程就效率高。其实这些认识都比较片面，多线程和异步所提升的效率并不是所认为的
 
-
-
-
-
 思考下面的场景，4 个医生给人看病，每个病人花费 20 分钟，而且医生看病的过程中是以病人为单位的，一个病人看完了，才能看下一个病人。假设病人源源不断地来，可以计算一下 4 个医生一天工作 8 小时，处理的病人总数是：`4 * 8 * 3 = 96`
 
 ![](img/0044.png)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 经研究发现，看病可以细分为四个步骤，经拆分后每个步骤需要 5 分钟，如下
 
 ![](img/0048.png)
-
-
-
-
-
-
-
-
-
-
 
 因此可以做如下优化，只有一开始，医生 2、3、4 分别要等待 5、10、15 分钟才能执行工作，但只要后续病人源源不断地来，他们就能够满负荷工作，并且处理病人的能力提高到了 `4 * 8 * 12` 效率几乎是原来的四倍
 
@@ -696,8 +618,6 @@ public class CloseFutureClient {
 * 单线程没法异步提高效率，必须配合多线程、多核 cpu 才能发挥异步的优势
 * 异步并没有缩短响应时间，反而有所增加
 * 合理进行任务拆分，也是利用异步的关键
-
-
 
 ### 3.3 Future & Promise
 
@@ -723,8 +643,6 @@ public class CloseFutureClient {
 | addLinstener | -                              | 添加回调，异步接收结果                                       | -            |
 | setSuccess   | -                              | -                                                            | 设置成功结果 |
 | setFailure   | -                              | -                                                            | 设置失败结果 |
-
-
 
 #### 例1
 
@@ -757,8 +675,6 @@ log.debug("{}",promise.get());
 11:51:54 [DEBUG] [defaultEventLoop-1-1] c.i.o.DefaultPromiseTest2 - set success, 10
 11:51:54 [DEBUG] [main] c.i.o.DefaultPromiseTest2 - 10
 ```
-
-
 
 #### 例2
 
@@ -795,8 +711,6 @@ log.debug("start...");
 11:49:31 [DEBUG] [defaultEventLoop-1-1] c.i.o.DefaultPromiseTest2 - set success, 10
 11:49:31 [DEBUG] [defaultEventLoop-1-1] c.i.o.DefaultPromiseTest2 - 10
 ```
-
-
 
 #### 例3
 
@@ -840,8 +754,6 @@ Caused by: java.lang.RuntimeException: error...
 	at java.lang.Thread.run(Thread.java:745)
 ```
 
-
-
 #### 例4
 
 同步处理任务失败 - await
@@ -876,8 +788,6 @@ log.debug("result {}", (promise.isSuccess() ? promise.getNow() : promise.cause()
 12:18:54 [DEBUG] [main] c.i.o.DefaultPromiseTest2 - result java.lang.RuntimeException: error...
 ```
 
-
-
 #### 例5
 
 异步处理任务失败
@@ -911,8 +821,6 @@ log.debug("start...");
 12:04:58 [DEBUG] [defaultEventLoop-1-1] c.i.o.DefaultPromiseTest2 - set failure, java.lang.RuntimeException: error...
 12:04:58 [DEBUG] [defaultEventLoop-1-1] c.i.o.DefaultPromiseTest2 - result java.lang.RuntimeException: error...
 ```
-
-
 
 #### 例6
 
@@ -977,10 +885,6 @@ io.netty.util.concurrent.BlockingOperationException: DefaultPromise@47499c2a(inc
 
 ```
 
-
-
-
-
 ### 3.4 Handler & Pipeline
 
 ChannelHandler 用来处理 Channel 上的各种事件，分为入站、出站两种。所有 ChannelHandler 被连成一串，就是 Pipeline
@@ -989,8 +893,6 @@ ChannelHandler 用来处理 Channel 上的各种事件，分为入站、出站�
 * 出站处理器通常是 ChannelOutboundHandlerAdapter 的子类，主要对写回结果进行加工
 
 打个比喻，每个 Channel 是一个产品的加工车间，Pipeline 是车间中的流水线，ChannelHandler 就是流水线上的各道工序，而后面要讲的 ByteBuf 是原材料，经过很多工序的加工：先经过一道道入站工序，再经过一道道出站工序最终变成产品
-
-
 
 先搞清楚顺序，服务端
 
@@ -1097,13 +999,9 @@ new Bootstrap()
   * 3 处的 ctx.channel().write(msg) 如果改为 ctx.write(msg) 仅会打印 1 2 3，因为节点3 之前没有其它出站处理器了
   * 6 处的 ctx.write(msg, promise) 如果改为 ctx.channel().write(msg) 会打印 1 2 3 6 6 6... 因为 ctx.channel().write() 是从尾部开始查找，结果又是节点6 自己
 
-
-
 图1 - 服务端 pipeline 触发的原始流程，图中数字代表了处理步骤的先后次序
 
 ![](img/0009.png)
-
-
 
 ### 3.5 ByteBuf
 
@@ -1140,8 +1038,6 @@ private static void log(ByteBuf buffer) {
 }
 ```
 
-
-
 #### 2）直接内存 vs 堆内存
 
 可以使用下面的代码来创建池化基于堆的 ByteBuf
@@ -1158,8 +1054,6 @@ ByteBuf buffer = ByteBufAllocator.DEFAULT.directBuffer(10);
 
 * 直接内存创建和销毁的代价昂贵，但读写性能高（少一次内存复制），适合配合池化功能一起用
 * 直接内存对 GC 压力小，因为这部分内存不受 JVM 垃圾回收的管理，但也要注意及时主动释放
-
-
 
 #### 3）池化 vs 非池化
 
@@ -1178,8 +1072,6 @@ ByteBuf buffer = ByteBufAllocator.DEFAULT.directBuffer(10);
 * 4.1 以后，非 Android 平台默认启用池化实现，Android 平台启用非池化实现
 * 4.1 之前，池化功能还不成熟，默认是非池化实现
 
-
-
 #### 4）组成
 
 ByteBuf 由四部分组成
@@ -1187,8 +1079,6 @@ ByteBuf 由四部分组成
 ![](img/0010.png)
 
 最开始读写指针都在 0 位置
-
-
 
 #### 5）写入
 
@@ -1214,8 +1104,6 @@ ByteBuf 由四部分组成
 >
 > * 这些方法的未指明返回值的，其返回值都是 ByteBuf，意味着可以链式调用
 > * 网络传输，默认习惯是 Big Endian
-
-
 
 先写入 4 个字节
 
@@ -1253,11 +1141,7 @@ read index:0 write index:8 capacity:10
 +--------+-------------------------------------------------+----------------+
 ```
 
-
-
 还有一类方法是 set 开头的一系列方法，也可以写入数据，但不会改变写指针位置
-
-
 
 #### 6）扩容
 
@@ -1284,8 +1168,6 @@ read index:0 write index:12 capacity:16
 |00000000| 01 02 03 04 00 00 00 05 00 00 00 06             |............    |
 +--------+-------------------------------------------------+----------------+
 ```
-
-
 
 #### 7）读取
 
@@ -1356,8 +1238,6 @@ read index:4 write index:12 capacity:16
 
 还有种办法是采用 get 开头的一系列方法，这些方法不会改变 read index
 
-
-
 #### 8）retain & release
 
 由于 Netty 中有堆外内存的 ByteBuf 实现，堆外内存最好是手动来释放，而不是等 GC 垃圾回收。
@@ -1366,13 +1246,9 @@ read index:4 write index:12 capacity:16
 * UnpooledDirectByteBuf 使用的就是直接内存了，需要特殊的方法来回收内存
 * PooledByteBuf 和它的子类使用了池化机制，需要更复杂的规则来回收内存
 
-
-
 > 回收内存的源码实现，请关注下面方法的不同实现
 >
 > `protected abstract void deallocate()`
-
-
 
 Netty 这里采用了引用计数法来控制回收内存，每个 ByteBuf 都实现了 ReferenceCounted 接口
 
@@ -1380,8 +1256,6 @@ Netty 这里采用了引用计数法来控制回收内存，每个 ByteBuf 都�
 * 调用 release 方法计数减 1，如果计数为 0，ByteBuf 内存被回收
 * 调用 retain 方法计数加 1，表示调用者没用完之前，其它 handler 即使调用了 release 也不会造成回收
 * 当计数为 0 时，底层内存会被回收，这时即使 ByteBuf 对象还在，其各个方法均无法正常使用
-
-
 
 谁来负责 release 呢？
 
@@ -1412,8 +1286,6 @@ try {
 * 异常处理原则
   * 有时候不清楚 ByteBuf 被引用了多少次，但又必须彻底释放，可以循环调用 release 直到返回 true
 
-
-
 TailContext 释放未处理消息逻辑
 
 ```java
@@ -1440,8 +1312,6 @@ public static boolean release(Object msg) {
     return false;
 }
 ```
-
-
 
 #### 9）slice
 
@@ -1552,8 +1422,6 @@ System.out.println(ByteBufUtil.prettyHexDump(origin));
 +--------+-------------------------------------------------+----------------+
 ```
 
-
-
 #### 10）duplicate
 
 【零拷贝】的体现之一，就好比截取了原始 ByteBuf 所有内容，并且没有 max capacity 的限制，也是与原始 ByteBuf 使用同一块底层内存，只是读写指针是独立的
@@ -1565,8 +1433,6 @@ System.out.println(ByteBufUtil.prettyHexDump(origin));
 #### 11）copy
 
 会将底层内存数据进行深拷贝，因此无论读写，都与原始 ByteBuf 无关
-
-
 
 #### 12）CompositeByteBuf
 
@@ -1622,8 +1488,6 @@ System.out.println(ByteBufUtil.prettyHexDump(buf3));
 
 这种方法好不好？回答是不太好，因为进行了数据的内存复制操作
 
-
-
 方法2：
 
 ```java
@@ -1646,8 +1510,6 @@ CompositeByteBuf 是一个组合的 ByteBuf，它内部维护了一个 Component
 
 * 优点，对外是一个虚拟视图，组合这些 ByteBuf 不会产生内存复制
 * 缺点，复杂了很多，多次操作会带来性能的损耗
-
-
 
 #### 13）Unpooled
 
@@ -1695,8 +1557,6 @@ class io.netty.buffer.CompositeByteBuf
 +--------+-------------------------------------------------+----------------+
 ```
 
-
-
 #### 💡 ByteBuf 优势
 
 * 池化 - 可以重用池中 ByteBuf 实例，更节约内存，减少内存溢出的可能
@@ -1704,8 +1564,6 @@ class io.netty.buffer.CompositeByteBuf
 * 可以自动扩容
 * 支持链式调用，使用更流畅
 * 很多地方体现零拷贝，例如 slice、duplicate、CompositeByteBuf
-
-
 
 ## 4. 双向通信
 
@@ -1781,15 +1639,9 @@ new Thread(() -> {
 }).start();
 ```
 
-
-
 ### 💡 读和写的误解
 
-
-
 我最初在认识上有这样的误区，认为只有在 netty，nio 这样的多路复用 IO 模型时，读写才不会相互阻塞，才可以实现高效的双向通信，但实际上，Java Socket 是全双工的：在任意时刻，线路上存在`A 到 B` 和 `B 到 A` 的双向信号传输。即使是阻塞 IO，读和写是可以同时进行的，只要分别采用读线程和写线程即可，读不会阻塞写、写也不会阻塞读
-
-
 
 例如
 
@@ -1860,10 +1712,6 @@ public class TestClient {
     }
 }
 ```
-
-
-
-
 
 
 
