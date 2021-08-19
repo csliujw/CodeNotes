@@ -2,7 +2,7 @@
 
 ## 1. 概述
 
-### 1.1 Netty 是什么？
+### 1.1 Netty 是什么？	
 
 ```
 Netty is an asynchronous event-driven network application framework
@@ -11,13 +11,7 @@ for rapid development of maintainable high performance protocol servers & client
 
 Netty 是一个异步的、基于事件驱动的网络应用框架，用于快速开发可维护、高性能的网络服务器和客户端
 
-### 1.2 Netty 的作者
-
-![](img/0005.png)
-
-他还是另一个著名网络应用框架 Mina 的重要贡献者
-
-### 1.3 Netty 的地位
+### 1.2 Netty 的地位
 
 Netty 在 Java 网络应用框架中的地位就好比：Spring 框架在 JavaEE 开发中的地位
 
@@ -33,7 +27,7 @@ Netty 在 Java 网络应用框架中的地位就好比：Spring 框架在 JavaEE
 * Spring 5.x - flux api 完全抛弃了 tomcat ，使用 netty 作为服务器端
 * Zookeeper - 分布式协调框架
 
-### 1.4 Netty 的优势
+### 1.3 Netty 的优势
 
 * Netty vs NIO，工作量大，bug 多
   * 需要自己构建协议
@@ -49,6 +43,61 @@ Netty 在 Java 网络应用框架中的地位就好比：Spring 框架在 JavaEE
     * 5.x 已废弃（没有明显的性能提升，维护成本高）
 
 ## 2. Hello World
+
+```java
+public class QuickServer {
+    public static void main(String[] args) {
+        // 1. 服务器端的启动器。负责组装 netty 组件，启动服务器
+        new ServerBootstrap()
+                // 2. Group 类似我们前面写的 BoosEventLoop  WorkerEventLoop(selector,thread)
+                .group(new NioEventLoopGroup())
+                // 3.选择一个 ServerChannel 的实现。 OIO 其实就是 BIO
+                .channel(NioServerSocketChannel.class)
+                // 4.BOSS 负责处理连接， worker(child) 负责处理读写，决定了 worker(child) 能执行哪些操作
+                .childHandler(
+                        // 5.和客户端进行数据读写的通道。channel 代表和客户端进行数据读写的通道 Initializer 初始化，负责添加别的 handler
+                        new ChannelInitializer<NioServerSocketChannel>() {
+                            @Override
+                            protected void initChannel(NioServerSocketChannel ch) throws Exception {
+                                // 6.添加具体的 handler
+                                ch.pipeline().addLast(new StringDecoder()); // 将 ByteBuf 转换为字符串
+                                ch.pipeline().addLast(new ChannelInboundHandlerAdapter() { // 自定义 handler
+                                    @Override
+                                    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                                        System.out.println(msg);
+                                    }
+                                });
+                            }
+                        })
+                // 7.绑定监听端口
+                .bind(8080);
+        System.out.println(123);
+    }
+}
+
+public class QuickClient {
+    public static void main(String[] args) throws InterruptedException {
+        // 1.启动类
+        new Bootstrap()
+                // 2.添加 EventLoop
+                .group(new NioEventLoopGroup())
+                // 3 选择客户端 channel 实现
+                .channel(NioSocketChannel.class)
+                // 4 添加处理器
+                .handler(new ChannelInitializer<NioSocketChannel>() {
+                    @Override // 在建立连接后被调用
+                    protected void initChannel(NioSocketChannel ch) throws Exception {
+                        ch.pipeline().addLast(new StringEncoder());
+                    }
+                })
+                .connect("127.0.0.1", 8080)
+                .sync() // 阻塞方法、直到连接建立才执行。
+                .channel() // 连接建立好了，拿到了 channel 对象（连接对象）。可以读写数据了。
+                // 向服务器发送数据
+                .writeAndFlush("hello world netty");
+    }
+}
+```
 
 ### 2.1 目标
 
@@ -69,73 +118,75 @@ Netty 在 Java 网络应用框架中的地位就好比：Spring 框架在 JavaEE
 
 ### 2.2 服务器端
 
+注意 `ChannelInitializer` 的泛型 是 `NioSocketChannel`
+
 ```java
-new ServerBootstrap()
-    .group(new NioEventLoopGroup()) // 1
-    .channel(NioServerSocketChannel.class) // 2
-    .childHandler(new ChannelInitializer<NioSocketChannel>() { // 3
-        protected void initChannel(NioSocketChannel ch) {
-            ch.pipeline().addLast(new StringDecoder()); // 5
-            ch.pipeline().addLast(new SimpleChannelInboundHandler<String>() { // 6
-                @Override
-                protected void channelRead0(ChannelHandlerContext ctx, String msg) {
-                    System.out.println(msg);
-                }
-            });
-        }
-    })
-    .bind(8080); // 4
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.string.StringDecoder;
+
+public class QuickServer {
+    public static void main(String[] args) {
+        // 1. 服务器端的启动器。负责组装 netty 组件，启动服务器
+        new ServerBootstrap()
+                // 2. Group 类似我们前面写的 BoosEventLoop  WorkerEventLoop(selector,thread) 可以简单理解为 线程池 + Selector ，一开始来讲，关心的是 accept 事件。
+                .group(new NioEventLoopGroup()) // 
+                // 3.选择一个 ServerChannel 的实现。 OIO 其实就是 BIO
+                .channel(NioServerSocketChannel.class)
+                // 4.BOSS 负责处理连接， worker(child) 负责处理读写，决定了 worker(child) 能执行哪些操作
+                .childHandler( //
+                        // 5.和客户端进行数据读写的通道。channel 代表和客户端进行数据读写的通道 Initializer 初始化，负责添加别的 handler。这个不是加完后就执行，是在连接建立以后（accept事件发生后）他会去执行 initChannel 方法
+                        new ChannelInitializer<NioSocketChannel>() {
+                            @Override
+                            protected void initChannel(NioSocketChannel ch) throws Exception {
+                                // 6.添加具体的 handler。（处理器类）
+                                ch.pipeline().addLast(new StringDecoder()); // 将 ByteBuf 转换为字符串
+                                ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+                                    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                                        ctx.fireChannelRead(msg);
+                                        System.out.println(msg);
+                                    }
+                                });
+                            }
+                        })
+                // 7.绑定监听端口
+                .bind(8080);
+        System.out.println(123);
+    }
+}
 ```
-
-代码解读
-
-* 1 处，创建 NioEventLoopGroup，可以简单理解为 `线程池 + Selector` 后面会详细展开
-
-* 2 处，选择服务 Scoket 实现类，其中 NioServerSocketChannel 表示基于 NIO 的服务器端实现，其它实现还有
-
-  ![](img/0006.png)
-
-* 3 处，为啥方法叫 childHandler，是接下来添加的处理器都是给 SocketChannel 用的，而不是给 ServerSocketChannel。ChannelInitializer 处理器（仅执行一次），它的作用是待客户端 SocketChannel 建立连接后，执行 initChannel 以便添加更多的处理器
-
-* 4 处，ServerSocketChannel 绑定的监听端口
-
-* 5 处，SocketChannel 的处理器，解码 ByteBuf => String
-
-* 6 处，SocketChannel 的业务处理器，使用上一个处理器的处理结果
 
 ### 2.3 客户端
 
 ```java
-new Bootstrap()
-    .group(new NioEventLoopGroup()) // 1
-    .channel(NioSocketChannel.class) // 2
-    .handler(new ChannelInitializer<Channel>() { // 3
-        @Override
-        protected void initChannel(Channel ch) {
-            ch.pipeline().addLast(new StringEncoder()); // 8
-        }
-    })
-    .connect("127.0.0.1", 8080) // 4
-    .sync() // 5
-    .channel() // 6
-    .writeAndFlush(new Date() + ": hello world!"); // 7
+public class QuickClient {
+    public static void main(String[] args) throws InterruptedException {
+        // 1.启动类
+        new Bootstrap()
+                // 2.添加 EventLoop
+                .group(new NioEventLoopGroup())
+                // 3 选择客户端 channel 实现
+                .channel(NioSocketChannel.class)
+                // 4 添加处理器
+                .handler(new ChannelInitializer<NioSocketChannel>() {
+                    @Override // 在建立连接后被调用
+                    protected void initChannel(NioSocketChannel ch) throws Exception {
+                        ch.pipeline().addLast(new StringEncoder()); // 把 hello xxx 转成 ByteBuffer
+                    }
+                })
+                .connect("127.0.0.1", 8080)
+                .sync() // 阻塞方法、直到连接建立才执行。
+                .channel() // 连接建立好了，拿到了 channel 对象（连接对象）。可以读写数据了。
+                // 向服务器发送数据
+                .writeAndFlush("hello world netty");
+    }
+}
 ```
-
-代码解读
-
-* 1 处，创建 NioEventLoopGroup，同 Server
-
-* 2 处，选择客户 Socket 实现类，NioSocketChannel 表示基于 NIO 的客户端实现，其它实现还有
-
-  ![](img/0007.png)
-
-* 3 处，添加 SocketChannel 的处理器，ChannelInitializer 处理器（仅执行一次），它的作用是待客户端 SocketChannel 建立连接后，执行 initChannel 以便添加更多的处理器
-* 4 处，指定要连接的服务器和端口
-* 5 处，Netty 中很多方法都是异步的，如 connect，这时需要使用 sync 方法等待 connect 建立连接完毕
-* 6 处，获取 channel 对象，它即为通道抽象，可以进行数据读写操作
-* 7 处，写入消息并清空缓冲区
-* 8 处，消息会经过通道 handler 处理，这里是将 String => ByteBuf 发出
-* 数据经过网络传输，到达服务器端，服务器端 5 和 6 处的 handler 先后被触发，走完一个流程
 
 ### 2.4 流程梳理
 
@@ -150,10 +201,12 @@ new Bootstrap()
 > * 把 handler 理解为数据的处理工序
 >   * 工序有多道，合在一起就是 pipeline，pipeline 负责发布事件（读、读取完成...）传播给每个 handler， handler 对自己感兴趣的事件进行处理（重写了相应事件处理方法）
 >   * handler 分 Inbound 和 Outbound 两类
-> * 把 eventLoop 理解为处理数据的工人
->   * 工人可以管理多个 channel 的 io 操作，并且一旦工人负责了某个 channel，就要负责到底（绑定）
+>     * Inbound 入站
+>     * Outbound 出站
+> * 把 eventLoop 理解为处理数据的工人（使用单线程的线程池实现的？）
+>   * 工人可以管理多个 channel 的 io 操作，并且一旦工人负责了某个 channel，就要负责到底（绑定）。一个 channel 只被一个线程操作，线程安全。
 >   * 工人既可以执行 io 操作，也可以进行任务处理，每位工人有任务队列，队列里可以堆放多个 channel 的待处理任务，任务分为普通任务、定时任务
->   * 工人按照 pipeline 顺序，依次按照 handler 的规划（代码）处理数据，可以为每道工序指定不同的工人
+>   * 工人按照 pipeline 顺序，依次按照 handler 的规划（代码）处理数据，可以为每道工序指定不同的工人（非 IO 操作的处理可以换工人）
 
 ## 3. 组件
 
@@ -172,7 +225,7 @@ EventLoop 本质是一个单线程执行器（同时维护了一个 Selector）�
 
 事件循环组
 
-EventLoopGroup 是一组 EventLoop，Channel 一般会调用 EventLoopGroup 的 register 方法来绑定其中一个 EventLoop，后续这个 Channel 上的 io 事件都由此 EventLoop 来处理（保证了 io 事件处理时的线程安全）
+EventLoopGroup 是一组 EventLoop，Channel 一般会调用 EventLoopGroup 的 register 方法来绑定其中一个 EventLoop，**后续这个 Channel 上的 io 事件都由此 EventLoop 来处理（保证了 io 事件处理时的线程安全）**【把 Channel 和其中一个 EventLoop 绑定在一起。】
 
 * 继承自 netty 自己的 EventExecutorGroup
   * 实现了 Iterable 接口提供遍历 EventLoop 的能力
@@ -181,40 +234,65 @@ EventLoopGroup 是一组 EventLoop，Channel 一般会调用 EventLoopGroup 的 
 以一个简单的实现为例：
 
 ```java
-// 内部创建了两个 EventLoop, 每个 EventLoop 维护一个线程
-DefaultEventLoopGroup group = new DefaultEventLoopGroup(2);
-System.out.println(group.next());
-System.out.println(group.next());
-System.out.println(group.next());
-```
+@Slf4j(topic = "c.TestEventLoop")
+public class TestEventLoop {
+    public static void main(String[] args) {
+        NioEventLoopGroup group = new NioEventLoopGroup(2); // io 事件、普通任务、定时任务
+//        DefaultEventLoopGroup eventExecutors1 = new DefaultEventLoopGroup();// 普通任务、定时任务
+//        System.out.println(NettyRuntime.availableProcessors(
 
-输出
-
-```
-io.netty.channel.DefaultEventLoop@60f82f98
-io.netty.channel.DefaultEventLoop@35f983a6
-io.netty.channel.DefaultEventLoop@60f82f98
-```
-
-也可以使用 for 循环
-
-```java
-DefaultEventLoopGroup group = new DefaultEventLoopGroup(2);
-for (EventExecutor eventLoop : group) {
-    System.out.println(eventLoop);
+        // 获取下一个事件的循环
+        System.out.println(group.next());
+        System.out.println(group.next());
+        System.out.println(group.next());
+        System.out.println(group.next());
+    }
 }
 ```
 
 输出
 
 ```
-io.netty.channel.DefaultEventLoop@60f82f98
-io.netty.channel.DefaultEventLoop@35f983a6
+io.netty.channel.nio.NioEventLoop@3e96bacf
+io.netty.channel.nio.NioEventLoop@484970b0
+io.netty.channel.nio.NioEventLoop@3e96bacf
+io.netty.channel.nio.NioEventLoop@484970b0
 ```
+
+也可以使用 for 循环。
 
 #### 💡 优雅关闭
 
 优雅关闭 `shutdownGracefully` 方法。该方法会首先切换 `EventLoopGroup` 到关闭状态从而拒绝新的任务的加入，然后在任务队列的任务都处理完成后，停止线程的运行。从而确保整体应用是在正常有序的状态下退出的
+
+#### 演示 NioEventLoop 处理普通&定时任务
+
+```java
+@Slf4j(topic = "c.TestEventLoop")
+public class TestEventLoop {
+    public static void main(String[] args) {
+        NioEventLoopGroup group = new NioEventLoopGroup(2); // io 事件、普通任务、定时任务
+//        DefaultEventLoopGroup eventExecutors1 = new DefaultEventLoopGroup();// 普通任务、定时任务
+
+        // 执行普通事件.把任务提交给了事件循环组的某一个事件循环对象去执行。
+        group.next().submit(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(2);
+                log.debug("ok");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        // 执行定时任务。启动一个定时任务，以一定的频率执行
+        // initialDelay 初始延时事件，线程启动后 1s 才运行。period 2，每隔2s 运行一次
+        group.next().scheduleAtFixedRate(() -> {
+            log.debug("fixed rate");
+        }, 1, 2, TimeUnit.SECONDS);
+        log.debug("main");
+    }
+}
+```
 
 #### 演示 NioEventLoop 处理 io 事件
 
@@ -279,99 +357,134 @@ public static void main(String[] args) throws InterruptedException {
 
 ![](img/0042.png)
 
-再增加两个非 nio 工人
+#### 演示 NioEventLoop 分工细化
+
+> 将 boss 与 worker 细分下。调用 group 里接收带两个参数的方法即可。
+
+- 第一个参数是 boss 只负责处理 accept 事件。
+  - `NioServerSocketChannel` 只有一个，那我们是不是应该把 boss 的 `EventLoopGroup` 设置为1呢？不用的。因为 `NioServerSocketChannel`只有一个，将来注册事件的时候，也只会在 EventLoopGroup 里找一个 eventLoop 进行绑定。
+- 第二个参数是 worker 只负责 sockerChannel 上的读写。
+
+**服务器端代码**
 
 ```java
-DefaultEventLoopGroup normalWorkers = new DefaultEventLoopGroup(2);
-new ServerBootstrap()
-    .group(new NioEventLoopGroup(1), new NioEventLoopGroup(2))
-    .channel(NioServerSocketChannel.class)
-    .childHandler(new ChannelInitializer<NioSocketChannel>() {
-        @Override
-        protected void initChannel(NioSocketChannel ch)  {
-            ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
-            ch.pipeline().addLast(normalWorkers,"myhandler",
-              new ChannelInboundHandlerAdapter() {
-                @Override
-                public void channelRead(ChannelHandlerContext ctx, Object msg) {
-                    ByteBuf byteBuf = msg instanceof ByteBuf ? ((ByteBuf) msg) : null;
-                    if (byteBuf != null) {
-                        byte[] buf = new byte[16];
-                        ByteBuf len = byteBuf.readBytes(buf, 0, byteBuf.readableBytes());
-                        log.debug(new String(buf));
+@Slf4j(topic = "c.EventLoopServer2")
+public class EventLoopServer2 {
+    public static void main(String[] args) {
+        new ServerBootstrap()
+                // boss 只负责 ServerSocketChannel 上的 accept 事件，
+                // worker 只负责 socketChannel 上的读写
+                .group(new NioEventLoopGroup(), new NioEventLoopGroup(/*根据自己的需求设置*/2))
+                // server socket channel 只和一个 EventLoop 绑定。不可能有更多的 Server Socket。
+                .channel(NioServerSocketChannel.class)
+                .childHandler(new ChannelInitializer<NioSocketChannel>() {
+                    @Override
+                    protected void initChannel(NioSocketChannel ch) throws Exception {
+                        ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+                            @Override // ByteBuf 类型
+                            public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                                ByteBuf buf = (ByteBuf) msg;
+                                log.debug(buf.toString(StandardCharsets.UTF_8));
+                                super.channelRead(ctx, msg);
+                            }
+                        });
                     }
-                }
-            });
-        }
-    }).bind(8080).sync();
+                }).bind(8080);
+    }
+}
 ```
 
-客户端代码不变，启动三次，分别修改发送字符串为 zhangsan（第一次），lisi（第二次），wangwu（第三次）
+客户端代码
+
+```java
+@Slf4j(topic = "c.EventLoopClient")
+public class EventLoopClient {
+    // Netty的客户端是多线程的。
+    public static void main(String[] args) throws InterruptedException, IOException {
+        Channel channel = new Bootstrap()
+                .group(new NioEventLoopGroup())
+                .channel(NioSocketChannel.class)
+                .handler(new ChannelInitializer<NioSocketChannel>() {
+                    @Override // 在建立连接后被调用
+                    protected void initChannel(NioSocketChannel ch) throws Exception {
+                        ch.pipeline().addLast(new StringEncoder());
+                    }
+                })
+                .connect("127.0.0.1", 8080)
+                .sync()
+                .channel();
+        System.in.read();
+    }
+}
+```
+
+启动三次，分别修改发送字符串为 lisi（第一次），zhangsan（第二次），wangwu（第三次）
 
 输出
 
 ```
-22:19:48 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x251562d5, L:/127.0.0.1:8080 - R:/127.0.0.1:52588] REGISTERED
-22:19:48 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x251562d5, L:/127.0.0.1:8080 - R:/127.0.0.1:52588] ACTIVE
-22:19:48 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x251562d5, L:/127.0.0.1:8080 - R:/127.0.0.1:52588] READ: 8B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 7a 68 61 6e 67 73 61 6e                         |zhangsan        |
-+--------+-------------------------------------------------+----------------+
-22:19:48 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x251562d5, L:/127.0.0.1:8080 - R:/127.0.0.1:52588] READ COMPLETE
-22:19:48 [DEBUG] [defaultEventLoopGroup-2-1] c.i.o.EventLoopTest - zhangsan        
-22:19:50 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x251562d5, L:/127.0.0.1:8080 - R:/127.0.0.1:52588] READ: 8B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 7a 68 61 6e 67 73 61 6e                         |zhangsan        |
-+--------+-------------------------------------------------+----------------+
-22:19:50 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x251562d5, L:/127.0.0.1:8080 - R:/127.0.0.1:52588] READ COMPLETE
-22:19:50 [DEBUG] [defaultEventLoopGroup-2-1] c.i.o.EventLoopTest - zhangsan        
-22:20:24 [DEBUG] [nioEventLoopGroup-4-2] i.n.h.l.LoggingHandler - [id: 0x94b2a840, L:/127.0.0.1:8080 - R:/127.0.0.1:52612] REGISTERED
-22:20:24 [DEBUG] [nioEventLoopGroup-4-2] i.n.h.l.LoggingHandler - [id: 0x94b2a840, L:/127.0.0.1:8080 - R:/127.0.0.1:52612] ACTIVE
-22:20:25 [DEBUG] [nioEventLoopGroup-4-2] i.n.h.l.LoggingHandler - [id: 0x94b2a840, L:/127.0.0.1:8080 - R:/127.0.0.1:52612] READ: 4B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 6c 69 73 69                                     |lisi            |
-+--------+-------------------------------------------------+----------------+
-22:20:25 [DEBUG] [nioEventLoopGroup-4-2] i.n.h.l.LoggingHandler - [id: 0x94b2a840, L:/127.0.0.1:8080 - R:/127.0.0.1:52612] READ COMPLETE
-22:20:25 [DEBUG] [defaultEventLoopGroup-2-2] c.i.o.EventLoopTest - lisi            
-22:20:27 [DEBUG] [nioEventLoopGroup-4-2] i.n.h.l.LoggingHandler - [id: 0x94b2a840, L:/127.0.0.1:8080 - R:/127.0.0.1:52612] READ: 4B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 6c 69 73 69                                     |lisi            |
-+--------+-------------------------------------------------+----------------+
-22:20:27 [DEBUG] [nioEventLoopGroup-4-2] i.n.h.l.LoggingHandler - [id: 0x94b2a840, L:/127.0.0.1:8080 - R:/127.0.0.1:52612] READ COMPLETE
-22:20:27 [DEBUG] [defaultEventLoopGroup-2-2] c.i.o.EventLoopTest - lisi            
-22:20:38 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x79a26af9, L:/127.0.0.1:8080 - R:/127.0.0.1:52625] REGISTERED
-22:20:38 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x79a26af9, L:/127.0.0.1:8080 - R:/127.0.0.1:52625] ACTIVE
-22:20:38 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x79a26af9, L:/127.0.0.1:8080 - R:/127.0.0.1:52625] READ: 6B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 77 61 6e 67 77 75                               |wangwu          |
-+--------+-------------------------------------------------+----------------+
-22:20:38 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x79a26af9, L:/127.0.0.1:8080 - R:/127.0.0.1:52625] READ COMPLETE
-22:20:38 [DEBUG] [defaultEventLoopGroup-2-1] c.i.o.EventLoopTest - wangwu          
-22:20:40 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x79a26af9, L:/127.0.0.1:8080 - R:/127.0.0.1:52625] READ: 6B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 77 61 6e 67 77 75                               |wangwu          |
-+--------+-------------------------------------------------+----------------+
-22:20:40 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x79a26af9, L:/127.0.0.1:8080 - R:/127.0.0.1:52625] READ COMPLETE
-22:20:40 [DEBUG] [defaultEventLoopGroup-2-1] c.i.o.EventLoopTest - wangwu          
+23:12:21.086 c.EventLoopServer [nioEventLoopGroup-3-1] - lisi
+23:12:47.260 c.EventLoopServer [nioEventLoopGroup-3-2] - zhangsan
+23:13:09.738 c.EventLoopServer [nioEventLoopGroup-3-2] - wangwu        
 ```
 
-可以看到，nio 工人和 非 nio 工人也分别绑定了 channel（LoggingHandler 由 nio 工人执行，而我们自己的 handler 由非 nio 工人执行）
+> 某个 handler 执行时间长，最好不要占用 nio 的线程，再次进行细分。
+>
+> - 创建一个新的 EventLoopGroup 专门处理耗时长的操作。而不是让 NIO 的 EventLoopGroup 去执行这些耗时长的操作。
+> - 即，把 handler 的执行权交给额外的 group。并且他也会做一个绑定。
+
+**服务器端代码**
+
+```java
+@Slf4j(topic = "c.EventLoopServer3")
+public class EventLoopServer3 {
+    public static void main(String[] args) {
+        // 创建一个独立的 EventLoopGroup
+        DefaultEventLoopGroup group = new DefaultEventLoopGroup();
+        new ServerBootstrap()
+                // boss 只负责 ServerSocketChannel 上的 accept 事件，
+                // worker 只负责 socketChannel 上的读写
+                .group(new NioEventLoopGroup(), new NioEventLoopGroup(/*根据自己的需求设置*/2))
+                // server socket channel 只和一个 EventLoop 绑定。不可能有更多的 Server Socket。
+                .channel(NioServerSocketChannel.class)
+                .childHandler(new ChannelInitializer<NioSocketChannel>() {
+                    @Override
+                    protected void initChannel(NioSocketChannel ch) {
+                        ch.pipeline().addLast("handler1", new ChannelInboundHandlerAdapter() {
+                            @Override // ByteBuf 类型
+                            public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                                ByteBuf buf = (ByteBuf) msg;
+                                log.debug(buf.toString(StandardCharsets.UTF_8) + " handler1");
+                                ctx.fireChannelRead(msg);// 将消息传递给下一个 group。
+                            }
+                        });
+                        ch.pipeline().addLast(group, "handler2", new ChannelInboundHandlerAdapter() {
+                            @Override // ByteBuf 类型
+                            public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                                ByteBuf buf = (ByteBuf) msg;
+                                log.debug(buf.toString(StandardCharsets.UTF_8) + " handler2");
+                            }
+                        });
+                    }
+                }).bind(8080);
+    }
+}
+```
+
+客户端代码不变。输出结果如下
+
+```shell
+23:34:56.400 c.EventLoopServer3 [nioEventLoopGroup-4-1] - 123 handler1
+23:34:56.402 c.EventLoopServer3 [defaultEventLoopGroup-2-1] - 123 handler2
+```
+
+绑定关系如下图所示：可以看到，nio 工人和 非 nio 工人也分别绑定了 channel（handler1 由 nio 工人执行，而我们自己的 handler2 由非 nio 工人执行）
 
 ![](img/0041.png)
 
-#### 💡 handler 执行中如何换人？
+#### 💡 源码分析 handler 执行中如何换人？
+
+就是我们上面写的代码，多个 handler 是不同的 group 如何进行线程的切换。
 
 关键代码 `io.netty.channel.AbstractChannelHandlerContext#invokeChannelRead()`
 
@@ -379,10 +492,10 @@ new ServerBootstrap()
 static void invokeChannelRead(final AbstractChannelHandlerContext next, Object msg) {
     final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
     // 下一个 handler 的事件循环是否与当前的事件循环是同一个线程
-    EventExecutor executor = next.executor();
+    EventExecutor executor = next.executor(); // 返回下一个 handler 的 eventLoop。EventExecutor 也是一个 EventLoop
     
-    // 是，直接调用
-    if (executor.inEventLoop()) {
+    //  当前 handler 中的线程，是否和 eventLoop 是同一个线程。是，直接调用
+    if (executor.inEventLoop()) { 
         next.invokeChannelRead(m);
     } 
     // 不是，将要执行的代码作为任务提交给下一个事件循环处理（换人）
@@ -400,65 +513,19 @@ static void invokeChannelRead(final AbstractChannelHandlerContext next, Object m
 * 如果两个 handler 绑定的是同一个线程，那么就直接调用
 * 否则，把要调用的代码封装为一个任务对象，由下一个 handler 的线程来调用
 
-#### 演示 NioEventLoop 处理普通任务
-
-NioEventLoop 除了可以处理 io 事件，同样可以向它提交普通任务
-
-```java
-NioEventLoopGroup nioWorkers = new NioEventLoopGroup(2);
-
-log.debug("server start...");
-Thread.sleep(2000);
-nioWorkers.execute(()->{
-    log.debug("normal task...");
-});
-```
-
-输出
-
-```
-22:30:36 [DEBUG] [main] c.i.o.EventLoopTest2 - server start...
-22:30:38 [DEBUG] [nioEventLoopGroup-2-1] c.i.o.EventLoopTest2 - normal task...
-```
-
-> 可以用来执行耗时较长的任务
-
-#### 演示 NioEventLoop 处理定时任务
-
-```java
-NioEventLoopGroup nioWorkers = new NioEventLoopGroup(2);
-
-log.debug("server start...");
-Thread.sleep(2000);
-nioWorkers.scheduleAtFixedRate(() -> {
-    log.debug("running...");
-}, 0, 1, TimeUnit.SECONDS);
-```
-
-输出
-
-```
-22:35:15 [DEBUG] [main] c.i.o.EventLoopTest2 - server start...
-22:35:17 [DEBUG] [nioEventLoopGroup-2-1] c.i.o.EventLoopTest2 - running...
-22:35:18 [DEBUG] [nioEventLoopGroup-2-1] c.i.o.EventLoopTest2 - running...
-22:35:19 [DEBUG] [nioEventLoopGroup-2-1] c.i.o.EventLoopTest2 - running...
-22:35:20 [DEBUG] [nioEventLoopGroup-2-1] c.i.o.EventLoopTest2 - running...
-...
-```
-
-> 可以用来执行定时任务
+----
 
 ### 3.2 Channel
 
-channel 的主要作用
+#### 主要作用
 
 * close() 可以用来关闭 channel
-* closeFuture() 用来处理 channel 的关闭
+* closeFuture() 用来处理 channel 的关闭：close 执行后，需要进行一些善后的处理的话，可以用 closeFuture 进行处理。
   * sync 方法作用是同步等待 channel 关闭
   * 而 addListener 方法是异步等待 channel 关闭
-* pipeline() 方法添加处理器
-* write() 方法将数据写入
-* writeAndFlush() 方法将数据写入并刷出
+* pipeline() 方法添加处理器：加入一个个的 hander 处理器。
+* write() 方法将数据写入：但是不会立即发出。
+* writeAndFlush() 方法将数据写入并刷出：会立即发出数据。
 
 #### ChannelFuture
 
@@ -493,7 +560,7 @@ ChannelFuture channelFuture = new Bootstrap()
         }
     })
     .connect("127.0.0.1", 8080); // 1
-
+// 不调用 sync 可能会出现问题。
 channelFuture.sync().channel().writeAndFlush(new Date() + ": hello world!");
 ```
 

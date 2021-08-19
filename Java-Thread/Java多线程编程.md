@@ -7,6 +7,10 @@
 - JMM
 - ThreadLocal
 
+----
+
+**参考书籍：《实战Java高并发程序设计》、《Java并发编程之美》、《Java并发编程实战》、《Java 编程思想》**
+
 ---
 
 > **JMH 用法 Demo**
