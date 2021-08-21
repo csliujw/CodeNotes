@@ -1,3 +1,36 @@
+```
+@Slf4j
+public class Server2 {
+    public static void main(String[] args) throws InterruptedException {
+        NioEventLoopGroup boss = new NioEventLoopGroup();
+        NioEventLoopGroup worker = new NioEventLoopGroup(2);
+        try {
+
+            ServerBootstrap bootstrap = new ServerBootstrap();
+            bootstrap.group(boss, worker);
+            bootstrap.channel(NioServerSocketChannel.class);
+            bootstrap.childOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(16, 16, 16));
+            bootstrap.childHandler(new ChannelInitializer<NioSocketChannel>() {
+
+                @Override
+                protected void initChannel(NioSocketChannel ch) throws Exception {
+                    // 解码器先解码，在打日志，这样拿到的才是解码正确的数据
+                    ch.pipeline().addLast(new FixedLengthFrameDecoder(10));
+                    ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
+                }
+            });
+            ChannelFuture sync = bootstrap.bind(8080).sync();
+            sync.channel().closeFuture().sync();
+        } catch (Exception e) {
+            log.error("server error {}", e);
+        } finally {
+            boss.shutdownGracefully();
+            worker.shutdownGracefully();
+        }
+    }
+}
+```
+
 # 三. Netty 进阶
 
 ## 1. 粘包与半包
@@ -186,7 +219,7 @@ serverBootstrap.option(ChannelOption.SO_RCVBUF, 10);
 * 原因
   * 应用层：接收方 ByteBuf 设置太大（Netty 默认 1024）
   * 滑动窗口：假设发送方 256 bytes 表示一个完整报文，但由于接收方处理不及时且窗口大小足够大，这 256 bytes 字节就会缓冲在接收方的滑动窗口中，当滑动窗口中缓冲了多个报文就会粘包
-  * Nagle 算法：会造成粘包
+  * Nagle 算法：尽可能多的发送数据，但是会造成粘包
 
 半包
 
@@ -196,7 +229,7 @@ serverBootstrap.option(ChannelOption.SO_RCVBUF, 10);
   * 滑动窗口：假设接收方的窗口只剩了 128 bytes，发送方的报文大小是 256 bytes，这时放不下了，只能先发送前 128 bytes，等待 ack 后才能发送剩余部分，这就造成了半包
   * MSS 限制：当发送的数据超过 MSS 限制后，会将数据切分发送，就会造成半包
 
-本质是因为 TCP 是流式协议，消息无边界
+**本质是因为 TCP 是流式协议，消息无边界**
 
 > 滑动窗口
 >
@@ -216,7 +249,6 @@ serverBootstrap.option(ChannelOption.SO_RCVBUF, 10);
 >   * 窗口内的数据才允许被发送，当应答未到达前，窗口必须停止滑动
 >   * 如果 1001~2000 这个段的数据 ack 回来了，窗口就可以向前滑动
 >   * 接收方也会维护一个窗口，只有落在窗口内的数据才能允许接收
->
 
 >  MSS 限制
 >
@@ -254,7 +286,7 @@ serverBootstrap.option(ChannelOption.SO_RCVBUF, 10);
 
 #### 方法1，短链接
 
-以解决粘包为例
+> 客户端代码 以解决粘包为例
 
 ```java
 public class HelloWorldClient {
@@ -291,7 +323,8 @@ public class HelloWorldClient {
                     });
                 }
             });
-            ChannelFuture channelFuture = bootstrap.connect("localhost", 8080).sync();
+            ChannelFuture channelFuture = bootstrap.connect("localhost", 8080).sync();.0000000.
+                
             channelFuture.channel().closeFuture().sync();
 
         } catch (InterruptedException e) {
@@ -302,6 +335,61 @@ public class HelloWorldClient {
     }
 }
 ```
+
+> 服务器端代码
+
+```java
+public class HelloWorldServer {
+    static final Logger log = LoggerFactory.getLogger(HelloWorldServer.class);
+
+    void start() {
+        NioEventLoopGroup boss = new NioEventLoopGroup(1);
+        NioEventLoopGroup worker = new NioEventLoopGroup();
+        try {
+            ServerBootstrap serverBootstrap = new ServerBootstrap();
+            serverBootstrap.channel(NioServerSocketChannel.class);
+            serverBootstrap.option(ChannelOption.SO_RCVBUF, 10); // 设置默认缓冲区大小。
+            serverBootstrap.group(boss, worker);
+            serverBootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
+                @Override
+                protected void initChannel(SocketChannel ch) throws Exception {
+                    ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
+                    ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+                        @Override//连接建立成功后触发 active 事件
+                        public void channelActive(ChannelHandlerContext ctx) throws Exception {
+                            log.debug("connected {}", ctx.channel());
+                            super.channelActive(ctx);
+                        }
+
+                        @Override
+                        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                            log.debug("disconnect {}", ctx.channel());
+                            super.channelInactive(ctx);
+                        }
+                    });
+                }
+            });
+            ChannelFuture channelFuture = serverBootstrap.bind(8080);
+            log.debug("{} binding...", channelFuture.channel());
+            channelFuture.sync();
+            log.debug("{} bound...", channelFuture.channel());
+            channelFuture.channel().closeFuture().sync();
+        } catch (InterruptedException e) {
+            log.error("server error", e);
+        } finally {
+            boss.shutdownGracefully();
+            worker.shutdownGracefully();
+            log.debug("stopped");
+        }
+    }
+
+    public static void main(String[] args) {
+        new HelloWorldServer().start();
+    }
+}
+```
+
+
 
 输出，略
 
@@ -309,58 +397,98 @@ public class HelloWorldClient {
 
 #### 方法2，固定长度
 
-让所有数据包长度固定（假设长度为 8 字节），服务器端加入
+`FixedLengthFrameDecoder`
+
+> 服务器端代码 让所有数据包长度固定（假设长度为 8 字节），服务器端加入 `ch.pipeline().addLast(new FixedLengthFrameDecoder(10));`
 
 ```java
-ch.pipeline().addLast(new FixedLengthFrameDecoder(8));
+@Slf4j
+public class Server2 {
+    public static void main(String[] args) throws InterruptedException {
+        NioEventLoopGroup boss = new NioEventLoopGroup();
+        NioEventLoopGroup worker = new NioEventLoopGroup(2);
+        try {
+
+            ServerBootstrap bootstrap = new ServerBootstrap();
+            bootstrap.group(boss, worker);
+            bootstrap.channel(NioServerSocketChannel.class);
+            bootstrap.childOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(16, 16, 16));
+            bootstrap.childHandler(new ChannelInitializer<NioSocketChannel>() {
+
+                @Override
+                protected void initChannel(NioSocketChannel ch) throws Exception {
+                    // 解码器先解码，在打日志，这样拿到的才是解码正确的数据
+                    ch.pipeline().addLast(new FixedLengthFrameDecoder(10));
+                    ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
+                }
+            });
+            ChannelFuture sync = bootstrap.bind(8080).sync();
+            sync.channel().closeFuture().sync();
+        } catch (Exception e) {
+            log.error("server error {}", e);
+        } finally {
+            boss.shutdownGracefully();
+            worker.shutdownGracefully();
+        }
+    }
+}
 ```
 
-客户端测试代码，注意, 采用这种方法后，客户端什么时候 flush 都可以
+> 客户端测试代码，注意, 采用这种方法后，客户端什么时候 flush 都可以
 
 ```java
-public class HelloWorldClient {
-    static final Logger log = LoggerFactory.getLogger(HelloWorldClient.class);
-
-    public static void main(String[] args) {
+@Slf4j
+public class Client2 {
+    public static void main(String[] args) throws InterruptedException {
         NioEventLoopGroup worker = new NioEventLoopGroup();
+        // Netty 客户端
         try {
             Bootstrap bootstrap = new Bootstrap();
-            bootstrap.channel(NioSocketChannel.class);
             bootstrap.group(worker);
-            bootstrap.handler(new ChannelInitializer<SocketChannel>() {
+            bootstrap.channel(NioSocketChannel.class);
+            bootstrap.handler(new ChannelInitializer<NioSocketChannel>() {
+
                 @Override
-                protected void initChannel(SocketChannel ch) throws Exception {
-                    log.debug("connetted...");
+                protected void initChannel(NioSocketChannel ch) throws Exception {
                     ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
+                    ch.pipeline().addLast(new StringEncoder());
                     ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
                         @Override
                         public void channelActive(ChannelHandlerContext ctx) throws Exception {
-                            log.debug("sending...");
-                            // 发送内容随机的数据包
-                            Random r = new Random();
-                            char c = 'a';
-                            ByteBuf buffer = ctx.alloc().buffer();
+                            log.debug("sending");
+                            ByteBuf buf = ctx.alloc().buffer();
+                            char c = '0';
+                            Random random = new Random();
                             for (int i = 0; i < 10; i++) {
-                                byte[] bytes = new byte[8];
-                                for (int j = 0; j < r.nextInt(8); j++) {
-                                    bytes[j] = (byte) c;
-                                }
-                                c++;
-                                buffer.writeBytes(bytes);
+                                byte[] bytes = fill0Bytes(c++, random.nextInt(8) + 1, 10);
+                                buf.writeBytes(bytes);
                             }
-                            ctx.writeAndFlush(buffer);
+                            ctx.writeAndFlush(buf);
+                            log.debug("send over");
+                            super.channelActive(ctx);
                         }
                     });
                 }
             });
-            ChannelFuture channelFuture = bootstrap.connect("192.168.0.103", 9090).sync();
+            ChannelFuture channelFuture = bootstrap.connect("127.0.0.1", 8080).sync();
             channelFuture.channel().closeFuture().sync();
-
-        } catch (InterruptedException e) {
-            log.error("client error", e);
+        } catch (Exception e) {
+            log.error("client error {}", e);
         } finally {
             worker.shutdownGracefully();
         }
+    }
+
+    // 返回 len 个 c，len<max 以 _ 替代
+    public static byte[] fill0Bytes(char c, int len, int max) {
+        byte[] bytes = new byte[max];
+        for (int i = 0; i < len; i++) {
+            bytes[i] = (byte) c;
+        }
+        for (int i = len; i < max; i++) {
+            bytes[i] = '_';
+        }
+        return bytes;
     }
 }
 ```
@@ -368,93 +496,92 @@ public class HelloWorldClient {
 客户端输出
 
 ```
-12:07:00 [DEBUG] [nioEventLoopGroup-2-1] c.i.n.HelloWorldClient - connetted...
-12:07:00 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0x3c2ef3c2] REGISTERED
-12:07:00 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0x3c2ef3c2] CONNECT: /192.168.0.103:9090
-12:07:00 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0x3c2ef3c2, L:/192.168.0.103:53155 - R:/192.168.0.103:9090] ACTIVE
-12:07:00 [DEBUG] [nioEventLoopGroup-2-1] c.i.n.HelloWorldClient - sending...
-12:07:00 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0x3c2ef3c2, L:/192.168.0.103:53155 - R:/192.168.0.103:9090] WRITE: 80B
+21:36:02.262 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-2-1] - [id: 0x5d4e6f56] REGISTERED
+21:36:02.262 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-2-1] - [id: 0x5d4e6f56] CONNECT: /127.0.0.1:8080
+21:36:02.272 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-2-1] - [id: 0x5d4e6f56, L:/127.0.0.1:13289 - R:/127.0.0.1:8080] ACTIVE
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-2-1] - [id: 0x5d4e6f56, L:/127.0.0.1:13289 - R:/127.0.0.1:8080] WRITE: 100B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 61 61 61 61 00 00 00 00 62 00 00 00 00 00 00 00 |aaaa....b.......|
-|00000010| 63 63 00 00 00 00 00 00 64 00 00 00 00 00 00 00 |cc......d.......|
-|00000020| 00 00 00 00 00 00 00 00 66 66 66 66 00 00 00 00 |........ffff....|
-|00000030| 67 67 67 00 00 00 00 00 68 00 00 00 00 00 00 00 |ggg.....h.......|
-|00000040| 69 69 69 69 69 00 00 00 6a 6a 6a 6a 00 00 00 00 |iiiii...jjjj....|
+|00000000| 30 30 30 30 30 30 30 5f 5f 5f 31 31 31 31 31 31 |0000000___111111|
+|00000010| 31 5f 5f 5f 32 32 32 32 32 32 5f 5f 5f 5f 33 33 |1___222222____33|
+|00000020| 33 5f 5f 5f 5f 5f 5f 5f 34 34 34 5f 5f 5f 5f 5f |3_______444_____|
+|00000030| 5f 5f 35 35 35 35 35 35 5f 5f 5f 5f 36 36 5f 5f |__555555____66__|
+|00000040| 5f 5f 5f 5f 5f 5f 37 37 37 37 5f 5f 5f 5f 5f 5f |______7777______|
+|00000050| 38 38 5f 5f 5f 5f 5f 5f 5f 5f 39 39 39 39 39 39 |88________999999|
+|00000060| 39 39 5f 5f                                     |99__            |
 +--------+-------------------------------------------------+----------------+
-12:07:00 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0x3c2ef3c2, L:/192.168.0.103:53155 - R:/192.168.0.103:9090] FLUSH
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-2-1] - [id: 0x5d4e6f56, L:/127.0.0.1:13289 - R:/127.0.0.1:8080] FLUSH
 ```
 
 服务端输出
 
 ```
-12:06:51 [DEBUG] [main] c.i.n.HelloWorldServer - [id: 0xe3d9713f] binding...
-12:06:51 [DEBUG] [main] c.i.n.HelloWorldServer - [id: 0xe3d9713f, L:/192.168.0.103:9090] bound...
-12:07:00 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0xd739f137, L:/192.168.0.103:9090 - R:/192.168.0.103:53155] REGISTERED
-12:07:00 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0xd739f137, L:/192.168.0.103:9090 - R:/192.168.0.103:53155] ACTIVE
-12:07:00 [DEBUG] [nioEventLoopGroup-3-1] c.i.n.HelloWorldServer - connected [id: 0xd739f137, L:/192.168.0.103:9090 - R:/192.168.0.103:53155]
-12:07:00 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0xd739f137, L:/192.168.0.103:9090 - R:/192.168.0.103:53155] READ: 8B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 61 61 61 61 00 00 00 00                         |aaaa....        |
+|00000000| 30 30 30 30 30 30 30 5f 5f 5f                   |0000000___      |
 +--------+-------------------------------------------------+----------------+
-12:07:00 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0xd739f137, L:/192.168.0.103:9090 - R:/192.168.0.103:53155] READ: 8B
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-1] - [id: 0x997f5006, L:/127.0.0.1:8080 - R:/127.0.0.1:13289] READ COMPLETE
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-1] - [id: 0x997f5006, L:/127.0.0.1:8080 - R:/127.0.0.1:13289] READ: 10B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 62 00 00 00 00 00 00 00                         |b.......        |
+|00000000| 31 31 31 31 31 31 31 5f 5f 5f                   |1111111___      |
 +--------+-------------------------------------------------+----------------+
-12:07:00 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0xd739f137, L:/192.168.0.103:9090 - R:/192.168.0.103:53155] READ: 8B
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-1] - [id: 0x997f5006, L:/127.0.0.1:8080 - R:/127.0.0.1:13289] READ: 10B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 63 63 00 00 00 00 00 00                         |cc......        |
+|00000000| 32 32 32 32 32 32 5f 5f 5f 5f                   |222222____      |
 +--------+-------------------------------------------------+----------------+
-12:07:00 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0xd739f137, L:/192.168.0.103:9090 - R:/192.168.0.103:53155] READ: 8B
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-1] - [id: 0x997f5006, L:/127.0.0.1:8080 - R:/127.0.0.1:13289] READ COMPLETE
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-1] - [id: 0x997f5006, L:/127.0.0.1:8080 - R:/127.0.0.1:13289] READ: 10B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 64 00 00 00 00 00 00 00                         |d.......        |
+|00000000| 33 33 33 5f 5f 5f 5f 5f 5f 5f                   |333_______      |
 +--------+-------------------------------------------------+----------------+
-12:07:00 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0xd739f137, L:/192.168.0.103:9090 - R:/192.168.0.103:53155] READ: 8B
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-1] - [id: 0x997f5006, L:/127.0.0.1:8080 - R:/127.0.0.1:13289] READ COMPLETE
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-1] - [id: 0x997f5006, L:/127.0.0.1:8080 - R:/127.0.0.1:13289] READ: 10B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 00 00 00 00 00 00 00 00                         |........        |
+|00000000| 34 34 34 5f 5f 5f 5f 5f 5f 5f                   |444_______      |
 +--------+-------------------------------------------------+----------------+
-12:07:00 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0xd739f137, L:/192.168.0.103:9090 - R:/192.168.0.103:53155] READ: 8B
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-1] - [id: 0x997f5006, L:/127.0.0.1:8080 - R:/127.0.0.1:13289] READ: 10B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 66 66 66 66 00 00 00 00                         |ffff....        |
+|00000000| 35 35 35 35 35 35 5f 5f 5f 5f                   |555555____      |
 +--------+-------------------------------------------------+----------------+
-12:07:00 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0xd739f137, L:/192.168.0.103:9090 - R:/192.168.0.103:53155] READ: 8B
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-1] - [id: 0x997f5006, L:/127.0.0.1:8080 - R:/127.0.0.1:13289] READ COMPLETE
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-1] - [id: 0x997f5006, L:/127.0.0.1:8080 - R:/127.0.0.1:13289] READ: 10B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 67 67 67 00 00 00 00 00                         |ggg.....        |
+|00000000| 36 36 5f 5f 5f 5f 5f 5f 5f 5f                   |66________      |
 +--------+-------------------------------------------------+----------------+
-12:07:00 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0xd739f137, L:/192.168.0.103:9090 - R:/192.168.0.103:53155] READ: 8B
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-1] - [id: 0x997f5006, L:/127.0.0.1:8080 - R:/127.0.0.1:13289] READ: 10B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 68 00 00 00 00 00 00 00                         |h.......        |
+|00000000| 37 37 37 37 5f 5f 5f 5f 5f 5f                   |7777______      |
 +--------+-------------------------------------------------+----------------+
-12:07:00 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0xd739f137, L:/192.168.0.103:9090 - R:/192.168.0.103:53155] READ: 8B
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-1] - [id: 0x997f5006, L:/127.0.0.1:8080 - R:/127.0.0.1:13289] READ COMPLETE
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-1] - [id: 0x997f5006, L:/127.0.0.1:8080 - R:/127.0.0.1:13289] READ: 10B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 69 69 69 69 69 00 00 00                         |iiiii...        |
+|00000000| 38 38 5f 5f 5f 5f 5f 5f 5f 5f                   |88________      |
 +--------+-------------------------------------------------+----------------+
-12:07:00 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0xd739f137, L:/192.168.0.103:9090 - R:/192.168.0.103:53155] READ: 8B
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-1] - [id: 0x997f5006, L:/127.0.0.1:8080 - R:/127.0.0.1:13289] READ COMPLETE
+21:36:02.292 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-1] - [id: 0x997f5006, L:/127.0.0.1:8080 - R:/127.0.0.1:13289] READ: 10B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 6a 6a 6a 6a 00 00 00 00                         |jjjj....        |
+|00000000| 39 39 39 39 39 39 39 39 5f 5f                   |99999999__      |
 +--------+-------------------------------------------------+----------------+
-12:07:00 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0xd739f137, L:/192.168.0.103:9090 - R:/192.168.0.103:53155] READ COMPLETE
 ```
 
 缺点是，数据包的大小不好把握
@@ -463,6 +590,8 @@ public class HelloWorldClient {
 * 长度定的太小，对某些数据包又显得不够
 
 #### 方法3，固定分隔符
+
+`LineBasedFrameDecoder`
 
 服务端加入，默认以 \n 或 \r\n 作为分隔符，如果超出指定长度仍未出现分隔符，则抛出异常
 
@@ -473,47 +602,59 @@ ch.pipeline().addLast(new LineBasedFrameDecoder(1024));
 客户端在每条消息之后，加入 \n 分隔符
 
 ```java
-public class HelloWorldClient {
-    static final Logger log = LoggerFactory.getLogger(HelloWorldClient.class);
-
-    public static void main(String[] args) {
+@Slf4j
+public class Client3 {
+    public static void main(String[] args) throws InterruptedException {
         NioEventLoopGroup worker = new NioEventLoopGroup();
+        // Netty 客户端
         try {
             Bootstrap bootstrap = new Bootstrap();
-            bootstrap.channel(NioSocketChannel.class);
             bootstrap.group(worker);
-            bootstrap.handler(new ChannelInitializer<SocketChannel>() {
+            bootstrap.channel(NioSocketChannel.class);
+            bootstrap.handler(new ChannelInitializer<NioSocketChannel>() {
+
                 @Override
-                protected void initChannel(SocketChannel ch) throws Exception {
-                    log.debug("connetted...");
+                protected void initChannel(NioSocketChannel ch) throws Exception {
                     ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
+                    ch.pipeline().addLast(new StringEncoder());
                     ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
                         @Override
                         public void channelActive(ChannelHandlerContext ctx) throws Exception {
-                            log.debug("sending...");
-                            Random r = new Random();
-                            char c = 'a';
-                            ByteBuf buffer = ctx.alloc().buffer();
+                            log.debug("sending");
+                            ByteBuf buf = ctx.alloc().buffer();
+                            char c = '0';
+                            Random random = new Random();
                             for (int i = 0; i < 10; i++) {
-                                for (int j = 1; j <= r.nextInt(16)+1; j++) {
-                                    buffer.writeByte((byte) c);
-                                }
-                                buffer.writeByte(10);
-                                c++;
+                                byte[] bytes = fill0Bytes(c++, random.nextInt(8) + 1, random.nextInt(5) + 10);
+                                buf.writeBytes(bytes);
+                                buf.writeByte('\n');
                             }
-                            ctx.writeAndFlush(buffer);
+                            ctx.writeAndFlush(buf);
+                            log.debug("send over");
+                            super.channelActive(ctx);
                         }
                     });
                 }
             });
-            ChannelFuture channelFuture = bootstrap.connect("192.168.0.103", 9090).sync();
+            ChannelFuture channelFuture = bootstrap.connect("127.0.0.1", 8080).sync();
             channelFuture.channel().closeFuture().sync();
-
-        } catch (InterruptedException e) {
-            log.error("client error", e);
+        } catch (Exception e) {
+            log.error("client error {}", e);
         } finally {
             worker.shutdownGracefully();
         }
+    }
+
+    // 返回 len 个 c，len<max 以 _ 替代
+    public static byte[] fill0Bytes(char c, int len, int max) {
+        byte[] bytes = new byte[max];
+        for (int i = 0; i < len; i++) {
+            bytes[i] = (byte) c;
+        }
+        for (int i = len; i < max; i++) {
+            bytes[i] = '_';
+        }
+        return bytes;
     }
 }
 ```
@@ -521,246 +662,252 @@ public class HelloWorldClient {
 客户端输出
 
 ```
-14:08:18 [DEBUG] [nioEventLoopGroup-2-1] c.i.n.HelloWorldClient - connetted...
-14:08:18 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0x1282d755] REGISTERED
-14:08:18 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0x1282d755] CONNECT: /192.168.0.103:9090
-14:08:18 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0x1282d755, L:/192.168.0.103:63641 - R:/192.168.0.103:9090] ACTIVE
-14:08:18 [DEBUG] [nioEventLoopGroup-2-1] c.i.n.HelloWorldClient - sending...
-14:08:18 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0x1282d755, L:/192.168.0.103:63641 - R:/192.168.0.103:9090] WRITE: 60B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 61 0a 62 62 62 0a 63 63 63 0a 64 64 0a 65 65 65 |a.bbb.ccc.dd.eee|
-|00000010| 65 65 65 65 65 65 65 0a 66 66 0a 67 67 67 67 67 |eeeeeee.ff.ggggg|
-|00000020| 67 67 0a 68 68 68 68 0a 69 69 69 69 69 69 69 0a |gg.hhhh.iiiiiii.|
-|00000030| 6a 6a 6a 6a 6a 6a 6a 6a 6a 6a 6a 0a             |jjjjjjjjjjj.    |
+|00000000| 30 30 30 30 30 30 5f 5f 5f 5f 0a 31 31 31 5f 5f |000000____.111__|
+|00000010| 5f 5f 5f 5f 5f 0a 32 32 32 32 32 32 32 32 5f 5f |_____.22222222__|
+|00000020| 5f 5f 5f 0a 33 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f |___.3___________|
+|00000030| 5f 5f 0a 34 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f 0a |__.4___________.|
+|00000040| 35 35 35 35 5f 5f 5f 5f 5f 5f 5f 5f 0a 36 36 36 |5555________.666|
+|00000050| 36 36 36 5f 5f 5f 5f 0a 37 37 37 5f 5f 5f 5f 5f |666____.777_____|
+|00000060| 5f 5f 0a 38 38 38 38 38 38 5f 5f 5f 5f 5f 5f 5f |__.888888_______|
+|00000070| 0a 39 39 39 39 39 5f 5f 5f 5f 5f 0a             |.99999_____.    |
 +--------+-------------------------------------------------+----------------+
-14:08:18 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0x1282d755, L:/192.168.0.103:63641 - R:/192.168.0.103:9090] FLUSH
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-2-1] - [id: 0x16c71dae, L:/127.0.0.1:13567 - R:/127.0.0.1:8080] FLUSH
+
 ```
 
 服务端输出
 
 ```
-14:08:18 [DEBUG] [nioEventLoopGroup-3-5] c.i.n.HelloWorldServer - connected [id: 0xa4b3be43, L:/192.168.0.103:9090 - R:/192.168.0.103:63641]
-14:08:18 [DEBUG] [nioEventLoopGroup-3-5] i.n.h.l.LoggingHandler - [id: 0xa4b3be43, L:/192.168.0.103:9090 - R:/192.168.0.103:63641] READ: 1B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 61                                              |a               |
+|00000000| 30 30 30 30 30 30 5f 5f 5f 5f                   |000000____      |
 +--------+-------------------------------------------------+----------------+
-14:08:18 [DEBUG] [nioEventLoopGroup-3-5] i.n.h.l.LoggingHandler - [id: 0xa4b3be43, L:/192.168.0.103:9090 - R:/192.168.0.103:63641] READ: 3B
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ COMPLETE
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ: 10B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 62 62 62                                        |bbb             |
+|00000000| 31 31 31 5f 5f 5f 5f 5f 5f 5f                   |111_______      |
 +--------+-------------------------------------------------+----------------+
-14:08:18 [DEBUG] [nioEventLoopGroup-3-5] i.n.h.l.LoggingHandler - [id: 0xa4b3be43, L:/192.168.0.103:9090 - R:/192.168.0.103:63641] READ: 3B
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ COMPLETE
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ: 13B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 63 63 63                                        |ccc             |
+|00000000| 32 32 32 32 32 32 32 32 5f 5f 5f 5f 5f          |22222222_____   |
 +--------+-------------------------------------------------+----------------+
-14:08:18 [DEBUG] [nioEventLoopGroup-3-5] i.n.h.l.LoggingHandler - [id: 0xa4b3be43, L:/192.168.0.103:9090 - R:/192.168.0.103:63641] READ: 2B
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ COMPLETE
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ: 14B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 64 64                                           |dd              |
+|00000000| 33 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f       |3_____________  |
 +--------+-------------------------------------------------+----------------+
-14:08:18 [DEBUG] [nioEventLoopGroup-3-5] i.n.h.l.LoggingHandler - [id: 0xa4b3be43, L:/192.168.0.103:9090 - R:/192.168.0.103:63641] READ: 10B
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ: 12B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 65 65 65 65 65 65 65 65 65 65                   |eeeeeeeeee      |
+|00000000| 34 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f 5f             |4___________    |
 +--------+-------------------------------------------------+----------------+
-14:08:18 [DEBUG] [nioEventLoopGroup-3-5] i.n.h.l.LoggingHandler - [id: 0xa4b3be43, L:/192.168.0.103:9090 - R:/192.168.0.103:63641] READ: 2B
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ COMPLETE
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ: 12B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 66 66                                           |ff              |
+|00000000| 35 35 35 35 5f 5f 5f 5f 5f 5f 5f 5f             |5555________    |
 +--------+-------------------------------------------------+----------------+
-14:08:18 [DEBUG] [nioEventLoopGroup-3-5] i.n.h.l.LoggingHandler - [id: 0xa4b3be43, L:/192.168.0.103:9090 - R:/192.168.0.103:63641] READ: 7B
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ COMPLETE
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ: 10B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 67 67 67 67 67 67 67                            |ggggggg         |
+|00000000| 36 36 36 36 36 36 5f 5f 5f 5f                   |666666____      |
 +--------+-------------------------------------------------+----------------+
-14:08:18 [DEBUG] [nioEventLoopGroup-3-5] i.n.h.l.LoggingHandler - [id: 0xa4b3be43, L:/192.168.0.103:9090 - R:/192.168.0.103:63641] READ: 4B
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ COMPLETE
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ: 10B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 68 68 68 68                                     |hhhh            |
+|00000000| 37 37 37 5f 5f 5f 5f 5f 5f 5f                   |777_______      |
 +--------+-------------------------------------------------+----------------+
-14:08:18 [DEBUG] [nioEventLoopGroup-3-5] i.n.h.l.LoggingHandler - [id: 0xa4b3be43, L:/192.168.0.103:9090 - R:/192.168.0.103:63641] READ: 7B
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ COMPLETE
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ: 13B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 69 69 69 69 69 69 69                            |iiiiiii         |
+|00000000| 38 38 38 38 38 38 5f 5f 5f 5f 5f 5f 5f          |888888_______   |
 +--------+-------------------------------------------------+----------------+
-14:08:18 [DEBUG] [nioEventLoopGroup-3-5] i.n.h.l.LoggingHandler - [id: 0xa4b3be43, L:/192.168.0.103:9090 - R:/192.168.0.103:63641] READ: 11B
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ: 10B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 6a 6a 6a 6a 6a 6a 6a 6a 6a 6a 6a                |jjjjjjjjjjj     |
+|00000000| 39 39 39 39 39 5f 5f 5f 5f 5f                   |99999_____      |
 +--------+-------------------------------------------------+----------------+
-14:08:18 [DEBUG] [nioEventLoopGroup-3-5] i.n.h.l.LoggingHandler - [id: 0xa4b3be43, L:/192.168.0.103:9090 - R:/192.168.0.103:63641] READ COMPLETE
+21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ COMPLETE
 ```
 
 缺点，处理字符数据比较合适，但如果内容本身包含了分隔符（字节数据常常会有此情况），那么就会解析错误
 
 #### 方法4，预设长度
 
-在发送消息前，先约定用定长字节表示接下来数据的长度
+`LengthFieldBasedFrameDecoder`  看下源码注释就清晰了。
+
+- `lengthFieldOffset` - 长度字段偏移量
+- `lengthFieldLength` - 长度字段长度
+- `lengthAdjustment` - 从长度字段开始算，还有几个字节是内容
+- `initialBytesToStip` - 从头剥离几个字节
 
 ```java
+/**
+ * <pre>
+ * <b>lengthFieldOffset</b>   = <b>0</b>
+ * <b>lengthFieldLength</b>   = <b>2</b>
+ * lengthAdjustment    = 0
+ * initialBytesToStrip = 0 (= do not strip header)
+ * 消息长度 = Length = 0x000C = 12
+ * lengthFieldOffset = 0 消息长度部分从0开始算。
+ * lengthFieldLength = 2 用两个字节计算消息长度。
+ * 这样就知道实例的消息长度为 14-2=12
+ * BEFORE DECODE (14 bytes)         AFTER DECODE (14 bytes)
+ * +--------+----------------+      +--------+----------------+
+ * | Length | Actual Content |----->| Length | Actual Content |
+ * | 0x000C | "HELLO, WORLD" |      | 0x000C | "HELLO, WORLD" |
+ * +--------+----------------+      +--------+----------------+
+ * </pre>
+ *
+ * <h3>2 bytes length field at offset 0, strip header</h3>
+ *
+ * Because we can get the length of the content by calling
+ * {@link ByteBuf#readableBytes()}, you might want to strip the length
+ * field by specifying <tt>initialBytesToStrip</tt>.  In this example, we
+ * specified <tt>2</tt>, that is same with the length of the length field, to
+ * strip the first two bytes.
+ * <pre>
+ * lengthFieldOffset   = 0
+ * lengthFieldLength   = 2
+ * lengthAdjustment    = 0
+ * <b>initialBytesToStrip</b> = <b>2</b> (= the length of the Length field)
+ * initialBytesToStrip 剥离消息的长度字段。
+ * BEFORE DECODE (14 bytes)         AFTER DECODE (12 bytes)
+ * +--------+----------------+      +----------------+
+ * | Length | Actual Content |----->| Actual Content |
+ * | 0x000C | "HELLO, WORLD" |      | "HELLO, WORLD" |
+ * +--------+----------------+      +----------------+
+ * </pre>
+ *
+ *
+ * <h3>3 bytes length field at the end of 5 bytes header, do not strip header</h3>
+ *
+ * The following message is a simple variation of the first example.  An extra
+ * header value is prepended to the message.  <tt>lengthAdjustment</tt> is zero
+ * again because the decoder always takes the length of the prepended data into
+ * account during frame length calculation.
+ * <pre>
+ * <b>lengthFieldOffset</b>   = <b>2</b> (= the length of Header 1) 长度字段的偏移量 从第二个字节开始（刚刚是从索引0开始）
+ * <b>lengthFieldLength</b>   = <b>3</b>  用3个字节记录长度
+ * lengthAdjustment    = 0
+ * initialBytesToStrip = 0
+ * 其实就是 从 2 开始 到 2+3 记录的是消息的长度
+ * BEFORE DECODE (17 bytes)                      AFTER DECODE (17 bytes)
+ * +----------+----------+----------------+      +----------+----------+----------------+
+ * | Header 1 |  Length  | Actual Content |----->| Header 1 |  Length  | Actual Content |
+ * |  0xCAFE  | 0x00000C | "HELLO, WORLD" |      |  0xCAFE  | 0x00000C | "HELLO, WORLD" |
+ * +----------+----------+----------------+      +----------+----------+----------------+
+ * </pre>
+ *
+ * <h3>3 bytes length field at the beginning of 5 bytes header, do not strip header</h3>
+ *
+ * This is an advanced example that shows the case where there is an extra
+ * header between the length field and the message body.  You have to specify a
+ * positive <tt>lengthAdjustment</tt> so that the decoder counts the extra
+ * header into the frame length calculation.
+ * <pre>
+ * lengthFieldOffset   = 0
+ * lengthFieldLength   = 3
+ * <b>lengthAdjustment</b>    = <b>2</b> (= the length of Header 1) 从长度开始算，跳过两个字节才是消息，
+ * initialBytesToStrip = 0
+ * 意思就是，从 3+2 开始算，才是要用到的消息内容（Actual Content）。
+ * BEFORE DECODE (17 bytes)                      AFTER DECODE (17 bytes)
+ * +----------+----------+----------------+      +----------+----------+----------------+
+ * |  Length  | Header 1 | Actual Content |----->|  Length  | Header 1 | Actual Content |
+ * | 0x00000C |  0xCAFE  | "HELLO, WORLD" |      | 0x00000C |  0xCAFE  | "HELLO, WORLD" |
+ * +----------+----------+----------------+      +----------+----------+----------------+
+ * </pre>
+ *
+ * <h3>2 bytes length field at offset 1 in the middle of 4 bytes header,
+ *     strip the first header field and the length field</h3>
+ *
+ * This is a combination of all the examples above.  There are the prepended
+ * header before the length field and the extra header after the length field.
+ * The prepended header affects the <tt>lengthFieldOffset</tt> and the extra
+ * header affects the <tt>lengthAdjustment</tt>.  We also specified a non-zero
+ * <tt>initialBytesToStrip</tt> to strip the length field and the prepended
+ * header from the frame.  If you don't want to strip the prepended header, you
+ * could specify <tt>0</tt> for <tt>initialBytesToSkip</tt>.
+ * <pre>
+ * lengthFieldOffset   = 1 (= the length of HDR1)
+ * lengthFieldLength   = 2
+ * <b>lengthAdjustment</b>    = <b>1</b> (= the length of HDR2)
+ * <b>initialBytesToStrip</b> = <b>3</b> (= the length of HDR1 + LEN)
+ * 长度在中间。 initialBytesToStrip = 3 头三个字节不要。 最后只剩 HDR2 Actual Content
+ * BEFORE DECODE (16 bytes)                       AFTER DECODE (13 bytes)
+ * +------+--------+------+----------------+      +------+----------------+
+ * | HDR1 | Length | HDR2 | Actual Content |----->| HDR2 | Actual Content |
+ * | 0xCA | 0x000C | 0xFE | "HELLO, WORLD" |      | 0xFE | "HELLO, WORLD" |
+ * +------+--------+------+----------------+      +------+----------------+
+ * </pre>
+ */
+```
+
+在发送消息前，先约定用定长字节表示接下来数据的长度，再填写内容。
+
+```java
+	BEFORE DECODE (14 bytes)         AFTER DECODE (12 bytes)
+   +--------+----------------+      +----------------+
+   | Length | Actual Content |----->| Actual Content |
+   | 0x000C | "HELLO, WORLD" |      | "HELLO, WORLD" |
+   +--------+----------------+      +----------------+
+  	
 // 最大长度，长度偏移，长度占用字节，长度调整，剥离字节数
 ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(1024, 0, 1, 0, 1));
 ```
 
-客户端代码
+测试代码
 
 ```java
-public class HelloWorldClient {
-    static final Logger log = LoggerFactory.getLogger(HelloWorldClient.class);
-
+public class TestLengthFieldDecoder {
     public static void main(String[] args) {
-        NioEventLoopGroup worker = new NioEventLoopGroup();
-        try {
-            Bootstrap bootstrap = new Bootstrap();
-            bootstrap.channel(NioSocketChannel.class);
-            bootstrap.group(worker);
-            bootstrap.handler(new ChannelInitializer<SocketChannel>() {
-                @Override
-                protected void initChannel(SocketChannel ch) throws Exception {
-                    log.debug("connetted...");
-                    ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
-                    ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
-                        @Override
-                        public void channelActive(ChannelHandlerContext ctx) throws Exception {
-                            log.debug("sending...");
-                            Random r = new Random();
-                            char c = 'a';
-                            ByteBuf buffer = ctx.alloc().buffer();
-                            for (int i = 0; i < 10; i++) {
-                                byte length = (byte) (r.nextInt(16) + 1);
-                                // 先写入长度
-                                buffer.writeByte(length);
-                                // 再
-                                for (int j = 1; j <= length; j++) {
-                                    buffer.writeByte((byte) c);
-                                }
-                                c++;
-                            }
-                            ctx.writeAndFlush(buffer);
-                        }
-                    });
-                }
-            });
-            ChannelFuture channelFuture = bootstrap.connect("192.168.0.103", 9090).sync();
-            channelFuture.channel().closeFuture().sync();
 
-        } catch (InterruptedException e) {
-            log.error("client error", e);
-        } finally {
-            worker.shutdownGracefully();
-        }
+        EmbeddedChannel embeddedChannel = new EmbeddedChannel(
+                new LengthFieldBasedFrameDecoder(1024, 0, 4, 1, 0),
+                new LoggingHandler(LogLevel.DEBUG)
+        );
+        ByteBuf buffer = ByteBufAllocator.DEFAULT.buffer();
+        send(buffer, "Hello World");
+        send(buffer, "Hi");
+        embeddedChannel.writeInbound(buffer);
+    }
+
+    private static void send(ByteBuf buffer, String content) {
+        byte[] bytes = content.getBytes();
+        int len = bytes.length;
+        buffer.writeInt(len);
+        // 长度之后加了额外内容
+        buffer.writeByte(1); // 如果加了额外内容，就需要调整 即设置 lengthAdjustment = 额外的内容长度
+        buffer.writeBytes(bytes);
     }
 }
 ```
 
-客户端输出
 
-```
-14:37:10 [DEBUG] [nioEventLoopGroup-2-1] c.i.n.HelloWorldClient - connetted...
-14:37:10 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0xf0f347b8] REGISTERED
-14:37:10 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0xf0f347b8] CONNECT: /192.168.0.103:9090
-14:37:10 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0xf0f347b8, L:/192.168.0.103:49979 - R:/192.168.0.103:9090] ACTIVE
-14:37:10 [DEBUG] [nioEventLoopGroup-2-1] c.i.n.HelloWorldClient - sending...
-14:37:10 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0xf0f347b8, L:/192.168.0.103:49979 - R:/192.168.0.103:9090] WRITE: 97B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 09 61 61 61 61 61 61 61 61 61 09 62 62 62 62 62 |.aaaaaaaaa.bbbbb|
-|00000010| 62 62 62 62 06 63 63 63 63 63 63 08 64 64 64 64 |bbbb.cccccc.dddd|
-|00000020| 64 64 64 64 0f 65 65 65 65 65 65 65 65 65 65 65 |dddd.eeeeeeeeeee|
-|00000030| 65 65 65 65 0d 66 66 66 66 66 66 66 66 66 66 66 |eeee.fffffffffff|
-|00000040| 66 66 02 67 67 02 68 68 0e 69 69 69 69 69 69 69 |ff.gg.hh.iiiiiii|
-|00000050| 69 69 69 69 69 69 69 09 6a 6a 6a 6a 6a 6a 6a 6a |iiiiiii.jjjjjjjj|
-|00000060| 6a                                              |j               |
-+--------+-------------------------------------------------+----------------+
-14:37:10 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0xf0f347b8, L:/192.168.0.103:49979 - R:/192.168.0.103:9090] FLUSH
-```
 
-服务端输出
+输出
 
-```
-14:36:50 [DEBUG] [main] c.i.n.HelloWorldServer - [id: 0xdff439d3] binding...
-14:36:51 [DEBUG] [main] c.i.n.HelloWorldServer - [id: 0xdff439d3, L:/192.168.0.103:9090] bound...
-14:37:10 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979] REGISTERED
-14:37:10 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979] ACTIVE
-14:37:10 [DEBUG] [nioEventLoopGroup-3-1] c.i.n.HelloWorldServer - connected [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979]
-14:37:10 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979] READ: 9B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 61 61 61 61 61 61 61 61 61                      |aaaaaaaaa       |
-+--------+-------------------------------------------------+----------------+
-14:37:10 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979] READ: 9B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 62 62 62 62 62 62 62 62 62                      |bbbbbbbbb       |
-+--------+-------------------------------------------------+----------------+
-14:37:10 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979] READ: 6B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 63 63 63 63 63 63                               |cccccc          |
-+--------+-------------------------------------------------+----------------+
-14:37:10 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979] READ: 8B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 64 64 64 64 64 64 64 64                         |dddddddd        |
-+--------+-------------------------------------------------+----------------+
-14:37:10 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979] READ: 15B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 65 65 65 65 65 65 65 65 65 65 65 65 65 65 65    |eeeeeeeeeeeeeee |
-+--------+-------------------------------------------------+----------------+
-14:37:10 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979] READ: 13B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 66 66 66 66 66 66 66 66 66 66 66 66 66          |fffffffffffff   |
-+--------+-------------------------------------------------+----------------+
-14:37:10 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979] READ: 2B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 67 67                                           |gg              |
-+--------+-------------------------------------------------+----------------+
-14:37:10 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979] READ: 2B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 68 68                                           |hh              |
-+--------+-------------------------------------------------+----------------+
-14:37:10 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979] READ: 14B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 69 69 69 69 69 69 69 69 69 69 69 69 69 69       |iiiiiiiiiiiiii  |
-+--------+-------------------------------------------------+----------------+
-14:37:10 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979] READ: 9B
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 6a 6a 6a 6a 6a 6a 6a 6a 6a                      |jjjjjjjjj       |
-+--------+-------------------------------------------------+----------------+
-14:37:10 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979] READ COMPLETE
 
-```
 
 ## 2. 协议设计与解析
 
@@ -882,6 +1029,103 @@ try {
 } finally {
     worker.shutdownGracefully();
 }
+```
+
+与 `redis` 进行交互
+
+```java
+public class TestRedis {
+    /**
+     * set name hello
+     * 3个元素，每个命令 键值的长度
+     * set 命令是3个字节 $3
+     * name 是四个字节 $4
+     * hello 是五个字节 $8
+     * 多个命令间要用回车换行。
+     */
+    public static void main(String[] args) {
+        final byte[] LINE = new byte[]{13, 10};// 13 回车 10 换行
+        NioEventLoopGroup worker = new NioEventLoopGroup();
+        try {
+            Bootstrap bootstrap = new Bootstrap();
+            bootstrap.group(worker);
+            bootstrap.channel(NioSocketChannel.class);
+            bootstrap.handler(new ChannelInitializer<NioSocketChannel>() {
+                @Override
+                protected void initChannel(NioSocketChannel ch) throws Exception {
+                    ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
+                    ch.pipeline().addLast(
+                            new ChannelInboundHandlerAdapter() {
+                                // 连接建立就执行，发送数据
+                                @Override
+                                public void channelActive(ChannelHandlerContext ctx) throws Exception {
+                                    ByteBuf buf = ctx.alloc().buffer();
+                                    buf.writeBytes("*3".getBytes());
+                                    buf.writeBytes(LINE);
+                                    buf.writeBytes("$3".getBytes());
+                                    buf.writeBytes(LINE);
+                                    buf.writeBytes("set".getBytes());
+                                    buf.writeBytes(LINE);
+                                    buf.writeBytes("$4".getBytes());
+                                    buf.writeBytes(LINE);
+                                    buf.writeBytes("name".getBytes());
+                                    buf.writeBytes(LINE);
+                                    buf.writeBytes("$5".getBytes());
+                                    buf.writeBytes(LINE);
+                                    buf.writeBytes("Hello".getBytes());
+                                    buf.writeBytes(LINE);
+                                    ctx.writeAndFlush(buf);
+                                    super.channelActive(ctx);
+                                }
+
+                                @Override
+                                // 接收 redis 返回的结果
+                                public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+                                    ByteBuf buf = (ByteBuf) msg;
+                                    String retVal = buf.toString(Charset.defaultCharset());
+                                    System.out.println(retVal);
+                                    super.channelRead(ctx, msg);
+                                }
+                            }
+                    );
+                }
+            });
+            ChannelFuture localhost = bootstrap.connect("localhost", 6379).sync();
+            localhost.channel().closeFuture().sync();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            worker.shutdownGracefully();
+        }
+    }
+}
+```
+
+`redis` 返回的结果
+
+```shell
+00:49:32.450 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-2-1] - [id: 0x9a509446] REGISTERED
+00:49:32.450 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-2-1] - [id: 0x9a509446] CONNECT: localhost/127.0.0.1:6379
+00:49:32.450 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-2-1] - [id: 0x9a509446, L:/127.0.0.1:14078 - R:localhost/127.0.0.1:6379] ACTIVE
+00:49:32.470 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-2-1] - [id: 0x9a509446, L:/127.0.0.1:14078 - R:localhost/127.0.0.1:6379] WRITE: 34B
+         +-------------------------------------------------+
+         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
++--------+-------------------------------------------------+----------------+
+|00000000| 2a 33 0d 0a 24 33 0d 0a 73 65 74 0d 0a 24 34 0d |*3..$3..set..$4.|
+|00000010| 0a 6e 61 6d 65 0d 0a 24 35 0d 0a 48 65 6c 6c 6f |.name..$5..Hello|
+|00000020| 0d 0a                                           |..              |
++--------+-------------------------------------------------+----------------+
+00:49:32.470 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-2-1] - [id: 0x9a509446, L:/127.0.0.1:14078 - R:localhost/127.0.0.1:6379] FLUSH
+00:49:32.470 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-2-1] - [id: 0x9a509446, L:/127.0.0.1:14078 - R:localhost/127.0.0.1:6379] READ: 5B
+         +-------------------------------------------------+
+         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
++--------+-------------------------------------------------+----------------+
+|00000000| 2b 4f 4b 0d 0a                                  |+OK..           |
++--------+-------------------------------------------------+----------------+
++OK
+
+00:49:32.470 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-2-1] - [id: 0x9a509446, L:/127.0.0.1:14078 - R:localhost/127.0.0.1:6379] READ COMPLETE
 ```
 
 ### 2.3 http 协议举例

@@ -214,7 +214,7 @@ public class QuickClient {
 
 ## 3. 组件
 
-### 3.1 `EventLoop`
+### 3.1 EventLoop
 
 事件循环对象
 
@@ -519,7 +519,7 @@ static void invokeChannelRead(final AbstractChannelHandlerContext next, Object m
 
 ----
 
-### 3.2 `Channel`
+### 3.2 Channel
 
 #### 主要作用
 
@@ -818,7 +818,7 @@ closeFuture.addListener(new ChannelFutureListener() {
 * 异步并没有缩短响应时间，反而有所增加，但是增加了吞吐量。
 * 合理进行任务拆分，也是利用异步的关键
 
-### 3.3 `Future & Promise`
+### 3.3 Future & Promise
 
 在异步处理时，经常用到这两个接口
 
@@ -935,10 +935,6 @@ public class TestNettyPromise {
     }
 }
 ```
-
-
-
-
 
 #### 例1
 
@@ -1181,7 +1177,7 @@ io.netty.util.concurrent.BlockingOperationException: DefaultPromise@47499c2a(inc
 
 ```
 
-### 3.4 `Handler & Pipeline`
+### 3.4 Handler & Pipeline
 
 `ChannelHandler` 用来处理 Channel 上的各种事件，**分为入站、出站两种**。所有 `ChannelHandler` 被连成一串，就是 Pipeline
 
@@ -1418,7 +1414,7 @@ PooledUnsafeDirectByteBuf(ridx: 0, widx: 0, cap: 256)
 PooledUnsafeDirectByteBuf(ridx: 0, widx: 300, cap: 512)
 ```
 
-其中 log 方法参考如下
+<span style="color:red">**其中 log 方法参考如下**</span>
 
 ```java
 private static void log(ByteBuf buffer) {
@@ -1670,7 +1666,7 @@ try {
 
 <span style="color:green">**基本规则是，谁是最后使用 ByteBuf，谁负责 release，详细分析如下：**</span>
 
-* 起点，对于 NIO 实现来讲，在 io.netty.channel.nio.AbstractNioByteChannel.NioByteUnsafe#read 方法中首次创建 ByteBuf 放入 pipeline（line 163 pipeline.fireChannelRead(byteBuf)）
+* 起点，对于 NIO 实现来讲，在 `io.netty.channel.nio.AbstractNioByteChannel.NioByteUnsafe#read` 方法中首次创建 ByteBuf 放入 pipeline（line 163 pipeline.fireChannelRead(byteBuf)）
 * 入站 ByteBuf 处理原则
   * 对原始 ByteBuf 不做处理，调用 ctx.fireChannelRead(msg) 向后传递，这时无须 release
   * 将原始 ByteBuf 转换为其它类型的 Java 对象，这时 ByteBuf 就没用了，必须 release
@@ -1682,7 +1678,11 @@ try {
 * 异常处理原则
   * 有时候不清楚 ByteBuf 被引用了多少次，但又必须彻底释放，可以循环调用 release 直到返回 true
 
-TailContext 释放未处理消息逻辑
+>`TailContext` 源码
+
+`TailContext` 释放未处理消息逻辑：实现了入站接口（它需要收尾，也得关心入站的信息，所以实现了 `ChannelInboundHandler`）
+
+入站消息 ---> 看 `chanelRead` 方法 --> 调用了 `onUnhandledInboundMessage` 方法 --> `onUnhandledInboundMessage` 方法 --> `ReferenceCountUtil.release(msg);`
 
 ```java
 // io.netty.channel.DefaultChannelPipeline#onUnhandledInboundMessage(java.lang.Object)
@@ -1705,13 +1705,54 @@ public static boolean release(Object msg) {
     if (msg instanceof ReferenceCounted) {
         return ((ReferenceCounted) msg).release();
     }
-    return false;
+    return false; // 已经是其他类型的消息了，不能释放了。
 }
 ```
 
+> `HeadContext` 源码
+
+`writer` --> `unsafe.write(AbstractUnsafe)` --> `ReferenceCountUtil.release(msg);`
+
+```java
+public final void write(Object msg, ChannelPromise promise) {
+    assertEventLoop();
+
+    ChannelOutboundBuffer outboundBuffer = this.outboundBuffer;
+    if (outboundBuffer == null) {
+        // If the outboundBuffer is null we know the channel was closed and so
+        // need to fail the future right away. If it is not null the handling of the rest
+        // will be done in flush0()
+        // See https://github.com/netty/netty/issues/2362
+        safeSetFailure(promise, newClosedChannelException(initialCloseCause));
+        // release message now to prevent resource-leak
+        ReferenceCountUtil.release(msg);
+        return;
+    }
+
+    int size;
+    try {
+        msg = filterOutboundMessage(msg);
+        size = pipeline.estimatorHandle().size(msg);
+        if (size < 0) {
+            size = 0;
+        }
+    } catch (Throwable t) {
+        safeSetFailure(promise, t);
+        ReferenceCountUtil.release(msg);
+        return;
+    }
+
+    outboundBuffer.addMessage(msg, size, promise);
+}
+```
+
+
+
 #### 9）slice
 
-【零拷贝】的体现之一，对原始 ByteBuf 进行切片成多个 ByteBuf，切片后的 ByteBuf 并没有发生内存复制，还是使用原始 ByteBuf 的内存，切片后的 ByteBuf 维护独立的 read，write 指针
+slice 切片是共享内存，但是指针独立。调用完 slice 后需要调用 retain，确保自己的 `buf` 由自己`释放`
+
+【零拷贝】的体现之一（对数据零拷贝的体系之一，与前面讲的不是不经过Java内存，直接到网络设备的零拷贝有点不同），对原始 ByteBuf 进行切片成多个 ByteBuf，切片后的 ByteBuf 并没有发生内存复制，还是使用原始 ByteBuf 的内存，切片后的 ByteBuf 维护独立的 read，write 指针
 
 ![](img/0011.png)
 
@@ -1802,7 +1843,7 @@ System.out.println(ByteBufUtil.prettyHexDump(slice));
 +--------+-------------------------------------------------+----------------+
 ```
 
-这时，原始 ByteBuf 也会受影响，因为底层都是同一块内存
+**这时，原始 `ByteBuf` 也会受影响**，<span style="color:red">**因为底层都是同一块内存**</span>
 
 ```
 System.out.println(ByteBufUtil.prettyHexDump(origin));
@@ -1828,11 +1869,11 @@ System.out.println(ByteBufUtil.prettyHexDump(origin));
 
 #### 11）copy
 
-会将底层内存数据进行深拷贝，因此无论读写，都与原始 ByteBuf 无关
+<span style="color:red">**会将底层内存数据进行深拷贝，因此无论读写，都与原始 ByteBuf 无关**</span>
 
 #### 12）CompositeByteBuf
 
-【零拷贝】的体现之一，可以将多个 ByteBuf 合并为一个逻辑上的 ByteBuf，避免拷贝
+【零拷贝】的体现之一，可以将多个 ByteBuf 合并为一个逻辑上的 ByteBuf，避免拷贝。用之后也是建议 retain 一下，让引用计数+1
 
 有两个 ByteBuf 如下
 
@@ -2037,7 +2078,7 @@ new Thread(() -> {
 
 ### 💡 读和写的误解
 
-我最初在认识上有这样的误区，认为只有在 netty，nio 这样的多路复用 IO 模型时，读写才不会相互阻塞，才可以实现高效的双向通信，但实际上，Java Socket 是全双工的：在任意时刻，线路上存在`A 到 B` 和 `B 到 A` 的双向信号传输。即使是阻塞 IO，读和写是可以同时进行的，只要分别采用读线程和写线程即可，读不会阻塞写、写也不会阻塞读
+我最初在认识上有这样的误区，认为只有在 netty，nio 这样的多路复用 IO 模型时，读写才不会相互阻塞，才可以实现高效的双向通信，但实际上，**Java Socket 是全双工的（读写可以同时进行，发一条数据，不必非得等接收到了响应再处理）**：在任意时刻，线路上存在`A 到 B` 和 `B 到 A` 的双向信号传输。即使是阻塞 IO，读和写是可以同时进行的，只要分别采用读线程和写线程即可，读不会阻塞写、写也不会阻塞读
 
 例如
 
@@ -2108,8 +2149,3 @@ public class TestClient {
     }
 }
 ```
-
-
-
-
-
