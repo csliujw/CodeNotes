@@ -1,3 +1,18 @@
+# 常用工具及命令
+
+- `javac - java compiler java编译器`
+- `javadoc - 抽取Java 文档`
+  - 只能为 public protected 成员进行文档注释。
+  - 常见使用方法如下：
+  - `@see` 引用其他类。`@see classname / @see full-qualified-classname`
+  - `@version` 版本号
+  - `@author` 作者
+  - `@since` 代码的最早使用版本
+  - `@param` 修饰参数
+  - `@return` 返回值
+  - `@throws` 抛出的异常
+  - `@description` 表示方法废弃。已经被 `@Deprecated` 注解替代了
+
 # 第一部分 入门
 
 ## 第二章 开发环境
@@ -20,7 +35,7 @@
 
 - 编写、编译、运行
 - Java源程序-->Java字节码文件-->JVM运行
-- Javac.exe 编译器 处理后 字节码
+- Javac.exe 编译器 处理后 Java文件变成字节码文件
 - Java.exe 解释器 解释字节码的内容
 
 ## 第四章 常量
@@ -31,7 +46,7 @@
     - 整数常量：直接写上数字的，没有小数点。
     - 浮点数常量：直接写上数字的，有小数点。
     - 字符常量：用单引号引起来的 ‘A’，不能是空字符‘’。
-    - 布尔常量：只有量中取值。true，false
+    - 布尔常量：只有两种取值。true，false
     - 空常量：null，代表没有任何数据。不能直接用来打印。syso(null)是错的。
 
 ## 第五章 变量&数据类型
@@ -104,6 +119,53 @@ ASCII码表：American Standard Code for Information Interchange
 Unicode码表：万国码。也是数字和符号对照关系，开头0-127部分和ASCII完全一样，但是从128开始包含更多字符。
 ```
 
+### 5.6 易错点
+
+byte short char 这些在计算的时候，会有类型提升，提升为 int 进行计算。
+
+```java
+public static void main(String[] args) {
+    byte a = 8;
+    byte b = 127;
+    b = a+b; // 会报错，提示你要进行强制类型转换。因为计算的时候，a和b会被提升为int类型，然后再进行计算，得到的结果也是int的，要把int类型的赋值给byte类型的变量需要进行强制类型转换。
+}
+```
+
+包装类型的比较
+
+```java
+public class Demo {
+    public static void main(String[] args) {
+        Integer b = new Integer(47);
+        Integer a = new Integer(47);
+        System.out.println(a == b);  // false 因为 a b 是不同的对象。
+        Integer c = Integer.valueOf(47);
+        Integer d = Integer.valueOf(47);
+        System.out.println(c == d); // true 因为 valueOf 创建对象是会先从 IntegerCache 缓存中找，有就返回缓存中的对象。
+        							// IntegerCache 是静态内部类。静态内部类在你使用的时候才会进行加载。注意：是说的静态内部类。
+    }
+}
+```
+
+静态内部类加载时机的测试。遇到new、getstatic、putstatic或invokestatic 这四条字节码指令执行的时候，如果类没有进行过初始化，则需要先触发其初始化。
+
+```java
+public class Demo {
+    // VM参数 -XX:+TraceClassLoading
+    public static void main(String[] args) {
+        int a = 0x2f;
+        System.out.printf("", TestClassLoading.d); // 调用静态内部类，控制台输出，它被加载了。不用静态内部类，它就不加载。
+    }
+
+    static class TestClassLoading {
+        static int d =10;
+        {
+            System.out.println("d");
+        }
+    }
+}
+```
+
 ## 第六章 常用运算
 
 - 一元运算符：只需要一个数据就可以进行操作的运算符。
@@ -130,21 +192,47 @@ Unicode码表：万国码。也是数字和符号对照关系，开头0-127部�
     ```
     short = 5 + 8;(都要是常量才行)
     等同于
-    short = 13;
+    short = 13; // 编译优化
     先计算出的结果在进行赋值的
     称为编译器的常量优化。
     ```
 
 ## 第七章 基本语法
 
-### 7.1 switch语句使用的注意事项
+### 7.1 switch语句的使用
+
+> 基本语法
+
+```java
+public class Demo {
+    public static void main(String[] args) {
+        int a = 5;
+        switch (a) {
+            case 1:
+                System.out.println(1);
+            case 2:
+                System.out.println(2);
+            default:
+                System.out.println("over!");
+        }
+    }
+}
+```
 
 - 多个case后面的数值不可以重复
 - switch后面小括号中只能是下列数据类型
     - 基本数据类型 byte/short/char/int
     - 引用数据类型 String字符串、enum枚举
 
-### 7.2 循环概述
+> switch 的原理
+
+```java
+
+```
+
+
+
+### 7.2 循环
 
 - for循环
 
@@ -168,6 +256,18 @@ for(float x : f){
 }
 将每一个f的元素赋值给x
 ```
+
+- do-while
+
+```java
+do {
+    // doing something
+} while (condtion);
+```
+
+- break & continue
+
+break 跳出一层循环，continue 开启下一次循环。IDEA 点击关键字可以看到下一步会执行到那里。
 
 ### 7.3 方法重载与重写
 
@@ -713,6 +813,8 @@ public void testSplit2() {
 ## 第四章 静态关键字
 
 > **可实现数据共享。static修饰的内容不再属于对象自己，而是属于类的，所以凡是本类的对象，都共享同一份。**
+
+什么时候用 static：只想为某特定域分配单一存储空间，而不去考虑究竟要创建多少对象，甚至更本不用创建对象；不希望某个方法、成员变量与类的任何对象关联起来。
 
 ### 4.1 静态概述
 
