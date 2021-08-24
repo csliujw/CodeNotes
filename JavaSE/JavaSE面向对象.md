@@ -224,13 +224,54 @@ public class Demo {
     - 基本数据类型 byte/short/char/int
     - 引用数据类型 String字符串、enum枚举
 
-> switch 的原理
+> switch 中可以用 String 的原理
 
 ```java
+public class TestSwitch {
+    public static void main(String[] args) {
+        String str = "dd";
+        switch (str) {
+            case "dd":
+                System.out.println("odk");
+                break;
+            case "cc":
+            default:
+                System.out.println("over!");
+        }
+    }
+}
+// 反编译后的代码
+public class TestSwitch {
+    public TestSwitch() {
+    }
 
+    public static void main(String[] args) {
+        String str = "dd";
+        byte var3 = -1;
+        switch(str.hashCode()) {
+        case 3168:
+            if (str.equals("cc")) {
+                var3 = 1;
+            }
+            break;
+        case 3200:
+            if (str.equals("dd")) {
+                var3 = 0;
+            }
+        }
+
+        switch(var3) {
+        case 0:
+            System.out.println("odk");
+            break;
+        case 1:
+        default:
+            System.out.println("over!");
+        }
+
+    }
+}
 ```
-
-
 
 ### 7.2 循环
 
@@ -389,6 +430,19 @@ public static int[] calculate(int a,int b){
 - 4.本地方法栈（native method stack）：与操作系统相关
 - 5.寄存器（register）：与CPU相关
 
+----
+
+Java 的垃圾回收，对于提高对象的创建速度，具有明显的效果。Java从堆空间分配空间的速度，可以和其他语义从堆栈上分配空间的速度相媲美。在某些 Java VM 中，堆的实现截然不同，但是堆内存的分配可以看做：有一个堆指针，简单移动到尚未分配的区域，通过这种方式分配对象内存，其效率比得上 C++ 在栈上分配空间的效率。当然，在实际簿记工作方面，还有少量额外的开销，但是比不上查找可用空间的开销。（**Java GC 会清理出可用的空间，堆指针在空用空间中移动，这样就完成了内存的分配。而 C++ 需要遍历查找可用的内存，这个查找开销较大。这样一对比，会发现，Java 分配对象的速度并不比 C++慢**）
+
+Java 的 GC 工作的时候，一面回收内存空间，一面使堆中的对象紧凑排列。
+
+-----
+
+Java 的优化技术\=\=\=>JIT（Just-In-Time）：这种技术可以把重新全部或部分翻译成本地机器码，提升程序速度。当要装载某个类时，编译器会先找到其 `.class` 文件，然后将该类的字节码转入内存。此时有两种方式可供选择：
+
+- 一、让即时编译器编译所有代码，但是这种做法有两个缺陷：①这种加载动作散落在整个程序的生命周期内，累加起来要花很多时间，②会增加可执行代码的长度（字节码要比 JIT 展开后的本地机器码小很多），这将导致页面调度，从而降低程序速度。
+- 二、惰性评估，只在必要的时候编译代码。
+
 ### 7.6 常见异常
 
 > ArrayIndexOfBoundsException
@@ -507,7 +561,7 @@ static修饰，属于类本身，与类加载一次，因为只有一份所以�
 - **聚合（has-a）**：一个对象将一个或者多个其它对象作为自己的成员
 - **继承（is-a）**：
 
-### 1.1 面向对象
+### 面向对象
 
 > 当需要实现一个功能时，不关心具体的步骤，而是找一个已经具有该功能的人，来替我们做事。
 
@@ -515,7 +569,7 @@ static修饰，属于类本身，与类加载一次，因为只有一份所以�
 
 > 面向对象的基本特征：继承，封装，多态
 
-### 1.2 类和对象
+### 类和对象
 
 - 类：是一组相关 <u>*属性和行为的集合*</u> 。可以看成是一类事物的模板，使用事物的属性特征和行为特征来描述该 类事物。现实中，描述一类事物：
   - 属性：就是该事物的状态信息。 
@@ -531,7 +585,7 @@ static修饰，属于类本身，与类加载一次，因为只有一份所以�
 
 > 类与对象的关系 ：类是对一类事物的描述，是抽象的。 对象是一类事物的实例，是具体的。 类是对象的模板，对象是类的实体。
 
-### 1.3 一个对象的内存图
+### 一个对象的内存图
 
 方法区中存放class信息。
 class中的成员方法一直在方法区中。
@@ -540,7 +594,7 @@ class中的成员方法一直在方法区中。
 main方法中得变量指向堆中的对象，并对对象进行赋值操作。
 stack--栈，FIFO
 
-### 1.4 成员变量和局部变量
+### 成员变量和局部变量
 
 ```java
 /*
@@ -589,17 +643,28 @@ public class Demo01VariableDifference {
 }
 ```
 
-### 1.5 访问修饰符
+> 变量的初始化顺序
+
+```java
+public Class Counter{
+    int i;
+    public Counter(){
+        i=7;//在 调用构造方法 为 i 赋值为 7之前，i 就已经被初始化为 0 了。即，自动初始化发生在构造器被调用之前。
+    }
+}
+```
+
+### 访问修饰符
 
 > **private/protect/public/默认访问**
 
-#### 1.5.1 private访问属性
+#### private访问属性
 
 > **只有本类中可以随意访问，其他类都不行。**
 
-### 1.6 this关键字
+###  this关键字
 
-#### 1.6.1 this关键字的一些概念
+#### this关键字的一些概念
 
 > **通过谁调用的方法谁就是this。**
 
@@ -607,7 +672,7 @@ public class Demo01VariableDifference {
 
 > **类加载机制！静态的使用不必对类进行实例化。this指的是当前对象的引用。**
 
-#### 1.6.2 this关键字的一些作用
+#### this关键字的一些作用
 
 - 在构造器中调用构造器
 
@@ -629,9 +694,135 @@ this只能调用一个构造器
 this调用的构造器要放在最前面    
 ```
 
-### 1.6 匿名对象
+### 构造器初始化
+
+#### 初始化顺序
+
+在类的内部，变量定义的先后顺序决定了初始化的顺序。即使变量定义散布于方法定义之间，它们仍旧会在任何方法（包括构造器）被调用之前得到初始化。
+
+```java
+public class InitSequerence {
+    Windows w1 = new Windows("w1");
+
+    public InitSequerence() {
+        Windows w2 = new Windows("w2");
+    }
+
+    Windows w3 = new Windows("w3");
+
+    public static void main(String[] args) {
+        new InitSequerence();
+    }
+
+    static class Windows {
+        public Windows(String name) {
+            System.out.println(name);
+        }
+    }
+}
+// w1 w3 w2 先执行成员变量的初始化，在调用构造器
+```
+
+#### 静态数据的初始化
+
+静态初始化只有在必要的时候才会进行。
+
+- 静态成员变量的初始化，会在非静态成员变量之前。
+- 静态内部类的初始化，只有在使用到静态内部类/类中的变量，方法时才会初始化。即：静态内部类用到时才会加载。
+
+#### 非静态实例初始化
+
+- 也是按代码的顺序进行初始化的。且均在
+
+```java
+public class UnStaticInit {
+
+    public UnStaticInit() {
+        System.out.println("unStaticInit");
+    }
+
+    Test t1;
+
+    {
+        t1 = new Test("用于初始化成员变量的代码块");
+    }
+
+    {
+        Test test = new Test("单纯的代码块");
+    }
 
 
+    public static void main(String[] args) {
+        new UnStaticInit().t1.say();
+    }
+}
+
+class Test {
+    public Test(String msg) {
+        System.out.println(msg);
+    }
+
+    public void say() {
+        System.out.println("hello");
+    }
+}
+
+/**
+用于初始化成员变量的代码块
+单纯的代码块
+unStaticInit
+hello
+*/
+```
+
+#### 数组的初始化
+
+```java
+int[] a = {};
+System.out.println(a.length);// 这种是被允许的。
+```
+
+
+
+### 匿名对象
+
+### 枚举对象
+
+- 枚举对象可以更加清楚的表明程序的意义。
+
+- 打印枚举对象时，会自动调用 `toString()` 方法，枚举的 `values()` 方法 ，用来按照 enum 常量的声明顺序，产生由这些常量值构成的数组。
+
+```java
+public enum SpicinessEnum {
+    NOT, MILD, MEDIUM, HOT, FLAMING
+}
+
+class SimpleUseEnum {
+    public static void main(String[] args) {
+        for (SpicinessEnum value : SpicinessEnum.values()) {
+            System.out.println(value + ":" + value.ordinal());
+        }
+    }
+}
+/*
+NOT:0
+MILD:1
+MEDIUM:2
+HOT:3
+FLAMING:4
+*/
+```
+
+### 访问控制符
+
+把变动的事物与保持不变的事物区分开来。
+
+Java 有四种访问权限：`public` `protected` 包访问权限 `private`
+
+- `public` 公有的，任何类都可以访问
+- `protected` 受保护的，子类和同一包下的都可以访问
+- `包访问权限 default` 只能同一个类，或同一个包下的进行访问。不同包的，即便是子类也不能访问！
+- `private` 私有的，仅在自己类内部可以访问
 
 ## 第二章 API
 
@@ -941,7 +1132,7 @@ public void test1(){
 
 ​	【有争议的观点】子类能否继承父类的静态成员？
 
-### 5.1 继承中成员变量的访问特点
+### 继承中成员变量的访问特点
 
 > 目前关系数据库有六种范式：第一范式（1NF）、第二范式（2NF）、第三范式（3NF）、巴斯-科德范式（BCNF）、第四范式(4NF）和第五范式（5NF，又称完美范式）。
 
@@ -968,7 +1159,7 @@ class Fu{
 父类的成员变量 super.成员变量
 ```
 
-### 5.2 重写和重载
+### 重写和重载
 
 - 重写：在继承关系中，**方法名称一样，参数列表【也一样】**。覆盖、覆写 === 【没说返回值！】
 - 重载：方法名称一样，参数列表【不一样】
@@ -1014,7 +1205,7 @@ class Fu{
 
     > 对于已经投入使用的类，尽量不要进行修改。推荐定义一个新的类，来重复利用其中共性内容，并且添加改动新内容。
 
-### 5.3 继承中构造方法的访问特点
+### 继承中构造方法的访问特点
 
 子类构造方法中默认隐含有一个super()调用，所以一定是先调用父类构造
 
@@ -1074,7 +1265,105 @@ public Zi(){
 }
 ```
 
-### 5.4 继承中 this和super的内存图
+### 继承中 this和super的内存图
+
+### 初始化顺序
+
+先初始化父类，在初始化子类
+
+```java
+// 父类初始化的顺序
+public class SuperInit {
+    public static void main(String[] args) {
+        new Cartoon();
+    }
+}
+
+class Art {
+    public Art() {
+        System.out.println("Art");
+    }
+}
+
+class Drawing extends Art {
+    public Drawing() {
+        System.out.println("Drawing");
+    }
+}
+
+class Cartoon extends Drawing {
+    public Cartoon() {
+        System.out.println("Cartoon");
+    }
+}
+/*
+Art
+Drawing
+Cartoon
+*/
+```
+
+### 组合与继承
+
+> 组合与继承都允许在新的类中放置子对象，组合是显式的这样做，而继承是隐式地做。二者的区别在哪里，如何做出选择？
+
+- 组合技术通常用于想在新类中使用类的功能而非它的结构这种情况（多态）。
+- 如果需要子类向父类 向上转型，那么继承是必需的，如果不是，那么要考虑好是不是真的要用继承。（少用继承）
+
+### 完整的初始化过程
+
+```java
+// reuse/Beetle.java
+// The full process of initialization
+class Insect {
+    private int i = 9;
+    protected int j;
+
+    Insect() {
+        System.out.println("i = " + i + ", j = " + j);
+        j = 39;
+    }
+
+    private static int x1 = printInit("static Insect.x1 initialized");
+
+    static int printInit(String s) {
+        System.out.println(s);
+        return 47;
+    }
+}
+
+public class Beetle extends Insect {
+    private int k = printInit("Beetle.k.initialized");
+
+    public Beetle() {
+        System.out.println("k = " + k);
+        System.out.println("j = " + j);
+    }
+
+    private static int x2 = printInit("static Beetle.x2 initialized");
+
+    public static void main(String[] args) {
+        System.out.println("Beetle constructor");
+        Beetle b = new Beetle();
+    }
+}
+/*
+输出：
+static Insect.x1 initialized
+static Beetle.x2 initialized
+Beetle constructor
+i = 9, j = 0
+Beetle.k initialized
+k = 47
+j = 39
+*/
+```
+
+​		当执行 java Beetle，首先会试图访问 Beetle 类的 main() 方法（一个静态方法）， 加载器启动并找出 Beetle 类的编译代码（在名为 Beetle.class 的文件中）。在加载过 程中，编译器注意到有一个基类，于是继续加载基类。不论是否创建了基类的对象，基 类都会被加载。（可以尝试把创建基类对象的代码注释掉证明这点。）
+
+​		如果基类还存在自身的基类，那么第二个基类也将被加载，以此类推。接下来，根 基类（例子中根基类是 Insect）的 static 的初始化开始执行，接着是派生类，以此类 推。这点很重要，因为派生类中 static 的初始化可能依赖基类成员是否被正确地初始 化。 
+
+​		至此，必要的类都加载完毕，对象可以被创建了。首先，对象中的所有基本类型变 量都被置为默认值，对象引用被设为 null —— 这是通过将对象内存设为二进制零值一 举生成的。接着会调用基类的构造器。本例中是自动调用的，但是你也可以使用 super 调用指定的基类构造器（在 Beetle 构造器中的第一步操作）。基类构造器和派生类构 造器一样以相同的顺序经历相同的过程。当基类构造器完成后，实例变量按文本顺序初 始化。最终，构造器的剩余部分被执行。
 
 ## 第六章 抽象
 
@@ -1289,6 +1578,12 @@ public static final int num = 10;
 
 ## 第八章 多态
 
+能够改善代码的组织结构和可读性，还能够创造可扩展的程序；可以消除类型之间的耦合关系。
+
+多态（动态绑定、后期绑定或运行时绑定）：**在运行时根据对象的类型进行绑定**。当一种语言实现了后期绑定，就必须具有某种机制在运行时 能判断对象的类型，从而调用恰当的方法。也就是说，**编译器仍然不知道对象的类型， 但是方法调用机制能找到正确的方法体并调用。**每种语言的后期绑定机制都不同，但是 可以想到，对象中一定存在某种类型信息。 
+
+Java 中除了 static 和 final 方法（private 方法也是隐式的 final）外，其他所有方法都是后期绑定。这意味着通常情况下，我们不需要判断后期绑定是否会发生-----它 自动发生
+
 > **extends继承或implements实现是多态性的前提！**
 
 ```java
@@ -1333,7 +1628,18 @@ Employee two = new Assistant();
 
 ## 第九章 final
 
-### 9.1 final修饰类
+- final 修饰变量：
+  - 得到一个永远不改变的编译时常量；
+  - 在一个运行时被初始化的值，而你不希望它被改变。
+  - final 修饰引用只能确保引用的执行不被改变，但是对象内部的数据可以改变
+- final 修饰方法：
+  - 锁定方法，以防任何继承类修改它的含义。
+  - JVM对 final 修饰的方法可能会有优化，消除方法调用的开销。类似于 CPP 的内联函数
+- final 修饰类：
+  - final 类禁止继承。
+- 类中所有的 private 方法都隐式地指定为 final 的。由于无法取用 private 方法，所以也就无法覆盖它。
+
+### final修饰类
 
 final修饰的类是没有子孙的，但是有父亲（太监类）
 
@@ -1344,7 +1650,7 @@ public final class FinalDemo {
 }
 ```
 
-### 9.2 final修饰方法
+### final修饰方法
 
 final修饰的方法是最终方法，不能覆盖重写（override）
 
@@ -1358,7 +1664,7 @@ public final void method(){
 
 - 因为子类是一定要覆盖重写抽象方法的！
 
-### 9.3 final修饰局部变量
+### final修饰局部变量
 
 ```java
 final int num = 3; // 可以
@@ -1376,7 +1682,7 @@ public void say(){
 - **对于基本类型，不可变局势变量中的数据不可变**
 - **对于引用类型，不可以就是变量中的地址值不可变**
 
-### 9.4 final修饰成员变量
+### final修饰成员变量
 
 > **对于成员变量来说，如果使用final关键字修饰，那么这个变量也照样是不可变**
 
