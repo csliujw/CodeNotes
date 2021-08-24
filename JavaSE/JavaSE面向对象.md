@@ -13,6 +13,8 @@
   - `@throws` 抛出的异常
   - `@description` 表示方法废弃。已经被 `@Deprecated` 注解替代了
 
+Think in Java 阅读中，不断补充更新迭代笔记。
+
 # 第一部分 入门
 
 ## 第二章 开发环境
@@ -1369,13 +1371,14 @@ j = 39
 
 > **若父类中的方法不能确定如何进行{}方法体实现，那么这就应该是一个抽象方法。**
 
-### 6.1 抽象概述
+### 抽象概述
 
 - 抽象方法：就是加上abstract关键字，然后去掉大括号，直接分号结束
 - 抽象类：抽象方法所在的类，必须是抽象类才行！在class之前写上abstract即可
-- default关键字
+- 抽象类**可以没有**一个抽象方法。
+- 子类继承了抽象类，如果有未给父类（抽象类）的抽象方法方法体，那么子类也必须声明为抽象类。
 
-### 6.2 如何使用抽象类和抽象方法
+### 如何使用抽象类和抽象方法
 
 - 不能直接创建new抽象类对象。
 
@@ -1457,7 +1460,7 @@ public interface Name{
 - 如果是**Java 9**还可以额外包含有
   - 私有方法
 
-### 7.1 代码示例
+### 代码示例
 
 > 在任何版本的Java中，接口都能定义抽象方法。
 > 格式：public abstract 返回值类型 方法名称(参数列表);
@@ -1542,7 +1545,14 @@ public static final int num = 10;
 接口名.num调用！
 ```
 
-### 7.2 总结
+### 接口的注意事项
+
+- 接口中不能有构造方法，不能有静态代码块
+- 一个类的直接父类只有一个，但是可同时实现多个接口
+- **如果实现类所实现的多个接口中，存在重复的默认方法，那么实现类一定要对冲突的默认方法进行覆盖重写。**
+- **一个类如果直接父类当中的方法和接口中的默认方法产生了冲突，优先用父类当中的方法！**
+
+### 总结
 
 > **在Java 9+版本中，接口的内容可以有：**
 
@@ -1569,20 +1579,17 @@ public static final int num = 10;
       静态私有方法：private static 返回值类型 方法名称(参数列表) { 方法体 }
       注意：private的方法只有接口自己才能调用，不能被实现类或别人使用。
 
-### 7.3 接口的注意事项
-
-- 接口中不能有构造方法，不能有静态代码块
-- 一个类的直接父类只有一个，但是可同时实现多个接口
-- **如果实现类所实现的多个接口中，存在重复的默认方法，那么实现类一定要对冲突的默认方法进行覆盖重写。**
-- **一个类如果直接父类当中的方法和接口中的默认方法产生了冲突，优先用父类当中的方法！**
-
 ## 第八章 多态
 
 能够改善代码的组织结构和可读性，还能够创造可扩展的程序；可以消除类型之间的耦合关系。
 
 多态（动态绑定、后期绑定或运行时绑定）：**在运行时根据对象的类型进行绑定**。当一种语言实现了后期绑定，就必须具有某种机制在运行时 能判断对象的类型，从而调用恰当的方法。也就是说，**编译器仍然不知道对象的类型， 但是方法调用机制能找到正确的方法体并调用。**每种语言的后期绑定机制都不同，但是 可以想到，对象中一定存在某种类型信息。 
 
-Java 中除了 static 和 final 方法（private 方法也是隐式的 final）外，其他所有方法都是后期绑定。这意味着通常情况下，我们不需要判断后期绑定是否会发生-----它 自动发生
+Java 中除了 static 和 final 方法（private 方法也是隐式的 final）外，其他所有方法都是后期绑定。这意味着通常情况下，我们不需要判断后期绑定是否会发生-----它 自动发生。
+
+---
+
+
 
 > **extends继承或implements实现是多态性的前提！**
 
@@ -1593,7 +1600,7 @@ obj.method();
 obj.methodFu();
 ```
 
-### 8.1 访问成员变量的两种方式
+### 访问成员变量的两种方式
 
 - 直接通过对象名称访问成员变量：看等号左边是谁，优先使用谁，没有则向上找
 - 间接通过成员方法访问
@@ -1602,7 +1609,7 @@ obj.methodFu();
   - **成员变量：编译看左边，运行还看左边**
   - **成员方法：编译看左边，运行看右边**
 
-### 8.2 多态的好处
+### 多态的好处
 
 ```java
 Employee one = new Teacher();
@@ -1611,7 +1618,7 @@ Employee two = new Assistant();
 
 **无论右边new的时候换成那个子类对象，等号左边调用方法都不会变化！**
 
-### 8.3 对象的向上、下转型
+### 对象的向上\下转型
 
 - 向上转型一定是安全的，没有问题的，正确的。弊端在于，对象一旦向上转型为父类，就无法调用子类原本持有的内容。
 
@@ -1625,6 +1632,108 @@ Employee two = new Assistant();
   }
   一般先判断是否是该类，是才进行向下转型！
   ```
+
+### 构造器内调用多态方法
+
+在构造器中调用了正在构造的对象 的动态绑定方法，会发生什么?
+
+调用 RoundGlyph 构造器时，会先初始化 Glyph 的构造器，而 Glyph 构造器会调用 draw() 方法，由于多态，最终调用的是 RoundGlyph 的 draw() , 此时 radius 还未初始化，是默认值0，所以 radius 第一次打印的值是0。
+
+```java
+class Glyph {
+    void draw() {
+        System.out.println("Glyph.draw()");
+    }
+
+    Glyph() {
+        System.out.println("Glyph() before draw()");
+        draw();
+        System.out.println("Glyph() after draw()");
+    }
+}
+
+class RoundGlyph extends Glyph {
+    private int radius = 1;
+
+    RoundGlyph(int r) {
+        radius = r;
+        System.out.println("RoundGlyph.RoundGlyph(), radius = " + radius);
+    }
+
+    @Override
+    void draw() {
+        System.out.println("RoundGlyph.draw(), radius = " + radius);
+    }
+}
+
+public class PolyConstructors {
+    public static void main(String[] args) {
+        new RoundGlyph(5);
+    }
+}
+/**
+Glyph() before draw()
+RoundGlyph.draw(), radius = 0
+Glyph() after draw()
+RoundGlyph.RoundGlyph(), radius = 5
+*/
+```
+
+### 协变返回类型
+
+Java 5 中引入了协变返回类型，子类重写父类的方法，方法的返回值类型可以变为父类返回值类型的子类。即子类重写方法，返回值类型可以`缩窄`
+
+重写方法时，子类不能降低父类的权限。例如：父类是 public，但子类重写的权限不能低于 public。
+
+```java
+class Grain {
+    @Override
+    public String toString() {
+        return "Grain";
+    }
+}
+
+class Wheat extends Grain {
+    @Override
+    public String toString() {
+        return "Wheat";
+    }
+}
+
+class Mill {
+    Grain process() {
+        return new Grain();
+    }
+}
+
+class WheatMill extends Mill {
+    @Override
+    Wheat process() {
+        return new Wheat();
+    }
+}
+
+public class CovariantReturn {
+    public static void main(String[] args) {
+        Mill m = new Mill();
+        Grain g = m.process();
+        System.out.println(g);
+        m = new WheatMill();
+        g = m.process();
+        System.out.println(g);
+    }
+}
+```
+
+### RTTI
+
+RTTI：运行时类型识别。在运行时检查类型的行为称为 RTTI。在 Java 中，每次转型都会被检查！所以即使只是进行一次普通的加括号形式的类型转换，在运行时这个转换仍会被检查，以确保它的确是希望的那种类型。如果不是，就会 得到 ClassCastException
+
+### 易错点
+
+只有普通方法的调用可以是多态的。成员变量是没有的。
+
+
 
 ## 第九章 final
 
