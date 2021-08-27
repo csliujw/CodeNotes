@@ -3096,58 +3096,101 @@ public void fn6(){
 }
 ```
 
-## 第十二章 集合框架
+## 第十二章 集合
 
-### 0 引言（Think in Java 第11章 持有对象）
+java.util 库提供了一套相当完整的集合类（collection classes）来解决非固定长度数据的问题，其中基本的类型有 List 、Set 、Queue 和 Map。
 
-> **Java容器类类库的用途是“保存对象”。可细分为单列集合，双列集合！**
+### 基本概念
 
-- Collection。一个独立元素序列
-- Map。一组成队的“键值对”对象，允许使用键来查找值
+Java 集合类库采用 “持有对象”（holding objects）的思想，并将其分为两个不同的 概念，表示为类库的基本接口：
 
-- 添加一组元素的 
+- **集合（Collection）：**一个独立元素的序列，这些元素都服从一条或多条规则。List 必须以插入的顺序保存元素，Set 不能包含重复元素，Queue 按照排队规则来确 定对象产生的顺序
+  - HashSet、TreeSet、LinkedHashSet，仅保存每个相同项中的一个。
+  - `HashSet` 存储元素的方法复杂，检索元素快
+  - `TreeSet` 按比较结果升序保存对象
+  - `LinkedHashSet` 按照被添加的先后顺序保存对象
+- **映射（Map）：**一组成对的 “键值对” 对象，允许使用键来查找值。
+  - `HashMap` 不按插入顺序存储元素
+  - `TreeMap` 通过比较结果的升序来保存键
+  - `LinkedHashMap` 在保持 HashMap 查找速度的同时按键的插入顺序保存键。
+
+> 代码示例：
+
+for 循环添加元素并打印。
 
 ```java
-@Test
-public void fn2(){
-    Collection<Integer> c = new ArrayList<Integer>(Arrays.asList(1,2,3,4,5,6,7));
-    Integer []arr = {1,2,3,4,5};
-    // 这里需要Integer类型的数组！
-    Collection<Integer> c1 = new ArrayList<Integer>(Arrays.asList(arr)); 
-    for (Integer i: c)
-        System.out.print(i+"\t");
-    for ( Integer i: c1)
-        System.out.print(i+"\t");
-}
+import java.util.ArrayList;
+import java.util.Collection;
 
-@Test
-public void fn1(){
-    Integer []array = {1,23,4,5};
-    Collection<Integer> coll = new ArrayList<Integer>(Arrays.asList(array));
-    System.out.println(coll.size());
-    coll.addAll(Arrays.asList(array));
-    System.out.println(coll.size());
-
-    // 可变长参数 自动装箱拆箱
-    Collections.addAll(coll,1,2,3,5);
-    System.out.println(coll.size());
-}
-
-@Test
-public void fn2(){
-    Integer []array = {1,23,4,5};
-    Collection<Integer> coll = new ArrayList<Integer>(Arrays.asList(array));
-    Iterator<Integer> iterator = coll.iterator();
-    //迭代器遍历
-    while(iterator.hasNext()){ // hasNext仅仅判断是否有元素
-        Integer next = iterator.next(); // 依稀记得有指针后移的操作 后面补充
-        System.out.println(next);
-        iterator.remove();
+public class SimpleCollection {
+    public static void main(String[] args) {
+        Collection<Integer> elements = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            elements.add(i);
+        }
+        for (Integer i : elements) {
+            System.out.println(i);
+        }
     }
 }
 ```
 
-- 这节就一个核心观点，使用泛型，安全！强制类型转换时使用instanceof进行检测！
+### 添加元素
+
+- Arrays 类和 Collections 类。
+- Arrays.asList() 接受一个数组或可变长参数，并将其转换为 List 对象。
+- Collections.addAll() 方法接受一个 Collection 对象，数组 或 可变长参数，将其中的元素添加到 Collection 中。
+
+```java
+public class AddElements {
+    public static void main(String[] args) {
+        Collection<Integer> elements = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6));
+        ArrayList<Integer> elements2 = new ArrayList<>();
+        // 运行速度更快
+        Collections.addAll(elements2, 1, 2, 3, 4, 5, 6);
+
+        List<Integer> list = Arrays.asList(1, 2, 3, 4, 5, 6);
+        list.set(1, 100);
+//        list.add(100); 报错，asList 产生的集合大小是不可变的，会抛出 Unsupported Operation
+    }
+}
+```
+
+### 列表 List
+
+- ArrayList：随机访问快，在中间插入、删除元素较慢。动态数组实现的。
+- LinkedList：随机访问慢，在 List 中间进行的插入和删除操作代价低一些，比 ArrayList 功能更多，链表实现。
+
+> List 常用 API
+
+- `contains()` 对象是否在列表中
+- `indexOf()` 第一次出现的下标号，返回 -1 表示未找到
+- `lastIndexOf()`  最后一次出现的下标号，返回 -1 表示未找到
+- `subList(5，8)` 列表切片。左闭右开，从索引5开始，切片到索引8，不包括索引8这个位置的元素。
+- `listA.containsAll(listB)` listA中是否包含listB中的所有元素，与顺序无关。
+- `Collections.sort(list)` 对集合进行排序
+- `Collections.shuffle(list)` 打乱集合
+- `listA.retainAll(listB)` 取A∩B，所产生的结果行为依赖于 equals() 方法
+- `listA.set(1,xx)` 将索引1处的替换为 xx
+- `listA.addAll(newList)` 将新列表插入到 原始列表的中间位置
+- isEmpty() 判空和 clear()清除元素
+- `listA.toArray()`  将任意的 Collection 转换为数组,Object类型。
+- `listA.toArray(new Type[0])`  将目标类型的数 组传递给这个重载版本，会生成一个指定类型的数组。如果参数数组太小而无法容纳 List 中的所有元素，则 toArray() 会 创建一个具有合适尺寸的新数组。
+
+### 迭代器 iterators
+
+迭代器是一个对象，它在一 个序列中移动并选择该序列中的每个对象，我们无须关心该序列的底层结构。
+
+迭代器通常被称为轻量级对象（lightweight object），创建它的代价小。
+
+Java 的 Iterator 只能单向 移动。这个 Iterator 只能用来：
+
+- 使用 iterator() 方法要求集合返回一个 Iterator。Iterator 将准备好返回序列 中的第一个元素。
+- 使用 next() 方法获得序列中的下一个元素。
+- 使用 hasNext() 方法检查序列中是否还有元素。
+- 使用 remove() 方法将迭代器最近返回的那个元素删除。
+
+# Think in Java P380页
 
 ### 12.1 List集合
 
