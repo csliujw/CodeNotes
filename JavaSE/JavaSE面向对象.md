@@ -3179,9 +3179,7 @@ public class AddElements {
 
 ### 迭代器 iterators
 
-迭代器是一个对象，它在一 个序列中移动并选择该序列中的每个对象，我们无须关心该序列的底层结构。
-
-迭代器通常被称为轻量级对象（lightweight object），创建它的代价小。
+<span style="color:red">**能够将遍历序列的操作与该序列的底层结构分离，统一了对集合的访问方式。**</span>
 
 Java 的 Iterator 只能单向 移动。这个 Iterator 只能用来：
 
@@ -3190,7 +3188,426 @@ Java 的 Iterator 只能单向 移动。这个 Iterator 只能用来：
 - 使用 hasNext() 方法检查序列中是否还有元素。
 - 使用 remove() 方法将迭代器最近返回的那个元素删除。
 
-# Think in Java P380页
+#### Iterator
+
+```java
+public class IteratorDemo {
+    public static void main(String[] args) {
+        ArrayList<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6));
+        Iterator<Integer> iterator = list.iterator();
+        while (iterator.hasNext()){
+            Integer next = iterator.next();// 拿到元素
+            System.out.println(next);
+            iterator.remove(); // 删除由 next() 生成的最后一个元素
+        }
+        System.out.println(list.size());
+    }
+}
+```
+
+#### Iterable
+
+所有的 Collection 都继承自 Iterable 接口，且 Iterable 接口有生成迭代器的方法 `Iterator<T> iterator();`。
+
+#### ListIterator
+
+一个更强大的 Iterator 子类型。
+
+- Iterator只能向前移动，而 Listiterator 可以双向移动。
+
+```java
+public class ListIteratorDemo {
+    public static void main(String[] args) {
+        ArrayList<Integer> list = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6));
+        ListIterator<Integer> iterator = list.listIterator();
+        while (iterator.hasNext()) {
+            System.out.print(iterator.next() + "\t");
+        }
+        System.out.println();
+        while (iterator.hasPrevious()) {
+            System.out.print(iterator.previous() + "\t");
+        }
+    }
+}
+```
+
+### 链表 LinkedList
+
+它在 List 中间执行 插入和删除操作时比 ArrayList 更高效，随机访问方面效率比 ArrayList 低。
+
+LinkedList 还添加了一些方法，使其可以被用作**栈、队列或双端队列（deque）**
+
+-  getFirst() 和 element() 是相同的，它们都返回列表的头部（第一个元素）而并 不删除它，如果 List 为空，则抛出 NoSuchElementException 异常。peek() 方法与这两个方法只是稍有差异，它在列表为空时返回 null 。 
+- removeFirst() 和 remove() 也是相同的，它们删除并返回列表的头部元素，并 在列表为空时抛出 NoSuchElementException 异常。poll() 稍有差异，它在列 表为空时返回 null 。
+- addFirst() 在列表的开头插入一个元素。 
+- offer() 与 add() 和 addLast() 相同。它们都在列表的尾部（末尾）添加一个元 素。 
+- removeLast() 删除并返回列表的最后一个元素。
+
+### 栈 Stack
+
+堆栈是 “后进先出”（LIFO）集合。
+
+Java 1.0 的 Stack 类设计的很糟糕。它使用继承 Vector 来实现 Stack 而不是组合。Java 1.6 提供了一个新的类 ArrayDeque，但是把它作为 栈，ArrauDeque 这个命名不是很合适。
+
+```java
+class Stack<T> {
+    ArrayDeque<T> deque = new ArrayDeque<T>();
+
+    public void push(T element) {
+        deque.push(element);
+    }
+
+    public T peek() {
+        return deque.peek();
+    }
+
+    public T pop() {
+        return deque.pop();
+    }
+
+    public int size() {
+        return deque.size();
+    }
+
+    public boolean isEmpty() {
+        return deque.isEmpty();
+    }
+}
+```
+
+如果只需要栈的行为，那么使用继承是不合适的，因为这将产生一个具有 ArrayDeque 的其它所有方法的类（Java 1.0 设计者在创建 java.util.Stack 时，就犯了这个错误）。使用组合，可以选择要公开的方法以及如何命名它们。
+
+### 集合 Set
+
+有如下几种常用的 Set
+
+- TreeSet：用 TreeMap 实现的，底层数据结构是**红黑树**。会按顺序存储结果。需要比较器。
+- HashSet：用 HashMap 实现的，底层数据结构是**散列表**
+- LinkedHashSet：继承自 HashSet
+
+Set 不保存重复的元素。
+
+```java
+public class SetOfInteger {
+    public static void main(String[] args) {
+        Random rand = new Random(47);
+        Set<Integer> intset = new HashSet<>();
+        for (int i = 0; i < 10000; i++)
+            intset.add(rand.nextInt(30));
+        System.out.println(intset);
+    }
+}
+// [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+```
+
+验证 TreeSet 是有序的
+
+```java
+@Test
+public void fn4(){
+    /**
+     * 内部使用的红黑树，我也不知道红黑树是啥
+     * 二叉排序树 --> AVL --> 红黑树
+     * 应该都满足，中序遍历结果是有序的！
+    */
+    TreeSet<Integer> set = new TreeSet<>();
+    for (int i = 0; i <100 ; i++) {
+        set.add((int)(Math.random()*100));
+    }
+    System.out.println(set.size());
+    for(int i : set){
+        System.out.println(i);
+    }
+}
+```
+
+用 TreeSet 对添加的对象进行排序，需要 Comparator 比较器 或 对象实现 Comparable 接口。
+
+```java
+package com.bbxx.list;
+
+import java.util.Objects;
+import java.util.TreeSet;
+/**
+ * 类大小比较
+ * 依据年龄 姓名进行比较
+ */
+public class Student implements Comparable {
+
+    public static void main(String[] args) {
+        TreeSet<Student> set = new TreeSet<Student>();
+        for (int i = 0; i <10 ; i++) {
+            set.add(new Student(i+5,i+"s"));
+        }
+        set.add(new Student(6,null));
+        for(Student ss : set){
+            System.out.println(ss);
+        }
+        /**
+         * 总结
+         * TreeSet采用的红黑树。其应该是符合二叉排序树的性质。中序遍历是有序的。
+         * 中序遍历为从小到大的顺序。所以是从小到大来输出。
+         *
+         * comparable的compareTo方法返回值的解释。
+         * 返回正数表示大于。返回0等于，返回负数表示小于!
+         *
+         * 查看TreeSet add的源码试试 发现 看不懂！
+         * 采取代码测试
+         */
+        Student obj1 = new Student(6, "kkx");
+        Student obj2 = new Student(6, "kkx1");
+        Student obj3 = new Student(7, "kkx3");
+        Student obj4 = new Student(8, "kkx1");
+        // -1 如果是表示小于那么set集合的输出顺序是obj1在前
+        System.out.println(obj1.compareTo(obj2));
+        set.clear();
+        set.add(obj1);
+        set.add(obj2);
+        //测试结果表明 的确是小于。
+        for(Student ss : set){
+            System.out.println(ss);
+        }
+        /**
+         * 总结：
+         *  comparable的compareTo方法返回值的解释。
+         *   返回正数表示大于。返回0等于，返回负数表示小于!
+         *   obj1.compareTo(obj2) 比较1 和 2的大小。返回正数则 obj1大
+         */
+    }
+    //方便操作
+    public int age;
+    public String name;
+
+    public Student(){}
+    public Student(int age,String name){
+        this.age = age;
+        this.name = name;
+    }
+    @Override
+    public String toString() {
+        return "Student{" +
+                "age=" + age +
+                ", name='" + name + '\'' +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Student student = (Student) o;
+        return age == student.age &&
+                Objects.equals(name, student.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(age, name);
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        Object obj;
+        // 不属于该类
+        if (!((obj = o) instanceof Student)) {
+            System.out.println("对象错误");
+            return -1;
+        }
+        o = (Student) o;
+        if (this.equals(o)) return 0;
+        // 优先通过年龄判断
+        if (this.age > ((Student) o).age) return 1;
+        // 其次通过姓名判断
+        if (this.age == ((Student) o).age) {
+            if(this.name==null && ((Student) o).name==null) return 0;
+            if(this.name == null && ((Student) o).name!=null) return -1;
+            int len = this.name.compareTo(((Student) o).name);
+            if (len == 0) return 0;
+            else if (len > 0) return 1;
+        }
+        return -1;
+    }
+}
+```
+
+其他的 API 自行查文档。
+
+### 映射 Map
+
+将对象映射到其他对象。
+
+Map 可以返回由其键组成的 Set ，由其值组成的 Collection ，或者其键值对的 Set 。
+
+> **常用的有 `HashMap`和`TreeMap`**
+
+`HashMap`相关
+
+- 基本原理：`Java1.8`后是 红黑树+散列表。最开始是散列表的拉链法，链长度超过八是链转为红黑树。
+- `HashMap` 的 key 可以存入null，`HashTable` 的 key 不可为 null。
+
+基本操作：
+
+```java
+public void fn1(){
+    // map的存储 遍历  指定泛型，安全
+    Map map = new HashMap<Integer,String>();
+    map.put(1,"AA");
+    map.put(12,"BB");
+    map.put(13,"CC");
+    map.put(1,"DD");
+
+    // map的基本遍历有两种方式
+    // 先获取所有的key  @return a set view of the keys contained in this map
+    Set set = map.keySet();
+    Iterator iterator = set.iterator();
+    while(iterator.hasNext()){
+        System.out.println(map.get(iterator.next()));
+    }
+    System.out.println("*************华丽的分割线*************");
+
+    // @return a set view of the mappings contained in this map
+    // 记不清就点进去看他的返回值回忆具体操作
+    Set set1 = map.entrySet();
+    Iterator iterator1 = set1.iterator();
+    while(iterator1.hasNext()){
+        // Map.Entry<Integer, String> 内部接口
+        Map.Entry<Integer, String> next = (Map.Entry<Integer, String>)iterator1.next();
+        System.out.println(next.getKey()+"=="+next.getValue());
+    }
+}
+```
+
+**`HashMap`对象的key、value值均可为null。且`HashMap`是线程不安全的**
+
+**`HahTable`对象的key、value值均不可为null。且`HashTable`是线程安全的**，put方法用synchronized锁了！好多方法也用synchronized锁了。如remove这些方法！
+
+```java
+public void fn1(){
+    Hashtable<Integer, String> table = new Hashtable<>();
+    // Make sure the value is not null
+    // 测试时 发现 key也不能为null，key为null时，没有对应的处理策略
+    table.put(null,"ss");
+
+    // map的存储 遍历  指定泛型，安全
+    HashMap map = new HashMap<Integer,String>();
+    map.put(1,"AA");
+    map.put(12,"BB");
+    map.put(13,"CC");
+    map.put(1,"DD");
+    // 如果key为null时有处理策略的 return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+    map.put(null,null);
+```
+
+`TreeMap`基本内容
+
+```java
+public void fn2(){
+    // 盲猜 TreeMap的key有二叉排序树的性质 中序遍历为从小到大 内部采用的红黑树。
+    // 暂时用二叉排的性质去理解。
+    // String 内部的排序 比较的时ASCII码值 Unicode包含ASCII的所有码值
+    TreeMap<String, String> map = new TreeMap<String, String>();
+    map.put("AA","AA");
+    map.put("BB","BB");
+    map.put("B123B","CC");
+    map.put("23BB","DD");
+    Set<Map.Entry<String, String>> entries = map.entrySet();
+    Iterator<Map.Entry<String, String>> iterator = entries.iterator();
+    while(iterator.hasNext()){
+        Map.Entry<String, String> next = iterator.next();
+        // 有时候不用泛型 代码返回值就是舒服
+   System.out.println(next.getKey()+":"+next.getValue());
+    }
+}
+```
+
+Properties集合
+
+> `HashTable`的子类。常用于存储一些配置信息。回忆`properties`文件，好像是的。还有一个properties流？果不其然，有load方法传入的对象是输入流！
+
+-----
+
+```java
+public void fn3(){
+    Properties properties = new Properties();
+    // 仅仅可以为String，应该是专门为配置文件所产生的一个map
+    properties.setProperty("name","kkx");
+    properties.setProperty("age","18");
+    properties.setProperty("sex","xxx");
+    Set<Map.Entry<Object, Object>> entries = properties.entrySet();
+    Iterator<Map.Entry<Object, Object>> iterator = entries.iterator();
+    while(iterator.hasNext()){
+        Map.Entry<Object, Object> next = iterator.next();
+        System.out.println(next.getKey()+":"+next.getValue());
+    }
+    Runtime runtime = Runtime.getRuntime();java
+}
+```
+
+### 队列 Queue
+
+“先进先出”（FIFO）
+
+#### LinkedList
+
+LinkedList 实现了 Queue 接口，并且提供了一些方法以支持队列行为。
+
+- peek 拿到队首元素，不会移除
+- remove 移除队首元素
+- offer 元素入队
+
+#### 优先队列 PriorityQueue
+
+优先级队列声明下一个弹出的元素是最需要的元素（具有最高的优先级）Java 1.5 提供。默认的排序使用队列中对象的自然顺序，可以通过提供自己的 Comparator 来修改这个顺序。
+
+> 优先队列的默认排序。小顶堆，堆顶的元素是最小值
+
+```java
+public class PriorityQueueDemo {
+    public static void main(String[] args) {
+        PriorityQueue<Integer> queue = new PriorityQueue<>();
+        Random random = new Random(47);
+        for (int i = 0; i < 10; i++) {
+            queue.offer(random.nextInt(i + 10));
+        }
+        print(queue);
+    }
+
+    public static void print(PriorityQueue<Integer> queue) {
+        while (!queue.isEmpty()) {
+            System.out.printf("%d \t", queue.poll());
+        }
+
+    }
+}
+```
+
+> 修改默认的排序 `Collections.reverseOrder()`
+
+```java
+public class PriorityQueueDemo {
+    public static void main(String[] args) {
+        PriorityQueue<Integer> queue = new PriorityQueue<>(Collections.reverseOrder());
+        Random random = new Random(47);
+        for (int i = 0; i < 10; i++) {
+            queue.offer(random.nextInt(i + 10));
+        }
+        print(queue);
+    }
+
+    public static void print(PriorityQueue<Integer> queue) {
+        while (!queue.isEmpty()) {
+            System.out.printf("%d \t", queue.poll());
+        }
+
+    }
+}
+```
+
+Integer ，String 和 Character 可以与 PriorityQueue 一起使用，因为这些类已经内置了自然排序。如果想在 PriorityQueue 中使用自己的类，则必须包含额外的功能以产生自然排序，或者必须提供自己的 Comparator。
+
+### 集合与迭代器
+
+
 
 ### 12.1 List集合
 
@@ -7471,7 +7888,6 @@ HotSpot使用的是 计数器 的方式进行探测，为每个方法准备了�
     - 「执行」调用系统的硬件执行最终的程序指令
 
   <img src="../pics/JavaStrengthen/jvm/From_Java2Class.jpg">
-  
 
 ### Java内存模型
 
