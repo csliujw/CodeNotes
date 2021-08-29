@@ -2935,5 +2935,69 @@ module.exports = {
 
 <img src="../pics/vue/heima/vue-content.png" style="float:left">
 
+# Vue+Vant 压缩图片
+
+```vue
+<van-uploader :max-size="4 * 1024 * 1024" capture="camera" class="uploader" accept="image/*"
+              :after-read="afterRead">
+    <van-swipe-item>
+        <van-button plain type="info" icon="plus" class="re-btn">
+            拍照识别
+        </van-button>
+    </van-swipe-item>
+</van-uploader>
+```
+
+```java
+ // base64 转 file
+    dataURLtoFile(dataurl, filename) {
+      var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new File([u8arr], filename, {type: mime});
+    },
+    afterRead(file) {
+      console.log(file)
+      // 图片大于500kb就压缩
+      if (file.file.size > 512000) {
+        let canvas = document.createElement('canvas') // 创建Canvas对象(画布)
+        let context = canvas.getContext('2d')
+        let img = new Image()
+        img.src = file.content // 指定图片的DataURL(图片的base64编码数据)
+        let files = file;
+        img.onload = () => {
+          let size = files.file.size / 512000
+          canvas.width = img.naturalWidth / Math.sqrt(size)
+          canvas.height = img.naturalHeight / Math.sqrt(size)
+          context.drawImage(img, 0, 0, canvas.width, canvas.height)
+          files.content = canvas.toDataURL(files.file.type, 0.92) // 0.92为默认压缩质量
+          let myFile = this.dataURLtoFile(files.content, files.file.name)//dataURLtoFile为自己封装的函数，将base64转为file
+          console.log(files)
+          let formDatas = new FormData()
+          formDatas.append('file', myFile)
+          this.upload(formDatas)//上传的封装函数
+        }
+      } else { //小于10M直接上传
+        let formData = new FormData()
+        formData.append('file', file.file)
+        console.log(formData)
+        this.upload(formData)//上传的封装函数
+      }
+    },
+    async upload(formData) {
+      const {data: response} = await this.$http.post('/upload', formData)
+      if (response.code == 200) {
+        Toast.success(response.msg);
+        window.sessionStorage.setItem("classify_result", JSON.stringify(response))
+        window.sessionStorage.getItem("classify_result")// 此处获得 图片回显的 url 地址。
+        this.$router.push("/result/classify")
+      } else {
+        Toast.fail(response.msg);
+      }
+    },
+```
+
 # 极客时间Vue
 

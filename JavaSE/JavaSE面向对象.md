@@ -3607,327 +3607,102 @@ Integer ，String 和 Character 可以与 PriorityQueue 一起使用，因为这
 
 ### 集合与迭代器
 
+如果要自行实现一个可迭代的集合有如下几种选择：
 
+- 实现  Collection 接口，但是这就必须实现它的所有方法了。是不是太臃肿了？
+- 继承自 AbstractCollection，AbstractCollection 实现了一个默认的 Collection，这样就不必手动实现这么多方法了，只需要实现个别集合未实现的方法。但是使用了  extends，会导致，后面无法再继承。
+- 实现 Iterable 接口，只需要自行实现一个 iterator 方法，且耦合度很小。（推荐）
 
-### 12.1 List集合
+### for-in 和迭代器
+
+for-in 语法主要用于数组，但它也适用于任何 Collection 对象。
+
+Java 5 引入了一个 Iterable 的接口，该接口包含一个能够生 成 Iterator 的 iterator() 方法。for-in 使用此 Iterable 接口来遍历序列。因此，如 果创建了任何实现了 Iterable 的类，都可以将它用于 for-in 语句中。**Collection 接口就继承了 Iterable 接口**。
 
 ```java
-@Test
-public void fn1(){
-    // 不使用多态，便于测试特有的实现方法
-    ArrayList<Integer> list = new ArrayList<Integer>();
-    /**
-         * ArrayList初始化时有容量。默认10.当用到了一定比例的空间会自行进行扩充
-         * 简而言之：可变长数组！
-         * 如果存储空间不足，会扩大至原来大小的2倍
-         * int newCapacity = oldCapacity + (oldCapacity >> 1);
-         * 看remove方法的代码，似乎没有发现明显的当用的空间不多时，对数组大小进行缩减！
-         *
-         * 可变长数组代码的策略
-         *      长度不够时进行数组长度的扩充，创建一个新的，大小时原来2-3倍的，把数组copy进行曲
-         *      所用的空间不多时，对数组长度进行缩减。创建一个新的长度小的数组，把oldValue复制进去
-         *
-         *      度的把握：用了2/3时就进行数组的扩充
-         *               元素只剩1/3（好像是1/2）时才进行数组的缩减.缩减的策略比较保守
-         *               主要是因为程序的局部性原理！
-         */
-    for (int i = 0; i <5 ; i++) {
-        list.add(10);
-    }
-    Integer i = 10;
-    list.remove(i);// remove(Object o)  这个是对象。
-    // list.remove(10); 这个识别成了 index 所以报错
-    System.out.println(list.size()); // 0
-    list.set(0,100);
-    System.out.println(list.get(0));
-    System.out.println(list.lastIndexOf(10));
-    // list.forEach(); 函数式编程 后期补充
-    // list.equals() 对象比较时 记得按需求考虑是否重写对象的equals方法
-}
-
-@Test
-public void fn2(){
-    // 可充当 队列 / 栈？
-    LinkedList<Integer> list = new LinkedList<>();
-    for (int i = 0; i <5 ; i++) {
-        list.add(i);
-    }
-    list.offer(100);
-    System.out.println(list.getLast()); // 记单词 tail 尾部
-}
-
-@Test
-public void fn3(){
-    LinkedList<Integer> list = new LinkedList<>();
-    for (int i = 0; i <5 ; i++) {
-        // 插入 begin stack后进先出FIFO
-        list.addFirst(i);
-    }
-    // 后进入的在head 故获取First
-    System.out.println(list.getFirst());
+public interface Collection<E> extends Iterable<E> {
+	// some code
 }
 ```
 
-### 12.2 Set集合
-
-> **set无重复元素**
-
-- `TreeSet` 有序，红黑树
+for-in 语句适用于数组或其它任何 Iterable ，但这并不意味着数组肯定也是个 Iterable ，也不会发生任何自动装箱。
 
 ```java
-@Test
-public void fn4(){
-    /**
-     * 内部使用的红黑树，我也不知道红黑树是啥
-     * 二叉排序树 --> AVL --> 红黑树
-     * 应该都满足，中序遍历结果是有序的！
-    */
-    TreeSet<Integer> set = new TreeSet<>();
-    for (int i = 0; i <100 ; i++) {
-        set.add((int)(Math.random()*100));
+import java.util.Arrays;
+
+public class ArrayIsNotIterable {
+    static <T> void test(Iterable<T> ib) {
+        for (T t : ib)
+            System.out.print(t + " ");
     }
-    System.out.println(set.size());
-    for(int i : set){
-        System.out.println(i);
-    }
-}
-```
-
-- `HashSet` 散列表，无序
-
-```java
-@Test
-public void fn5(){
-    HashSet<Integer> set = new HashSet<>();
-    for (int i = 0; i <100 ; i++) {
-        // 看不懂代码。不看了。知道散列表的基本写法就算了.
-        set.add((int)(Math.random()*100));
-    }
-    System.out.println(set.size());
-    for(int i : set){
-        System.out.println(i);
-    }
-}
-```
-
-- 对象之间用Set
-
-```java
-package com.bbxx.list;
-
-import java.util.Objects;
-import java.util.TreeSet;
-/**
- * 类大小比较
- * 依据年龄 姓名进行比较
- */
-public class Student implements Comparable {
 
     public static void main(String[] args) {
-        TreeSet<Student> set = new TreeSet<Student>();
-        for (int i = 0; i <10 ; i++) {
-            set.add(new Student(i+5,i+"s"));
-        }
-        set.add(new Student(6,null));
-        for(Student ss : set){
-            System.out.println(ss);
-        }
-        /**
-         * 总结
-         * TreeSet采用的红黑树。其应该是符合二叉排序树的性质。中序遍历是有序的。
-         * 中序遍历为从小到大的顺序。所以是从小到大来输出。
-         *
-         * comparable的compareTo方法返回值的解释。
-         * 返回正数表示大于。返回0等于，返回负数表示小于!
-         *
-         * 查看TreeSet add的源码试试 发现 看不懂！
-         * 采取代码测试
-         */
-        Student obj1 = new Student(6, "kkx");
-        Student obj2 = new Student(6, "kkx1");
-        Student obj3 = new Student(7, "kkx3");
-        Student obj4 = new Student(8, "kkx1");
-        // -1 如果是表示小于那么set集合的输出顺序是obj1在前
-        System.out.println(obj1.compareTo(obj2));
-        set.clear();
-        set.add(obj1);
-        set.add(obj2);
-        //测试结果表明 的确是小于。
-        for(Student ss : set){
-            System.out.println(ss);
-        }
-        /**
-         * 总结：
-         *  comparable的compareTo方法返回值的解释。
-         *   返回正数表示大于。返回0等于，返回负数表示小于!
-         *   obj1.compareTo(obj2) 比较1 和 2的大小。返回正数则 obj1大
-         */
-    }
-    //方便操作
-    public int age;
-    public String name;
-
-    public Student(){}
-    public Student(int age,String name){
-        this.age = age;
-        this.name = name;
-    }
-    @Override
-    public String toString() {
-        return "Student{" +
-                "age=" + age +
-                ", name='" + name + '\'' +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Student student = (Student) o;
-        return age == student.age &&
-                Objects.equals(name, student.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(age, name);
-    }
-
-    @Override
-    public int compareTo(Object o) {
-        Object obj;
-        // 不属于该类
-        if (!((obj = o) instanceof Student)) {
-            System.out.println("对象错误");
-            return -1;
-        }
-        o = (Student) o;
-        if (this.equals(o)) return 0;
-        // 优先通过年龄判断
-        if (this.age > ((Student) o).age) return 1;
-        // 其次通过姓名判断
-        if (this.age == ((Student) o).age) {
-            if(this.name==null && ((Student) o).name==null) return 0;
-            if(this.name == null && ((Student) o).name!=null) return -1;
-            int len = this.name.compareTo(((Student) o).name);
-            if (len == 0) return 0;
-            else if (len > 0) return 1;
-        }
-        return -1;
+        test(Arrays.asList(1, 2, 3));
+        String[] strings = {"A", "B", "C"};
+        // An array works in for-in, but it's not Iterable:
+        //- test(strings);
+        // You must explicitly convert it to an Iterable:
+        // test(strings);  错误
+        test(Arrays.asList(strings));
     }
 }
 ```
 
-### 12.3 Map集合
+尝试将数组作为一个 Iterable 参数传递会导致失败。这说明不存在任何从数组到 Iterable 的自动转换; 必须手工执行这种转换。
 
-> **常用的有 `HashMap`和`TreeMap`**
+#### 适配器方法
 
-- `HashMap`相关
+如果现在有一个 Iterable 类，你想要添加一种或多种在 for-in 语句中使用这个类 的方法，应该怎么做？
 
-  - 基本原理：`Java1.8`后是 红黑树+散列表。最开始是散列表的拉链法，链长度超过八是链转为红黑树！
-  - `HashMap`的key可以存入null**
-  - 基本操作：
+- 如果 直接继承这个类，并重写 iterator() 方法，则只能替换现有的方法。
+- 书中的做法是 定义了一个方法，这个方法会返回一个迭代器的对象。
+- 感觉也不太像适配器模式。（适配器模式是）
 
-  ```java
-  public void fn1(){
-      // map的存储 遍历  指定泛型，安全
-      Map map = new HashMap<Integer,String>();
-      map.put(1,"AA");
-      map.put(12,"BB");
-      map.put(13,"CC");
-      map.put(1,"DD");
-  
-      // map的基本遍历有两种方式
-      // 先获取所有的key  @return a set view of the keys contained in this map
-      Set set = map.keySet();
-      Iterator iterator = set.iterator();
-      while(iterator.hasNext()){
-          System.out.println(map.get(iterator.next()));
-      }
-      System.out.println("*************华丽的分割线*************");
-  
-      // @return a set view of the mappings contained in this map
-      // 记不清就点进去看他的返回值回忆具体操作
-      Set set1 = map.entrySet();
-      Iterator iterator1 = set1.iterator();
-      while(iterator1.hasNext()){
-          // Map.Entry<Integer, String> 内部接口
-          Map.Entry<Integer, String> next = (Map.Entry<Integer, String>)iterator1.next();
-          System.out.println(next.getKey()+"=="+next.getValue());
-      }
-  }
-  ```
+```java
+public class IteratorAdaptor {
+    public static void main(String[] args) {
+        ReversibleArrayList<String> ral = new ReversibleArrayList<String>(
+                Arrays.asList("To be or not to be".split(" ")));
+        // Grabs the ordinary iterator via iterator():
+        for (String s : ral)
+            System.out.print(s + " ");
+        System.out.println();
+        // Hand it the Iterable of your choice
+        for (String s : ral.reversed())
+            System.out.print(s + " ");
+    }
+}
 
-  - **PS**：开始没必要学太细，第17章有深入理解集合的内容！
+class ReversibleArrayList<T> extends ArrayList<T> {
+    ReversibleArrayList(Collection<T> c) {
+        super(c);
+    }
 
-    **`HashMap`对象的key、value值均可为null。且`HashMap`是线程不安全的**
+    public Iterable<T> reversed() {
+        return new Iterable<T>() {
+            public Iterator<T> iterator() {
+                return new Iterator<T>() {
+                    int current = size() - 1;
 
-    **`HahTable`对象的key、value值均不可为null。且`HashTable`是线程安全的**，put方法用synchronized锁了！好多方法也用synchronized锁了。如remove这些方法！
+                    public boolean hasNext() {
+                        return current > -1;
+                    }
 
-  ```java
-  public void fn1(){
-      Hashtable<Integer, String> table = new Hashtable<>();
-      // Make sure the value is not null
-      // 测试时 发现 key也不能为null，key为null时，没有对应的处理策略
-      table.put(null,"ss");
-  
-      // map的存储 遍历  指定泛型，安全
-      HashMap map = new HashMap<Integer,String>();
-      map.put(1,"AA");
-      map.put(12,"BB");
-      map.put(13,"CC");
-      map.put(1,"DD");
-      // 如果key为null时有处理策略的 return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
-      map.put(null,null);
-  ```
+                    public T next() {
+                        return get(current--);
+                    }
 
-- `TreeMap`基本内容
+                    public void remove() { // Not implemented
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+        };
+    }
+}
+```
 
-  ```java
-  public void fn2(){
-      // 盲猜 TreeMap的key有二叉排序树的性质 中序遍历为从小到大 内部采用的红黑树。
-      // 暂时用二叉排的性质去理解。
-      // String 内部的排序 比较的时ASCII码值 Unicode包含ASCII的所有码值
-      TreeMap<String, String> map = new TreeMap<String, String>();
-      map.put("AA","AA");
-      map.put("BB","BB");
-      map.put("B123B","CC");
-      map.put("23BB","DD");
-      Set<Map.Entry<String, String>> entries = map.entrySet();
-      Iterator<Map.Entry<String, String>> iterator = entries.iterator();
-      while(iterator.hasNext()){
-          Map.Entry<String, String> next = iterator.next();
-          // 有时候不用泛型 代码返回值就是舒服
-     System.out.println(next.getKey()+":"+next.getValue());
-      }
-  }
-  ```
-
-- Properties集合
-
-  > `HashTable`的子类。常用于存储一些配置信息。回忆`properties`文件，好像是的。还有一个properties流？果不其然，有load方法传入的对象是输入流！
-
-  -----
-  
-  ```java
-  public void fn3(){
-      Properties properties = new Properties();
-      // 仅仅可以为String，应该是专门为配置文件所产生的一个map
-      properties.setProperty("name","kkx");
-      properties.setProperty("age","18");
-      properties.setProperty("sex","xxx");
-      Set<Map.Entry<Object, Object>> entries = properties.entrySet();
-      Iterator<Map.Entry<Object, Object>> iterator = entries.iterator();
-      while(iterator.hasNext()){
-          Map.Entry<Object, Object> next = iterator.next();
-          System.out.println(next.getKey()+":"+next.getValue());
-      }
-      Runtime runtime = Runtime.getRuntime();java
-  }
-  ```
-
-### 12.4 集合工具类
+### 集合工具类
 
 集合工具类 Collections：排序、复制、翻转等操作
 
@@ -3954,7 +3729,7 @@ Collections.fill(list,"h"); // 全部填充为h
 // 与Collections没什么区别
 ```
 
-### 12.5 比较器
+### 比较器
 
 用户自定义对象需要排序的话就需要比较器了~
 
