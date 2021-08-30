@@ -2935,7 +2935,11 @@ module.exports = {
 
 <img src="../pics/vue/heima/vue-content.png" style="float:left">
 
-# Vue+Vant 压缩图片
+# 项目中的问题
+
+## 图片过大，上传过慢
+
+Vue+Vant 压缩图片，提高上传速度。
 
 ```vue
 <van-uploader :max-size="4 * 1024 * 1024" capture="camera" class="uploader" accept="image/*"
@@ -2999,5 +3003,35 @@ module.exports = {
     },
 ```
 
-# 极客时间Vue
+## axios 等网络请求出现异常
+
+```javascript
+try{
+    // 处理异常，才发现 js 有 try catch
+}catch(error){
+    
+}
+// =====================
+    async upload(formData) {
+      try {
+        const {data: response} = await this.$http.post('/upload', formData)
+        if (response.code == 200) {
+          Toast.success(response.msg);
+          window.sessionStorage.setItem("classify_result", JSON.stringify(response))
+          window.sessionStorage.getItem("classify_result")// 此处获得 图片回显的 url 地址。
+          this.$router.push("/result/classify")
+        } else {
+          Toast.fail(response.msg);
+        }
+      } catch (error) {
+        Toast("请求未响应，请检查网络是否正常！");
+      }
+    }
+```
+
+
+
+# Vant 给 app 加点过渡动画
+
+#  表单和图纸、图画用 element 的 table 组件和 echarts 的柱状图？
 

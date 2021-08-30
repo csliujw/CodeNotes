@@ -3765,6 +3765,392 @@ public class myxx implements Comparator{
 }
 ```
 
+## 第十三章 函数式编程
+
+传递的是行为，而不仅仅是数据。
+
+### 代码对比
+
+- 传统形式编码
+- Java 8 方法引用
+- Lambda 表达式
+
+### Lambda 表达式
+
+- Lambda 表达式产生函数，而不是类。在 JVM（Java Virtual Machine，Java 虚 拟机）上，一切都是一个类。
+- 语法尽可能少，易于编写和使用。
+
+> **lambda 语法**
+
+- 参数
+- ->
+- -> 之后的内容都是方法体
+
+[1] 当只用一个参数，可以不需要括号 ()。然而，这是一个特例。
+
+[2] 正常情况使用括号 () 包裹参数。为了保持一致性，也可以使用括号 () 包裹 单个参数，虽然这种情况并不常见。
+
+[3] 如果没有参数，则必须使用括号 () 表示空参数列表
+
+[4] 对于多个参数，将参数列表放在括号 () 中。单行表达式的结果自动成为 Lambda 表达式的返回值，在单行表达式中使用 return 关键字是非法的。
+
+[5] 如果在 Lambda 表达式中确实需要多行，则必须将这些行放在花括号中。在这 种情况下，就需要使用 return。
+
+```java
+package tij.chapter12;
+
+public class LambdaExpressions {
+    static Body bod = h -> h + "No Parent!";
+    static Body bod2 = (h) -> h + "More details!";
+    static Description desc = () -> "Short info";
+    static Multi mult = (h1, h2) -> h1 + h2;
+    static Description moreLines = () -> {
+        System.out.println("moreLines()");
+        return "from moreLines";
+    };
+
+    public static void main(String[] args) {
+        System.out.println(bod.detailed("Oh!"));
+        System.out.println(bod2.detailed("Hi!"));
+        System.out.println(desc.brief());
+        System.out.println(mult.twoArg("Pi! ", 3.14159));
+        System.out.println(moreLines.brief());
+    }
+}
+
+interface Description {
+    String brief();
+}
+
+interface Body {
+    String detailed(String head);
+}
+
+interface Multi {
+    String twoArg(String head, Double d);
+}
+```
+
+### 递归
+
+递归函数是一个自我调用的函数。可以编写递归的 Lambda 表达式，但需要注意： 递归方法必须是实例变量或静态变量，否则会出现编译时错误。
+
+> 阶乘递归
+
+```java
+public class RecursiveFactorial {
+    static IntCall fact;
+
+    public static void main(String[] args) {
+        fact = n -> n == 0 ? 1 : n * fact.call(n - 1);
+        for (int i = 0; i <= 10; i++)
+            System.out.println(fact.call(i));
+    }
+}
+
+interface IntCall {
+    int call(int arg);
+}
+```
+
+> 斐波那契递归
+
+```java
+public class RecursiveFibonacci {
+    static IntCall1 fib;
+
+    public static void main(String[] args) {
+        // 三元 if else、
+        // n==0 就返回0，不等于0就 n == 1 ? 1 : fib.call(n - 1) + fib.call(n - 2)
+        fib = n -> n == 0 ? 0 : n == 1 ? 1 : fib.call(n - 1) + fib.call(n - 2);
+        System.out.println(fib.call(16));
+    }
+}
+
+interface IntCall1 {
+    int call(int args);
+}
+```
+
+### 方法引用
+
+类名或对象名，后面跟 :: ，然后 跟方法名称。`Math::abs`
+
+方法引用的赋值，要求函数的签名（参数类型和返回类型）想符合。 
+
+```java
+package tij.chapter12;
+
+public class MethodReferences {
+    static void hello(String name) { // [3]
+        System.out.println("Hello, " + name);
+    }
+
+    static class Description {
+        String about;
+
+        Description(String desc) {
+            about = desc;
+        }
+
+        void help(String msg) { // [4]
+            System.out.println(about + " " + msg);
+        }
+    }
+
+    static class Helper {
+        static void assist(String msg) { // [5]
+            System.out.println(msg);
+        }
+    }
+
+    public static void main(String[] args) {
+        Describe d = new Describe(); // 外部类的非静态方法
+        Callable c = d::show; // [6]
+        c.call("call()"); // [7]
+        c = MethodReferences::hello; // [8]  本类的静态方法
+        c.call("Bob");
+        c = new Description("valuable")::help; // [9] 静态内部类的非静态方法
+        c.call("information");
+        c = Helper::assist; // [10]
+        c.call("Help!");
+    }
+}
+
+interface Callable { // [1]
+    void call(String s);
+}
+
+class Describe {
+    void show(String msg) { // [2]
+        System.out.println(msg);
+    }
+}
+```
+
+[1] lambda要求接口中只有一个方法，且建议用  `@FunctionalInterface` 修饰。 
+
+[2] show() 的签名（参数类型和返回类型）符合 Callable 的 call() 的签名。 
+
+[3] hello() 也符合 call() 的签名。 
+
+[4] help() 也符合，它是静态内部类中的非静态方法。 
+
+[5] assist() 是静态内部类中的静态方法。 
+
+[6] 我们将 Describe 对象的方法引用赋值给 Callable ，它没有 show() 方法，而是 call() 方法。但是，Java 似乎接受用这个看似奇怪的赋值，因为方法引用符合 Callable 的 call() 方法的签名。 
+
+[7] 我们现在可以通过调用 call() 来调用 show()，因为 Java 将 call() 映射到 show()。 
+
+[8] 这是一个静态方法引用。 
+
+[9] 这是 [6] 的另一个版本：对已实例化对象的方法的引用，有时称为绑定方法引 用。 
+
+[10] 最后，获取静态内部类中静态方法的引用与 [8] 中通过外部类引用相似。
+
+#### Runnable 接口
+
+lambda + 方法引用 Demo
+
+```java
+class Go {
+    public static void go() {
+        System.out.println("方法引用");
+    }
+}
+
+public class RunnableMethodReference {
+    public static void main(String[] args) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("匿名内部类");
+            }
+        }).start();
+
+        new Thread(() -> System.out.println("lambda表达式")).start();
+
+        new Thread(Go::go).start();
+    }
+}
+// 匿名内部类
+// lambda表达式
+// 方法引用
+```
+
+#### 未绑定的方法引用
+
+未绑定的方法引用就是，类的非静态方法，且这个方法没有与任何实例对象关联起来。**使用未绑定的引用时， 我们必须先提供对象。**具体请看代码：
+
+```java
+class X {
+    String f() {
+        return "X::f()";
+    }
+}
+
+interface MakeString {
+    String make();
+}
+
+interface TransformX {
+    String transform(X x); // 未绑定方法引用，多了一个参数
+}
+
+public class UnboundMethodReference {
+    public static void main(String[] args) {
+        // MakeString ms = X::f; // [1]  会报错。
+        TransformX sp = X::f; // 将对象X的方法f的引用赋值给 TransformX
+        X x = new X();
+        System.out.println(sp.transform(x)); // [2] 使用未绑定方法引用时，需要一个对象来调用方法。
+        System.out.println(x.f()); // 同等效果
+    }
+}
+```
+
+​		在 [1]，我们尝试把 X 的 f() 方法引用赋值给 MakeString。结果即使 make() 与 f() 具有相同的签名，编译也 会报 “invalid method reference”（无效方法引用）错误。这是因为实际上还有另一个隐 藏的参数：this。你不能在没有 X 对象的前提下调用 f()。因此，X :: f 表示未绑定的方法引用，因为它尚未 “绑定” 到对象。
+
+​		要解决这个问题，我们需要一个 X 对象，所以我们的接口实际上需要一个额外的 参数，如上例中的 TransformX。如果将 X :: f 赋值给 TransformX，在 Java 中是 允许的。我们必须做第二个心理调整——使用未绑定的引用时，函数式方法的签名（接 口中的单个方法）不再与方法引用的签名完全匹配。原因是：你需要一个对象来调用方 法。
+
+​		拿到未绑定的方法引用，并且调用它的 transform() 方法，将一个 X 类的对象传递给它，最后使得 x.f() 以某种方式被调用。 Java 知道它必须拿到第一个参数，该参数实际就是 this，然后调用方法作用在它之上。
+
+PS：方法引用只是把方法的引用赋值给了其他方法。我们赋值给接口，利用多态，让 **接口.方法** 可以调用赋值给他的那个方法，但是这个方法的调用需要一个对象！
+
+> 多个参数的 Demo
+
+```java
+package tij.chapter12;
+
+class This {
+    void two(int i, double d) {
+    }
+
+    void three(int i, double d, String s) {
+    }
+
+    void four(int i, double d, String s, char c) {
+    }
+}
+
+interface TwoArgs {
+    void call2(This athis, int i, double d);
+}
+
+interface ThreeArgs {
+    void call3(This athis, int i, double d, String s);
+}
+
+interface FourArgs {
+    void call4(
+            This athis, int i, double d, String s, char c);
+}
+
+public class MultiUnbound {
+    public static void main(String[] args) {
+        TwoArgs twoargs = This::two;
+        ThreeArgs threeargs = This::three;
+        FourArgs fourargs = This::four;
+        This athis = new This();
+        twoargs.call2(athis, 11, 3.14);
+        threeargs.call3(athis, 11, 3.14, "Three");
+        fourargs.call4(athis, 11, 3.14, "Four", 'Z');
+    }
+}
+```
+
+#### 构造函数引用
+
+```java
+package tij.chapter12;
+
+class Dog {
+    String name;
+    int age = -1; // For "unknown"
+
+    Dog() {
+        name = "stray";
+    }
+
+    Dog(String nm) {
+        name = nm;
+    }
+
+    Dog(String nm, int yrs) {
+        name = nm;
+        age = yrs;
+    }
+
+    @Override
+    public String toString() {
+        return "Dog{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                '}';
+    }
+}
+
+interface MakeNoArgs {
+    Dog make();
+}
+
+interface Make1Arg {
+    Dog make(String nm);
+}
+
+interface Make2Args {
+    Dog make(String nm, int age);
+}
+
+
+public class CtorReference {
+    public static void main(String[] args) {
+        MakeNoArgs mna = Dog::new; // [1]  构造函数引用赋值过去
+        Make1Arg m1a = Dog::new; // [2] 构造函数引用赋值过去
+        Make2Args m2a = Dog::new; // [3] 构造函数引用赋值过去
+        Dog dn = mna.make(); // 调用make，make调用构造函数实例化对象
+        Dog d1 = m1a.make("Comet");
+        Dog d2 = m2a.make("Ralph", 4);
+        System.out.println(dn);
+        System.out.println(d1);
+        System.out.println(d2);
+    }
+}
+// Dog{name='stray', age=-1}
+// Dog{name='Comet', age=-1}
+// Dog{name='Ralph', age=4}
+```
+
+Dog 有三个构造函数，函数式接口内的 make() 方法反映了构造函数参数列表 （make() 方法名称可以不同）。 
+
+注意我们如何对 [1]，[2] 和 [3] 中的每一个使用 Dog :: new。这三个构造函数只 有一个相同名称：:: new，但在每种情况下赋值给不同的接口，编译器可以从中知道具 体使用哪个构造函数。 **编译器知道调用函数式方法（本例中为 make()）就相当于调用构造函数。**
+
+### 函数式接口
+
+Java 8 引入了 java.util.function 包。它包含一组接口，这 些接口是 Lambda 表达式和方法引用的目标类型。在编写接口时，可以使用 @FunctionalInterface 注解强制执行此 “函数式方法” 模式。
+
+如果将方法引用或 Lambda 表达式赋值给函数式接口（类型需要匹配），Java 会适配你的赋值到目标接口。编译器会在后台把方法引用或 Lambda 表达式包装进实现目标接口的类 的实例中。
+
+#### 函数式接口的命名准则
+
+- 如果<span style="color:red">**只处理对象而非基本类型**</span>，名称则为 Function，Consumer，Predicate 等。 参数类型通过泛型添加。
+- 如果<span style="color:red">**接收的参数是基本类型**</span>，则由名称的第一部分表示，如 LongConsumer， DoubleFunction，IntPredicate 等，但返回基本类型的 Supplier 接口例外。
+- 如果<span style="color:red">**返回值为基本类型**</span>，则用 To 表示，如 ToLongFunction  和 IntToLongFunction。
+- 如果<span style="color:red">**返回值类型与参数类型一致**</span>，则是一个运算符：单个参数使用 UnaryOperator， 两个参数使用 BinaryOperator。
+- 如果<span style="color:red">**接收两个参数且返回值为布尔值**</span>，则是一个谓词（Predicate）。
+- 如果<span style="color:red">**接收的两个参数类型不同**</span>，则名称中有一个 Bi。
+
+### 高阶函数
+
+### 闭包
+
+### 函数组合
+
+### 柯里化和部分求值
+
+### 纯函数式编程
+
+### 小结
+
 
 
 ## 第十三章 异常
