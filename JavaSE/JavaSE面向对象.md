@@ -2973,7 +2973,7 @@ public class ExtendInnerClass2 extends WithInner2{
 
 ```
 
-## 第十一章
+## 第十一章 Object & 日期
 
 ### 11.1 Object
 
@@ -4130,6 +4130,10 @@ Java 8 引入了 java.util.function 包。它包含一组接口，这 些接口�
 
 如果将方法引用或 Lambda 表达式赋值给函数式接口（类型需要匹配），Java 会适配你的赋值到目标接口。编译器会在后台把方法引用或 Lambda 表达式包装进实现目标接口的类 的实例中。
 
+> 个人理解
+
+函数式接口就是，你把这个接口当成形式参数传递过去，你在方法里用了这个接口的方法，你需要使用这个方法就需要去实现；实现可以用匿名内部类或者函数式。
+
 #### 函数式接口的命名准则
 
 - 如果<span style="color:red">**只处理对象而非基本类型**</span>，名称则为 Function，Consumer，Predicate 等。 参数类型通过泛型添加。
@@ -4139,7 +4143,464 @@ Java 8 引入了 java.util.function 包。它包含一组接口，这 些接口�
 - 如果<span style="color:red">**接收两个参数且返回值为布尔值**</span>，则是一个谓词（Predicate）。
 - 如果<span style="color:red">**接收的两个参数类型不同**</span>，则名称中有一个 Bi。
 
+#### 四大函数式接口
+
+- 消费型接口：void Consumer<T> 
+  - 对类型为T的对象应用操作，包含方法
+  - void accept(T t)
+- 供给型接口：T Supplier<T>
+  - 返回类型为T的对象，包含方法
+  - T get()
+- 函数型接口：R Function<T,R>
+  - 对类型为T的对象应用操作，并返回结果。结果是R类型的对象。包含方法
+  - R apply(T t)
+  - 也有指定类型的apply方法，如 `applyAsInt`，as 后面就是指定的返回类型。
+- 断定型接口：boolean Predicate<T>
+  - 确定类型为T的对象是否满足某约束，并返回boolean值。包含方法
+  - boolean test(T t)
+
+##### 消费型接口：Consumer
+
+> 只需要消费对象，无需返回值。
+
+```java
+public class ConsumerDemo {
+    public static void main(String[] args) {
+        happy(10.0, new Consumer<Double>() {
+            @Override
+            public void accept(Double t) {
+                System.err.println("I get the money = " + t);
+            }
+        });
+        // 函数式接口写法
+        happy(23.2, money -> System.out.println("I get the money = " + money));
+        
+    }
+
+    // 本质con就是一个对象，我们需要传入一个对象，可以用匿名内部类实现或者lambda表达式
+    public static void happy(double money, Consumer<Double> con) {
+        con.accept(money);
+    }
+}
+```
+
+##### 断定型接口 Predicate
+
+> 就是判断是否符合要求
+
+```java
+public class PredicateDemo {
+    public static void main(String[] args) {
+
+        List<Integer> list = Arrays.asList(12, 234, 56, 31, 23, 54, 34);
+        // 匿名内部类
+        filterNumber(list, new Predicate<Integer>() {
+
+            @Override
+            public boolean test(Integer t) {
+                return t % 2 == 0;
+            }
+
+        });
+
+        // lambda写法 我们只用到了predicate的test方法
+        filterNumber(list, s -> s % 2 == 0);
+    }
+
+    // 根据给定规则 过滤数据，方法时Predicate中的抽象方法
+    public static List<Integer> filterNumber(List<Integer> list, Predicate<Integer> predicate) {
+        List<Integer> arrayList = new ArrayList<>();
+        for (Integer number : list) {
+            if (predicate.test(number)) {
+                arrayList.add(number);
+            }
+        }
+        return arrayList;
+    }
+}
+```
+
+#### 常见案例
+
+##### apply 运算
+
+```java
+class Foo {
+}
+
+class Bar {
+    Foo f;
+
+    Bar(Foo f) {
+        this.f = f;
+    }
+}
+
+class IBaz {
+    int i;
+
+    IBaz(int i) {
+        this.i = i;
+    }
+}
+
+class LBaz {
+    long l;
+
+    LBaz(long l) {
+        this.l = l;
+    }
+}
+
+class DBaz {
+    double d;
+
+    DBaz(double d) {
+        this.d = d;
+    }
+}
+
+public class FunctionVariants {
+    static Function<Foo, Bar> f1 = f -> new Bar(f);
+    static IntFunction<IBaz> f2 = i -> new IBaz(i);
+    static LongFunction<LBaz> f3 = l -> new LBaz(l);
+    static DoubleFunction<DBaz> f4 = d -> new DBaz(d);
+    static ToIntFunction<IBaz> f5 = ib -> ib.i;
+    static ToLongFunction<LBaz> f6 = lb -> lb.l;
+    static ToDoubleFunction<DBaz> f7 = db -> db.d;
+    static IntToLongFunction f8 = i -> i;
+    static IntToDoubleFunction f9 = i -> i;
+    static LongToIntFunction f10 = l -> (int) l;
+    static LongToDoubleFunction f11 = l -> l;
+    static DoubleToIntFunction f12 = d -> (int) d;
+    static DoubleToLongFunction f13 = d -> (long) d;
+
+    public static void main(String[] args) {
+        Bar b = f1.apply(new Foo());
+        IBaz ib = f2.apply(11);
+        LBaz lb = f3.apply(11);
+        DBaz db = f4.apply(11);
+        int i = f5.applyAsInt(ib);
+        long l = f6.applyAsLong(lb);
+        double d = f7.applyAsDouble(db);
+        l = f8.applyAsLong(12);
+        d = f9.applyAsDouble(12);
+        i = f10.applyAsInt(12);
+        d = f11.applyAsDouble(12);
+        i = f12.applyAsInt(13.0);
+        l = f13.applyAsLong(13.0);
+    }
+}
+```
+
+##### Consumer 消费对象
+
+消费对象。案例：消费两个类型的对象，A和B。使用 BiConsumer
+
+```java
+class A {
+    {
+        System.out.println("消费了A");
+    }
+}
+
+class B {
+    {
+        System.out.println("消费了B");
+    }
+}
+
+public class BiConsumerDemo {
+    static void acceptDemo(A a, B b) {
+        System.out.println("acceptDemo");
+    }
+
+    public static void lambdaDemo() {
+        BiConsumer<A, B> bic = (t1, t2) -> {
+            System.out.println("lambdaDemo");
+        };
+        bic.accept(new A(), new B());
+    }
+
+
+    public static void main(String[] args) {
+        // 1. lambda 实现方法
+        lambdaDemo();
+        // 2. 方法引用赋值
+        BiConsumer<A, B> bic = BiConsumerDemo::acceptDemo;
+        // 赋值后使用
+        bic.accept(new A(), new B());
+    }
+}
+// 消费了A
+// 消费了B
+// lambdaDemo
+// 消费了A
+// 消费了B
+// acceptDemo
+```
+
+##### Supplier 提供对象
+
+```java
+class AA {
+}
+
+class BB {
+}
+
+class CC {
+}
+
+public class ClassFunctionals {
+    static AA f1() {
+        return new AA();
+    }
+ 
+    static CC f5(AA aa) {
+        return new CC();
+    }
+
+    static CC f6(AA aa, BB bb) {
+        return new CC();
+    }
+
+    static AA f9(AA aa) {
+        return new AA();
+    }
+    static AA f10(AA aa1, AA aa2) {
+        return new AA();
+    }
+
+    public static void main(String[] args) {
+        Supplier<AA> s = ClassFunctionals::f1; // 提供对象
+        s.get();
+       
+        Function<AA, CC> f = ClassFunctionals::f5; // 接收一个参数 返回结果
+        CC cc = f.apply(new AA());
+        
+        BiFunction<AA, BB, CC> bif = ClassFunctionals::f6; // 接收两个参数 返回结果
+        cc = bif.apply(new AA(), new BB());
+        
+        UnaryOperator<AA> uo = ClassFunctionals::f9;
+        AA aa = uo.apply(new AA());
+        
+        BinaryOperator<AA> bo = ClassFunctionals::f10; // Operator 返回的类型和参数是一致的。
+        aa = bo.apply(new AA(), new AA());
+    }
+}
+```
+
+##### 各式各样
+
+```java
+class AA {
+}
+
+class BB {
+}
+
+class CC {
+}
+
+public class ClassFunctionals {
+    static AA f1() {
+        return new AA();
+    }
+
+    static int f2(AA aa1, AA aa2) {
+        return 1;
+    }
+
+    static void f3(AA aa) {
+    }
+
+    static void f4(AA aa, BB bb) {
+    }
+
+    static CC f5(AA aa) {
+        return new CC();
+    }
+
+    static CC f6(AA aa, BB bb) {
+        return new CC();
+    }
+
+    static boolean f7(AA aa) {
+        return true;
+    }
+
+    static boolean f8(AA aa, BB bb) {
+        return true;
+    }
+
+    static AA f9(AA aa) {
+        return new AA();
+    }
+
+    static AA f10(AA aa1, AA aa2) {
+        return new AA();
+    }
+
+    public static void main(String[] args) {
+        Supplier<AA> s = ClassFunctionals::f1; // 提供对象
+        s.get();
+        Comparator<AA> c = ClassFunctionals::f2; // 比较接口
+        c.compare(new AA(), new AA());
+        Consumer<AA> cons = ClassFunctionals::f3;
+        cons.accept(new AA());
+        BiConsumer<AA, BB> bicons = ClassFunctionals::f4;
+        bicons.accept(new AA(), new BB());
+        Function<AA, CC> f = ClassFunctionals::f5; // 接收一个参数 返回结果
+        CC cc = f.apply(new AA());
+        BiFunction<AA, BB, CC> bif = ClassFunctionals::f6; // 接收两个参数 返回结果
+        cc = bif.apply(new AA(), new BB());
+        Predicate<AA> p = ClassFunctionals::f7; // 一个对象的 布尔判断
+        boolean result = p.test(new AA());
+        BiPredicate<AA, BB> bip = ClassFunctionals::f8; // Bi 两个对象参数的 布尔判断
+        result = bip.test(new AA(), new BB());
+        UnaryOperator<AA> uo = ClassFunctionals::f9;
+        AA aa = uo.apply(new AA());
+        BinaryOperator<AA> bo = ClassFunctionals::f10; // Operator 返回的类型和参数是一致的。
+        aa = bo.apply(new AA(), new AA());
+    }
+}
+```
+
+#### 多参数函数式接口
+
+自行实现一个含有四个接收参数的，一个返回值的函数式接口
+
+```java
+@FunctionalInterface
+interface FourSum<T, Y, U, I, R> {
+    R apply(T t, Y y, U u, I i);
+}
+
+public class MutilParamInterface {
+    public static void main(String[] args) {
+        // 1. 方法引用
+        // 2. lambda 表达式
+        FourSum<Integer, Integer, Integer, Integer, Long> f = (x1, x2, x3, x4) -> {
+            return (long) (x1 + x2 + x3 + x4);
+        };
+        System.out.println(f.apply(1, 2, 3, 4));
+    }
+}
+```
+
+#### 缺少基本类型的函数
+
+```java
+// 单纯记忆用法。
+public class Something {
+    public static void main(String[] args) {
+        IntToDoubleFunction fid2 = i -> i;
+        System.out.println(fid2.applyAsDouble(10));
+    }
+}
+```
+
+为什么会缺少基本类型的函数式接口?
+
+用基本类型的唯一原因是可以避免传递参数和返回结果过程中的自动装箱和自动拆箱，进而提升性能。 似乎是考虑到使用频率，某些函数类型并没有预定义。 当然，如果因为缺少针对基本类型的函数式接口造成了性能问题，你可以轻松编写 自己的接口（参考 Java 源代码）——尽管这里出现性能瓶颈的可能性不大。
+
 ### 高阶函数
+
+一个消费或产生函数的函数。
+
+#### 产生函数的函数
+
+```java
+interface FP extends Function<String, String> {
+}
+
+public class ProduceFunction {
+    static FP product() {
+        // 产生了一个函数，（实际上是一个对象，假装是函数）。
+        return s -> s.toLowerCase();
+    }
+
+    public static void main(String[] args) {
+        FP f = product();
+        System.out.println(f.apply("helloASDF"));
+    }
+}
+```
+
+这里，produce() 是高阶函数。 
+
+[1] 使用继承，可以轻松地为专用接口创建别名。 
+
+[2] 使用 Lambda 表达式，可以轻松地在方法中创建和返回一个函数。
+
+#### 消费函数的函数
+
+> 先看下消费函数
+
+要消费一个函数，消费函数需要在参数列表正确地描述函数类型。代码示例：
+
+```java
+public class ConsumeFunction {
+    // 传了一个函数。
+    static Two consume(Function<One, Two> onetwo) {
+        // 开始使用
+        return onetwo.apply(new One());
+    }
+
+    public static void main(String[] args) {
+        Two two = consume(one -> new Two());
+    }
+}
+```
+
+> 基于消费函数生成新函数
+
+先看下 addThen 的源码
+
+```java
+default <V> Function<T, V> andThen(Function<? super R, ? extends V> after) {
+    Objects.requireNonNull(after);
+    // 先消费 t 在消费 t 产生的函数
+    return (T t) -> after.apply(apply(t));
+}
+```
+
+```java
+public class TransformFunction {
+    static Function<I, O> transform(Function<I, O> in) {
+        return in.andThen(o -> {
+            System.out.println(o);
+            return o;
+        });
+    }
+
+    public static void main(String[] args) {
+        Function<I, O> f2 = transform(i -> {
+            System.out.println(i);
+            return new O();
+        });
+        // 消费了两次嘛。先消费了 I。然后消费了 f2 产生的新对象 O。
+        O o = f2.apply(new I());
+    }
+}
+
+class I {
+    @Override
+    public String toString() {
+        return "I";
+    }
+}
+
+class O {
+    @Override
+    public String toString() {
+        return "O";
+    }
+}
+```
+
+这里使用到了 Function 接口中名为 andThen() 的默认方法，该方法专门用于操作 函数。顾名思义，在调用 in 函数之后调用 andThen()（还有个 compose() 方法，它在 in 函数之前应用新函数）。要附加一个 andThen() 函数，我们只需将该函数作为参数传 递。transform() 产生的是一个新函数，它将 in 的动作与 andThen() 参数的动作结合 起来。
 
 ### 闭包
 
