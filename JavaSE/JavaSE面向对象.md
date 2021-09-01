@@ -5431,7 +5431,118 @@ public class Prime {
 
 rangeClosed() 包含了上限值。如果不能整除，即余数不等于 0，则 noneMatch() 操作返回 true，如果出现任何等于 0 的结果则返回 false。noneMatch() 操作一旦有 失败就会退出。
 
-# P484
+#### 应用函数
+
+**map\=\=>映射**  将A数据映射为B数据。比如 String 映射为 Integer
+
+- map(Function)：将函数操作应用在输入流的元素中，并将返回值传递到输出流中。 
+- mapToInt(ToIntFunction)：操作同上，但结果是 IntStream。 
+- mapToLong(ToLongFunction)：操作同上，但结果是 LongStream。 
+- mapToDouble(ToDoubleFunction)：操作同上，但结果是 DoubleStream。
+
+> 使用 map() 映射多种函数到一个字符串流中
+
+```java
+public class FunctionMap {
+    static String[] elements = {"12", "", "23", "45"};
+
+    static Stream<String> testStream() {
+        return Arrays.stream(elements);
+    }
+
+    static void test(String desc, Function<String, String> func) {
+        System.out.println(" ---( " + desc + " )---");
+        testStream()
+                .map(func)
+                .forEach(System.out::println);
+    }
+
+    public static void main(String[] args) {
+        test("add brackets", s -> "[" + s + "]");
+        test("Increment", s -> {
+            try {
+                return Integer.parseInt(s) + 1 + "";
+            } catch (NumberFormatException e) {
+                return s;
+            }
+        });
+        test("Replace", s -> s.replace("2", "9"));
+        test("Take last digit", s -> s.length() > 0 ? s.charAt(s.length() - 1) + " " : s);
+    }
+}
+```
+
+```shell
+ ---( add brackets )---
+[12]
+[]
+[23]
+[45]
+ ---( Increment )---
+13
+
+24
+46
+ ---( Replace )---
+19
+
+93
+45
+ ---( Take last digit )---
+2 
+
+3 
+5 
+```
+
+> 使用 map 将 A 类型映射为 B类型
+
+```java
+package tij.chapter13;
+
+import java.util.stream.Stream;
+
+class Numbered {
+    final int n;
+
+    Numbered(int n) {
+        this.n = n;
+    }
+
+    @Override
+    public String toString() {
+        return "Numbered(" + n + ")";
+    }
+}
+
+public class FunctionMap2 {
+    public static void main(String[] args) {
+        Stream.of(1, 5, 7, 9, 11, 13)
+                // 将 int 映射为 Numbered 类型
+                .map(Numbered::new)
+                .forEach(System.out::println);
+    }
+}
+/*
+Numbered(1)
+Numbered(5)
+Numbered(7)
+Numbered(9)
+Numbered(11)
+Numbered(13)
+*/
+```
+
+#### 在 map 中组合流
+
+map，mapToInt 生成的都是 Stream 流。而不是元素。我们用 map，想要产生一个元素流，而实际却产生了一个元素流的流。
+
+flatMap() 做了两件事：将产生流的函数应用在每个元素上（与 map() 所做的相 同），然后将每个流都扁平化为元素，因而最终产生的仅仅是元素。
+
+- flatMap(Function)：当 Function 产生流时使用。 
+- flatMapToInt(Function)：当 Function 产生 IntStream 时使用。 
+- flatMapToLong(Function)：当 Function 产生 LongStream 时使用。 
+- flatMapToDouble(Function)：当 Function 产生 DoubleStream 时使用。
 
 ## 第十三章 异常
 
