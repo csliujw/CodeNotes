@@ -4604,15 +4604,834 @@ class O {
 
 ### 闭包
 
-### 函数组合
+闭包能够将一个方法作为一个变量去存储，这个方法有能力去访问所在类的自由变量。
+
+> 闭包的特性：
+
+**封闭性：**外界无法访问闭包内部的数据，如果在闭包内声明变量，外界是无法访问的，除非闭包主动向外界提供访问接口； 
+
+**持久性：**一般的函数，调用完毕之后，系统自动注销函数，而对于闭包来说，在外部函数被调用之后，闭包结构依然保存在。
+
+PS：有一说一，我看不懂闭包这块。
+
+#### lambda表达式内的变量
+
+被 Lambda 表达式引用的局部变量必须是 final 或者是等同 final 效果的。
+
+> 验证代码
+
+```java
+IntSupplier makeFun(int x) {
+    int i = 0;
+    // 报错。
+    return () -> x++ + i++;
+}
+
+// 实际上代码等同于这样
+IntSupplier makeFun(final int x) {
+    final int i = 0;
+    // 报错。
+    return () -> x++ + i++;
+}
+```
+
+如果使用 final 修饰 x 和 i，就不能再递增它们的值了。
+
+> 等同 final 效果
+
+做等同 final 效果，Java 8 出现的，表示虽然没有明确地声明变量是 final 的，但是因变量值没被改变过而实际有了 final 同等的效果。如果局部变量的初始值永远不会改变，那么它实际上就是 final 的。 
+
+如果 x 和 i 的值在方法中的其他位置发生改变（但不在返回的函数内部），则编译 器仍将视其为错误。每个递增操作则会分别产生错误消息。代码示例：
+
+```java
+public class Closure5 {
+    IntSupplier makeFun(int x) {
+        int i = 0;
+        i++;
+        x++;
+        // 报错
+        return () -> x + i;
+    }
+}
+```
+
+通过在闭包中使用 final 关键字提前修饰变量 x 和 i ，我们解决了 Closure5.java 中的问题。代码示例：
+
+```java
+public class Closure6 {
+    IntSupplier makeFun(int x) {
+        int i = 0;
+        i++;
+        x++;
+        // 不是 返回 i 和 x了，不会存在被其他函数引用 makeFun 方法中的变量。
+        final int iFinal = i;
+        final int xFinal = x;
+        return () -> xFinal + iFinal;
+    }
+}
+```
+
+把 int 改成 Integer 试试
+
+```java
+public class Closure7 {
+    IntSupplier makeFun(int x) {
+        Integer i = 0;
+        i = i + 1;
+        // 报错，识别到 i 的应用被改了。
+        return () -> x + i;
+    }
+    
+    public static void main(String[] args) {
+        Integer i = 0;
+        i += 1;
+        // class java.lang.Integer 
+        System.out.println(i.getClass()); 
+    }
+}
+```
+
+List 测试：应用于对象引用的 final 关键字仅表示不会重新赋值引用。 它并不代表你不能修改对象本身。
+
+```java
+public class Closure8 {
+    Supplier<List<Integer>> makeFun() {
+        final List<Integer> ai = new ArrayList<>();
+        // final 只是禁止改引用，而不是不准再内存中添加值。
+        ai.add(1);
+        return () -> ai;
+    }
+
+    public static void main(String[] args) {
+        Closure8 c7 = new Closure8();
+        List<Integer>
+                l1 = c7.makeFun().get(),
+                l2 = c7.makeFun().get();
+        System.out.println(l1);
+        System.out.println(l2);
+        l1.add(42);
+        l2.add(96);
+        System.out.println(l1);
+        System.out.println(l2);
+    }
+}
+/*
+[1]
+[1]
+[1, 42]
+[1, 96]
+*/
+```
+
+> 小结
+
+如果它是对象中的字段，那么它拥有独立的生存周期，并且不需要任何特殊的捕获，以便稍后在调用 Lambda 时存在。如果是方法内部的，则会隐式声明为 final。
+
+#### 作为闭包的内部类
+
+与 lambda 表达式类似，变量 x 和 i 必须被明确声明为 final。在 Java 8 中，内部类的规则放宽，包括等 同 final 效果。【为什么要这样，它使用函数作用域之外的变量，闭包是为了解决当你调用函数时，可以知道，它对那些 “外部” 变量引用了什么】
+
+```java
+public class AnonymousClosure {
+    IntSupplier makeFun(int x) {
+        int i = 0;
+        // 同样规则的应用:
+        // i++; // 非等同 final 效果
+        // x++; // 同上
+        return new IntSupplier() {
+            public int getAsInt() {
+                return x + i;
+            }
+        };
+    }
+}
+```
+
+### 函数组合 ★
+
+多个函数组合成新函数。
+
+#### 常见函数组合示例
+
+- `andThen(arg)` 根据参数执行原始操作 `before.andThen(after)`
+- `compose(arg)` 根据参数执行原始操作 `after.compose(before)`
+- `and(argument)` 短路逻辑与原始谓词和参数谓词 
+- `or(argument)` 短路逻辑或原始谓词和参数谓词
+- `negate()` 该谓词的逻辑否谓词
+
+#### 代码示例
+
+compose 和 andThen
+
+```java
+// 返回一个组合函数，该函数首先将{@code before}函数应用于其输入，然后将该函数应用于结果。如果任意一个函数的求值抛出异常，则将其转发给组合函数的调用者。
+// before，before 先执行
+default <V> Function<V, R> compose(Function<? super V, ? extends T> before) {
+    Objects.requireNonNull(before);
+    // 从代码的运行流程就看的出
+    return (V v) -> apply(before.apply(v));
+}
+
+// 返回一个组合函数，该函数首先将此函数应用于其输入，然后将{@code after}函数应用于结果。如果任意一个函数的求值抛出异常，则将其转发给组合函数的调用者。
+// after，after 后执行
+default <V> Function<T, V> andThen(Function<? super R, ? extends V> after) {
+    Objects.requireNonNull(after);
+    return (T t) -> after.apply(apply(t));
+}
+```
+
+**`一句话：f1.compose(f2).addThen(f3)，f2先执行，再执行f1，最后添加f3（即f3最后执行）`**
+
+```java
+public class FunctionComposition {
+    static Function<String, String> f1 = s -> {
+        System.out.println(s);
+        return s.replace('A', '_');
+    },
+            f2 = s -> s.substring(3),
+            f3 = s -> s.toLowerCase(),
+    // 这个啥意思？
+    f4 = f1.compose(f2).andThen(f3);
+
+    public static void main(String[] args) {
+        // 当 f1 获得字符串时，它已经被 f2 剥离了前三个字符。这是因为 compose（f2）表
+        //示 f2 的调用发生在 f1 之前。
+        f4.apply("GO AFTER ALL AMBULANCES");
+    }
+}
+
+// AFTER ALL AMBULANCES
+```
+
+negate、and、or
+
+```java
+public class PredicateComposition {
+    static Predicate<String>
+            p1 = s -> s.contains("bar"),
+            p2 = s -> s.length() < 5,
+            p3 = s -> s.contains("foo"),
+            // （不包含 bar且长度小于5）或者（它包含 foo。）
+            p4 = p1.negate().and(p2).or(p3);
+
+    public static void main(String[] args) {
+        // 如果字符串中不包含 bar 且长度小于 5，或者它包含 foo ，则结果为 true。
+
+        Stream.of("bar", "foobar", "foobaz", "fongopuckey")
+                .filter(p4)
+                .forEach(System.out::println);
+    }
+}
+// foobar
+// foobaz
+```
 
 ### 柯里化和部分求值
 
-### 纯函数式编程
+柯里化：将一个多参数的函数，转换为一系列单参数函数。
+
+#### 柯里化两参数
+
+- 在函数接口声明中，第二个参数是另一个函数
+- 柯里化的目的是能够通过提供单个参数来创建一个新函数，所以现在有了一个 “带参函数” 和剩下的 “自由函数”
+
+```java
+public class CurryingAndPartials {
+    // 未柯里化:
+    static String uncurried(String a, String b) {
+        return a + b;
+    }
+
+    public static void main(String[] args) {
+        // 柯里化的函数: 柯里化两参数
+        Function<String, Function<String, String>> sum = a -> b -> a + b;
+
+        System.out.println(uncurried("Hi", "Ho"));
+
+        // 使用 柯里化函数
+        Function<String, String> hi = sum.apply("Hi");
+        System.out.println(hi.apply("Ho"));
+
+        // 部分应用
+        Function<String, String> sumHi = sum.apply("Hup");
+        System.out.println(sumHi.apply("Ho")); // 每次只传入一个参数，然后多次操作
+        System.out.println(sumHi.apply("Hey"));
+    }
+}
+```
+
+#### 柯里化三参数
+
+- 对于每一级的箭头级联（Arrow-cascading），你都会在类型声明周围包裹另一个 Function。
+
+```java
+public class Curry3Args {
+    public static void main(String[] args) {
+        Function<String,
+                Function<String,
+                        Function<String, String>>> sum =
+                a -> b -> c -> a + b + c;
+        Function<String,
+                Function<String, String>> hi =
+                sum.apply("Hi ");
+        Function<String, String> ho =
+                hi.apply("Ho ");
+        System.out.println(ho.apply("Hup"));
+    }
+}
+```
+
+- 基本类型和装箱时的柯里化
+
+```java
+import java.util.function.IntFunction;
+import java.util.function.IntUnaryOperator;
+
+public class CurriedIntAdd {
+    public static void main(String[] args) {
+        // 基本类型 和 装箱 时，选择合适的 函数式接口
+        IntFunction<IntUnaryOperator>
+                curriedIntAdd = a -> b -> a + b;
+        IntUnaryOperator add4 = curriedIntAdd.apply(4);
+        System.out.println(add4.applyAsInt(5));
+    }
+}
+```
 
 ### 小结
 
+Lambda 表达式和方法引用并没有将 Java 转换成函数式语言，而是提供了对函数式编程的支持。编写代码可以更简洁明了，易于理解。
 
+- lambda 表达式
+- 方法引用：将一个方法复制给 函数式接口，只要函数的形参保持一致即可；未绑定的方法引用除外，因为它需要一个 this对象 来执行方法，要多一个参数 this。
+- 高阶函数：产生函数的函数
+- 闭包：lambda、匿名内部类变量作用域的范围
+- 函数组合，多个函数组合起来使用 `f1.compose(f2).andThen(f3)` **调用顺序**：`f2-->f1-->f3`
+- 柯里化：将多个参数的函数，变为多个单参数的函数
+
+## 第十四章 流式编程
+
+### 为什么使用流
+
+- 集合优化了对象的存储，而流则是关于一组对象的处理。
+- 流（Streams）是与任何特定存储机制无关的元素序列——实际上，我们说流是 “没 有存储” 的。
+- 取代了在集合中迭代元素的做法，使用流即可从管道中提取元素并对其操作。这些 管道通常被串联在一起形成一整套的管线，来对流进行操作。
+- 把焦点从集合转到了流上
+- 程序短小，容易理解
+- **流是懒加载的**。它只在**绝对必要时才计算**。可以将流看作 “延迟列表”。由于计算延迟，流使我们能够表示非常大（甚至无限）的序列，而**不需要考虑内存问题**。
+
+代码举例：随机展示 5 至 20 之间不重复的整数并进行排序
+
+```java
+public class Randoms {
+    public static void main(String[] args) {
+        new Random(47)
+                .ints(5, 20)
+                .distinct()
+                .limit(7)
+                .sorted()
+                .forEach(System.out::println);
+    }
+}
+```
+
+```shell
+// 可能的输出结果
+6
+10
+13
+16
+17
+18
+19
+```
+
+- ints() 方法产生一个流
+- distinct() 使流中的整数不重复
+- limit() 方法获取前 7 个元素
+- sorted() 排序
+- forEach() 遍历输出
+
+> **声明式编程：**声明了要做什么， 而不是指明（每一步）如何做
+
+```java
+// 命令式编程
+public class ImperativeRandoms {
+    public static void main(String[] args) {
+        Random rand = new Random(47);
+        SortedSet<Integer> rints = new TreeSet<>();
+        while (rints.size() < 7) {
+            int r = rand.nextInt(20);
+            if (r < 5) continue;
+            rints.add(r);
+        }
+        System.out.println(rints);
+    }
+}
+```
+
+Randoms 是声明式编程，ImperativeRandoms 是命令式编程。必须研究代码才能搞清楚 ImperativeRandoms.java 程序在做什么。而在 Randoms.java 中，代码会直接告诉你它在做什么，语义清晰。
+
+### 流支持
+
+要扩展流的话，有巨大的挑战：需要扩充现有接口，这样会破坏每一个实现接口的类。
+
+最终的处理方式：Java 8 在接口中添加被 default（默认）修饰的方法。通过这种方案，设计者们可以将流式（stream）方法平滑地嵌入到现有类中。
+
+#### 流操作类型
+
+- 创建流
+- 修改流元素（中间操作）
+- 消费流元素（终端操作）通常意味着收集流元素（通常是汇入一个集合）。
+
+### 流创建
+
+通过 Stream.of() 将一组元素转化成为流
+
+```java
+public class StreamOf {
+    public static void main(String[] args) {
+        Stream.of(new Bubble(1), new Bubble(2), new Bubble(3))
+                .forEach(System.out::println);
+    }
+}
+
+class Bubble {
+    int i;
+
+    public Bubble(int i) {
+        this.i = i;
+    }
+
+    @Override
+    public String toString() {
+        return "Bubble(" + i + ')';
+    }
+}
+```
+
+每个集合都可以通过调用 stream() 方法来产生一个流
+
+- map  `<R> Stream<R> map(Function<? super T, ? extends R> mapper);` 会产生一个新流。
+  - mapToInt() `mapToInt() 方法将一个对象流（object stream）转换成为包含整型数字的 IntStream`
+  - 
+
+```java
+public class CollectionToStream {
+    public static void main(String[] args) {
+        List<Bubble> bubbles = Arrays.asList(new Bubble(1), new Bubble(2), new Bubble(3));
+        int sum = bubbles.stream().mapToInt(b -> b.i).sum();
+        System.out.println(sum);
+
+        Set<String> w = new HashSet<>(Arrays.asList("It's a wonderful day for pie!".split(" ")));
+        w.stream().map(x -> x + " ").forEach(System.out::print);
+        System.out.println();
+        Map<String, Double> m = new HashMap<>();
+        m.put("pi", 3.14159);
+        m.put("e", 2.718);
+        m.put("phi", 1.618);
+		// Set<Map.Entry<String, Double>> entries = m.entrySet();
+        m.entrySet().stream()
+                .map(e -> e.getKey() + ": " + e.getValue())
+                .forEach(System.out::println);
+    }
+}
+/*
+    6
+    a pie! It's for wonderful day 
+    phi: 1.618
+    e: 2.718
+    pi: 3.14159
+*/
+```
+
+#### 随机数流
+
+这块没看懂
+
+> 生成随机数
+
+- boxed() 流操作将会自动地把基 本类型包装成为对应的装箱类型，从而使得 show() 能够接受流。
+
+```java
+// IntStream 中的 boxed 方法
+Stream<Integer> boxed();
+```
+
+```java
+public class RandomGenerators {
+    public static <T> void show(Stream<T> stream) {
+        stream
+                .limit(4)
+                .forEach(System.out::println);
+        System.out.println("++++++++");
+    }
+
+    public static void main(String[] args) {
+        Random rand = new Random(47);
+        show(rand.ints().boxed());
+        show(rand.longs().boxed());
+        show(rand.doubles().boxed());
+        // 控制上限和下限：
+        show(rand.ints(10, 20).boxed());
+        show(rand.longs(50, 100).boxed());
+        show(rand.doubles(20, 30).boxed());
+        // 控制流大小：
+        show(rand.ints(2).boxed());
+        show(rand.longs(2).boxed());
+        show(rand.doubles(2).boxed());
+        // 控制流的大小和界限 产生三个元素
+        show(rand.ints(3, 3, 9).boxed());
+        show(rand.longs(3, 12, 22).boxed());
+        show(rand.doubles(3, 11.5, 12.3).boxed());
+    }
+}
+```
+
+> 使用 Random 为 String 对象集合创建 Supplier
+
+- collect() 操作，它根据参数来结合 所有的流元素
+-  Collectors.joining() 作为 collect() 的参数时，将得到一个 String 类型的结果，该结果是流中的所有元素被 joining() 的参数隔开
+- Stream.generate() 的用法，它可以把任意 Supplier 用于生成 T 类型的流
+
+```java
+package tij.chapter13;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class RandomWords implements Supplier<String> {
+    List<String> words = new ArrayList<>();
+    Random rand = new Random(47);
+
+    RandomWords(String fname) throws IOException {
+        List<String> lines = Files.readAllLines(Paths.get(fname));
+        // 略过第一行
+        for (String line : lines.subList(1, lines.size())) {
+            for (String word : line.split("[ .?,]+"))
+                words.add(word.toLowerCase());
+        }
+    }
+
+    public String get() {
+        return words.get(rand.nextInt(words.size()));
+    }
+
+    @Override
+    public String toString() {
+        return words.stream()
+                .collect(Collectors.joining(" "));
+    }
+
+    public static void main(String[] args) throws Exception {
+        System.out.println(
+                Stream.generate(new RandomWords("Cheese.dat"))
+                        .limit(10)
+                        .collect(Collectors.joining(" ")));
+    }
+}
+/*
+txt 数据
+Not much of a cheese shop really, is it?
+Finest in the district, sir.
+And what leads you to that conclusion?
+Well, it's so clean.
+It's certainly uncontaminated by cheese.
+*/
+```
+
+#### int 类型的范围
+
+IntStream 类提供了 range() 方法用于生成整型序列的流。编写循环时，这个方法会更加便利。
+
+```java
+public class Ranges {
+    public static void main(String[] args) {
+        int result = 0;
+        for (int i = 0; i < 50; i++) { // 1. 传统 for 循环 
+            result += i;
+        }
+
+        System.out.println(result);
+        result = 0;
+        for (int i : IntStream.range(0, 50).toArray()) { // 2. 流对象变为数组
+            result += i;
+        }
+        System.out.println(result);
+
+        System.out.println(IntStream.range(0, 50).sum()); // 全程使用流
+    }
+}
+// 1225
+// 1225
+// 1225
+```
+
+> 自定义一个 repeat 循环执行任务
+
+```java
+public class Repeat {
+    public static void repeat(int n, Runnable action) {
+        IntStream.range(0, n).forEach(i -> action.run());
+    }
+
+    static void hi() {
+        System.out.println("hi");
+    }
+
+    public static void main(String[] args) {
+        repeat(3, () -> System.out.println("Loop"));
+        repeat(2, Repeat::hi);
+    }
+}
+//Loop
+//Loop
+//Loop
+//hi
+//hi
+```
+
+#### generate() 无限流
+
+> 来看下 generate 需要的参数类型
+
+```java
+public static<T> Stream<T> generate(Supplier<T> s) {} // 需要一个 Supplier
+```
+
+----
+
+```java
+public class Generator implements Supplier<String> {
+    Random rand = new Random(47);
+    char[] letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
+
+    @Override // Supplier 的方法，用来提供数据
+    public String get() {
+        return "" + letters[rand.nextInt(letters.length)];
+    }
+
+    public static void main(String[] args) {
+        String word = Stream.generate(new Generator())
+                .limit(30)
+                .collect(Collectors.joining());
+        System.out.println(word);
+    }
+}
+// YNZBRNYGCFOWZNTCQRGSEGZMMJMROE
+```
+
+#### iterate() 无限流
+
+- skip 丢弃元素
+- limit 限制取几个元素
+
+```java
+public class Fibonacci {
+    int x = 1;
+
+    Stream<Integer> numbers() {
+        return Stream.iterate(0, i -> {
+            int result = x + i;
+            x = i; // x 是成员变量。 fibonacci f3 = f2 + f1 嘛，所以需要 利用一个变量 x 追踪另外一个元素
+            return result;
+        });
+    }
+
+    public static void main(String[] args) {
+        new Fibonacci().numbers()
+                .skip(20) // 过滤前 20 个
+                .limit(10) // 然后取 10 个
+                .forEach(System.out::println);
+    }
+}
+```
+
+#### 流的建造者模式
+
+在建造者模式（Builder design pattern）中，首先创建一个 builder 对象，然后将创建流所需的多个信息传递给它，最后 builder 对象执行” 创建 “流的操作。Stream 库提供了这样的 Builder。
+
+```java
+public class FileToWordsBuilder {
+    Stream.Builder<String> builder = Stream.builder(); // 1.创建 builder 对象
+
+    public FileToWordsBuilder(String filePath) throws Exception {
+        Files.lines(Paths.get(filePath))
+                .skip(1) // 略过开头的注释行
+                .forEach(line -> {
+                    for (String w : line.split("[ .?,]+"))
+                        builder.add(w); // 2.builder 对象中添加单词
+                });
+    }
+
+    Stream<String> stream() { // 只要不调用这个方法，就可以一直向 builder 对象中添加单词。
+        return builder.build();
+    }
+
+    public static void main(String[] args) throws Exception {
+        new FileToWordsBuilder("E:\\Code\\JavaSE\\tik\\src\\main\\java\\tij\\chapter13\\Cheese.dat")
+                .stream()
+                .limit(7)
+                .map(w -> w + " ")
+                .forEach(System.out::print);
+    }
+}
+```
+
+#### Arrays.stream
+
+将数组转换为流
+
+```java
+public class ArrayStreams {
+    public static void main(String[] args) {
+        Arrays.stream(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}).forEach(System.out::print);
+        System.out.println();
+        // 从索引2开始 一直到索引5，但是不包括5
+        Arrays.stream(new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, 2, 5).forEach(System.out::print);
+    }
+}
+// 12345678910
+// 345
+```
+
+#### 正则表达式
+
+Java 8 在 java.util.regex.Pattern 中增加了一个新的方法 splitAsStream()。这个方法可以根据传入的公式将字符序列转化为流。但是有一个限制，输入只能是 CharSequence，因此不能将流作为 splitAsStream() 的参数。
+
+```java
+package tij.chapter13;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class FileToWordsRegexp {
+    private String all;
+
+    public FileToWordsRegexp(String filePath) throws Exception {
+        all = Files.lines(Paths.get(filePath))
+                .skip(1) // First (comment) line
+                .collect(Collectors.joining(" "));
+    }
+
+    public Stream<String> stream() {
+        return Pattern
+                .compile("[ .,?]+").splitAsStream(all);
+    }
+
+    public static void
+    main(String[] args) throws Exception {
+        FileToWordsRegexp fw = new FileToWordsRegexp("Cheese.dat");
+        fw.stream()
+                .limit(7)
+                .map(w -> w + " ")
+                .forEach(System.out::print);
+        fw.stream()
+                .skip(7)
+                .limit(2)
+                .map(w -> w + " ")
+                .forEach(System.out::print);
+    }
+}
+```
+
+在构造器中我们读取了文件中的所有内容（跳过第一行注释，并将其转化成为单行 字符串）。现在，当你调用 stream() 的时候，可以像往常一样获取一个流，但这回你可 以多次调用 stream() ，每次从已存储的字符串中创建一个新的流。这里有个限制，整 个文件必须存储在内存中；在大多数情况下这并不是什么问题，但是这丢掉了流操作非 常重要的优势： 
+
+1. “不需要把流存储起来。” 当然，流确实需要一些内部存储，但存储的只是序列的 一小部分，和存储整个序列不同。 
+2. 它们是懒加载计算的。
+
+### 中间操作
+
+中间操作用于从一个流中获取对象，并将对象作为另一个流从后端输出，以连接到 其他操作。
+
+#### 跟踪和调试
+
+peek() 操作的目的是帮助调试。它允许你无修改地查看流中的元素。**[ 具体看代码 ]**
+
+```java
+public class Peeking {
+    public static void main(String[] args) {
+        Arrays.stream(new int[]{1, 2, 5, 8, 25, 2, 5, 2, 5, 5, 2, 5, 582, 6, 146, 41})
+                .skip(1)
+                .limit(5)
+                .map(w -> w % 2) // 执行完 map 后，用 peek 输出看下结果
+                .peek(e -> System.out.println(e))
+                .map(w -> w * 5) // 执行完 map 后，用 peek 输出看下结果
+                .peek(e -> System.out.println(e))
+                .forEach(System.out::print);
+    }
+}
+```
+
+#### 流元素排序
+
+传入一个 Comparator 参数
+
+- 代码中直接调用的方法，反转 “自然排序”。
+- 也可以把 Lambda 函数作为参数传递给 sorted()。
+
+```java
+public class SortedComparator {
+    public static void main(String[] args) throws Exception {
+        Arrays.stream(new String[]{"!@!#", "A", "B", "s", "ASFASF"})
+                .limit(10)
+                .sorted(Comparator.reverseOrder())
+                .forEach(System.out::print);
+    }
+}
+```
+
+#### 移除元素
+
+- distinct()：在 Randoms.java 类中的 distinct() 可用于消除流中的重复元素。 相比创建一个 Set 集合来消除重复，该方法的工作量要少得多。 
+- filter(Predicate)：过滤操作，保留如下元素：若元素传递给过滤函数产生的结 果为 true。
+
+```java
+package tij.chapter13;
+
+import java.util.stream.LongStream;
+
+import static java.util.stream.LongStream.*;
+
+public class Prime {
+    public static Boolean isPrime(long n) {
+        return rangeClosed(2, (long) Math.sqrt(n))
+                .noneMatch(i -> n % i == 0);
+    }
+
+    public LongStream numbers() {
+        return iterate(2, i -> i + 1)
+                .filter(Prime::isPrime);
+    }
+
+    public static void main(String[] args) {
+        new Prime().numbers()
+                .limit(10)
+                .forEach(n -> System.out.format("%d ", n));
+        System.out.println();
+        new Prime().numbers()
+                .skip(90)
+                .limit(10)
+                .forEach(n -> System.out.format("%d ", n));
+    }
+}
+// 2 3 5 7 11 13 17 19 23 29
+// 467 479 487 491 499 503 509 521 523 541
+```
+
+rangeClosed() 包含了上限值。如果不能整除，即余数不等于 0，则 noneMatch() 操作返回 true，如果出现任何等于 0 的结果则返回 false。noneMatch() 操作一旦有 失败就会退出。
+
+# P484
 
 ## 第十三章 异常
 
@@ -6958,7 +7777,7 @@ public void fn8() {
 }
 ```
 
-## 二十一 JDBC
+## 第二十一章 JDBC
 
 ### C3P0
 
@@ -7200,6 +8019,39 @@ class DataSourceUtils {
 
 }
 ```
+
+## 第二十二章 泛型
+
+### 特殊情况★★★
+
+```java
+public class Demo {
+    public static void main(String[] args) {
+        // 这个不是泛型，而且可以通过编译。且反编译后的结果是
+        Test t = new Test<String>();
+        t.name(123);
+    }
+}
+
+class Test<T> {
+    public T name(T t) {
+        return t;
+    }
+}
+
+// 反编译的结果
+public class Demo {
+    public Demo() {
+    }
+
+    public static void main(String[] args) {
+        Test t = new Test();
+        t.name(123);
+    }
+}
+```
+
+
 
 # 第三部分 加强
 
