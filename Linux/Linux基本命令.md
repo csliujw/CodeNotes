@@ -1,5 +1,15 @@
 # Linux基本命令
 
+## screen
+
+创建：screen -S 名称
+
+查看会话：screen -ls
+
+进入会话：screen -r
+
+删除 kill -9 194746  `There is a screen on"194746.name` 在 screen -wipe 就可以杀死进程了。
+
 ## 文件和目录操作
 
 - ls
