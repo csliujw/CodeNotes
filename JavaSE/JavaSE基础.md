@@ -5416,7 +5416,358 @@ Java SE5 添加了
 
 Java 的基本理念是 “结构不佳的代码不能运行”。
 
-异常往往能降低错误处理代码的复杂度。如果不使用异常，那么就必须检查特定的 错误，并在程序中的许多地方去处理它。
+异常往往能降低错误处理代码的复杂度。如果不使用异常，那么就必须检查特定的 错误，并在程序中的许多地方去处理它。这样非常麻烦。
+
+### 异常继承体系
+
+`Throwable` 是所有异常类的父类
+
+`Exception` 是 `Throwable` 的子类 
+
+### 异常捕获
+
+#### try 语句
+
+```java
+try{
+    // Code that might generate exceptions
+}
+```
+
+#### 异常处理程序
+
+```java
+try {
+// Code that might generate exceptions
+} catch(Type1 id1) {
+// Handle exceptions of Type1
+} catch(Type2 id2) {
+// Handle exceptions of Type2
+} catch(Type3 id3) {
+// Handle exceptions of Type3
+}
+/*
+每个 catch 子句（异常处理程序）看起来就像是接收且仅接收一个特殊类型的参数的方法。
+*/
+```
+
+#### 终止与恢复
+
+> 终止模型（基本只用这种）
+
+在这种模型中，我们假设错误非常严重，以至于程序无法返回到异常发生的地方继续执行。一旦异常被抛出，就表明错误已无法挽回，不能继续执行发送异常的代码。
+
+> 恢复模型
+
+恢复模型是尝试重复执行出现异常的代码，期待它可以正常执行。如果想要用 Java 实现类似恢复的行为，那么在遇见错误时就不能抛出异常， 而是调用方法来修正该错误。或者，把 try 块放在 while 循环里，这样就不断地进入 try 块，直到得到满意的结果。
+
+### 自定义异常
+
+Java 异常体系不可能预见你将报告的所有错误， 所以有时候需要创建自己的异常类。
+
+要自己定义异常类，必须从已有的异常类继承，最好是选择意思相近的异常类继承 （不过这样的异常并不容易找）。建立新的异常类型最简单的方法就是让编译器为你产生无参构造器，所以这几乎不用写多少代码：
+
+> 自定义异常案例
+
+对异常来说，最重要的就是类名，程序抛出异常的时候，根据异常的类名知道是什么错误就足够了。<span style="color:green">**我们也不需要未异常提供有参构造器，对异常最重要的部分是类名！**</span>
+
+```java
+public class SimpleException extends Exception {
+}
+
+class InheritingExceptions {
+    public void f() throws SimpleException {
+        throw new SimpleException();
+    }
+
+    public static void main(String[] args) {
+        InheritingExceptions exception = new InheritingExceptions();
+        try {
+            exception.f();
+        } catch (SimpleException e) {
+            e.printStackTrace();
+        }
+    }
+}
+/*
+tij.chapter15.SimpleException
+	at tij.chapter15.InheritingExceptions.f(SimpleException.java:8)
+	at tij.chapter15.InheritingExceptions.main(SimpleException.java:14)
+*/
+```
+
+当然，我们也可以为异常类创建一个接收字符串参数的构造器
+
+```java
+public class MyException extends Exception {
+    MyException() {
+    }
+
+    MyException(String msg) {
+        super(msg); // 调用父类的构造器
+    }
+}
+
+class TestMyException {
+    public void f() throws MyException {
+        throw new MyException("This is MyException");
+    }
+
+    public static void main(String[] args) {
+        TestMyException exc = new TestMyException();
+        try {
+            exc.f();
+        } catch (MyException e) {
+            e.printStackTrace(System.err); // 如果换成 System.out 打印的就是红色字体了
+        }
+    }
+}
+/**
+tij.chapter15.MyException: This is MyException
+	at tij.chapter15.TestMyException.f(MyException.java:14)
+	at tij.chapter15.TestMyException.main(MyException.java:20)
+**/
+```
+
+### 捕获所有异常
+
+直接 catch(Exception e) 即可捕获所有异常。因为 Exception 是其他具体异常的父类。
+
+- `String getMessage()` 获取详细信息
+- `String getLocalizedMessage()` 用本地语言表示的详细信息
+- `void printStackTrace()`  打印 `Throwable` 和 `Throwable` 的调用栈轨迹。
+- `void printStackTrace(PrintStream)` 允许选择要输出的流
+- `void printStackTrace(java.io.PrintWrite)` 允许选择要输出的流
+- `Throwable fillInStackTrace()` 在 `Throwable` 对象的内部记录栈帧的当前状态。在程序重新抛出错误或异常时很有用。
+
+#### 多重捕获
+
+```java
+try{
+    
+}catch(Except1 e){
+    
+}catch(Except2 e){
+    
+}
+```
+
+Java 7 的多重捕获机制。
+
+```java
+try{
+    
+}catch(Except1 | Except2 | Except3){
+    // do something
+}
+```
+
+#### 栈轨迹
+
+```java
+package tij.chapter15;
+
+public class WhoCalled {
+    static void f() {
+        try {
+            throw new Exception();
+        } catch (Exception e) {
+            for (StackTraceElement ste : e.getStackTrace()) {
+                System.out.println(ste.getMethodName());
+            }
+        }
+    }
+
+    static void g() {
+        f();
+    }
+
+    static void h() {
+        g();
+    }
+
+    public static void main(String[] args) {
+        f();
+        System.out.println("***********");
+        g();
+        System.out.println("***********");
+        h();
+    }
+}
+/*
+f
+main
+*********** // 第一次出异常前调用了 f 和 main 方法
+f
+g
+main
+*********** // 第二次出异常前调用了 f g main
+f
+g
+h
+main // 第三次出异常前调用了 f g h main 因为是栈所以是先进后出。
+*/
+```
+
+#### 重新抛出异常
+
+希望把刚捕获的异常重新抛出。
+
+```java
+catch(Exception e){
+    sout("sf");
+    throw e;
+}
+```
+
+重新抛出异常会把异常抛给上一级环境中的异常处理程序，同一个 try 块的后续 catch 子句将被忽略。
+
+如果只是把当前异常对象重新抛出，那么 printStackTrace() 方法显示的将是原来异常抛出点的调用栈信息，而并非重新抛出点的信息。要想更新这个信息，可以调用 fillInStackTrace() 方法，这将返回一个 Throwable 对象，它是通过把当前调用栈信息填 入原来那个异常对象而建立的
+
+```java
+try{
+    
+}catch(Exception e){
+    throw (Exception)e.fillInStackTrace();
+}
+```
+
+#### 精准的重新抛出异常
+
+在 Java 7 之前，如果捕捉到一个异常，重新抛出的异常类型只能与原异常完全相同。这导致代码不精确，Java 7 修复了这个问题。所以在 Java 7 之前，这无法编译：
+
+```java
+class BaseException extends Exception {
+}
+
+class DerivedException extends BaseException {
+}
+
+public class PreciseRethrow {
+    void catcher() throws DerivedException {
+        try {
+            throw new DerivedException();
+        } catch (BaseException e) {
+            throw e;
+        }
+    }
+}
+```
+
+#### 异常链（自定义类库要用）
+
+想要在捕获一个异常后抛出另一个异常，并且希望把原始异常的信息保存下 来，这被称为异常链。在 JDK1.4 以前，程序员必须自己编写代码来保存原始异常的信 息。现在所有 Throwable 的子类在构造器中都可以接受一个 cause（因由）对象作为参数。这个 cause 就用来表示原始异常，这样通过<span style="color:red">**把原始异常传递给新的异常，使得即使 在当前位置创建并抛出了新的异常，也能通过这个异常链追踪到异常最初发生的位置。**</span>
+
+在 `Throwable` 的子类中，只有三种基本的异常类提供了带 cause 参数的构造器。它们是 Error（用于 Java 虚拟机报告系统错误）、Exception 以及 RuntimeException。如果要把其他类型的异常链接起来，应该使用 `initCause()` 方法而不是构造 器。
+
+```java
+DynamicFieldsException dfe = new DynamicFieldsException();
+dfe.initCause(new NullPointerException());
+throw dfe;
+```
+
+### Java 标准异常
+
+对异常来说，关键是理解概念以及如何使用！
+
+用异常的名称代表发生的问题，望文知意。异常并非全是在 java.lang 包里定义的；有些异常是用来支持其他像 util、net 和 io 这样的程序包，这些异常可以通过它们的完整名称或者从它们的父类中看出端倪。比如，所有的 输入/输出异常都是从 java.io.IOException 继承而来的。
+
+<img src="../pics/JavaSE/throwable.webp">
+
+- error 是程序无法处理了。
+- Exception 包含了运行时异常(`RuntimeException`, 又叫非检查异常)和非运行时异常(又叫检查异常)
+
+### 使用 finally 清理
+
+无论异常是否被抛出，finally 子句总能被执行。这也为解决 Java 不允许我们回到异常抛出点这一问题，提供了一个思路。如果将 try 块放在循环里，就 可以设置一种在程序执行前一定会遇到的异常状况。还可以加入一个 static 类型的计数器或者别的装置，使循环在结束以前能尝试一定的次数。这将使程序的健壮性更上一个台阶。
+
+#### finally 的作用
+
+finally 中的语句无论如何都会被执行，所以经常用来做一些清理的操作。如关闭网络，关闭 IO 流。
+
+#### return 与 finally
+
+从何处返回无关紧要，finally 子句永远会执行。
+
+```java
+public class Finally {
+    public static void main(String[] args) {
+        try {
+            System.out.println("before return");
+            return;
+        } finally {
+            System.out.println("finally");
+        }
+    }
+}
+```
+
+#### 异常丢失
+
+异常作为程序出错的标志，决不应该被忽 略，但它还是有可能被轻易地忽略。用某些特殊的方式使用 finally 子句，就会发生异常忽略的情况：
+
+```java
+package tij.chapter15;
+
+class VeryImportantException extends Exception {
+    @Override
+    public String toString() {
+        return "A very important exception!";
+    }
+}
+
+class HoHumException extends Exception {
+    @Override
+    public String toString() {
+        return "A trivial exception";
+    }
+}
+
+public class LostMessage {
+    void f() throws VeryImportantException {
+        throw new VeryImportantException();
+    }
+
+    void dispose() throws HoHumException {
+        throw new HoHumException();
+    }
+
+    public static void main(String[] args) {
+        try {
+            LostMessage lm = new LostMessage();
+            try {
+                lm.f();
+            } finally {
+                lm.dispose();
+            }
+        } catch (VeryImportantException | HoHumException e) {
+            System.out.println(e);
+        }
+    }
+}
+/*
+A trivial exception
+*/
+```
+
+VeryImportantException 不见了，它被 finally 子句里的 HoHumException 所取代。
+
+```java
+public class ExceptionSilencer {
+    public static void main(String[] args) {
+        try {
+            throw new RuntimeException();
+        } finally {
+            return;
+        }
+    }
+}
+// 这样也会丢失异常
+```
+
+运行这个程序，即使方法里抛出了异常，它也不会产生任何输出。
+
+# P555异常限制
 
 ## 第十五章 IO流
 

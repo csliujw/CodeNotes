@@ -8,6 +8,8 @@
 
 进入会话：screen -r
 
+- 进入会话后，执行 python app.py，这样退出终端后代码也不会终止
+
 删除 kill -9 194746  `There is a screen on"194746.name` 在 screen -wipe 就可以杀死进程了。
 
 ## 文件和目录操作
