@@ -29,7 +29,7 @@
 
    src|
 
-  ​	|com 类所在的包名
+  ​	  |com 类所在的包名
 
   conf 配置文件所在的文件夹，与src目录同级别
 
@@ -135,7 +135,7 @@ public class BeanXMLTest {
 
 ## 用注解配置类
 
-- @Configuration 可以替代xml，进行类的配置。典型的应用有三方jar包，我们需要把它交给Spring容器进行管理，于是用@Configuration的方式把这个类注入到Spring中。
+- `@Configuration` 可以替代xml，进行类的配置。典型的应用有三方jar包，我们需要把它交给Spring容器进行管理，于是用 `@Configuration` 的方式把这个类注入到Spring中。
 
 `JavaConfig`配置类
 
@@ -192,7 +192,7 @@ public class BeanXMLTest {
 用到的注解有
 
 - `@Configuration`
-- `@ComponentScan`，如果是`jdk8`，它被设置成了重复注解，可以重复用。
+- `@ComponentScan`，如果是 `jdk8`，它被设置成了重复注解，可以重复用。
 
 - `xml`的配置方式
 
@@ -2274,7 +2274,7 @@ try{
 
 > 重要概念图
 
-<img src="../pics/Spring/SpringAOP.png" style="float:left">
+<img src="../pics/Spring/SpringAOP.png">
 
 ## AOP代码
 
@@ -3492,7 +3492,7 @@ Servlet 3.0 异步请求
 
 ## 概述
 
-<img src="../pics/spring/servlet3.0_async.png" style="float:left">
+<img src="../pics/spring/servlet3.0_async.png">
 
 ## 代码
 
@@ -3647,7 +3647,6 @@ class DeferredResultQueue {
 ## 新功能
 
 - 代码基于Java8，运行时兼容Java 9，把不建议的代码、库删除了。
-
 - 自带通用日志封装
   - Spring 5 移除了Log4jConfigListener，官方建议使用Log4j2
   - Spring 5框架整合Log4j2
@@ -3658,5 +3657,4 @@ class DeferredResultQueue {
     - 方法：返回值可以为空
     - 属性：属性可以为空
     - 参数值：参数值可以为空
-- 
 

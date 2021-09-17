@@ -18,7 +18,7 @@
 ## 2.2 RequestMapping基本概念
 
 - @RequestMapping注解：
-     - 告诉spring mvc这个方法用来处理什么请求。。
+     - 告诉 spring mvc 这个方法用来处理什么请求。。
      - 这个/是可以省略的，即使省略了，也是默认从当前项目开始。
      - 加上/比较好
 

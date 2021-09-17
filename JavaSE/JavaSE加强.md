@@ -20,7 +20,7 @@ public String judge(String str){
 }
 ```
 
-- 条件一多 就要该源码【扩展性弱】，有没有解决办法
+- 条件一多 就要改源码【扩展性弱】，有没有解决办法
 - 代码看起来不优雅，有没有解决办法
 
 **枚举！**
@@ -282,7 +282,7 @@ invoke(Object obj, Object... args)
 
 **`ClassLoader`的类继承图如下：**
 
-<img src="D:\69546\Documents\pics\JavaStrengthen\classLoader.png" style="float:left">
+<img src="..\pics\JavaStrengthen\classLoader.png">
 
 ### 4.3 动态代理
 
@@ -292,7 +292,7 @@ invoke(Object obj, Object... args)
 
 动态代理对比其他方法增强方式
 
-<img src="D:\69546\Documents\pics\JavaStrengthen\proxy.png" style="float:left">
+<img src="..\pics\JavaStrengthen\proxy.png">
 
 #### 4.3.2 基本Demo
 
@@ -387,7 +387,7 @@ public Object invoke(Object proxy, Method method, Object[] args)
 - `Object [ ] args`：实参
 - 返回的是方法的返回值。
 
-<img src="D:\69546\Documents\pics\JavaStrengthen\invoke_explain.png" style="float:left">
+<img src="..\pics\JavaStrengthen\invoke_explain.png">
 
 ----
 
@@ -426,7 +426,7 @@ public class ProxyDemo2 {
 
 ## 第五章 注解
 
-**注解也叫元数据**。是一种代码级别的说明，JDK1.5引入的特性，与类，接口，枚举是在同一层次。**可声明在包，类，字段，方法，局部变量，方法参数等的前面**，对这些元素进行说明。
+**注解也叫元数据**。是一种代码级别的说明，JDK1.5 引入的特性，与类，接口，枚举是在同一层次。**可声明在包，类，字段，方法，局部变量，方法参数等的前面**，对这些元素进行说明。
 
 **作用分类：**
 
@@ -458,7 +458,7 @@ public interface Annotation extends Annotation {
 
 #### 5.2.1 属性的返回值
 
-**基本数据类型	String	枚举	注解	以上类型的数组**
+基本数据类型、String、枚举、注解、及以上类型的数组
 
 #### 5.2.2 赋值问题
 
@@ -566,7 +566,7 @@ class String{ // 引导加载， String类，类库中的
 
 `ClassLoader`加载类都是通过==`loadClass()`==方法来完成的。`loadClass()`方法的工作流程如下：
 
-- 调用==`findLoadedClass()`==方法查看该类是否已经被加载过了，如果该类没有加载过，那么这个方法返回null。
+- 调用==findLoadedClass()==方法查看该类是否已经被加载过了，如果该类没有加载过，那么这个方法返回null。
 - 判断`findLoadedClass()`返回的是否为null,如果不是null那么直接返回，可避免同一个类被加载两次。
 - 如果`findLoadedClass()`返回的是null, 那么就启动代理模式（委托机制），即调用上级的`loadClass()`方法，获取上级的方法是`getParent()`，当然上级可能还有上级，这个动作就一直向上走；（==双亲委派机制==，tomcat破坏了双亲委派模型）
 - 如果`getParent().loadClass()`返回的不是null，这说明上级加载成功了，那么就加载结果；
@@ -738,7 +738,7 @@ tomcat破坏了双亲委派模型
 
 应用类加载器：先自己动手，然后再去委托
 
-<img src="D:\69546\Documents\pics\JavaStrengthen\tomcat_classLoader.png" style="float:left">
+<img src="..\pics\JavaStrengthen\tomcat_classLoader.png" style="float:left">
 
 ## 第七章 并发
 
@@ -767,9 +767,9 @@ public enum State {
 }
 ```
 
-> **lock和unlock，unlock要放在finally中，确保锁可以被释放。**
+- **lock和unlock，unlock要放在finally中，确保锁可以被释放。**
 
-> **可重入锁，获得锁的方法（代码）可以调用持有相同锁的方法**
+- **可重入锁，获得锁的方法（代码）可以调用持有相同锁的方法**
 
 > **`ReentrantLock()`**
 
