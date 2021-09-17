@@ -94,12 +94,35 @@ Redis 是键值对存取的，它的数据保存在内存中。如果仅仅是�
 
 # 二、Redis的安装
 
+## windows 安装
+
 1. 官网：https://redis.io
 2. 中文网：http://www.redis.net.cn/
 3. 解压直接可以使用：
 	  redis.windows.conf：配置文件
 	redis-cli.exe：redis的客户端
 	redis-server.exe：redis服务器端
+
+## Docker 安装
+
+```shell
+# 拉取 redis 镜像
+docker pull redis
+# 运行 redis 容器
+docker run --name myredis -d -p6379:6379 redis
+# 执行容器中的 redis-cli 可以直接命令行操作 redis
+docker exec -it myredis redis-cli
+```
+
+
+
+## 直接安装
+
+```shell
+apt-get install redis
+# 运行客户端
+redis-cli
+```
 
 # 三、Redis的操作
 
@@ -113,11 +136,19 @@ Redis 是键值对存取的，它的数据保存在内存中。如果仅仅是�
 -  哈希类型 hash ： map格式
 - 列表类型 list ： linkedlist格式，支持重复元素
 - 集合类型 set  ： 不允许重复元素
-- 有序集合类型 sortedset：不允许重复元素，且元素有顺序
+- 有序集合类型 zset：不允许重复元素，且元素有顺序
 
 ## 3.2 操作
 
-> **字符串类型 string**
+### 字符串类型 string
+
+内部表示是一个字符数组。常用来缓存用户信息。将用户信息用 JSON 序列化成字符串，然后将序列化后的字符塞进 redis 来缓存。
+
+redis 的字符串是动态字符串，是可以修改的字符串，采用预分配冗余空间的方式来减少内存的频繁分配。
+
+<img src="../pics/SQL/Redis/sds.png">
+
+#### 键值对
 
 存储： set key value
 
@@ -143,7 +174,85 @@ del key
 (integer) 1
 ```
 
-> **哈希类型 hash** 
+查看是否存在
+
+```shell
+127.0.0.1:6379> exists username
+```
+
+#### 批量键值对
+
+对多个字符串进行批量读写，节省网络耗时开销。
+
+```shell
+127.0.0.1:6379> mset name1 ljwsf1 name2 ljwsf2
+OK
+127.0.0.1:6379> mget name1 name2 name3
+1) "liujiawe1"
+2) "liujiawei2"
+3) (nil)
+127.0.0.1:6379>
+```
+
+#### 过期和 set 命令扩展
+
+对 key 设置过期时间，到期自动删除，常用来控制缓存的失效时间。
+
+```shell
+127.0.0.1:6379> set name ljwsf
+OK
+127.0.0.1:6379> expire name 5 # 5秒后过期
+(integer) 1
+127.0.0.1:6379> get name
+(nil)
+127.0.0.1:6379> SETEX name 5 ljwsf # 5秒后过期
+OK
+127.0.0.1:6379> get name
+(nil)
+127.0.0.1:6379>
+```
+
+不存在则创建，存在则不创建
+
+```shell
+127.0.0.1:6379> SETNX name ll
+(integer) 1
+127.0.0.1:6379> setnx name 11
+(integer) 0
+127.0.0.1:6379>
+```
+
+#### 计数
+
+value 如果是数字的话，可以自增。自增的范围是 signed long 的最大值和最小值。
+
+```shell
+127.0.0.1:6379> set age "30"
+OK
+127.0.0.1:6379> incr age
+(integer) 31
+127.0.0.1:6379> incrby age 20
+(integer) 51
+127.0.0.1:6379> incrby age -5
+(integer) 46
+127.0.0.1:6379>
+```
+
+### 列表 list
+
+由链表实现。双向链表实现的？
+
+redis 的列表结构常用来做异步队列使用。将需要延后处理的任务结构体序列化成字符串，塞进 redis 的列表，另一个线程从这个列表中轮询数据进行处理。
+
+#### 右边进左边出：队列
+
+先进先出，常用于消息排队和异步逻辑处理，可以确保元素访问顺序性。
+
+#### 左边进右边出：栈
+
+做栈的应用场景不多。
+
+**哈希类型 hash** 
 
 存储：
 
