@@ -8,3 +8,85 @@
 - Netty中是如何管理内存的，ByteBuf 的特点和分配时机
 - 看源码、调试的一些技巧
 
+# 环境搭建
+
+> maven 依赖
+
+```xml
+<dependencies>
+    <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-all</artifactId>
+        <version>4.1.39.Final</version>
+    </dependency>
+    <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>1.16.18</version>
+    </dependency>
+    <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>2.8.5</version>
+    </dependency>
+    <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>19.0</version>
+    </dependency>
+    <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>1.2.3</version>
+    </dependency>
+    <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>3.11.3</version>
+    </dependency>
+</dependencies>
+```
+
+> logback.xml
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration
+        xmlns="http://ch.qos.logback/xml/ns/logback"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://ch.qos.logback/xml/ns/logback logback.xsd">
+    <!-- 输出控制，格式控制-->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date{HH:mm:ss} [%-5level] [%thread] %logger{17} - %m%n </pattern>
+        </encoder>
+    </appender>
+    <!--<appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        &lt;!&ndash; 日志文件名称 &ndash;&gt;
+        <file>logFile.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            &lt;!&ndash; 每天产生一个新的日志文件 &ndash;&gt;
+            <fileNamePattern>logFile.%d{yyyy-MM-dd}.log</fileNamePattern>
+            &lt;!&ndash; 保留 15 天的日志 &ndash;&gt;
+            <maxHistory>15</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date{HH:mm:ss} [%-5level] [%thread] %logger{17} - %m%n </pattern>
+        </encoder>
+    </appender>-->
+
+    <!-- 用来控制查看那个类的日志内容（对mybatis name 代表命名空间） -->
+    <logger name="cn.itcast" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <logger name="io.netty.handler.logging.LoggingHandler" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <root level="ERROR">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>
+```
+

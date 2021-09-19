@@ -151,8 +151,6 @@ public class ChannelDemo1 {
 10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - 读到字节数：-1
 ```
 
-
-
 ### 2.1  ByteBuffer 正确使用姿势
 
 1. 向 buffer 写入数据，例如调用 channel.read(buffer)
@@ -160,8 +158,6 @@ public class ChannelDemo1 {
 3. 从 buffer 读取数据，例如调用 buffer.get()
 4. 调用 clear() 或 compact() 切换至**写模式**
 5. 重复 1~4 步骤
-
-
 
 ### 2.2 ByteBuffer 结构
 
@@ -193,7 +189,7 @@ clear 动作发生后，状态
 
 ![](img/0021.png)
 
-compact 方法，是把未读完的部分向前压缩，然后切换至写模式
+compact 方法，是把未读完的部分向前压缩，然后切换至写模式。【数据没读完，就切换为写模式】
 
 ![](img/0022.png)
 
@@ -372,7 +368,19 @@ public class ByteBufferUtil {
 }
 ```
 
+####  💡 测试方法
 
+ByteBuffer.allocate()：分配指定字节大小的空间
+
+put：写入数据
+
+flip：开启读模式 
+
+compact
+
+- 只是把未读取的数据移动到了前面而已，并不会清空数据
+- 例如 61 62 63 61被读取了，然后 compact
+- 变成 62 63 64 64
 
 ### 2.3 ByteBuffer 常见方法
 
@@ -381,10 +389,13 @@ public class ByteBufferUtil {
 可以使用 allocate 方法为 ByteBuffer 分配空间，其它 buffer 类也有该方法
 
 ```java
-Bytebuffer buf = ByteBuffer.allocate(16);
+Bytebuffer buf = ByteBuffer.allocate(16); // class java.nio.HeapByteBuffer
+Bytebuffer dir = ByteBuffer.allocateDirect(10) // class java.nio.DirectByteBuffer
 ```
 
+`class java.nio.HeapByteBuffer` - Java 堆内存，读写效率低，受到  GC 影响
 
+`class java.nio.DirectByteBuffer` - 直接内存，读写效率高（少一次拷贝），不会受  GC 影响，分配效率低。
 
 #### 向 buffer 写入数据
 
@@ -397,13 +408,9 @@ Bytebuffer buf = ByteBuffer.allocate(16);
 int readBytes = channel.read(buf);
 ```
 
-和
-
 ```java
 buf.put((byte)127);
 ```
-
-
 
 #### 从 buffer 读取数据
 
@@ -416,8 +423,6 @@ buf.put((byte)127);
 int writeBytes = channel.write(buf);
 ```
 
-和
-
 ```java
 byte b = buf.get();
 ```
@@ -425,7 +430,23 @@ byte b = buf.get();
 get 方法会让 position 读指针向后走，如果想重复读取数据
 
 * 可以调用 rewind 方法将 position 重新置为 0
-* 或者调用 get(int i) 方法获取索引 i 的内容，它不会移动读指针
+* 或者**调用 get(int i) 方法获取索引 i 的内容，它不会移动读指针！**
+
+```java
+@Test
+public void read() {
+    ByteBuffer allocate = ByteBuffer.allocate(10);
+    allocate.put(new byte[]{'a', 'b', 'c', 'd'});
+    allocate.flip();
+
+    // rewind 重复读数据 其实就是 令position = 0;
+    allocate.get(new byte[4]);
+    debugAll(allocate);
+    allocate.rewind();
+    debugAll(allocate);
+
+}
+```
 
 
 
@@ -433,42 +454,68 @@ get 方法会让 position 读指针向后走，如果想重复读取数据
 
 mark 是在读取时，做一个标记，即使 position 改变，只要调用 reset 就能回到 mark 的位置
 
-> **注意**
->
-> rewind 和 flip 都会清除 mark 位置
+```java
+@Test
+public void markAndRest() {
+    ByteBuffer allocate = ByteBuffer.allocate(10);
+    allocate.put(new byte[]{'a', 'b', 'c', 'd'});
+    allocate.flip();
+    System.out.println(allocate.get());
+
+    allocate.mark(); // 在 b 加了标记
+    System.out.println((char) allocate.get());
+    System.out.println((char)allocate.get());
+    allocate.reset(); // 重置到 b 处
+    System.out.println((char)allocate.get());
+    // mark & rest
+    // mark 做一个标记，记录 position 位置，rest 将position重置到 mark 的位置。
+    // 其实就是对1对 rewind 的增强
+}
+```
 
 
+
+<span style="color:red">**注意：rewind 和 flip 都会清除 mark 位置**</span>
 
 #### 字符串与 ByteBuffer 互转
 
+> 字符串===>ByteBuffer
+
 ```java
-ByteBuffer buffer1 = StandardCharsets.UTF_8.encode("你好");
-ByteBuffer buffer2 = Charset.forName("utf-8").encode("你好");
+public class TestByteBufferString {
+    @Test
+    public void String2ByteBuffer() {
+        // 写模式 [pos=5 lim=10 cap=10]
+        ByteBuffer allocate = ByteBuffer.allocate(10);
+        allocate.put("hello".getBytes(StandardCharsets.UTF_8));
+        System.out.println(allocate);
+    }
 
-debug(buffer1);
-debug(buffer2);
+    @Test
+    public void String2ByteBuffer2() {
+        // 自动切换到读模式   [pos=0 lim=5 cap=5]
+        ByteBuffer hello = StandardCharsets.UTF_8.encode("hello");
+        System.out.println(hello);
+    }
 
-CharBuffer buffer3 = StandardCharsets.UTF_8.decode(buffer1);
-System.out.println(buffer3.getClass());
-System.out.println(buffer3.toString());
+    @Test
+    public void String2ByteBuffer3() {
+        // 自动切换到读模式   [pos=0 lim=5 cap=5]
+        ByteBuffer wrap = ByteBuffer.wrap("hello".getBytes(StandardCharsets.UTF_8));
+        System.out.println(wrap);
+    }
+}
 ```
 
 输出
 
 ```
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| e4 bd a0 e5 a5 bd                               |......          |
-+--------+-------------------------------------------------+----------------+
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| e4 bd a0 e5 a5 bd                               |......          |
-+--------+-------------------------------------------------+----------------+
-class java.nio.HeapCharBuffer
-你好
+java.nio.HeapByteBuffer[pos=5 lim=10 cap=10]
+java.nio.HeapByteBuffer[pos=0 lim=5 cap=5]
+java.nio.HeapByteBuffer[pos=0 lim=5 cap=5]
 ```
+
+> ByteBuffer===>String
 
 
 
@@ -489,42 +536,25 @@ onetwothree
 使用如下方式读取，可以将数据填充至多个 buffer
 
 ```java
-try (RandomAccessFile file = new RandomAccessFile("helloword/3parts.txt", "rw")) {
-    FileChannel channel = file.getChannel();
-    ByteBuffer a = ByteBuffer.allocate(3);
-    ByteBuffer b = ByteBuffer.allocate(3);
-    ByteBuffer c = ByteBuffer.allocate(5);
-    channel.read(new ByteBuffer[]{a, b, c});
-    a.flip();
-    b.flip();
-    c.flip();
-    debug(a);
-    debug(b);
-    debug(c);
-} catch (IOException e) {
-    e.printStackTrace();
+@Test
+public void test() {
+    try (FileChannel file = new RandomAccessFile("read.txt", "rw").getChannel()) {
+        ByteBuffer buf1 = ByteBuffer.allocate(3);
+        ByteBuffer buf2 = ByteBuffer.allocate(4);
+        ByteBuffer buf3 = ByteBuffer.allocate(5);
+        long read = file.read(new ByteBuffer[]{buf1, buf2, buf3});
+        buf1.flip();
+        buf2.flip();
+        buf3.flip();
+        debugAll(buf1);
+        debugAll(buf2);
+        debugAll(buf3);
+    } catch (Exception e) {
+    }
 }
 ```
 
-结果
-
-```
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 6f 6e 65                                        |one             |
-+--------+-------------------------------------------------+----------------+
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 74 77 6f                                        |two             |
-+--------+-------------------------------------------------+----------------+
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 74 68 72 65 65                                  |three           |
-+--------+-------------------------------------------------+----------------+
-```
+结果：都读取到了数据
 
 
 
@@ -533,43 +563,56 @@ try (RandomAccessFile file = new RandomAccessFile("helloword/3parts.txt", "rw"))
 使用如下方式写入，可以将多个 buffer 的数据填充至 channel
 
 ```java
-try (RandomAccessFile file = new RandomAccessFile("helloword/3parts.txt", "rw")) {
-    FileChannel channel = file.getChannel();
-    ByteBuffer d = ByteBuffer.allocate(4);
-    ByteBuffer e = ByteBuffer.allocate(4);
-    channel.position(11);
-
-    d.put(new byte[]{'f', 'o', 'u', 'r'});
-    e.put(new byte[]{'f', 'i', 'v', 'e'});
-    d.flip();
-    e.flip();
-    debug(d);
-    debug(e);
-    channel.write(new ByteBuffer[]{d, e});
-} catch (IOException e) {
-    e.printStackTrace();
+public class TestScatteringReads {
+    @Test
+    public void test() {
+        try (FileChannel file = new RandomAccessFile("read.txt", "rw").getChannel()) {
+            ByteBuffer buf1 = ByteBuffer.allocate(3);
+            ByteBuffer buf2 = ByteBuffer.allocate(4);
+            ByteBuffer buf3 = ByteBuffer.allocate(5);
+            long read = file.read(new ByteBuffer[]{buf1, buf2, buf3});
+            buf1.flip();
+            buf2.flip();
+            buf3.flip();
+            debugAll(buf1);
+            debugAll(buf2);
+            debugAll(buf3);
+        } catch (Exception e) {
+        }
+    }
 }
 ```
 
 输出
 
 ```
++--------+-------------------- all ------------------------+----------------+
+position: [0], limit: [3]
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 66 6f 75 72                                     |four            |
+|00000000| 33 33 33                                        |333             |
 +--------+-------------------------------------------------+----------------+
++--------+-------------------- all ------------------------+----------------+
+position: [0], limit: [4]
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 66 69 76 65                                     |five            |
+|00000000| 34 34 34 34                                     |4444            |
++--------+-------------------------------------------------+----------------+
++--------+-------------------- all ------------------------+----------------+
+position: [0], limit: [5]
+         +-------------------------------------------------+
+         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
++--------+-------------------------------------------------+----------------+
+|00000000| 35 35 35 35 35                                  |55555           |
 +--------+-------------------------------------------------+----------------+
 ```
 
 文件内容
 
 ```
-onetwothreefourfive
+helloworldjava
 ```
 
 
@@ -588,38 +631,44 @@ onetwothreefourfive
 * Hello,world\nI'm zhangsan\nHo
 * w are you?\n
 
-现在要求你编写程序，将错乱的数据恢复成原始的按 \n 分隔的数据
+现在要求你编写程序，将错乱的数据恢复成原始的按 \n 分隔的数据。**自己回去再写一遍。**
 
 ```java
-public static void main(String[] args) {
-    ByteBuffer source = ByteBuffer.allocate(32);
-    //                     11            24
-    source.put("Hello,world\nI'm zhangsan\nHo".getBytes());
-    split(source);
+import org.junit.Test;
 
-    source.put("w are you?\nhaha!\n".getBytes());
-    split(source);
-}
+import java.nio.ByteBuffer;
 
-private static void split(ByteBuffer source) {
-    source.flip();
-    int oldLimit = source.limit();
-    for (int i = 0; i < oldLimit; i++) {
-        if (source.get(i) == '\n') {
-            System.out.println(i);
-            ByteBuffer target = ByteBuffer.allocate(i + 1 - source.position());
-            // 0 ~ limit
-            source.limit(i + 1);
-            target.put(source); // 从source 读，向 target 写
-            debugAll(target);
-            source.limit(oldLimit);
-        }
+import static netty.study.utils.ByteBufferUtil.debugAll;
+
+public class TestRecordContent {
+    @Test
+    public void test1() {
+        ByteBuffer source = ByteBuffer.allocate(32);
+        source.put("Hello,world\nI'm zhangsan\nHo".getBytes());
+        split(source);
+        source.put("w are you?\nhaha!\n".getBytes());
+        split(source);
     }
-    source.compact();
+
+    private void split(ByteBuffer source) {
+        source.flip();
+        for (int i = 0; i < source.limit(); i++) {
+            // 找到一条完整的消息
+            if (source.get(i) == '\n') {
+                int length = i + 1 - source.position();// 换行符位置+1 - 起始
+                ByteBuffer target = ByteBuffer.allocate(length);
+                // 从 source 读，向 target写 
+                for (int j = 0; j < length; j++) {
+                    target.put(source.get());
+                }
+                debugAll(target);
+            }
+
+        }
+        source.compact(); // 把剩余部分向前移动。
+    }
 }
 ```
-
-
 
 ## 3. 文件编程
 
@@ -627,9 +676,7 @@ private static void split(ByteBuffer source) {
 
 #### ⚠️ FileChannel 工作模式
 
-> FileChannel 只能工作在阻塞模式下
-
-
+> <span style="color:green">**FileChannel 只能工作在阻塞模式下。而和网络相关的才能配合 selector 工作在非阻塞模式下。**</span>
 
 #### 获取
 
@@ -639,8 +686,6 @@ private static void split(ByteBuffer source) {
 * 通过 FileOutputStream 获取的 channel 只能写
 * 通过 RandomAccessFile 是否能读写根据构造 RandomAccessFile 时的读写模式决定
 
-
-
 #### 读取
 
 会从 channel 读取数据填充 ByteBuffer，返回值表示读到了多少字节，-1 表示到达了文件的末尾
@@ -648,8 +693,6 @@ private static void split(ByteBuffer source) {
 ```java
 int readBytes = channel.read(buffer);
 ```
-
-
 
 #### 写入
 
@@ -667,13 +710,9 @@ while(buffer.hasRemaining()) {
 
 在 while 中调用 channel.write 是因为 write 方法并不能保证一次将 buffer 中的内容全部写入 channel
 
-
-
 #### 关闭
 
 channel 必须关闭，不过调用了 FileInputStream、FileOutputStream 或者 RandomAccessFile 的 close 方法会间接地调用 channel 的 close 方法
-
-
 
 #### 位置
 
@@ -695,78 +734,71 @@ channel.position(newPos);
 * 这时读取会返回 -1 
 * 这时写入，会追加内容，但要注意如果 position 超过了文件末尾，再写入时在新内容和原末尾之间会有空洞（00）
 
-
-
 #### 大小
 
 使用 size 方法获取文件的大小
-
-
 
 #### 强制写入
 
 操作系统出于性能的考虑，会将数据缓存，不是立刻写入磁盘。可以调用 force(true)  方法将文件内容和元数据（文件的权限等信息）立刻写入磁盘
 
-
-
 ### 3.2 两个 Channel 传输数据
 
-```java
-String FROM = "helloword/data.txt";
-String TO = "helloword/to.txt";
-long start = System.nanoTime();
-try (FileChannel from = new FileInputStream(FROM).getChannel();
-     FileChannel to = new FileOutputStream(TO).getChannel();
-    ) {
-    from.transferTo(0, from.size(), to);
-} catch (IOException e) {
-    e.printStackTrace();
-}
-long end = System.nanoTime();
-System.out.println("transferTo 用时：" + (end - start) / 1000_000.0);
-```
-
-输出
-
-```
-transferTo 用时：8.2011
-```
-
-
-
-超过 2g 大小的文件传输
+只要是 jdk 中带了 transferTo 的底层都会用操作系统的 **零拷贝** 进行优化。`transferTo` 一次最多传 **2G**
 
 ```java
 public class TestFileChannelTransferTo {
-    public static void main(String[] args) {
-        try (
-                FileChannel from = new FileInputStream("data.txt").getChannel();
-                FileChannel to = new FileOutputStream("to.txt").getChannel();
+    @Test
+    public void main() {
+        try (FileChannel from = new FileInputStream("from.txt").getChannel();
+             FileChannel to = new FileOutputStream("to.txt").getChannel();
         ) {
-            // 效率高，底层会利用操作系统的零拷贝进行优化
-            long size = from.size();
-            // left 变量代表还剩余多少字节
-            for (long left = size; left > 0; ) {
-                System.out.println("position:" + (size - left) + " left:" + left);
-                left -= from.transferTo((size - left), left, to);
-            }
-        } catch (IOException e) {
+            // 效率高。
+            from.transferTo(0, from.size(), to);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 }
 ```
 
-实际传输一个超大文件
+超过 2g 大小的文件传输，可以进行多次传输。
+
+```java
+@Test
+public void bigFile() {
+    try (
+        FileChannel from = new FileInputStream("D:\\archive.zip").getChannel();
+        FileChannel to = new FileOutputStream("D:\\copy.zip").getChannel();
+    ) {
+        // 效率高，底层会利用操作系统的零拷贝进行优化
+        long size = from.size(); // 4845135158 ≈ 4.6G 就是文件的大小。这个应该是直接读的文件大小相关信息。
+        System.out.println("=============");
+        System.out.println(size);
+        System.out.println("=============");
+
+        // left 变量代表还剩余多少字节
+        for (long left = size; left > 0; ) {
+            System.out.println("position:" + (size - left) + " left:" + left);
+            // 起始位置，写的数量，目的地
+            left -= from.transferTo((size - left), left, to);
+        }
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+```
+
+实际传输一个超大文件（4.6G）
 
 ```
-position:0 left:7769948160
-position:2147483647 left:5622464513
-position:4294967294 left:3474980866
-position:6442450941 left:1327497219
+=============
+4845135158
+=============
+position:0 left:4845135158
+position:2147483647 left:2697651511
+position:4294967294 left:550167864
 ```
-
-
 
 ### 3.3 Path
 
@@ -817,16 +849,16 @@ d:\data\projects\b
 
 ### 3.4 Files
 
-检查文件是否存在
+#### 基本操作
+
+> 检查文件是否存在
 
 ```java
 Path path = Paths.get("helloword/data.txt");
 System.out.println(Files.exists(path));
 ```
 
-
-
-创建一级目录
+> 创建一级目录
 
 ```java
 Path path = Paths.get("helloword/d1");
@@ -836,18 +868,14 @@ Files.createDirectory(path);
 * 如果目录已存在，会抛异常 FileAlreadyExistsException
 * 不能一次创建多级目录，否则会抛异常 NoSuchFileException
 
-
-
-创建多级目录用
+> 创建多级目录用
 
 ```java
 Path path = Paths.get("helloword/d1/d2");
 Files.createDirectories(path);
 ```
 
-
-
-拷贝文件
+> 拷贝文件
 
 ```java
 Path source = Paths.get("helloword/data.txt");
@@ -858,15 +886,13 @@ Files.copy(source, target);
 
 * 如果文件已存在，会抛异常 FileAlreadyExistsException
 
-如果希望用 source 覆盖掉 target，需要用 StandardCopyOption 来控制
+> 如果希望用 source 覆盖掉 target，需要用 StandardCopyOption 来控制
 
 ```java
 Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
 ```
 
-
-
-移动文件
+> 移动文件
 
 ```java
 Path source = Paths.get("helloword/data.txt");
@@ -877,9 +903,7 @@ Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
 
 * StandardCopyOption.ATOMIC_MOVE 保证文件移动的原子性
 
-
-
-删除文件
+> 删除文件
 
 ```java
 Path target = Paths.get("helloword/target.txt");
@@ -889,9 +913,7 @@ Files.delete(target);
 
 * 如果文件不存在，会抛异常 NoSuchFileException
 
-
-
-删除目录
+> 删除目录
 
 ```java
 Path target = Paths.get("helloword/d1");
@@ -901,87 +923,113 @@ Files.delete(target);
 
 * 如果目录还有内容，会抛异常 DirectoryNotEmptyException
 
+#### Files.walk
 
-
-遍历目录文件
+> 遍历目录文件
 
 ```java
-public static void main(String[] args) throws IOException {
-    Path path = Paths.get("C:\\Program Files\\Java\\jdk1.8.0_91");
-    AtomicInteger dirCount = new AtomicInteger();
-    AtomicInteger fileCount = new AtomicInteger();
-    Files.walkFileTree(path, new SimpleFileVisitor<Path>(){
+import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class TestTravelFilePath {
+    @Test
+    public void test1() throws IOException {
+        AtomicInteger dirCount = new AtomicInteger();
+        AtomicInteger fileCount = new AtomicInteger();
+        Files.walkFileTree(Paths.get("D:\\Program Files\\Java"),
+                new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                        System.out.println("====>" + dir);
+                        dirCount.incrementAndGet();
+                        return super.preVisitDirectory(dir, attrs);
+                    }
+
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        fileCount.incrementAndGet();
+                        return super.visitFile(file, attrs);
+                    }
+                });
+        System.out.format("dir==> %d\n", dirCount.get());
+        System.out.format("file==> %d\n", fileCount.get());
+    }
+}
+```
+
+> 统计 java文件 的数目
+
+```java
+import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class TestTravelFilePath {
+    @Test
+    public void test1() throws IOException {
+        AtomicInteger dirCount = new AtomicInteger();
+        AtomicInteger fileCount = new AtomicInteger();
+        Files.walkFileTree(Paths.get("D:\\Code\\Java"),
+                new SimpleFileVisitor<Path>() {
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                        System.out.println("====>" + dir);
+                        dirCount.incrementAndGet();
+                        return super.preVisitDirectory(dir, attrs);
+                    }
+
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        if (file.toString().endsWith(".java")) {
+                            fileCount.incrementAndGet();
+                        }
+                        return super.visitFile(file, attrs);
+                    }
+                });
+        System.out.format("dir==> %d\n", dirCount.get());
+        System.out.format("Java file count ==> %d\n", fileCount.get());
+    }
+}
+```
+
+> 删除多级目录
+
+```java
+@Test
+public void deleteFileAndDir() throws IOException {
+    Files.walkFileTree(Paths.get("D:\\EISeg-main"), new SimpleFileVisitor<Path>() {
         @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) 
-            throws IOException {
-            System.out.println(dir);
-            dirCount.incrementAndGet();
+        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+            System.out.println("====>" + dir);
             return super.preVisitDirectory(dir, attrs);
         }
 
         @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) 
-            throws IOException {
-            System.out.println(file);
-            fileCount.incrementAndGet();
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            System.out.println("先删除文件");
             return super.visitFile(file, attrs);
         }
+
+        @Override
+        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+            System.out.println("再删除文件夹");
+            System.out.println("<====退出" + dir);
+            return super.postVisitDirectory(dir, exc);
+        }
     });
-    System.out.println(dirCount); // 133
-    System.out.println(fileCount); // 1479
 }
 ```
-
-
-
-统计 jar 的数目
-
-```java
-Path path = Paths.get("C:\\Program Files\\Java\\jdk1.8.0_91");
-AtomicInteger fileCount = new AtomicInteger();
-Files.walkFileTree(path, new SimpleFileVisitor<Path>(){
-    @Override
-    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) 
-        throws IOException {
-        if (file.toFile().getName().endsWith(".jar")) {
-            fileCount.incrementAndGet();
-        }
-        return super.visitFile(file, attrs);
-    }
-});
-System.out.println(fileCount); // 724
-```
-
-
-
-删除多级目录
-
-```java
-Path path = Paths.get("d:\\a");
-Files.walkFileTree(path, new SimpleFileVisitor<Path>(){
-    @Override
-    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) 
-        throws IOException {
-        Files.delete(file);
-        return super.visitFile(file, attrs);
-    }
-
-    @Override
-    public FileVisitResult postVisitDirectory(Path dir, IOException exc) 
-        throws IOException {
-        Files.delete(dir);
-        return super.postVisitDirectory(dir, exc);
-    }
-});
-```
-
-
 
 #### ⚠️ 删除很危险
 
 > 删除是危险操作，确保要递归删除的文件夹没有重要内容
-
-
 
 拷贝多级目录
 
@@ -1009,10 +1057,6 @@ long end = System.currentTimeMillis();
 System.out.println(end - start);
 ```
 
-
-
-
-
 ## 4. 网络编程
 
 ### 4.1 非阻塞 vs 阻塞
@@ -1027,8 +1071,6 @@ System.out.println(end - start);
 * 但多线程下，有新的问题，体现在以下方面
   * 32 位 jvm 一个线程 320k，64 位 jvm 一个线程 1024k，如果连接数过多，必然导致 OOM，并且线程太多，反而会因为频繁上下文切换导致性能降低
   * 可以采用线程池技术来减少线程数和线程上下文切换，但治标不治本，如果有很多连接建立，但长时间 inactive，会阻塞线程池中所有线程，因此不适合长连接，只适合短连接
-
-
 
 服务器端
 
@@ -1070,8 +1112,6 @@ sc.connect(new InetSocketAddress("localhost", 8080));
 System.out.println("waiting...");
 ```
 
-
-
 #### 非阻塞
 
 * 非阻塞模式下，相关方法都会不会让线程暂停
@@ -1080,8 +1120,6 @@ System.out.println("waiting...");
   * 写数据时，线程只是等待数据写入 Channel 即可，无需等 Channel 通过网络把数据发送出去
 * 但非阻塞模式下，即使没有连接建立，和可读数据，线程仍然在不断运行，白白浪费了 cpu
 * 数据复制过程中，线程实际还是阻塞的（AIO 改进的地方）
-
-
 
 服务器端，客户端代码不变
 
@@ -1117,8 +1155,6 @@ while (true) {
 }
 ```
 
-
-
 #### 多路复用
 
 单线程可以配合 Selector 完成对多个 Channel 可读写事件的监控，这称之为多路复用
@@ -1129,8 +1165,6 @@ while (true) {
   * 有可读事件才去读取
   * 有可写事件才去写入
     * 限于网络传输能力，Channel 未必时时可写，一旦 Channel 可写，会触发 Selector 的可写事件
-
-
 
 ### 4.2 Selector
 
@@ -1144,8 +1178,6 @@ selector --> c3(channel)
 end
 ```
 
-
-
 好处
 
 * 一个线程配合 selector 就可以监控多个 channel 的事件，事件发生线程才去处理。避免非阻塞模式下所做无用功
@@ -1153,15 +1185,11 @@ end
 * 节约了线程的数量
 * 减少了线程上下文切换
 
-
-
 #### 创建
 
 ```java
 Selector selector = Selector.open();
 ```
-
-
 
 #### 绑定 Channel 事件
 
@@ -1180,8 +1208,6 @@ SelectionKey key = channel.register(selector, 绑定事件);
   * read - 数据可读入时触发，有因为接收能力弱，数据暂不能读入的情况
   * write - 数据可写出时触发，有因为发送能力弱，数据暂不能写出的情况
 
-
-
 #### 监听 Channel 事件
 
 可以通过下面三种方法来监听是否有事件发生，方法的返回值代表有多少 channel 发生了事件
@@ -1192,23 +1218,17 @@ SelectionKey key = channel.register(selector, 绑定事件);
 int count = selector.select();
 ```
 
-
-
 方法2，阻塞直到绑定事件发生，或是超时（时间单位为 ms）
 
 ```java
 int count = selector.select(long timeout);
 ```
 
-
-
 方法3，不会阻塞，也就是不管有没有事件，立刻返回，自己根据返回值检查是否有事件
 
 ```java
 int count = selector.selectNow();
 ```
-
-
 
 #### 💡 select 何时不阻塞
 
@@ -1220,8 +1240,6 @@ int count = selector.selectNow();
 > * 调用 selector.wakeup()
 > * 调用 selector.close()
 > * selector 所在线程 interrupt
-
-
 
 ### 4.3 处理 accept 事件
 
@@ -1240,8 +1258,6 @@ public class Client {
     }
 }
 ```
-
-
 
 服务器端代码为
 
@@ -1289,13 +1305,9 @@ public class ChannelDemo6 {
 }
 ```
 
-
-
 #### 💡 事件发生后能否不处理
 
 > 事件发生后，要么处理，要么取消（cancel），不能什么都不做，否则下次该事件仍会触发，这是因为 nio 底层使用的是水平触发
-
-
 
 ### 4.4 处理 read 事件
 
@@ -1378,8 +1390,6 @@ sun.nio.ch.ServerSocketChannelImpl[/0:0:0:0:0:0:0:0:8080]
 +--------+-------------------------------------------------+----------------+
 ```
 
-
-
 #### 💡 为何要 iter.remove()
 
 > 因为 select 在事件发生后，就会将相关的 key 放入 selectedKeys 集合，但不会在处理完后从 selectedKeys 集合中移除，需要我们自己编码删除。例如
@@ -1387,13 +1397,9 @@ sun.nio.ch.ServerSocketChannelImpl[/0:0:0:0:0:0:0:0:8080]
 > * 第一次触发了 ssckey 上的 accept 事件，没有移除 ssckey 
 > * 第二次触发了 sckey 上的 read 事件，但这时 selectedKeys 中还有上次的 ssckey ，在处理时因为没有真正的 serverSocket 连上了，就会导致空指针异常
 
-
-
 #### 💡 cancel 的作用
 
 > cancel 会取消注册在 selector 上的 channel，并从 keys 集合中删除 key 后续不会再监听事件
-
-
 
 #### ⚠️  不处理边界的问题
 
@@ -1448,8 +1454,6 @@ ld�
 
 为什么？
 
-
-
 #### 处理消息的边界
 
 ![](img/0023.png)
@@ -1459,8 +1463,6 @@ ld�
 * TLV 格式，即 Type 类型、Length 长度、Value 数据，类型和长度已知的情况下，就可以方便获取消息大小，分配合适的 buffer，缺点是 buffer 需要提前分配，如果内容过大，则影响 server 吞吐量
   * Http 1.1 是 TLV 格式
   * Http 2.0 是 LTV 格式
-
-
 
 ```mermaid
 sequenceDiagram 
@@ -1572,10 +1574,6 @@ sc.write(Charset.defaultCharset().encode("0123456789abcdef3333\n"));
 System.in.read();
 ```
 
-
-
-
-
 #### ByteBuffer 大小分配
 
 * 每个 channel 都需要记录可能被切分的消息，因为 ByteBuffer 不能被多个 channel 共同使用，因此需要为每个 channel 维护一个独立的 ByteBuffer
@@ -1583,13 +1581,7 @@ System.in.read();
   * 一种思路是首先分配一个较小的 buffer，例如 4k，如果发现数据不够，再分配 8k 的 buffer，将 4k buffer 内容拷贝至 8k buffer，优点是消息连续容易处理，缺点是数据拷贝耗费性能，参考实现 [http://tutorials.jenkov.com/java-performance/resizable-array.html](http://tutorials.jenkov.com/java-performance/resizable-array.html)
   * 另一种思路是用多个数组组成 buffer，一个数组不够，把多出来的内容写入新的数组，与前面的区别是消息存储不连续解析复杂，优点是避免了拷贝引起的性能损耗
 
-
-
-
-
 ### 4.5 处理 write 事件
-
-
 
 #### 一次无法写完例子
 
@@ -1598,8 +1590,6 @@ System.in.read();
   * 当消息处理器第一次写入消息时，才将 channel 注册到 selector 上
   * selector 检查 channel 上的可写事件，如果所有的数据写完了，就取消 channel 的注册
   * 如果不取消，会每次可写均会触发 write 事件
-
-
 
 ```java
 public class WriteServer {
@@ -1687,21 +1677,9 @@ public class WriteClient {
 }
 ```
 
-
-
 #### 💡 write 为何要取消
 
 只要向 channel 发送数据时，socket 缓冲可写，这个事件会频繁触发，因此应当只在 socket 缓冲区写不下时再关注可写事件，数据写完之后再取消关注
-
-
-
-
-
-
-
-
-
-
 
 ### 4.6 更进一步
 
@@ -1711,16 +1689,12 @@ public class WriteClient {
 
 > 现在都是多核 cpu，设计时要充分考虑别让 cpu 的力量被白白浪费
 
-
-
 前面的代码只有一个选择器，没有充分利用多核 cpu，如何改进呢？
 
 分两组选择器
 
 * 单线程配一个选择器，专门处理 accept 事件
 * 创建 cpu 核心数的线程，每个线程配一个选择器，轮流处理 read 事件
-
-
 
 ```java
 public class ChannelDemo7 {
@@ -1857,14 +1831,10 @@ public class ChannelDemo7 {
 }
 ```
 
-
-
 #### 💡 如何拿到 cpu 个数
 
 > * Runtime.getRuntime().availableProcessors() 如果工作在 docker 容器下，因为容器不是物理隔离的，会拿到物理 cpu 个数，而不是容器申请时的个数
 > * 这个问题直到 jdk 10 才修复，使用 jvm 参数 UseContainerSupport 配置， 默认开启
-
-
 
 ### 4.7 UDP
 
@@ -1896,8 +1866,6 @@ public class UdpServer {
 waiting...
 ```
 
-
-
 运行客户端
 
 ```java
@@ -1924,10 +1892,6 @@ public class UdpClient {
 +--------+-------------------------------------------------+----------------+
 ```
 
-
-
-
-
 ## 5. NIO vs BIO
 
 ### 5.1 stream vs channel
@@ -1936,16 +1900,12 @@ public class UdpClient {
 * stream 仅支持阻塞 API，channel 同时支持阻塞、非阻塞 API，网络 channel 可配合 selector 实现多路复用
 * 二者均为全双工，即读写可以同时进行
 
-
-
 ### 5.2 IO 模型
 
 同步阻塞、同步非阻塞、同步多路复用、异步阻塞（没有此情况）、异步非阻塞
 
 * 同步：线程自己去获取结果（一个线程）
 * 异步：线程自己不去获取结果，而是由其它线程送结果（至少两个线程）
-
-
 
 当调用一次 channel.read 或 stream.read 后，会切换至操作系统内核态来完成真正数据读取，而读取又分为两个阶段，分别为：
 
@@ -1982,8 +1942,6 @@ public class UdpClient {
 
 UNIX 网络编程 - 卷 I
 
-
-
 ### 5.3 零拷贝
 
 #### 传统 IO 问题
@@ -2015,14 +1973,10 @@ socket.getOutputStream().write(buf);
 
 4. 接下来要向网卡写数据，这项能力 java 又不具备，因此又得从**用户态**切换至**内核态**，调用操作系统的写能力，使用 DMA 将 **socket 缓冲区**的数据写入网卡，不会使用 cpu
 
-
-
 可以看到中间环节较多，java 的 IO 实际不是物理设备级别的读写，而是缓存的复制，底层的真正读写是操作系统来完成的
 
 * 用户态与内核态的切换发生了 3 次，这个操作比较重量级
 * 数据拷贝了共 4 次
-
-
 
 #### NIO 优化
 
@@ -2041,8 +1995,6 @@ socket.getOutputStream().write(buf);
   * 通过专门线程访问引用队列，根据虚引用释放堆外内存
 * 减少了一次数据拷贝，用户态与内核态的切换次数没有减少
 
-
-
 进一步优化（底层采用了 linux 2.1 后提供的 sendFile 方法），java 中对应着两个 channel 调用 transferTo/transferFrom 方法拷贝数据
 
 ![](img/0026.png)
@@ -2055,8 +2007,6 @@ socket.getOutputStream().write(buf);
 
 * 只发生了一次用户态与内核态的切换
 * 数据拷贝了 3 次
-
-
 
 进一步优化（linux 2.4）
 
@@ -2072,8 +2022,6 @@ socket.getOutputStream().write(buf);
 * 不利用 cpu 计算，减少 cpu 缓存伪共享
 * 零拷贝适合小文件传输
 
-
-
 ### 5.3 AIO
 
 AIO 用来解决数据复制阶段的阻塞问题
@@ -2085,8 +2033,6 @@ AIO 用来解决数据复制阶段的阻塞问题
 >
 > * Windows 系统通过 IOCP 实现了真正的异步 IO
 > * Linux 系统异步 IO 在 2.6 版本引入，但其底层实现还是用多路复用模拟了异步 IO，性能没有优势
-
-
 
 #### 文件 AIO
 
@@ -2143,13 +2089,9 @@ public class AioDemo1 {
 * 响应文件读取成功的是另一个线程 Thread-5
 * 主线程并没有 IO 操作阻塞
 
-
-
 #### 💡 守护线程
 
 默认文件 AIO 使用的线程都是守护线程，所以最后要执行 `System.in.read()` 以避免守护线程意外结束
-
-
 
 #### 网络 AIO
 
@@ -2255,8 +2197,4 @@ public class AioServer {
     }
 }
 ```
-
-
-
-
 
