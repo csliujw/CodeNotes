@@ -125,6 +125,7 @@ public class NoBlockClient {
         }
 
         // 5. 轮训地获取选择器上已“就绪”的事件--->只要select()>0，说明已就绪
+        // 轮询，查看事件是否已经就绪了。Python NIO 也这样？p
         while (selector.select() > 0) {
             // 6. 获取当前选择器所有注册的“选择键”(已就绪的监听事件)
             Iterator<SelectionKey> iterator = selector.selectedKeys().iterator();

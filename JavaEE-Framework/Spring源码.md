@@ -5,26 +5,26 @@
   - 不要一开始就看源码细节，死扣某个方法，先看脉络在看细节
   - 猜猜方法的作用和流程再验证
   - 见名知意
-- IOC 源码
+- `IOC` 源码
 - Spring 启动流程
 - Spring 加载配置文件
-- 掌握核心接口 BeanDefinitionReader
-- 核心接口 BeanFactory
+- 掌握核心接口 `BeanDefinitionReader`
+- 核心接口 `BeanFactory`
 - Spring refresh 方法
-- BeanPostProcessor 接口的作用及实现
-- BeanFactoryPostProcessor 接口的作用及实现
+- `BeanPostProcessor` 接口的作用及实现
+- `BeanFactoryPostProcessor` 接口的作用及实现
 
 ---
 
 - Spring Bean 为何实现 Aware 接口
 - Spring Bean 实例化过程
 - Spring Bean 的初始化做什么的
-- FactoryBean 接口
+- `FactoryBean` 接口
 - Spring Bean 生命周期
 - Spring Environment 接口的作用
 - 循环依赖及其解决
 
-## gradle 搭建环境
+## `gradle` 搭建环境
 
 `https://blog.csdn.net/u013469325/article/details/106575704?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_title~default-0.control&spm=1001.2101.3001.4242`
 

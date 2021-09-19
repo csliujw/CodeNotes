@@ -4,20 +4,20 @@
 
 > **扩展**
 
-HTTP协议是明文传输，不安全，不适合传输安全性要求高的文件，如密码
+HTTP 协议是明文传输，不安全，不适合传输安全性要求高的文件，如密码
 
-HTTPS，对HTTP协议不安全的改进，叫安全套接字超文本传输协议，采用了基于SSL(Secure Sockets Layer)进行加密，安全性高！SSL依靠证书来验证服务器的身份，并为浏览器和服务器之间的通信加密。
+HTTPS，对 HTTP 协议不安全的改进，叫安全套接字超文本传输协议，采用了基于 SSL(Secure Sockets Layer) 进行加密，安全性高！SSL 依靠证书来验证服务器的身份，并为浏览器和服务器之间的通信加密。
 
 > HTTP和HTTPS的对比
 
-- https相对于http加入了ssl层，
-- 需要到ca申请收费的证书，SSL证书需要钱，功能越强大的证书费用越高，个人网站、小网站没有必要一般不会用。
-- 安全但是耗时多，缓存不是很好，HTTPS协议握手阶段比较费时，会使页面的加载时间延长近50%，增加10%到20%的耗电；
-- 注意兼容http和https
+- https 相对于 http 加入了 ssl 层，
+- 需要到ca申请收费的证书，SSL 证书需要钱，功能越强大的证书费用越高，个人网站、小网站没有必要一般不会用。
+- 安全但是耗时多，缓存不是很好，HTTPS 协议握手阶段比较费时，会使页面的加载时间延长近50%，增加10%到20%的耗电；
+- 注意兼容 http 和 https
 
 > **SSL**
 
-​			SSL协议位于[TCP/IP协议](https://baike.baidu.com/item/TCP%2FIP协议)与各种[应用层](https://baike.baidu.com/item/应用层)协议之间，为[数据通讯](https://baike.baidu.com/item/数据通讯)提供安全支持。SSL协议可分为两层： SSL记录协议（SSL Record Protocol）：它建立在可靠的[传输协议](https://baike.baidu.com/item/传输协议)（如TCP）之上，为高层协议提供[数据封装](https://baike.baidu.com/item/数据封装)、压缩、加密等基本功能的支持。 SSL[握手协议](https://baike.baidu.com/item/握手协议)（SSL Handshake Protocol）：它建立在SSL记录协议之上，用于在实际的数据传输开始前，通讯双方进行[身份认证](https://baike.baidu.com/item/身份认证)、协商[加密算法](https://baike.baidu.com/item/加密算法)、交换加密[密钥](https://baike.baidu.com/item/密钥)等。
+SSL 协议位于 [TCP/IP协议](https://baike.baidu.com/item/TCP%2FIP协议) 与各种[应用层](https://baike.baidu.com/item/应用层)协议之间，为[数据通讯](https://baike.baidu.com/item/数据通讯)提供安全支持。SSL协议可分为两层： SSL记录协议（SSL Record Protocol）：它建立在可靠的[传输协议](https://baike.baidu.com/item/传输协议)（如TCP）之上，为高层协议提供[数据封装](https://baike.baidu.com/item/数据封装)、压缩、加密等基本功能的支持。 SSL[握手协议](https://baike.baidu.com/item/握手协议)（SSL Handshake Protocol）：它建立在SSL记录协议之上，用于在实际的数据传输开始前，通讯双方进行[身份认证](https://baike.baidu.com/item/身份认证)、协商[加密算法](https://baike.baidu.com/item/加密算法)、交换加密[密钥](https://baike.baidu.com/item/密钥)等。
 
 ## 1.1 基本知识
 
@@ -46,8 +46,8 @@ HTTPS，对HTTP协议不安全的改进，叫安全套接字超文本传输协�
   - GET /login.html	HTTP/1.1
 
 - HTTP协议有7种请求方式，常用的有2种
-  - GET：请求参数在请求行中，在url后；请求的url长度有限制的；不太安全。
-  - POST：请求参数在请求体中；请求的url长度没有限制的；相对安全。
+  - GET：请求参数在请求行中，在 url 后；请求的 url 长度有限制的；不太安全。
+  - POST：请求参数在请求体中；请求的 url 长度没有限制的；相对安全。
 
 ### 1.2.2 请求头
 
@@ -239,7 +239,7 @@ username=zhangsan
   - 2.配置conf/server.xml文件
   - 3.在conf\Catalina\localhost创建任意名称的xml文件。在文件中编写
 
-- **webapps部署方式**
+- **webapps 部署方式**
 
   - 直接将项目放到webapps目录下
   - /hello：项目的访问路径会被映射为虚拟目录
@@ -287,7 +287,7 @@ URI：统一资源标识符，标识这个资源唯一。
 
 > **Servlet：server applet**。运行在服务器端的小程序。
 
-Servlet就是一个接口，定义了Java类被浏览器访问到(tomcat识别)的规则。
+Servlet 就是一个接口，定义了Java类被浏览器访问到(tomcat识别)的规则。
 
 Java定制规范，提供接口，其他厂商根据规范和接口进行实际的功能实现。
 
@@ -334,6 +334,8 @@ Java定制规范，提供接口，其他厂商根据规范和接口进行实际�
     在服务器启动时，创建
     <load-on-startup>的值为0或正整数
     ```
+    
+    
 
 - 初始化：init方法，只执行一次，说明一个Servlet在内存中只存在一个对象，Servlet是单例的
   - 多个用户同时访问时，可能存在线程安全问题。
@@ -472,6 +474,8 @@ public @interface WebServlet {
       <url-pattern>/user/*.action</url-pattern>
   </servlet-mapping>
   ```
+  
+  
 
 ### 3.5.2 初始化资源配置
 
@@ -490,6 +494,8 @@ public @interface WebServlet {
     <load-on-startup>2</load-on-startup>
 </servlet>
 ```
+
+
 
 ```java
 public void init(ServletConfig config){
@@ -652,7 +658,7 @@ request域：代表一次请求的范围，一般用于请求转发的多个资�
 ServletContext context = request.getServletContext();
 ```
 
-> `ServletContext`官方叫`servlet`上下文。服务器会为每一个工程创建一个对象，这个对象就是`ServletContext`对象。这个对象全局唯一，而且==工程内部的所有`servlet`都共享这个对象。所以叫全局应用程序共享对象。==
+> `ServletContext`官方叫`servlet`上下文。服务器会为每一个工程创建一个对象，这个对象就是`ServletContext`对象。这个对象全局唯一，而且==工程内部的所有 Servlet 都共享这个对象。所以叫全局应用程序共享对象。==
 
 ### 4.2.5 获取输入流
 
@@ -790,6 +796,8 @@ response.sendRedirect("/blog/xx.do")
     ./可以省略
     ```
 
+    
+
   - ../:后退一级目录
 
 - **绝对路径：通过绝对路径可以确定唯一资源**
@@ -829,8 +837,6 @@ response.setHeader("content-type","text/html;character=utf-8");
 // 其实写了上面那句，就不用写response.setCharacterEncoding("utf-8");了
 ```
 
-----
-
 简单设置编码的写法，是在获取流之前设置
 
 ```java
@@ -844,6 +850,8 @@ response.setContentType("text/html;charset=utf-8");
 response.setContentType("text/html;charset=utf-8");
 response.getWriter().write("你好");
 ```
+
+
 
 ----
 
@@ -885,6 +893,8 @@ response.getWriter().write("你好");
     String a = context.getRealPath("/WEB-INF/classes/a.txt");//src目录下的资源访问
     System.out.println(a);
     ```
+    
+    
 
 ## 5.3 文件的下载
 
@@ -1002,19 +1012,19 @@ public class DownLoadUtils {
 - **重写URL**
   - 就是URL地址后面附加参数 
   - `<a href="xxx/xx/xxx?name=zs">`
-  - 其缺点为：URL地址过长，不同浏览器对URL传递参数的限制，安全性差【参数明码传输】，编程繁杂。
+  - 其缺点为：URL 地址过长，不同浏览器对URL传递参数的限制，安全性差【参数明码传输】，编程繁杂。
 - **隐藏表单字段**
-  - 将会话数据放在隐藏域表单元素。简而言之就是form表单传递数据。
+  - 将会话数据放在隐藏域表单元素。简而言之就是 form 表单传递数据。
   - 其缺点为：安全性差，可以通过查看网页源代码发现保存的会话信息；编程复杂，如果要保存的数据很多，就很麻烦；无法在超链接模式下工作。
 - **Cookie**
-  - web服务器保存在客户端的小的文本文件。存储了许多key，value对。
-  - Cookie由服务器创建，存储在客户端中。
-  - **PS：高版本tomcat中Cookie不能存储空格**
+  - web 服务器保存在客户端的小的文本文件。存储了许多 key，value 对。
+  - Cookie 由服务器创建，存储在客户端中。
+  - <span style="color:red">**PS：高版本tomcat中Cookie不能存储空格**</span>
   - 缺点：
-    - 存储方式单一，只能存储String类型【Cookie(String name,String name)】
-    - 存储位置限制，若存储的Cookie过多，每次请求都发送Cookie，网络数据量过大，影响Web应用性能。
-    - Cookie大小受浏览器限制
-    - Cookie存储在客户端，若客户端禁用Cookie则无效。
+    - 存储方式单一，只能存储 String 类型【Cookie(String name,String name)】
+    - 存储位置限制，若存储的Cookie过多，每次请求都发送Cookie，网络数据量过大，影响 Web 应用性能。
+    - Cookie 大小受浏览器限制
+    - Cookie 存储在客户端，若客户端禁用 Cookie 则无效。
 - **HTTPSession对象API**
 
 ## 6.4 Cookie的使用
@@ -1156,30 +1166,28 @@ public void setDomain(String domain) {
   - session没有数据大小限制，Cookie有
   - session数据安全，Cookie相对于不安全
 
-```java
-就servlet规范本身，servlet可以再三个不同的作用域存储数据，分别是：
-Request对象、Session对象和getServletContext（）方法返回的servletContext对象中保存。以下是本人对他们之间区别的分析：
+> 就servlet规范本身，servlet可以再三个不同的作用域存储数据，分别是：
+
+- Request对象、
+- Session对象
+- getServletContext() 方法返回的 servletContext 对象
 
 1 首先从作用范围来说
     Request       保存的键值仅在下一个request对象中可以得到。
     Session        它是一个会话范围，相当于一个局部变量，从Session第一次创建知道关闭，数据都一直 保存，每一个客户都有一个Session，所以它可以被客户一直访问，只要Session没有关闭和超时即浏览器关闭。
     servletContext    它代表了servlet环境的上下文，相当于一个全局变量，即只要某个web应用在启动中，这个对象就一直都有效的存在，所以它的范围是最大的，存储的数据可以被所有用户使用，只要服务器不关闭，数据就会一直都存在。
 
-
 2 它们的优缺点：
 request：
 好处：用完就仍，不会导致资源占用的无限增长。
 弊处：数据只能被下一个对象获取，所以在写程序时会因为无法共享数据导致每次要用都从数据库中取，多做操作，自然会对性能有一些影响。
-    
+
 session：
 好处：是一个局部变量，可以保存用户的信息并直接取出，不用每次都去数据库抓，少做操作，极大的方便了程序的编写。
 弊处：每个客户都有一个session，只能自己使用，不同session可能保存大量重复数据； 可能耗费大量服务器内存； 另外session构建在cookie和url重写的基础上，所以用session实现会话跟踪，会用掉一点点服务器带宽和客户端保持联络， 当然session越多，耗费的带宽越多，理论上也会对性能造成影响。 集群的session同步会是个问题。
 
 servletContext：
 好处：不用每次都去数据库抓，少做操作。 存储的数据所有客户都可以用。 可减少重复在内存中存储数据造成的开销
-```
-
-
 
 ----
 
@@ -1603,7 +1611,7 @@ Proxy.newProxyInstance(lc.getClassLoader(),lc.getInterfaces(),(proxy,method,ags)
 
 # 八、Listener
 
-> **概念：web的三大组件之一。**
+**web的三大组件之一。**
 
 > **事件监听机制**
 
@@ -1659,9 +1667,8 @@ default void contextDestroyed(ServletContextEvent sce) {
     }
     ```
 
-    
 
-> 作用？
+> 作用
 
 - 用来加载资源文件
 
@@ -1695,13 +1702,11 @@ public class Listener implements ServletContextListener {
 }
 ```
 
-
-
 # 九、`MVC`&三层架构
 
 ## 9.1 `MVC`
 
-`M：Model`，模型，用来表示数据和处理业务，对应组件是`JavaBean`。（==`JavaBean` 可重用组件==）
+`M：Model`，模型，用来表示数据和处理业务，对应组件是`JavaBean`（==JavaBean 可重用组件==）
 
 - 如：查询数据库，封装对象
 

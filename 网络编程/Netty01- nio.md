@@ -472,8 +472,13 @@ public void markAndRest() {
     // 其实就是对1对 rewind 的增强
 }
 ```
+<<<<<<< HEAD:网络编程/Netty01-nio.md
+=======
+
+>>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
 
 
+<span style="color:red">**注意：rewind 和 flip 都会清除 mark 位置**</span>
 
 <span style="color:red">**注意：rewind 和 flip 都会清除 mark 位置**</span>
 
@@ -1061,6 +1066,8 @@ System.out.println(end - start);
 
 ### 4.1 非阻塞 vs 阻塞
 
+对代码进行 `debug` 查看阻塞，非阻塞的特点。
+
 #### 阻塞
 
 * 阻塞模式下，相关方法都会导致线程暂停
@@ -1072,7 +1079,11 @@ System.out.println(end - start);
   * 32 位 jvm 一个线程 320k，64 位 jvm 一个线程 1024k，如果连接数过多，必然导致 OOM，并且线程太多，反而会因为频繁上下文切换导致性能降低
   * 可以采用线程池技术来减少线程数和线程上下文切换，但治标不治本，如果有很多连接建立，但长时间 inactive，会阻塞线程池中所有线程，因此不适合长连接，只适合短连接
 
+<<<<<<< HEAD:网络编程/Netty01-nio.md
 服务器端
+=======
+> 服务器端
+>>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
 
 ```java
 // 使用 nio 来理解阻塞模式, 单线程
@@ -1104,17 +1115,19 @@ while (true) {
 }
 ```
 
-客户端
+> 客户端
 
 ```java
 SocketChannel sc = SocketChannel.open();
 sc.connect(new InetSocketAddress("localhost", 8080));
+// open.write(StandardCharsets.UTF_8.encode("hello"));  debug evaluate
 System.out.println("waiting...");
 ```
 
 #### 非阻塞
 
 * 非阻塞模式下，相关方法都会不会让线程暂停
+<<<<<<< HEAD:网络编程/Netty01-nio.md
   * 在 ServerSocketChannel.accept 在没有连接建立时，会返回 null，继续运行
   * SocketChannel.read 在没有数据可读时，会返回 0，但线程不必阻塞，可以去执行其它 SocketChannel 的 read 或是去执行 ServerSocketChannel.accept 
   * 写数据时，线程只是等待数据写入 Channel 即可，无需等 Channel 通过网络把数据发送出去
@@ -1122,6 +1135,15 @@ System.out.println("waiting...");
 * 数据复制过程中，线程实际还是阻塞的（AIO 改进的地方）
 
 服务器端，客户端代码不变
+=======
+  * 在 `ServerSocketChannel.accept` 在没有连接建立时，会返回 `null`，继续运行
+  * `SocketChannel.read` 在没有数据可读时，会返回 0，但线程不必阻塞，可以去执行其它 `SocketChannel` 的 `read` 或是去执行 `ServerSocketChannel.accept` 
+  * 写数据时，线程只是等待数据写入 `Channel` 即可，无需等 `Channel` 通过网络把数据发送出去
+* 但非阻塞模式下，即使没有连接建立，和可读数据，线程仍然在不断运行，白白浪费了 `cpu`
+* 数据复制过程中，线程实际还是阻塞的（`AIO` 改进的地方）
+
+服务器端，客户端代码不变。这样写，虽然是非阻塞的，但是即便客户端没有发送数据过来，服务器的线程也要不断进行循环。有读取事件时再进行处理比较好。
+>>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
 
 ```java
 // 使用 nio 来理解非阻塞模式, 单线程
@@ -1129,7 +1151,7 @@ System.out.println("waiting...");
 ByteBuffer buffer = ByteBuffer.allocate(16);
 // 1. 创建了服务器
 ServerSocketChannel ssc = ServerSocketChannel.open();
-ssc.configureBlocking(false); // 非阻塞模式
+ssc.configureBlocking(false); // 开启非阻塞模式
 // 2. 绑定监听端口
 ssc.bind(new InetSocketAddress(8080));
 // 3. 连接集合
@@ -1202,9 +1224,9 @@ SelectionKey key = channel.register(selector, 绑定事件);
 
 * channel 必须工作在非阻塞模式
 * FileChannel 没有非阻塞模式，因此不能配合 selector 一起使用
-* 绑定的事件类型可以有
+* <span  style="color:green">**绑定的事件类型可以有**</span>
   * connect - 客户端连接成功时触发
-  * accept - 服务器端成功接受连接时触发
+  * accept - 服务器端成功接受连接时触发，有连接请求时触发
   * read - 数据可读入时触发，有因为接收能力弱，数据暂不能读入的情况
   * write - 数据可写出时触发，有因为发送能力弱，数据暂不能写出的情况
 
@@ -1241,6 +1263,50 @@ int count = selector.selectNow();
 > * 调用 selector.close()
 > * selector 所在线程 interrupt
 
+<<<<<<< HEAD:网络编程/Netty01-nio.md
+=======
+#### 处理事件
+
+```java
+@Slf4j(topic = "c.Server2")
+public class Server2 {
+    public static void main(String[] args) throws IOException {
+        // 1. 创建 selector 管理多个 channel
+        Selector selector = Selector.open();
+        ByteBuffer buffer = ByteBuffer.allocate(16);
+
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        serverSocketChannel.configureBlocking(false);
+
+        // 2.建立 selector 和 channel 的联系（注册）
+        // SelectionKey 时将来事件发生后，通过它可以知道事件和哪个channel的事件。
+        SelectionKey ssKey = serverSocketChannel.register(selector, 0, null);
+        // 3.只关注 accept 事件
+        ssKey.interestOps(SelectionKey.OP_ACCEPT);
+
+        log.debug("register key {}", ssKey);
+
+        serverSocketChannel.bind(new InetSocketAddress(8080));
+
+        while (true) {
+            // 4. select 方法，没有事件发生，线程阻塞，有事件，线程才会恢复运行。事件未处理时，不会阻塞；事件发生后 要么处理，要么取消，不能置之不理。
+            int select = selector.select();
+            // 5. 处理事件 拿到所有的可用的事件
+            Set<SelectionKey> selectionKeys = selector.selectedKeys();
+            Iterator<SelectionKey> iterator = selectionKeys.iterator();
+            while (iterator.hasNext()) {
+                SelectionKey currentKey = iterator.next();
+//                ServerSocketChannel channel = (ServerSocketChannel) currentKey.channel();
+//                SocketChannel accept = channel.accept(); // 如果事件不处理，就一直有事件。accept 就是处理事件。
+//                log.debug("accept {}", accept);
+                currentKey.cancel();
+            }
+        }
+    }
+}
+```
+
+>>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
 ### 4.3 处理 accept 事件
 
 客户端代码为
@@ -1342,6 +1408,7 @@ public class ChannelDemo6 {
                         ServerSocketChannel c = (ServerSocketChannel) key.channel();
                         // 必须处理
                         SocketChannel sc = c.accept();
+                        // 注册读事件。
                         sc.configureBlocking(false);
                         sc.register(selector, SelectionKey.OP_READ);
                         log.debug("连接已建立: {}", sc);
@@ -1478,6 +1545,8 @@ s ->> b2: 第二次 read 存入 3333\r
 b2 ->> b2: 01234567890abcdef3333\r
 ```
 
+<img src="..\pics\net_coding\image-20210817145844382.png">
+
 服务器端
 
 ```java
@@ -1576,7 +1645,7 @@ System.in.read();
 
 #### ByteBuffer 大小分配
 
-* 每个 channel 都需要记录可能被切分的消息，因为 ByteBuffer 不能被多个 channel 共同使用，因此需要为每个 channel 维护一个独立的 ByteBuffer
+* 每个 channel 都需要记录可能被切分的消息，**因为 ByteBuffer 不能被多个 channel 共同使用**，因此需要为每个 channel 维护一个独立的 ByteBuffer
 * ByteBuffer 不能太大，比如一个 ByteBuffer 1Mb 的话，要支持百万连接就要 1Tb 内存，因此需要设计大小可变的 ByteBuffer
   * 一种思路是首先分配一个较小的 buffer，例如 4k，如果发现数据不够，再分配 8k 的 buffer，将 4k buffer 内容拷贝至 8k buffer，优点是消息连续容易处理，缺点是数据拷贝耗费性能，参考实现 [http://tutorials.jenkov.com/java-performance/resizable-array.html](http://tutorials.jenkov.com/java-performance/resizable-array.html)
   * 另一种思路是用多个数组组成 buffer，一个数组不够，把多出来的内容写入新的数组，与前面的区别是消息存储不连续解析复杂，优点是避免了拷贝引起的性能损耗
@@ -1625,7 +1694,7 @@ public class WriteServer {
                     // 4. 如果有剩余未读字节，才需要关注写事件
                     if (buffer.hasRemaining()) {
                         // read 1  write 4
-                        // 在原有关注事件的基础上，多关注 写事件
+                        // 在原有关注事件的基础上，多关注 写 事件
                         sckey.interestOps(sckey.interestOps() + SelectionKey.OP_WRITE);
                         // 把 buffer 作为附件加入 sckey
                         sckey.attach(buffer);
@@ -1636,8 +1705,8 @@ public class WriteServer {
                     int write = sc.write(buffer);
                     System.out.println("实际写入字节:" + write);
                     if (!buffer.hasRemaining()) { // 写完了
-                        key.interestOps(key.interestOps() - SelectionKey.OP_WRITE);
-                        key.attach(null);
+                        key.interestOps(key.interestOps() - SelectionKey.OP_WRITE); // 不需要关注可写事件。
+                        key.attach(null); // help gc
                     }
                 }
             }
@@ -1682,8 +1751,6 @@ public class WriteClient {
 只要向 channel 发送数据时，socket 缓冲可写，这个事件会频繁触发，因此应当只在 socket 缓冲区写不下时再关注可写事件，数据写完之后再取消关注
 
 ### 4.6 更进一步
-
-
 
 #### 💡 利用多线程优化
 
@@ -1898,44 +1965,55 @@ public class UdpClient {
 
 * stream 不会自动缓冲数据，channel 会利用系统提供的发送缓冲区、接收缓冲区（更为底层）
 * stream 仅支持阻塞 API，channel 同时支持阻塞、非阻塞 API，网络 channel 可配合 selector 实现多路复用
+<<<<<<< HEAD:网络编程/Netty01-nio.md
 * 二者均为全双工，即读写可以同时进行
+=======
+* **二者均为全双工，即读写可以同时进行**
+>>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
 
 ### 5.2 IO 模型
 
-同步阻塞、同步非阻塞、同步多路复用、异步阻塞（没有此情况）、异步非阻塞
+<span style="color:green">**同步阻塞、同步非阻塞、同步多路复用、异步阻塞（没有此情况，网上瞎说的）、异步非阻塞**</span>
 
 * 同步：线程自己去获取结果（一个线程）
 * 异步：线程自己不去获取结果，而是由其它线程送结果（至少两个线程）
 
+<<<<<<< HEAD:网络编程/Netty01-nio.md
 当调用一次 channel.read 或 stream.read 后，会切换至操作系统内核态来完成真正数据读取，而读取又分为两个阶段，分别为：
+=======
+当调用一次 channel.read 或 stream.read 后，会切换至操作系统内核态来完成真正数据读取，而**读取又分为两个阶段**，分别为：
+>>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
 
 * 等待数据阶段
 * 复制数据阶段
 
 ![](img/0033.png)
 
-* 阻塞 IO
+* <span style="color:green">**阻塞 IO**</span>：用户线程被阻塞了，用户线程在读取数据的时候，数据可能没准备好，需要等待。等内核空间处理好数据，可以读取后，用户线程才可以继续运行。在等待数据准备完毕的时候，用户线程什么事都不能做，只能干等着。
 
   ![](img/0039.png)
 
-* 非阻塞  IO
+* <span style="color:green">**同步非阻塞  IO**</span>：读数据时，调用一次 read 方法，这时候数据还没传输过来，会立刻返回，告诉用户线程，我读到了0（没读到数据），然后回继续调用 read 方法，继续看数据有没有好；用户线程并没有停下来，而是一直在问，数据有没有好。但是，某一次调用时，发现有数据了！这时候就不会立刻返回了，就会去完成第二个阶段**赋值数据**，赋值数据的时候，用户线程还是会被阻塞。等待数据赋值完毕，返回，用户线程可以继续运行。这里的非阻塞只是等待数据非阻塞的（这里不就是空转cpu吗，而且牵扯到多次系统空间和用户空间的切换，开销也大）。
 
   ![](img/0035.png)
 
-* 多路复用
+* <span style="color:green">**同步多路复用**</span>：关键在于 select，select 方法先阻塞住，看有没有事件，有事件发生了，内核就会通知 select，用户线程就可以根据 selectKey 拿到 channel，去调用相应的事件。read 期间需要赋值数据了，还是需要阻塞。两个阶段都是阻塞的，但是
 
   ![](img/0038.png)
 
-* 信号驱动
+* <span style="color:green">**信号驱动**</span>
 
-* 异步 IO
+* <span style="color:green">**异步 IO**</span>：read 是非阻塞的，不用等待 ”等待数据“和”复制数据“的阶段，只是通知 OS 我要读一个数据，什么时候数据准备好了就告诉我。
 
   ![](img/0037.png)
 
-* 阻塞 IO vs 多路复用
+* <span style="color:green">**阻塞 IO vs 多路复用**</span>
 
+  * 阻塞 IO，做一件事的时候，就不能做另一件事。比如，你在等待连接，那么就不可以进行建立连接。
+  * 多路复用，一个 select 可以检测多个 channel 的事件。 select 方法执行后，就在等待事件发生，只要事件发生了，就可以触发 select，让 select 继续向下运行。
+  
   ![](img/0034.png)
-
+  
   ![](img/0036.png)
 
 #### 🔖 参考
@@ -1987,9 +2065,9 @@ socket.getOutputStream().write(buf);
 
 ![](img/0025.png)
 
-大部分步骤与优化前相同，不再赘述。唯有一点：java 可以使用 DirectByteBuf 将堆外内存映射到 jvm 内存中来直接访问使用
+**大部分步骤与优化前相同**，不再赘述。唯有一点：java 可以使用 DirectByteBuf 将堆外内存映射到 jvm 内存中来直接访问使用
 
-* 这块内存不受 jvm 垃圾回收的影响，因此内存地址固定，有助于 IO 读写
+* 这块内存不受 jvm 垃圾回收的影响，因此**内存地址固定，有助于 IO 读写**
 * java 中的 DirectByteBuf 对象仅维护了此内存的虚引用，内存回收分成两步
   * DirectByteBuf 对象被垃圾回收，将虚引用加入引用队列
   * 通过专门线程访问引用队列，根据虚引用释放堆外内存
@@ -2016,11 +2094,17 @@ socket.getOutputStream().write(buf);
 2. 只会将一些 offset 和 length 信息拷入 **socket 缓冲区**，几乎无消耗
 3. 使用 DMA 将 **内核缓冲区**的数据写入网卡，不会使用 cpu
 
-整个过程仅只发生了一次用户态与内核态的切换，数据拷贝了 2 次。所谓的【零拷贝】，并不是真正无拷贝，而是在不会拷贝重复数据到 jvm 内存中，零拷贝的优点有
+整个过程仅只发生了一次用户态与内核态的切换，数据拷贝了 2 次。<span style="color:green">**所谓的【零拷贝】，并不是真正无拷贝，而是在不会拷贝重复数据到 jvm 内存中**</span>，零拷贝的优点有
 
 * 更少的用户态与内核态的切换
 * 不利用 cpu 计算，减少 cpu 缓存伪共享
+<<<<<<< HEAD:网络编程/Netty01-nio.md
 * 零拷贝适合小文件传输
+=======
+* 零拷贝适合小文件传输，不适合大文件的传输。
+  * 如果文件比较大，那需要把大量的数据读到缓冲区去，缓冲区是为了方便反复获取数据，如果文件比较大，要把文件发生到网卡，数据从头到尾只读取了一次，没发挥到缓存的效果，反而因为文件较大，把缓冲区内存都占满了，导致其他文件的读写受到影响。
+  * 适合读取频繁的小文件。
+>>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
 
 ### 5.3 AIO
 
@@ -2049,6 +2133,7 @@ public class AioDemo1 {
             ByteBuffer buffer = ByteBuffer.allocate(2);
             log.debug("begin...");
             s.read(buffer, 0, null, new CompletionHandler<Integer, ByteBuffer>() {
+                // 这是一个守护线程！
                 @Override
                 public void completed(Integer result, ByteBuffer attachment) {
                     log.debug("read completed...{}", result);
