@@ -6230,12 +6230,133 @@ SymbolicLink: false
 
 能通过对 **Path** 对象增加或者删除一部分来构造一个新的 **Path** 对象
 
-- `relativize()` 移除 Path 的根路径
-- `resolve()` 添加 Path 的尾路径 (不一定是 “可发现” 的名称)
+- `relativize()` 移除 Path 的根路径。大白话就是求两个路径的直接的相对路径
+- `resolve()` 添加 Path 的尾路径 (不一定是 “可发现” 的名称)。大白话就是拼接路径。
 
-看点文档，查点博客吧。
+```java
+public class AddAndSubtractPaths {
+    static Path base = Paths.get("..").toAbsolutePath().normalize();
 
-# P650
+    static void show(int id, Path result) {
+        if (result.isAbsolute()) {
+            // 构造此路径和给定路径之间的相对路径
+            // relativize 相对化。构造 result - base = 相对路径
+            System.out.println("(" + id + ") r " + base.relativize(result));
+        } else {
+            System.out.println("(" + id + ") " + result);
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println(base);
+        Path path = Paths.get("AddAndSubtractPaths.java").toAbsolutePath();
+        show(1, path);
+        // resolve 感觉就是路径拼接
+        Path strings = path.getParent()
+                .getParent()
+                .resolve("strings")
+                .resolve("..")
+                .resolve(path.getParent().getFileName());
+        // E:\Code\strings\..\SQL
+        System.out.println(strings);
+        // normalize  去除路径中多余的元素。就是把 .. 解释为返回上一级目录
+        System.out.println(strings.normalize());
+        show(2, strings);
+        System.out.println(path.resolveSibling("strings"));
+    }
+}
+```
+
+### 目录
+
+####  删除目录树
+
+删除目录树的方法实现依赖于 `Files.walkFileTreee(Path path，FileVisitor visitor)`
+
+其中操作的定义取决于 `FileVisitor` 的四个抽象方法
+
+- `preVisitDirectory`  在访问目录中条目之前的目录上运行
+- `visitFile` 运行目录中的每一个文件
+- `visitFileFailed` 调用无法访问的文件
+- `postVisitDirectory` 在访问目录中条目之后再目录上运行
+
+```java
+import java.io.IOError;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+
+public class RmDir {
+    public static void rmdir(Path dir) throws Exception {
+        Path path = Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+}
+```
+
+## 字符串
+
+### 正则表达式
+
+> 正则表达式实现模板引擎
+
+```java
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class Template {
+    private static Pattern templatePattern = Pattern.compile("\\{(\\w+)\\}");
+
+    public static String templateEngine(String template, Map<String, String> params) {
+        StringBuffer buffer = new StringBuffer();
+        Matcher matcher = templatePattern.matcher(template);
+        while (matcher.find()) {
+            String key = matcher.group(1);
+            Object value = params.get(key);
+            matcher.appendReplacement(buffer, value != null ?
+                    Matcher.quoteReplacement(value.toString()) : "");
+        }
+        matcher.appendTail(buffer);
+        return buffer.toString();
+    }
+
+    public static void templateDemo() {
+        String template = "Hi {name}, your code is {code}.";
+        Map<String, String> params = new HashMap();
+        params.put("name", "老马");
+        params.put("code", "6789");
+        System.out.println(templateEngine(template, params));
+    }
+
+    public static void main(String[] args) {
+        templateDemo();
+    }
+}
+```
+
+
+
+
+
+
+
+# P654
 
 ## 第十五章 IO流
 
@@ -7197,7 +7318,7 @@ public void fn1() throws UnknownHostException {
 - 端口：设备上应用程序的唯一标识
 - 端口号：用两个字节表示的整数。范围是0到65535.其中0到1023被用于一些知名的网络服务和应用。普通程序建议使用1024以上的端口号，防止端口被占用启动失败！
 
-### 17.4 协议（`UDP`）
+### 17.4 协议（UDP）
 
 > **协议：计算机网络中，连接和通信的规则称之为网络通信协议**
 
