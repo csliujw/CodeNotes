@@ -5414,27 +5414,78 @@ Java SE5 添加了
 
 ## 第十六章 异常
 
+### 概念
+
 Java 的基本理念是 “结构不佳的代码不能运行”。
 
-异常往往能降低错误处理代码的复杂度。如果不使用异常，那么就必须检查特定的 错误，并在程序中的许多地方去处理它。这样非常麻烦。
+异常往往能降低错误处理代码的复杂度。如果不使用异常，那么就必须检查特定的错误，并在程序中的许多地方去处理它。这样非常麻烦。
+
+### 基本异常
+
+> 异常参数
+
+我们用 new 在堆上创建异常对象。`throw new NullPointException("t= null")`  用 new 创建异常后，将异常对象的引用传给了 throw，throw 将异常抛了出去。
+
+> throw 与 return 的对比
+
+throw关键字可以与return关键字进行对比。return代表正常退出，throw代表异常退出；return的返回位置是确定的，就是上一级调用者，而throw后执行哪行代码则经常是不确定的，由异常处理机制动态确定。
 
 ### 异常继承体系
 
-`Throwable` 是所有异常类的父类
+> Java 异常继承体系图
 
-`Exception` 是 `Throwable` 的子类 
+<img src="../pics/JavaSE/throwable.jpg">
 
-### 异常捕获
+`Throwable` 是所有异常类的父类；`Exception` 是 `Throwable` 的子类；我们经常使用的一些异常就是继承自 `Exception`。
 
-#### try 语句
+> `Throwable` 的直接子类有两个：`Error` 和 `Exception`。
+
+- `Error`表示系统错误或资源耗尽，由Java系统自己使用，应用程序不应抛出和处理。
+    - 虚拟机错误（`VirtualMacheError`）
+    - 内存溢出错误（`OutOfMemory-Error`）
+    - 栈溢出错误（`StackOverflowError`）
+- Exception表示应用程序错误
+    - `IOException`（输入输出 I/O 异常）
+    - `RuntimeException`（运行时异常）
+    - `SQLException`（数据库 SQL 异常）
+
+`RuntimeException`比较特殊，`RuntimeException` 和其他异常也是运行时产生的，它表示的实际含义是未受检异常（unchecked exception），Exception 的其他子类和Exception 自身则是受检异常（checked exception）, Error 及其子类也是未受检异常。    
+
+<span style="color:green">**受检（checked）和未受检（unchecked）的区别在于Java如何处理这两种异常。对于受检异常，Java会强制要求程序员进行处理，否则会有编译错误，而对于未受检异常则没有这个要求。**</span>
+
+> `Throwable` 常见方法
 
 ```java
-try{
-    // Code that might generate exceptions
-}
+public Throwable();
+public Throwable(String message);
+public Throwable(String message, Throwable cause);
+public Throwable(Throwable cause);
+
+Throwable initCause(Throwable cause)
 ```
 
-#### 异常处理程序
+- message 表示异常消息
+- cause 触发该异常的其他异常（常用于追踪异常链）
+
+异常可以形成一个异常链，上层的异常由底层异常触发，cause表示底层异常。
+
+`Throwable` 的某些子类没有带cause参数的构造方法，可以通过 `fillInStackTrace`() 来设置，这个方法最多只能被调用一次。`fillInStackTrace` 会将异常栈信息保存下来。
+
+```java
+void printStackTrace(); // 打印异常栈信息到标准错误输出流
+void printStackTrace(PrintStream s); // 打印异常栈信息到指定的流
+void printStackTrace(PrintWriter s);  // 打印异常栈信息到指定的流
+String getMessage(); // 获取设置的异常 message
+Throwable getCause() // 获取异常的 cause
+```
+
+### 异常的基本处理
+
+捕获异常的语法有 try、catch、throw、finally、try-with-resources 和 throws
+
+#### try-catch 语句
+
+在使用 try-catch 语句时，要注意子类异常要写在父类异常前面。try-catch 捕获异常时，如果前面的 catch 捕获到了就不会执行后面的了。你把一个模糊不清的父类异常放在前面，语义清晰的子类异常放在后面，这样捕获到的异常内容也是模糊的。
 
 ```java
 try {
@@ -5450,6 +5501,329 @@ try {
 每个 catch 子句（异常处理程序）看起来就像是接收且仅接收一个特殊类型的参数的方法。
 */
 ```
+
+#### Java 7 的 try-catch
+
+写法更加便捷
+
+```java
+try{
+    
+}catch( ExceptionA | ExceptionB e){
+    e.printStackTrace();
+}
+```
+
+#### 重新抛出异常
+
+- 为什么要重新抛出呢？因为当前代码不能够完全处理该异常，需要调用者进一步处理。
+- 为什么要抛出一个新的异常呢？当然是因为当前异常不太合适。不合适可能是信息不够，需要补充一些新信息；还可能是过于细节，不便于调用者理解和使用，如果调用者对细节感兴趣，还可以继续通过 `getCause()` 获取到原始异常。
+
+在catch块内处理完后，可以重新抛出异常，异常可以是原来的，也可以是新建的。
+
+```java
+try{
+    // some code
+}catch( NullPointException e ){
+    // log 
+    throw new NewException("空指针异常",e);
+}catch( Exception e){
+    e.printStackTrace();
+    throw e;
+}
+```
+
+#### finally
+
+finally内的代码不管有无异常发生，都会执行。
+
+一般用于释放资源，如 socket连接、数据库连接、文件流等。
+
+请注意：无论异常是否被抛出，finally 子句总能被执行。这也为解决 Java 不允许我们回到异常抛出点这一问题，提供了一个思路。如果将 try 块放在循环里，就可以设置一种在程序执行前一定会遇到的异常状况。还可以加入一个 static 类型的计数器或者别的装置，使循环在结束以前能尝试一定的次数。这将使程序的健壮性更上一个台阶。
+
+> **finally 的语法细节**
+
+- 如果在try或者catch语句内有return语句，则return语句在finally语句执行结束后才执行，但finally并不能改变返回值
+
+这段代码最后得到的返回值是0。实际执行过程是：在执行到 `try` 内的 `return retVal`；语句前，会先将返回值 `retVal` 保存在一个临时变量中，然后才执行 `finally` 语句，最后`try` 再返回那个临时变量，`finally` 中对 `retVal` 的修改不会被返回。
+
+```java
+public static int test(){
+    int retVal = 0;
+    try{
+        return retVal;
+    }finally{
+        retVal = 2;
+    }
+}
+```
+
+<span style="color:green">**字节码验证猜想：**</span>走一遍字节码流程，发现返回的是0。return retVal 和 retVal 用的不是同一个局部变量表中的内容。
+
+```shell
+  public static int test();
+    descriptor: ()I
+    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=1, locals=3, args_size=0
+         0: iconst_0 # 将 int 类型 0 推至栈顶
+         1: istore_0 # 将栈顶 int 类型数值存入第 1 个本地变量
+         2: iload_0 # 将第 1 个 int 类型本地变量推送至栈顶
+         3: istore_1
+         4: iconst_2
+         5: istore_0
+         6: iload_1
+         7: ireturn
+         8: astore_2 # 将栈顶引用类型数值存入第 3 个本地变量
+         9: iconst_2
+        10: istore_0
+        11: aload_2
+        12: athrow
+```
+
+----
+
+如果在 finally 中也有 return 语句，try 和 catch 内的 return 会丢失，实际会返回 finally中的返回值。finally 中有 return 不仅会覆盖 try 和 catch 内的返回值，还会掩盖 try 和catch 内的异常，就像异常没有发生一样，比如：
+
+```java
+package base;
+
+public class Finally {
+    public static void main(String[] args) {
+        System.out.println(test());
+    }
+
+    public static int test() {
+        try {
+            int i = 1;
+        } catch (Exception e) {
+            return 0;
+        } finally {
+            return 100;
+        }
+    }
+}
+/*
+100
+*/
+```
+
+----
+
+如果finally中抛出了异常，则原异常也会被掩盖，看下面的代码：
+
+```java
+package base;
+
+public class Finally {
+    public static void main(String[] args) {
+        test2();
+        test3();
+    }
+
+    public static void test2() {
+        try {
+            int i = 1 / 0;
+        } finally {
+            // 除 0 异常会被吞掉
+            throw new RuntimeException("Hello World"); 
+        }
+    }
+
+    public static void test3() {
+        try {
+             int i = 1 / 0;
+            throw new RuntimeException();
+        } catch (Exception e) {
+            throw new RuntimeException();
+        } finally {
+            // try 和 catch 里面的异常会被吞掉
+            return;
+        }
+    }
+}
+/*
+Exception in thread "main" java.lang.RuntimeException: Hello World
+	at base.Finally.test2(Finally.java:24)
+	at base.Finally.main(Finally.java:6)
+*/
+```
+
+`finally` 中抛出了 `RuntimeException`，则原异常 `ArithmeticException` 就丢失了。所以，一般而言，为避免混淆，应该避免在 `finally` 中使用 `return` 语句或者抛出异常，如果调用的其他代码可能抛出异常，则应该捕获异常并进行处理。
+
+#### try-with-resources
+
+Java 7 开始提供的自动关闭资源的语法。这种语法仅针对实现了 `java.lang.AutoCloseable` 接口的对象
+
+```java
+public class AutoCloseableDemo {
+    public static void main(String[] args) {
+        try (AutoCloseable r = new FileInputStream("sf")) {
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+语句执行完 try 后会自动调用 close 方法。反编译的字节码如下：
+
+```java
+public class AutoCloseableDemo {
+    public AutoCloseableDemo() {
+    }
+
+    public static void main(String[] args) {
+        try {
+            AutoCloseable r = new FileInputStream("sf");
+            r.close();
+        } catch (Exception var2) {
+            var2.printStackTrace();
+        }
+
+    }
+}
+```
+
+----
+
+Java 5 中的 `Closeable` 已经被修改，修改之后的接口继承了 `AutoCloseable` 接口。所以实现了 `Closeable` 接口的对象，都支持了 `try-with-resources` 特性。
+
+---
+
+> 自定义 `AutoCloseable`
+
+```java
+public class Reporter implements AutoCloseable {
+    String name;
+
+    Reporter(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public void close() { // 子类复写父类的方法，可以不抛出原有异常。
+        System.out.println("Closing " + name);
+    }
+
+    public static void main(String[] args) {
+        try (Reporter r = new Reporter("Hello");) {
+
+        }
+    }
+}
+// Closing Hello
+```
+
+如果对象（比如 Reporter 对象）没有被正确的创建，那么也不会为 Reporter 对象调用 close 方法。
+
+#### throws
+
+throws 用于声明一个方法可能抛出的异常。
+
+未受检异常表示编程的逻辑错误，编程时应该检查以避免这些错误，比如空指针异常，如果真的出现了这些异常，程序退出也是正常的，程序员应该检查程序代码的bug而不是想办法处理这种异常。受检异常表示程序本身没问题，但由于I/O、网络、数据库等其他不可预测的错误导致的异常，调用者应该进行适当处理。
+
+Java中对受检异常和未受检异常的区分是没有太大意义的，可以统一使用未受检异常来代替。
+
+#### 如何使用异常
+
+- <span style="color:red">**真正出现异常的时候，应该抛出异常，而不是返回特殊值**</span>
+- <span style="color:red">**只有在我们知道如何处理的情况下才捕获异常**</span>
+
+```java
+static void checkBoundsBeginEnd(int begin, int end, int length) {
+    if (begin < 0 || begin > end || end > length) {
+        throw new StringIndexOutOfBoundsException(
+            "begin " + begin + ", end " + end + ", length " + length);
+    }
+}
+```
+
+对用户，如果用户输入不对，可以提示用户具体哪里输入不对，如果是编程错误，可以提示用户系统错误、建议联系客服，如果是第三方连接问题，可以提示用户稍后重试。
+
+如果自己知道怎么处理异常，就进行处理；如果可以通过程序自动解决，就自动解决；如果异常可以被自己解决，就不需要再向上报告。
+
+如果自己不能完全解决，就应该向上报告。如果自己有额外信息可以提供，有助于分析和解决问题，就应该提供，可以以原异常为cause重新抛出一个异常。
+
+```java
+try{
+    
+}catch(SomeException e){
+    throw new RuntimeException(e);
+}
+```
+
+#### 把被检查异常转为不检查异常
+
+当在一个普通方法里调用别的方法时发现：我们不知道该如何处理这个异常，但是又不能把它吞掉或打印一些无用的信息。我们可以使用异常链，将一个被检测的异常传递给 `RuntimeException` 的构造器，把它包装进 `RuntimeException` 里。这样可以让异常自己沿着调用栈向上冒泡，同时还可以用 `getCause()` 捕获并处理特定的异常。
+
+```java
+package base;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+class WarpCheckedException {
+    void throwRuntimeException(int type) {
+        try {
+            switch (type) {
+                case 0:
+                    throw new FileNotFoundException();
+                case 1:
+                    throw new IOException();
+                case 2:
+                    throw new RuntimeException("Where am I?");
+                default:
+                    return;
+            }
+        } catch (IOException | RuntimeException e) {
+            // 转为 未检查异常
+            throw new RuntimeException(e);
+        }
+    }
+}
+
+public class TurnOffChecking {
+    public static void main(String[] args) {
+        WarpCheckedException warp = new WarpCheckedException();
+        warp.throwRuntimeException(3);
+        for (int i = 0; i < 4; i++) {
+            try {
+                if (i < 3) {
+                    warp.throwRuntimeException(i);
+                } else {
+                    throw new SomeOtherException();
+                }
+            } catch (SomeOtherException e) {
+                e.printStackTrace();
+            } catch (RuntimeException et) {
+                try {
+                    throw et.getCause(); // 捕捉 RuntimeException 的原因。原因可能是 catch 中的任意一个或多个
+                } catch (FileNotFoundException e) {
+                    System.out.println("FileNotFound " + e);
+                } catch (IOException e) {
+                    System.out.println("IOException " + e);
+                } catch (Throwable e) {
+                    System.out.println("Throwable " + e);
+                }
+            }
+        }
+    }
+}
+
+class SomeOtherException extends Exception {
+}
+/*
+FileNotFound java.io.FileNotFoundException
+IOException java.io.IOException
+Throwable java.lang.RuntimeException: Where am I?
+base.SomeOtherException
+	at base.TurnOffChecking.main(TurnOffChecking.java:35)
+*/
+```
+
+
 
 #### 终止与恢复
 
@@ -5540,28 +5914,6 @@ tij.chapter15.MyException: This is MyException
 - `void printStackTrace(java.io.PrintWrite)` 允许选择要输出的流
 - `Throwable fillInStackTrace()` 在 `Throwable` 对象的内部记录栈帧的当前状态。在程序重新抛出错误或异常时很有用。
 
-#### 多重捕获
-
-```java
-try{
-    
-}catch(Except1 e){
-    
-}catch(Except2 e){
-    
-}
-```
-
-Java 7 的多重捕获机制。
-
-```java
-try{
-    
-}catch(Except1 | Except2 | Except3){
-    // do something
-}
-```
-
 #### 栈轨迹
 
 ```java
@@ -5622,7 +5974,7 @@ catch(Exception e){
 
 重新抛出异常会把异常抛给上一级环境中的异常处理程序，同一个 try 块的后续 catch 子句将被忽略。
 
-如果只是把当前异常对象重新抛出，那么 printStackTrace() 方法显示的将是原来异常抛出点的调用栈信息，而并非重新抛出点的信息。要想更新这个信息，可以调用 fillInStackTrace() 方法，这将返回一个 Throwable 对象，它是通过把当前调用栈信息填 入原来那个异常对象而建立的
+如果只是把当前异常对象重新抛出，那么 `printStackTrace()` 方法显示的将是原来异常抛出点的调用栈信息，而并非重新抛出点的信息。要想更新这个信息，可以调用 `fillInStackTrace()` 方法，这将返回一个 `Throwable` 对象，它是通过把当前调用栈信息填 入原来那个异常对象而建立的
 
 ```java
 try{
@@ -5656,9 +6008,9 @@ public class PreciseRethrow {
 
 #### 异常链（自定义类库要用）
 
-想要在捕获一个异常后抛出另一个异常，并且希望把原始异常的信息保存下 来，这被称为异常链。在 JDK1.4 以前，程序员必须自己编写代码来保存原始异常的信 息。现在所有 Throwable 的子类在构造器中都可以接受一个 cause（因由）对象作为参数。这个 cause 就用来表示原始异常，这样通过<span style="color:red">**把原始异常传递给新的异常，使得即使 在当前位置创建并抛出了新的异常，也能通过这个异常链追踪到异常最初发生的位置。**</span>
+想要在捕获一个异常后抛出另一个异常，并且希望把原始异常的信息保存下 来，这被称为异常链。在 `JDK1.4` 以前，程序员必须自己编写代码来保存原始异常的信 息。现在所有 `Throwable` 的子类在构造器中都可以接受一个 `cause`（因由）对象作为参数。这个 cause 就用来表示原始异常，这样通过<span style="color:red">**把原始异常传递给新的异常，使得即使 在当前位置创建并抛出了新的异常，也能通过这个异常链追踪到异常最初发生的位置。**</span>
 
-在 `Throwable` 的子类中，只有三种基本的异常类提供了带 cause 参数的构造器。它们是 Error（用于 Java 虚拟机报告系统错误）、Exception 以及 RuntimeException。如果要把其他类型的异常链接起来，应该使用 `initCause()` 方法而不是构造 器。
+在 `Throwable` 的子类中，只有三种基本的异常类提供了带 `cause` 参数的构造器。它们是 `Error`（用于 Java 虚拟机报告系统错误）、`Exception` 以及 `RuntimeException`。如果要把其他类型的异常链接起来，应该使用 `initCause()` 方法而不是构造 器。
 
 ```java
 DynamicFieldsException dfe = new DynamicFieldsException();
@@ -5666,108 +6018,224 @@ dfe.initCause(new NullPointerException());
 throw dfe;
 ```
 
-### Java 标准异常
+### 异常指南
 
-对异常来说，关键是理解概念以及如何使用！
+- 尽可能使用 try-with-resource
+- 知道如何处理的情况下才捕获异常
+- 解决问题并且重新调用产生异常的方法
+- 进行少许修补，然后绕过异常发生的地方继续执行
+- 用别的数据进行计算，以代替方法预计会返回的值
+- 把当前运行环境下能做的事情尽量做完，然后把相同的异常重抛到更高层
+- 把当前运行环境下能做的事情尽量做完，然后把不同的异常抛到更高层
+- 终止程序
+-  进行简化。(如果你的异常模式使问题变得太复杂，那用起来会非常痛苦也很烦
+    人
+- 让类库和程序更安全
 
-用异常的名称代表发生的问题，望文知意。异常并非全是在 java.lang 包里定义的；有些异常是用来支持其他像 util、net 和 io 这样的程序包，这些异常可以通过它们的完整名称或者从它们的父类中看出端倪。比如，所有的 输入/输出异常都是从 java.io.IOException 继承而来的。
+## 第十七章 文件
 
-<img src="../pics/JavaSE/throwable.webp">
+不包含传统的 I/O 方法。Java 的 I/O 都用 `NIO` 重写了。本部分内容涉及到的是 `java.nio.file` 下的类库。文件操作包含的两个基本组件如下：
 
-- error 是程序无法处理了。
-- Exception 包含了运行时异常(`RuntimeException`, 又叫非检查异常)和非运行时异常(又叫检查异常)
+- 文件或目录的路径
+- 文件本身
 
-### 使用 finally 清理
+### 文件和目录路径
 
-无论异常是否被抛出，finally 子句总能被执行。这也为解决 Java 不允许我们回到异常抛出点这一问题，提供了一个思路。如果将 try 块放在循环里，就 可以设置一种在程序执行前一定会遇到的异常状况。还可以加入一个 static 类型的计数器或者别的装置，使循环在结束以前能尝试一定的次数。这将使程序的健壮性更上一个台阶。
+一个 **Path** 对象表示一个文件或者目录的路径，是一个跨操作系统（OS）和文件系统的抽象，目的是在构造路径时不必关注底层操作系统，代码可以在不进行修改的情况下运行在不同的操作系统上。**java.nio.file.Paths** 类包含一个重载方法 **static get()**，该方法接受一系列 **String** 字符串或一个统一资源标识符 (URI) 作为参数，并且进行转换返回一个 **Path** 对象：
 
-#### finally 的作用
+> 基本用法
 
-finally 中的语句无论如何都会被执行，所以经常用来做一些清理的操作。如关闭网络，关闭 IO 流。
+很奇怪的一件事，我 `PathInfo.java` 所在的目录为 `D:\JavaSE\src\chapter17\PathInfo.java` 但是我代码得到的绝对路径是 `D:\JavaSE\PathInfo.java` 有点不解。但是用 `Files.readAllBytes( path )` 是可以正常读取到文件的。
 
-#### return 与 finally
-
-从何处返回无关紧要，finally 子句永远会执行。
+不用 IDEA 进行了一下测试，应该是开发工具编译的问题。
 
 ```java
-public class Finally {
-    public static void main(String[] args) {
-        try {
-            System.out.println("before return");
-            return;
-        } finally {
-            System.out.println("finally");
+public class PathInfo {
+    static void show(String id, Object p) {
+        System.out.println(id + ": " + p);
+    }
+
+
+    public void show(Path path) {
+        System.out.println(path);
+        System.out.println("是否存在===>" + Files.exists(path));
+        // 有没有被隐藏什么的。
+        System.out.println("常规文件===>" + Files.isRegularFile(path));
+        System.out.println("是否是目录===>" + Files.isDirectory(path));
+        System.out.println("是否是绝对路径===>" + path.isAbsolute());
+        System.out.println("文件名===>" + path.getFileName());
+        System.out.println("父级目录===>" + path.getParent());
+        System.out.println("根目录===>" + path.getRoot());
+    }
+
+    @Test
+    public void osName() {
+        System.out.println(System.getProperty("os.name"));
+    }
+
+    @Test
+    public void test1() throws IOException {
+        Path path = Paths.get("C:", "path", "to", "nowhere", "NoFile.txt");
+        show(path);
+    }
+
+    @Test
+    public void test2() {
+        // 相对路径
+        Path path = Paths.get("PathInfo.java");
+        path = path.toAbsolutePath();
+        show(path);
+    }
+
+    @Test
+    public void test3() throws IOException {
+        Path path = Paths.get("PathInfo.java");
+        path = path.toRealPath();
+        show(path);
+    }
+
+    @Test
+    public void test4() {
+        Path path = Paths.get("PathInfo.java");
+        URI uri = path.toUri();
+        System.out.println(uri); // 同一资源定位符
+        Path puri = Paths.get(uri);
+        System.out.println(Files.exists(puri));
+        File file = path.toAbsolutePath().toFile(); //表示目录或者文件本身
+    }
+
+}
+```
+
+### 选取路径部分片段
+
+**Path** 对象可以非常容易地生成路径的某一部分：
+
+- `getNameCount()` 获取路径片段的数目
+- `getName(index)` 获取对应所以的路径name
+- <span style="color:green">**即使路径以 .java 结尾，使用  endsWith() 方法也会返回 false。这是因为使用 endsWith() 比较的是整个路径部分，而不会包含文件路径的后缀。**</span>
+
+```java
+
+import org.junit.Test;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+public class PathsOfPaths {
+
+    @Test
+    public void test1() {
+        Path path = Paths.get("PathsOfPaths.java").toAbsolutePath();
+        // Code/Java/JavaSE/PathsOfPaths.java
+        for (int i = 0; i < path.getNameCount(); i++) {
+            // 会输出 Code  Java JavaSE PathsOfPaths.java
+            System.out.println(path.getName(i));
+        }
+        System.out.println("=================================");
+        System.out.println("ends with '.java' " + path.endsWith(".java")); // false
+        /**
+         * Code
+         * Java
+         * JavaSE
+         * PathsOfPaths.java
+         * =================================
+         * ends with '.java' false
+         */
+    }
+
+    @Test
+    public void test2() {
+        Path path = Paths.get("PathsOfPaths.java").toAbsolutePath();
+        // Path 内部实现了迭代器，迭代器迭代的是 路径的name
+        for (Path tmp : path) {
+            System.out.print(tmp + ": ");
+            System.out.print(path.startsWith(tmp) + " : ");
+            System.out.println(path.endsWith(tmp));
+        }
+        System.out.println("Starts with " + path.getRoot() + " " + path.startsWith(path.getRoot()));
+        /**
+         * Code: false : false
+         * Java: false : false
+         * JavaSE: false : false
+         * PathsOfPaths.java: false : true
+         * Starts with D:\ true
+         */
+    }
+}
+```
+
+### 路径分析
+
+**Files** 工具类包含一系列完整的方法用于获得 **Path** 相关的信息。
+
+```java
+public class PathAnalysis {
+    static void say(String id, Object result) {
+        System.out.print(id + ": ");
+        System.out.println(result);
+    }
+
+    public static void main(String[] args) throws IOException {
+        System.out.println(System.getProperty("os.name"));
+        Path p = Paths.get("D:", "content.txt").toAbsolutePath();
+        say("Exists", Files.exists(p));
+        say("Directory", Files.isDirectory(p));
+        say("Executable", Files.isExecutable(p));
+        say("Readable", Files.isReadable(p));
+        say("RegularFile", Files.isRegularFile(p));
+        say("Writable", Files.isWritable(p));
+        say("notExists", Files.notExists(p));
+        say("Hidden", Files.isHidden(p));
+        say("size", Files.size(p));
+        say("FileStore", Files.getFileStore(p));
+        say("LastModified: ", Files.getLastModifiedTime(p));
+        say("Owner", Files.getOwner(p));
+        say("ContentType", Files.probeContentType(p));
+        say("SymbolicLink", Files.isSymbolicLink(p));
+        if (Files.isSymbolicLink(p)) {
+            say("SymbolicLink", Files.readSymbolicLink(p));
+        }
+        // 在调用最后一个测试方法 getPosixFilePermissions() 之前我们需要确认一下当
+        //前文件系统是否支持 Posix 接口，否则会抛出运行时异常。
+        if (FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            say("PosixFilePermissions", Files.getPosixFilePermissions(p));
         }
     }
 }
 ```
 
-#### 异常丢失
+output
 
-异常作为程序出错的标志，决不应该被忽 略，但它还是有可能被轻易地忽略。用某些特殊的方式使用 finally 子句，就会发生异常忽略的情况：
-
-```java
-package tij.chapter15;
-
-class VeryImportantException extends Exception {
-    @Override
-    public String toString() {
-        return "A very important exception!";
-    }
-}
-
-class HoHumException extends Exception {
-    @Override
-    public String toString() {
-        return "A trivial exception";
-    }
-}
-
-public class LostMessage {
-    void f() throws VeryImportantException {
-        throw new VeryImportantException();
-    }
-
-    void dispose() throws HoHumException {
-        throw new HoHumException();
-    }
-
-    public static void main(String[] args) {
-        try {
-            LostMessage lm = new LostMessage();
-            try {
-                lm.f();
-            } finally {
-                lm.dispose();
-            }
-        } catch (VeryImportantException | HoHumException e) {
-            System.out.println(e);
-        }
-    }
-}
-/*
-A trivial exception
-*/
+```shell
+Windows 10
+Exists: true
+Directory: false
+Executable: true
+Readable: true
+RegularFile: true
+Writable: true
+notExists: false
+Hidden: false
+size: 16
+FileStore: 软件 (D:)
+LastModified: : 2021-09-20T11:48:10.078413Z
+Owner: DESKTOP-VE0BHE6\liujiawei (User)
+ContentType: text/plain
+SymbolicLink: false
 ```
 
-VeryImportantException 不见了，它被 finally 子句里的 HoHumException 所取代。
 
-```java
-public class ExceptionSilencer {
-    public static void main(String[] args) {
-        try {
-            throw new RuntimeException();
-        } finally {
-            return;
-        }
-    }
-}
-// 这样也会丢失异常
-```
+### Paths 的增减修改
 
-运行这个程序，即使方法里抛出了异常，它也不会产生任何输出。
+能通过对 **Path** 对象增加或者删除一部分来构造一个新的 **Path** 对象
 
-# P555异常限制
+- `relativize()` 移除 Path 的根路径
+- `resolve()` 添加 Path 的尾路径 (不一定是 “可发现” 的名称)
+
+看点文档，查点博客吧。
+
+# P650
 
 ## 第十五章 IO流
 
