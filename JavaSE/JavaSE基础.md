@@ -6308,6 +6308,144 @@ public class RmDir {
 }
 ```
 
+### 文件系统
+
+查找文件系统相关的其他信息。也就是一些 `API` 的使用，用到在查。
+
+```java
+public class FileSystemDemo {
+    static void show(String id, Object o) {
+        System.out.println(id + ": " + o);
+    }
+
+    public static void main(String[] args) {
+        FileSystem fsys = FileSystems.getDefault();
+        for (FileStore fs : fsys.getFileStores()) {
+            show("File Store", fs);
+        }
+        System.out.println("===============================");
+        for (Path rd : fsys.getRootDirectories()) {
+            show("Root Directory", rd);
+        }
+        System.out.println("===============================");
+        show("Separator", fsys.getSeparator());
+        System.out.println("===============================");
+        // 返回此文件系统的UserPrincipalLookupService(可选操作)。由此产生的查找服务可用于查找用户或组名。
+        show("UserPrincipalLookupService", fsys.getUserPrincipalLookupService());
+        System.out.println("===============================");
+        show("isOpen", fsys.isOpen());
+        show("isReadOnly", fsys.isReadOnly());
+        show("FileSystemProvider", fsys.provider());
+        Set<String> strings = fsys.supportedFileAttributeViews();
+        strings.forEach(System.out::print);
+    }
+}
+```
+
+### 路径监听
+
+监听目录的变动。下面的代码为监听目录是否发生了删除事件。
+
+```java
+public class PathWatcher {
+    static Path test = Paths.get("D:", "Delete");
+
+    // 删除后缀为 txt 的文本
+    static void delTxtFiles() {
+        try {
+            Files.walk(test)
+                    .filter(f -> f.toString().endsWith(".txt"))
+                    .forEach(f -> {
+                        try {
+//                            System.out.println("deleting " + f);
+                            Files.delete(f);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        WatchService watcher = FileSystems.getDefault().newWatchService();
+        // 注册监听删除事件
+        // 只会监视给定的目录，而不是下面的所有内容。
+        test.register(watcher, StandardWatchEventKinds.ENTRY_DELETE);
+        Executors.newSingleThreadScheduledExecutor().schedule(PathWatcher::delTxtFiles, 250, TimeUnit.MILLISECONDS);
+        WatchKey take = null;
+        while ((take = watcher.take()) != null) {
+            for (WatchEvent evt : take.pollEvents()) {
+                System.out.println("evt.context() " + evt.context() + "\n evt.count():" + evt.count() + "\n evt.kind() " + evt.kind());
+            }
+        }
+    }
+}
+```
+
+上面的代码只会监听给定的目录，而不是下面的所有内容。如果需要监听整个树目录，必须在每个子目录上放置一个 `Watchservice`
+
+```java
+package chapter17;
+
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.concurrent.Executors;
+
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+
+public class TreeWatcher {
+    public static void main(String[] args) throws IOException {
+        Files.walk(Paths.get("D:", "Delete"))
+                .filter(Files::isDirectory)
+                .forEach(TreeWatcher::walkDir); // 为每个文件注册删除监听事件
+        PathWatcher.delTxtFiles();
+    }
+
+    static void walkDir(Path dir) {
+        try {
+            WatchService watcher = FileSystems.getDefault().newWatchService();
+            dir.register(watcher, ENTRY_DELETE);
+            Executors.newSingleThreadScheduledExecutor().submit(() -> {
+                try {
+                    WatchKey key = watcher.take();
+                    for (WatchEvent evt : key.pollEvents()) {
+                        System.out.println("evt.context() "
+                                + evt.context()
+                                + "\n evt.count():"
+                                + evt.count()
+                                + "\n evt.kind() "
+                                + evt.kind());
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return;
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+/*
+evt.context() 1.txt
+ evt.count():1
+ evt.kind() ENTRY_DELETE
+evt.context() 2.txt
+ evt.count():1
+ evt.kind() ENTRY_DELETE
+*/
+```
+
+### 文件查找
+
+
+
+### 文件读写
+
+
+
 ## 字符串
 
 ### 正则表达式
