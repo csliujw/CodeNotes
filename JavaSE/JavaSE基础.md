@@ -6677,21 +6677,543 @@ public class Redirecting {
 
 在 Java 内部直接执行操作系统的程序。运行程序并将输出结果发送到控制台。
 
-# 百度查。这里写的不清不楚。
+```java
+
+
+import java.io.BufferedReader;
+import java.io.Closeable;
+import java.io.File;
+import java.io.InputStreamReader;
+
+public class Main {
+
+    public static void main(String[] args) throws Exception {
+        String result = execCmd("java -version", null);
+        System.out.println(result);
+    }
+
+    /**
+     * 执行系统命令, 返回执行结果
+     *
+     * @param cmd 需要执行的命令
+     * @param dir 执行命令的子进程的工作目录, null 表示和当前主进程工作目录相同
+     */
+    public static String execCmd(String cmd, File dir) throws Exception {
+        StringBuilder result = new StringBuilder();
+
+        Process process = null;
+        BufferedReader bufrIn = null;
+        BufferedReader bufrError = null;
+
+        try {
+            // 执行命令, 返回一个子进程对象（命令在子进程中执行）
+            process = Runtime.getRuntime().exec(cmd, null, dir);
+
+            // 方法阻塞, 等待命令执行完成（成功会返回0）
+            process.waitFor();
+
+            // 获取命令执行结果, 有两个结果: 正常的输出 和 错误的输出（PS: 子进程的输出就是主进程的输入）
+            bufrIn = new BufferedReader(new InputStreamReader(process.getInputStream(), "UTF-8"));
+            bufrError = new BufferedReader(new InputStreamReader(process.getErrorStream(), "UTF-8"));
+
+            // 读取输出
+            String line = null;
+            while ((line = bufrIn.readLine()) != null) {
+                result.append(line).append('\n');
+            }
+            while ((line = bufrError.readLine()) != null) {
+                result.append(line).append('\n');
+            }
+
+        } finally {
+            closeStream(bufrIn);
+            closeStream(bufrError);
+
+            // 销毁子进程
+            if (process != null) {
+                process.destroy();
+            }
+        }
+
+        // 返回执行结果
+        return result.toString();
+    }
+
+    private static void closeStream(Closeable stream) {
+        if (stream != null) {
+            try {
+                stream.close();
+            } catch (Exception e) {
+                // nothing
+            }
+        }
+    }
+}
+```
 
 ### NIO
 
- **NIO**（同步非阻塞）。原有的 IO 流也被 NIO 重写了，即使我们不显式地使用 **NIO** 方式来编写代码，也能带来性能和速度的提高（文件读写，网络读写）。
+ `NIO`（同步非阻塞）。原有的 IO 流也被 `NIO` 重写了，即使我们不显式地使用 `NIO` 方式来编写代码，也能带来性能和速度的提高（文件读写，网络读写）。
 
-#### NIO 三大核心
+在遇到性能瓶颈（例如内存映射文件）或创建自己的 I/O 库时，我们需要去理解 `NIO`。
 
-- Channel(通道)，
-- Buffer(缓冲区),
-- Selector（多路复用器）
+#### `NIO` 三大核心
+
+- Channel(通道)，运输数据的载体。
+- Buffer(缓冲区)，存储数据的地方。
+- Selector（多路复用器），用于检查多个Channel的状态变更情况。
+
+#### ByteBuffer
+
+`ByteBuffer`（字节缓冲区，保存原始字节的缓冲区）直接与 Channel （通道）交互。通过初始化一个存储空间，再使用一些方法向里面**填充\获取**字节或原始数据类型。我们无法在里面直接存放对象和 String 类似的数据。也正是它只能**填充\获取**字节和原始数据类型，使得它与大多数操作系统的映射更加高效。
+
+老 I/O 中的三个类分别被更新成了 `FileChannel`（文件通道）
+
+- `FileInputStream`
+- `FileOutputStream`
+- `RandomAccessFile`
+
+**Reader** 和 **Writer** 字符模式的类是不产生通道的。但 `java.nio.channels.Channels` 类具有从通道中生成 **Reader** 和 **Writer** 的实用方法。
+
+>练习
+
+- `ByteBuffer.wrap("Some text ".getBytes())`，将一个字节数组包装为 `ByteBuffer` 对象（使用的 Heap 内存）。
+    - Heap 内存分配效率高，但是读写效率低
+    - 直接内存 内存分配效率低，但是读写效率高
+- `FileChannel`
+    - 操作 **ByteBuffer** 来用于读写
+        - 直接调用 put() 方法将一个或多个字节放入 **ByteBuffer**
+        - 或调用 wrap() 方法包装现有字节数组到 **ByteBuffer**。执行此操作时，不会复制底层数组，而是将其用作生成的 **ByteBuffer** 存储。这样产生的 **ByteBuffer** 是数组 “支持” 的。
+    - 并独占式访问和锁定文件区域
+- `RandomAccessFile`
+    - 可指定模式，只读、只写、或可读可写。
+    - 对于只读访问，必须使用静态 allocate() 方法显式地分配 `ByteBuffer`。
+    - `NIO` 的目标是快速移动大量数据，因此 `ByteBuffer` 的大小应该很重要，需要方法测试以找到最佳的大小。
+    - `allocateDirect()` 可以生成与操作系统具备更高耦合度的“直接”缓冲区，速度可能更快，但分配内存的开销大。
+
+```java
+package stander_io;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+
+public class GetChannel {
+    private static String name = "data.txt";
+    private static final int B_SIZE = 1024;
+
+    public static void writer() {
+        try (FileChannel fc = new FileOutputStream(name).getChannel()) {
+            fc.write(ByteBuffer.wrap("Some text".getBytes())); // ByteBuffer.wrap 包装现有字节数组到 ByteBuffer
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void append() {
+        try (FileChannel fc = new RandomAccessFile(name, "rw").getChannel()) {
+            // 移动到文件末尾
+            fc.position(fc.size());
+            fc.write(ByteBuffer.wrap("Some more".getBytes()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void read() {
+        try (FileChannel fc = new FileInputStream(name).getChannel()) {
+            ByteBuffer allocate = ByteBuffer.allocate(B_SIZE);
+            fc.read(allocate); // 读取字节到 allocate
+            allocate.flip(); // 准备写 {切换到写模式}
+            while (allocate.hasRemaining()) {
+                System.out.write(allocate.get());
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.flush();
+    }
+
+    public static void main(String[] args) {
+        writer();
+        append();
+        read();
+    }
+}
+/*
+Some textSome more
+*/
+```
+
+> Channel 之间复制数据
+
+- 第一个 **FileChannel** 用于读取；
+- 第二个 **FileChannel** 用于写入。
+
+```- java
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+/*
+javac ChannelCopy.java
+java ChannelCopy ChannelCopy.java test.txt    args 会接收到参数 ChannelCopy.java 和 test.txt
+*/
+public class ChannelCopy {
+    private static final int B_SIZE = 1024;
+
+    public static void main(String[] args) {
+        if (args.length != 2) {
+            System.out.println(
+                    "arguments: sourcefile destfile");
+            System.exit(1);
+        }
+        try (
+                FileChannel in = new FileInputStream(
+                        args[0]).getChannel();
+                FileChannel out = new FileOutputStream(
+                        args[1]).getChannel()
+        ) {
+            ByteBuffer buffer = ByteBuffer.allocate(B_SIZE);
+            while (in.read(buffer) != -1) {
+                buffer.flip(); // 准备写入
+                out.write(buffer);
+                buffer.clear(); // 准备读取
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+- `transferTo()` 和 `transferFrom()` 简化了通道之间复制数据的操作，允许直接连接 A 通道到 B 通道
+
+```java
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+
+public class TransferTo {
+    public static void main(String[] args) {
+        if (args.length != 2) {
+            System.out.println(
+                    "arguments: sourcefile destfile");
+            System.exit(1);
+        }
+        try (
+                FileChannel in = new FileInputStream(
+                        args[0]).getChannel();
+                FileChannel out = new FileOutputStream(
+                        args[1]).getChannel()
+        ) {
+            // 从 in 到 out
+            in.transferTo(0, in.size(), out);
+            // Or:
+            // out.transferFrom(in, 0, in.size());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+#### 内存映射文件
+
+内存映射文件能让你创建和修改那些因为太大而无法放入内存的文件。有了内存映射文件，我们可以认为文件已经全部读进了内存，然后把它当成一个非常大的数组来访问。这种解决办法能大大简化修改文件的代码： 
+
+- `tdat.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, length)`
+
+```java
+
+import java.io.RandomAccessFile;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+
+public class LargeMappedFiles {
+    static int length = 0x8000000; // 128 MB
+
+    public static void
+    main(String[] args) throws Exception {
+        try (RandomAccessFile tdat = new RandomAccessFile("test.dat", "rw")) {
+            MappedByteBuffer out = tdat.getChannel()
+                    .map(FileChannel.MapMode.READ_WRITE, 0, length);
+            long start = System.currentTimeMillis();
+            for (int i = 0; i < length; i++) {
+                // 创建长度为 128MB 的文件
+                out.put((byte) 'x');
+            }
+            long end = System.currentTimeMillis();
+            System.out.println(end - start);
+            start = System.currentTimeMillis();
+            System.out.println("Finished writing");
+            for (int i = length / 2; i < length / 2 + 6; i++) {
+                System.out.print((char) out.get(i));
+            }
+            end = System.currentTimeMillis();
+            System.out.println(end - start);
+        }
+    }
+}
+```
+
+#### 性能
+
+虽然旧的 I/O 流的性能通过使用 **NIO** 实现得到了改进，但是映射文件访问往往要快得多。
+
+```java
+package stander_io;
+
+import java.io.*;
+import java.nio.IntBuffer;
+import java.nio.channels.FileChannel;
+import java.util.Arrays;
+
+public class MappedIO {
+    private static int numOfInts = 4_000_000;
+    private static int numOfUbuffInts = 100_000;
+
+    private abstract static class Tester {
+        private String name;
+
+        Tester(String name) {
+            this.name = name;
+        }
+
+        public void runTest() {
+            System.out.print(name + ": ");
+            long start = System.nanoTime();
+            test();
+            double duration = System.nanoTime() - start;
+            System.out.format("%.3f%n", duration / 1.0e9);
+        }
+
+        public abstract void test();
+
+        private static Tester[] tests = {
+                new Tester("Stream Write") {
+                    @Override
+                    public void test() {
+                        try (
+                                DataOutputStream dos =
+                                        new DataOutputStream(
+                                                new BufferedOutputStream(
+                                                        new FileOutputStream(
+                                                                new File("temp.tmp"))))
+                        ) {
+                            for (int i = 0; i < numOfInts; i++)
+                                dos.writeInt(i);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                },
+                new Tester("Mapped Write") {
+                    @Override
+                    public void test() {
+                        try (
+                                FileChannel fc =
+                                        new RandomAccessFile("temp.tmp", "rw").getChannel()
+                        ) {
+                            IntBuffer ib =
+                                    fc.map(FileChannel.MapMode.READ_WRITE, 0, fc.size()).asIntBuffer();
+                            for (int i = 0; i < numOfInts; i++)
+                                ib.put(i);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                },
+                new Tester("Stream Read") {
+                    @Override
+                    public void test() {
+                        try (
+                                DataInputStream dis =
+                                        new DataInputStream(
+                                                new BufferedInputStream(
+                                                        new FileInputStream("temp.tmp")))
+                        ) {
+                            for (int i = 0; i < numOfInts; i++)
+                                dis.readInt();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                },
+                new Tester("Mapped Read") {
+                    @Override
+                    public void test() {
+                        try (
+                                FileChannel fc = new FileInputStream(
+                                        new File("temp.tmp")).getChannel()
+                        ) {
+                            IntBuffer ib =
+                                    fc.map(FileChannel.MapMode.READ_ONLY, 0, fc.size()).asIntBuffer();
+                            while (ib.hasRemaining())
+                                ib.get();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                },
+                new Tester("Stream Read/Write") {
+                    @Override
+                    public void test() {
+                        try (
+                                RandomAccessFile raf =
+                                        new RandomAccessFile(
+                                                new File("temp.tmp"), "rw")
+                        ) {
+                            raf.writeInt(1);
+                            for (int i = 0; i < numOfUbuffInts; i++) {
+                                raf.seek(raf.length() - 4);
+                                raf.writeInt(raf.readInt());
+                            }
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                },
+                new Tester("Mapped Read/Write") {
+                    @Override
+                    public void test() {
+                        try (
+                                FileChannel fc = new RandomAccessFile(
+                                        new File("temp.tmp"), "rw").getChannel()
+                        ) {
+                            IntBuffer ib =
+                                    fc.map(FileChannel.MapMode.READ_WRITE, 0, fc.size()).asIntBuffer();
+                            ib.put(0);
+                            for (int i = 1; i < numOfUbuffInts; i++)
+                                ib.put(ib.get(i - 1));
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+        };
+
+        public static void main(String[] args) {
+            Arrays.stream(tests).forEach(Tester::runTest);
+        }
+    }
+}
+/*
+Stream Write: 0.219
+Mapped Write: 0.057
+Stream Read: 0.059
+Mapped Read: 0.007
+Stream Read/Write: 2.614
+Mapped Read/Write: 0.004
+*/
+```
+
+#### 文件锁定
+
+`JDK 1.4` 引入了文件加锁机制，它允许我们同步访问某个作为共享资源的文件。争用同一文件的两个线程可能位于不同的 `JVM` 中；或者一个可能是 `Java` 线程，另一个可能是操作系统中的本机线程。所以 Java 的文件锁设置的是对其他操作系统进程可见（ `Java` 文件锁定直接映射到本机操作系统锁定工具。）
+
+- `tryLock()` 是非阻塞的。它试图获取锁，若不能获取则从方法调用返回。
+- `lock()` 会阻塞，直到获得锁，或者调用 `lock()` 的线程中断，或者调用 `lock()` 方法的通道关闭。
+- `tryLock(long position, long size, boolean shared)`
+- `lock(long position, long size, boolean shared)`
+- 锁定文件的一部分，锁住（position~position+size） 区域。第三个参数指定是否共享此锁。
+- 零参数锁定方法适应文件大小的变化，有参数的无法适应，始终是锁住（position~position+size） 区域
+
+```java
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileLock;
+import java.util.concurrent.TimeUnit;
+
+public class FileLocking {
+    public static void main(String[] args) {
+        try (
+                FileOutputStream fos = new FileOutputStream("file.txt");
+                FileLock fl = fos.getChannel().tryLock()
+        ) {
+            if (fl != null) {
+                System.out.println("Locked File");
+                TimeUnit.MILLISECONDS.sleep(100);
+                fl.release();
+                System.out.println("Released Lock");
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+> 映射文件的部分锁定
+
+```java
+package stander_io;
+
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+
+public class LockingMappedFiles {
+    static final int LENGTH = 0x8FFFFFF; // 128 MB
+    static FileChannel fc;
+
+    public static void main(String[] args) throws Exception {
+        fc = new RandomAccessFile("test.dat", "rw").getChannel();
+        MappedByteBuffer out = fc.map(FileChannel.MapMode.READ_WRITE, 0, LENGTH);
+        for (int i = 0; i < LENGTH; i++)
+            out.put((byte) 'x');
+        new LockAndModify(out, 0, 0 + LENGTH / 3);
+        new LockAndModify(out, LENGTH / 2, LENGTH / 2 + LENGTH / 4);
+    }
+
+    private static class LockAndModify extends Thread {
+        private ByteBuffer buff;
+        private int start, end;
+
+        LockAndModify(ByteBuffer mbb, int start, int end) {
+            this.start = start;
+            this.end = end;
+            mbb.limit(end);
+            mbb.position(start);
+            buff = mbb.slice();
+            start();
+        }
+
+        @Override
+        public void run() {
+            try {
+                // Exclusive lock with no overlap:
+                // 文件通道上获取锁
+                FileLock fl = fc.lock(start, end, false);
+                System.out.println(
+                        "Locked: " + start + " to " + end);
+                // Perform modification:
+                while (buff.position() < buff.limit() - 1)
+                    buff.put((byte) (buff.get() + 1));
+                fl.release();
+                System.out.println(
+                        "Released: " + start + " to " + end);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+}
+```
+
+**LockAndModify** 线程类设置缓冲区并创建要修改的 slice()，在 run() 中，锁在文件通道上获取（<span style="color:red">不能在缓冲区上获取锁—只能在通道上获取锁</span>）。lock() 的调用非常类似于获取对象上的线程锁 —— 现在有了一个 “临界区”，可以对文件的这部分进行独占访问。当 JVM 退出或关闭获取锁的通道时，锁会自动释放，但是你也可以显式地调用**FileLock** 对象上的 release()
 
 
 
-## 字符串
+## `字符串`
 
 ### 正则表达式
 
