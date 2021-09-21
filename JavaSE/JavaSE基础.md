@@ -6557,9 +6557,137 @@ public class StreamInAndOut {
 }
 ```
 
+### 标准 IO
+
+我们可以把标准 IO 流控制台读入数据该为从文本读入数据；输出到控制台改为输出到文本文档。
+
+> 为什么需要标准 IO 流?
+
+程序的所有输入都可以来自于标准输入，其所有输出都可以流向标准输出，并且其所有错误信息均可以发送到标准错误。标准 I/O 的意义在于程序之间可以很容易地连接起来，一个程序的标准输出可以作为另一个程序的标准输入。这是一个非常强大的工具。
+
+#### 从标准输入流中读取
+
+- <span style="color:green">**`System.out` 已经预先包装成了 `PrintStream` 对象。**</span>
+- <span style="color:green">**标准错误流 `System.err` 也预先包装为 `PrintStream` 对象**</span>
+- <span style="color:green">**但是标准输入流 `System.in` 是原生的没有经过包装的 `InputStream`。**</span>
+
+> 一次一行读取输入
+
+```java
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+public class StanderIO {
+    public static void main(String[] args) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String str = null;
+        while (!"".equals(str = reader.readLine())) {
+            System.out.println(str);
+        }
+    }
+}
+```
+
+> 使用 `BufferReader` 读取控制台数据（ACM 模式），比 Scanner 快很多
+
+```java
+public class StanderIO {
+    /**
+     * 控制台输入
+     * 2 3    要输入 2行3列 的数据
+     * 1 2 5   输入的数据示例
+     * 5 6 8
+     */
+    public static void main(String[] args) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        String dataInfo = reader.readLine();
+        String[] info = dataInfo.split(" ");
+        int row = Integer.parseInt(info[0]);
+        int col = Integer.parseInt(info[1]);
+        ArrayList<Integer> list = new ArrayList<>();
+        for (int i = 0; i < row; i++) {
+            String[] tmp = reader.readLine().split(" ");
+            for (int j = 0; j < col; j++) {
+                list.add(tmp[j].charAt(0) - '0');
+            }
+        }
+        list.forEach(System.out::println);
+    }
+}
+```
+
+#### 将 System.out 转为 PrintWriter
+
+`System.out` 是一个 `PrintStream`，而 `PrintStream` 是一个 `OutputStream`。`PrintWriter` 有一个把 `OutputStream` 作为参数的构造器。因此，我们可以使用这个构造器把 `System.out` 转换成 `PrintWriter` 。
+
+```java
+import java.io.PrintWriter;
+
+public class ChangeSystemOut {
+    public static void main(String[] args) {
+        PrintWriter out = new PrintWriter(System.out, true);
+        out.println("Hello World Java");
+    }
+}
+```
+
+#### 重定向标准 I/O
+
+可把输出内容重定向到文件中供后续查看。
+
+- `setIn (InputStream）`
+- `setOut (PrintStream)`
+- `setErr (PrintStream)`
+
+```java
+new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor(); // 清除 cmd 中的数据
+```
+
+I/O 重 定 向 操 作 的 是 字 节 流 而 不 是 字 符 流， 因 此 使 用 `InputStream`  `OutputStream`，而不是 Reader 和 Writer。
+
+```java
+public class Redirecting {
+    public static void main(String[] args) {
+        PrintStream console = System.out;
+        try (
+                BufferedInputStream in = new BufferedInputStream(
+                        new FileInputStream("D:\\Code\\Java\\JavaSE\\src\\stander_io\\Redirecting.java"));
+                PrintStream out = new PrintStream(
+                        new BufferedOutputStream(
+                                new FileOutputStream("Redirecting.txt")))
+        ) {
+            System.setIn(in);
+            System.setOut(out);
+            System.setErr(out);
+            new BufferedReader(
+                    new InputStreamReader(System.in))
+                    .lines()
+                    .forEach(System.out::println);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            System.setOut(console);
+        }
+    }
+}
+```
+
+#### 执行控制
+
+在 Java 内部直接执行操作系统的程序。运行程序并将输出结果发送到控制台。
+
+# 百度查。这里写的不清不楚。
+
 ### NIO
 
+ **NIO**（同步非阻塞）。原有的 IO 流也被 NIO 重写了，即使我们不显式地使用 **NIO** 方式来编写代码，也能带来性能和速度的提高（文件读写，网络读写）。
 
+#### NIO 三大核心
+
+- Channel(通道)，
+- Buffer(缓冲区),
+- Selector（多路复用器）
 
 
 
