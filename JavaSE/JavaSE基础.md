@@ -6032,14 +6032,16 @@ throw dfe;
     人
 - 让类库和程序更安全
 
-## 第十七章 文件
+## 第十七章 文件、IO
+
+### 文件
 
 不包含传统的 I/O 方法。Java 的 I/O 都用 `NIO` 重写了。本部分内容涉及到的是 `java.nio.file` 下的类库。文件操作包含的两个基本组件如下：
 
 - 文件或目录的路径
 - 文件本身
 
-### 文件和目录路径
+#### 文件和目录路径
 
 一个 **Path** 对象表示一个文件或者目录的路径，是一个跨操作系统（OS）和文件系统的抽象，目的是在构造路径时不必关注底层操作系统，代码可以在不进行修改的情况下运行在不同的操作系统上。**java.nio.file.Paths** 类包含一个重载方法 **static get()**，该方法接受一系列 **String** 字符串或一个统一资源标识符 (URI) 作为参数，并且进行转换返回一个 **Path** 对象：
 
@@ -6107,7 +6109,7 @@ public class PathInfo {
 }
 ```
 
-### 选取路径部分片段
+#### 选取路径部分片段
 
 **Path** 对象可以非常容易地生成路径的某一部分：
 
@@ -6165,7 +6167,7 @@ public class PathsOfPaths {
 }
 ```
 
-### 路径分析
+#### 路径分析
 
 **Files** 工具类包含一系列完整的方法用于获得 **Path** 相关的信息。
 
@@ -6225,8 +6227,7 @@ ContentType: text/plain
 SymbolicLink: false
 ```
 
-
-### Paths 的增减修改
+#### Paths 的增减修改
 
 能通过对 **Path** 对象增加或者删除一部分来构造一个新的 **Path** 对象
 
@@ -6267,9 +6268,9 @@ public class AddAndSubtractPaths {
 }
 ```
 
-### 目录
+#### 遍历并删除
 
-####  删除目录树
+> 删除目录树
 
 删除目录树的方法实现依赖于 `Files.walkFileTreee(Path path，FileVisitor visitor)`
 
@@ -6308,7 +6309,7 @@ public class RmDir {
 }
 ```
 
-### 文件系统
+#### 文件系统
 
 查找文件系统相关的其他信息。也就是一些 `API` 的使用，用到在查。
 
@@ -6342,7 +6343,7 @@ public class FileSystemDemo {
 }
 ```
 
-### 路径监听
+#### 路径监听
 
 监听目录的变动。下面的代码为监听目录是否发生了删除事件。
 
@@ -6438,11 +6439,127 @@ evt.context() 2.txt
 */
 ```
 
-### 文件查找
+#### 文件查找
+
+在 `FileSystem` 对象上调用 `getPathMatcher` 获得一个 `PathMatcher` 然后传入感兴趣的模式：`glob` 或 `regex`
+
+- `PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:**/*.{xls,txt}");`
+- `Files.walk(Path)` 遍历文件，调用 `pathMatcher` 对象进行筛选
+
+> 使用 glob 查找 `txt` 或 `md` 结尾的所有 Path 
+
+```java
+import java.io.IOException;
+import java.nio.file.*;
+
+public class Find {
+    public static void main(String[] args) throws IOException {
+        Path delete = Paths.get("D:", "Delete");
+        // 查找 xls 结尾的 或 txt 结尾的
+        // ** 表示查找 D:/Delete/ 下的所有目录
+        PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:**/*.{xls,txt}");
+        Files.walk(delete)
+                .filter(pathMatcher::matches)
+                .forEach(System.out::println);
+        System.out.println("================");
+
+        // 只打印文件名，不包括目录
+        Files.walk(delete)
+                .filter(Files::isRegularFile) // 只查找文件
+                .filter(pathMatcher::matches)
+                .map(Path::getFileName) // map 将原有的名称 映射为 FileName
+                .forEach(System.out::println);
+    }
+}
+```
+
+#### 文件读写
+
+小文件的高效读写。`java.nio.file.Files` 类
+
+> 读取指定文件中的内容
+
+```java
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+
+public class ListOfLines {
+    public static void main(String[] args) throws IOException {
+        List<String> lines = Files.readAllLines(Paths.get("D:", "test.txt"));
+        lines.stream().forEach(System.out::println);
+    }
+}
+```
+
+> 文件中写入内容
+
+- `Files.write( Path, 可迭代的对象)` 
+
+```java
+public class Writing {
+    public static void main(String[] args) throws IOException {
+        byte[] out = "Hello World Java".getBytes(StandardCharsets.UTF_8);
+        Files.write(Paths.get("D:", "copy.txt"), out);
+
+        ArrayList<String> list = new ArrayList<>();
+        list.add("!23");
+        list.add("!23");
+        list.add("!23");
+        Files.write(Paths.get("D:", "copy2.txt"), list);
+    }
+}
+```
+
+> 文件太大，无法一次读取怎么办
+
+- 文件太大，如果一次读完整个文件，可能会耗尽内存。
+- 可能只需要在操作文件的中途获得结果即可，读取整个文件会浪费时间。
+- 使用 `Files.lines()`
+
+```java
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+public class ReadLineStream {
+    public static void main(String[] args) throws IOException {
+        // 跳过前两行，选择下一行进行打印
+        Files.lines(Paths.get("D:\\Code\\Java\\JavaSE\\src\\chapter17\\Find.java"))
+                .skip(2)
+                .findFirst()
+                .ifPresent(System.out::println);
+    }
+}
+```
+
+想在 Stream 中读写的话，遍历的时候调用输出流的写方法即可。
+
+```java
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.stream.Stream;
+
+public class StreamInAndOut {
+    public static void main(String[] args) {
+        try (Stream<String> lines = Files.lines(Paths.get("D:\\Code\\Java\\JavaSE\\src\\chapter17\\FileSystemDemoCopy.java"));
+             PrintWriter out = new PrintWriter("StreamInAndOut.txt");
+        ) {
+            lines.map(String::toUpperCase)
+                    .forEachOrdered(out::println);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+### NIO
 
 
-
-### 文件读写
 
 
 
