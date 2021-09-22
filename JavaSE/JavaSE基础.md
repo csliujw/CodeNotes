@@ -7211,74 +7211,22 @@ public class LockingMappedFiles {
 
 **LockAndModify** 线程类设置缓冲区并创建要修改的 slice()，在 run() 中，锁在文件通道上获取（<span style="color:red">不能在缓冲区上获取锁—只能在通道上获取锁</span>）。lock() 的调用非常类似于获取对象上的线程锁 —— 现在有了一个 “临界区”，可以对文件的这部分进行独占访问。当 JVM 退出或关闭获取锁的通道时，锁会自动释放，但是你也可以显式地调用**FileLock** 对象上的 release()
 
+### 流式 IO
 
-
-## `字符串`
-
-### 正则表达式
-
-> 正则表达式实现模板引擎
-
-```java
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-public class Template {
-    private static Pattern templatePattern = Pattern.compile("\\{(\\w+)\\}");
-
-    public static String templateEngine(String template, Map<String, String> params) {
-        StringBuffer buffer = new StringBuffer();
-        Matcher matcher = templatePattern.matcher(template);
-        while (matcher.find()) {
-            String key = matcher.group(1);
-            Object value = params.get(key);
-            matcher.appendReplacement(buffer, value != null ?
-                    Matcher.quoteReplacement(value.toString()) : "");
-        }
-        matcher.appendTail(buffer);
-        return buffer.toString();
-    }
-
-    public static void templateDemo() {
-        String template = "Hi {name}, your code is {code}.";
-        Map<String, String> params = new HashMap();
-        params.put("name", "老马");
-        params.put("code", "6789");
-        System.out.println(templateEngine(template, params));
-    }
-
-    public static void main(String[] args) {
-        templateDemo();
-    }
-}
-```
-
-
-
-
-
-
-
-# P654
-
-## 第十五章 IO流
-
-> IO流可大致分为字节流和字符流。字节是按字节进行输入输出的，适用于各种文件。字符流是按字符进行输入输出的，适用于文本文件。
+IO流可大致分为字节流和字符流。字节是按字节进行输入输出的，适用于各种文件。字符流是按字符进行输入输出的，适用于文本文件。
 
 > **IO流文件的创建读取，采用相对路径是以当前项目为基准的！**
 
 - 输入流：其他地方向内存中输入。 	xx--->内存
 - 输出流：从内存中输出到其他地方。 内存--->其他
 
-### 15.1 字节流
+#### 字节流
 
-无论何种文件，都是以二进制（字节）的形式存储在计算机中。可操作Computer中的任何文件。
+无论何种文件，都是以二进制（字节）的形式存储在计算机中。可操作 Computer 中的任何文件。
 
 **字节流通常以`InputStream`或`OutputStream`结尾**
 
-#### 15.1.1 文件的输入（读取文件）
+> 文件的输入（读取文件）
 
 ```java
 public void fn1() throws IOException {
@@ -7306,7 +7254,7 @@ public void fn1() throws IOException {
 此方法需要注意，静态方法（通过当前的classloader加载的类来获取当前d.txt被加载的路径）
 ```
 
-#### 15.1.2 文件的输出（写入）
+> 文件的输出（写入）
 
 ```java
 @Test
@@ -7336,7 +7284,7 @@ public void fn3() throws Exception{
 }
 ```
 
-#### 15.1.3 文件的复制
+> 文件的复制
 
 - 获取输入流，将内容读入内存
 - 获取输出流，将读入的内容写到磁盘
@@ -7372,7 +7320,7 @@ public void fn5() throws IOException {
 }
 ```
 
-#### 15.1.4 字节缓冲流
+#### 字节缓冲流
 
 ```java
 @Test
@@ -7390,11 +7338,9 @@ public void fn6() throws Exception {
 }
 ```
 
-### 15.2 字符流
+#### 字符流
 
-- 为什么出现字符流？
-
-> 有些是好几个字节组成一个字符，一个一个字节读，输出的数据可能不对！文件的复制时，由于是连续的操作，所以没出现问题！（同时，一个一个字节的读取，写入，频繁的进行系统调用，在申请调用上太费时了。）
+- 为什么出现字符流？有些数据是好几个字节组成一个字符，一个一个字节读，输出的数据可能不对！文件的复制时，由于是连续的操作，所以没出现问题！（同时，一个一个字节的读取，写入，频繁的进行系统调用，在申请调用上太费时了。）
 
 - 小例子
 
@@ -7430,11 +7376,11 @@ public void fn8() throws UnsupportedEncodingException {
 }
 ```
 
-> **字符流 = 字节流 + 编码表**
+**字符流 = 字节流 + 编码表**
 
-> 用字节流复制文本文件时，文本文件的中文没有问题。原因是最终底层操作会自动进行字节拼接成中文，如何识别中文呢？
+用字节流复制文本文件时，文本文件的中文没有问题。原因是最终底层操作会自动进行字节拼接成中文，如何识别中文呢？
 
-> 汉字在存储时，无论时那种编码存储，第一个字节都是负数！
+汉字在存储时，无论时那种编码存储，第一个字节都是负数！
 
 ```java
 // 代码验证
@@ -7458,7 +7404,7 @@ public void fn9() throws Exception{
 
 - 汉字的码值很大！字节流的返回值在-1到255直接，无法正确识别大的数值。
 
-#### 15.2.1 字符流的输出（写入文本文件）
+> 字符流的输出（写入文本文件）
 
 ```java
 public void fn1() throws IOException {
@@ -7501,9 +7447,9 @@ public void fn9() throws Exception{
 }
 ```
 
-> **获取src下的文件请用类加载器进行加载！**
+**获取src下的文件请用类加载器进行加载！**
 
-#### 15.2.2 字符流的输入（读取到内存）
+> 字符流的输入（读取到内存）
 
 ```java
 public void fn3() throws IOException{
@@ -7513,7 +7459,7 @@ public void fn3() throws IOException{
 }
 ```
 
-#### 15.3 字符缓冲流的使用
+#### 字符缓冲流
 
 > **与字节缓冲流类似，也是用到了装饰模式，且内部有一个8192大小的数组（不过是char数组）**
 
@@ -7534,9 +7480,9 @@ public void fn4() throws Exception {
 }
 ```
 
-### 15.3 File类概述
+### File类
 
-#### 15.3.1 概述
+#### 概述
 
 > `java.io.File` 类是文件和目录路径名的抽象表示，主要用于文件和目录的创建、查找和删除等操作。 
 
@@ -7738,100 +7684,13 @@ public void copyFile(File src, File dest) {
 }
 ```
 
-### 15.4 标准输入输出流
+### 其他流对象
 
-#### 15.4.1 标准输入流
-
-```java
-InputStream in = System.in;
-
-/**
-* 模拟Scanner读入一个char 读入String
-* @throws IOException
-*/
-public static void fn3() throws IOException {
-    // 只能安全键盘录入字节
-    InputStream in = System.in;
-    // 转换流 装饰模式
-    InputStreamReader isr = new InputStreamReader(in);
-    // -1 到 0xFFFF
-    int read = isr.read();
-    // 可以安全地读入一个中文
-    System.out.println((char)read);
-    // 读一个串地话，自己设置char数组
-}
-```
-
-#### 15.4.2 标准输出流
-
-> **客户端的输入内容，直接写入文本？？！！重定向牛批**
-
-```java
-PrintStream out = System.out;
-
-/**
-* 标准输入流的重定向
-* 从键盘输入 打印到文本中
-*/
-public static void fn2() throws FileNotFoundException {
-    PrintStream printStream = new PrintStream("target.txt");
-    System.setOut(printStream);
-    String str = "999";
-    while(!str.equals("exit")){
-        Scanner sc = new Scanner(System.in);
-        str = sc.next();
-        System.out.println(str);
-    }
-}
-```
-
-### 15.4 打印流====用于写入数字，写入对象哈希值什么的
-
-#### 15.4.1 字节打印流
-
-```java
-PrintStream
-@Test
-public void fn6() throws FileNotFoundException {
-    PrintStream ps = new PrintStream(new FileOutputStream("xxx.txt"),true);
-    ps.println(99);
-    ps.close();
-}
-```
-
-#### 15.4.2 字符打印流
-
-```java
-PrintWriter
-/**
-* 字符打印流
-*/
-@Test
-public void fn4() throws IOException {
-    PrintWriter printWriter = new PrintWriter(new FileWriter("a.x"));
-    printWriter.write(99);
-    printWriter.close();
-    // 不刷新看一看
-}
-
-@Test
-public void fn5() throws IOException {
-    // true 调用 print println时自动刷新 而且写入的时99 不进行转型（char）99 也可以写入对象？
-    PrintWriter printWriter = new PrintWriter(new FileWriter("a.txt"),true);
-    // 写入数字
-    printWriter.println(99);
-    // 写入对象的哈希值
-    printWriter.println(new Object());
-}
-```
-
-### 15.5 其他流对象
-
-#### 15.5.1 对象序列化
+#### 对象序列化
 
 - 用于将不常用的又不能销毁的对象存入文本，要用时在从文本读取。可以节约内存？
 - 类想要被序列化需要实现**`Serializable`**接口
-- 类的个别字段不想被序列化的话使用**transient**关键字
+- 类的个别字段不想被序列化的话使用 **transient** 关键字
 - 若因为类进行了更改导致反序列化失败，如何解决？
   - 定义一个`private static final long serialVersionUID = -6849794470754660L;`进行是否是同一个类的判断
   - 无责任猜测：应该是计算了类的信息指纹，用信息指纹的比较来判断是否是同一个类。【密码学】
@@ -7915,7 +7774,7 @@ class Student implements java.io.Serializable {
 }
 ```
 
-#### 15.5.2 Properties与IO流的结合
+#### Properties与IO流的结合
 
 - 用于配置文件，防止硬编码
 
@@ -7937,6 +7796,48 @@ public class PropertiesDemo {
         p.load(new FileInputStream("PropertiesDemo.properties"));
         String name = p.getProperty("name");
         System.out.println(name);
+    }
+}
+```
+
+## `字符串`
+
+### 正则表达式
+
+> 正则表达式实现模板引擎
+
+```java
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class Template {
+    private static Pattern templatePattern = Pattern.compile("\\{(\\w+)\\}");
+
+    public static String templateEngine(String template, Map<String, String> params) {
+        StringBuffer buffer = new StringBuffer();
+        Matcher matcher = templatePattern.matcher(template);
+        while (matcher.find()) {
+            String key = matcher.group(1);
+            Object value = params.get(key);
+            matcher.appendReplacement(buffer, value != null ?
+                    Matcher.quoteReplacement(value.toString()) : "");
+        }
+        matcher.appendTail(buffer);
+        return buffer.toString();
+    }
+
+    public static void templateDemo() {
+        String template = "Hi {name}, your code is {code}.";
+        Map<String, String> params = new HashMap();
+        params.put("name", "老马");
+        params.put("code", "6789");
+        System.out.println(templateEngine(template, params));
+    }
+
+    public static void main(String[] args) {
+        templateDemo();
     }
 }
 ```
