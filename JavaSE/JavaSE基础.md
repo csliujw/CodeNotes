@@ -7802,6 +7802,169 @@ public class PropertiesDemo {
 
 ## `字符串`
 
+### 特性-不可变
+
+String 对象是不可变的。，String 类中每一个看起来会修改 String 值的方法，实际上都是创建了一个全新的 String 对象。而最初的 String 对象则丝毫未动。
+
+### +的重载与 StringBuilder 的优化
+
+不可变性会降低效率，但是编译器会为其做一定的优化。将对 String 的操作改为对 `StringBuilder` 类的操作。
+
+```java
+public class WhitherStringBuilder {
+    public String implicit(String[] fields) {
+        String result = "";
+        for (String field : fields) {
+            result += field;
+        }
+        return result;
+    }
+
+    public String explicit(String[] fields) {
+        StringBuilder result = new StringBuilder();
+        for (String field : fields) {
+            result.append(field);
+        }
+        return result.toString();
+    }
+}
+```
+
+运行 `javap -c WhitherStringBuilder`
+
+- `implicit` 的字节码
+
+从第 16 行到第 48 行构成了一个循环体。第 16 行：对堆栈中的操作数进行“大于或等于的整数比较运算”，循环结束时跳转到第 51 行。第 48 行：重新回到循环体正则表达式的起始位置（第 12 行）。注意：`StringBuilder` 是在循环内构造的，这意味着每进行一次循环，会创建一个新的 `StringBuilder` 对象。
+
+```shell
+public java.lang.String implicit(java.lang.String[]);
+0: ldc #2 // String
+2: astore_2
+3: aload_1
+4: astore_3
+5: aload_3
+6: arraylength
+7: istore 4
+9: iconst_0
+10: istore 5
+12: iload 5
+14: iload 4
+16: if_icmpge 51
+19: aload_3
+20: iload 5
+22: aaload
+23: astore 6
+25: new #3 // StringBuilder
+28: dup
+29: invokespecial #4 // StringBuilder."<init>"
+32: aload_2
+33: invokevirtual #5 // StringBuilder.append:(String)
+36: aload 6
+38: invokevirtual #5 // StringBuilder.append:(String;)
+41: invokevirtual #6 // StringBuilder.toString:()
+44: astore_2
+45: iinc 5, 1
+48: goto 12
+51: aload_2
+52: areturn
+```
+
+- explicit 的字节码
+
+循 环 部 分 的 代 码 更 简 短、 更 简 单， 而 且 它 只 生 成 了 一 个 `StringBuilder` 对象。显式地创建 `StringBuilder` 还允许你预先为其指定大小。如果你已经知道最终字符串的大概长度，那预先指定 `StringBuilder` 的大小可以避免频繁地重新分配缓冲。
+
+```java
+public java.lang.String explicit(java.lang.String[]);
+0: new #3 // StringBuilder
+3: dup
+4: invokespecial #4 // StringBuilder."<init>"
+7: astore_2
+8: aload_1
+9: astore_3
+10: aload_3
+11: arraylength
+12: istore 4
+14: iconst_0
+15: istore 5
+17: iload 5
+19: iload 4
+21: if_icmpge 43
+24: aload_3
+25: iload 5
+27: aaload
+28: astore 6
+30: aload_2
+31: aload 6
+33: invokevirtual #5 // StringBuilder.append:(String)
+36: pop
+37: iinc 5, 1
+40: goto 17
+43: aload_2
+44: invokevirtual #6 // StringBuilder.toString:()
+47: areturn
+```
+
+对循环题，建议还是自己建一个 `StringBuilder`，性能更高。如果字符串的操作比简单，可以信赖编译器直接用 String。
+
+> 示例
+
+```java
+package chapter17;
+
+import java.util.Random;
+import java.util.stream.Collectors;
+
+public class UsingStringBuilder {
+    public static String string1() {
+        Random rand = new Random(47);
+        StringBuilder result = new StringBuilder("[");
+        for (int i = 0; i < 25; i++) {
+            result.append(rand.nextInt(100));
+            result.append(", ");
+        }
+        result.delete(result.length() - 2, result.length());
+        result.append("]");
+        return result.toString();
+    }
+
+    public static String string2() {
+        String result = new Random(47).ints(25, 0, 100).mapToObj(Integer::toString)
+                .collect(Collectors.joining(", ")); // 加入 ， 进行区分
+        return "[" + result + "]";
+    }
+
+    public static void main(String[] args) {
+        System.out.println(string1());
+        System.out.println(string2());
+    }
+}
+```
+
+> 注意！
+
+append(a + ": " + c)，会为创建一个新的 `StringBuilder` 对象处理括号内的字符串操作。如果拿不准该用哪种方式，随时可以用 `javap` 来分析你的程序。
+
+### 意外递归
+
+编译器发现一个 `String` 对象后面跟着一个 “+”，而 “+” 后面的对象不是 `String`，编译器试着将 `this` 转换成一个 `String`。它怎么转换呢？正是通过调用 `this` 上 `toString()` 方法，于是就发生了递归调用。
+
+```java
+import java.util.stream.Stream;
+
+public class InfiniteRecursion {
+    @Override
+    public String toString() {
+        return " InfiniteRecursion address: " + this + "\n";
+    }
+
+    public static void main(String[] args) {
+        Stream.generate(InfiniteRecursion::new).limit(10).forEach(System.out::println);
+    }
+}
+```
+
+打印对象的内存地址，应该调用 `Object.toString() / super.toString()` 方法
+
 ### 正则表达式
 
 > 正则表达式实现模板引擎
@@ -7841,6 +8004,30 @@ public class Template {
     }
 }
 ```
+
+### StringTokenizer 类
+
+基本废弃，正则表达式和 Scanner 类更好用。
+
+```java
+class StringTokenizerDemo {
+
+    public static void main(String[] args) {
+        String input = "But I'm not dead yet! I feel     happy! \n sasf";
+        StringTokenizer token = new StringTokenizer(input); // 以空格 \n \t 来分割字符
+        while (token.hasMoreElements()) {
+            System.out.println(token.nextToken());
+        }
+
+        Scanner scanner = new Scanner(System.in);
+        while (!scanner.hasNext("#")) {
+            System.out.println(scanner.next());
+        }
+    }
+}
+```
+
+
 
 ## 第十六章 线程
 
