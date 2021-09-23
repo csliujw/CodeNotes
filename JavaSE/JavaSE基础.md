@@ -4674,6 +4674,35 @@ Randoms 是声明式编程，ImperativeRandoms 是命令式编程。必须研究
 
 ### 流创建
 
+> 创建流的几种方式
+
+- Collection体系的集合可以使用默认方法stream（）生成流
+  - default Stream<E>() stream()
+- Map体系的集合间接生成流
+- 数组可以通过Stream接口的静态方法of(T ...value)生成流
+
+```java
+@Test
+public void fn1() {
+    // Collection的 直接生成流
+    ArrayList<String> arr = new ArrayList<String>();
+    Stream<String> arrStream = arr.stream();
+
+    HashSet<String> set = new HashSet<>();
+    Stream<String> setStream = set.stream();
+
+    // Map体系间接的生成流
+    HashMap<String, Integer> map = new HashMap<>();
+    Stream<Map.Entry<String, Integer>> mapStream = map.entrySet().stream();
+    mapStream.filter(s -> s.getKey().length() > 2).forEach(System.out::println);
+
+    // 数组变为Stream流
+    String[] str = {"12313", "asda"};
+    Stream<String> strSteam1 = Stream.of(str);
+    Stream<String> strSteam2 = Stream.of("123", "!231", "!!");
+}
+```
+
 通过 Stream.of() 将一组元素转化成为流
 
 ```java
@@ -4701,8 +4730,7 @@ class Bubble {
 每个集合都可以通过调用 stream() 方法来产生一个流
 
 - map  `<R> Stream<R> map(Function<? super T, ? extends R> mapper);` 会产生一个新流。
-  - mapToInt() `mapToInt() 方法将一个对象流（object stream）转换成为包含整型数字的 IntStream`
-  - 
+- `mapToInt()` `mapToInt() 方法将一个对象流（object stream）转换成为包含整型数字的 IntStream`
 
 ```java
 public class CollectionToStream {
@@ -5040,7 +5068,33 @@ public class FileToWordsRegexp {
 
 ### 中间操作
 
-中间操作用于从一个流中获取对象，并将对象作为另一个流从后端输出，以连接到 其他操作。
+中间操作用于从一个流中获取对象，并将对象作为另一个流从后端输出，以连接到其他操作。
+
+#### 中间流操作
+
+- **`filter`**：过滤，满足条件的保留，不满足的不保留。传入的是Predicate
+
+- **`limit`**：取前xx个元素
+
+- **`skip`**：跳过前xx个元素
+
+- **`concat`**：`concat(Steam a,Stream b)` 合并a，b两个流
+
+- **`distinct`**：基于`hashCode（）`和`equals（）`去重
+
+- **`sorted`**：**按照指的规则排序，无参数按照自然排序，有参数按照指的排序规则**
+  - `sorted(Comparator<? super T> comparator)`
+
+- **`mapToInt`**：将 xx 转为 `intStream`
+  - `IntStream mapToInt(ToIntFunction<? super T> mapper);`
+
+- **`forEach`**：遍历元素
+  - 属于终结方法
+
+  - `void forEach(Consumer<? super T> action);`
+
+- **`count`**：返回元素总和
+  - 属于终结方法
 
 #### 跟踪和调试
 
@@ -8224,12 +8278,235 @@ class StringTokenizerDemo {
 
 ## 第十九章 类型信息
 
-RTTI（RunTime Type Information，运行时类型信息）能够在程序运行时发 现和使用类型信息。
+`RTTI`（RunTime Type Information，运行时类型信息）能够在程序运行时发现和使用类型信息。
 
  Java 是如何在运行时识别对象和类信息的？
 
 - “传统的” RTTI：假定我们在编译时已经知道了所有的类型； 
-- “反射” 机制：允许我们在运行时发现和使用类的信息。
+- <span style="color:green">“反射” 机制：允许我们在运行时发现和使用类的信息。</span>
+
+RTTI 在 Java 中的形式+
+
+- `instanceof`
+
+### 分界线
+
+### 类加载器前置知识概述
+
+**类加载的时机**
+
+类从被加载到虚拟机内存中开始，到卸载出内存为止，整个生命周期包括：
+
+加载，验证，准备，解析，初始化，使用和卸载 七个阶段
+
+####  加载
+
+加载是类加载过程的一个阶段，加载阶段需要完成以下三件事情
+
+- 通过一个类的全限定名来获取定义此类的二进制字节流
+- 将这个字节流所代表的静态存储结构转化为方法区的运行时数据结构
+- 在内存中生成一个代表这个类的java.lang.Class对象，作为方法区，这个类的各种数据的访问入口。
+
+任何类被使用时，系统都会为之建立一个java.lang.Class对象
+
+#### 连接
+
+- 验证阶段：用于检测被加载的类是否有正确的内部结构【符合JVM规范】。【不是必要阶段，可省略】
+
+- 准备阶段：负责为类的类变量分配内存，设置默认初始化值。
+
+  - 这时候进行的内存分配仅包含类变量（被static修饰的变量），不包括实例变量，实例变量将会在对象实例化时随对象一起分配在Java堆中。
+
+  - 这里的初始值“通常情况”下时数据类型的零值
+
+  - ```java
+    public staatic int value = 123
+    value在准备阶段过后 初始值为0，而非123
+    ```
+
+- 解析阶段：将常量池内的符号引用替换为直接引用
+
+  - 符号引用（Symbolic References）：符号引用以一组符号来描述所引用的目标，符号引用可以是任何形式的字面量，只要使用时能无歧义的定位到目标即可。与虚拟机的内存布局无关
+  - 直接引用（Direct References）：直接引用可以是直接指向目标的指针、相对偏移量或是一个能间接定位到目标的句柄。与虚拟机的内存布局有关。如果有直接引用了，那么目标一定在内存中！
+
+#### 初始化
+
+类加载过程的最后一步。到了初始化阶段，才开始执行类中定义的Java程序代码（或者是是字节码）
+
+**对类变量进行初始化**
+
+**类的初始化步骤**
+
+- 假如类还未被加载和连接，则程序先加载并连接该类
+- 假如该类的直接父类还未被初始化，则先初始化其直接父类
+- 假如父类中有初始化语句，则系统依次执行这些初始化语句
+
+**类的初始化时机**【视频中的】
+
+- 创建类的实例
+- 调用类的类方法
+- 访问类或接口的类的变量，或者为该类变量赋值
+- 使用反射方式来强制创建某个类或接口对应的java.lang.Class对象
+- 初始化某个类的子类
+- 直接使用java.exe命令运行某个主类
+
+### 类加载器
+
+#### 类加载器作用
+
+- 负责将.class文件加载到内存中，并为之生成对应的java.lang.Class对象
+
+#### JVM的类加载机制
+
+- 全盘负责：当一个类加载器负责加载某个Class时，该Class所依赖和引用的其他Class也将由该类加载器负责载入，除非显示使用另一个类加载器来载入
+- 父类委托：当一个类加载器负责某个Class时，先让父类加载器试图加载该Class，只有在父类加载器无法加载该类时才尝试从自己的类路径中加载该类
+- 缓存机制：保证所有加载过的Class都会被缓存，当程序需要使用某个Class对象时，类加载器先从缓存区中搜索该Class，只有当缓存中不存在该Class对象时，系统才会读取该类对应的二进制数据，并将其转换成Class对象，存储到缓存区。
+
+#### ClassLoader：
+
+- 负责加载类的对象
+
+#### Java运行时的内置类加载器
+
+- **Bootstrap class loader**：它是虚拟机的内置类加载器，通常表示为null，并且没用父
+- **Platform class loader**：平台类加载器可以看到所有平台类，平台类包括由平台类加载器或其祖先定义的JavaSE平台API，其实现类和JDK特定的运行时类
+- **System class loader**：也被称为应用程序类加载器，与平台类加载器不同，系统类加载器通常定义应用程序类路径，模块路径和JDK特定工具上的类
+- 类加载器的继承关系：System的父加载器为Platform，而Platform的父加载器为Bootstrap
+
+```java
+@Test
+public void fn1(){
+    // 获得系统加载
+    ClassLoader c = ClassLoader.getSystemClassLoader();
+    System.out.println(c);//sun.misc.Launcher$AppClassLoader@18b4aac2
+
+    //获得父类加载
+    ClassLoader c2 = c.getParent();
+    System.out.println(c2);//sun.misc.Launcher$ExtClassLoader@4a574795
+
+    //获得父类加载
+    ClassLoader c3 = c2.getParent();
+    System.out.println(c3);// null
+}
+```
+
+### 反射概述
+
+​		Java的反射机制是指在运行时去获取一个类的变量和方法信息，然后通过获取到的信息来创建对象，从而调用方法的一种机制。由于这种动态性，可以极大的增强程序的灵活性，程序不用在编译期就完成确定，在运行期仍然可以扩展。
+
+### 反射操作
+
+#### 获取Class类的对象
+
+要使用反射，先要获取该类的字节码文件对象
+
+- 使用类的class属性获取Class对象
+- 调用对象的getClass()方法，该方法是Object类中的方法，所有Java对象都可以调用该方法
+- 使用Class类中的静态方法forName(String className) 传入的是完整包名路径
+
+```java
+@Test
+public void getClazz() throws ClassNotFoundException {
+    // 最方便
+    Class<Student> c1 = Student.class;
+    Class<Student> c2 = Student.class;
+    System.out.println(c1 == c2); //true
+
+    Student s = new Student();
+    Class<? extends Student> c3 = s.getClass();
+    System.out.println(c2 == c3); //true
+
+    // 灵活 可以把xx写在配置文件中
+    Class<?>  c4 = Class.forName("com.bbxx.demo1.Student");
+    System.out.println(c3 == c4); //true
+}
+```
+
+#### 获取构造方法
+
+- **自行查看api【暴力访问时需要setAccessible（true）】**
+
+```java
+@Test
+public void getConstructors() throws Exception {
+    Class<Student> c1 = Student.class;
+    // 获得指定的构造方法
+    Constructor<Student> con1 = c1.getConstructor(String.class,String.class,int.class);
+    // 创建对象
+    Student student = con1.newInstance("xxx", "swx", 15);
+    System.out.println(student);
+
+    // 获得所有非私有构造方法
+    Constructor<?>[] con2 = c1.getConstructors();
+    for(Constructor c: con2 ){
+        System.out.println(c.getParameterTypes().length);
+    }
+
+    // 暴力反射
+    Constructor<Student> c3 = c1.getDeclaredConstructor(String.class);
+    // 取消访问检查
+    c3.setAccessible(true);
+    Student s3 = c3.newInstance("xx");
+    System.out.println(s3.getName());
+}
+```
+
+#### 获取成员变量
+
+|        方法名称         |               方法说明                |
+| :---------------------: | :-----------------------------------: |
+|     `getFields（）`     |   获得所有公共字段（public修饰的）    |
+| `getDeclaredFields（）` | 获得所有字段（包括protected private） |
+| `age.set(student,18);`  |    为student对象的age字段设置值18     |
+
+```java
+@Test
+public void getFiled() throws Exception {
+    Class<Student> stu = Student.class;
+    // 获得所有公有字段。public修饰的
+    Field[] fields = stu.getFields();
+    for (Field f: fields) {
+        System.out.println(f.getName());
+    }
+    System.out.println("**********");
+    // 获得所有字段 包括 protected private
+    Field[] declaredFields = stu.getDeclaredFields();
+    for (Field f: declaredFields) {
+        System.out.println(f.getName());
+    }
+    System.out.println("**********");
+    // 给student对象的age字段赋值为18
+    Student student = stu.newInstance();
+    Field age = stu.getDeclaredField("age");
+    age.setAccessible(true);
+    age.set(student,18);
+    System.out.println(student.getAge());
+}
+```
+
+#### 获取成员方法
+
+| 方法名                                                       | 说明                                        |
+| :----------------------------------------------------------- | :------------------------------------------ |
+| `Method[] getMethods()`                                      | 返回所有公共成员方法对象的数组，包 括继承的 |
+| `Method[] getDeclaredMethods()`                              | 返回所有成员方法对象的数组，不包括 继承的   |
+| `Method getMethod(String name, Class<?>... parameterTypes)`  | 返回单个公共成员方法对象                    |
+| `Method getDeclaredMethod(String name, Class<?>... parameterTypes)` | 返回单个成员方法对象                        |
+
+#### 反射越过泛型检查
+
+```java
+@Test
+public void refelectDemo() throws Exception {
+    ArrayList<Integer> list = new ArrayList<Integer>();
+    // list.add("123"); 抱错，有泛型检查
+    Class<? extends ArrayList> clazz = list.getClass();
+    // 是Object.class
+    Method add = clazz.getMethod("add", Object.class);
+    add.invoke(list,"asdf");
+    System.out.println(list.get(0));
+}
+```
 
 ## 第二十章 泛型
 
@@ -8933,768 +9210,6 @@ public class BSDemo3 {
         properties.load(in);
         return properties;
     }
-}
-```
-
-## 第十八章 反射
-
-### 18.0 类加载器前置知识概述
-
-**类加载的时机**
-
-类从被加载到虚拟机内存中开始，到卸载出内存为止，整个生命周期包括：
-
-加载，验证，准备，解析，初始化，使用和卸载 七个阶段
-
-####  **18.0.1 加载**
-
-加载是类加载过程的一个阶段，加载阶段需要完成以下三件事情
-
-- 通过一个类的全限定名来获取定义此类的二进制字节流
-- 将这个字节流所代表的静态存储结构转化为方法区的运行时数据结构
-- 在内存中生成一个代表这个类的java.lang.Class对象，作为方法区，这个类的各种数据的访问入口。
-
-任何类被使用时，系统都会为之建立一个java.lang.Class对象
-
-#### **18.0.2 连接**
-
-- 验证阶段：用于检测被加载的类是否有正确的内部结构【符合JVM规范】。【不是必要阶段，可省略】
-
-- 准备阶段：负责为类的类变量分配内存，设置默认初始化值。
-
-  - 这时候进行的内存分配仅包含类变量（被static修饰的变量），不包括实例变量，实例变量将会在对象实例化时随对象一起分配在Java堆中。
-
-  - 这里的初始值“通常情况”下时数据类型的零值
-
-  - ```java
-    public staatic int value = 123
-    value在准备阶段过后 初始值为0，而非123
-    ```
-
-- 解析阶段：将常量池内的符号引用替换为直接引用
-
-  - 符号引用（Symbolic References）：符号引用以一组符号来描述所引用的目标，符号引用可以是任何形式的字面量，只要使用时能无歧义的定位到目标即可。与虚拟机的内存布局无关
-  - 直接引用（Direct References）：直接引用可以是直接指向目标的指针、相对偏移量或是一个能间接定位到目标的句柄。与虚拟机的内存布局有关。如果有直接引用了，那么目标一定在内存中！
-
-#### 18.0.3 初始化
-
-类加载过程的最后一步。到了初始化阶段，才开始执行类中定义的Java程序代码（或者是是字节码）
-
-**对类变量进行初始化**
-
-**类的初始化步骤**
-
-- 假如类还未被加载和连接，则程序先加载并连接该类
-- 假如该类的直接父类还未被初始化，则先初始化其直接父类
-- 假如父类中有初始化语句，则系统依次执行这些初始化语句
-
-**类的初始化时机**【视频中的】
-
-- 创建类的实例
-- 调用类的类方法
-- 访问类或接口的类的变量，或者为该类变量赋值
-- 使用反射方式来强制创建某个类或接口对应的java.lang.Class对象
-- 初始化某个类的子类
-- 直接使用java.exe命令运行某个主类
-
-### 18.1 类加载器
-
-#### **18.1.1 类加载器作用**
-
-- 负责将.class文件加载到内存中，并为之生成对应的java.lang.Class对象
-
-#### **18.1.2 JVM的类加载机制**
-
-- 全盘负责：当一个类加载器负责加载某个Class时，该Class所依赖和引用的其他Class也将由该类加载器负责载入，除非显示使用另一个类加载器来载入
-- 父类委托：当一个类加载器负责某个Class时，先让父类加载器试图加载该Class，只有在父类加载器无法加载该类时才尝试从自己的类路径中加载该类
-- 缓存机制：保证所有加载过的Class都会被缓存，当程序需要使用某个Class对象时，类加载器先从缓存区中搜索该Class，只有当缓存中不存在该Class对象时，系统才会读取该类对应的二进制数据，并将其转换成Class对象，存储到缓存区。
-
-#### **18.1.3 ClassLoader：**
-
-- 负责加载类的对象
-
-#### **18.1.4 Java运行时的内置类加载器**
-
-- **Bootstrap class loader**：它是虚拟机的内置类加载器，通常表示为null，并且没用父
-- **Platform class loader**：平台类加载器可以看到所有平台类，平台类包括由平台类加载器或其祖先定义的JavaSE平台API，其实现类和JDK特定的运行时类
-- **System class loader**：也被称为应用程序类加载器，与平台类加载器不同，系统类加载器通常定义应用程序类路径，模块路径和JDK特定工具上的类
-- 类加载器的继承关系：System的父加载器为Platform，而Platform的父加载器为Bootstrap
-
-```java
-@Test
-public void fn1(){
-    // 获得系统加载
-    ClassLoader c = ClassLoader.getSystemClassLoader();
-    System.out.println(c);//sun.misc.Launcher$AppClassLoader@18b4aac2
-
-    //获得父类加载
-    ClassLoader c2 = c.getParent();
-    System.out.println(c2);//sun.misc.Launcher$ExtClassLoader@4a574795
-
-    //获得父类加载
-    ClassLoader c3 = c2.getParent();
-    System.out.println(c3);// null
-}
-```
-
-### 18.2 反射概述
-
-​		Java的反射机制是指在运行时去获取一个类的变量和方法信息，然后通过获取到的信息来创建对象，从而调用方法的一种机制。由于这种动态性，可以极大的增强程序的灵活性，程序不用在编译期就完成确定，在运行期仍然可以扩展。
-
-### 18.3 反射操作
-
-#### 18.3.1 获取Class类的对象
-
-要使用反射，先要获取该类的字节码文件对象
-
-- 使用类的class属性获取Class对象
-- 调用对象的getClass()方法，该方法是Object类中的方法，所有Java对象都可以调用该方法
-- 使用Class类中的静态方法forName(String className) 传入的是完整包名路径
-
-```java
-@Test
-public void getClazz() throws ClassNotFoundException {
-    // 最方便
-    Class<Student> c1 = Student.class;
-    Class<Student> c2 = Student.class;
-    System.out.println(c1 == c2); //true
-
-    Student s = new Student();
-    Class<? extends Student> c3 = s.getClass();
-    System.out.println(c2 == c3); //true
-
-    // 灵活 可以把xx写在配置文件中
-    Class<?>  c4 = Class.forName("com.bbxx.demo1.Student");
-    System.out.println(c3 == c4); //true
-}
-```
-
-#### 18.3.2 获取构造方法
-
-- **自行查看api【暴力访问时需要setAccessible（true）】**
-
-```java
-@Test
-public void getConstructors() throws Exception {
-    Class<Student> c1 = Student.class;
-    // 获得指定的构造方法
-    Constructor<Student> con1 = c1.getConstructor(String.class,String.class,int.class);
-    // 创建对象
-    Student student = con1.newInstance("xxx", "swx", 15);
-    System.out.println(student);
-
-    // 获得所有非私有构造方法
-    Constructor<?>[] con2 = c1.getConstructors();
-    for(Constructor c: con2 ){
-        System.out.println(c.getParameterTypes().length);
-    }
-
-    // 暴力反射
-    Constructor<Student> c3 = c1.getDeclaredConstructor(String.class);
-    // 取消访问检查
-    c3.setAccessible(true);
-    Student s3 = c3.newInstance("xx");
-    System.out.println(s3.getName());
-}
-```
-
-#### 18.3.3  获取成员变量
-
-|        方法名称         |               方法说明                |
-| :---------------------: | :-----------------------------------: |
-|     `getFields（）`     |   获得所有公共字段（public修饰的）    |
-| `getDeclaredFields（）` | 获得所有字段（包括protected private） |
-| `age.set(student,18);`  |    为student对象的age字段设置值18     |
-
-```java
-@Test
-public void getFiled() throws Exception {
-    Class<Student> stu = Student.class;
-    // 获得所有公有字段。public修饰的
-    Field[] fields = stu.getFields();
-    for (Field f: fields) {
-        System.out.println(f.getName());
-    }
-    System.out.println("**********");
-    // 获得所有字段 包括 protected private
-    Field[] declaredFields = stu.getDeclaredFields();
-    for (Field f: declaredFields) {
-        System.out.println(f.getName());
-    }
-    System.out.println("**********");
-    // 给student对象的age字段赋值为18
-    Student student = stu.newInstance();
-    Field age = stu.getDeclaredField("age");
-    age.setAccessible(true);
-    age.set(student,18);
-    System.out.println(student.getAge());
-}
-```
-
-#### 18.3.4 获取成员方法
-
-| 方法名                                                       | 说明                                        |
-| :----------------------------------------------------------- | :------------------------------------------ |
-| `Method[] getMethods()`                                      | 返回所有公共成员方法对象的数组，包 括继承的 |
-| `Method[] getDeclaredMethods()`                              | 返回所有成员方法对象的数组，不包括 继承的   |
-| `Method getMethod(String name, Class<?>... parameterTypes)`  | 返回单个公共成员方法对象                    |
-| `Method getDeclaredMethod(String name, Class<?>... parameterTypes)` | 返回单个成员方法对象                        |
-
-#### 18.3.5 反射越过泛型检查
-
-```java
-@Test
-public void refelectDemo() throws Exception {
-    ArrayList<Integer> list = new ArrayList<Integer>();
-    // list.add("123"); 抱错，有泛型检查
-    Class<? extends ArrayList> clazz = list.getClass();
-    // 是Object.class
-    Method add = clazz.getMethod("add", Object.class);
-    add.invoke(list,"asdf");
-    System.out.println(list.get(0));
-}
-```
-
-
-
-
-
-## 第二十章 接口组成更新
-
-#### **概述：接口的组成**
-
-- 常量
-
-  - ```
-    public static final
-    ```
-
-- 抽象方法
-
-  - ```
-    public abstract
-    ```
-
-- 默认方法（jdk 8）
-
-  - ```
-     public default void walk(){ System.out.println("hello"); }
-    ```
-
-  -  **default可以不被重写。方便在不影响已有接口的情况下更新接口**
-
-- 静态方法（jdk 8）
-
-- 私有方法（jdk 9）
-
-### 20.1 方法引用
-
-在使用Lambda表达式的时候，我们实际上传递进去的代码就是一种解决方案：拿参数做操作
-
-若在Lambda中所指的的操作方案，已经有地方存在相同的方案，这时候是没用必要再写重复逻辑的。
-
-那如何使用已经存在的方案？
-
-使用方法引用来使用已经存在的方案！
-
-- 方法引用符号
-
-```java
-public interface Animal {
-    void say(Object o);
-}
-
-public interface Printable {
-    void printString(String s);
-}
-
-public class PrintableDemo {
-    public static void main(String[] args) {
-        // 常规写法
-        userPrintable(s -> System.out.println(s));
-        // 方法引用符 ，：：   其实方法应用是直接把参数传给了这个方法【print】
-        userPrintable(System.out::print);
-        // 可推导的就是可省略的
-        useAnimal(System.out::print);
-    }
-
-    // 我要打印数据
-    private static void userPrintable(Printable p) {
-        p.printString("hehahhh");
-    }
-
-    private static void useAnimal(Animal a){
-        a.say(new Object());
-    }
-}
-```
-
-- ##### 静态方法引用
-  
-  - 格式：类名：：静态方法
-  
-  - 示例：Integer::parseInt（）
-  
-- 练习
-  - 定义一个接口（Converter），定义抽象方法int convert(String s)
-  - 定义测试类
-
-```java
-public interface Convert {
-    int convert(String s);
-}
-
-public class ConvertDemo {
-    public static void main(String[] args) {
-        useConver(Integer::parseInt,"105");
-    }
-	// lambda表达式被类方法替代的时候，它的形式参数全部传递给静态方法作为参数！
-    public static void useConver(Convert c,String str){
-        int convert = c.convert(str);
-        System.out.println(convert*10);
-    }
-}
-```
-
-- **特定对象的实例方法引用**
-
-  - 格式：对象：：成员方法
-  - 示例：“HelloWorld”.toUpperCase
-
-- ##### 类的任意对象的实例方法引用
-
-  - 格式：类名：：成员方法
-
-  - 示例：String::substring
-
-  - 格式：类名：：成员方法
-  - 示例：String::substring
-
-- ##### 构造器引用
-
-  - 格式：**类名::new** ，
-
-  - 示例： () -> new ArrayList<String>() 等价于 ArrayList<String>::new，代码示例：
-
-  - ```java
-    Supplier<List<String>> supplier1= () -> new  ArrayList<String>();
-    ```
-
-### 20.1 函数式接口
-
-有且仅有一个抽象方法的接口
-
-```java
-@FunctionalInterface
-public interface MyInterface {
-    void say();
-    default void saa(){
-        System.out.println("hello");
-    }
-}
-
-// 可以不写注解，但是写注解可以检测到是否只有一个抽象方法，安全些。
-// 如果接口时函数式接口，编译通过！
-// 建议加上这个注解
-```
-
-#### 20.1.1 函数式接口作为返回值
-
-**return 推到式就可以了**
-
-#### 20.1.2 常用的函数式接口
-
-- `Java8`在`java.util.function`包下预定义了大量的函数式接口
-
-- **Supplier接口**
-
-  - Supplier<T>：包含一个无参的方法
-  - T get（）：获得结果
-  - 该方法不需要参数，它会按照某种实现逻辑（由Lambda表达式实现）返回一个数据
-  - Supplier<T>接口也被称为生产型接口，如果我们指定了接口的泛型式是什么类型，那么接口中的get（）方法就会产生什么类型的数据供我们使用！
-  - **简单说来，他就是一个容易，用来存Lambda表达式生成的数据的。可用get方法得到这个生成的数据**
-
-  ```java
-  public class Student {
-      private int age;
-      public Student(){}
-      public Student(int age){
-          this.age = age;
-      }
-  }
-  
-  public class SupplierDemo {
-      public static void main(String[] args) {
-          String string = getString(() -> "lqx");// 生成String
-          Integer integer = getInteger(() -> 20 + 50);// 生成int
-          System.out.println(string);
-          System.out.println(integer);
-      }
-  
-      // 生成Supplier示例
-      private static void fn2(){
-          Supplier<Student> s1 = Student::new; // 生成 对象放进去
-          Student student = s1.get(); // 获得这个对象
-          System.out.println(student.toString());
-      }
-  
-      // 返回integer
-      private static Integer getInteger(Supplier<Integer> sup){
-          return sup.get();
-  
-      }
-      // 返回String
-      private static String getString(Supplier<String> sup){
-          return sup.get();
-      }
-  }
-  
-  ```
-
-- **Consumer接口**
-
-  - Consumer<T>：包含两个方法
-  - void accept(T t)：对给的的参数执行此操作
-  - default Consumer<T>andThen(Consumer after)：返回一个组合的Consumer，依次执行此操作，然后执行after操作
-  - Consumer<T>接口也被称为消费型接口，它消费数据的数据类型由泛型指定
-  - **大概意思就是，你定义消费规则。然后调用它的消费方法，他会按这个消费规则进行消费**
-
-```java
-public class ConsumerDemo {
-    public static void main(String[] args) {
-        Consumer<Integer> c = x -> {
-            for (int i = 0; i < x; i++) {
-                System.out.println(i);
-            }
-        };
-        c.accept(10);
-    }
-}
-```
-
-- **Predicate接口**
-
-  - Predicate 接口是一个谓词型接口，其实，这个就是一个类似于 bool 类型的判断的接口。
-
-  - Predicate常用的四个方法
-
-    - ```java
-      boolean test(T t) 对给定参数进行逻辑判断，判断表达式由Lambda实现。
-      ```
-
-    - ```java
-      default Predicate<T>negate(); 返回一个逻辑的否定， 对应逻辑非
-      ```
-
-    - ```java
-      default Predicate<T>and(Predicate other) 返回一个组合逻辑判断，对应短路与
-      ```
-
-    - ```java
-      default Predicate<T>or(Predicate other) 返回一个组合判断，对应短路或
-      ```
-
-  - **Predicate常用于判断参数是否满足xx条件**
-
-```java
-public class PredicateDemo {
-    @Test
-    public void fn1() {
-        Predicate<String> pre = (s) ->  s .equals("hello") ;
-        System.out.println(pre.test("ss"));
-        System.out.println(pre.negate().test("hello"));
-    }
-
-    @Test
-    public void fn2(){
-        Predicate<String> pre1 = (s) ->  s .equals("hello") ;
-        Predicate<String> pre2 = (s) ->  s .equals("hello") ;
-        // test(参数) 这个参数是赋值给s的 pre1 和 pre2 是否都等于hello
-        System.out.println(pre1.and(pre2).test("hello"));
-    }
-
-    @Test
-    public void fn3(){
-        Predicate<String> pre1 = (s) ->  s .equals("hello") ;
-        Predicate<String> pre2 = (s) ->  s .equals("123") ;
-        // 把hello 赋值给s pre1 和 pre2 是否满足他们的比较关系
-        System.out.println(pre1.or(pre2).test("hello"));
-    }
-}
-
-// 用lambda筛选数据
-@Test
-public void fn4() {
-    String[] strArray = {"理解,30", "wul123i,20","wui,20"};
-    ArrayList<String> strings = myFilter(strArray, s -> s.split(",")[0].length() >= 2, s -> Integer.parseInt(s.split(",")[1]) > 23);
-    System.out.println("ss");
-    for(String s : strings){
-        System.out.println(s);
-    }
-}
-
-public static ArrayList<String> myFilter(String[] strArray, Predicate<String> pre1, Predicate<String> pre2) {
-    ArrayList<String> list = new ArrayList<>();
-    for (String s : strArray) {
-        if (pre1.and(pre2).test(s)) {
-            list.add(s);
-            System.out.println("asfs");
-        }
-    }
-    return list;
-}
-```
-
-- **Function接口**
-  - Function 接口是一个功能型接口，是一个转换数据的作用。
-  - Function 接口实现 `apply` 方法来做转换。
-
-  - 常用方法
-    - R apply（T t）将此函数应用于给定的参数
-    - default<V> Function andThen(Function after) ：返回一个组合函数，首先将函数应用于输入，然后将after函数应用于结果
-
-  ```java
-  public class FunctionDemo {
-  
-      public static void main(String[] args) {
-          convert("132", Integer::parseInt);
-          convert("132", Integer::parseInt);
-  
-  
-          // 直接使用 String是传入数据的类型，Integer是apply处理后返回的数据类型
-          Function<String,Integer> fn = (s)->Integer.parseInt(s)*10;
-          Integer apply = fn.apply("10");
-          System.out.println(apply);
-  
-      }
-      // 要求 把一个字符串转换为int类型并乘以10输出
-      private static void convert(String s, Function<String,Integer> fun){
-          Integer apply = fun.apply(s);
-          System.out.println(apply*10);
-      }
-  }
-  ```
-
-
-
-### 20.4 Stream流的简单Demo
-
-**Stream流的使用**
-
-- 生成流
-
-  - 通过数据源（集合，数组等）生成流
-  - `list.stream();`
-
-- 中间操作
-
-  - 一个流后面可以跟0个或多个中间操作，其主要是打开流，然后返回一个新的流，交给下一个操作使用
-  - `filter()`
-
-- 终结操作
-
-  - **一个流只能有一个终结操作，当这个操作执行后流会被关闭**【forEach是void，无返回值的意思】
-
-  - ```java
-    public class StreamDemo {
-        @Test
-        public void fn1() {
-            ArrayList<String> list = new ArrayList<>();
-            list.add("张三");
-            list.add("李三");
-            list.add("兆三");
-            list.add("科学三");
-            list.add("学习三");
-            // stream 筛选出符合条件的数据进行输出
-            list.stream().filter((ss) -> ss.length() == 3).forEach(ss -> System.out.println(ss));
-            Stream<String> stringStream = list.stream().filter((ss) -> ss.length() == 3);
-            Assert.assertNotNull(stringStream);// 通过测试，不为空
-            stringStream.forEach(System.out::print);
-            Assert.assertNotNull(stringStream);// 通过测试，不为空
-        }
-        
-        @Test
-        public void fn4() {
-            ArrayList<String> arr = new ArrayList<>();
-            arr.add("1111");
-            arr.add("2222");
-            arr.add("3333");
-            arr.add("4444");
-            arr.add("5555");
-            arr.add("6666");
-            arr.add("7777");
-            Stream<String> limit = arr.stream().limit(5);
-            Stream<String> skip = arr.stream().skip(3);
-            Stream<String> concat = Stream.concat(limit, skip);
-            // stream has already been operated upon or closed
-            // concat.forEach(System.out::println);
-            System.out.println("***********");
-            concat.distinct().forEach(System.out::println);
-        }
-    }
-    ```
-
-### 20.5 Stream流的生成方式
-
-#### **20.5.1 Stream流的常见生成方式**
-
-- Collection体系的集合可以使用默认方法stream（）生成流
-  - default Stream<E>() stream()
-- Map体系的集合间接生成流
-- 数组可以通过Stream接口的静态方法of(T ...value)生成流
-
-```java
-@Test
-public void fn1() {
-    // Collection的 直接生成流
-    ArrayList<String> arr = new ArrayList<String>();
-    Stream<String> arrStream = arr.stream();
-
-    HashSet<String> set = new HashSet<>();
-    Stream<String> setStream = set.stream();
-
-    // Map体系间接的生成流
-    HashMap<String, Integer> map = new HashMap<>();
-    Stream<Map.Entry<String, Integer>> mapStream = map.entrySet().stream();
-    mapStream.filter(s -> s.getKey().length() > 2).forEach(System.out::println);
-
-    // 数组变为Stream流
-    String[] str = {"12313", "asda"};
-    Stream<String> strSteam1 = Stream.of(str);
-    Stream<String> strSteam2 = Stream.of("123", "!231", "!!");
-}
-```
-
-#### 20.5.2 中间流操作
-
-- **filter**：过滤，满足条件的保留，不满足的不保留。传入的是Predicate
-
-- **limit**：取前xx个元素
-
-- **skip**：跳过前xx个元素
-
-- **concat**：`concat(Steam a,Stream b)` 合并a，b两个流
-
-- **distinct**：基于`hashCode（）`和`equals（）`去重
-
-- **sorted**：**按照指的规则排序，无参数按照自然排序，有参数按照指的排序规则**
-
-  - ```java
-    sorted(Comparator<? super T> comparator)
-    ```
-
-- **mapToInt**：将xx转为intStream
-
-  - ```java
-    IntStream mapToInt(ToIntFunction<? super T> mapper);
-    ```
-
-- **forEach**：遍历元素
-
-  - 属于终结方法
-
-  - ```java
-    void forEach(Consumer<? super T> action);
-    ```
-
-- **count**：返回元素总和
-  
-  - 属于终结方法
-
-```java
-// filter操作
-@Test
-public void fn2(){
-    ArrayList<Object> arr = new ArrayList<Object>();
-    arr.add(new Object());
-    arr.add(new Object());
-    arr.add("!@#123");
-    //  Stream<T> filter(Predicate<? super T> predicate);
-    // 进行布尔判断，为真就保存？
-    arr.stream().filter(s->(s instanceof String)).forEach(System.out::println);
-}
-```
-
-```java
-// limit和skip操作
-@Test
-    public void fn3(){
-        ArrayList<String> arr = new ArrayList<>();
-        arr.add("qeasfsa");
-        arr.add("456");
-        arr.add("789");
-        arr.add("/45662*");
-        arr.add("/asfg*");
-        arr.add("/阿斯弗*");
-        arr.add("/撒法发*");
-        // limit 取前三个元素
-        arr.stream().limit(3).forEach(System.out::println);
-        // skip 跳过前3个元素
-        arr.stream().skip(3).forEach(System.out::println);
-        System.out.println("**********");
-        // 跳过两个，剩下的前三个输出
-        arr.stream().skip(2).limit(3).forEach(System.out::println);
-    }
-```
-
-```java
-// concat 和 distinct
-@Test
-public void fn4() {
-    ArrayList<String> arr = new ArrayList<>();
-    arr.add("1111");
-    arr.add("2222");
-    arr.add("3333");
-    arr.add("4444");
-    arr.add("5555");
-    arr.add("6666");
-    arr.add("7777");java
-        Stream<String> limit = arr.stream().limit(5);
-    Stream<String> skip = arr.stream().skip(3);
-    Stream<String> concat = Stream.concat(limit, skip);
-    // stream has already been operated upon or closed
-    // concat.forEach(System.out::println);
-    System.out.println("***********");
-    concat.distinct().forEach(System.out::println);
-}
-```
-
-```java
-// sorted
-@Test
-public void fn5() {
-    ArrayList<String> arr = new ArrayList<>();
-    arr.add("1111");
-    arr.add("22122");
-    arr.add("3332333");
-    arr.add("4123444");
-    arr.add("a5555");
-    arr.add("6dsf666");
-    arr.add("7ds777");
-    //在测试一次
-    // arr.stream().sorted().forEach(System.out::println);
-
-    // 默认从小到大排序。返回正数代表大！
-    arr.stream().sorted((s1, s2) -> s1.length() - s2.length()).forEach(System.out::println);
-    System.out.println("***");
-    // 反过来就是从大到小
-    arr.stream().sorted((s1,s2)-> s2.length()-s1.length()).forEach(System.out::println);
-}
-```
-
-```java
-// mapToInt
-@Test
-public void fn6(){
-    ArrayList<String> list = new ArrayList<>();
-    list.add("123");
-    list.add("12");
-    list.add("32");
-    list.add("45");
-    IntStream intStream = list.stream().mapToInt(Integer::parseInt);
-    int sum = intStream.sum();
-    intStream.forEach(System.out::println);
-    System.out.println(sum);
 }
 ```
 
