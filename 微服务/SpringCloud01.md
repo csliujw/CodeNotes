@@ -152,7 +152,7 @@ cloud-demo：父工程，管理依赖
 - 订单服务和用户服务都对外暴露 Restful 的接口
 - 订单服务如果需要查询用户信息，只能调用用户服务的 Restful 接口，不能查询用户数据库
 
-### 2.2.1.导入 SQL 语句
+### 导入 SQL 语句
 
 首先，将课前资料提供的`cloud-order.sql`和`cloud-user.sql`导入到 mysql中：
 
@@ -170,7 +170,7 @@ cloud-order表中初始数据如下：
 
 cloud-order 表中持有 cloud-user 表中的 id 字段。
 
-### 2.2.2.导入demo工程
+### 导入demo工程
 
 用 IDEA 导入课前资料提供的 Demo：
 
@@ -222,7 +222,7 @@ cloud-order 表中持有 cloud-user 表中的 id 字段。
 
 ### 案例需求：
 
-修改order-service中的根据id查询订单业务，要求在查询订单的同时，根据订单中包含的userId查询出用户信息，一起返回。
+修改 order-service 中的根据id查询订单业务，要求在查询订单的同时，根据订单中包含的 userId 查询出用户信息，一起返回。
 
 ![image-20210713213312278](assets/image-20210713213312278.png)
 
@@ -230,13 +230,13 @@ cloud-order 表中持有 cloud-user 表中的 id 字段。
 
 大概的步骤是这样的：
 
-- 注册一个RestTemplate的实例到Spring容器
-- 修改order-service服务中的OrderService类中的queryOrderById方法，根据Order对象中的userId查询User
-- 将查询的User填充到Order对象，一起返回
+- 注册一个 RestTemplate 的实例到 Spring 容器
+- 修改 order-service 服务中的 OrderService 类中的 queryOrderById 方法，根据Order 对象中的 userId 查询User
+- 将查询的 User 填充到 Order 对象，一起返回
 
 ### 注册RestTemplate
 
-首先，我们在order-service服务中的OrderApplication启动类中，注册RestTemplate实例：
+首先，我们在 `order-service` 服务中的 `OrderApplication` 启动类中，注册 `RestTemplate` 实例：
 
 ```java
 package cn.itcast.order;
@@ -264,7 +264,7 @@ public class OrderApplication {
 
 ### 实现远程调用
 
-修改order-service服务中的cn.itcast.order.service包下的OrderService类中的queryOrderById方法：
+修改 `order-service` 服务中的 `cn.itcast.order.service` 包下的 `OrderService` 类中的 `queryOrderById` 方法：
 
 ![image-20210713213959569](assets/image-20210713213959569.png)
 
@@ -282,57 +282,51 @@ public class OrderApplication {
 
 但是，服务提供者与服务消费者的角色并不是绝对的，而是相对于业务而言。
 
-如果服务A调用了服务B，而服务B又调用了服务C，服务B的角色是什么？
+如果服务 A 调用了服务 B，而服务 B 又调用了服务 C，服务 B 的角色是什么？
 
-- 对于A调用B的业务而言：A是服务消费者，B是服务提供者
-- 对于B调用C的业务而言：B是服务消费者，C是服务提供者
+- 对于 A 调用 B 的业务而言：A 是服务消费者，B 是服务提供者
+- 对于 B 调用 C 的业务而言：B 是服务消费者，C 是服务提供者
 
-因此，服务B既可以是服务提供者，也可以是服务消费者。
+因此，服务 B 既可以是服务提供者，也可以是服务消费者。
 
 # Eureka注册中心
 
-
-
-假如我们的服务提供者user-service部署了多个实例，如图：
+假如我们的服务提供者 `user-service` 部署了多个实例，如图：
 
 ![image-20210713214925388](assets/image-20210713214925388.png)
 
-大家思考几个问题：
+> **思考：**
 
-- order-service在发起远程调用的时候，该如何得知user-service实例的ip地址和端口？
-- 有多个user-service实例地址，order-service调用时该如何选择？
-- order-service如何得知某个user-service实例是否依然健康，是不是已经宕机？
+- `order-service` 在发起远程调用的时候，该如何得知 `user-service` 实例的ip地址和端口？
+- 有多个 `user-service` 实例地址，`order-service` 调用时该如何选择？
+- `order-service` 如何得知某个 `user-service` 实例是否依然健康，是不是已经宕机？
 
 ## Eureka 的结构和作用
 
-这些问题都需要利用 Spring Cloud 中的注册中心来解决，其中最广为人知的注册中心就是Eureka，其结构如下：
+这些问题都需要利用 Spring Cloud 中的注册中心来解决，其中最广为人知的注册中心就是 Eureka，其结构如下：
 
 ![image-20210713220104956](assets/image-20210713220104956.png)
 
-
-
-回答之前的各个问题。
-
-问题1：order-service如何得知user-service实例地址？
+> <span style="color:green">**order-service 如何得知 user-service 实例地址？**</span>
 
 获取地址信息的流程如下：
 
-- user-service服务实例启动后，将自己的信息注册到eureka-server（Eureka服务端）。这个叫服务注册
-- eureka-server保存服务名称到服务实例地址列表的映射关系
-- order-service根据服务名称，拉取实例地址列表。这个叫服务发现或服务拉取
+- `user-service` 服务实例启动后，将自己的信息注册到 `eureka-server`（`Eureka` 服务端）。这个叫服务注册
+- `eureka-server` 保存服务名称到服务实例地址列表的映射关系。<span style="color:red">（key-->服务名称；value-->服务地址）</span>
+- `order-service` 根据服务名称，拉取实例地址列表。这个叫服务发现或服务拉取
 
-问题2：order-service如何从多个user-service实例中选择具体的实例？
+> <span style="color:green">**order-service 如何从多个 user-service 实例中选择具体的实例？**</span>
 
-- order-service从实例列表中利用负载均衡算法选中一个实例地址
+- `order-service` 从实例列表中<span style="color:red">利用负载均衡算法选中一个实例地址</span>
 - 向该实例地址发起远程调用
 
-问题3：order-service如何得知某个user-service实例是否依然健康，是不是已经宕机？
+> <span style="color:green">**order-service 如何得知某个 user-service 实例是否依然健康，是不是已经宕机？**</span>
 
-- user-service会每隔一段时间（默认30秒）向eureka-server发起请求，报告自己状态，称为心跳
-- 当超过一定时间没有发送心跳时，eureka-server会认为微服务实例故障，将该实例从服务列表中剔除
-- order-service拉取服务时，就能将故障实例排除了
+- `user-service` 会每隔一段时间（默认30秒）向 `eureka-server` 发起请求，报告自己状态，称为心跳
+- 当超过一定时间没有发送心跳时，`eureka-server` 会认为微服务实例故障，将该实例从服务列表中剔除
+- `order-service` 拉取服务时，就能将故障实例排除了
 
-> 注意：一个微服务，既可以是服务提供者，又可以是服务消费者，因此eureka将服务注册、服务发现等功能统一封装到了eureka-client端
+> <span style="color:green">**注意：一个微服务，既可以是服务提供者，又可以是服务消费者，因此 eureka 将服务注册、服务发现等功能统一封装到了eureka-client 端**</span>
 
 因此，接下来我们动手实践的步骤包括：
 
@@ -340,11 +334,11 @@ public class OrderApplication {
 
 ## 搭建eureka-server
 
-首先大家注册中心服务端：eureka-server，这必须是一个独立的微服务
+首先大家注册中心服务端：`eureka-server`，这必须是一个独立的微服务
 
 ### 创建eureka-server服务
 
-在cloud-demo父工程下，创建一个子模块：
+在 `cloud-demo` 父工程下，创建一个子模块：
 
 ![image-20210713220605881](assets/image-20210713220605881.png)
 
@@ -358,7 +352,7 @@ public class OrderApplication {
 
 ### 引入eureka依赖
 
-引入 Spring Cloud 为eureka提供的starter依赖：
+引入 `Spring Cloud` 为 `eureka` 提供的 `starter` 依赖：
 
 ```xml
 <dependency>
@@ -369,7 +363,7 @@ public class OrderApplication {
 
 ### 编写启动类
 
-给 eureka-server 服务编写一个启动类，一定要添加一个 `@EnableEurekaServer` 注解，开启 eureka 的注册中心功能：
+给 `eureka-server` 服务编写一个启动类，一定要添加一个 `@EnableEurekaServer` 注解，开启 `eureka` 的注册中心功能：
 
 ```java
 package cn.itcast.eureka;
@@ -389,7 +383,7 @@ public class EurekaApplication {
 
 ### 编写配置文件
 
-编写一个 application.yml 文件，内容如下：
+编写一个 `application.yml` 文件，内容如下：
 
 ```yaml
 server:
@@ -413,11 +407,11 @@ eureka:
 
 ## 服务注册
 
-下面，我们将user-service注册到eureka-server中去。
+下面，我们将 `user-service` 注册到 `eureka-server` 中去。
 
-### 1）引入依赖
+### 引入依赖
 
-在user-service的 pom 文件中，引入下面的eureka-client依赖：
+在 `user-service` 的 `pom` 文件中，引入下面的 `eureka-client` 依赖：
 
 ```xml
 <dependency>
@@ -426,9 +420,9 @@ eureka:
 </dependency>
 ```
 
-### 2）配置文件
+### 配置文件
 
-在user-service中，修改application.yml文件，添加服务名称、eureka地址：
+在 `user-service` 中，修改 `application.yml` 文件，添加服务名称、`eureka` 地址：
 
 ```yaml
 spring:
@@ -440,11 +434,11 @@ eureka:
       defaultZone: http://127.0.0.1:10086/eureka
 ```
 
-### 3）启动多个user-service实例
+### 启动多个user-service实例
 
-为了演示一个服务有多个实例的场景，我们添加一个SpringBoot的启动配置，再启动一个user-service。
+为了演示一个服务有多个实例的场景，我们添加一个 `SpringBoot` 的启动配置，再启动一个 `user-service`。
 
-首先，复制原来的user-service启动配置：
+首先，复制原来的 `user-service` 启动配置：
 
 ![image-20210713222656562](assets/image-20210713222656562.png)
 
@@ -452,29 +446,29 @@ eureka:
 
 ![image-20210713222757702](assets/image-20210713222757702.png)
 
-现在，Spring Boot 窗口会出现两个user-service启动配置：
+现在，`Spring Boot` 窗口会出现两个 `user-service` 启动配置：
 
 ![image-20210713222841951](assets/image-20210713222841951.png)
 
-不过，第一个是8081端口，第二个是8082端口。
+不过，第一个是 `8081` 端口，第二个是 `8082` 端口。
 
-启动两个user-service实例：
+启动两个 `user-service` 实例：
 
 ![image-20210713223041491](assets/image-20210713223041491.png)
 
-查看eureka-server管理页面：
+查看 `eureka-server` 管理页面：
 
 ![image-20210713223150650](assets/image-20210713223150650.png)
 
-## 3.4.服务发现
+## 服务发现
 
-下面，我们将order-service的逻辑修改：向eureka-server拉取user-service的信息，实现服务发现。
+下面，我们将 `order-service` 的逻辑修改：向 `eureka-server` 拉取 `user-service` 的信息，实现服务发现。
 
-### 1）引入依赖
+### 引入依赖
 
-之前说过，服务发现、服务注册统一都封装在eureka-client依赖，因此这一步与服务注册时一致。
+之前说过，<span style="color:red">服务发现、服务注册统一都封装在 `eureka-client` 依赖</span>，因此这一步与服务注册时一致。
 
-在order-service的 pom 文件中，引入下面的eureka-client依赖：
+在 `order-service` 的 `pom` 文件中，引入下面的 `eureka-client` 依赖：
 
 ```xml
 <dependency>
@@ -483,7 +477,7 @@ eureka:
 </dependency>
 ```
 
-### 2）配置文件
+### 配置文件
 
 服务发现也需要知道 eureka 地址，因此第二步与服务注册一致，都是配置 eureka 信息：
 
@@ -499,21 +493,19 @@ eureka:
       defaultZone: http://127.0.0.1:10086/eureka
 ```
 
-### 3）服务拉取和负载均衡
+### 服务拉取和负载均衡
 
-最后，我们要去 `eureka-server` 中拉取 `user-service` 服务的实例列表，并且实现负载均衡。
-
-不过这些动作不用我们去做，只需要添加一些注解即可。
+最后，我们要去 `eureka-server` 中拉取 `user-service` 服务的实例列表，并且实现负载均衡。不过这些动作不用我们去做，只需要添加一些注解即可。
 
 在 order-service 的 `OrderApplication` 中，给 `RestTemplate` 这个Bean添加一个 `@LoadBalanced` 注解：
 
 ![image-20210713224049419](assets/image-20210713224049419.png)
 
-修改order-service服务中的 `cn.itcast.order.service` 包下的 `OrderService` 类中的 `queryOrderById` 方法。修改访问的 `url` 路径，用服务名代替 `ip`、端口：
+修改 `order-service` 服务中的 `cn.itcast.order.service` 包下的 `OrderService` 类中的 `queryOrderById` 方法。修改访问的 `url` 路径，用服务名代替 `ip`、端口：
 
 ![image-20210713224245731](assets/image-20210713224245731.png)
 
-spring会自动帮助我们从eureka-server端，根据 `userservice` 这个服务名称，获取实例列表，而后完成负载均衡。
+`spring` 会自动帮助我们从 `eureka-server` 端，根据 `userservice` 这个服务名称，获取实例列表，而后完成负载均衡。
 
 # Ribbon 负载均衡
 
@@ -525,17 +517,17 @@ spring会自动帮助我们从eureka-server端，根据 `userservice` 这个服�
 
 ![image-20210713224517686](assets/image-20210713224517686.png)
 
-那么我们发出的请求明明是http://userservice/user/1，怎么变成了http://localhost:8081的呢？
+那么我们发出的请求明明是 http://userservice/user/1，怎么变成了http://localhost:8081的呢？
 
 ## 源码跟踪
 
 为什么我们只输入了 `service` 名称就可以访问了呢？之前还要获取 `IP` 和端口。
 
-显然有人帮我们根据 service 名称，获取到了服务实例的 `IP` 和端口。它就是`LoadBalancerInterceptor`，这个类会在对 `RestTemplate` 的请求进行拦截，然后从 `Eureka` 根据服务 `id` 获取服务列表，随后利用负载均衡算法得到真实的服务地址信息，替换服务 `id`。
+显然有人帮我们根据 `service`  名称，获取到了服务实例的 `IP` 和端口。它就是`LoadBalancerInterceptor`，这个类会在对 `RestTemplate` 的请求进行拦截，然后从 `Eureka` 根据服务 `id` 获取服务列表，随后利用负载均衡算法得到真实的服务地址信息，替换服务 `id`。
 
 我们进行源码跟踪：
 
-### 1）LoadBalancerIntercepor
+### LoadBalancerIntercepor
 
 ![1525620483637](assets/1525620483637.png)
 
@@ -547,7 +539,7 @@ spring会自动帮助我们从eureka-server端，根据 `userservice` 这个服�
 
 这里的`this.loadBalancer`是`LoadBalancerClient`类型，我们继续跟入。
 
-### 2）LoadBalancerClient
+### LoadBalancerClient
 
 继续跟入execute方法：
 
@@ -590,7 +582,7 @@ spring会自动帮助我们从eureka-server端，根据 `userservice` 这个服�
 
 到这里，整个负载均衡的流程我们就清楚了。
 
-### 4）总结
+### 总结
 
 `SpringCloudRibbon` 的底层采用了一个拦截器，拦截了 `RestTemplate` 发出的请求，对地址做了修改。用一幅图来总结一下：
 
@@ -602,7 +594,7 @@ spring会自动帮助我们从eureka-server端，根据 `userservice` 这个服�
 - `RibbonLoadBalancerClient` 会从请求 `url` 中获取服务名称，也就是user-service
 - `DynamicServerListLoadBalancer` 根据 `user-service` 到 `eureka` 拉取服务列表
 - `eureka` 返回列表，`localhost:8081`、`localhost:8082`
-- `IRule` 利用内置负载均衡规则，从列表中选择一个，例如 `localhost:8081`
+- `IRule` 利用内置负载均衡规则，从列表中选择一个，例如 `localhost:8081` [ 默认的负载均衡策略是轮询 ]
 - `RibbonLoadBalancerClient` 修改请求地址，用 `localhost:8081` 替代`userservice`，得到 http://localhost:8081/user/1，发起真实请求
 
 ## 负载均衡策略
@@ -618,9 +610,9 @@ spring会自动帮助我们从eureka-server端，根据 `userservice` 这个服�
 | **内置负载均衡规则类**      | **规则描述**                                                 |
 | --------------------------- | ------------------------------------------------------------ |
 | `RoundRobinRule`            | 简单轮询服务列表来选择服务器。它是Ribbon默认的负载均衡规则。 |
-| `AvailabilityFilteringRule` | 对以下两种服务器进行忽略：   （1）在默认情况下，这台服务器如果3次连接失败，这台服务器就会被设置为“短路”状态。短路状态将持续30秒，如果再次连接失败，短路的持续时间就会几何级地增加。  （2）并发数过高的服务器。如果一个服务器的并发连接数过高，配置了AvailabilityFilteringRule规则的客户端也会将其忽略。并发连接数的上限，可以由客户端的<clientName>.<clientConfigNameSpace>.ActiveConnectionsLimit属性进行配置。 |
+| `AvailabilityFilteringRule` | 对以下两种服务器进行忽略：   <br>（1）在默认情况下，这台服务器如果3次连接失败，这台服务器就会被设置为“短路”状态。短路状态将持续30秒，如果再次连接失败，短路的持续时间就会几何级地增加。  <br>（2）并发数过高的服务器。如果一个服务器的并发连接数过高，配置了 `AvailabilityFilteringRule` 规则的客户端也会将其忽略。并发连接数的上限，可以由客户端的`<clientName>.<clientConfigNameSpace>.ActiveConnectionsLimit`属性进行配置。 |
 | `WeightedResponseTimeRule`  | 为每一个服务器赋予一个权重值。服务器响应时间越长，这个服务器的权重就越小。这个规则会随机选择服务器，这个权重值会影响服务器的选择。 |
-| **`ZoneAvoidanceRule`**     | 以区域可用的服务器为基础进行服务器的选择。使用Zone对服务器进行分类，这个Zone可以理解为一个机房、一个机架等。而后再对Zone内的多个服务做轮询。 |
+| **`ZoneAvoidanceRule`**     | 以区域可用的服务器为基础进行服务器的选择。使用 Zone 对服务器进行分类，这个 Zone 可以理解为一个机房、一个机架等。而后再对 Zone 内的多个服务做轮询。 |
 | `BestAvailableRule`         | 忽略那些短路的服务器，并选择并发数较低的服务器。             |
 | `RandomRule`                | 随机选择一个可用的服务器。                                   |
 | `RetryRule`                 | 重试机制的选择逻辑                                           |
@@ -633,7 +625,7 @@ spring会自动帮助我们从eureka-server端，根据 `userservice` 这个服�
 
 通过定义 `IRule` 实现可以修改负载均衡规则，有两种方式：
 
-代码方式：在 order-service 中的 `OrderApplication` 类中，定义一个新的`IRule`：
+代码方式：在 <span style="color:red">order-service </span>中的 `OrderApplication` 类中，定义一个新的`IRule`：
 
 ```java
 @Bean
@@ -652,7 +644,7 @@ userservice: # 给某个微服务配置负载均衡规则，这里是userservice
 
 > **注意**，一般用默认的负载均衡规则，不做修改。
 
-## 4.4.饥饿加载
+## 饥饿加载
 
 `Ribbon` 默认是采用懒加载，即第一次访问时才会去创建 `LoadBalanceClient`，请求时间会很长。
 
@@ -664,6 +656,18 @@ ribbon:
     enabled: true
     clients: userservice
 ```
+
+## 总结
+
+- Ribbon 负载均衡规则
+  - 规则接口时 IRule
+  - 默认实现时 ZoneAvoidanceRule，根据 zone 选择服务列表，然后轮询
+- 负载均衡自定义方式
+  - 代码方式：配置灵活，但是修改时需要重新打包发布
+  - 配置方式：直观、方便，无需重新打包发布，但是无法做全局配置
+- 饥饿加载
+  - 开启饥饿加载
+  - 指定饥饿加载的微服务名称
 
 # Nacos注册中心
 
@@ -686,7 +690,7 @@ ribbon:
 - 依赖不同
 - 服务地址不同
 
-### 1）引入依赖
+### 引入依赖
 
 在 `cloud-demo` 父工程的 `pom` 文件中的`<dependencyManagement>`中引入`SpringCloudAlibaba` 的依赖：
 
@@ -711,7 +715,7 @@ ribbon:
 
 > **注意**：不要忘了注释掉eureka的依赖。
 
-### 2）配置nacos地址
+### 配置nacos地址
 
 在 `user-service` 和 `order-service` 的 `application.yml` 中添加 `nacos` 地址：
 
@@ -724,13 +728,13 @@ spring:
 
 > **注意**：不要忘了注释掉eureka的地址
 
-### 3）重启
+### 重启
 
 重启微服务后，登录 `nacos` 管理页面，可以看到微服务信息：
 
 ![image-20210713231439607](assets/image-20210713231439607.png)
 
-## 5.3.服务分级存储模型
+## 服务分级存储模型
 
 一个**服务**可以有多个**实例**，例如我们的 user-service，可以有:
 
@@ -836,8 +840,6 @@ userservice:
 
 ![image-20210713235235219](assets/image-20210713235235219.png)
 
-
-
 > **注意**：如果权重修改为0，则该实例永远不会被访问
 
 ## 环境隔离
@@ -849,8 +851,6 @@ userservice:
 - 不同 `namespace` 之间相互隔离，例如不同 `namespace` 的服务互相不可见
 
 ![image-20210714000101516](assets/image-20210714000101516.png)
-
-
 
 ### 创建 namespace
 
@@ -886,13 +886,9 @@ spring:
         namespace: 492a7d5d-237b-46a1-a99a-fa8e98e4b0f9 # 命名空间，填ID
 ```
 
-
-
 重启order-service后，访问控制台，可以看到下面的结果：
 
 ![image-20210714000830703](assets/image-20210714000830703.png)
-
-
 
 ![image-20210714000837140](assets/image-20210714000837140.png)
 
@@ -900,17 +896,13 @@ spring:
 
 ![image-20210714000941256](assets/image-20210714000941256.png)
 
-
-
-## 5.6.Nacos与Eureka的区别
+## Nacos与Eureka的区别
 
 Nacos的服务实例分为两种l类型：
 
 - 临时实例：如果实例宕机超过一定时间，会从服务列表剔除，默认的类型。
 
 - 非临时实例：如果实例宕机，不会从服务列表剔除，也可以叫永久实例。
-
-
 
 配置一个服务实例为永久实例：
 
@@ -922,15 +914,9 @@ spring:
         ephemeral: false # 设置为非临时实例
 ```
 
-
-
-
-
 Nacos和Eureka整体结构类似，服务注册、服务拉取、心跳等待，但是也存在一些差异：
 
 ![image-20210714001728017](assets/image-20210714001728017.png)
-
-
 
 - Nacos与eureka的共同点
   - 都支持服务注册和服务拉取
@@ -941,8 +927,3 @@ Nacos和Eureka整体结构类似，服务注册、服务拉取、心跳等待，
   - 临时实例心跳不正常会被剔除，非临时实例则不会被剔除
   - Nacos支持服务列表变更的消息推送模式，服务列表更新更及时
   - Nacos集群默认采用AP方式，当集群中存在非临时实例时，采用CP模式；Eureka采用AP方式
-
-
-
-
-
