@@ -181,5 +181,4 @@ sh startup.sh -m standalone
     <groupId>com.alibaba.cloud</groupId>
     <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
 </dependency>
-
 ```
