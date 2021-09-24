@@ -2,30 +2,33 @@
 
 ## 学习内容
 
-- 容器
-  - `AnnotationConfigApplicationContext`
-  - 组件添加
-  - 组件赋值
-  - 组件注入
-  - `AOP`
-  - 声明式事务
-  
-- 扩展原理
-  - `BeanFactoryPostProcessor`
-  - `BeanDefinitionRegistryPostProcessor`
-  - `ApplicationListener`
-  - Spring容器创建过程
-  
-- web
-  - `servlet3.0`请求
-  - 异步请求
+> 容器
 
-- <a href="https://docs.spring.io/spring-framework/docs/current/spring-framework-reference/core.html#beans-factory-extension">如何扩展Spring的功能</a>
+- `AnnotationConfigApplicationContext`
+- 组件添加
+- 组件赋值
+- 组件注入
+- `AOP`
+- 声明式事务
 
-- 配置文件注意点
+> 扩展原理
 
-  - 配置文件需要放在源码文件夹，这样合并的时候才会出现在bin目录下
-  - eg，目录层级关系
+- `BeanFactoryPostProcessor`
+- `BeanDefinitionRegistryPostProcessor`
+- `ApplicationListener`
+- Spring容器创建过程
+
+> web
+
+- `servlet3.0`请求
+- 异步请求
+
+<a href="https://docs.spring.io/spring-framework/docs/current/spring-framework-reference/core.html#beans-factory-extension">如何扩展Spring的功能</a>
+
+> 配置文件注意点
+
+- 配置文件需要放在源码文件夹，这样合并的时候才会出现在bin目录下
+- 目录层级关系
 
    src|
 
@@ -59,7 +62,7 @@
 
 ## 导包
 
-导入spring-context包后，其他一些包也会自动导入哦~即核心容器所依赖的所有环境也会被。
+导入spring-context包后，其他一些包也会自动导入哦~ 即核心容器所依赖的所有环境也会被导入。
 
 ```xml
 <!-- https://mvnrepository.com/artifact/org.springframework/spring-context -->
@@ -70,9 +73,9 @@
 </dependency>
 ```
 
-## 原始的xml方式写法
+## 原始的 xml 方式写法
 
-- pojo对象
+- POJO 对象
 
 ```java
 package org.example.pojo;
@@ -130,14 +133,14 @@ public class BeanXMLTest {
 }
 ```
 
-- `xml`配置文件。在maven的`resrouce`目录下哦。resource目录下的资源最后会变成项目根目录下的文件。所以是直接`Classxxx("bean.xml")`
-- `JavaSE`的项目和`JavaEE`项目最后的输出路径好像都是classes，但是`JavaEE`里写路径得是`classpath`！
+- `xml` 配置文件。在 maven 的 `resrouce` 目录下。resource 目录下的资源最后会变成项目根目录下的文件。所以是直接 `Classxxx("bean.xml")`
+- `JavaSE` 的项目和 `JavaEE` 项目最后的输出路径好像都是 classes，但是 `JavaEE` 里写的路径是 `classpath`！
 
 ## 用注解配置类
 
-- `@Configuration` 可以替代xml，进行类的配置。典型的应用有三方jar包，我们需要把它交给Spring容器进行管理，于是用 `@Configuration` 的方式把这个类注入到Spring中。
+- `@Configuration` 可以替代 XML，进行类的配置。典型的应用有三方jar包，我们需要把它交给Spring容器进行管理，于是用 `@Configuration` 的方式把这个类注入到Spring中。
 
-`JavaConfig`配置类
+`JavaConfig` 配置类
 
 ```java
 package org.example.configuration;
@@ -194,7 +197,7 @@ public class BeanXMLTest {
 - `@Configuration`
 - `@ComponentScan`，如果是 `jdk8`，它被设置成了重复注解，可以重复用。
 
-- `xml`的配置方式
+- `xml` 的配置方式
 
   ```xml
   <!-- 配置包扫描 , 只要标注了@Controller、@Service、@Repository、@Component的都会被自动的扫描加入容器中-->
@@ -206,7 +209,7 @@ public class BeanXMLTest {
   ```java
   // excludeFilters指定排除那些  用@Filter指定排除那些
   // includeFilters指定包含那些  用@Filter指定包含那些
-  // 要让includeFilters生效需要设置@ComponentScan的useDefaultFilters=false
+  // 要让includeFilters生效需要设置@ComponentScan的useDefaultFilters=false，默认过滤器会导入所有的。
   // MainConfiguration的配置对象不会被排除的
   @Configuration
   @ComponentScan(basePackages = "org.example", excludeFilters = {
@@ -246,10 +249,9 @@ public class BeanXMLTest {
           return new Person();
       }
   }
-  
   ```
-
-  ```java
+  
+```java
   public class ScanTest {
   
       @Test
@@ -274,78 +276,78 @@ public class BeanXMLTest {
 
 ## @Filter自定义过滤规则
 
-自定义过滤规则的代码
+- 自定义过滤规则的代码
 
-```java
-package org.example.configuration;
+  ```java
+  package org.example.configuration;
+  
+  import org.springframework.context.annotation.ComponentScan;
+  import org.springframework.context.annotation.Configuration;
+  import org.springframework.context.annotation.FilterType;
+  import org.springframework.core.io.Resource;
+  import org.springframework.core.type.AnnotationMetadata;
+  import org.springframework.core.type.ClassMetadata;
+  import org.springframework.core.type.classreading.MetadataReader;
+  import org.springframework.core.type.classreading.MetadataReaderFactory;
+  import org.springframework.core.type.filter.TypeFilter;
+  
+  import java.io.IOException;
+  
+  @Configuration
+  @ComponentScan(basePackages = "org.example", includeFilters = {
+          @ComponentScan.Filter(type = FilterType.CUSTOM, classes = {DefineFilter.class})
+  }, useDefaultFilters = false)
+  public class DefineFilterConfiguration {
+  }
+  
+  class DefineFilter implements TypeFilter {
+      // 自定义匹配规则
+      @Override
+      public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory) throws IOException {
+          AnnotationMetadata annotationMetadata = metadataReader.getAnnotationMetadata();
+          // 获得当前正在扫描的类信息
+          ClassMetadata classMetadata = metadataReader.getClassMetadata();
+          // 获得当前类资源（类路径）
+          Resource resource = metadataReader.getResource();
+          // 类名
+          String className = classMetadata.getClassName();
+          System.out.println("---->" + className);
+          if (className.contains("Dao")) {
+              return true;
+          }
+          return false;
+      }
+  }
+  ```
 
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.FilterType;
-import org.springframework.core.io.Resource;
-import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.core.type.ClassMetadata;
-import org.springframework.core.type.classreading.MetadataReader;
-import org.springframework.core.type.classreading.MetadataReaderFactory;
-import org.springframework.core.type.filter.TypeFilter;
+- 测试代码
 
-import java.io.IOException;
-
-@Configuration
-@ComponentScan(basePackages = "org.example", includeFilters = {
-        @ComponentScan.Filter(type = FilterType.CUSTOM, classes = {DefineFilter.class})
-}, useDefaultFilters = false)
-public class DefineFilterConfiguration {
-}
-
-class DefineFilter implements TypeFilter {
-    // 自定义匹配规则
-    @Override
-    public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory) throws IOException {
-        AnnotationMetadata annotationMetadata = metadataReader.getAnnotationMetadata();
-        // 获得当前正在扫描的类信息
-        ClassMetadata classMetadata = metadataReader.getClassMetadata();
-        // 获得当前类资源（类路径）
-        Resource resource = metadataReader.getResource();
-        // 类名
-        String className = classMetadata.getClassName();
-        System.out.println("---->" + className);
-        if (className.contains("Dao")) {
-            return true;
-        }
-        return false;
-    }
-}
-```
-
-测试代码
-
-```java
-package org.example;
-
-import org.example.configuration.DefineFilterConfiguration;
-import org.example.configuration.IncludeConfiguration;
-import org.example.configuration.MainConfiguration;
-import org.junit.Test;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-
-
-public class ScanTest {
-
-    @Test
-    public void test3() {
-        AnnotationConfigApplicationContext anno = new AnnotationConfigApplicationContext(DefineFilterConfiguration.class);
-        String[] beanDefinitionNames = anno.getBeanDefinitionNames();
-        for (int i = 0; i < beanDefinitionNames.length; i++) {
-            System.out.println(beanDefinitionNames[i]);
-        }
-    }
-}
-```
+  ```java
+  package org.example;
+  
+  import org.example.configuration.DefineFilterConfiguration;
+  import org.example.configuration.IncludeConfiguration;
+  import org.example.configuration.MainConfiguration;
+  import org.junit.Test;
+  import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+  
+  
+  public class ScanTest {
+  
+      @Test
+      public void test3() {
+          AnnotationConfigApplicationContext anno = new AnnotationConfigApplicationContext(DefineFilterConfiguration.class);
+          String[] beanDefinitionNames = anno.getBeanDefinitionNames();
+          for (int i = 0; i < beanDefinitionNames.length; i++) {
+              System.out.println(beanDefinitionNames[i]);
+          }
+      }
+  }
+  ```
 
 ## Spring单元测试
 
-引入依赖，需要的`JUnit`的版本有点高
+引入依赖，需要的 `JUnit` 的版本有点高
 
 [Spring测试官方文档](https://docs.spring.io/spring-framework/docs/current/reference/html/testing.html)
 
@@ -395,8 +397,6 @@ public class ScopeConfigurationTest {
 }
 ```
 
-
-
 ## Bean作用域范围
 
 - singleton 单例
@@ -407,7 +407,7 @@ public class ScopeConfigurationTest {
 
 ## 懒加载
 
-- @Lazy ，针对单实例 容器启动时不创建对象，第一次获取bean时再进行初始化。
+- @Lazy ，针对单实例容器启动时不创建对象，第一次获取 bean 时再进行初始化。
 - 验证代码如下
 
 ```java
@@ -429,174 +429,172 @@ public class LazyConfiguration {
 }
 ```
 
-
-
 ## 按条件注入
 
-- @Conditional，
+> @Conditional
 
-  ```java
-  @Target({ElementType.TYPE, ElementType.METHOD}) // 方法
-  @Retention(RetentionPolicy.RUNTIME)
-  @Documented
-  public @interface Conditional {
-  
-  	/**
-  	 * All {@link Condition} classes that must {@linkplain Condition#matches match}
-  	 * in order for the component to be registered.
-  	 */
-  	Class<? extends Condition>[] value();
-  
-  }
-  
-  // 再看Class<? exntends Condition>[] 中的Condition
-  @FunctionalInterface
-  public interface Condition {
-  
-  	/**
-  	 * Determine if the condition matches.
-  	 * @param context the condition context
-  	 * @param metadata the metadata of the {@link org.springframework.core.type.AnnotationMetadata class}
-  	 * or {@link org.springframework.core.type.MethodMetadata method} being checked
-  	 * @return {@code true} if the condition matches and the component can be registered,
-  	 * or {@code false} to veto the annotated component's registration
-  	 */
-  	boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata);
-  
-  }
-  // 由此可看出，Conditional传入的是Condition数组
-  ```
+```java
+@Target({ElementType.TYPE, ElementType.METHOD}) // 方法
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Conditional {
 
-- 按条件注入具体Demo
+	/**
+	 * All {@link Condition} classes that must {@linkplain Condition#matches match}
+	 * in order for the component to be registered.
+	 */
+	Class<? extends Condition>[] value();
 
-  ```java
-  package org.example.configuration;
-  
-  import org.example.pojo.Person;
-  import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-  import org.springframework.context.annotation.*;
-  import org.springframework.core.type.AnnotatedTypeMetadata;
-  
-  class LinuxCondition implements Condition {
-  
-      /**
-       * @param context  判断能使用的上下文环境
-       * @param metadata 当前标注了Condtion注解的标注信息
-       * @return
-       */
-      @Override
-      public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-          String property = context.getEnvironment().getProperty("os.name");
-          if (property != null && property.contains("linux"))
-              return true;
-          return false;
-      }
-  }
-  
-  class WindowsCondition implements Condition {
-  
-      @Override
-      public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-          String property = context.getEnvironment().getProperty("os.name");
-          if (property != null && property.contains("Window"))
-              return true;
-          return false;
-      }
-  }
-  
-  /**
-   * 包含某个bean才xxx
-   */
-  class ConditionDemo implements Condition {
-  
-      @Override
-      public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-          context.getBeanFactory();
-          context.getClassLoader();
-          context.getEnvironment();
-          BeanDefinitionRegistry registry = context.getRegistry();
-          boolean windows = registry.containsBeanDefinition("windows");
-          if (windows)
-              return true;
-          return false;
-          // bean的注冊还未学习
-      }
-  }
-  
-  
-  @Configuration
-  public class ConditionConfiguration {
-  
-      @Bean("linux")
-      @Conditional(value = {LinuxCondition.class})
-      public Person getLinux() {
-          return new Person("linux");
-      }
-  
-      @Bean("windows")
-      @Conditional(value = {WindowsCondition.class})
-      public Person getWindows() {
-          return new Person("windows");
-      }
-  
-      // 包含指定的Bean才注入此obj对象
-      @Bean("obj")
-      @Conditional(value = {ConditionDemo.class})
-      public Object getObj() {
-          return new Object();
-      }
-  }
-  ```
+}
 
-- 测试代码
+// 再看Class<? exntends Condition>[] 中的Condition
+@FunctionalInterface
+public interface Condition {
 
-  ```java
-  package org.example;
-  
-  import org.example.configuration.ConditionConfiguration;
-  import org.example.pojo.Person;
-  import org.junit.Test;
-  import org.junit.runner.RunWith;
-  import org.springframework.beans.factory.annotation.Autowired;
-  import org.springframework.context.ApplicationContext;
-  import org.springframework.test.context.ContextConfiguration;
-  import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-  
-  import java.util.stream.Stream;
-  
-  @RunWith(SpringJUnit4ClassRunner.class)
-  @ContextConfiguration(classes = ConditionConfiguration.class)
-  public class ConditionTest {
-  
-      @Autowired
-      ApplicationContext context;
-  
-      @Test
-      public void test1() {
-          String[] beanNamesForType = context.getBeanNamesForType(Person.class);
-          Stream.of(beanNamesForType).forEach(System.out::println);
-      }
-  
-      @Test
-      public void test2() {
-          String[] beanDefinitionNames = context.getBeanDefinitionNames();
-          Stream.of(beanDefinitionNames).forEach(System.out::println);
-      }
-  }
-  ```
+	/**
+	 * Determine if the condition matches.
+	 * @param context the condition context
+	 * @param metadata the metadata of the {@link org.springframework.core.type.AnnotationMetadata class}
+	 * or {@link org.springframework.core.type.MethodMetadata method} being checked
+	 * @return {@code true} if the condition matches and the component can be registered,
+	 * or {@code false} to veto the annotated component's registration
+	 */
+	boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata);
+
+}
+// 由此可看出，Conditional传入的是Condition数组
+```
+
+> 按条件注入具体Demo
+
+```java
+package org.example.configuration;
+
+import org.example.pojo.Person;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.context.annotation.*;
+import org.springframework.core.type.AnnotatedTypeMetadata;
+
+class LinuxCondition implements Condition {
+
+    /**
+     * @param context  判断能使用的上下文环境
+     * @param metadata 当前标注了Condtion注解的标注信息
+     * @return
+     */
+    @Override
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+        String property = context.getEnvironment().getProperty("os.name");
+        if (property != null && property.contains("linux"))
+            return true;
+        return false;
+    }
+}
+
+class WindowsCondition implements Condition {
+
+    @Override
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+        String property = context.getEnvironment().getProperty("os.name");
+        if (property != null && property.contains("Window"))
+            return true;
+        return false;
+    }
+}
+
+/**
+ * 包含某个bean才xxx
+ */
+class ConditionDemo implements Condition {
+
+    @Override
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+        context.getBeanFactory();
+        context.getClassLoader();
+        context.getEnvironment();
+        BeanDefinitionRegistry registry = context.getRegistry();
+        boolean windows = registry.containsBeanDefinition("windows");
+        if (windows)
+            return true;
+        return false;
+        // bean的注冊还未学习
+    }
+}
+
+
+@Configuration
+public class ConditionConfiguration {
+
+    @Bean("linux")
+    @Conditional(value = {LinuxCondition.class})
+    public Person getLinux() {
+        return new Person("linux");
+    }
+
+    @Bean("windows")
+    @Conditional(value = {WindowsCondition.class})
+    public Person getWindows() {
+        return new Person("windows");
+    }
+
+    // 包含指定的Bean才注入此obj对象
+    @Bean("obj")
+    @Conditional(value = {ConditionDemo.class})
+    public Object getObj() {
+        return new Object();
+    }
+}
+```
+
+> 测试代码
+
+```java
+package org.example;
+
+import org.example.configuration.ConditionConfiguration;
+import org.example.pojo.Person;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.util.stream.Stream;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = ConditionConfiguration.class)
+public class ConditionTest {
+
+    @Autowired
+    ApplicationContext context;
+
+    @Test
+    public void test1() {
+        String[] beanNamesForType = context.getBeanNamesForType(Person.class);
+        Stream.of(beanNamesForType).forEach(System.out::println);
+    }
+
+    @Test
+    public void test2() {
+        String[] beanDefinitionNames = context.getBeanDefinitionNames();
+        Stream.of(beanDefinitionNames).forEach(System.out::println);
+    }
+}
+```
 
 ## @Import导入另一组件
 
 ### 容器注入组件
 
 - 包扫描+组件标注注解（`@Controller / @Service / @Repository / @Component`）,局限于我们自己写的类
-- `@Bean`[导入的第三方包里面的组件]，xml的bean配置方式也可以做到。 
-- `@Import`[快速给容器中导入一个组件]，xml也有对应的引入方式。
+- `@Bean` [导入的第三方包里面的组件]，xml 的 bean 配置方式也可以做到。 
+- `@Import` [快速给容器中导入一个组件]，xml 也有对应的引入方式。
   - `@ImportSelector`[导入的选择器,返回需要导入的组件的全类名数组]
   - `@ImportBeanDefinitionRegistrar`[也是一个接口]
-- 使用Spring提供的`FactoryBean`
-  - 默认获取到的是工厂bean调用`getObject`创建的对象
-  - 要获取工厂Bean本身，我们需要给id前面加一个& 如：`&ColorFactoryBean`
+- 使用Spring提供的 `FactoryBean`
+  - 默认获取到的是工厂bean调用 `getObject` 创建的对象
+  - 要获取工厂 Bean 本身，我们需要给 id 前面加一个& 如：`&ColorFactoryBean`
   - 这个的特点或者是优势到底是什么？为什么会提供这种方法？
 
 import注解的具体定义及注释
@@ -950,10 +948,10 @@ public class ImportBeanDefinitionTest {
 
 ## FactoryBean创建
 
-使用Spring提供的`FactoryBean`
+使用Spring提供的 `FactoryBean`
 
-- 默认获取到的是工厂bean调用`getObject`创建的对象
-- 要获取工厂Bean本身，我们需要给id前面加一个& 如：`&ColorFactoryBean`
+- 默认获取到的是工厂 bean 调用 `getObject` 创建的对象
+- 要获取工厂 Bean 本身，我们需要给 id 前面加一个& 如：`&ColorFactoryBean`
 - 这个的特点或者是优势到底是什么？为什么会提供这种方法？
 
 代码
@@ -1027,7 +1025,7 @@ public interface BeanFactory {
 
 - `@Bean(initMethod = "init", destroyMethod = "destroy")`
 
-- 原本在xml中的配置方式
+- 原本在 xml 中的配置方式
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1152,9 +1150,9 @@ public class LifeCycleConfiguration {
 
 ## JS250规范定义的注解
 
-- `@PostConstruct`,在bean创建完成并属性赋值完成，来执行初始化方法
-- `@PreDestroy`，在容器销毁bean之前通知我们进行清理操作
-- 这几个注解是Java提供的，好像是需要提供J2EE的依赖。
+- `@PostConstruct`, 在 bean 创建完成并属性赋值完成，来执行初始化方法
+- `@PreDestroy`，在容器销毁 bean 之前通知我们进行清理操作
+- 这几个注解是 Java 提供的，好像是需要提供 J2EE 的依赖。
 
 ```java
 package org.example.pojo;
@@ -1283,7 +1281,7 @@ public interface BeanPostProcessor {
 }
 ```
 
-我测试了一下，`@Configuration 的@Bean注解注册的Bean，用下面 实现 接口的方式 无效`
+我测试了一下，`@Configuration 的@Bean注解注册的Bean，用下面实现接口的方式无效`
 
 ```java
 package org.example.configuration.lifecycle;
@@ -1370,91 +1368,90 @@ public @interface Value {
 - 基本数值
 - 可以写SpEL；#{}
 - 可以写${}; 取出配置文件中的值（在运行环境变量里面的值）；**properties配置文件，放在resource目录下！！**
-
 - pojo对象
 
-  ```java
-  package org.example.pojo;
-  
-  import org.springframework.beans.factory.annotation.Value;
-  
-  public class Person {
-      // 使用@Value赋值
-      // 1 基本数值
-      // 2 可以写SpEL， #{}，取出配置文件中的值
-      @Value("张三")
-      private String name;
-      @Value("#{20-5}")
-      private Integer age;
-  
-      public Person() {
-      }
-  
-      public Person(String name) {
-          this.name = name;
-      }
-  
-      public String getName() {
-          return name;
-      }
-  
-      public void setName(String name) {
-          this.name = name;
-      }
-  
-      public Integer getAge() {
-          return age;
-      }
-  
-      public void setAge(Integer age) {
-          this.age = age;
-      }
-  
-      @Override
-      public String toString() {
-          return "Person{" +
-                  "name='" + name + '\'' +
-                  ", age=" + age +
-                  '}';
-      }
-  }
-  
-  ```
+```java
+package org.example.pojo;
 
-- JavaConfig
+import org.springframework.beans.factory.annotation.Value;
 
-  ```java
-  package org.example.configuration.assign;
-  
-  import org.example.pojo.Person;
-  import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-  import org.springframework.context.annotation.Bean;
-  import org.springframework.context.annotation.Configuration;
-  
-  @Configuration
-  public class ValueConfig {
-      @Bean
-      public Person person() {
-          return new Person();
-      }
-  
-      public static void main(String[] args) {
-          AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ValueConfig.class);
-          Person person = (Person) context.getBean("person");
-          System.out.println(person);
-      }
-  }
-  // output  Person{name='张三', age=15} 赋值成功
-  ```
+public class Person {
+    // 使用@Value赋值
+    // 1 基本数值
+    // 2 可以写SpEL， #{}，取出配置文件中的值
+    @Value("张三")
+    private String name;
+    @Value("#{20-5}")
+    private Integer age;
+
+    public Person() {
+    }
+
+    public Person(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                '}';
+    }
+}
+
+```
+
+JavaConfig
+
+```java
+package org.example.configuration.assign;
+
+import org.example.pojo.Person;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class ValueConfig {
+    @Bean
+    public Person person() {
+        return new Person();
+    }
+
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ValueConfig.class);
+        Person person = (Person) context.getBean("person");
+        System.out.println(person);
+    }
+}
+// output  Person{name='张三', age=15} 赋值成功
+```
 
 
 ## `@propertySource`
 
-- properties配置文件，在resource根目录下哦
+properties配置文件，在resource根目录下哦
 
-  ```properties
-  person.name=zhangsan
-  ```
+```properties
+person.name=zhangsan
+```
 
 为什么是在根目录下？请看该注解的注释！！
 
@@ -1521,86 +1518,86 @@ public @interface PropertySource {
 
 ----
 
-- pojo
+pojo
 
-  ```java
-  package org.example.pojo;
-  
-  import org.springframework.beans.factory.annotation.Value;
-  
-  public class Person {
-      // 使用@Value赋值
-      // 1 基本数值
-      // 2 可以写SpEL， #{}，取出配置文件中的值
-      @Value("${person.name}")
-      private String name;
-      @Value("#{20-5}")
-      private Integer age;
-  
-  
-      public Person() {
-      }
-  
-      public Person(String name) {
-          this.name = name;
-      }
-  
-      public String getName() {
-          return name;
-      }
-  
-      public void setName(String name) {
-          this.name = name;
-      }
-  
-      public Integer getAge() {
-          return age;
-      }
-  
-      public void setAge(Integer age) {
-          this.age = age;
-      }
-  
-      @Override
-      public String toString() {
-          return "Person{" +
-                  "name='" + name + '\'' +
-                  ", age=" + age +
-                  '}';
-      }
-  }
-  ```
+```java
+package org.example.pojo;
 
-- JavaConfig
+import org.springframework.beans.factory.annotation.Value;
 
-  ```java
-  package org.example.configuration.assign;
-  
-  import org.example.pojo.Person;
-  import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-  import org.springframework.context.annotation.Bean;
-  import org.springframework.context.annotation.Configuration;
-  import org.springframework.context.annotation.PropertySource;
-  
-  @Configuration
-  // 使用@PropertySource读取外部配置文件中的k/v保存到运行的环境中
-  @PropertySource(value = {"classpath:/person.properties"})
-  public class PropertySourceConfig {
-  
-      @Bean
-      public Person person() {
-          return new Person();
-      }
-  
-      public static void main(String[] args) {
-          AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(PropertySourceConfig.class);
-          ConfigurableEnvironment environment = context.getEnvironment();
-          System.out.println(environment.getProperty("person.name"));
-          Person person = context.getBean(Person.class, "person");
-          System.out.println(person);
-      }
-  }
-  ```
+public class Person {
+    // 使用@Value赋值
+    // 1 基本数值
+    // 2 可以写SpEL， #{}，取出配置文件中的值
+    @Value("${person.name}")
+    private String name;
+    @Value("#{20-5}")
+    private Integer age;
+
+
+    public Person() {
+    }
+
+    public Person(String name) {
+        this.name = name;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                '}';
+    }
+}
+```
+
+JavaConfig
+
+```java
+package org.example.configuration.assign;
+
+import org.example.pojo.Person;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+
+@Configuration
+// 使用@PropertySource读取外部配置文件中的k/v保存到运行的环境中
+@PropertySource(value = {"classpath:/person.properties"})
+public class PropertySourceConfig {
+
+    @Bean
+    public Person person() {
+        return new Person();
+    }
+
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(PropertySourceConfig.class);
+        ConfigurableEnvironment environment = context.getEnvironment();
+        System.out.println(environment.getProperty("person.name"));
+        Person person = context.getBean(Person.class, "person");
+        System.out.println(person);
+    }
+}
+```
 
 # 自动装配
 
@@ -1610,17 +1607,17 @@ public @interface PropertySource {
 
 * 1、`@AutoWired`：自动注入【Spring定义的】
     * 默认按照类型去容器中找对应的组件 `applicationContext.getBean(BookService.class)`，找到就赋值
-    * 如果找到相同类型的组件，再将属性的名称作为组件的id去容器中查找`applicationContext.getBean("bookDao")`
-* 2、`@Qualifier("bookDao")`：使用该注解来指定需要装配的组件的id，而不是使用属性名
-* 3、自动装配默认一定要将属性赋值好，没有就会报错，可通过在`Autowire`的注解中将required=false来使该配置设置为非必需
-* 4、`@Primary`：让Spring进行自动装配的时候，默认使用首选的bean,也可以继续使用@Qualifier来指定需要装配的bean
+    * 如果找到相同类型的组件，再将属性的名称作为组件的id去容器中查找 `applicationContext.getBean("bookDao")`
+* 2、`@Qualifier("bookDao")`：使用该注解来指定需要装配的组件的 id，而不是使用属性名
+* 3、自动装配默认一定要将属性赋值好，没有就会报错，可通过在 `Autowire` 的注解中将 required=false 来使该配置设置为非必需
+* 4、`@Primary`：让 Spring 进行自动装配的时候，默认使用首选的 bean, 也可以继续使用 @Qualifier 来指定需要装配的bean
 
 **Spring还支持使用@Resource（JSR250）和@Inject（JSR330）【java规范】**
 
- * 1、@Resource：
-     *              可以和@Autowired一样实现自动装配功能；默认是按照组件名称进行装配的；没有能支持@Primary的功能以及@Autowired（required=false）的功能
- * 2、@Inject（需要导入依赖）：
-     *              导入javax.inject的包，和Autowired的功能一样，没有required=false的功能
+ * @Resource：
+     *              可以和 `@Autowired` 一样实现自动装配功能；默认是按照组件名称进行装配的；没有能支持 `@Primary` 的功能以及 `@Autowired（required=false）`的功能
+ * @Inject（需要导入依赖）：
+     *              导入 `javax.inject` 的包，和 `Autowired` 的功能一样，没有 required=false 的功能
 
 ## `@Autowired`
 
@@ -1656,9 +1653,7 @@ class Book {
 
 ## @Primary
 
-首选的，主要的注解
-
-让Spring进行自动装配时，默认使用首选的Bean
+首选的，主要的注解；让Spring进行自动装配时，默认使用首选的Bean
 
 ```java
 @Configuration
@@ -1708,9 +1703,9 @@ JSRxx是会被其他IOC框架支持的，使用JSR的，脱离了Spring，换其
 
 ## 自动装配功能原理
 
-`AutowiredAnnotationBeanPostProcessor`解析完成自动装配功能
+`AutowiredAnnotationBeanPostProcessor` 解析完成自动装配功能
 
-- AutowiredAnnotationBeanProcessor类
+- AutowiredAnnotationBeanProcessor 类
 
 ```java
 public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationAwareBeanPostProcessor,
@@ -1736,18 +1731,18 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 
 `@Autowired`：构造器，参数，方法，属性
 
-- 1）**标注在方法位置：**标注在方法，Spring容器创建当前对象，就会调用方法，完成赋值，方法使用的参数，自定义类型的值从ioc容器中获取,@Bean标注的方法创建对象的时侯，方法参数的值默认从ioc容器中获取，默认不写Autowired，效果是一样的。
+- **标注在方法位置：**标注在方法，Spring 容器创建当前对象，就会调用方法，完成赋值，方法使用的参数，自定义类型的值从 IOC 容器中获取, @Bean 标注的方法创建对象的时侯，方法参数的值默认从 IOC 容器中获取，默认不写Autowired，效果是一样的。
 
- *        2）**标注在构造器位置：**默认加在ioc容器中的组件，容器启动会调用无参构造器创建对象，再进行初始化赋值等操作。标注在构造器上可以默认调用该方法，方法中用的参数同样从IOC容器中获取，如果容器只有一个有参构造器，这个有参构造器的Autowired可以省略，参数位置的组件还是可以自动从容器中获取
- *        3）**标注在参数位置：**从ioc容器中获取参数组件的值
+ *        **标注在构造器位置：**默认加在 IOC 容器中的组件，容器启动会调用无参构造器创建对象，再进行初始化赋值等操作。标注在构造器上可以默认调用该方法，方法中用的参数同样从 IOC 容器中获取，如果容器只有一个有参构造器，这个有参构造器的 Autowired 可以省略，参数位置的组件还是可以自动从容器中获取
+ *        **标注在参数位置：**从 IOC 容器中获取参数组件的值
 
 ### 构造器
 
 @Component注解。
 
-默认再加载ioc容器中的组件，容器启动会调用无参构造器创建对象，再进行初始化赋值等操作。
+默认再加载 IOC 容器中的组件，容器启动会调用无参构造器创建对象，再进行初始化赋值等操作。
 
-如果当前类只有一个有参构造器，那么Autowired是可以省略的。@Bean注入，若只有一个有参构造则也是可以省略的。
+如果当前类只有一个有参构造器，那么 Autowired 是可以省略的。@Bean 注入，若只有一个有参构造则也是可以省略的。
 
 ```java
 @Component
@@ -2224,7 +2219,6 @@ IOC是一个容器，棒我们管理所有的组件
  - 初始化
    	- 填充属性
       	- 调用初始化方法
-      	- 
 
 # AOP
 
@@ -2238,7 +2232,7 @@ OOP：面向对象编程
 
 指在程序运行期间，<span style="color:red">将某段代码</span><span style="color:green">动态的切入</span>到<span style="color:red">指定方法</span>的<span style="color:red">指定位置</span>进行运行的这种编程方式，面向切面编程；
 
-使用场景：
+> 使用场景：
 
 ==>日志记录
 
@@ -2268,9 +2262,7 @@ try{
 */
 ```
 
-通知只是告知执行的时机，那到底在那些方法上进行增强呢？
-
-用切入点表达式告知对那些方法进行增强。
+<span style="color:red">通知只是告知执行的时机</span>，那到底在那些方法上进行增强呢？<span style="color:red">用切入点表达式告知对那些方法进行增强</span>。
 
 > 重要概念图
 
@@ -2284,10 +2276,10 @@ try{
 
 > **三步走**
 
-- 1）在业务逻辑组件和切面类都加入到容器中，告诉Spring哪个是切面类（<span  style="color:green">**@Aspect注解标注**</span>）
-- 2）在切面类上的每一个通知方法上标注通知注解，告诉Spring何时何地运行（<span  style="color:green">**切入点表达式**</span>）
+- 在业务逻辑组件和切面类都加入到容器中，告诉Spring哪个是切面类（<span  style="color:green">**@Aspect注解标注**</span>）
+- 在切面类上的每一个通知方法上标注通知注解，告诉Spring何时何地运行（<span  style="color:green">**切入点表达式**</span>）
     - @After("public int com.cc.ClassName.method(int,int)")
-- 3）开启基于注解的`aop`模式：`@EnableAspectJAutoProxy`
+- 开启基于注解的`aop`模式：`@EnableAspectJAutoProxy`
 
 > **基本Demo**
 
@@ -2420,9 +2412,7 @@ AOP创建的是代理对象 不是创建原有的Object对象，而是创建它�
 
 > throwing return接收返回值
 
-```java
-@AfterReturning注解上赋值
-```
+`@AfterReturning` 注解上赋值
 
 > 告诉Spring哪个参数是用来接受异常
 
@@ -2602,9 +2592,7 @@ TransactionFilter{
 
 事务管理代码的固定模式作为一种横切关注点，可以通过AOP方法模块化，进而借助Spring AOP框架实现声明式事务管理。
 
-​	自己要写这个切面还是很麻烦；
-
-​	且这个切面已经有了；（事务切面，事务管理）
+自己要写这个切面还是很麻烦；且这个切面已经有了；（事务切面，事务管理）
 
 ## 事务控制
 
@@ -2760,7 +2748,7 @@ public class MulService {
 2.不可重复读：两次读取数据不一样（第一次读到了原来的数据；接下来数据更新了；第二次又读了这个数据，数据不一样了，因为更新了）
 3.幻读：多读了，或少读了数据
 
-事务的隔离级别 根据业务的特性进行调整
+事务的隔离级别是需要根据业务的特性进行调整
 
 ```java
 @Transactional(isolation+Isolation.READ_UNCOMMITTED)

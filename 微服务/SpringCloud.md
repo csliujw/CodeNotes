@@ -8,7 +8,7 @@
 
 # 认识微服务
 
-随着互联网行业的发展，对服务的要求也越来越高，服务架构也从单体架构逐渐演变为现在流行的微服务架构。这些架构之间有怎样的差别呢？
+随着互联网行业的发展，对服务的要求也越来越高，服务架构也从单体架构逐渐演变为现在流行的微服务架构。
 
 ## 单体架构
 
@@ -56,7 +56,7 @@
 
 ## 微服务
 
-> 微服务架构：一种良好的分布式架构方案
+> **微服务架构：一种良好的分布式架构方案**
 
 - 优点：拆分粒度更小、服务更独立、耦合度更低。
 - 缺点：架构非常复杂，运维、监控、部署难度提高。
@@ -76,7 +76,7 @@
 
 ![image-20210923224508151](assets\image-20210923224508151.png)
 
-- **服务网关：**网关把请求分发到服务集群，做复杂均衡，隔离，容错等。
+- **服务网关：**网关把请求分发到服务集群，做负载均衡，隔离，容错等。
 - **注册中心：**维护微服务中每个节点的信息。
 - **配置中心：**统一管理整个微服务群的配置，将来用变更，用通知的方式去让对应的服务监控到配置的服务，实现配置的热更新。
 - **服务集群：**微服务拆分，形成集群。集群中的服务要遵从单一职责原则，面向服务，对外暴露接口。
@@ -103,7 +103,7 @@ Spring Cloud 集成了各种微服务功能组件，并基于 Spring Boot 实现
 
 ![image-20210713205003790](assets/image-20210713205003790.png)
 
-我学习的版本是 Hoxton.SR10，因此对应的 Spring Boot版本是 2.3.x 版本。
+我学习的版本是 Hoxton.SR10，因此对应的 Spring Boot 版本是 2.3.x 版本。
 
 ## 总结
 
@@ -125,7 +125,7 @@ Spring Cloud 集成了各种微服务功能组件，并基于 Spring Boot 实现
 
 ## 服务拆分原则
 
-这里我总结了微服务拆分时的几个原则：
+微服务拆分时的几个原则：
 
 - <span style="color:green">不同微服务，不要重复开发相同业务</span>
 - <span style="color:green">微服务数据独立，不要访问其它微服务的数据库</span>
@@ -137,7 +137,7 @@ Spring Cloud 集成了各种微服务功能组件，并基于 Spring Boot 实现
 
 ## 服务拆分示例
 
-以课前资料中的微服务 cloud-demo 为例，其结构如下：
+以微服务 cloud-demo 为例，其结构如下：
 
 ![image-20210713211009593](assets/image-20210713211009593.png)
 
@@ -154,17 +154,15 @@ cloud-demo：父工程，管理依赖
 
 ### 导入 SQL 语句
 
-首先，将课前资料提供的`cloud-order.sql`和`cloud-user.sql`导入到 mysql中：
+首先，将 `cloud-order.sql` 和 `cloud-user.sql `导入到 mysql中：
 
 ![image-20210713211417049](assets/image-20210713211417049.png)
 
-
-
-cloud-user表中初始数据如下：
+cloud-user 表中初始数据如下：
 
 ![image-20210713211550169](assets/image-20210713211550169.png)
 
-cloud-order表中初始数据如下：
+cloud-order 表中初始数据如下：
 
 ![image-20210713211657319](assets/image-20210713211657319.png)
 
@@ -226,12 +224,12 @@ cloud-order 表中持有 cloud-user 表中的 id 字段。
 
 ![image-20210713213312278](assets/image-20210713213312278.png)
 
-因此，我们需要在order-service中 向user-service发起一个http的请求，调用http://localhost:8081/user/{userId}这个接口。
+因此，我们需要在 `order-service` 中向 `user-service` 发起一个http的请求，调用 http://localhost:8081/user/{userId} 这个接口。
 
 大概的步骤是这样的：
 
 - 注册一个 RestTemplate 的实例到 Spring 容器
-- 修改 order-service 服务中的 OrderService 类中的 queryOrderById 方法，根据Order 对象中的 userId 查询User
+- 修改 order-service 服务中的 OrderService 类中的 queryOrderById 方法，根据 Order 对象中的 userId 查询 User
 - 将查询的 User 填充到 Order 对象，一起返回
 
 ### 注册RestTemplate
@@ -521,11 +519,9 @@ eureka:
 
 ## 源码跟踪
 
-为什么我们只输入了 `service` 名称就可以访问了呢？之前还要获取 `IP` 和端口。
+为什么我们只输入了 `service` 名称就可以访问了呢？之前还要获取 `IP` 和端口。显然有人帮我们根据 `service`  名称，获取到了服务实例的 `IP` 和端口。它就是`LoadBalancerInterceptor`，这个类会在对 `RestTemplate` 的请求进行拦截，然后从 `Eureka` 根据服务 `id` 获取服务列表，随后利用负载均衡算法得到真实的服务地址信息，替换服务 `id`。
 
-显然有人帮我们根据 `service`  名称，获取到了服务实例的 `IP` 和端口。它就是`LoadBalancerInterceptor`，这个类会在对 `RestTemplate` 的请求进行拦截，然后从 `Eureka` 根据服务 `id` 获取服务列表，随后利用负载均衡算法得到真实的服务地址信息，替换服务 `id`。
-
-我们进行源码跟踪：
+> 我们进行源码跟踪：
 
 ### LoadBalancerIntercepor
 
@@ -590,9 +586,9 @@ eureka:
 
 基本流程如下：
 
-- 拦截我们的 `RestTemplate` 请求http://userservice/user/1
-- `RibbonLoadBalancerClient` 会从请求 `url` 中获取服务名称，也就是user-service
-- `DynamicServerListLoadBalancer` 根据 `user-service` 到 `eureka` 拉取服务列表
+- 拦截我们的 `RestTemplate` 请求 http://userservice/user/1
+- `RibbonLoadBalancerClient` 会从请求 `url` 中获取服务名称，也就是 user-service
+- `DynamicServerListLoadBalancer` 根据  `user-service` 到  `eureka` 拉取服务列表
 - `eureka` 返回列表，`localhost:8081`、`localhost:8082`
 - `IRule` 利用内置负载均衡规则，从列表中选择一个，例如 `localhost:8081` [ 默认的负载均衡策略是轮询 ]
 - `RibbonLoadBalancerClient` 修改请求地址，用 `localhost:8081` 替代`userservice`，得到 http://localhost:8081/user/1，发起真实请求
@@ -609,7 +605,7 @@ eureka:
 
 | **内置负载均衡规则类**      | **规则描述**                                                 |
 | --------------------------- | ------------------------------------------------------------ |
-| `RoundRobinRule`            | 简单轮询服务列表来选择服务器。它是Ribbon默认的负载均衡规则。 |
+| `RoundRobinRule`            | 简单轮询服务列表来选择服务器。它是 Ribbon 默认的负载均衡规则。 |
 | `AvailabilityFilteringRule` | 对以下两种服务器进行忽略：   <br>（1）在默认情况下，这台服务器如果3次连接失败，这台服务器就会被设置为“短路”状态。短路状态将持续30秒，如果再次连接失败，短路的持续时间就会几何级地增加。  <br>（2）并发数过高的服务器。如果一个服务器的并发连接数过高，配置了 `AvailabilityFilteringRule` 规则的客户端也会将其忽略。并发连接数的上限，可以由客户端的`<clientName>.<clientConfigNameSpace>.ActiveConnectionsLimit`属性进行配置。 |
 | `WeightedResponseTimeRule`  | 为每一个服务器赋予一个权重值。服务器响应时间越长，这个服务器的权重就越小。这个规则会随机选择服务器，这个权重值会影响服务器的选择。 |
 | **`ZoneAvoidanceRule`**     | 以区域可用的服务器为基础进行服务器的选择。使用 Zone 对服务器进行分类，这个 Zone 可以理解为一个机房、一个机架等。而后再对 Zone 内的多个服务做轮询。 |
@@ -617,15 +613,13 @@ eureka:
 | `RandomRule`                | 随机选择一个可用的服务器。                                   |
 | `RetryRule`                 | 重试机制的选择逻辑                                           |
 
-
-
 默认的实现就是 `ZoneAvoidanceRule`，是一种轮询方案
 
 ### 自定义负载均衡策略
 
 通过定义 `IRule` 实现可以修改负载均衡规则，有两种方式：
 
-代码方式：在 <span style="color:red">order-service </span>中的 `OrderApplication` 类中，定义一个新的`IRule`：
+<span style="color:purple">**代码方式**</span>：在 <span style="color:red">order-service </span>中的 `OrderApplication` 类中，定义一个新的`IRule`，<span style="color:green">这样 order-service 在请求服务的时候就会根据我们配置的负载均衡规则进行查找最合适的服务。</span>
 
 ```java
 @Bean
@@ -634,7 +628,7 @@ public IRule randomRule(){
 }
 ```
 
-配置文件方式：在 `order-service` 的 `application.yml` 文件中，添加新的配置也可以修改规则：
+<span style="color:purple">**配置文件方式**</span>：在 `order-service` 的 `application.yml` 文件中，添加新的配置也可以修改规则：
 
 ```yaml
 userservice: # 给某个微服务配置负载均衡规则，这里是userservice服务
@@ -679,11 +673,11 @@ ribbon:
 
 ![image-20210713230444308](assets/image-20210713230444308.png)
 
-安装方式可以参考课前资料《Nacos安装指南.md》
+安装方式可以参考《Nacos安装指南.md》
 
 ## 服务注册到 nacos
 
-`Nacos` 是 `SpringCloudAlibaba` 的组件，而 `SpringCloudAlibaba` 也遵循`SpringCloud` 中定义的服务注册、服务发现规范。因此使用 `Nacos` 和使用`Eureka` 对于微服务来说，并没有太大区别。
+`Nacos` 是 `SpringCloudAlibaba` 的组件，而 `SpringCloudAlibaba` 也遵循 `SpringCloud` 中定义的服务注册、服务发现规范。因此使用 `Nacos` 和使用 `Eureka` 对于微服务来说，并没有太大区别。
 
 主要差异在于：
 

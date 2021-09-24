@@ -1,3 +1,210 @@
+# HashMap
+
+## Java中的 HashMap 的⼯作原理是什么？
+
+HashMap 类有⼀个叫做 Entry 的内部类。这个 Entry 类包含了 key-value 作为实例变量。 每当往 hashmap ⾥⾯存放 key-value 对的时候，都会为它们实例化⼀个 Entry 对象，这个 Entry 对象就会存储在前⾯提到的 Entry 数组 table 中。Entry 具体存在 table 的那个位置是根据 key 的 hashcode() ⽅法计算出来的 hash 值（来决定）。
+
+> 放入元素的源码逻辑
+
+```java
+final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+               boolean evict) {
+    Node<K,V>[] tab; Node<K,V> p; int n, i;
+    // 散列表的table 为 null 或者 散列表长度不够了。
+    if ((tab = table) == null || (n = tab.length) == 0)
+        n = (tab = resize()).length;
+    // 散列表中没有这个 key，就加入这个 key value 进去。
+    if ((p = tab[i = (n - 1) & hash]) == null)
+        tab[i] = newNode(hash, key, value, null);
+    else { // 如果存在这个散列值
+        Node<K,V> e; K k;
+        if (p.hash == hash && // 查看 hash 值是否相等，
+            // 如果 hash 值相等则看 key 是否相同
+            ((k = p.key) == key || (key != null && key.equals(k))))
+            // 如果发现 hash 和 key 都相同的话，则把原先的节点对象赋值给 e
+            e = p;
+        else if (p instanceof TreeNode)
+            e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+        else {
+            for (int binCount = 0; ; ++binCount) {
+                if ((e = p.next) == null) {
+                    p.next = newNode(hash, key, value, null);
+                    if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                        treeifyBin(tab, hash);
+                    break;
+                }
+                if (e.hash == hash &&
+                    ((k = e.key) == key || (key != null && key.equals(k))))
+                    break;
+                p = e;
+            }
+        }
+        if (e != null) { // existing mapping for key
+            V oldValue = e.value;
+            // 如果可以覆盖 火鹤 旧值为 null
+            if (!onlyIfAbsent || oldValue == null)
+                e.value = value; // 则将之前的 value 进行覆盖。
+            afterNodeAccess(e);
+            return oldValue; // 并返回旧值
+        }
+    }
+    ++modCount;
+    // 大小超过了就进行 resize
+    if (++size > threshold)
+        resize();
+    afterNodeInsertion(evict);
+    return null;
+}
+```
+
+> 获取元素
+
+```java
+public V get(Object key) {
+    Node<K,V> e;
+    return (e = getNode(hash(key), key)) == null ? null : e.value;
+}
+
+// 查找是否有这个结点。
+final Node<K,V> getNode(int hash, Object key) {
+    Node<K,V>[] tab; Node<K,V> first, e; int n; K k;
+    // 如果 table 中有这个元素的话，
+    if ((tab = table) != null && (n = tab.length) > 0 &&
+        (first = tab[(n - 1) & hash]) != null) { // 此处的判断说明，table 中有这个元素。
+        // 开始查找。看第一个元素的 hash 值和 key 是否一样
+        if (first.hash == hash && // always check first node
+            ((k = first.key) == key || (key != null && key.equals(k))))
+            return first;
+        // hash 值一样，但是 key 不一样则说明发生了 hash 冲突，查看节点的下一个链表。
+        if ((e = first.next) != null) {
+            if (first instanceof TreeNode) // 链表过长，HashMap 会 treeify
+                return ((TreeNode<K,V>)first).getTreeNode(hash, key);
+            do {
+                if (e.hash == hash &&
+                    ((k = e.key) == key || (key != null && key.equals(k))))
+                    return e;
+            } while ((e = e.next) != null);
+        }
+    }
+    return null;
+}
+```
+
+> 扩容策略
+
+扩容为原来的两倍，再旧 table 中的一个一个放进新 table。
+
+```java
+final Node<K,V>[] resize() {
+    Node<K,V>[] oldTab = table; // 保存旧的 table
+    int oldCap = (oldTab == null) ? 0 : oldTab.length; // 保存原先散列表的大小
+    int oldThr = threshold;
+    int newCap, newThr = 0;
+    if (oldCap > 0) {
+        if (oldCap >= MAXIMUM_CAPACITY) {
+            threshold = Integer.MAX_VALUE;
+            return oldTab;
+        }
+        // 新容量为原先容量的 2 倍
+        else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+                 oldCap >= DEFAULT_INITIAL_CAPACITY)
+            newThr = oldThr << 1; // double threshold
+    }
+    else if (oldThr > 0) // initial capacity was placed in threshold
+        newCap = oldThr;
+    else {               // zero initial threshold signifies using defaults
+        newCap = DEFAULT_INITIAL_CAPACITY;
+        newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+    }
+    if (newThr == 0) {
+        float ft = (float)newCap * loadFactor; // 新容量 * 装载因子
+        newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
+                  (int)ft : Integer.MAX_VALUE);
+    }
+    threshold = newThr; // 更新数组最大容量（放入元素的最大容量 length * loadFactor）
+    @SuppressWarnings({"rawtypes","unchecked"})
+    Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
+    table = newTab;
+    if (oldTab != null) {
+        for (int j = 0; j < oldCap; ++j) {
+            Node<K,V> e;
+            if ((e = oldTab[j]) != null) { // 取出旧 tab 中的数据
+                oldTab[j] = null;
+                if (e.next == null) // 可能散列冲突，所有要检查 next
+                    newTab[e.hash & (newCap - 1)] = e;
+                else if (e instanceof TreeNode)
+                    ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+                else { // preserve order
+                    Node<K,V> loHead = null, loTail = null;
+                    Node<K,V> hiHead = null, hiTail = null;
+                    Node<K,V> next;
+                    do {
+                        next = e.next;
+                        if ((e.hash & oldCap) == 0) {
+                            if (loTail == null)
+                                loHead = e;
+                            else
+                                loTail.next = e;
+                            loTail = e;
+                        }
+                        else {
+                            if (hiTail == null)
+                                hiHead = e;
+                            else
+                                hiTail.next = e;
+                            hiTail = e;
+                        }
+                    } while ((e = next) != null);
+                    if (loTail != null) {
+                        loTail.next = null;
+                        newTab[j] = loHead;
+                    }
+                    if (hiTail != null) {
+                        hiTail.next = null;
+                        newTab[j + oldCap] = hiHead;
+                    }
+                }
+            }
+        }
+    }
+    return newTab;
+}
+```
+
+## 什么是 HashMap
+
+HashMap 是⼀个散列表，它存储的内容是键值对(key-value)映射。 
+
+HashMap 继承于AbstractMap，实现了 Map、Cloneable、java.io.Serializable 接⼝。 HashMap 的实现不是同步的，这意味着它不是线程安全的。它的key、value都可以为null。此外 HashMap 中的映射不是有序的。
+
+HashMap 的实例有两个参数影响其性能：“初始容量” 和 “加载因⼦”。容量是哈希表中桶的量，初始容量只是哈希表在创建时的容量。加载因⼦是哈希表在其容量⾃动增加之前可以达到多满的⼀种尺度。当哈希表中的条⽬数超出了加载因⼦与当前容量的乘积时，则要对该哈 希表进⾏ rehash 操作（即重建内部数据结构），从⽽哈希表将具有⼤约两倍的桶数。 通常，默认加载因⼦是 0.75, 这是在时间和空间成本上寻求⼀种折衷。加载因⼦过⾼虽然减少了空间开销，但同时也增加了查询成本（在⼤多数 HashMap 类的操作中，包括 get 和 put 操作，都反映了这⼀点）。在设置初始容量时应该考虑到映射中所需的条⽬数及其加载因⼦，以便最⼤限度地减少 rehash 操作次数。如果初始容量⼤于最⼤条⽬数除以加载因⼦，则不会发⽣ rehash 操作。 
+
+> hashmap共有4个构造函数： 
+
+```java
+// 默认构造函数。
+HashMap() 
+
+// 指定“容量⼤⼩”的构造函数 
+HashMap(int capacity) 
+
+// 指定“容量⼤⼩”和“加载因⼦”的构造函数 
+HashMap(int capacity, float loadFactor) 
+
+// 包含“⼦Map”的构造函数 
+HashMap(Map map)
+```
+
+## 如何构造一致性哈希算法
+
+参考回答： 先构造⼀个⻓度为232的整数环（这个环被称为⼀致性Hash环），根据节点名称的Hash值 （其分布为[0, 232-1]）将服务器节点放置在这个Hash环上，然后根据数据的Key值计算得到 其Hash值（其分布也为[0, 232-1]），接着在Hash环上顺时针查找距离这个Key值的Hash值 最近的服务器节点，完成Key到服务器的映射查找。 这种算法解决了普通余数Hash算法伸缩性差的问题，可以保证在上线、下线服务器的情况下 尽量有多的请求命中原来路由到的服务器。
+
+# ArrayList
+
+
+
+# 遍历
+
 ## 遍历Collection
 
 对List和Set的遍历，有四种方式，下面以ArrayList为例进行说明。
