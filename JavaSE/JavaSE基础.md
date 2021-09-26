@@ -1,6 +1,4 @@
-# 第二部分 基础
-
-类的初始化过程？？
+# `第二部分` 基础
 
 ## 第一章 面向对象概述
 
@@ -386,167 +384,9 @@ Java 有四种访问权限：`public` `protected` 包访问权限 `private`
 - 5.看类的解释和说明。
 - 6.学习构造方法。
 
-## 第三章 字符串
+## 第三章 初始化和清理
 
-### 概述
 
-> **字符串：程序中凡是所有的双引号字符串都是String类的对象【就算没有new，也照样是】**
-
-#### 字符串的特点
-
-- 字符串的内容永不可变。【常量池？】
-- 因字符串不可变，故字符串可共享使用【不可变，不会出现线程安全问题】
-- 字符串效果相当于char[]字符数组，但底层原理是byte[]字节数组
-- String str = "Hello" 也是字符串对象
-
-#### 字符串常量池
-
-> **字符串常量池**：程序中直接写上双引号的字符串，就在字符串常量池中。从jdk1.7开始，字符串常量在堆中。【方便gc嘛？】
-
-> 对于基本类型来说， == 是进行数值比较
-
-> 对应用类型来说，==是进行【地址值】的比较
-
-就算不new 字符串直接双引号也是一个对象。故String str1 是一个对象。
-
-字符串常量池中的对象保持的其实是byte数组的地址值。
-
-而直接new出来的，是不在常量池中的。【具体过程看图。用new String(char型数组)有一个中转过程】
-    char[] --> byte[] --> 字符串对象
-    字符串对象再指向byte数组
-
-**总结：双引号直接写的在常量池中，new的不在池中。**
-
-```java
-public static void main(String[] args) {
-    String str1 = "abc";
-    String str2 = "abc";
-
-    char[] charArray = {'a', 'b', 'c'};
-    String str3 = new String(charArray);
-
-    System.out.println(str1 == str2);// true
-    System.out.println(str1 == str3);// false
-    System.out.println(str2 == str3);// false
-
-    String str4 = new String("abc");
-    String str5 = new String("abc");
-    System.out.println(str1 == str4); // false
-    System.out.println(str4 == str5); // false
-}
-```
-
-### 字符串常用API
-
-#### 字符串的比较▲
-
-> **== 是进行对象的地址值比较。如果确实需要比较字符串的内容，可以使用如下的方法**
-
-```java
-public static void testEqual(){
-    String str1 = new String("11");
-    String str2 = new String("11");
-
-    String str3 = "11";
-    System.out.println(str1.equals(str2)); // true
-    System.out.println(str1.equals(str3)); // true
-    System.out.println(str1.equals("11")); // true
-}
-
-String 对equals进行了重写！
-```
-
-> **注意事项**
-
-- 如果比较双方一个常量一个变量，推荐把常量写在前面。【避免NullPointerException】
-- **equalsIgnoreCase**忽略大小写进行比较。
-
-#### 字符串获取相关方法
-
-- ```java
-  - length
-  - concat(String str) 拼接会产生新的字符串
-  - charAt(int index)
-  - indexOf(String str) 查找首次出现的位置，没有返回-1
-  
-  public static void testGetStr(){
-      String str1 = "abc";
-      String str2 = "df";
-      System.out.println(str1.length()); // 3
-      System.out.println(str1.charAt(0)); // a
-      System.out.println(str1.concat(str2)); // abcdf
-      System.out.println(str1.indexOf("ab")); // 0
-      System.out.println(str2.indexOf('d')); // 0
-  }
-  ```
-
-- concat的测试▲
-
-  ```java
-  public void testConcat(){
-      String str1 = "abc";
-      String str2 = "df";
-      String concat = str1.concat(str2);
-      String concat2 = "abcdf";
-      String concat3 = "abcdf";
-      System.out.println(concat == concat2); // false
-      System.out.println(concat2 == concat3);// true
-  }
-  concat内部返回的字符串是使用的new。故会有上述结果！
-  ```
-
-#### 字符串截取、转换、分割
-
-> **截取指定索引的数据**
-
-```java
-@Test
-public void testSubstring(){
-    String str1 = "abcefghig";
-	// beginIndex
-    System.out.println(str1.substring(1));
-    // beginIndex, endIndex 左闭右开
-    System.out.println(str1.substring(1,str1.length()));
-    // false
-    System.out.println(str1.substring(1) == str1.substring(1,str1.length()));
-}
-查看源码可知 返回的是new String
-```
-
-> **字符串转换字符数组，字节数组**
-
-```java
-@Test
-public void testConvert(){
-    String str = "hello world";
-    char[] chars = str.toCharArray(); // 转化为字符数组
-    byte[] bytes = str.getBytes(); // 转化为字节数组
-    String replace = str.replace("o", "liu"); // 把所有的o替换成liu
-    System.out.println(replace); //hellliu wliurld
-}
-```
-
-> **分割**
-
-```java
-@Test
-public void testSplit() {
-    String str = "aa,bb,cc";
-    String[] split = str.split(","); // 里面是正则表达式
-    for (String s : split ) {
-        System.out.println(s);// aa bb cc
-    }
-}
-
-@Test
-public void testSplit2() {
-    String str = "aa.b.cc";
-    String[] split = str.split("\\."); //用.作为划分
-    for (String s : split ) {
-        System.out.println(s);// aa bb cc
-    }
-}
-```
 
 ## 第四章 静态关键字
 
@@ -8001,6 +7841,168 @@ public class PropertiesDemo {
 
 ## 第十八章 字符串
 
+### 概述
+
+> **字符串：程序中凡是所有的双引号字符串都是String类的对象【就算没有new，也照样是】**
+
+#### 字符串的特点
+
+- 字符串的内容永不可变。【常量池？】
+- 因字符串不可变，故字符串可共享使用【不可变，不会出现线程安全问题】
+- 字符串效果相当于char[]字符数组，但底层原理是byte[]字节数组
+- String str = "Hello" 也是字符串对象
+
+#### 字符串常量池
+
+> **字符串常量池**：程序中直接写上双引号的字符串，就在字符串常量池中。从jdk1.7开始，字符串常量在堆中。【方便gc嘛？】
+
+> 对于基本类型来说， == 是进行数值比较
+
+> 对应用类型来说，==是进行【地址值】的比较
+
+就算不new 字符串直接双引号也是一个对象。故String str1 是一个对象。
+
+字符串常量池中的对象保持的其实是byte数组的地址值。
+
+而直接new出来的，是不在常量池中的。【具体过程看图。用new String(char型数组)有一个中转过程】
+    char[] --> byte[] --> 字符串对象
+    字符串对象再指向byte数组
+
+**总结：双引号直接写的在常量池中，new的不在池中。**
+
+```java
+public static void main(String[] args) {
+    String str1 = "abc";
+    String str2 = "abc";
+
+    char[] charArray = {'a', 'b', 'c'};
+    String str3 = new String(charArray);
+
+    System.out.println(str1 == str2);// true
+    System.out.println(str1 == str3);// false
+    System.out.println(str2 == str3);// false
+
+    String str4 = new String("abc");
+    String str5 = new String("abc");
+    System.out.println(str1 == str4); // false
+    System.out.println(str4 == str5); // false
+}
+```
+
+### 字符串常用API
+
+#### 字符串的比较▲
+
+> **== 是进行对象的地址值比较。如果确实需要比较字符串的内容，可以使用如下的方法**
+
+```java
+public static void testEqual(){
+    String str1 = new String("11");
+    String str2 = new String("11");
+
+    String str3 = "11";
+    System.out.println(str1.equals(str2)); // true
+    System.out.println(str1.equals(str3)); // true
+    System.out.println(str1.equals("11")); // true
+}
+
+String 对equals进行了重写！
+```
+
+> **注意事项**
+
+- 如果比较双方一个常量一个变量，推荐把常量写在前面。【避免NullPointerException】
+- **equalsIgnoreCase**忽略大小写进行比较。
+
+#### 字符串获取相关方法
+
+- ```java
+  - length
+  - concat(String str) 拼接会产生新的字符串
+  - charAt(int index)
+  - indexOf(String str) 查找首次出现的位置，没有返回-1
+  
+  public static void testGetStr(){
+      String str1 = "abc";
+      String str2 = "df";
+      System.out.println(str1.length()); // 3
+      System.out.println(str1.charAt(0)); // a
+      System.out.println(str1.concat(str2)); // abcdf
+      System.out.println(str1.indexOf("ab")); // 0
+      System.out.println(str2.indexOf('d')); // 0
+  }
+  ```
+
+- concat的测试▲
+
+  ```java
+  public void testConcat(){
+      String str1 = "abc";
+      String str2 = "df";
+      String concat = str1.concat(str2);
+      String concat2 = "abcdf";
+      String concat3 = "abcdf";
+      System.out.println(concat == concat2); // false
+      System.out.println(concat2 == concat3);// true
+  }
+  concat内部返回的字符串是使用的new。故会有上述结果！
+  ```
+
+#### 字符串截取、转换、分割
+
+> **截取指定索引的数据**
+
+```java
+@Test
+public void testSubstring(){
+    String str1 = "abcefghig";
+	// beginIndex
+    System.out.println(str1.substring(1));
+    // beginIndex, endIndex 左闭右开
+    System.out.println(str1.substring(1,str1.length()));
+    // false
+    System.out.println(str1.substring(1) == str1.substring(1,str1.length()));
+}
+查看源码可知 返回的是new String
+```
+
+> **字符串转换字符数组，字节数组**
+
+```java
+@Test
+public void testConvert(){
+    String str = "hello world";
+    char[] chars = str.toCharArray(); // 转化为字符数组
+    byte[] bytes = str.getBytes(); // 转化为字节数组
+    String replace = str.replace("o", "liu"); // 把所有的o替换成liu
+    System.out.println(replace); //hellliu wliurld
+}
+```
+
+> **分割**
+
+```java
+@Test
+public void testSplit() {
+    String str = "aa,bb,cc";
+    String[] split = str.split(","); // 里面是正则表达式
+    for (String s : split ) {
+        System.out.println(s);// aa bb cc
+    }
+}
+
+@Test
+public void testSplit2() {
+    String str = "aa.b.cc";
+    String[] split = str.split("\\."); //用.作为划分
+    for (String s : split ) {
+        System.out.println(s);// aa bb cc
+    }
+}
+```
+
+
+
 ### 特性-不可变
 
 String 对象是不可变的。，String 类中每一个看起来会修改 String 值的方法，实际上都是创建了一个全新的 String 对象。而最初的 String 对象则丝毫未动。
@@ -8278,6 +8280,8 @@ class StringTokenizerDemo {
 
 ## 第十九章 类型信息
 
+### RTTI 概述
+
 `RTTI`（RunTime Type Information，运行时类型信息）能够在程序运行时发现和使用类型信息。
 
  Java 是如何在运行时识别对象和类信息的？
@@ -8285,11 +8289,11 @@ class StringTokenizerDemo {
 - “传统的” RTTI：假定我们在编译时已经知道了所有的类型； 
 - <span style="color:green">“反射” 机制：允许我们在运行时发现和使用类的信息。</span>
 
-RTTI 在 Java 中的形式+
+`RTTI` 在 Java 中的形式
 
-- `instanceof`
-
-### 分界线
+- 传统的类型转换
+- 代表对象的类型的 Class 对象
+- 关键字 `instanceof`
 
 ### 类加载器前置知识概述
 
@@ -8354,7 +8358,7 @@ RTTI 在 Java 中的形式+
 
 #### 类加载器作用
 
-- 负责将.class文件加载到内存中，并为之生成对应的java.lang.Class对象
+- 负责将.class文件加载到内存中，并为之生成对应的 `java.lang.Class` 对象
 
 #### JVM的类加载机制
 
@@ -8362,16 +8366,16 @@ RTTI 在 Java 中的形式+
 - 父类委托：当一个类加载器负责某个Class时，先让父类加载器试图加载该Class，只有在父类加载器无法加载该类时才尝试从自己的类路径中加载该类
 - 缓存机制：保证所有加载过的Class都会被缓存，当程序需要使用某个Class对象时，类加载器先从缓存区中搜索该Class，只有当缓存中不存在该Class对象时，系统才会读取该类对应的二进制数据，并将其转换成Class对象，存储到缓存区。
 
-#### ClassLoader：
+#### ClassLoader
 
 - 负责加载类的对象
 
-#### Java运行时的内置类加载器
+#### 运行时的内置类加载器
 
 - **Bootstrap class loader**：它是虚拟机的内置类加载器，通常表示为null，并且没用父
-- **Platform class loader**：平台类加载器可以看到所有平台类，平台类包括由平台类加载器或其祖先定义的JavaSE平台API，其实现类和JDK特定的运行时类
-- **System class loader**：也被称为应用程序类加载器，与平台类加载器不同，系统类加载器通常定义应用程序类路径，模块路径和JDK特定工具上的类
-- 类加载器的继承关系：System的父加载器为Platform，而Platform的父加载器为Bootstrap
+- **Platform class loader**：平台类加载器可以看到所有平台类，平台类包括由平台类加载器或其祖先定义的 `JavaSE` 平台 `API`，其实现类和 `JDK` 特定的运行时类
+- **System class loader**：也被称为应用程序类加载器，与平台类加载器不同，系统类加载器通常定义应用程序类路径，模块路径和 `JDK` 特定工具上的类
+- 类加载器的继承关系：`System` 的父加载器为 `Platform`，而 `Platform` 的父加载器为 `Bootstrap`
 
 ```java
 @Test
@@ -8390,11 +8394,13 @@ public void fn1(){
 }
 ```
 
-### 反射概述
+### 反射
+
+#### 反射概述
 
 ​		Java的反射机制是指在运行时去获取一个类的变量和方法信息，然后通过获取到的信息来创建对象，从而调用方法的一种机制。由于这种动态性，可以极大的增强程序的灵活性，程序不用在编译期就完成确定，在运行期仍然可以扩展。
 
-### 反射操作
+`java.lang.reflect` 库中包含类 `Field`、`Method` 和 `Constructor`（每一个都实现了 Member 接口）。这些类型的对象由 `JVM` 在运行时创建， 以表示未知类中的对应成员。然后，可以使用 `Constructor` 创建新对象，`get()` 和 `set()` 方法读取和修改与 `Field` 对象关联的字段，`invoke()` 方法调用与 `Method` 对象关联的 方法。此外，还可以调用便利方法 `getFields()`、`getMethods()`、`getConstructors()` 等，以返回表示字段、方法和构造函数的对象数组。
 
 #### 获取Class类的对象
 
@@ -8508,6 +8514,210 @@ public void refelectDemo() throws Exception {
 }
 ```
 
+### 动态代理
+
+一个对象封装真实对象，代替其提供其他或不同的操作。当我们希望将额外的操作与 “真实对象” 做分离时，可以考虑使用代理模式
+
+> 常规的代理模式
+
+```java
+/**
+ * 静态代理。
+ * 基本上，GoF 23 种设计模式都是基于多态的
+ */
+interface Interface {
+    void doingSomething();
+
+    void somethingElse();
+}
+
+class RealObj implements Interface {
+
+    @Override
+    public void doingSomething() {
+        System.out.println("RealObj doingSomething");
+    }
+
+    @Override
+    public void somethingElse() {
+        System.out.println("RealObj somethingElse");
+    }
+}
+
+class SimpleProxyObj implements Interface {
+    public static void main(String[] args) {
+        SimpleProxyObj proxy = new SimpleProxyObj(new RealObj());
+        proxy.doingSomething();
+        proxy.somethingElse();
+    }
+
+    private Interface realObj;
+
+    public SimpleProxyObj() {
+
+    }
+
+    public SimpleProxyObj(Interface realObj) {
+        this.realObj = realObj;
+    }
+
+    @Override
+    public void doingSomething() {
+        realObj.doingSomething();
+        System.out.println("Proxy Object doingSomething");
+    }
+
+    @Override
+    public void somethingElse() {
+        realObj.somethingElse();
+        System.out.println("Proxy Object somethingElse");
+    }
+}
+```
+
+> Java 的动态代理
+
+仅动态创建代理对象而且动态处理对代理方法的调用。在动态代理上进行的所有调用都被重定向到单个调用处理程序，该处理程序负责 发现调用的内容并决定如何处理。
+
+动态代理重写上述 example
+
+```java
+class DynamicProxyHandler implements InvocationHandler {
+    private Interface realObject;
+
+    public DynamicProxyHandler() {
+    }
+
+    public DynamicProxyHandler(Interface realObject) {
+        this.realObject = realObject;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        System.out.println("proxy: " + proxy.getClass() + "\nmethod:" + method + "\nargs:" + args);
+        return method.invoke(realObject, args);
+    }
+}
+
+public class SimpleDynamicProxy {
+
+    public static void main(String[] args) {
+        RealObj realObj = new RealObj();
+
+        /**
+         * 三个参数，都是接口的
+         */
+        Interface anInterface = (Interface) Proxy.newProxyInstance(Interface.class.getClassLoader(),
+                new Class[]{Interface.class},
+                new DynamicProxyHandler(realObj));
+        anInterface.doingSomething();
+    }
+}
+```
+
+> 动态代理模拟 AOP
+
+- AOP：面向切面编程
+  - `beforeAdvice` 前置通知
+  - `afterAdvice` 后置通知
+
+- 代码结构
+  - `beforeAdvice` 为一个接口
+  - `afterAdvice` 为一个接口
+  - 具体通知实现这些接口，完成具体的功能
+
+```java
+public class DynamicalProxyAOP {
+
+    // 真实对象
+    private CommonInterface realObject;
+
+    private DynamicalProxyAOP() {
+    }
+
+    public DynamicalProxyAOP(CommonInterface realObject) {
+        this.realObject = realObject;
+    }
+
+    public static void main(String[] args) {
+        DynamicalProxyAOP dynamicalProxyAOP = new DynamicalProxyAOP(new RealObject());
+        dynamicalProxyAOP.invoke();
+    }
+
+    public void invoke() {
+        CommonInterface common = (CommonInterface) Proxy.newProxyInstance(CommonInterface.class.getClassLoader(),
+                realObject.getClass().getInterfaces(),
+                new ProxyHandler<CommonInterface>(realObject,
+                        new AfterAdvice() {
+                            @Override
+                            public void execute(Object... o) {
+                                System.out.println("after advice with args");
+                            }
+
+                            @Override
+                            public void execute() {
+                                System.out.println("after advice");
+                            }
+                        },
+                        new BeforeAdvice() {
+                            @Override
+                            public void execute() {
+                                System.out.println("before advice");
+                            }
+
+                            @Override
+                            public void execute(Object... o) {
+                                System.out.println("before advice with args");
+                            }
+                        })
+        );
+        common.doingSomething();
+    }
+}
+
+class ProxyHandler<T> implements InvocationHandler {
+    // 前置通知
+    private BeforeAdvice beforeAdvice;
+    // 后置通知
+    private AfterAdvice afterAdvice;
+    private T realObject;
+
+    public ProxyHandler(T realObject) {
+        this(realObject, null, null);
+    }
+
+    public ProxyHandler(T realObject, AfterAdvice afterAdvice, BeforeAdvice beforeAdvice) {
+        this.realObject = realObject;
+        this.beforeAdvice = beforeAdvice;
+        this.afterAdvice = afterAdvice;
+    }
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        if (beforeAdvice != null && args != null) {
+            beforeAdvice.execute(args);
+        } else if (beforeAdvice != null) {
+            beforeAdvice.execute();
+        }
+        Object invoke = method.invoke(realObject, args);
+        if (afterAdvice != null && args != null) {
+            afterAdvice.execute();
+        } else if (afterAdvice != null) {
+            afterAdvice.execute(args);
+        }
+        return invoke;
+    }
+}
+```
+
+可用策略模式改进 Advice
+
+### 总结
+
+`RTTI` 允许通过匿名类的引用来获取类型信息。在学会使 用多态调用方法之前，使用 switch + RTTI 的组合很容易获取到类型信息，实现功能，但是这样损失了多态机制在代码开发和维护过程中的重要价值。面向对象编程语言是想让我们尽可能地使用多态 机制，只在非用不可的时候才使用 `RTTI`。
+
+<span style="color:green">`RTTI` 有时候也能解决效率问题。假设你的代码运用了多态，但是为了实现多态，导致其中某个对象的效率非常低。这时候，你就可以挑出那个类，使用 `RTTI` 为它编写一段特别的代码以提高效率。然而必须注意的是，不要太早地关注程序的效率问题。</span>
+
 ## 第二十章 泛型
 
 ### 特殊情况★★★
@@ -8546,6 +8756,264 @@ public class Demo {
 ## 第二十二章 枚举
 
 ## 第二十三章 注解
+
+注解就是给程序添加一些信息，用字符@开头，这些信息用于修饰它后面紧挨着的其他代码元素，比如类、接口、字段、方法、方法中的参数、构造方法等。注解可以被编译器、程序运行时和其他工具使用，<span style="color:green">**用于增强或修改程序行为，减轻编写 “样板” 代码的负担。**</span>
+
+> 注解的优点（主要）
+
+- 使用 `annotation API` 为自己的注解构造处理工具
+- 增强或修改程序行为
+- <span style="color:red">减轻编写 “样板” 代码的负担</span>（定义注解并使用，编写注解解析工具，实现某类通用功能）
+
+> 常见注解
+
+- `@Override：` 表示当前的方法定义将覆盖基类的方法。如果你不小心拼写错误，或 者方法签名被错误拼写的时候，编译器就会发出错误提示。
+- `@Deprecated： `如果使用该注解的元素被调用，编译器就会发出警告信息。
+  - Java 9 开始 `@Deprecated` 多了两个属性：`since` 和 `forRemoval`
+  - `since` 表示从哪个版本开始过时的
+  - `forRemoval` 表示未来是否会删除
+- `@SuppressWarnings： `压制编译器警告信息
+  - `@SuppressWarnings({"deprecation","unused"})`
+- `@SafeVarags： `在 Java 7 中加入用于禁止对具有泛型 varargs 参数的方法或构 造函数的调用方发出警告。
+- `@FunctionalInterface：` Java 8 中加入用于表示类型声明为函数式接口。
+
+<span style="color:red">每当创建涉及重复工作的类或接口时，你通常可以使用注解来自动化和简化流程。</span>
+
+### 基本语法
+
+> 使用注解
+
+```java
+@Deprecated
+public class TemplateMethod {
+}
+```
+
+> 定义注解
+
+注解的定义看起来很像接口，实际上，定义的注解和接口一样，也会被编译成 calssk 文件
+
+```java
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Test {
+}
+```
+
+- 注解的定义也需要一些元注解
+- `@Target`  定义注解可以用在那里 【 类、方法、字段 】
+  - `@Target(ElementType.METHOD)`，`ElementType` 是一个注解，包含如下几种类型
+  - TYPE：表示类、接口（包括注解），或者枚举声明；
+  - FIELD：字段，包括枚举常量
+  - METHOD：方法；
+  - PARAMETER：方法中的参数
+  - CONSTRUCTOR：构造方法；
+  - LOCAL_VARIABLE：本地变量
+  - MODULE：模块（Java 9引入的）
+- `@Retention`  定义注解在那里可用 【源码（source）、class 文件、运行时（RUNTIME）】
+  - `@Retention(RetentionPolicy.SOURCE)`
+  - SOURCE：只在源代码中保留，编译器将代码编译为字节码文件后就会丢掉。
+  - CLASS：保留到字节码文件中，但Java虚拟机将class文件加载到内存时不一定会在内存中保留。
+  - <span style="color:red">RUNTIME：一直保留到运行时。一般选这个</span>
+  - <span style="color:red">如果没有声明@Retention，则默认为CLASS。</span>
+
+`@Override` 和 `@SuppressWarnings` 都是给编译器用的，所以 `@Retention` 都是`RetentionPolicy.SOURCE`。
+
+> 小细节
+
+当只有一个参数，且名称为value时，提供参数值时可以省略"value="，即可以简写为
+
+```java
+@SupressWarnings(value={"deprecation","unused"})
+@SupressWarnings({"deprecation","unused"})
+```
+
+注解元素可用的类型如下：
+
+- 所有基本类型（int、float、boolean）
+- String
+- Class
+- enum
+- Annotation
+- 以上类型的数组
+
+### 元注解
+
+| 注解        | 解释                                         |
+| ----------- | -------------------------------------------- |
+| @Target     | 表示注解可以用于哪些地方（方法、字段）       |
+| @Target     | 表示注解信息保存的时长。                     |
+| @Documented | 表示注解信息保存的时长。                     |
+| @Documented | 表示注解信息保存的时长。                     |
+| @Documented | 允许一个注解可以被使用一次或者多次（Java 8） |
+
+多数时候我们需要定义自己的注解，并编写自己的处理器来处理他们。
+
+### 解析注解
+
+#### 查看注解信息
+
+Annotation是一个接口，它表示注解，具体定义为
+
+```java
+package java.lang.annotation;
+
+public interface Annotation {
+
+    boolean equals(Object obj);
+
+    int hashCode();
+
+    String toString();
+	// 返回真正的注解类型
+    Class<? extends Annotation> annotationType();
+}
+```
+
+#### 常用方法
+
+| 方法名                                                       | 解释                                           |
+| ------------------------------------------------------------ | ---------------------------------------------- |
+| `public Annotation[] getAnnotations()`                       | 获取所有的注解                                 |
+| `public Annotation[] getDeclaredAnnotations()`               | 获取所有本元素上直接声明的注解，忽略 inherited |
+| `public <A extends Annotation> A getAnnotation(Class<A> annotationClass)` | 获取指定类型的注解，没有则返回 null            |
+| `public boolean isAnnotationPresent(xx)`                     | 判断是否有指定类型的注解                       |
+
+#### DI 容器
+
+> 定义的注解
+
+ `@Component` - DI 注解
+
+`@Singleton` - DI 注解，表示是单例的
+
+```java
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+public @interface Component {
+}
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface Singleton {
+
+}
+```
+
+> 需要注入的对象
+
+```java
+public class ServiceA {
+    @Component
+    ServiceB b;
+
+    public void callB() {
+        b.action();
+    }
+
+    public ServiceB getB() {
+        return b;
+    }
+}
+
+@Singleton
+public class ServiceB {
+    public void action() {
+        System.out.println("I am B");
+    }
+}
+```
+
+> DI 工具类
+
+```java
+package tij.chapter23.format;
+
+import java.lang.reflect.Field;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class SimpleContainer {
+    private static Map<Class<?>, Object> instances = new ConcurrentHashMap<>();
+
+    private static <T> T createInstance(Class<T> cls) throws InstantiationException, IllegalAccessException {
+        T obj = cls.newInstance();
+        Field[] fileds = cls.getDeclaredFields();
+        for (Field filed : fileds) {
+            if (filed.isAnnotationPresent(Component.class)) {
+                if (!filed.isAccessible()) {
+                    filed.setAccessible(true);
+                }
+                Class<?> filedCls = filed.getType();
+                filed.set(obj, getInstance(filedCls));
+            }
+        }
+        return obj;
+    }
+
+    public static <T> T getInstance(Class<T> cls) {
+        try {
+            boolean singleton = cls.isAnnotationPresent(Singleton.class);
+            if (!singleton) {
+                return createInstance(cls);
+            }
+            Object obj = instances.get(cls);
+            if (obj != null) {
+                return (T) obj;
+            }
+            synchronized (cls) {
+                obj = instances.get(cls);
+                if (obj == null) {
+                    obj = createInstance(cls);
+                    instances.put(cls, obj);
+                }
+            }
+            return (T) obj;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
+
+> 测试代码
+
+```java
+public class ContainerDemo {
+
+    public static void usingSimpleContainer() {
+        ServiceA a = SimpleContainer.getInstance(ServiceA.class);
+        a.callB();
+
+        ServiceB b = SimpleContainer.getInstance(ServiceB.class);
+
+        if (b == a.getB()) {
+            System.out.println("SimpleContainer2: same instances");
+        }
+    }
+
+    public static void main(String[] args) {
+        usingSimpleContainer();
+    }
+}
+```
+
+
 
 ## 第二十四章 并发编程
 
@@ -8780,7 +9248,63 @@ public class SaleTicket implements Runnable {
 - 不能拿/放则等待 用wait()
 - 有东西了，可以拿了就notify() == 【应该是随机唤醒一个等待的线程，可以指定唤醒某个吗？】
 
-## 第二十五章 网络编程
+## 第二十五章 设计模式
+
+设计模式：解决特定类问题的一种方法。<span style="color:red">将易变的事物与不变的事物分开。</span>设计模式的目标是隔离代码中的更改。例如：迭代器允许你编写通用代码，该代码对序列中的所有元素执行操作，而不考虑序列的构建方式。
+
+### 单例模式
+
+只允许有一个实例对象。
+
+当 Resource 对象加载的时候，静态初始化块将被调用。由 于 `JVM` 的工作方式，这种静态初始化是线程安全的，即 单例模式的线程安全性由 `JVM` 保证
+
+```java
+interface Resource {
+    int getValue();
+
+    void setValue(int x);
+}
+
+public class Singleton {
+    private static class ResourceHolder {
+        private static Resource resource = new ResourceImpl(47);
+    }
+
+    public static Resource getResource() {
+        return ResourceHolder.resource;
+    }
+
+    private static final class ResourceImpl implements Resource {
+        private int i;
+
+        private ResourceImpl(int i) {
+            this.i = i;
+        }
+
+        public synchronized int getValue() {
+            return i;
+        }
+
+        public synchronized void setValue(int x) {
+            i = x;
+        }
+    }
+}
+```
+
+### 模式分类
+
+“设计模式” 一书讨论了 23 种不同的模式，分为以下三种类别
+
+- <span style="color:green">**创建型：**</span>如何创建对象。这通常涉及隔离对象创建的细节，这样你的代码就不依赖于具体的对象的类型，因此在添加新类型的对象时不会更改。单例模式（Singleton） 被归类为创作模式
+- <span style="color:green">**构建型：**</span>设计对象以满足特定的项目约束。它们处理对象与其他对象连接的方式，以确保系统中的更改不需要更改这些连接
+- <span style="color:green">**行为型：**</span>处理程序中特定类型的操作的对象。这些封装要执行的过程，例如解释语言、实现请求、遍历序列 (如在迭代器中) 或实现算法。（观察者、访问者模式）
+
+### 构建应用程序框架
+
+重用现有类 中的大部分代码，并根据需要覆盖一个或多个方法来定制应用程序。
+
+## 第二十六章 网络编程
 
 ### 网络编程入门
 
@@ -9213,7 +9737,7 @@ public class BSDemo3 {
 }
 ```
 
-## 第二十六章 JDBC
+## 第二十七章 JDBC
 
 ### C3P0
 

@@ -922,7 +922,7 @@ Nacos和Eureka整体结构类似，服务注册、服务拉取、心跳等待，
   - Nacos 支持服务列表变更的消息推送模式，服务列表更新更及时。（eureka 是 pull 而 nacos 是 pull+push）
   - Nacos 集群默认采用 AP（强调数据的可用性，服务的可用性）方式，当集群中存在非临时实例时，采用 CP（强调数据的可靠性和一致性）模式；Eureka 采用 AP 方式。
 
-# Spring Cloud实用篇
+# Spring Cloud 实用篇
 
 - Nacos 配置管理
 - Feign 远程调用
@@ -932,9 +932,18 @@ Nacos和Eureka整体结构类似，服务注册、服务拉取、心跳等待，
 
 Nacos除了可以做注册中心，同样可以做配置管理来使用。
 
+> 主要内容
+
+- 统一配置管理
+- 配置热更新
+- 配置共享
+- 搭建 Nacos 集群
+
 ## 统一配置管理
 
-当微服务部署的实例越来越多，达到数十、数百时，逐个修改微服务配置就会让人抓狂，而且很容易出错。我们需要一种统一配置管理方案，可以集中管理所有实例的配置。
+当微服务部署的实例越来越多，达到数十、数百时，逐个修改微服务配置很麻烦，而且很容易出错。我们需要一种统一配置管理方案，可以集中管理所有实例的配置。
+
+> 配置热更新
 
 ![image-20210714164426792](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714164426792.png)
 
@@ -950,17 +959,19 @@ Nacos一方面可以将配置集中管理，另一方可以在配置变更时，
 
 然后在弹出的表单中，填写配置信息：
 
+- Data ID 就是配置文件的名称。配置文件的名称取名：`服务名称-[profile].[后缀名]`
+
 ![image-20210714164856664](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714164856664.png)
 
 > 注意：项目的核心配置，需要热更新的配置才有放到nacos管理的必要。基本不会变更的一些配置还是保存在微服务本地比较好。
 
 ### 从微服务拉取配置
 
-微服务要拉取nacos中管理的配置，并且与本地的application.yml配置合并，才能完成项目启动。
+微服务要拉取 nacos 中管理的配置，并且与本地的 application.yml 配置合并，才能完成项目启动。
 
-但如果尚未读取application.yml，又如何得知nacos地址呢？
+但如果尚未读取 application.yml，又如何得知 nacos 地址呢？
 
-因此spring引入了一种新的配置文件：bootstrap.yaml文件，会在application.yml之前被读取，流程如下：
+因此 spring 引入了一种新的配置文件：bootstrap.yaml 文件，会在 application.yml 之前被读取，流程如下：
 
 ![img](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/L0iFYNF.png)
 
@@ -1132,7 +1143,7 @@ public class UserController {
 
 下面我们通过案例来测试配置共享
 
-### 1）添加一个环境共享配置
+### 添加一个环境共享配置
 
 我们在nacos中添加一个userservice.yaml文件：
 
@@ -1140,7 +1151,7 @@ public class UserController {
 
 
 
-### 2）在user-service中读取共享配置
+### 在user-service中读取共享配置
 
 在user-service服务中，修改PatternProperties类，读取新添加的属性：
 
@@ -1152,7 +1163,7 @@ public class UserController {
 
 
 
-### 3）运行两个UserApplication，使用不同的profile
+### 运行两个UserApplication，使用不同的profile
 
 修改UserApplication2这个启动项，改变其profile值：
 
@@ -1176,7 +1187,7 @@ public class UserController {
 
 可以看出来，不管是dev，还是test环境，都读取到了envSharedValue这个属性的值。
 
-### 4）配置共享的优先级
+### 配置共享的优先级
 
 当nacos、服务本地同时出现相同属性时，优先级有高低之分：
 
@@ -1210,7 +1221,7 @@ Feign是一个声明式的http客户端，官方地址：https://github.com/Open
 
 Fegin的使用步骤如下：
 
-### 1）引入依赖
+### 引入依赖
 
 我们在order-service服务的pom文件中引入feign的依赖：
 
@@ -1221,13 +1232,13 @@ Fegin的使用步骤如下：
 </dependency>
 ```
 
-### 2）添加注解
+### 添加注解
 
 在order-service的启动类添加注解开启Feign的功能：
 
 ![image-20210714175102524](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714175102524.png)
 
-### 3）编写Feign的客户端
+### 编写Feign的客户端
 
 在order-service中新建一个接口，内容如下：
 
@@ -1256,7 +1267,7 @@ public interface UserClient {
 
 这样，Feign就可以帮助我们发送http请求，无需自己使用RestTemplate来发送了。
 
-### 4）测试
+### 测试
 
 修改order-service中的OrderService类中的queryOrderById方法，使用Feign客户端代替RestTemplate：
 
@@ -1264,7 +1275,7 @@ public interface UserClient {
 
 是不是看起来优雅多了。
 
-### 5）总结
+### 总结
 
 使用Feign的步骤：
 
@@ -1457,7 +1468,7 @@ UserController：
 
 ### 实现基于抽取的最佳实践
 
-#### 1）抽取
+#### 抽取
 
 首先创建一个module，命名为feign-api：
 
@@ -1480,9 +1491,7 @@ UserController：
 
 ![image-20210714205221970](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714205221970.png)
 
-
-
-#### 2）在order-service中使用feign-api
+#### 在order-service中使用feign-api
 
 首先，删除order-service中的UserClient、User、DefaultFeignConfiguration等类或接口。
 
@@ -1498,7 +1507,7 @@ UserController：
 
 修改order-service中的所有与上述三个组件有关的导包部分，改成导入feign-api中的包
 
-#### 3）重启测试
+#### 重启测试
 
 重启后，发现服务报错了：
 
@@ -1508,7 +1517,7 @@ UserController：
 
 而order-service的@EnableFeignClients注解是在cn.itcast.order包下，不在同一个包，无法扫描到UserClient。
 
-#### 4）解决扫描包问题
+#### 解决扫描包问题
 
 方式一：
 
@@ -1564,7 +1573,7 @@ Zuul是基于Servlet的实现，属于阻塞式编程。而SpringCloudGateway则
 3. 编写基础配置和路由规则
 4. 启动网关服务进行测试
 
-### 1）创建gateway服务，引入依赖
+### 创建gateway服务，引入依赖
 
 创建服务：
 
@@ -1585,7 +1594,7 @@ Zuul是基于Servlet的实现，属于阻塞式编程。而SpringCloudGateway则
 </dependency>
 ```
 
-### 2）编写启动类
+### 编写启动类
 
 ```java
 package cn.itcast.gateway;
@@ -1602,7 +1611,7 @@ public class GatewayApplication {
 }
 ```
 
-### 3）编写基础配置和路由规则
+### 编写基础配置和路由规则
 
 创建application.yml文件，内容如下：
 
@@ -1628,13 +1637,13 @@ spring:
 
 本例中，我们将 `/user/**`开头的请求，代理到`lb://userservice`，lb是负载均衡，根据服务名拉取服务列表，实现负载均衡。
 
-### 4）重启测试
+### 重启测试
 
 重启网关，访问http://localhost:10010/user/1时，符合`/user/**`规则，请求转发到uri：http://userservice/user/1，得到了结果：
 
 ![image-20210714211908341](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714211908341.png)
 
-### 5）网关路由的流程图
+### 网关路由的流程图
 
 整个访问的流程如下：
 
@@ -1909,4 +1918,3 @@ spring:
             allowCredentials: true # 是否允许携带cookie
             maxAge: 360000 # 这次跨域检测的有效期
 ```
-
