@@ -4903,8 +4903,8 @@ public class FileToWordsRegexp {
 
 在构造器中我们读取了文件中的所有内容（跳过第一行注释，并将其转化成为单行 字符串）。现在，当你调用 stream() 的时候，可以像往常一样获取一个流，但这回你可 以多次调用 stream() ，每次从已存储的字符串中创建一个新的流。这里有个限制，整 个文件必须存储在内存中；在大多数情况下这并不是什么问题，但是这丢掉了流操作非 常重要的优势： 
 
-1. “不需要把流存储起来。” 当然，流确实需要一些内部存储，但存储的只是序列的 一小部分，和存储整个序列不同。 
-2. 它们是懒加载计算的。
+- “不需要把流存储起来。” 当然，流确实需要一些内部存储，但存储的只是序列的 一小部分，和存储整个序列不同。 
+- 它们是懒加载计算的。
 
 ### 中间操作
 
@@ -5467,7 +5467,7 @@ Java 的基本理念是 “结构不佳的代码不能运行”。
 
 > throw 与 return 的对比
 
-throw关键字可以与return关键字进行对比。return代表正常退出，throw代表异常退出；return的返回位置是确定的，就是上一级调用者，而throw后执行哪行代码则经常是不确定的，由异常处理机制动态确定。
+throw 关键字可以与 return 关键字进行对比。return 代表正常退出，throw 代表异常退出；return 的返回位置是确定的，就是上一级调用者，而 throw 后执行哪行代码则经常是不确定的，由异常处理机制动态确定。
 
 ### 异常继承体系
 
@@ -5479,18 +5479,18 @@ throw关键字可以与return关键字进行对比。return代表正常退出，
 
 > `Throwable` 的直接子类有两个：`Error` 和 `Exception`。
 
-- `Error`表示系统错误或资源耗尽，由Java系统自己使用，应用程序不应抛出和处理。
+- `Error` 表示系统错误或资源耗尽，由 Java 系统自己使用，应用程序不应抛出和处理。
     - 虚拟机错误（`VirtualMacheError`）
     - 内存溢出错误（`OutOfMemory-Error`）
     - 栈溢出错误（`StackOverflowError`）
-- Exception表示应用程序错误
+- Exception 表示应用程序错误
     - `IOException`（输入输出 I/O 异常）
     - `RuntimeException`（运行时异常）
     - `SQLException`（数据库 SQL 异常）
 
-`RuntimeException`比较特殊，`RuntimeException` 和其他异常也是运行时产生的，它表示的实际含义是未受检异常（unchecked exception），Exception 的其他子类和Exception 自身则是受检异常（checked exception）, Error 及其子类也是未受检异常。    
+`RuntimeException` 比较特殊，`RuntimeException` 和其他异常也是运行时产生的，<span style="color:red">它表示的实际含义是未受检异常</span>（unchecked exception），Exception 的其他子类和 Exception 自身则是受检异常（checked exception）, Error 及其子类也是未受检异常。    
 
-<span style="color:green">**受检（checked）和未受检（unchecked）的区别在于Java如何处理这两种异常。对于受检异常，Java会强制要求程序员进行处理，否则会有编译错误，而对于未受检异常则没有这个要求。**</span>
+<span style="color:red">**受检（checked）和未受检（unchecked）的区别在于Java如何处理这两种异常。对于受检异常，Java会强制要求程序员进行处理，否则会有编译错误，而对于未受检异常则没有这个要求。**</span>
 
 > `Throwable` 常见方法
 
@@ -5504,11 +5504,11 @@ Throwable initCause(Throwable cause)
 ```
 
 - message 表示异常消息
-- cause 触发该异常的其他异常（常用于追踪异常链）
+- <span style="color:red">**cause 触发该异常的其他异常（常用于追踪异常链）**</span>
 
 异常可以形成一个异常链，上层的异常由底层异常触发，cause表示底层异常。
 
-`Throwable` 的某些子类没有带cause参数的构造方法，可以通过 `fillInStackTrace`() 来设置，这个方法最多只能被调用一次。`fillInStackTrace` 会将异常栈信息保存下来。
+`Throwable` 的某些子类没有带 cause 参数的构造方法，可以通过 `fillInStackTrace()` 来设置，这个方法最多只能被调用一次。`fillInStackTrace` 会将异常栈信息保存下来。
 
 ```java
 void printStackTrace(); // 打印异常栈信息到标准错误输出流
@@ -5523,6 +5523,8 @@ Throwable getCause() // 获取异常的 cause
 捕获异常的语法有 try、catch、throw、finally、try-with-resources 和 throws
 
 #### try-catch 语句
+
+小的异常放前面，大的放后面。
 
 在使用 try-catch 语句时，要注意子类异常要写在父类异常前面。try-catch 捕获异常时，如果前面的 catch 捕获到了就不会执行后面的了。你把一个模糊不清的父类异常放在前面，语义清晰的子类异常放在后面，这样捕获到的异常内容也是模糊的。
 
@@ -5558,7 +5560,7 @@ try{
 - 为什么要重新抛出呢？因为当前代码不能够完全处理该异常，需要调用者进一步处理。
 - 为什么要抛出一个新的异常呢？当然是因为当前异常不太合适。不合适可能是信息不够，需要补充一些新信息；还可能是过于细节，不便于调用者理解和使用，如果调用者对细节感兴趣，还可以继续通过 `getCause()` 获取到原始异常。
 
-在catch块内处理完后，可以重新抛出异常，异常可以是原来的，也可以是新建的。
+在 catch 块内处理完后，可以重新抛出异常，异常可以是原来的，也可以是新建的。
 
 ```java
 try{
@@ -5574,15 +5576,13 @@ try{
 
 #### finally
 
-finally内的代码不管有无异常发生，都会执行。
+finally 内的代码不管有无异常发生，都会执行。一般用于释放资源，如 socket连接、数据库连接、文件流等。
 
-一般用于释放资源，如 socket连接、数据库连接、文件流等。
-
-请注意：无论异常是否被抛出，finally 子句总能被执行。这也为解决 Java 不允许我们回到异常抛出点这一问题，提供了一个思路。如果将 try 块放在循环里，就可以设置一种在程序执行前一定会遇到的异常状况。还可以加入一个 static 类型的计数器或者别的装置，使循环在结束以前能尝试一定的次数。这将使程序的健壮性更上一个台阶。
+**请注意：**无论异常是否被抛出，finally 子句总能被执行。这也为解决 Java 不允许我们回到异常抛出点这一问题，提供了一个思路。<span style="color:green">如果将 try 块放在循环里，就可以设置一种在程序执行前一定会遇到的异常状况。</span>还可以加入一个 static 类型的计数器或者别的装置，使循环在结束以前能尝试一定的次数。这将使程序的健壮性更上一个台阶。
 
 > **finally 的语法细节**
 
-- 如果在try或者catch语句内有return语句，则return语句在finally语句执行结束后才执行，但finally并不能改变返回值
+- 如果在 try 或者 catch 语句内有 return 语句，则 return 语句在 finally 语句执行结束后才执行，但 finally 并不能改变返回值
 
 这段代码最后得到的返回值是0。实际执行过程是：在执行到 `try` 内的 `return retVal`；语句前，会先将返回值 `retVal` 保存在一个临时变量中，然后才执行 `finally` 语句，最后`try` 再返回那个临时变量，`finally` 中对 `retVal` 的修改不会被返回。
 
@@ -5597,7 +5597,7 @@ public static int test(){
 }
 ```
 
-<span style="color:green">**字节码验证猜想：**</span>走一遍字节码流程，发现返回的是0。return retVal 和 retVal 用的不是同一个局部变量表中的内容。
+<span style="color:green">**字节码验证猜想：**</span>走一遍字节码流程，发现返回的是0。`return retVal` 和 `retVal` 用的不是同一个局部变量表中的内容。
 
 ```shell
   public static int test();
@@ -5622,7 +5622,7 @@ public static int test(){
 
 ----
 
-如果在 finally 中也有 return 语句，try 和 catch 内的 return 会丢失，实际会返回 finally中的返回值。finally 中有 return 不仅会覆盖 try 和 catch 内的返回值，还会掩盖 try 和catch 内的异常，就像异常没有发生一样，比如：
+如果在 finally 中也有 return 语句，try 和 catch 内的 return 会丢失，实际会返回 finally 中的返回值。finally 中有 return 不仅会覆盖 try 和 catch 内的返回值，还会掩盖 try 和 catch 内的异常，就像异常没有发生一样，比如：
 
 ```java
 package base;
@@ -5647,9 +5647,7 @@ public class Finally {
 */
 ```
 
-----
-
-如果finally中抛出了异常，则原异常也会被掩盖，看下面的代码：
+如果 finally 中抛出了异常，则原异常也会被掩盖，看下面的代码：
 
 ```java
 package base;
@@ -5692,7 +5690,7 @@ Exception in thread "main" java.lang.RuntimeException: Hello World
 
 #### try-with-resources
 
-Java 7 开始提供的自动关闭资源的语法。这种语法仅针对实现了 `java.lang.AutoCloseable` 接口的对象
+Java 7 开始提供的自动关闭资源的语法。这种语法仅针对实现了`java.lang.AutoCloseable` 接口的对象
 
 ```java
 public class AutoCloseableDemo {
@@ -5720,12 +5718,9 @@ public class AutoCloseableDemo {
         } catch (Exception var2) {
             var2.printStackTrace();
         }
-
     }
 }
 ```
-
-----
 
 Java 5 中的 `Closeable` 已经被修改，修改之后的接口继承了 `AutoCloseable` 接口。所以实现了 `Closeable` 接口的对象，都支持了 `try-with-resources` 特性。
 
@@ -5861,8 +5856,6 @@ base.SomeOtherException
 	at base.TurnOffChecking.main(TurnOffChecking.java:35)
 */
 ```
-
-
 
 #### 终止与恢复
 
@@ -9287,9 +9280,7 @@ public class CreatorGeneric {
 class Generic<T> {
     T t;
 
-    Generic(T t) {
-        this.t = t;
-    }
+    Generic(T t) { this.t = t; }
 
     @Override
     public String toString() {
@@ -10203,8 +10194,6 @@ public class TableCreator {
     }
 }
 ```
-
-
 
 ## 第二十四章 并发编程
 
@@ -11167,7 +11156,5 @@ class DataSourceUtils {
         }
         return dataSource;
     }
-
 }
 ```
-
