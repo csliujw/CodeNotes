@@ -8880,6 +8880,8 @@ public class Customer<A, B> {
 
 ### 泛型擦除
 
+#### 泛型擦除示例
+
 > 看代码说结果
 
 看起来 `c1` 和 `c2` 是不一样的，但程序会认为它们是相同的类型
@@ -8953,6 +8955,356 @@ public class LostInformation
         System.out.println(Arrays.toString(list.getClass().getTypeParameters()));
         System.out.println(Arrays.toString(map.getClass().getTypeParameters()));
         System.out.println(Arrays.toString(quark.getClass().getTypeParameters()));
+    }
+}
+```
+
+#### C++的方式
+
+以下代码在 C++ 中可以正常运行。
+
+Manipulator 类存储了一个 T 类型的对象。manipulate() 方法会调用 obj 上的 f() 方法。它是如何知道类型参数 T 中存在 f() 方法的呢？C++ 编译器会在你实例化模版时进行检查，所以在 Manipulator 实例化的那一刻，它看到 HasF 中含有 一个方法 f()。如果情况并非如此，你就会得到一个编译期错误，保持类型安全。
+
+![image-20210928204623550](..\pics\JavaSE\image-20210928204623550.png)
+
+![image-20210928204711352](..\pics\JavaSE\image-20210928204711352.png)
+
+将语法换成 Java 的，发现无法通过编译。
+
+```java
+public class HasF {
+    public void f() {
+        System.out.println("HasF.f()");
+    }
+}
+
+class Manipulator<T> {
+    private T obj;
+
+    public Manipulator(T obj) {
+        this.obj = obj;
+    }
+
+    public void manipulate() {
+        obj.f();
+    }
+
+    public static void main(String[] args) {
+        Manipulator<HasF> hasFManipulator = new Manipulator<>(new HasF());
+        hasFManipulator.manipulate();
+    }
+}
+```
+
+因为擦除，Java 编译器无法将 manipulate() 方法必须能调用 obj 的 f() 方法这一需求映射到 HasF 具有 f() 方法这个事实上。<span style="color:red">为了调用 f()，我们必须协助泛型类，给定泛型类一个边界，以此告诉编译器只能接受遵循这个边界的类型。</span>
+
+```java
+public class HasF {
+    public void f() {
+        System.out.println("HasF.f()");
+    }
+}
+
+class Manipulator<T extends HasF> {
+    private T obj;
+
+    public Manipulator(T obj) {
+        this.obj = obj;
+    }
+
+    public void manipulate() {
+        obj.f();
+    }
+
+    public static void main(String[] args) {
+        Manipulator<HasF> hasFManipulator = new Manipulator<>(new HasF());
+        hasFManipulator.manipulate();
+    }
+}
+```
+
+泛型参数类型会把泛型擦除到它的第一个边界。上述代码泛型为`<T extends HasF>` 会被擦除到 `HasF`，这样是为了兼容之前没有使用泛型的代码。为什么说是为了兼容呢？
+
+- 看 `ArrayList`，是一个泛型类，如果没有泛型擦除，那么之前的不支持泛型的代码，原先有使用 `ArrayList` 的代码就得更改。
+
+> 什么时候使用泛型呢？
+
+- 希望代码能够跨多个类工作时
+- 某个类有一个返回 T 的方法
+
+#### 迁移兼容性
+
+泛型擦除这是 Java 的一个折中选择。泛型擦除减少了泛型的泛化性。泛型在 Java 中仍旧是有用的，不过不如它们本来设想的那么有用。
+
+在基于擦除的实现中，泛型类型被当作第二类类型处理，即不能在某些重要的上下文使用泛型类型。<span style="color:red">泛型类型只有在静态类型检测期间才出现，在此之后，程序中的所有泛型类型都将被擦除，替换为它们的非泛型上界。例如，`List<T>` 这样的类型注解会被擦除为 List，普通的类型变量在未指定边界的情况下会被擦除为 Object。</span>
+
+- `List<T>` 被擦除为 List
+- List<普通类型> 如 `List<Integer>` 将被擦除为 Object
+
+擦除的核心动机是你可以在泛化的客户端上使用非泛型的类库。
+
+例如，假设一个应用使用了两个类库 X 和 Y，Y 使用了类库 Z。随着 Java 5 的出 现，这个应用和这些类库的创建者最终可能希望迁移到泛型上。但是当进行迁移时，它 们有着不同的动机和限制。为了实现迁移兼容性，每个类库与应用必须与其他所有的部 分是否使用泛型无关。因此，它们不能探测其他类库是否使用了泛型。因此，某个特定 的类库使用了泛型这样的证据必须被” 擦除 “。
+
+#### 擦除的问题
+
+泛型不能用于显式地引用运行时类型的操作中，例如转型、 `instanceof` 操作和 `new` 表达式。因为所有关于参数的类型信息都丢失了，当你在编写泛型代码时，必须时刻提醒自己，你只是看起来拥有有关参数的类型信息而已。
+
+```java
+// 泛型语法也在强烈暗示整个类中所有 T 出现的地方都被替换，
+class Foo<T> {
+	T var;
+}
+// 当你在编写这个类的代码时，必须提醒自己：“这只是一个 Object!“。
+Foo<Cat> f = new Foo<>();
+```
+
+#### 边界处的动作
+
+`ArrayList<T>` 中的泛型 T 虽然会被擦除，但是它仍旧可以在编译器确保你放置到 result 中的对象具有 T 类型。因此，即使擦除移除了方法或类中的实际类型的信息， 编译器仍可以确保方法或类中使用的类型的内部一致性。
+
+因为擦除移除了方法体中的类型信息，所以在运行时的问题就是边界：即对象进入和离开方法的地点。这些正是编译器在编译期执行类型检查并插入转型代码的地点。<span style="color:red">【该数据符不符合我之前擦除的泛型的类型，编译器会擦除泛型，也会在必要的地点生成对应类型检查字节码和转型字节码】</span>
+
+> 观察下面类型强转代码的字节码
+
+```java
+public class SimpleHolder {
+    private Object obj;
+    public void set(Object obj) { this.obj = obj; }
+    public Object get() { return obj; }
+    public static void main(String[] args) {
+        SimpleHolder holder = new SimpleHolder();
+        holder.set("item");
+        String o = (String) holder.get();
+    }
+}
+```
+
+```shell
+  public void set(java.lang.Object);
+       0: aload_0
+       1: aload_1
+       2: putfield      #2                  // Field obj: Object
+       5: return
+
+  public java.lang.Object get();
+       0: aload_0
+       1: getfield      #2                  // Field obj: Object
+       4: areturn
+
+  public static void main(java.lang.String[]);
+       0: new           #3                  // class tij/chapter20/SimpleHolder
+       3: dup
+       4: invokespecial #4                  // Method "<init>":()V
+       7: astore_1
+       8: aload_1
+       9: ldc           #5                  // String item
+      11: invokevirtual #6                  // Method set:(Object;)V
+      14: aload_1
+      15: invokevirtual #7                  // Method get:()Object
+      18: checkcast     #8                  // class java/lang/String 调用get 方法后，执行 checkcast 类型检查
+      21: astore_2
+      22: return
+```
+
+> 加入泛型后的代码，注意观察字节码
+
+- 传递给 set 的数据在编译期会进行类型检查（语法分析，分析语法是否正确）
+- get 获得的数据是  Object ，在执行了 get 方法后会执行 `checkcast`，检验类型转换。
+
+```java
+public class GenericHolder<T> {
+    private T obj;
+    public void set(T obj) { this.obj = obj; }
+    public T get() { return obj; }
+    public static void main(String[] args) {
+        GenericHolder<String> holder = new GenericHolder();
+        holder.set("item");
+        String o = holder.get();
+    }
+}
+```
+
+```shell
+  public void set(T);
+       0: aload_0
+       1: aload_1
+       2: putfield      #2                  // Field obj: Object;
+       5: return
+
+  public T get();
+       0: aload_0
+       1: getfield      #2                  // Field obj: Object;
+       4: areturn
+
+  public static void main(java.lang.String[]);
+       0: new           #3                  // class GenericHolder
+       3: dup
+       4: invokespecial #4                  // Method "<init>":()V
+       7: astore_1
+       8: aload_1
+       9: ldc           #5                  // String item
+      11: invokevirtual #6                  // Method set:(Object;)V
+      14: aload_1
+      15: invokevirtual #7                  // Method get:() Object;
+      18: checkcast     #8                  // class java/lang/String
+      21: astore_2
+      22: return
+```
+
+### 擦除的补偿
+
+因为擦除，我们将失去执行泛型代码中某些操作的能力。无法在运行时知道确切类型，但是我们可以通过其他手段来进行弥补！
+
+> 用 `isInstance` 替代 `instanceof`
+
+```java
+class Building {
+}
+
+class House extends Building {
+}
+
+public class ClassTypeCapture<T> {
+    Class<T> kind;
+
+    public ClassTypeCapture(Class<T> kind) {
+        this.kind = kind;
+    }
+
+    public boolean f(Object arg) {
+        return kind.isInstance(arg); // 用 isInstance 替代 instanceof
+    }
+
+    public static void main(String[] args) {
+        ClassTypeCapture<House> b = new ClassTypeCapture<>(House.class);
+        System.out.println(b.f(new Building()));
+        System.out.println(b.f(new House()));
+    }
+}
+/*
+false
+true
+*/
+```
+
+#### 创建类型实例
+
+试图在通过 new T() 是行不通的，部分原因是由于擦除，部分原因是编译器无法验证 T 是否具有默认（无参）构造函数。但是在 C++ 中，此操作自然，直接且安全（在编译时检查）：
+
+> Java 中的解决方案是传入一个工厂对象，并使用该对象创建新实例。最便利的工厂对象就是 Class 对象，因此，如果使用类型标记，则可以使用 `newInstance()` 创建该 类型的新对象：
+
+```java
+class ClassAsFactory<T> implements Supplier<T> {
+    Class<T> kind;
+
+    ClassAsFactory(Class<T> kind) {
+        this.kind = kind;
+    }
+
+    @Override
+    public T get() {
+        try {
+            return kind.newInstance();
+        } catch (InstantiationException |
+                IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+
+class Employee {
+    @Override
+    public String toString() {
+        return "Employee";
+    }
+}
+
+public class InstantiateGenericType {
+    public static void main(String[] args) {
+        // 成功
+        ClassAsFactory<Employee> fe = new ClassAsFactory<>(Employee.class);
+        System.out.println(fe.get());
+        ClassAsFactory<Integer> fi = new ClassAsFactory<>(Integer.class);
+        try {
+            // 失败，因为 Integer 没有无参构造。且这种错误在运行时才能捕获，不推荐！
+            System.out.println(fi.get());
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+}
+```
+
+> 建议使用显式工厂（Supplier）并限制其类型，以便只有实现该工厂的类可以这样创建对象
+
+> 还可以使用模板方法，定义一个创建对象的模板
+
+```java
+abstract class GenericWithCreate<T> {
+    final T element;
+
+    GenericWithCreate() {
+		// element = new T(); 报错
+        element = create();
+    }
+
+    abstract T create();
+}
+
+class X {
+}
+// 泛型给了一个具体的类型
+class XCreator extends GenericWithCreate<X> {
+
+    @Override
+    X create() {
+        return new X();
+    }
+
+    void f() {
+        System.out.println(element.getClass().getSimpleName());
+    }
+}
+
+public class CreatorGeneric {
+    public static void main(String[] args) {
+        XCreator xc = new XCreator();
+        xc.f();
+    }
+}
+```
+
+#### 泛型数组
+
+- `return (T[]) Array.newInstance(componentType, length);`
+- 直接创建一个 Object 类型的数组，在获取元素的时候，进行强转
+
+> 无法创建泛型数组。通用解决方案是在试 图创建泛型数组的时候使用 `ArrayList`
+
+> 但是，有时，仍然会创建泛型类型的数组。可以通 过使编译器满意的方式定义对数组的通用引用
+
+```java
+class Generic<T> {
+    T t;
+
+    Generic(T t) {
+        this.t = t;
+    }
+
+    @Override
+    public String toString() {
+        return "Generic{t=" + t.getClass() + "}";
+    }
+}
+
+public class ArrayOfGenericReference {
+    static Generic<Integer>[] gia;
+
+    public static void main(String[] args) {
+        gia = new Generic[10];
+        gia[0] = new Generic<>(10);
+        // Generic{t=class java.lang.Integer}
+        System.out.println(gia[0]);
     }
 }
 ```
