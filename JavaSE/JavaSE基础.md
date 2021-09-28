@@ -8720,6 +8720,245 @@ class ProxyHandler<T> implements InvocationHandler {
 
 ## 第二十章 泛型
 
+### 为什么引入泛型
+
+希望编写更通用的代码，使代码可以应用于多种类型。通过继承或接口的方式实现通用代码对程序的约束还是太强了。因此 `Java5` 引入了泛型机制。
+
+Java 的泛型受 C++ 的影响。泛型在编程语言中出现的最初目的是希望类或方法能够具备最广泛的表达能力，但 Java 的泛型并未完全实现这些。优点和局限性都很明显。对比 C++ 的泛型机制，我们可以很明显的感受到 Java 泛型的局限性。
+
+### 简单泛型
+
+泛型的主要目的是用来指定容器要持有什么类型的对象，并且由编译器来保证类型的正确性。
+
+> 泛型的基本使用（一）
+
+- 我们也可以用 Object 接收对象，然后 get 得到结果，对结果进行强制类型转换。但是这样做不安全，一旦传入的类型和强转的不一致，代码在运行时就会报错。而泛型可以在编译时就进行类型检查，更为安全。
+- 总结：泛型，告诉编译器想要使用什么类型，然后编译器帮助你处理一切的细节。
+
+```java
+public class Hold2<T> {
+    private T a;
+
+    public Hold2(T a) {
+        this.a = a;
+    }
+
+    public T get() {
+        return a;
+    }
+
+    public static void main(String[] args) {
+        String string = new String("123");
+        Hold2<String> hold = new Hold2<>(string);
+        System.out.println(hold.get());
+    }
+}
+```
+
+> 泛型的基本使用（二）
+
+实现一个元组（元组不可变，所以定义为 final）
+
+```java
+public class TwoTuple<A, B> {
+    final A a;
+    final B b;
+
+    TwoTuple(A a, B b) {
+        this.a = a;
+        this.b = b;
+    }
+
+    public static void main(String[] args) {
+        TwoTuple<String, Integer> two = new TwoTuple<>("Hello", 18);
+        System.out.println(two.a);
+        System.out.println(two.b);
+    }
+}
+```
+
+### 泛型接口&方法
+
+泛型接口的用法和泛型类的用法是一致的，不再赘述。
+
+#### 泛型方法
+
+- <span style="color:red">泛型方法和泛型类是独立的。普通类（非泛型类）中也可以有泛型方法！</span>
+- 如果泛型方法可以替代整个类泛型化，那么就应该只使用泛型方法，因为泛型方法可以使事情更加清晰。
+- 对于 static 修饰的方法而言，无法访问泛型类的参数类型，所以 static 方法需要使用泛型能力，就必须使其成为泛型方法。
+- 如果泛型方法中，传入了基本类型参数，那么会进行自动装箱拆箱。
+
+```java
+public class GenericMethods {
+    public <T> void f(T t) {
+        System.out.println(t.getClass().getName());
+    }
+
+    public static void main(String[] args) {
+        GenericMethods g = new GenericMethods();
+        g.f(1);
+        g.f("1");
+    }
+}
+/*
+java.lang.Integer
+java.lang.String
+*/
+```
+
+#### 显示指定泛型类型
+
+```java
+void p(Map<String,Integer> map){
+	// 集合中用的比较多
+}
+```
+
+#### 可变参数与泛型方法
+
+- 泛型方法与可变参数列表能够很好地共存。
+- 结合泛型和可变长参数，我们可以定义方法专门用来生产这种类型的集合。
+
+```java
+public class GenericVarargs {
+    public static <T> List<T> makeList(T... args) {
+        ArrayList<T> ts = new ArrayList<>();
+        for (T arg : args) {
+            ts.add(arg);
+        }
+        return ts;
+    }
+
+    public static void main(String[] args) {
+        List<Integer> list = makeList(1, 2, 3, 4, 5, 6, 7);
+        list.forEach(System.out::println);
+    }
+}
+```
+
+### 匿名内部类
+
+匿名内部类中使用泛型
+
+```java
+public class Customer {
+    public static List generator(){
+        return new List<Integer>() {
+            // some method
+        }
+    }
+}
+```
+
+### 构建复杂模型
+
+```java
+class PointA {
+    int x, y;
+}
+
+class PointB {
+    int x, y;
+}
+
+public class Customer<A, B> {
+    public A a;
+    public B b;
+
+    Customer(A a, B b) {
+        this.a = a;
+        this.b = b;
+    }
+
+    public static void main(String[] args) {
+        Customer<PointA, PointB> c = new Customer<>(new PointA(), new PointB());
+        System.out.println(c.a);
+        System.out.println(c.b);
+    }
+}
+```
+
+### 泛型擦除
+
+> 看代码说结果
+
+看起来 `c1` 和 `c2` 是不一样的，但程序会认为它们是相同的类型
+
+```java
+public class ErasedTypeEquivalence {
+    public static void main(String[] args) {
+        Class c1 = new ArrayList<String>().getClass();
+        Class c2 = new ArrayList<Integer>().getClass();
+        System.out.println(c1 == c2); // true
+        System.out.println(c1); // class java.util.ArrayList
+        System.out.println(c2); // class java.util.ArrayList
+    }
+}
+```
+
+> 代码补充
+
+- 根据 `JDK` 文档的描述：`Class.getTypeParameters()` 将返回一个 `TypeVariable` 对象数组，表示有泛型声明所声明的参数类型。
+- 实际上，我们观察输出结果发现，只有用作参数占位符的标识符。
+- <span style="color:red">在泛型内部，无法获得任何有关泛型参数类型的信息。</span>
+
+```java
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+
+class Frob {
+}
+
+class Fnorkle {
+}
+
+class Quark<Q> {
+}
+
+public class LostInformation {
+    public static void main(String[] args) {
+        ArrayList<Frob> list = new ArrayList<>();
+        HashMap<Frob, Fnorkle> map = new HashMap<>();
+        Quark<Frob> quark = new Quark<>();
+        System.out.println(Arrays.toString(list.getClass().getTypeParameters()));
+        System.out.println(Arrays.toString(map.getClass().getTypeParameters()));
+        System.out.println(Arrays.toString(quark.getClass().getTypeParameters()));
+    }
+}
+/*
+[E]
+[K, V]
+[Q]
+*/
+```
+
+Java 泛型是使用擦除实现的。这意味着当你在使用泛型时，任何具体的类型信息都被擦除了，你唯一知道的就是你在使用一个对象。因此，List 和 List 在运行时实际上是相同的类型。它们都被擦除成原生类型 List。
+
+上面代码的反编译结果如下：
+
+```java
+public class LostInformation
+{
+
+    public LostInformation()
+    {
+    }
+
+    public static void main(String args[])
+    {
+        ArrayList list = new ArrayList();
+        HashMap map = new HashMap();
+        Quark quark = new Quark();
+        System.out.println(Arrays.toString(list.getClass().getTypeParameters()));
+        System.out.println(Arrays.toString(map.getClass().getTypeParameters()));
+        System.out.println(Arrays.toString(quark.getClass().getTypeParameters()));
+    }
+}
+```
+
+
+
 ### 特殊情况★★★
 
 ```java
@@ -9160,7 +9399,7 @@ VERSION, getInfo=1.8.0_301
 
 我们以一个邮局的模型为例。邮局需要以尽可能通用的方式来处理每一封邮件，并且要不断尝试处理邮件，直到该邮件最终被确定为一封死信。其中的每一次尝试可以看作为一个策略（也是一个设计模式），而完整的处理方式列表就是一个职责链。
 
-# 责任链，状态机，多路分发暂时不看，看不懂。
+## 责任链，状态机，多路分发暂时不看，看不懂。
 
 ## 第二十三章 注解
 
