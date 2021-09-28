@@ -8749,11 +8749,418 @@ public class Demo {
 }
 ```
 
-
-
 ## 第二十一章 数组工具类
 
 ## 第二十二章 枚举
+
+### 枚举的优点
+
+`JDK 5` 开始提供的枚举，在这之前都是通过定义静态常量来实现类似的功能。
+
+> 枚举的优点
+
+- 定义枚举的语法更为简洁。
+- 枚举更为安全，一个枚举类型的变量，它的值要么为null，要么为枚举值之一，不可能为其他值。
+- 枚举类型自带很多便利方法（如 `values`、`valueOf`、`toString` 等），易于使用。
+
+比如，我们需要创建一个整数常量集，但是这些值并不会将自身限制在这个常量集的范围内，因此使用它们更有风险，而且更难使用。而枚举可以完美解决这个问题。
+
+### 枚举语法
+
+> 创建枚举并使用
+
+- 创建 `enum`  时，编译器会自动添加一些有用的特性
+  - 创建 `toString()` 方法，方便的显示某个 `enum` 实例的名称
+  - 创建 `ordinal()` 方法表示某个特定 `enum` 常量的声明顺序
+  - `static values()` 方法按照 `enum` 常量的声明顺序，生成这些常量值构成的数组
+
+```java
+//创建了一个名为 Spiciness 的枚举类型
+// PS: 枚举实例为常量
+public enum Spiciness {
+    NOT, MIL, MEDIUM, HOT, FLAMING
+}
+
+class SimpleEnumUse {
+    public static void main(String[] args) {
+        Spiciness hot = Spiciness.HOT;
+        System.out.println(hot); // HOT
+        System.out.println("=====================");
+        for (Spiciness value : Spiciness.values()) {
+            System.out.println(value + ",ordinal " + value.ordinal());
+        }
+    }
+}
+```
+
+`enum` 看起来像是一种新的数据类型，但是 `enum` 只是告诉编译器要执行一些内容。本质上， `enum` 就是一个类，可以有自己的方法。实际上  `enum` 类都继承自 `Enum` 类。
+
+<span style="color:red">`enum` 中的元素都是唯一的</span>
+
+> 在 switch 中使用枚举
+
+- switch 中使用数字/变量也可达成这样的效果，但是代码不直观。
+- 定义一个常量类也可，但是不安全，无法保证传入的值会限制在这些常量范围内。
+
+```java
+public class Burrito {
+    Spiciness degree;
+
+    public Burrito(Spiciness degree) {
+        this.degree = degree;
+    }
+
+    public void describe() {
+        System.out.println("This burrito is ");
+        switch (degree) {
+            case NOT:
+                System.out.println("not spicy at all");
+                break;
+            case MEDIUM:
+                System.out.println("a little hot");
+                break;
+            default:
+                System.out.println("too hot");
+        }
+    }
+
+    public static void main(String[] args) {
+        Burrito plain = new Burrito(Spiciness.NOT);
+        Burrito greenChile = new Burrito(Spiciness.MEDIUM);
+        plain.describe();
+        greenChile.describe();
+    }
+}
+```
+
+### 基本枚举特性
+
+```java
+enum Shrubbery {
+    GROUND, CRAWLING, HANGING
+}
+
+public class EnumClass {
+    public static void main(String[] args) {
+        for (Shrubbery s : Shrubbery.values()) {
+            System.out.println(s + " ordinal: " + s.ordinal());
+            System.out.print(s.compareTo(Shrubbery.CRAWLING) + " ");
+            System.out.print(s.equals(Shrubbery.CRAWLING) + " ");
+            System.out.println(s == Shrubbery.CRAWLING);
+            System.out.println(s.getDeclaringClass()); // 获得其所属的 enum 类
+            System.out.println(s.name());
+            System.out.println("********************");
+        }
+        // Produce an enum value from a String name:
+        for (String s : "HANGING CRAWLING GROUND".split(" ")) {
+            Shrubbery shrub = Enum.valueOf(Shrubbery.class, s);
+            System.out.println(shrub);
+        }
+    }
+}
+```
+
+### 添加方法
+
+#### 为枚举添加方法
+
+除了不能继承自一个 `enum` 之外，我们基本上可以将 `enum` 看作一个常规的类，`enum` 中也可以添加方法。
+
+如果我们希望每个枚举实例可以返回对自身信息的消息描述的话，我们可以自定义一个方法来返回描述信息。
+
+```java
+/**
+ * 带有详细信息的枚举
+ */
+public enum OzWitch {
+    WEST("This is WEST"),
+    NORTH("This is NORTH"),
+    EAST("This is EAST");
+
+    private String desc;
+
+    private OzWitch(String desc) {
+        this.desc = desc;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public static void main(String[] args) {
+        for (OzWitch value : OzWitch.values()) {
+            System.out.println(value + ":" + value.getDesc());
+        }
+    }
+}
+/*
+WEST:This is WEST
+NORTH:This is NORTH
+EAST:This is EAST
+*/
+```
+
+> 注意：
+
+- 必须在 `enum` 实例序列的最后添加一个分号
+- Java 要求你必须先定义 `enum` 实例。如果在定义 `enum` 实例之前定义了任何 方法或属性，那么在编译时就会得到错误信息
+
+#### 覆盖方法
+
+覆盖枚举的方法和覆盖普通类的方法一样。
+
+### switch 中的 enum
+
+不必 类名.值 来使用，直接使用枚举的值即可。
+
+```java
+enum Signal {
+    GREEN, YELLOW, RED
+}
+
+public class TrafficLight {
+    Signal color = Signal.RED;
+
+    public void change() {
+        // 在 switch 中我们不需要 Signal.RED 这样使用枚举
+        // 直接 RED 访问即可
+        switch (color) {
+            case RED:
+                color = Signal.GREEN;
+                break;
+            case GREEN:
+                color = Signal.YELLOW;
+                break;
+            case YELLOW:
+                color = Signal.RED;
+                break;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "The traffic light is " + color;
+    }
+
+    public static void main(String[] args) {
+        TrafficLight t = new TrafficLight();
+        for (int i = 0; i < 7; i++) {
+            System.out.println(t);
+            t.change();
+        }
+    }
+}
+```
+
+### values 方法
+
+ `enum` 类都继承自 `Enum` 类，而 `Enum` 类并没有 values 方法。那 values 方法来自那里？
+
+- <span style="color:red">values() 是由编译器添加的 static 方法。</span>可以看出，在创建 Explore 的过 程中，编译器还为其添加了 `valueOf()` 方法。`Enum` 类不是已经有 `valueOf()` 方法了吗？为什么还要再添加一个？
+- 因为 `Enum` 中的 `valueOf()` 方法需要两个参数，而这个新增的方法只需一个参数。
+
+```java
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.util.Set;
+import java.util.TreeSet;
+
+enum Explore {
+    HERE, THERE
+}
+
+public class Reflection {
+    public static Set<String> analyze(Class<?> enumClass) {
+        System.out.println("_____ Analyzing " + enumClass + " _____");
+        System.out.println("Interfaces:");
+        for (Type t : enumClass.getGenericInterfaces()) {
+            System.out.println(t);
+        }
+        System.out.println("Base: " + enumClass.getSuperclass());
+        System.out.println("Methods: ");
+        Set<String> methods = new TreeSet<>();
+        for (Method m : enumClass.getMethods()) {
+            methods.add(m.getName());
+        }
+        System.out.println(methods);
+        return methods;
+    }
+
+    public static void main(String[] args) {
+        Set<String> exploreMethods = analyze(Explore.class);
+        Set<String> enumMethods = analyze(Enum.class);
+        System.out.println("Explore.containsAll(Enum)? " + exploreMethods.containsAll(enumMethods));
+        System.out.print("Explore.removeAll(Enum): ");
+        exploreMethods.removeAll(enumMethods);
+        System.out.println(exploreMethods);
+    }
+}
+```
+
+```shell
+_____ Analyzing class tij.chapter22.Explore _____
+Interfaces:
+Base: class java.lang.Enum
+Methods: 
+[compareTo, equals, getClass, getDeclaringClass, hashCode, name, notify, notifyAll, ordinal, toString, valueOf, values, wait]
+_____ Analyzing class java.lang.Enum _____
+Interfaces:
+java.lang.Comparable<E>
+interface java.io.Serializable
+Base: class java.lang.Object
+Methods: 
+[compareTo, equals, getClass, getDeclaringClass, hashCode, name, notify, notifyAll, ordinal, toString, valueOf, wait]
+Explore.containsAll(Enum)? true
+Explore.removeAll(Enum): [values]
+// 摘自 Think in Java
+final class Explore extends java.lang.Enum<Explore> {
+    public static final Explore HERE;
+    public static final Explore THERE;
+    public static Explore[] values();
+    public static Explore valueOf(java.lang.String);
+    static {};
+}
+```
+
+编译器会将枚举类 Explore 标记为 final 类，所以 Explore 无法被继承。
+
+由于泛型擦除，反编译无法得到枚举的完整信息，展示出来的 Explore 的父类只是原始的 `Enum` 实际上应该是 `Enum<Explore>`
+
+### 枚举的实现
+
+枚举类型实际上会被Java编译器转换为一个对应的类，这个类继承了`Java API` 中的`java.lang.Enum` 类。`Enum` 类有 `name`和 `ordinal` 两个实例变量，在构造方法中需要传递，`name()`、`toString()`、`ordinal()`、`compareTo()`、`equals()` 方法都是由 `Enum` 类根据其实例变量 `name` 和 `ordinal` 实现的。`values` 和 `valueOf` 方法是编译器给每个枚举类型自动添加的。
+
+> 枚举类反编译后的代码
+
+- 构造器是私有的，不能在外部创建新的实例。
+- 三个枚举值实际上是三个静态常量（static final）
+- values方法是编译器添加的，内部有一个values数组保持所有枚举值
+- `valueOf()` 方法，如 `valueOf("ONE")` 可以得到 `Demo.ONE`
+
+```java
+public final class Demo extends Enum {
+	// 我们定义的枚举类型
+    public static final Demo ONE;
+    public static final Demo TWO;
+    public static final Demo THREE;
+    private static final Demo $VALUES[];
+	
+    // 静态初始化数组
+    static {
+        ONE = new Demo("ONE", 0);
+        TWO = new Demo("TWO", 1);
+        THREE = new Demo("THREE", 2);
+        $VALUES = (new Demo[]{
+                ONE, TWO, THREE
+        });
+    }
+    
+    // foreach 遍历 枚举.values() 时调用的就是此数组
+    public static Demo[] values() {
+        return (Demo[]) $VALUES.clone();
+    }
+
+    public static Demo valueOf(String name) {
+        return (Demo) Enum.valueOf(tij / chapter22 / Demo, name);
+    }
+
+    // 初始化枚举中的变量。
+    private Demo(String s, int i) {
+        super(s, i);
+    }
+
+    public static void main(String args[]) {
+        System.out.println();
+    }
+}
+```
+
+### 扩展枚举中的元素
+
+我们希望用枚举表示食物，且食物又分为很多的大类，我们希望对每个大类的食物也进行分组。如何实现？
+
+- 定义一个接口。
+- 接口中的枚举实现该接口
+
+```java
+/**
+ * enum 来表示不同类别的食物，同时还
+ * 希望每个 enum 元素仍然保持 Food 类型
+ */
+public interface Food {
+    enum Appetizer implements Food {
+        SALAD, SOUP, SPRING_ROLLS
+    }
+
+    enum Fruit implements Food {
+        APPLE, BANANA, ORANGE
+    }
+
+    public static void main(String[] args) {
+        Food food = Appetizer.SALAD;
+        System.out.println(food);
+        food = Fruit.APPLE;
+        System.out.println(food);
+    }
+}
+```
+
+枚举实现接口，这样枚举类就成了接口的子类了。
+
+> 枚举的枚举
+
+```java
+enum Appetizer implements Food {
+    SALAD, SOUP, SPRING_ROLLS;
+
+    enum D {
+        a, ab
+    }
+}
+```
+
+### 枚举常量的方法
+
+我们可以为枚举常量添加方法。正如前面所说的，枚举常量本质上就是该枚举类的一个实例对象。我们可以为枚举类定义一个或多个 abstract 方法，然后为每个 `enum` 实例对象实现该抽象方法。
+
+> 枚举体现多态
+
+```java
+public enum ConstantSpecificMethod {
+    CLASSPATH {
+        @Override
+        String getInfo() {
+            return System.getProperty("CLASSPATH");
+        }
+    },
+    VERSION {
+        @Override
+        String getInfo() {
+            return System.getProperty("java.version");
+        }
+    };
+
+    abstract String getInfo();
+
+    public static void main(String[] args) {
+        for (ConstantSpecificMethod value : ConstantSpecificMethod.values()) {
+            System.out.println(value + ", getInfo=" + value.getInfo());
+        }
+    }
+}
+/*
+CLASSPATH, getInfo=null
+VERSION, getInfo=1.8.0_301
+*/
+```
+
+#### 职责/责任 链模式
+
+通过常量相关的方法，我们可以很容易地实现一个简单的职责链。
+
+我们以一个邮局的模型为例。邮局需要以尽可能通用的方式来处理每一封邮件，并且要不断尝试处理邮件，直到该邮件最终被确定为一封死信。其中的每一次尝试可以看作为一个策略（也是一个设计模式），而完整的处理方式列表就是一个职责链。
+
+# 责任链，状态机，多路分发暂时不看，看不懂。
 
 ## 第二十三章 注解
 
