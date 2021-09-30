@@ -9273,10 +9273,10 @@ public class CreatorGeneric {
 
 #### 泛型数组
 
-- `return (T[]) Array.newInstance(componentType, length);`
+- `return (T[]) Array.newInstance(componentType, length);`，居然还有传入一个 Class 对象，似乎不是很合理。
 - 直接创建一个 Object 类型的数组，在获取元素的时候，进行强转
 
-> 无法创建泛型数组。通用解决方案是在试 图创建泛型数组的时候使用 `ArrayList`
+> 无法创建泛型数组。通用解决方案是在创建泛型数组的时候使用 `ArrayList`
 
 > 但是，有时，仍然会创建泛型类型的数组。可以通过使编译器满意的方式定义对数组的通用引用
 
@@ -9300,6 +9300,212 @@ public class ArrayOfGenericReference {
         gia[0] = new Generic<>(10);
         // Generic{t=class java.lang.Integer}
         System.out.println(gia[0]);
+    }
+}
+```
+
+- 创建一个 Object 数组，然后强制类型转换
+
+```java
+@SuppressWarnings("all") // 压制警告
+class Generic2<T> {
+    private T[] array;
+
+    public void f1() {
+        // 创建一个 Object 数组，然后强制类型转换
+        array = (T[]) new Object[20];
+    }
+}
+```
+
+- 创建一个 Object 数组，在必要的时候才进行类型转换
+
+```java
+@SuppressWarnings("all") // 压制警告
+class Generic2<T> {
+    private Object[] array;
+
+    public void f1() {
+        // 创建一个 Object 数组，然后强制类型转换
+        array = new Object[20];
+    }
+	
+    // 获取元素时才进行前置类型转换
+    public T get(int index) {
+        return (T) array[index];
+    }
+}
+```
+
+### 边界
+
+边界允许我们对泛型使用的参数类型施加约束，且我们可以在绑定的类型中调用方法！
+
+不使用边界的化，由于擦除会删除类型信息，因此唯一可用于无限制泛型参数的方法就是那些 Object 可用的方法。但是！如果我们将该参数类型限制为某类型的子集，则可以调用该子集中的方法。泛型中的 extends 关键字可以进行这种约束。
+
+```java
+interface HasColor {
+    java.awt.Color getColor();
+}
+
+class Coord {
+    public int x, y;
+}
+
+public class WithColorCoord<T extends Coord & HasColor> {
+    T item;
+
+    java.awt.Color color() {
+        return item.getColor();
+    }
+
+    int getX() {
+        return item.x;
+    }
+}
+```
+
+反编译结果
+
+```java
+public class WithColorCoord{
+
+    public WithColorCoord(){
+    }
+
+    Color color(){
+        return ((HasColor)item).getColor();
+    }
+
+    int getX(){
+        return item.x;
+    }
+
+    public static void main(String args1[]){
+    }
+
+    Coord item;
+}
+```
+
+### 通配符
+
+多态允许父类持有子类类型的引用。在泛型中呢？
+
+```java
+class Fruit {
+
+}
+
+class Apple extends Fruit {
+
+}
+
+public class NoCovariantGenerics {
+    // 报错，不能把一个涉及 Apple 的泛型 赋值给涉及 Fruit 的泛型
+    // 我们讨论的时集合类型，而不是集合持有对象的类型！泛型没有内建的协变类型
+    List<Fruit> flist = new ArrayList<Apple>();
+}
+```
+
+如果我们想在两个类型之间建立某种向上转型的关系，需要使用通配符。
+
+- `<? extends Parent>`  指定了泛型类型的上界，只能往外面拿，不能往里面写。
+- `<? super Child>`  指定了泛型类型的下界，只能往里面写，不能往外面拿
+- `<?>` 指定了没有限制的泛型类型
+
+```java
+public static void main(String[] args) {
+    ArrayList<Integer> list1 = new ArrayList<>();
+    // 协变, 可以正常转化, 表示list2是继承 Number的类型
+    ArrayList<? extends Number> list2 = list1;
+
+    // 无法正常添加
+    // ? extends Number 被限制为 是继承 Number的任意类型,
+    // 可能是 Integer,也可能是Float,也可能是其他继承自Number的类,
+    // 所以无法将一个确定的类型添加进这个列表,除了 null之外
+    list2.add(new Integer(1));
+    // 可以添加
+    list2.add(null);
+
+    // 逆变
+    ArrayList<Number> list3 = new ArrayList<>();
+    ArrayList<? super Number> list4 = list3;
+    list4.add(new Integer(1));
+}
+```
+
+> 上界通配符
+
+```java
+public void print(List<? extends Fruit> list) {
+    ...
+}
+```
+
+那么你的集合里面可能装的是 Apple，Orange，Fruit
+
+```java
+Fruit
+list ->    Apple
+           Orange
+```
+
+- 不能写：你可能传进去的是个`List<Apple>`,那你还能往里面随便丢个`Orang`e进去吗？
+- 可以读：你取出来的都只能被当成`Fruit`，无论你取出来的是`Apple`还是`Orange`，**根据向上转型**，你都可以把它当成是`Fruit`，但你无法确定它具体是哪一种类型，所以被取出来的只能当做Fruit处理
+
+> 下界通配符
+
+```java
+public void add(List<? super Fruit> list){
+    ...
+}
+```
+
+那么你的集合里面可能装的是 Apple，Orange，Fruit
+
+```shell
+Fruit
+list ->    Food
+           Obejct
+```
+
+- 可以写：那么无论你传进去的是`List<Fruit>`，还是`List<Food>`，我扔个`Apple`进去总没问题吧
+- 不能读：我无法确定我取出来的到底是什么，同时我也**无法进行转型**，假如你传进来的是个`List<Food>`，我总不能强转成`Fruit`吧
+
+----
+
+何时使用上限有界通配符以及何时使用下限有界通配符？官方文档中提供了一些准则.
+
+- "in"类型： “in”类型变量向代码**提供**数据。 如`copy（src，dest）` src参数提供要复制的数据，因此它是“in”类型变量的参数。
+- "out"类型: “out”类型变量保存**接收**数据以供其他地方使用.如复制示例中，`copy（src，dest）`，dest 参数接收数据，因此它是“out”参数。
+
+> 准则
+
+- "in" 类型使用 上边界通配符 `? extends`.
+- "out" 类型使用 下边界通配符 `? super`.
+- 如果即需要提供数据(in), 又需要接收数据(out), 就不要使用通配符.
+
+```java
+class Fruits {
+
+}
+
+class Apples extends Fruits {
+
+}
+
+public class NoCovariantGenerics {
+
+    public static void main(String[] args) {
+        // 提供数据用 extends
+        // 是 Number 的子类就可以加入集合
+        List<? extends Number> list = Arrays.asList(new Integer(1), new Float(2));
+
+        // 接收数据用 super
+        List<? super Fruits> list2 = new ArrayList<>();
+        list2.add(new Apples());
+        list2.add(new Fruits());
     }
 }
 ```
@@ -9745,8 +9951,6 @@ VERSION, getInfo=1.8.0_301
 通过常量相关的方法，我们可以很容易地实现一个简单的职责链。
 
 我们以一个邮局的模型为例。邮局需要以尽可能通用的方式来处理每一封邮件，并且要不断尝试处理邮件，直到该邮件最终被确定为一封死信。其中的每一次尝试可以看作为一个策略（也是一个设计模式），而完整的处理方式列表就是一个职责链。
-
-## 责任链，状态机，多路分发暂时不看，看不懂。
 
 ## 第二十三章 注解
 
