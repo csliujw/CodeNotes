@@ -111,8 +111,6 @@ public class HelloController {
   - templates：保存页面资源；springboot默认不支持jsp
   - mybatis的配置文件之类的需要放在resources文件夹下面。resources是资源的根路径。就把resources当成编译后的classes文件夹吧。
 
-
-
 # 二、Hello World探究
 
 ### 1、POM文件
@@ -197,7 +195,7 @@ public @interface SpringBootApplication {
 
 @**EnableAutoConfiguration**：开启自动配置功能；
 
-		以前我们需要配置的东西，Spring Boot帮我们自动配置；@**EnableAutoConfiguration**告诉SpringBoot开启自动配置功能；这样自动配置才能生效；
+以前我们需要配置的东西，Spring Boot帮我们自动配置；@**EnableAutoConfiguration**告诉SpringBoot开启自动配置功能；这样自动配置才能生效；
 
 ```java
 @AutoConfigurationPackage
@@ -210,7 +208,7 @@ public @interface EnableAutoConfiguration {
 
 	@**Import**(AutoConfigurationPackages.Registrar.class)：
 
-	Spring的底层注解@Import，给容器中导入一个组件；导入的组件由AutoConfigurationPackages.Registrar.class；
+	Spring的底层注解@Import，给容器中导入一个组件；导入的组件由AutoConfigurationPackages.Registrar.class;
 ```
 
 **将主配置类（@SpringBootApplication标注的类）的所在包及下面所有子包里面的所有组件扫描到Spring容器；**
@@ -230,12 +228,12 @@ public @interface EnableAutoConfiguration {
 有了自动配置类，免去了我们手动编写配置注入功能组件等的工作；
 
 ```java
-	SpringFactoriesLoader.loadFactoryNames(EnableAutoConfiguration.class,classLoader)；
+SpringFactoriesLoader.loadFactoryNames(EnableAutoConfiguration.class,classLoader)；
 ```
 
 **Spring Boot在启动的时候从类路径下的META-INF/spring.factories中获取EnableAutoConfiguration指定的值，将这些值作为自动配置类导入到容器中，自动配置类就生效，帮我们进行自动配置工作；**以前我们需要自己配置的东西，自动配置类都帮我们；
 
-J2EE的整体整合解决方案和自动配置都在spring-boot-autoconfigure-1.5.9.RELEASE.jar；
+J2EE 的整体整合解决方案和自动配置都在 spring-boot-autoconfigure-1.5.9.RELEASE.jar；
 
 ----
 
@@ -262,10 +260,8 @@ YAML   isn't Markup Language：不是一个标记语言；
 标记语言：
 
 ```yaml
-以前的配置文件；大多都使用的是  **xxxx.xml**文件；
-
-YAML：**以数据为中心**，比json、xml等更适合做配置文件；
-
+以前的配置文件；大多都使用的是  **xxxx.xml**文件;
+YAML：**以数据为中心**，比json、xml等更适合做配置文件;
 YAML：配置例子
 ```
 
@@ -385,9 +381,11 @@ public class Person {
     private Map<String,Object> maps;
     private List<Object> lists;
     private Dog dog;
+    
+}
 ```
 
-我们可以导入配置文件处理器，以后编写配置就有提示了
+我们可以导入配置文件处理器，以后编写配置就有提示了。
 
 ```xml
 <!--导入配置文件处理器，配置文件进行绑定就会有提示-->
@@ -801,7 +799,6 @@ java -jar spring-boot-02-config-02-0.0.1-SNAPSHOT.jar --spring.config.location=G
     扫描所有jar包类路径下  META-INF/spring.factories
     把扫描到的这些文件的内容包装成properties对象
     从properties中获取到EnableAutoConfiguration.class类（类名）对应的值，然后把他们添加在容器中
-  ```
 
 **将 类路径下  META-INF/spring.factories 里面配置的所有EnableAutoConfiguration的值加入到了容器中；**
 
@@ -952,19 +949,19 @@ public class HttpEncodingAutoConfiguration {
 ```java
 @ConfigurationProperties(prefix = "spring.http.encoding")  //从配置文件中获取指定的值和bean的属性进行绑定
 public class HttpEncodingProperties {
-
    public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+}
 ```
 
 **精髓：**
 
-	**1）、SpringBoot启动会加载大量的自动配置类**
-	
-	**2）、我们看我们需要的功能有没有SpringBoot默认写好的自动配置类；**
-	
-	**3）、我们再来看这个自动配置类中到底配置了哪些组件；（只要我们要用的组件有，我们就不需要再来配置了）**
-	
-	**4）、给容器中自动配置类添加组件的时候，会从properties类中获取某些属性。我们就可以在配置文件中指定这些属性的值；**
+**1）、SpringBoot启动会加载大量的自动配置类**
+
+**2）、我们看我们需要的功能有没有SpringBoot默认写好的自动配置类；**
+
+**3）、我们再来看这个自动配置类中到底配置了哪些组件；（只要我们要用的组件有，我们就不需要再来配置了）**
+
+**4）、给容器中自动配置类添加组件的时候，会从properties类中获取某些属性。我们就可以在配置文件中指定这些属性的值；**
 
 xxxxAutoConfigurartion：自动配置类；
 
@@ -1048,11 +1045,9 @@ Negative matches:（没有启动，没有匹配成功的自动配置类）
 	
 			给项目中导入具体的日志实现就行了；我们之前的日志框架都是实现的抽象层；
 
-
-
 **市面上的日志框架；**
 
-JUL、JCL、Jboss-logging、logback、log4j、log4j2、slf4j....
+JUL、JCL、Jboss-logging、logback、log4j、log4j2、slf4j ....
 
 | 日志门面  （日志的抽象层）                                   | 日志实现                                             |
 | ------------------------------------------------------------ | ---------------------------------------------------- |
@@ -1064,13 +1059,9 @@ JUL、JCL、Jboss-logging、logback、log4j、log4j2、slf4j....
 
 日志实现：Logback；
 
-
-
 SpringBoot：底层是Spring框架，Spring框架默认是用JCL；‘
 
 	**==SpringBoot选用 SLF4j和logback；==**
-
-
 
 ## 2、SLF4j使用
 
@@ -1078,7 +1069,7 @@ SpringBoot：底层是Spring框架，Spring框架默认是用JCL；‘
 
 以后开发的时候，日志记录方法的调用，不应该来直接调用日志的实现类，而是调用日志抽象层里面的方法；
 
-给系统里面导入slf4j的jar和  logback的实现jar
+给系统里面导入 slf4j 的 jar 和  logback的实现 jar
 
 ```java
 import org.slf4j.Logger;
@@ -1162,16 +1153,16 @@ public abstract class LogFactory {
 			Spring框架用的是commons-logging；
 
 ```xml
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-core</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-core</artifactId>
+    <exclusions>
+        <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
 ```
 
 **==SpringBoot能自动适配所有的日志，而且底层使用slf4j+logback的方式记录日志，引入其他框架的时候，只需要把这个框架依赖的日志框架排除掉即可；==**
@@ -1183,24 +1174,23 @@ public abstract class LogFactory {
 SpringBoot默认帮我们配置好了日志；
 
 ```java
-	//记录器
-	Logger logger = LoggerFactory.getLogger(getClass());
-	@Test
-	public void contextLoads() {
-		//System.out.println();
+//记录器
+Logger logger = LoggerFactory.getLogger(getClass());
+@Test
+public void contextLoads() {
+    //System.out.println();
 
-		//日志的级别；
-		//由低到高   trace<debug<info<warn<error
-		//可以调整输出的日志级别；日志就只会在这个级别以以后的高级别生效
-		logger.trace("这是trace日志...");
-		logger.debug("这是debug日志...");
-		//SpringBoot默认给我们使用的是info级别的，没有指定级别的就用SpringBoot默认规定的级别；root级别
-		logger.info("这是info日志...");
-		logger.warn("这是warn日志...");
-		logger.error("这是error日志...");
+    //日志的级别；
+    //由低到高   trace<debug<info<warn<error
+    //可以调整输出的日志级别；日志就只会在这个级别以以后的高级别生效
+    logger.trace("这是trace日志...");
+    logger.debug("这是debug日志...");
+    //SpringBoot默认给我们使用的是info级别的，没有指定级别的就用SpringBoot默认规定的级别；root级别
+    logger.info("这是info日志...");
+    logger.warn("这是warn日志...");
+    logger.error("这是error日志...");
 
-
-	}
+}
 ```
 
 
@@ -3441,8 +3431,6 @@ docker run --name some-mysql -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:tag --
 </dependency>
 ```
 
-
-
 ```yaml
 spring:
   datasource:
@@ -3539,8 +3527,6 @@ spring.datasource.maxPoolPreparedStatementPerConnectionSize=20
 spring.datasource.useGlobalDataSourceStat=true
 spring.datasource.connectionProperties=druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
 ```
-
-
 
 ```java
 @Configuration
@@ -3720,8 +3706,6 @@ spring:
     show-sql: true
 ```
 
-
-
 # 八、启动配置原理
 
 几个重要的事件回调机制
@@ -3894,10 +3878,6 @@ org.springframework.boot.SpringApplicationRunListener=\
 com.atguigu.springboot.listener.HelloSpringApplicationRunListener
 ```
 
-
-
-
-
 只需要放在ioc容器中
 
 **ApplicationRunner**
@@ -3912,8 +3892,6 @@ public class HelloApplicationRunner implements ApplicationRunner {
 }
 ```
 
-
-
 **CommandLineRunner**
 
 ```java
@@ -3925,8 +3903,6 @@ public class HelloCommandLineRunner implements CommandLineRunner {
     }
 }
 ```
-
-
 
 # 九、自定义starter
 
@@ -3962,8 +3938,6 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 
 mybatis-spring-boot-starter；自定义启动器名-spring-boot-starter
 
-
-
 步骤：
 
 1）、启动器模块
@@ -3981,7 +3955,6 @@ mybatis-spring-boot-starter；自定义启动器名-spring-boot-starter
 
     <!--启动器-->
     <dependencies>
-
         <!--引入自动配置模块-->
         <dependency>
             <groupId>com.atguigu.starter</groupId>
@@ -4023,19 +3996,14 @@ mybatis-spring-boot-starter；自定义启动器名-spring-boot-starter
    </properties>
 
    <dependencies>
-
       <!--引入spring-boot-starter；所有starter的基本配置-->
       <dependency>
          <groupId>org.springframework.boot</groupId>
          <artifactId>spring-boot-starter</artifactId>
       </dependency>
-
    </dependencies>
 
-
-
 </project>
-
 ```
 
 
@@ -4067,7 +4035,6 @@ public class HelloProperties {
         this.suffix = suffix;
     }
 }
-
 ```
 
 ```java
@@ -4089,7 +4056,6 @@ public class HelloService {
         return helloProperties.getPrefix()+"-" +name + helloProperties.getSuffix();
     }
 }
-
 ```
 
 ```java
@@ -4115,7 +4081,6 @@ public class HelloServiceAutoConfiguration {
         return service;
     }
 }
-
 ```
 
 # 更多SpringBoot整合示例

@@ -250,7 +250,6 @@ public class BeanXMLTest {
       }
   }
   ```
-  
 ```java
   public class ScanTest {
   
@@ -272,7 +271,7 @@ public class BeanXMLTest {
           }
       }
   }
-  ```
+```
 
 ## @Filter自定义过滤规则
 
@@ -2123,7 +2122,7 @@ class ProfileDemo implements EmbeddedValueResolverAware {
     }
     ```
 
-# 带泛型的DI
+# 带泛型的 DI
 
 父类类型 com.xxx.xxx.BaseService
 
