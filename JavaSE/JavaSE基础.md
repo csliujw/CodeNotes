@@ -5449,7 +5449,777 @@ Java SE5 添加了
 - `EnumSet` 和 `EnumMap`，为使用 `enum` 而设计的 Set 和 Map的特殊实现。
 - `Collections` 类中的多个便利方法
 
-### 填充容器
+### 剖析 ArrayList
+
+> 常用方法
+
+```java
+public boolean add(E e) //添加元素到末尾
+public boolean isEmpty() //判断是否为空￼
+public int size() //获取长度￼
+public E get(int index) //访问指定位置的元素
+public int indexOf(Object o) //查找元素， 如果找到，返回索引位置，否则返回-1
+public int lastIndexOf(Object o) //从后往前找
+public boolean contains(Object o) //是否包含指定元素，依据是equals方法的返回值￼
+public E remove(int index) //删除指定位置的元素， 返回值为被删对象
+//删除指定对象，只删除第一个相同的对象，返回值表示是否删除了元素
+//如果o为null，则删除值为null的元素￼
+public boolean remove(Object o)￼
+public void clear() //删除所有元素￼
+//在指定位置插入元素，index为0表示插入最前面，index为ArrayList的长度表示插到最后面￼ 
+public void add(int index, E element)
+public E set(int index, E element) //修改指定位置的元素内容
+```
+
+#### 基本原理
+
+动态数组：数组+扩容+modCount
+
+ArrayLIst 内部有一个 Object 类型的数组 elementData，size 变量记录 elementData 中有多数元素。
+
+#### 方法源码
+
+> add 方法
+
+新增时会先判断容量够不够，不够就扩容。需要扩容的话会调用 grow 方法，容量会扩充为原来的 1.5 倍。如果扩容 1.5 倍还是小于 minCapacity 则直接扩容到 minCapacity。（minCapacity 是 add 元素后所需的最小容量）
+
+```java
+// ①
+public boolean add(E e) {
+    // 确保容量够。
+    ensureCapacityInternal(size + 1); 
+    elementData[size++] = e;
+    return true;
+}
+
+// ②
+private void ensureCapacityInternal(int minCapacity) {
+    ensureExplicitCapacity(calculateCapacity(elementData, minCapacity));
+}
+
+// 确保容量够
+private void ensureExplicitCapacity(int minCapacity) {
+    modCount++; // 表示内部的修改次数
+
+    // overflow-conscious code
+    if (minCapacity - elementData.length > 0)
+        grow(minCapacity);
+}
+
+
+// 计算容量
+private static int calculateCapacity(Object[] elementData, int minCapacity) {
+    // 如果是空数组的话，则至少分配 DEFAULT_CAPACITY 大小的空间
+    if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+        return Math.max(DEFAULT_CAPACITY, minCapacity);
+    }
+    return minCapacity;
+}
+
+// 数组扩容
+private void grow(int minCapacity) {
+    // overflow-conscious code
+    int oldCapacity = elementData.length;
+    int newCapacity = oldCapacity + (oldCapacity >> 1);
+    if (newCapacity - minCapacity < 0)
+        newCapacity = minCapacity;
+    // 若扩展 1.5 倍还是小于 minCapacity 则直接扩容为 minCapacity
+    if (newCapacity - MAX_ARRAY_SIZE > 0)
+        newCapacity = hugeCapacity(minCapacity);
+    // minCapacity is usually close to size, so this is a win:
+    elementData = Arrays.copyOf(elementData, newCapacity);
+}
+```
+
+> remove 方法
+
+```java
+public E remove(int index) {
+    rangeCheck(index);
+
+    modCount++;
+    E oldValue = elementData(index);
+
+    int numMoved = size - index - 1;
+    if (numMoved > 0)
+        System.arraycopy(elementData, index+1, elementData, index,
+                         numMoved);
+    elementData[--size] = null; // clear to let GC do its work
+
+    return oldValue;
+}
+```
+
+> 迭代器
+
+ArrayList 实现了 Iterable 接口。关于迭代器，容易错误使用。使用增强 for 对 ArrayList 边遍历边删除元素会出现并发修改异常。
+
+```java
+public static void main(String[] args) {
+    ArrayList<Integer> list = new ArrayList();
+    list.add(1);
+    list.add(1);
+    list.add(1);
+    list.add(1);
+    for (Integer integer : list) {
+        System.out.println(integer);
+        list.remove(integer);
+    }
+}
+/*
+Exception in thread "main" java.util.ConcurrentModificationException
+	at java.util.ArrayList$Itr.checkForComodification(ArrayList.java:911)
+	at java.util.ArrayList$Itr.next(ArrayList.java:861)
+	at tij.chapter20.Demo_.main(Demo_.java:12)
+*/
+```
+
+因为增强for循环（foreach循环）本质上是隐式的 iterator，由于在删除和添加的时候会导致 modCount 发生变化，但是没有重新设置 expectedModCount，使用 list.remove() 后遍历执行 iterator.next() 时，方法检验 modCount 的值和的 expectedModCount 值，如果不相等，就会报ConcurrentModificationException。
+
+解决办法是使用迭代器进行删除。
+
+```java
+public static void main(String[] args) {
+    ArrayList<Integer> list = new ArrayList();
+    list.add(1);
+    list.add(1);
+    list.add(1);
+    list.add(1);
+    Iterator<Integer> iterator = list.iterator();
+    while (iterator.hasNext()) {
+        iterator.next();
+        iterator.remove();
+    }
+}
+```
+
+迭代器的 remove 方法代码如下：
+
+```java
+public void remove() {
+    if (lastRet < 0)
+        throw new IllegalStateException();
+    checkForComodification();
+
+    try {
+        ArrayList.this.remove(lastRet);
+        cursor = lastRet;
+        lastRet = -1;
+        expectedModCount = modCount; // 维护两者相等
+    } catch (IndexOutOfBoundsException ex) {
+        throw new ConcurrentModificationException();
+    }
+}
+```
+
+#### 特点总结
+
+- 可以随机访问，按照索引位置进行访问效率很高，用算法描述中的术语，效率是O(1)，简单说就是可以一步到位。
+- 除非数组已排序，否则按照内容查找元素效率比较低，具体是O(N), N为数组内容长度，也就是说，性能与数组长度成正比。
+- 添加元素的效率还可以，重新分配和复制数组的开销被平摊了，具体来说，添加N个元素的效率为O(N)。
+- 插入和删除元素的效率比较低，因为需要移动元素，具体为O(N)。
+
+### 剖析 LinkedList
+
+#### 基本原理
+
+内部由双链表实现，实现了 List、Deque、Queue 接口，链表节点的定义如下：
+
+```java
+private static class Node<E> {
+    E item;
+    Node<E> next;
+    Node<E> prev;
+
+    Node(Node<E> prev, E element, Node<E> next) {
+        this.item = element;
+        this.next = next;
+        this.prev = prev;
+    }
+}
+```
+
+LinkedList 内部组成是下面三个变量
+
+```java
+transient int size = 0;
+transient Node<E> first; // 指向头节点
+transient Node<E> last;  // 指向尾节点
+```
+
+> 常用方法
+
+```java
+public interface Queue<E> extends Collection<E> {
+
+    // 尾部添加元素
+    boolean add(E e);
+    boolean offer(E e);
+    
+    // 删除头部元素，返回元素并伤处
+    E remove(); // 队空时抛出异常
+    E poll(); // 队空返回 null
+    
+    // 查看头部元素，不删除
+    E element(); // 队空时抛出异常
+    E peek(); // 队空返回 null
+}
+
+public interface Deque<E> extends Queue<E> {
+    void push(E e); // 元素入栈，栈满抛出异常
+    E pop(); // 出栈，栈空抛出异常
+    E peek(); // 查看栈顶元素，栈空返回 null
+}
+```
+
+#### 方法源码
+
+> add 方法
+
+```java
+public boolean add(E e) {
+    linkLast(e);
+    return true;
+}
+// e element 元素，数据值
+void linkLast(E e) {
+    final Node<E> l = last;
+    // 创建一个 待插入的节点
+    final Node<E> newNode = new Node<>(l, e, null);
+    // 尾插入，尾指针指向尾节点
+    last = newNode;
+    // 空链表的话，则头尾指针指向同一元素
+    if (l == null)
+        first = newNode;
+    else // 否则尾插入
+        l.next = newNode;
+    size++;
+    modCount++;
+}
+```
+
+> get(int index) 按索引访问
+
+```java
+public E get(int index) {
+    checkElementIndex(index); // 检测元素是否越界，越界则直接抛出异常
+    return node(index).item;
+}
+
+Node<E> node(int index) {
+    // assert isElementIndex(index);
+	// 计算下 index 在链表的前半部分还是后半部分，算个查找的小优化。
+    if (index < (size >> 1)) {
+        Node<E> x = first;
+        for (int i = 0; i < index; i++)
+            x = x.next;
+        return x;
+    } else {
+        Node<E> x = last;
+        for (int i = size - 1; i > index; i--)
+            x = x.prev;
+        return x;
+    }
+}
+```
+
+> indexOf(Object o) 按内容查找
+
+```java
+public int indexOf(Object o) {
+    int index = 0;
+    if (o == null) { // 如果要查找的是 null 就从第一个开始找
+        for (Node<E> x = first; x != null; x = x.next) {
+            if (x.item == null)
+                return index;
+            index++;
+        }
+    } else { // 如果不是 null 则用 equals 比较对象
+        for (Node<E> x = first; x != null; x = x.next) {
+            if (o.equals(x.item))
+                return index;
+            index++;
+        }
+    }
+    return -1;
+}
+```
+
+> add(int index, E element)
+
+```java
+public void add(int index, E element) {
+    checkPositionIndex(index); // 检查索引是否合法
+
+    if (index == size)
+        linkLast(element); // 是最后一个？则直接尾插
+    else
+        linkBefore(element, node(index)); // 在 index 这个位置插入节点
+    	// 查找到 index 处的节点，拿到 index 的前驱节点。在index 的前驱 和 index 直接插入新节点
+}
+```
+
+> remove(int index)
+
+```java
+public E remove(int index) {
+    checkElementIndex(index);
+    return unlink(node(index));
+}
+// 双链表元素的删除
+E unlink(Node<E> x) {
+    // assert x != null;
+    final E element = x.item;
+    final Node<E> next = x.next;
+    final Node<E> prev = x.prev;
+
+    if (prev == null) {
+        first = next;
+    } else {
+        prev.next = next;
+        x.prev = null;
+    }
+
+    if (next == null) {
+        last = prev;
+    } else {
+        next.prev = prev;
+        x.next = null;
+    }
+
+    x.item = null;
+    size--;
+    modCount++;
+    return element;
+}
+```
+
+#### 特点总结
+
+- 按需分配空间，不需要预先分配很多空间。
+- 不可以随机访问，按照索引位置访问效率比较低，必须从头或尾顺着链接找，效率为O(N/2)。
+- 不管列表是否已排序，只要是按照内容查找元素，效率都比较低，必须逐个比较，效率为O(N)。
+- 在两端添加、删除元素的效率很高，为O(1)。
+- 在中间插入、删除元素，要先定位，效率比较低，为O(N)，但修改本身的效率很高，效率为O(1)。
+- 如果列表长度未知，添加、删除操作比较多，尤其经常从两端进行操作，而按照索引位置访问相对比较少，则LinkedList是比较理想的选择。
+
+### 剖析 ArrayDeque
+
+实现了 Deque 接口，且 ArrayDeque 效率很高。
+
+#### 基本原理
+
+采用循环数组实现。主要的几个实例变量如下
+
+```java
+private transient E[] elements; // 存储元素
+private transient int head; // 头指针
+private transient int tail; // 尾指针
+```
+
+> 循环数组
+
+普通数组，第一个元素为 `arr[0]` 最后一个元素为 `arr[arr.length-1]`。循环数组逻辑上是循环的。首尾相连。head 指向数组头部，tail 指向数组尾。默认分配一个长度为 16 的数组。
+
+#### 方法源码
+
+> 默认构造函数
+
+```java
+public ArrayDeque() {
+    elements = new Object[16];
+}
+```
+
+> 有参构造
+
+```java
+public ArrayDeque(int numElements) {
+    allocateElements(numElements);
+}
+```
+
+不是简单地分配给定的长度，而是调用了allocateElements。它主要就是在计算应该分配的数组的长度，计算逻辑如下：
+
+- 如果numElements小于8，就是8。
+- 在numElements大于等于8的情况下，分配的实际长度是严格大于numElements并且为2的整数次幂的最小数。比如，如果numElements为10，则实际分配16，如果num-Elements为32，则为64。
+
+2 的幂次数操作高效。
+
+> add(E e)
+
+```java
+public boolean add(E e) {
+    addLast(e);
+    return true;
+}
+```
+
+> addLast
+
+```java
+public void addLast(E e) {
+    if (e == null)
+        throw new NullPointerException();
+    elements[tail] = e; // 将元素添加到 tail 处
+    if ( (tail = (tail + 1) & (elements.length - 1)) == head)
+        doubleCapacity(); // 如果队列满了就扩容。tail 的下一个位置是 
+    					 //（tail+1）& （elements.length+1） 
+    					 // 假设长度为8  8 &（8-1） = 0，可以正确到达下一个位置
+}
+```
+
+```java
+private void doubleCapacity() { // 将数组扩容为两倍。按循环数组的逻辑头部，一个一个赋值元素直到全部赋值完毕。
+    assert head == tail; 
+    int p = head;
+    int n = elements.length;
+    int r = n - p; // number of elements to the right of p
+    int newCapacity = n << 1;
+    if (newCapacity < 0)
+        throw new IllegalStateException("Sorry, deque too big");
+    Object[] a = new Object[newCapacity];
+    System.arraycopy(elements, p, a, 0, r);
+    System.arraycopy(elements, 0, a, r, p);
+    elements = a;
+    head = 0;
+    tail = n;
+}
+```
+
+> addFirst
+
+- head 指向前一个位置，然后给对应位置赋值。
+
+```java
+public void addFirst(E e) {
+    if (e == null)
+        throw new NullPointerException();
+    elements[head = (head - 1) & (elements.length - 1)] = e;
+    if (head == tail)
+        doubleCapacity();
+}
+```
+
+> removeFirst
+
+- 将原来的位置设置为 null，help gc
+- 将 head 设置为下一个位置
+
+```java
+public E removeFirst() {
+    E x = pollFirst();
+    if (x == null)
+        throw new NoSuchElementException();
+    return x;
+}
+
+public E pollFirst() {
+    int h = head;
+    @SuppressWarnings("unchecked")
+    E result = (E) elements[h];
+    // Element is null if deque empty
+    if (result == null)
+        return null;
+    elements[h] = null;     // Must null out slot
+    head = (h + 1) & (elements.length - 1);
+    return result;
+}
+```
+
+> size
+
+```java
+public int size() {
+    return (tail - head) & (elements.length - 1);
+}
+```
+
+> contains
+
+从 head 开始变量，为 null 时停止遍历
+
+```java
+public boolean contains(Object o) {
+    if (o == null)
+        return false;
+    int mask = elements.length - 1;
+    int i = head;
+    Object x;
+    while ( (x = elements[i]) != null) {
+        if (o.equals(x))
+            return true;
+        i = (i + 1) & mask;
+    }
+    return false;
+}
+```
+
+> toArray
+
+```java
+public Object[] toArray() {
+    return copyElements(new Object[size()]);
+}
+private <T> T[] copyElements(T[] a) {
+    if (head < tail) {
+        System.arraycopy(elements, head, a, 0, size());
+    } else if (head > tail) {
+        int headPortionLen = elements.length - head;
+        System.arraycopy(elements, head, a, 0, headPortionLen);
+        System.arraycopy(elements, 0, a, headPortionLen, tail);
+    }
+    return a;
+}
+```
+
+#### 特点总结
+
+- 在两端添加、删除元素的效率很高，动态扩展需要的内存分配以及数组复制开销可以被平摊，具体来说，添加N个元素的效率为O(N)。
+- 根据元素内容查找和删除的效率比较低，为O(N)。
+- 与ArrayList和LinkedList不同，没有索引位置的概念，不能根据索引位置进行操作。
+- ArrayDeque和LinkedList都实现了Deque接口，应该用哪一个呢？如果只需要Deque接口，从两端进行操作，一般而言，ArrayDeque效率更高一些，应该被优先使用；如果同时需要根据索引位置进行操作，或者经常需要在中间进行插入和删除，则应该选LinkedList
+
+### Map 接口概述
+
+```java
+public interface Map<K,V> {
+    int size();
+
+    boolean isEmpty();
+
+    boolean containsKey(Object key);
+
+    boolean containsValue(Object value);
+
+    V get(Object key); // 根据 key 获得 value
+
+    V put(K key, V value); // 保存 key value 有则覆盖
+
+    V remove(Object key); // 根据 key 删除key-value
+
+    void putAll(Map<? extends K, ? extends V> m); // 保存 map 中所有的 key-value 到 map 中
+
+    void clear(); // 清空
+
+    Set<K> keySet(); // 获得所有 key
+
+    Collection<V> values(); // 获得所有 value
+
+    Set<Map.Entry<K, V>> entrySet(); // 获取 map 中的所有 key-value 对
+
+    interface Entry<K,V> { // 嵌套接口，表示一条键值对
+        K getKey();
+
+        V getValue();
+        V setValue(V value);
+
+        boolean equals(Object o);
+
+        int hashCode();
+
+
+        public static <K extends Comparable<? super K>, V> Comparator<Entry<K,V>> comparingByKey() {
+            return (Comparator<Map.Entry<K, V>> & Serializable)
+                    (c1, c2) -> c1.getKey().compareTo(c2.getKey());
+        }
+
+      
+        public static <K, V extends Comparable<? super V>> Comparator<Map.Entry<K,V>> comparingByValue() {
+            return (Comparator<Map.Entry<K, V>> & Serializable)
+                    (c1, c2) -> c1.getValue().compareTo(c2.getValue());
+        }
+
+       
+        public static <K, V> Comparator<Map.Entry<K, V>> comparingByKey(Comparator<? super K> cmp) {
+            Objects.requireNonNull(cmp);
+            return (Comparator<Map.Entry<K, V>> & Serializable)
+                    (c1, c2) -> cmp.compare(c1.getKey(), c2.getKey());
+        }
+
+       
+        public static <K, V> Comparator<Map.Entry<K, V>> comparingByValue(Comparator<? super V> cmp) {
+            Objects.requireNonNull(cmp);
+            return (Comparator<Map.Entry<K, V>> & Serializable)
+                    (c1, c2) -> cmp.compare(c1.getValue(), c2.getValue());
+        }
+    }
+
+   
+    boolean equals(Object o);
+
+    
+    int hashCode();
+
+    
+    default V getOrDefault(Object key, V defaultValue) {
+        V v;
+        return (((v = get(key)) != null) || containsKey(key))
+                ? v
+                : defaultValue;
+    }
+
+   
+    default void forEach(BiConsumer<? super K, ? super V> action) {
+        Objects.requireNonNull(action);
+        for (Map.Entry<K, V> entry : entrySet()) {
+            K k;
+            V v;
+            try {
+                k = entry.getKey();
+                v = entry.getValue();
+            } catch(IllegalStateException ise) {
+                // this usually means the entry is no longer in the map.
+                throw new ConcurrentModificationException(ise);
+            }
+            action.accept(k, v);
+        }
+    }
+
+    default void replaceAll(BiFunction<? super K, ? super V, ? extends V> function) {
+        Objects.requireNonNull(function);
+        for (Map.Entry<K, V> entry : entrySet()) {
+            K k;
+            V v;
+            try {
+                k = entry.getKey();
+                v = entry.getValue();
+            } catch(IllegalStateException ise) {
+                // this usually means the entry is no longer in the map.
+                throw new ConcurrentModificationException(ise);
+            }
+
+            // ise thrown from function is not a cme.
+            v = function.apply(k, v);
+
+            try {
+                entry.setValue(v);
+            } catch(IllegalStateException ise) {
+                // this usually means the entry is no longer in the map.
+                throw new ConcurrentModificationException(ise);
+            }
+        }
+    }
+
+    default V putIfAbsent(K key, V value) {
+        V v = get(key);
+        if (v == null) {
+            v = put(key, value);
+        }
+
+        return v;
+    }
+
+   
+    default boolean remove(Object key, Object value) {
+        Object curValue = get(key);
+        if (!Objects.equals(curValue, value) ||
+                (curValue == null && !containsKey(key))) {
+            return false;
+        }
+        remove(key);
+        return true;
+    }
+
+  
+    default boolean replace(K key, V oldValue, V newValue) {
+        Object curValue = get(key);
+        if (!Objects.equals(curValue, oldValue) ||
+                (curValue == null && !containsKey(key))) {
+            return false;
+        }
+        put(key, newValue);
+        return true;
+    }
+
+    
+    default V replace(K key, V value) {
+        V curValue;
+        if (((curValue = get(key)) != null) || containsKey(key)) {
+            curValue = put(key, value);
+        }
+        return curValue;
+    }
+
+   
+    default V computeIfAbsent(K key,
+                              Function<? super K, ? extends V> mappingFunction) {
+        Objects.requireNonNull(mappingFunction);
+        V v;
+        if ((v = get(key)) == null) {
+            V newValue;
+            if ((newValue = mappingFunction.apply(key)) != null) {
+                put(key, newValue);
+                return newValue;
+            }
+        }
+
+        return v;
+    }
+
+    
+    default V computeIfPresent(K key,
+                               BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        V oldValue;
+        if ((oldValue = get(key)) != null) {
+            V newValue = remappingFunction.apply(key, oldValue);
+            if (newValue != null) {
+                put(key, newValue);
+                return newValue;
+            } else {
+                remove(key);
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+
+    default V compute(K key,
+                      BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        V oldValue = get(key);
+
+        V newValue = remappingFunction.apply(key, oldValue);
+        if (newValue == null) {
+            // delete mapping
+            if (oldValue != null || containsKey(key)) {
+                // something to remove
+                remove(key);
+                return null;
+            } else {
+                // nothing to do. Leave things as they were.
+                return null;
+            }
+        } else {
+            // add or replace old mapping
+            put(key, newValue);
+            return newValue;
+        }
+    }
+
+    default V merge(K key, V value,
+                    BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+        Objects.requireNonNull(remappingFunction);
+        Objects.requireNonNull(value);
+        V oldValue = get(key);
+        V newValue = (oldValue == null) ? value :
+                remappingFunction.apply(oldValue, value);
+        if(newValue == null) {
+            remove(key);
+        } else {
+            put(key, newValue);
+        }
+        return newValue;
+    }
+}
+```
+
+### 剖析 HashMap
+
+
 
 ## 第十六章 异常
 
