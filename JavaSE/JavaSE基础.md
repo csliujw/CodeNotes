@@ -8715,13 +8715,14 @@ class ProxyHandler<T> implements InvocationHandler {
 
 ### 为什么引入泛型
 
-希望编写更通用的代码，使代码可以应用于多种类型。通过继承或接口的方式实现通用代码对程序的约束还是太强了。因此 `Java5` 引入了泛型机制。
+通过继承或接口的方式实现通用代码对程序的约束还是太强了，我们希望有更简单的方式编写更通用的代码，使代码可以应用于多种类型（可以更好的支持 Java 容器了）。因此 `Java5` 引入了泛型机制。
 
-Java 的泛型受 C++ 的影响。泛型在编程语言中出现的最初目的是希望类或方法能够具备最广泛的表达能力，但 Java 的泛型并未完全实现这些。优点和局限性都很明显。对比 C++ 的泛型机制，我们可以很明显的感受到 Java 泛型的局限性。
+Java 的泛型受 C++ 的影响。泛型在编程语言中出现的最初目的是希望类或方法能够具备最广泛的表达能力，但 Java 的泛型并未完全实现这些。优点和局限性都很明显。对比 C++ 的泛型机制，我们可以很明显的感受到 Java 泛型的局限性。Java 语言的泛型只在程序源码中存在，编译后的字节码泛型全部被替换为原来的裸类型，并在相应的地方插入了强制类型转换字节码，这种设计使得 Java 的泛型在使用效果和运行效率上都低于 C# 的具现化泛型。
 
-Java 语言的泛型只在程序源码中存在，编译后的字节码泛型全部被替换为原来的裸类型，并在相应的地方插入了强制类型转换字节码。
+> 泛型的优点
 
-Java 的泛型在使用效果和运行效率上都低于 C# 的具现化泛型。
+- 更好的安全性（编译时的类型检查）
+- 更好的可读性，有明确的类型信息（相对于中途的直接类型转换而言）
 
 ### 简单泛型
 
@@ -8730,7 +8731,7 @@ Java 的泛型在使用效果和运行效率上都低于 C# 的具现化泛型�
 > 泛型的基本使用（一）
 
 - 我们也可以用 Object 接收对象，然后 get 得到结果，对结果进行强制类型转换。但是这样做不安全，一旦传入的类型和强转的不一致，代码在运行时就会报错。而泛型可以在编译时就进行类型检查，更为安全。
-- 总结：泛型，告诉编译器想要使用什么类型，然后编译器帮助你处理一切的细节。
+- **总结：**泛型，告诉编译器想要使用什么类型，然后编译器帮助你处理一切的细节。
 
 ```java
 public class Hold2<T> {
@@ -8783,7 +8784,7 @@ public class TwoTuple<A, B> {
 - <span style="color:red">泛型方法和泛型类是独立的。普通类（非泛型类）中也可以有泛型方法！</span>
 - 如果泛型方法可以替代整个类泛型化，那么就应该只使用泛型方法，因为泛型方法可以使事情更加清晰。
 - 对于 static 修饰的方法而言，无法访问泛型类的参数类型，所以 static 方法需要使用泛型能力，就必须使其成为泛型方法。
-- 如果泛型方法中，传入了基本类型参数，那么会进行自动装箱拆箱。
+- 如果泛型方法中，传入了基本类型参数，那么会进行自动装箱拆箱，因为泛型最后会被擦除为对象（默认擦除为 Object 对象），而基本类型无法强转为对象（不支持基本数据类型的泛型使得它在这方面效率偏低）。
 
 ```java
 public class GenericMethods {
@@ -8881,7 +8882,7 @@ public class Customer<A, B> {
 
 > 看代码说结果
 
-看起来 `c1` 和 `c2` 是不一样的，但程序会认为它们是相同的类型
+看起来 `c1` 和 `c2` 是不一样的，但程序会认为它们是相同的类型，为什么呢？究其原因是泛型擦除惹的祸。
 
 ```java
 public class ErasedTypeEquivalence {
@@ -8899,7 +8900,7 @@ public class ErasedTypeEquivalence {
 
 - 根据 `JDK` 文档的描述：`Class.getTypeParameters()` 将返回一个 `TypeVariable` 对象数组，表示有泛型声明所声明的参数类型。
 - 实际上，我们观察输出结果发现，只有用作参数占位符的标识符。
-- <span style="color:red">在泛型内部，无法获得任何有关泛型参数类型的信息。</span>
+- <span style="color:red">在泛型内部，我们无法获得任何有关泛型参数类型的信息。</span>
 
 ```java
 import java.util.ArrayList;
@@ -8974,7 +8975,7 @@ public class HasF {
         System.out.println("HasF.f()");
     }
 }
-
+// T 这种会被擦除为 Object 对象，所以无法调用 f() 方法，要想调用 f() 方法，我们得告诉编译器 T 应该只擦除至 HasF 这个对象。
 class Manipulator<T> {
     private T obj;
 
@@ -9022,7 +9023,7 @@ class Manipulator<T extends HasF> {
 
 泛型参数类型会把泛型擦除到它的第一个边界。上述代码泛型为`<T extends HasF>` 会被擦除到 `HasF`，这样是为了兼容之前没有使用泛型的代码。为什么说是为了兼容呢？
 
-- 看 `ArrayList`，是一个泛型类，如果没有泛型擦除，那么之前的不支持泛型的代码，原先有使用 `ArrayList` 的代码就得更改。
+- 看 `ArrayList`，是一个泛型类，如果没有泛型擦除，那么之前的不支持泛型且使用了 `ArrayList` 的代码就得更改。
 
 > 什么时候使用泛型呢？
 
@@ -9057,9 +9058,9 @@ Foo<Cat> f = new Foo<>();
 
 #### 边界处的动作
 
-`ArrayList<T>` 中的泛型 T 虽然会被擦除，但是它仍旧可以在编译器确保你放置到 result 中的对象具有 T 类型。因此，即使擦除移除了方法或类中的实际类型的信息， 编译器仍可以确保方法或类中使用的类型的内部一致性。
+`ArrayList<T>` 中的泛型 T 虽然会被擦除，但是编译器会确保 `ArrayList<T>` 中存放的对象是 T 类型的。因此，即使擦除了方法或类中实际类型的信息， 编译器仍可以确保方法或类中使用的类型的内部一致性。
 
-因为擦除移除了方法体中的类型信息，所以在运行时的问题就是边界：即对象进入和离开方法的地点。这些正是编译器在编译期执行类型检查并插入转型代码的地点。<span style="color:red">【该数据符不符合我之前擦除的泛型的类型，编译器会擦除泛型，也会在必要的地点生成对应类型检查字节码和转型字节码】</span>
+类型信息被擦除了，那么我们在哪里校验放入 List 中的数据是不是正确的，取数据时又该在什么时候进行类型转换呢？这类问题就是边界：即对象进入和离开方法的地点。这些也就是编译器在编译期执行类型检查并插入转型代码的地点。<span style="color:red">【该数据符不符合我之前擦除的泛型的类型，编译器会擦除泛型，也会在必要的地点生成对应类型检查转型字节码】</span>
 
 > 观察下面类型强转代码的字节码
 
@@ -9150,9 +9151,14 @@ public class GenericHolder<T> {
 
 ### 擦除的补偿
 
+#### 别样的类型检测
+
 因为擦除，我们将失去执行泛型代码中某些操作的能力。无法在运行时知道确切类型，但是我们可以通过其他手段来进行弥补！
 
 > 用 `isInstance` 替代 `instanceof`
+
+- `instanceof` 是用来检测对象的类型信息的，但是因为泛型擦除 `instanceof` 无效
+- 可用 `isInstance` 替代
 
 ```java
 class Building {
@@ -9188,7 +9194,7 @@ true
 
 试图在通过 new T() 是行不通的，部分原因是由于擦除，部分原因是编译器无法验证 T 是否具有默认（无参）构造函数。但是在 C++ 中，此操作自然，直接且安全（在编译时检查）：
 
-> Java 中的解决方案是传入一个工厂对象，并使用该对象创建新实例。最便利的工厂对象就是 Class 对象，因此，如果使用类型标记，则可以使用 `newInstance()` 创建该 类型的新对象：
+> Java 中的解决方案是传入一个工厂对象，并使用该对象创建新实例。最便利的工厂对象就是 Class 对象，因此，如果使用类型标记，则可以使用 `newInstance()` 创建该类型的新对象：
 
 ```java
 class ClassAsFactory<T> implements Supplier<T> {
@@ -9273,12 +9279,10 @@ public class CreatorGeneric {
 
 #### 泛型数组
 
-- `return (T[]) Array.newInstance(componentType, length);`，居然还有传入一个 Class 对象，似乎不是很合理。
-- 直接创建一个 Object 类型的数组，在获取元素的时候，进行强转
+- `return (T[]) Array.newInstance(componentType, length);`，为了创建一个泛型数组，居然还要传入一个 Class 对象，似乎不是很合理。
+- 直接创建一个 Object 类型的数组，在获取元素的时候，进行强转（<span style="color:red">推荐</span>）
 
-> 无法创建泛型数组。通用解决方案是在创建泛型数组的时候使用 `ArrayList`
-
-> 但是，有时，仍然会创建泛型类型的数组。可以通过使编译器满意的方式定义对数组的通用引用
+> 无法创建泛型数组。通用解决方案是在创建泛型数组的时候使用 `ArrayList`。但是，有时候，我们仍然会创建泛型类型的数组。可以通过使编译器满意的方式定义对数组的通用引用
 
 ```java
 class Generic<T> {
@@ -9341,7 +9345,32 @@ class Generic2<T> {
 
 边界允许我们对泛型使用的参数类型施加约束，且我们可以在绑定的类型中调用方法！
 
-不使用边界的化，由于擦除会删除类型信息，因此唯一可用于无限制泛型参数的方法就是那些 Object 可用的方法。但是！如果我们将该参数类型限制为某类型的子集，则可以调用该子集中的方法。泛型中的 extends 关键字可以进行这种约束。
+不使用边界的话，由于擦除会删除类型信息，因此唯一可用于无限制泛型参数的方法就是那些 Object 可用的方法。但是！如果我们将该参数类型限制为某类型的子集，则可以调用该子集中的方法。泛型中的 extends 关键字可以进行这种约束。
+
+#### 使用 extends 限定边界
+
+<span style="color:red">限定类型后，如果类型使用错误，编译器会提示。指定边界后，类型擦除时就不会转换为 Object 了，而是会转换为它的边界类型。</span>
+
+```java
+public class NumberPair<U extends Number, V extends Number> {
+    U first;
+    V send;
+
+    public NumberPair(U first, V send) {
+        this.first = first;
+        this.send = send;
+    }
+
+    public double sum() {
+        return first.doubleValue() + send.doubleValue();
+    }
+
+    public static void main(String[] args) {
+        NumberPair<Integer, Integer> numberPair = new NumberPair(1, 2);
+        System.out.println(numberPair.sum());
+    }
+}
+```
 
 ```java
 interface HasColor {
@@ -9410,9 +9439,22 @@ public class NoCovariantGenerics {
 
 如果我们想在两个类型之间建立某种向上转型的关系，需要使用通配符。
 
-- `<? extends Parent>`  指定了泛型类型的上界，只能往外面拿，不能往里面写。
-- `<? super Child>`  指定了泛型类型的下界，只能往里面写，不能往外面拿
-- `<?>` 指定了没有限制的泛型类型
+- <span style="color:red">`<?>` 指定了没有限制的泛型类型，只能读不能写。</span>
+- <span style="color:red">`<? extends Parent>`  指定了泛型类型的上界，只能往外面拿，不能往里面写（假如可以写，那你写的是哪个子类？不确定，因此不能写）。</span>
+- <span style="color:red">`<? super Child>`  指定了泛型类型的下界，只能往里面写，不能往外面拿</span>
+
+> ? 只能拿，不能写
+
+```java
+public class Demo_ {
+    public static void main(String[] args) {
+        ArrayList<?> arrayList = new ArrayList();
+        arrayList.add(1);
+    }
+}
+```
+
+
 
 ```java
 public static void main(String[] args) {
@@ -9512,7 +9554,11 @@ public class NoCovariantGenerics {
 }
 ```
 
+通配符都可以用类型参数的形式来替代，通配符能做的，用类型参数都能做
 
+通配符形式可以减少类型参数，形式上更简单，可读性更好，能用通配符就用通配符
+
+通配符和类型参数往往配合使用
 
 ### 特殊情况★★★
 
