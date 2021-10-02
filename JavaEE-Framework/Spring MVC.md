@@ -1,10 +1,10 @@
-# 一、概述
+# 概述
 
 不太适合入门用~我看到雷丰阳的SpringMVC视频，17年的。但是我用的是JavaConfig风格的配置。没用视频中的xml配置。
 
-# 二、基本原理
+# 基本原理
 
-## 2.1 运行流程
+## 运行流程
 
  * 1）客户端点击链接发送 xxx/ 请求
  * 2）来到tomcat服务器
@@ -15,14 +15,14 @@
  * 7）拿到方法返回值后；用视图解析器进行拼串得到完整的页面地址
  * 8）拿到页面地址值，前端控制器帮我们转发到页面。
 
-## 2.2 RequestMapping基本概念
+## RequestMapping基本概念
 
 - @RequestMapping注解：
      - 告诉 spring mvc 这个方法用来处理什么请求。。
      - 这个/是可以省略的，即使省略了，也是默认从当前项目开始。
      - 加上/比较好
 
-## 2.3 前端控制器的拦截规则
+## 前端控制器的拦截规则
 
 ### 2.3.1 tomcat的拦截规则
 
@@ -66,9 +66,9 @@
      *  /* 直接是拦截所有请求。所以我们写  / ,写 / 也是为了迎合rest风格的url地址
      *  springmvc是先经过前端控制器的，看有没有配对的，没有就报错。
 
-# 三、常用注解
+# 常用注解
 
-## 3.1 常用注解归纳
+## 常用注解归纳
 
 - @Controller
 - @RequestMapping
@@ -76,13 +76,13 @@
 - @SessionAttribute
 - @ModelAttribute
 
-## 3.2 @RequestMapping
+## @RequestMapping
 
 > <span style="color:green">**@RequestMapping的使用**</span>
 
 Spring MVC使用@RequestMapping注解为控制器指定可以处理那些url请求。
 
- * 在控制器的类定义及方法定义处都可标准
+ * 在控制器的类定义及方法定义处都可标注
     * 类定义处：提供初步的请求映射信息。相对于WEB应用的根目录
     * 方法处：提供进一步的细分映射信息。相当于类定义处的URL。
     * 举例 WEB根路径为 localhost:8080/SpringMVC/
@@ -225,7 +225,7 @@ public class RequestMappingHeaderController {
 
 ----
 
-## 3.2 ant风格的URL
+## ant 风格的 URL
 
 **URL地址可以写模糊的通配符**
 
@@ -285,7 +285,7 @@ public class AntController {
 
 ----
 
-## 3.3 @PathVariable
+## @PathVariable
 
 **获取请求路径占位符中的值**
 
@@ -326,9 +326,9 @@ public class PathVariableController {
 
 ----
 
-## 3.4 Rest风格
+## Rest 风格
 
-### 3.4.1 概述
+### 概述
 
 Rest--->Representational State Transfer。（资源）表现层状态转化。是目前最流行的一种互联网软件架构。【前段时间提出了一种新的软件架构，是图的】
 
@@ -342,7 +342,7 @@ Rest--->Representational State Transfer。（资源）表现层状态转化。�
     - PUT：更新资源
     - DELETE：删除资源
 
-### 3.4.2 简单举例
+### 简单举例
 
 - /book/1 	：GET请求 表示查询1号图书
 - /book        ：POST请求 表示添加1号图书
@@ -360,17 +360,15 @@ Rest推荐：<span style="color:green">**url地址这么起名； /资源名/资
 **2）**如何发起其他形式的请求？
 
 - 按照以下要求：
-
 - 创建post类型的表单;
-
 - 表单项中携带一个`_method`的参数，`_method`的值就是所要的请求形式。
 
-- ```html
-    <form action="book/1" method="post">
-        <input name="_method" value="delete">
-        <input type="submit" value="删除">
-    </form>
-    ```
+```html
+<form action="book/1" method="post">
+    <input name="_method" value="delete">
+    <input type="submit" value="删除">
+</form>
+```
 
 为什么那个Filter可以实现这个功能？？请看源码！
 
@@ -397,9 +395,9 @@ protected void doFilterInternal(HttpServletRequest request, HttpServletResponse 
 }
 ```
 
-### 3.4.3 高版本tomcat
+### 高版本 tomcat
 
-高版本tomcat只支持get，pos，header请求，不支持其他的，执行其他的会报错。如何解决？
+高版本 tomcat 只支持 get，pos，header请求，不支持其他的，执行其他的会报错。如何解决？
 
 ```jsp
 <%@ page contentType="text/html;charset=UTF-8" language="java" isErrorPage="true" %>
@@ -413,13 +411,9 @@ protected void doFilterInternal(HttpServletRequest request, HttpServletResponse 
 </html>
 ```
 
+# 请求处理
 
-
-----
-
-# 四、请求处理
-
-## 4.1 概述
+## 概述
 
 SpringMVC获取请求带来的各种信息
 
@@ -430,11 +424,11 @@ SpringMVC获取请求带来的各种信息
 - POJO自动赋值。字段名一致即可。
 - 使用Servlet原生API。（session推荐使用原生API）
 
-## 4.2 注解获取请求参数
+## 注解获取请求参数
 
 <span style="color:green">**以下注解都是加载方法的参数上的。**</span>
 
-### 4.2.1 RequestParam
+### RequestParam
 
 **@RequestParam("user") String username 相当于：**
 
@@ -454,7 +448,7 @@ RequestParam注解的几个重要的值：
 - RequestParam是获取浏览器传过来的参数，是拿❓后面的值！！
 - PathVarible是取的地址中的值！！
 
-### 4.2.2 RequestHeader 
+### RequestHeader 
 
 **@RequestHeader 获取请求头中某个key的值。**
 
@@ -471,7 +465,7 @@ RequestHeader注解的几个重要的值
 - required
 - defaultValue
 
-### 4.2.3 CookieValue
+### CookieValue
 
 **@CookieValue：获取某个cookie的值**
 
@@ -500,7 +494,7 @@ CookieValue注解几个重要的值
 * required
 * defaultValue
 
-### 4.2.4 SessionAttribute
+### SessionAttribute
 
 以前获取Session
 
@@ -518,7 +512,7 @@ public String getSession(@SessionAttribute("user") String user) {
 
 **Session还是用原生API获取的好。**
 
-## 4.3 POJO自动赋值
+## POJO自动赋值
 
 <span style="color:red">**注意**</span>：返回对象类型的POJO要引入json库，我用的jackson。
 
@@ -557,13 +551,13 @@ public User pojo(User user) {
 }
 ```
 
-## 4.4 Servlet原生API
+## Servlet原生API
 
-## 4.5 解决提交数据乱码
+## 解决提交数据乱码
 
 提交数据可能乱码
 
-### 4.5.1 请求乱码
+### 请求乱码
 
 **GET请求乱码：**改server.xml 在8080端口处 URIEncoding="UTF-8"
 
@@ -581,7 +575,7 @@ public User pojo(User user) {
 
 - **注意！！字符编码Filter要在其他Filter之前！！！为什么！！因为我们要先设置，让设置生效，之后的操作才有效！！**
 
-### 4.5.2 响应乱码
+### 响应乱码
 
 response.setContentType("text/html;charset=utf-8")
 
@@ -599,12 +593,12 @@ response.setContentType("text/html;charset=utf-8")
     }
     ```
 
-### 4.5.3 总结
+### 总结
 
 * 使用SpringMVC前端控制器 写完就直接写字符编码过滤器
 * Tomcat一装上，上手就是server.xml的8080处添加URIEncoding=”UTF-8“
 
-### 4.5.3 实例配置
+### 实例配置
 
 **Spring IOC那块的配置**
 
@@ -675,11 +669,11 @@ public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherS
 }
 ```
 
-#  五、数据输出
+#  数据输出
 
 数据输出即把数据携带给页面。前面直接通过响应的方式把数据响应给了浏览器。但是如果使用的是模板引擎一类的，需要我们携带数据给页面。
 
-## 5.1 Map、Model、ModelMap
+## Map、Model、ModelMap
 
 1）可以在方法处传入Map、或Model或者ModelMap
 
@@ -736,7 +730,7 @@ public class CarryController {
 // 无论是传入Map还是Model还是ModelMap 最终的数据类型都是 BindingAwareModelMap
 ```
 
-## 5.2 ModelAndView
+## ModelAndView
 
 1）方法的返回值可以变为ModelAndView类型
 
@@ -755,7 +749,7 @@ public ModelAndView handle(){
 }
 ```
 
-## 5.3 数据暂存Session域
+## 数据暂存Session域
 
 使用一个注解 @SessionAttributes(只能标在类上)
 
@@ -771,7 +765,7 @@ public ModelAndView handle(){
 - 所以会存两大份！！用value指定的比较多，因为可以精确指定。
 - **但是我们不推荐用@SessionAttributes，还是用原生API吧。注解的话可能会引发异常，且移除session麻烦。**
 
-## 5.4 ModelAttribute方法
+## ModelAttribute方法
 
 ModelAttribute 方法入参标注该注解后，入参的对象就会放到数据模型中。
 
@@ -810,9 +804,9 @@ public void ModelAttribute(Model model) {
 
 <img src="../pics/SpringMVC/ModelAttribute.png" style="float:left">
 
-# 六、前端控制器源码
+# 前端控制器源码
 
-## 6.1 如何看SpringMVC源码
+## 如何看SpringMVC源码
 
 **SpringMVC源码如何看？**
 
@@ -820,9 +814,9 @@ public void ModelAttribute(Model model) {
 - 只要是finally块的，一般就是清东西。
 - try起来的一般是重要的代码。 
 
-## 6.2 梳理流程
+## 梳理流程
 
-### 6.2.1 文字分析
+### 文字分析
 
 **文字描述：**
 
@@ -908,7 +902,7 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 
 源码注释上写，处理对处理程序的实际调度！！而且，该类中调用了类中的很多方法，再根据这些被调用方法的名字，我们猜测doDispatch就是调度的核心方法，于是我们对它进行debug！！！
 
-### 6.2.2 总结
+### 总结
 
 **图示总结**
 
@@ -932,9 +926,9 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 
 7）**doDispatch**调用的方法中，我们根据单词意思和方法上的注释推断出这个方法就是我们要找的入口！于是对其进行**debug**！！
 
-## 6.2 阅读源码
+## 阅读源码
 
-###  6.2.1 走马观花
+###  走马观花
 
 <span style="color:green">**看每个方法的大致功能**</span>
 
@@ -1085,13 +1079,11 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 - <span style="color:red">目标方法执行后返回一个ModelAndView对象。</span>
 - <span style="color:red">根据ModelAndView的信息转发到具体的页面，并可以在请求域中取出ModelAndView中的模型数据。</span>
 
-### 6.2.2 细致阅读
+### 细致阅读
 
-#### 6.2.2.1 getHandler方法
+#### getHandler方法
 
 1）读了doDispatch（）方法，大致猜了每个方法的作用。现在来细看getHandler（）方法的细节。
-
------------------------------------
 
 **getHandler是如何找到那个类可以处理请求的。**
 
@@ -1131,7 +1123,7 @@ mappingRegistry：ioc容器启动创建Controller对象的时候扫描每个处�
 
 <img src="../pics/SpringMVC/getHandler_03.png" style="float:left">
 
-#### 6.2.2.2 getHandlerAdapter方法
+#### getHandlerAdapter方法
 
 2）细看 getHandler() 方法的细节，接下来看getHandlerAdapter() 方法的细节。
 
@@ -1165,7 +1157,7 @@ protected HandlerAdapter getHandlerAdapter(Object handler) throws ServletExcepti
 
 <img src="../pics/SpringMVC/getHandlerAdapter_01.png" style="float:left">
 
-#### 6.2.2.3 handle方法
+#### handle方法
 
 ```java
 @Override
@@ -1215,7 +1207,7 @@ protected ModelAndView handleInternal(HttpServletRequest request,
 }
 ```
 
-## 6.3 阅读总结
+## 阅读总结
 
 1）运行流程挑简单的。
 
@@ -1236,9 +1228,9 @@ protected ModelAndView handleInternal(HttpServletRequest request,
 
 视图解析器只是为了得到视图对象；视图对象才能真正的<span style="color:red">转发（将模型数据全部放在请求域中）或者重定向到页面</span>视图对象才能真正的<span style="color:red">渲染视图</span>。
 
-# 七、九大组件
+# 九大组件
 
-## 7.1 组件概述
+## 组件概述
 
 DispatcherServet中有几个引用类型的属性；SpringMVC的九大组件。
 
@@ -1364,11 +1356,11 @@ private void initHandlerMappings(ApplicationContext context) {
 }
 ```
 
-# 八、视图解析
+# 视图解析
 
-## 8.1 视图解析的应用
+## 视图解析的应用
 
-### 8.1.1 概述
+### 概述
 
 > <span style="color:green">**转发 forward**</span>
 
@@ -1396,7 +1388,7 @@ request.getRequestDispatcher("/地址").forward(request, response);
 
 4）请求域中的数据会丢失，因为是2次请求。request请求域的生命周期只是一次请求内有效！
 
-### 8.1.2 转发 forward
+### 转发 forward
 
 > **废话少说上代码**
 
@@ -1424,7 +1416,7 @@ class DemoController{
 
 forward可以转发到页面，也可以转发到一个请求上。 forward:/hello 转发到hello请求
 
-### 8.1.3 重定向 redirect
+### 重定向 redirect
 
 > **废话少说上代码**
 
@@ -1450,9 +1442,9 @@ class DemoController{
 - springmvc无需写项目名，会为我们自动拼接上项目名。
 - returen "redirect:/hello.jsp";
 
-## 8.2 视图解析器原理
+## 视图解析器原理
 
-### 8.2.1 概述
+### 概述
 
 **==>** 先根据当前请求，找到那个类能处理。
 
@@ -1476,7 +1468,7 @@ class DemoController{
 
 **==>** 由View对象进行视图的相关操作
 
-### 8.2.2 流程解析
+### 流程解析
 
 ><span  style="color:green">**先根据当前请求，找到那个类能处理**</span>
 
@@ -1813,7 +1805,7 @@ protected void exposeModelAsRequestAttributes(Map<String, Object> model, HttpSer
 
 一句话：视图解析器只是为了得到视图对象；视图对象才能真正的转发（将模型数据全部放在请求域中）或者重定向要页面，视图对象才能真正的<span style="color:red">渲染视图</span>
 
-### 8.2.3 流程图
+### 流程图
 
 <img src="../pics/SpringMVC/viewResolversFlow.png">
 
@@ -1821,9 +1813,7 @@ protected void exposeModelAsRequestAttributes(Map<String, Object> model, HttpSer
 
 ViewResolver只是一个中介商，用于得到视图对象
 
-----
-
-## 8.3 国际化
+## 国际化
 
 没记，有空再补。
 
@@ -1867,9 +1857,9 @@ protected View createView(String viewName, Locale locale) throws Exception {
 }1
 ```
 
-## 8.4 自定义视图解析器
+## 自定义视图解析器
 
-### 8.4.1 步骤
+### 步骤
 
 > 自定义视图和视图解析器的步骤
 
@@ -1982,7 +1972,7 @@ public class WebConfig implements WebMvcConfigurer {
 }
 ```
 
-# 九、CRUD案例
+# CRUD案例
 
 修改数据需要注意的地方：
 
@@ -2010,7 +2000,7 @@ D：Delete 删除
 
 /emp		POST	新增
 
-## 9.2 静态资源放行
+## 静态资源放行
 
 Spring MVC allows for mapping the `DispatcherServlet` to `/` (thus overriding the mapping of the container’s default Servlet), while still allowing static resource requests to be handled by the container’s default Servlet. It configures a `DefaultServletHttpRequestHandler` with a URL mapping of `/**` and the lowest priority relative to other URL mappings.
 
@@ -2032,9 +2022,9 @@ public class WebConfig implements WebMvcConfigurer {
 }
 ```
 
-## 9.3 Rest风格设置
+## Rest 风格设置
 
-### 9.3.1 如何设置？
+### 如何设置？
 
 <a href="https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-ann-initbinder">**HTTP Method Conversion**</a>
 
@@ -2116,7 +2106,7 @@ public class HiddenHttpMethodFilter extends OncePerRequestFilter {
 }
 ```
 
-### 9.3.2 配置代码
+### 配置代码
 
 **JavaConfig**
 
@@ -2217,9 +2207,9 @@ public class RestDemo {
 </html>
 ```
 
-# 十、数据转换/格式化/校验
+# 数据转换/格式化/校验
 
-## 10.1 概述
+## 概述
 
 SpringMVC封装自定义类型对象的时候
 
@@ -2250,13 +2240,13 @@ WebDataBinder：数据绑定器负责数据绑定工作；
 
 ConversionService组件负责数据类型的转换以及格式化。
 
-## 10.2 数据绑定流程
+## 数据绑定流程
 
 Spring MVC 通过反射机制对目标处理方法进行解析，将请求消息绑定到处理方法的入参中。数据绑定的核心部件是 DataBinder，运行机制如下：
 
 <img src="../pics/SpringMVC/WebDataBinderFlow.png" style="float:left">
 
-## 10.3 自定义数据类型转换
+## 自定义数据类型转换
 
 ConversionService接口
 
@@ -2364,7 +2354,7 @@ public class WebConfig implements WebMvcConfigurer {
 
 ```
 
-## 10.4 EnableWebMvc解析
+## EnableWebMvc解析
 
 use the `@EnableWebMvc` annotation to enable MVC configuration。
 
@@ -2408,7 +2398,7 @@ use the `@EnableWebMvc` annotation to enable MVC configuration。
 
 <img src="../pics/SpringMVC/mvc_driver_03.png" width="100%">
 
-## 10.5 格式化
+## 格式化
 
 1）日期格式化
 
@@ -2434,13 +2424,13 @@ public String number(@NumberFormat(pattern = "#,###,###.##") Double number) {
 }
 ```
 
-## 10.6 数据校验
+## 数据校验
 
-### 10.6.1 概述
+### 概述
 
 只做前端校验不安全！！他们可以直接绕过前端验证！！重要数据一定要加上后端验证。
 
-### 10.6.2 准备
+### 准备
 
 SpringMVC：可以用JSR303来做数据校验
 
@@ -2466,7 +2456,7 @@ JSR303：规范---Hibernate Validator（第三方校验框架）
 </dependency>
 ```
 
-### 10.6.3 校验
+### 校验
 
 给JavaBean的属性添加上校验注解。
 
@@ -2526,9 +2516,9 @@ public class Validation {
 private String lastName
 ```
 
-# 十一、ajax/下载/上传
+# ajax/下载/上传
 
-## 11.1 ajax
+## ajax
 
 返回数据是json就ok。
 
@@ -2581,9 +2571,9 @@ public String test3(HttpEntity<String> str){
 }
 ```
 
-## 11.2 下载
+## 下载
 
-### 11.2.1 Serlvet 3.0
+### Serlvet 3.0
 
 ```java
 public class DownServlet extends HttpServlet {
@@ -2607,15 +2597,15 @@ public class DownServlet extends HttpServlet {
 }
 ```
 
-### 11.2.2 SpringMVC下载
+### SpringMVC下载
 
 还不如原生api好用。
 
 [博客地址](https://www.cnblogs.com/wyq178/p/6921164.html)
 
-## 11.3 上传
+## 上传
 
-### 11.3.1 Servlet 3.0
+### Servlet 3.0
 
 > 表单设置
 
@@ -2658,7 +2648,7 @@ public class UploadServlet extends HttpServlet {
 }
 ```
 
-### 11.3.2 SpringMVC上传
+### SpringMVC上传
 
 [博客地址](https://www.cnblogs.com/wyq178/p/6921164.html)
 
@@ -2667,9 +2657,9 @@ public class UploadServlet extends HttpServlet {
 - 单文件：单个对象
 - 多文件：数组
 
-# 十二、拦截器/跨域
+# 拦截器/跨域
 
-## 12.1 拦截器
+## 拦截器
 
 > 自定义拦截器流程
 
@@ -2721,9 +2711,9 @@ public class UploadServlet extends HttpServlet {
 
 过滤器是javaweb的，要想从ioc容器中拿对象很麻烦。
 
-## 12.2 跨域
+## 跨域
 
-### 12.2.1 基本跨域配置
+### 基本跨域配置
 
 如果只是局部的某些类或方法需要跨域配置，那么在对应的类或注解上加上注解`@CrossOrigin`即可。
 
@@ -2782,7 +2772,7 @@ public class AccountController {
 }
 ```
 
-### 12.2.2 全局跨域配置
+### 全局跨域配置
 
 官方示例代码
 
@@ -2838,13 +2828,13 @@ public class CrossConfig implements WebMvcConfigurer {
 
 - `AbstractHandlerMapping`
 
-## 12.3 跨域过滤器
+## 跨域过滤器
 
 [官方文档](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-cors-filter)
 
-# 十三、异常处理
+# 异常处理
 
-## 13.1 概述
+## 概述
 
 Spring MVC通过<span style="color:red">HandlerExceptionResolver</span>处理程序的异常，包括Handler映射、数据绑定以及目标方法执行时发生的异常。
 
@@ -2921,7 +2911,7 @@ DefaultHandlerExceptionResolver：判断是否SpringMVC自带的异常
 
 ----
 
-## 13.2 异常解析器
+## 异常解析器
 
 >**ExceptionHandlerExceptionResolver**
 
@@ -3010,7 +3000,7 @@ public class XXController{
 
 如果希望对所有异常进行统一处理，可以使用 SimpleMappingExceptionResolver，它将异常类名映射为视图名，即发生异常时使用对应的视图报告异常
 
-## 13.3 not found异常
+## not found异常
 
 <span style="color:red">**如何自定义404异常？有如下三种方式！**</span>
 
@@ -3167,9 +3157,9 @@ class MyDispatcherServlet extends DispatcherServlet {
 
 - 通用性：第三种应该是最通用了，而一、二 两种则要依赖Spring MVC
 
-# 十四、扫尾
+# 扫尾
 
-## 14.1 运行流程
+## 运行流程
 
 <img src="../pics/SpringMVC/mvc_flow.png">
 
@@ -3205,9 +3195,9 @@ class MyDispatcherServlet extends DispatcherServlet {
 
 <span style="color:red">知道加粗部分的即可。</span>
 
-## 14.2 Spring与MVC
+## Spring与MVC
 
-### 14.2.1 概述
+### 概述
 
 Spring和SpringMVC整合的目的：分工明确
 
@@ -3215,7 +3205,7 @@ SpringMVC的配置文件就来配置和网站转发逻辑以及网站功能有�
 
 Spring的配置文件来配置和业务有关的（事务控制，数据源，xxx）；
 
-### 14.2.2 整合
+### 整合
 
 > <span style="color:green">**方式一：**</span>
 
@@ -3252,13 +3242,13 @@ Spring容器是作为父容器的，SpringMVC容器是作为子容器的。子�
 
 <img src="../pics/SpringMVC/spring_with_mvc3.png" width="100%">
 
-# 十五、乱码处理
+# 乱码处理
 
 [参考博客](https://blog.csdn.net/c17315377559/article/details/101940087?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.control)  博客中用的xml方式进行处理的，我采用的JavaConfig方式处理的。
 
-##  15.1 请求乱码
+##  请求乱码
 
-### 15.1.1 post请求乱码
+### post请求乱码
 
 > **在web.xml中配置过滤器**
 
@@ -3337,7 +3327,7 @@ public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherS
 
 此种方式可以处理，Get与Post请求方式的乱码。配完之后，便不需要在考虑中文乱码的问题
 
-## 15.2 响应乱码
+## 响应乱码
 
 > 方式一，在@RequestMapping中加上，**produces="text/html;charset=utf-8"**
 
@@ -3427,12 +3417,3 @@ public class StringHttpMessageConverter extends AbstractHttpMessageConverter<Str
 	}
 }
 ```
-
-----
-
-# 开始看书
-
-看透SpringMVC
-
-## 第一章
-
