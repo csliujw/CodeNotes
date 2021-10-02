@@ -5982,6 +5982,8 @@ private <T> T[] copyElements(T[] a) {
 
 ### Map 接口概述
 
+常用方法
+
 ```java
 public interface Map<K,V> {
     int size();
@@ -6219,7 +6221,322 @@ public interface Map<K,V> {
 
 ### 剖析 HashMap
 
+#### 基本原理
 
+JDK 1.7 数组+链表（散列表）
+
+JDK 1.8 数组+链表+红黑树（链表长度>=8 会树化）
+
+> HashMap 内部几个比较重要的实例变量如下
+
+```java
+transient Node<K,V>[] table = (Node<K,V>[])EMPTY_TABLE; // 数组 数组中的每个元素指向一个单链表，链表中的每个节点表示一个键值对
+transient int size;
+int threshold;
+final float loadFactor;
+```
+
+```java
+static class Node<K,V> implements Map.Entry<K,V> {
+    final int hash;
+    final K key;
+    V value;
+    Node<K,V> next; // 指向下一个节点
+
+    Node(int hash, K key, V value, Node<K,V> next) {
+        this.hash = hash;
+        this.key = key;
+        this.value = value;
+        this.next = next;
+    }
+
+    public final K getKey()        { return key; }
+    public final V getValue()      { return value; }
+    public final String toString() { return key + "=" + value; }
+
+    public final int hashCode() {
+        return Objects.hashCode(key) ^ Objects.hashCode(value);
+    }
+
+    public final V setValue(V newValue) {
+        V oldValue = value;
+        value = newValue;
+        return oldValue;
+    }
+
+    public final boolean equals(Object o) {
+        if (o == this)
+            return true;
+        if (o instanceof Map.Entry) {
+            Map.Entry<?,?> e = (Map.Entry<?,?>)o;
+            if (Objects.equals(key, e.getKey()) &&
+                Objects.equals(value, e.getValue()))
+                return true;
+        }
+        return false;
+    }
+}
+```
+
+一开始 table 是 null，添加第一个元素之后，默认分配大小为 16，装载因子（loadFactor）为 0.75，threshold = 12
+
+#### 方法源码
+
+> 放入元素的源码逻辑
+
+```java
+public V put(K key, V value) {
+    // hash(key) 计算 hash 值
+    return putVal(hash(key), key, value, false, true);
+}
+final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
+               boolean evict) {
+    Node<K,V>[] tab; Node<K,V> p; int n, i;
+    // 散列表的table 为 null 或者 散列表长度不够了。
+    if ((tab = table) == null || (n = tab.length) == 0)
+        n = (tab = resize()).length;
+    // 散列表中没有这个 key，就加入这个 key value 进去。
+    // hash & (n-1) 等同于求模运算 hash % (n-1)
+    if ((p = tab[i = (n - 1) & hash]) == null)
+        tab[i] = newNode(hash, key, value, null);
+    else { // 如果存在这个散列值
+        Node<K,V> e; K k;
+        if (p.hash == hash && // 查看 hash 值是否相等，
+            // 如果 hash 值相等则看 key 是否相同
+            ((k = p.key) == key || (key != null && key.equals(k))))
+            // 如果发现 hash 和 key 都相同的话，则把原先的节点对象赋值给 e
+            e = p;
+        else if (p instanceof TreeNode)
+            e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+        else {
+            for (int binCount = 0; ; ++binCount) {
+                if ((e = p.next) == null) {
+                    p.next = newNode(hash, key, value, null);
+                    if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
+                        treeifyBin(tab, hash);
+                    break;
+                }
+                if (e.hash == hash &&
+                    ((k = e.key) == key || (key != null && key.equals(k))))
+                    break;
+                p = e;
+            }
+        }
+        if (e != null) { // existing mapping for key
+            V oldValue = e.value;
+            // 如果可以覆盖 火鹤 旧值为 null
+            if (!onlyIfAbsent || oldValue == null)
+                e.value = value; // 则将之前的 value 进行覆盖。
+            afterNodeAccess(e);
+            return oldValue; // 并返回旧值
+        }
+    }
+    ++modCount;
+    // 大小超过了就进行 resize
+    if (++size > threshold)
+        resize();
+    afterNodeInsertion(evict);
+    return null;
+}
+```
+
+> 获取元素
+
+```java
+public V get(Object key) {
+    Node<K,V> e;
+    return (e = getNode(hash(key), key)) == null ? null : e.value;
+}
+
+// 查找是否有这个结点。
+final Node<K,V> getNode(int hash, Object key) {
+    Node<K,V>[] tab; Node<K,V> first, e; int n; K k;
+    // 如果 table 中有这个元素的话，
+    if ((tab = table) != null && (n = tab.length) > 0 &&
+        (first = tab[(n - 1) & hash]) != null) { // 此处的判断说明，table 中有这个元素。
+        // 开始查找。看第一个元素的 hash 值和 key 是否一样
+        if (first.hash == hash && // always check first node
+            ((k = first.key) == key || (key != null && key.equals(k))))
+            return first;
+        // hash 值一样，但是 key 不一样则说明发生了 hash 冲突，查看节点的下一个链表。
+        if ((e = first.next) != null) {
+            if (first instanceof TreeNode) // 链表过长，HashMap 会 treeify
+                return ((TreeNode<K,V>)first).getTreeNode(hash, key);
+            do {
+                if (e.hash == hash &&
+                    ((k = e.key) == key || (key != null && key.equals(k))))
+                    return e;
+            } while ((e = e.next) != null);
+        }
+    }
+    return null;
+}
+```
+
+> 扩容策略
+
+扩容为原来的两倍，再旧 table 中的一个一个放进新 table。
+
+```java
+final Node<K,V>[] resize() {
+    Node<K,V>[] oldTab = table; // 保存旧的 table
+    int oldCap = (oldTab == null) ? 0 : oldTab.length; // 保存原先散列表的大小
+    int oldThr = threshold;
+    int newCap, newThr = 0;
+    if (oldCap > 0) {
+        if (oldCap >= MAXIMUM_CAPACITY) {
+            threshold = Integer.MAX_VALUE;
+            return oldTab;
+        }
+        // 新容量为原先容量的 2 倍
+        else if ((newCap = oldCap << 1) < MAXIMUM_CAPACITY &&
+                 oldCap >= DEFAULT_INITIAL_CAPACITY)
+            newThr = oldThr << 1; // double threshold
+    }
+    else if (oldThr > 0) // initial capacity was placed in threshold
+        newCap = oldThr;
+    else {               // zero initial threshold signifies using defaults
+        newCap = DEFAULT_INITIAL_CAPACITY;
+        newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+    }
+    if (newThr == 0) {
+        float ft = (float)newCap * loadFactor; // 新容量 * 装载因子
+        newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
+                  (int)ft : Integer.MAX_VALUE);
+    }
+    threshold = newThr; // 更新数组最大容量（放入元素的最大容量 length * loadFactor）
+    @SuppressWarnings({"rawtypes","unchecked"})
+    Node<K,V>[] newTab = (Node<K,V>[])new Node[newCap];
+    table = newTab;
+    if (oldTab != null) {
+        for (int j = 0; j < oldCap; ++j) {
+            Node<K,V> e;
+            if ((e = oldTab[j]) != null) { // 取出旧 tab 中的数据
+                oldTab[j] = null;
+                if (e.next == null) // 可能散列冲突，所有要检查 next
+                    newTab[e.hash & (newCap - 1)] = e;
+                else if (e instanceof TreeNode)
+                    ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+                else { // preserve order
+                    Node<K,V> loHead = null, loTail = null;
+                    Node<K,V> hiHead = null, hiTail = null;
+                    Node<K,V> next;
+                    do {
+                        next = e.next;
+                        if ((e.hash & oldCap) == 0) {
+                            if (loTail == null)
+                                loHead = e;
+                            else
+                                loTail.next = e;
+                            loTail = e;
+                        }
+                        else {
+                            if (hiTail == null)
+                                hiHead = e;
+                            else
+                                hiTail.next = e;
+                            hiTail = e;
+                        }
+                    } while ((e = next) != null);
+                    if (loTail != null) {
+                        loTail.next = null;
+                        newTab[j] = loHead;
+                    }
+                    if (hiTail != null) {
+                        hiTail.next = null;
+                        newTab[j + oldCap] = hiHead;
+                    }
+                }
+            }
+        }
+    }
+    return newTab;
+}
+```
+
+> 根据键值对删除
+
+```java
+public V remove(Object key) {
+    Node<K,V> e;
+    return (e = removeNode(hash(key), key, null, false, true)) == null ?
+        null : e.value;
+}
+
+final Node<K,V> removeNode(int hash, Object key, Object value,
+                           boolean matchValue, boolean movable) {
+    Node<K,V>[] tab; Node<K,V> p; int n, index;
+    // 如果元素的 hash 值是在表中的话。
+    if ((tab = table) != null && (n = tab.length) > 0 &&
+        (p = tab[index = (n - 1) & hash]) != null) {
+        Node<K,V> node = null, e; K k; V v;
+        // 判断第一个节点是不是
+        if (p.hash == hash &&
+            ((k = p.key) == key || (key != null && key.equals(k))))
+            node = p;
+        else if ((e = p.next) != null) { // 如果树化了，就按树查找
+            if (p instanceof TreeNode)
+                node = ((TreeNode<K,V>)p).getTreeNode(hash, key);
+            else { // 没有则按链表查找
+                do {
+                    if (e.hash == hash &&
+                        ((k = e.key) == key ||
+                         (key != null && key.equals(k)))) {
+                        node = e;
+                        break;
+                    }
+                    p = e;
+                } while ((e = e.next) != null);
+            }
+        }
+        // 找到节点了的话
+        if (node != null && (!matchValue || (v = node.value) == value ||
+                             (value != null && value.equals(v)))) {
+            if (node instanceof TreeNode)
+                // 如果是树化后的则按树的逻辑移除节点
+                ((TreeNode<K,V>)node).removeTreeNode(this, tab, movable);
+            else if (node == p)
+                // 如果 hash 表的第一个节点就是要找的，则直接把next赋值即可
+                tab[index] = node.next;
+            else
+                p.next = node.next;
+            ++modCount;
+            --size;
+            afterNodeRemoval(node);
+            return node;
+        }
+    }
+    return null;
+}
+```
+
+#### 特点总结
+
+查找效率高
+
+### 剖析 HashSet
+
+#### 基本原理
+
+HashSet 由 HashMap 实现。
+
+#### 特点总结
+
+- 无重复元素
+- 可高效添加、删除、判断元素是否存在，时间复杂度都为 O(1)
+- 无序
+
+### 剖析 TreeMap
+
+#### 基本原理
+
+由红黑树实现。
+
+### 剖析 TreeSet
+
+#### 基本原理
+
+由 TreeMap 实现。
 
 ## 第十六章 异常
 
