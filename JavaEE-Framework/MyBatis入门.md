@@ -326,7 +326,7 @@ maven项目下，所有的非 `*.java` 文件都要放在 resources 目录下。
 
 ​	role 一对多user
 
-这样 user 和 role就是多对多关系了。 数据库的多对多需要一个中间表来描述 两表的多对多关系。
+这样 user 和 role就是多对多关系了。 数据库的多对多需要一个中间表来描述两表的多对多关系。
 
 多对多`SQL`的写法？
 
@@ -373,8 +373,7 @@ public interface IUserDao {
 <mapper namespace="com.bbxx.dao.IUserDao">
     <!-- 配置查询所有操作 -->
     <select id="findAll" resultType="com.bbxx.pojo.UserVO">
-        select *
-        from users
+        select * from users
     </select>
 
     <select id="findCondition" resultType="UserVO">
@@ -470,14 +469,17 @@ public Employee getXX(Integer id, String name);
 
 - 要么写#{0} #{1} 要么写#{param1} #{param2} 
 - 只有一个形参的话写什么都行#{asf} #{haha}都行
-- 原因：只要传入了多个参数；MyBatis会自动的将这些参数封装在一个 map 中；封装的时候使用的key 就是参数的索引和参数的第几个表示
-- Map<String,Object> map = new HashMap<>();
-  	map.put("1","传入的值1");
-    	map.put("2","传入的值2");
+- 原因：只要传入了多个参数；MyBatis会自动的将这些参数封装在一个 map 中；封装的时候使用的 key 就是参数的索引和参数的第几个表示
 
-> 如果我们不想这样做，想指定key，那么我们如何指定封装时使用的key？
+```java
+Map<String,Object> map = new HashMap<>();
+map.put("1","传入的值1");
+map.put("2","传入的值2");
+```
 
-- 使用注解`@Param`指定map的key的值！具体看看源码。
+> 如果我们不想这样做，想指定 key，那么我们如何指定封装时使用的key？
+
+- 使用注解 `@Param` 指定 map 的 key 的值！具体看看源码。
 
 ```java
 Employee getXX(@Param("id")Integer id, @Param("enmName")String empName);
