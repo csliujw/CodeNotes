@@ -62,13 +62,13 @@ public void refresh() throws BeansException, IllegalStateException {
     synchronized (this.startupShutdownMonitor) {
         // Prepare this context for refreshing.
         /**
-             * 做容器刷新前的准备工作。
-             * 1. 设置容器的启动时间
-             * 2. 设置活跃状态为 true
-             * 3. 设置关闭状态为 false
-             * 4. 获取 Environment 对象，并加载当前系统的属性值到 Environment 对象中
-             * 5. 准备监听器和事件的集合对象，默认为空的集合。
-             */
+        * 做容器刷新前的准备工作。
+        * 1. 设置容器的启动时间
+        * 2. 设置活跃状态为 true
+        * 3. 设置关闭状态为 false
+        * 4. 获取 Environment 对象，并加载当前系统的属性值到 Environment 对象中
+        * 5. 准备监听器和事件的集合对象，默认为空的集合。
+        */
         prepareRefresh();
 
         // Tell the subclass to refresh the internal bean factory.
@@ -89,31 +89,24 @@ public void refresh() throws BeansException, IllegalStateException {
             invokeBeanFactoryPostProcessors(beanFactory);
 
             // Register bean processors that intercept bean creation.
-            //
             registerBeanPostProcessors(beanFactory);
 
             // Initialize message source for this context.
-            //
             initMessageSource();
 
             // Initialize event multicaster for this context.
-            //
             initApplicationEventMulticaster();
 
             // Initialize other special beans in specific context subclasses.
-            //
             onRefresh();
 
             // Check for listener beans and register them.
-            //
             registerListeners();
 
             // Instantiate all remaining (non-lazy-init) singletons.
-            //
             finishBeanFactoryInitialization(beanFactory);
 
             // Last step: publish corresponding event.
-            //
             finishRefresh();
         } catch (BeansException ex) {
             if (logger.isWarnEnabled()) {
@@ -138,9 +131,9 @@ public void refresh() throws BeansException, IllegalStateException {
 }
 
 /**
-     * Prepare this context for refreshing, setting its startup date and
-     * active flag as well as performing any initialization of property sources.
-     */
+* Prepare this context for refreshing, setting its startup date and
+* active flag as well as performing any initialization of property sources.
+*/
 protected void prepareRefresh() {
     // Switch to active.
     this.startupDate = System.currentTimeMillis();
@@ -184,6 +177,41 @@ protected void prepareRefresh() {
     this.earlyApplicationEvents = new LinkedHashSet<>();
 }
 ```
+
+# IOC 容器
+
+IOC  容器的设计钟，有两个主要的容器系列
+
+- 一个是实现  BeanFactory 接口的简单容器系列，只实现了容器的基本功能
+- 一个是 ApplicationContext 应用上下文，增加了许多面向框架的特性，对应用环境做了许多适配。
+
+## IOC 容器初始化概述
+
+IOC 容器的初始化是通过 `refresh()` 方法启动的
+
+```java
+public ClassPathXmlApplicationContext(
+    String[] configLocations, boolean refresh, @Nullable ApplicationContext parent)
+    throws BeansException {
+
+    super(parent);
+    setConfigLocations(configLocations);
+    if (refresh) {
+        refresh();
+    }
+}
+```
+
+IOC 的启动过程包含三大部分
+
+- BeanDefinition 的 Resource 定位：BeanDefinition 的资源定位，由 ResourceLoader 通过统一的 Resource 接口完成
+- BeanDefinition 的载入：把用户定义好的 Bean 表示成 IOC 容器内部的数据结构，这个内部的数据结构就是 BeanDefinition。
+    - BeanDefinition 是 POJO 对象在 IOC 容器中的抽象。
+- 向 IOC 容器注册 BeanDefinition：通过调用 BeanDefinitionRegistry 接口实现。
+    - 会将 BeanDefinition 注册到一个 HashMap 中。
+- Bean 定义的1载入和依赖注入是两个独立的过程。依赖注入一般发生在应用第一次通过 getBean 向容器索取 Bean 的时候。也可以通过配置修改为初始化的时候就完成依赖注入。
+
+## BeanDefinition 的  Resource 定位
 
 
 
