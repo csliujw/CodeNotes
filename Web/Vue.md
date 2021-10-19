@@ -3029,9 +3029,3 @@ try{
     }
 ```
 
-
-
-# Vant 给 app 加点过渡动画
-
-#  表单和图纸、图画用 element 的 table 组件和 echarts 的柱状图？
-

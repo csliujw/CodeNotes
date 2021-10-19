@@ -114,8 +114,6 @@ docker run --name myredis -d -p6379:6379 redis
 docker exec -it myredis redis-cli
 ```
 
-
-
 ## 直接安装
 
 ```shell
@@ -403,43 +401,42 @@ redis 是一个内存数据库，当 redis 服务器重启，获取电脑重启�
 
 > **有RDB和AOF两种方式。持久化策略有四种！**
 
-- RDB：默认方式，不需要进行配置，默认就使用这种机制
-  在一定的间隔时间中，检测key的变化情况，然后持久化数据
-  
-  - 编辑redis.windwos.conf文件
-  
-    ```shell
-    after 900 sec (15 min) if at least 1 key changed
-    
-    save 900 1
-    
-    after 300 sec (5 min) if at least 10 keys changed
-    
-    save 300 10
-    
-    after 60 sec if at least 10000 keys changed
-    
-    save 60 10000
-    ```
-  
-  - 重新启动redis服务器，并指定配置文件名称
-  
-    ```shell
-    D:\JavaWeb2018\day23_redis\资料\redis\windows-64\redis-2.8.9>redis-server.exe redis.windows.conf	
-    ```
-  
-- AOF：日志记录的方式，可以记录每一条命令的操作。可以每一次命令操作后，持久化数据
-  - 编辑redis.windwos.conf文件
+RDB：默认方式，不需要进行配置，默认就使用这种机制。在一定的间隔时间中，检测key的变化情况，然后持久化数据
 
-    ```shell
-    appendonly no（关闭aof） --> appendonly yes （开启aof）
-    
-    appendfsync always ： 每一次操作都进行持久化
-    
-    appendfsync everysec ： 每隔一秒进行一次持久化
-    
-    appendfsync no	 ： 不进行持久化
-    ```
+- 编辑redis.windwos.conf文件
+
+  ```shell
+  after 900 sec (15 min) if at least 1 key changed
+  
+  save 900 1
+  
+  after 300 sec (5 min) if at least 10 keys changed
+  
+  save 300 10
+  
+  after 60 sec if at least 10000 keys changed
+  
+  save 60 10000
+  ```
+
+- 重新启动redis服务器，并指定配置文件名称
+
+  ```shell
+  D:\JavaWeb2018\day23_redis\资料\redis\windows-64\redis-2.8.9>redis-server.exe redis.windows.conf	
+  ```
+
+AOF：日志记录的方式，可以记录每一条命令的操作。可以每一次命令操作后，持久化数据
+- 编辑redis.windwos.conf文件
+
+  ```shell
+  appendonly no（关闭aof） --> appendonly yes （开启aof）
+  
+  appendfsync always ： 每一次操作都进行持久化
+  
+  appendfsync everysec ： 每隔一秒进行一次持久化
+  
+  appendfsync no	 ： 不进行持久化
+  ```
 
 # 五、Java与Jedis
 
@@ -612,6 +609,3 @@ port=6379
 maxTotal=50
 maxIdle=10
 ```
-
-
-
