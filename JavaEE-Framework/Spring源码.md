@@ -178,6 +178,55 @@ protected void prepareRefresh() {
 }
 ```
 
+# Spring学习内容
+
+- Java 语言特性：反射、动态代理、枚举、泛型、注解、ARM、Lambda
+- 设计模式的思想与实现：OOP、IOC、DDD、TDD、GoF23
+- Java API 的封装与简化：JDBC、事务、Transaction、Servlet、JPA、JMX、Bean Validation
+- JSR 规范的适配与实现
+- 三方框架的整合
+
+## 整体内容
+
+- 框架总览
+    - 特性总览
+    - 版本设计
+    - 模块化设计
+    - 技术整合
+    - 编程模型：
+        - OOP、
+        - AOP、
+        - 面向元编程（进行元数据处理）
+            - 配置元信息（配置信息影响程序的运行状态）
+            - 注解
+            - 属性配置
+        - 面向模块编程（Spring @Enable* 注解）
+        - 面向函数编程（Lambda、Reactive）
+- IOC 容器
+    - Spring IoC 容器
+    - 依赖查找
+    - 依赖注入
+    - 依赖来源
+    - Spring IoC 容器生命周期
+- Bean
+    - Bean 实例
+    - Bean 作用域
+    - Bean 生命周期
+- 元信息
+    - 注解
+    - 配置元信息
+    - 外部化属性
+- 基础设施
+    - 资源管理
+    - 类型转换
+    - 数据绑定
+    - 校验
+    - 国际化
+    - 事件
+    - 泛型处理
+
+## Spring 编程模型
+
 # IOC 容器
 
 IOC  容器的设计钟，有两个主要的容器系列
