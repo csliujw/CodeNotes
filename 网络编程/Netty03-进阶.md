@@ -229,11 +229,9 @@ serverBootstrap.option(ChannelOption.SO_RCVBUF, 10);
   * 滑动窗口：假设接收方的窗口只剩了 128 bytes，发送方的报文大小是 256 bytes，这时放不下了，只能先发送前 128 bytes，等待 ack 后才能发送剩余部分，这就造成了半包
   * MSS 限制：当发送的数据超过 MSS 限制后，会将数据切分发送，就会造成半包
 
-<<<<<<< HEAD
 本质是因为 TCP 是流式协议，消息无边界
-=======
+
 **本质是因为 TCP 是流式协议，消息无边界**
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 
 > 滑动窗口
 >
@@ -253,10 +251,7 @@ serverBootstrap.option(ChannelOption.SO_RCVBUF, 10);
 >   * 窗口内的数据才允许被发送，当应答未到达前，窗口必须停止滑动
 >   * 如果 1001~2000 这个段的数据 ack 回来了，窗口就可以向前滑动
 >   * 接收方也会维护一个窗口，只有落在窗口内的数据才能允许接收
-<<<<<<< HEAD
 >
-=======
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 
 >  MSS 限制
 >
@@ -399,13 +394,10 @@ public class HelloWorldServer {
 }
 ```
 
-
-
 输出，略
 
 > 半包用这种办法还是不好解决，因为接收方的缓冲区大小是有限的
 
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 #### 方法2，固定长度
 
 `FixedLengthFrameDecoder`
@@ -768,9 +760,6 @@ public class Client3 {
 缺点，处理字符数据比较合适，但如果内容本身包含了分隔符（字节数据常常会有此情况），那么就会解析错误
 
 #### 方法4，预设长度
-<<<<<<< HEAD
-=======
-
 `LengthFieldBasedFrameDecoder`  看下源码注释就清晰了。
 
 - `lengthFieldOffset` - 长度字段偏移量
@@ -879,8 +868,6 @@ public class Client3 {
  * </pre>
  */
 ```
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
-
 在发送消息前，先约定用定长字节表示接下来数据的长度，再填写内容。
 
 ```java
@@ -1016,12 +1003,6 @@ public class TestLengthFieldDecoder {
 14:37:10 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979] READ COMPLETE
 
 ```
-=======
-
-
-输出
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
-
 ## 2. 协议设计与解析
 
 ### 2.1 为什么需要协议？
@@ -1148,6 +1129,7 @@ try {
 ### 2.3 http 协议举例
 =======
 与 `redis` 进行交互
+
 >>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 
 ```java
@@ -1308,15 +1290,12 @@ public class TestHttp {
 } 
 ```
 
-<<<<<<< HEAD
-=======
 浏览器请求 `localhost:8080`，会输出数据
 
 ```html
 hello world netty http protocol
 ```
 
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 ### 2.4 自定义协议要素
 
 * 魔数，用来在第一时间判定是否是无效数据包
@@ -1325,11 +1304,7 @@ hello world netty http protocol
 * 指令类型，是登录、注册、单聊、群聊... 跟业务相关
 * 请求序号，为了双工通信，提供异步能力
 * 正文长度
-<<<<<<< HEAD
-* 消息正文
-=======
 * 消息正文：`json`，`xml`，`对象流`
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 
 #### 编解码器
 
@@ -1944,7 +1919,7 @@ public class QuitHandler extends ChannelInboundHandlerAdapter {
 
 服务器端解决
 
-* 怎么判断客户端连接是否假死呢？如果能收到客户端数据，说明没有假死。因此策略就可以定为，每隔一段时间就检查这段时间内是否接收到客户端数据，没有就可以判定为连接假死
+* 怎么判断客户端连接是否假死呢？如果能收到客户端数据，说明没有假死。因此策略就可以定为，<span style="color:red">每隔一段时间就检查这段时间内是否接收到客户端数据，没有就可以判定为连接假死</span>
 
 ```java
 // 用来判断是不是 读空闲时间过长，或 写空闲时间过长
@@ -1987,7 +1962,3 @@ ch.pipeline().addLast(new ChannelDuplexHandler() {
     }
 });
 ```
-<<<<<<< HEAD
-
-=======
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81

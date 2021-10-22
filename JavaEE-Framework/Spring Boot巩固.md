@@ -157,7 +157,7 @@ public class HelloController {
 
 - static：保存静态资源；js css img
 - templates：保存页面资源；springboot默认不支持jsp
-- mybatis的配置文件之类的需要放在resources文件夹下面。resources是资源的根路径。就把resources当成编译后的classes文件夹吧。
+- mybatis：的配置文件之类的需要放在resources文件夹下面。resources是资源的根路径。就把resources当成编译后的classes文件夹吧。
 
 ## 基本原理
 
@@ -174,7 +174,7 @@ public class HelloController {
 
 <span style="color:red">spring-boot-starter-parent --> spring-boot-dependencies --> 维护了版本号</span>
 
-`spring-boot-dependencie`s 中维护了常见 jar 的版本号，我们添加依赖的时候就不必添加版本了。
+`spring-boot-dependencies` 中维护了常见 jar 的版本号，我们添加依赖的时候就不必添加版本了。
 
 ```xml
 <dependency>
@@ -1001,6 +1001,16 @@ public class HelloController {
 
 项目或者页面修改以后：只需要 Ctrl+F9 就可以实时生效；如果想要真正的热更新，需要用付费的 jrebel。
 
+### 配置文件提示
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-configuration-processor</artifactId>
+    <optional>true</optional>
+</dependency>
+```
+
 # 配置文件
 
 SpringBoot使用一个全局的配置文件，配置文件名是固定的；
@@ -1550,7 +1560,7 @@ spring:
 
 #### 静态资源访问前缀
 
-默认无前缀
+默认无前缀，为其增加前缀后可以方便的拦截静态资源了（资源的拦截是先匹配 Controller、Controller 匹配不到再匹配静态资源）
 
 ```yaml
 spring:
@@ -1558,7 +1568,7 @@ spring:
     static-path-pattern: /res/**
 ```
 
-当前项目 + static-path-pattern + 静态资源名 = 静态资源文件夹下找（只是修改了下 url 的访问规则，资源的存放位置并没有改变）
+<span style="color:green">当前项目 + static-path-pattern + 静态资源名 = 静态资源文件夹下找（只是修改了下 url 的访问规则，资源的存放位置并没有改变）</span>
 
 #### 改变默认静态资源
 
@@ -1569,6 +1579,8 @@ spring:
 ```
 
 ### 欢迎页
+
+Spring Boot supports both static and templated welcome pages. It first looks for an **index.html file in the configured static content locations.** If one is not found, it then looks for an index template. If either is found, it is automatically used as the welcome page of the application.
 
 - 静态资源路径下  index.html
     - 可以配置静态资源路径
@@ -1581,6 +1593,250 @@ spring:
   resources:
     static-locations: [classpath:/haha/]
 ```
+
+## 静态资源配置原理
+
+- SpringBoot启动默认加载  xxxAutoConfiguration 类（自动配置类）
+- SpringMVC功能的自动配置类 WebMvcAutoConfiguration，生效
+
+```java
+@Configuration(proxyBeanMethods = false)
+@ConditionalOnWebApplication(type = Type.SERVLET) // 典型的 Servlet
+@ConditionalOnClass({ Servlet.class, DispatcherServlet.class, WebMvcConfigurer.class })
+@ConditionalOnMissingBean(WebMvcConfigurationSupport.class) // 缺失这个 WebMvcConfigurationSupport 才生效。用户自定义了，就用自定义的，没有就用默认的。
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE + 10)
+@AutoConfigureAfter({ DispatcherServletAutoConfiguration.class, TaskExecutionAutoConfiguration.class,
+		ValidationAutoConfiguration.class })
+public class WebMvcAutoConfiguration {
+    
+    /* 内部配置类 */
+    @Configuration(proxyBeanMethods = false)
+	@Import(EnableWebMvcConfiguration.class)
+	@EnableConfigurationProperties({ WebMvcProperties.class,
+			org.springframework.boot.autoconfigure.web.ResourceProperties.class, WebProperties.class })
+	@Order(0)
+	public static class WebMvcAutoConfigurationAdapter implements WebMvcConfigurer, ServletContextAware {}
+}
+```
+
+> 给容器中配了什么
+
+```java
+@Configuration(proxyBeanMethods = false)
+@Import(EnableWebMvcConfiguration.class)
+// WebMvcProperties 
+@EnableConfigurationProperties({ WebMvcProperties.class, ResourceProperties.class })
+@Order(0)
+public static class WebMvcAutoConfigurationAdapter implements WebMvcConfigurer {
+    public WebMvcAutoConfigurationAdapter(
+        org.springframework.boot.autoconfigure.web.ResourceProperties resourceProperties,
+        WebProperties webProperties, WebMvcProperties mvcProperties, ListableBeanFactory beanFactory,
+        ObjectProvider<HttpMessageConverters> messageConvertersProvider,
+        ObjectProvider<ResourceHandlerRegistrationCustomizer> resourceHandlerRegistrationCustomizerProvider,
+        ObjectProvider<DispatcherServletPath> dispatcherServletPath,
+        ObjectProvider<ServletRegistrationBean<?>> servletRegistrations) {
+        this.resourceProperties = resourceProperties.hasBeenCustomized() ? resourceProperties
+            : webProperties.getResources();
+        this.mvcProperties = mvcProperties;
+        this.beanFactory = beanFactory;
+        this.messageConvertersProvider = messageConvertersProvider;
+        this.resourceHandlerRegistrationCustomizer = resourceHandlerRegistrationCustomizerProvider.getIfAvailable();
+        this.dispatcherServletPath = dispatcherServletPath;
+        this.servletRegistrations = servletRegistrations;
+        this.mvcProperties.checkConfiguration();
+    }
+
+}
+```
+
+- EnableConfigurationProperties，会和配置文件的属性关联起来。
+    - WebMvcProperties 和 spring.mvc 前缀相关的配置文件进行匹配。
+    - 一个配置类如果只有一个有参构造器，有参构造器所有参数的值都会从容器中确定。
+
+### 资源管理的默认规则
+
+高版本 Spring Boot 重构了下里面的代码
+
+```java
+@Override
+public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    if (!this.resourceProperties.isAddMappings()) { // 可以禁用静态资源的访问
+        logger.debug("Default resource handling disabled");
+        return;
+    }
+    Duration cachePeriod = this.resourceProperties.getCache().getPeriod(); // 可以获取缓存策略
+    CacheControl cacheControl = this.resourceProperties.getCache().getCachecontrol().toHttpCacheControl();
+    //webjars的规则
+    if (!registry.hasMappingForPattern("/webjars/**")) {
+        customizeResourceHandlerRegistration(registry.addResourceHandler("/webjars/**")
+                                             .addResourceLocations("classpath:/META-INF/resources/webjars/")
+                                             .setCachePeriod(getSeconds(cachePeriod)).setCacheControl(cacheControl));
+    }
+
+    //
+    String staticPathPattern = this.mvcProperties.getStaticPathPattern();
+    if (!registry.hasMappingForPattern(staticPathPattern)) {
+        customizeResourceHandlerRegistration(registry.addResourceHandler(staticPathPattern) // staticPathPattern 静态资源路径，有默认值
+                                             .addResourceLocations(getResourceLocations(this.resourceProperties.getStaticLocations()))
+                                             .setCachePeriod(getSeconds(cachePeriod)).setCacheControl(cacheControl));
+    }
+}
+```
+
+### 欢迎页处理
+
+```java
+// HandlerMapping：处理器映射。保存了每一个Handler能处理哪些请求。
+@Bean
+public WelcomePageHandlerMapping welcomePageHandlerMapping(ApplicationContext applicationContext,
+                                                           FormattingConversionService mvcConversionService, ResourceUrlProvider mvcResourceUrlProvider) {
+    WelcomePageHandlerMapping welcomePageHandlerMapping = new WelcomePageHandlerMapping(
+        new TemplateAvailabilityProviders(applicationContext), applicationContext, getWelcomePage(),
+        this.mvcProperties.getStaticPathPattern());
+    welcomePageHandlerMapping.setInterceptors(getInterceptors(mvcConversionService, mvcResourceUrlProvider));
+    welcomePageHandlerMapping.setCorsConfigurations(getCorsConfigurations());
+    return welcomePageHandlerMapping;
+}
+
+final class WelcomePageHandlerMapping extends AbstractUrlHandlerMapping {
+
+	private static final Log logger = LogFactory.getLog(WelcomePageHandlerMapping.class);
+
+	private static final List<MediaType> MEDIA_TYPES_ALL = Collections.singletonList(MediaType.ALL);
+
+	WelcomePageHandlerMapping(TemplateAvailabilityProviders templateAvailabilityProviders,
+			ApplicationContext applicationContext, Resource welcomePage, String staticPathPattern) {
+		if (welcomePage != null && "/**".equals(staticPathPattern)) { // 原始静态路径没改的话，就转发到 forward:index.html
+			logger.info("Adding welcome page: " + welcomePage);
+			setRootViewName("forward:index.html");
+		}
+		else if (welcomeTemplateExists(templateAvailabilityProviders, applicationContext)) {
+			logger.info("Adding welcome page template: index");
+			setRootViewName("index"); // 改了就到 Controller 的 index 页面 ，看 哪个 Controller 可以处理这个页面
+		}
+	}
+    
+    private void setRootViewName(String viewName) {
+        ParameterizableViewController controller = new ParameterizableViewController();
+        controller.setViewName(viewName);
+        setRootHandler(controller);
+        setOrder(2);
+	}
+}
+```
+
+## 请求参数处理
+
+### 请求映射
+
+#### rest使用与原理
+
+- @xxxMapping；
+- Rest风格支持（使用**HTTP**请求方式动词来表示对资源的操作）
+    - 以前：/getUser  获取用户    /deleteUser 删除用户   /editUser  修改用户   /saveUser  保存用户
+    - 现在： /user  GET-获取用户    DELETE-删除用户    PUT-修改用户  POST-保存用户
+    - 核心Filter；HiddenHttpMethodFilter
+        - 用法： 表单method=post，隐藏域 _method=put
+        - Spring Boot 中手动开启，`spring.mvc.hiddenmethod.filter.enabled=true`
+    - 扩展：如何把_method 这个名字换成我们自己喜欢的
+
+> 原理
+
+```java
+// 测试代码
+@RestController
+public class HelloController {
+    @GetMapping(path = "/demo")
+    public String getUser() {
+        return "GET-张三";
+    }
+
+    @PutMapping(path = "/demo")
+    public String saveUser() {
+        return "PUT-张三";
+    }
+}
+```
+
+装配了一个 bean，HiddenHttpMethodFilter 需要我们手动开启
+
+```java
+@Bean
+@ConditionalOnMissingBean(HiddenHttpMethodFilter.class)
+@ConditionalOnProperty(prefix = "spring.mvc.hiddenmethod.filter", name = "enabled")
+public OrderedHiddenHttpMethodFilter hiddenHttpMethodFilter() {
+    return new OrderedHiddenHttpMethodFilter();
+}
+```
+
+Rest 原理（表单提交需要使用 Rest的时候）
+
+- 表单提交会带上 \_method=PUT
+- 请求过来被 HiddenHttpMethodFilter 拦截
+    - 请求是否正常，并且是 POST
+        - 获取到 \_method 的值
+        - 兼容以下请求：PUT、DELETE、PATCH
+        - 原生 request (post)，包装模式requestWarpper重写了 getMethod 方法，返回的是传入的值。
+        - 过滤器链放行的时候用 Warpper，以后的方法调用 getMethod 是调用 requestWarpper的。
+
+```java
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    HttpServletRequest requestToUse = request;
+    if ("POST".equals(request.getMethod()) && request.getAttribute("javax.servlet.error.exception") == null) {
+        String paramValue = request.getParameter(this.methodParam);
+        if (StringUtils.hasLength(paramValue)) {
+            String method = paramValue.toUpperCase(Locale.ENGLISH);
+            if (ALLOWED_METHODS.contains(method)) {
+                // Warpper，继承于 HttpRequestWarpper，起始就是原生的
+                // HttpRequest，重写了 getMethod 方法
+                requestToUse = new HiddenHttpMethodFilter.HttpMethodRequestWrapper(request, method);
+            }
+        }
+    }
+
+    filterChain.doFilter((ServletRequest)requestToUse, response);
+}
+```
+
+
+
+
+
+#### 请求映射原理
+
+### 普通参数与基本注解
+
+#### 注解
+
+#### Servlet API
+
+#### 复杂参数
+
+#### 自定义对象参数
+
+### POJO
+
+### 参数处理原理
+
+#### HandlerAdapter
+
+#### 执行目标方法
+
+#### 参数解析器
+
+#### 返回值处理器
+
+### 确定目标方法每一个参数值
+
+#### 解析器
+
+#### 解析参数
+
+#### 自定义类型参数
+
+### 目标方法执行完成
+
+### 处理派发结果
 
 
 

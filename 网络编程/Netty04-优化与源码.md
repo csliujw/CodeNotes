@@ -251,11 +251,9 @@ public abstract class Message implements Serializable {
 }
 ```
 
-
-
 ### 1.2 参数调优
 
-#### 1）CONNECT_TIMEOUT_MILLIS
+#### CONNECT_TIMEOUT_MILLIS
 
 * 属于 SocketChannal 参数
 * 用在客户端建立连接时，如果在指定毫秒内无法连接，会抛出 timeout 异常
@@ -311,7 +309,7 @@ public final void connect(
 }
 ```
 
-#### 2）SO_BACKLOG
+#### SO_BACKLOG
 
 * 属于 ServerSocketChannal 参数
 
@@ -418,25 +416,25 @@ Tue Apr 21 20:53:59 CST 2020 connecting timeout...
 java.net.SocketTimeoutException: connect timed out
 ```
 
-#### 3）ulimit -n
+#### ulimit -n
 
 * 属于操作系统参数
 
-#### 4）TCP_NODELAY
+#### TCP_NODELAY
 
 * 属于 SocketChannal 参数
 
-#### 5）SO_SNDBUF & SO_RCVBUF
+#### SO_SNDBUF & SO_RCVBUF
 
 * SO_SNDBUF 属于 SocketChannal 参数
 * SO_RCVBUF 既可用于 SocketChannal 参数，也可以用于 ServerSocketChannal 参数（建议设置到 ServerSocketChannal 上）
 
-#### 6）ALLOCATOR
+#### ALLOCATOR
 
 * 属于 SocketChannal 参数
 * 用来分配 ByteBuf， ctx.alloc()
 
-#### 7）RCVBUF_ALLOCATOR
+#### RCVBUF_ALLOCATOR
 
 * 属于 SocketChannal 参数
 * 控制 netty 接收缓冲区大小
@@ -444,7 +442,7 @@ java.net.SocketTimeoutException: connect timed out
 
 ### 1.3 RPC 框架
 
-#### 1）准备工作
+#### 准备工作
 
 这些代码可以认为是现成的，无需从头编写练习
 
@@ -534,7 +532,7 @@ public class RpcResponseMessage extends Message {
 }
 ```
 
-服务器架子
+服务器架子：关心RPC 请求消息
 
 ```java
 @Slf4j
@@ -572,7 +570,7 @@ public class RpcServer {
 }
 ```
 
-客户端架子
+客户端架子：关心 RPC 响应消息
 
 ```java
 public class RpcClient {
@@ -645,7 +643,7 @@ serializer.algorithm=Json
 cn.itcast.server.service.HelloService=cn.itcast.server.service.HelloServiceImpl
 ```
 
-#### 2）服务器 handler
+#### 服务器 handler
 
 ```java
 @Slf4j
@@ -679,7 +677,7 @@ public class RpcRequestMessageHandler extends SimpleChannelInboundHandler<RpcReq
 }
 ```
 
-#### 3）客户端代码第一版
+#### 客户端代码第一版
 
 只发消息
 
@@ -730,7 +728,7 @@ public class RpcClient {
 }
 ```
 
-#### 4）客户端 handler 第一版
+#### 客户端 handler 第一版
 
 ```java
 @Slf4j
@@ -743,7 +741,7 @@ public class RpcResponseMessageHandler extends SimpleChannelInboundHandler<RpcRe
 }
 ```
 
-#### 5）客户端代码 第二版
+#### 客户端代码 第二版
 
 包括 channel 管理，代理，接收结果
 
@@ -846,7 +844,7 @@ public class RpcClientManager {
 }
 ```
 
-#### 6）客户端 handler 第二版
+#### 客户端 handler 第二版
 
 ```java
 @Slf4j
