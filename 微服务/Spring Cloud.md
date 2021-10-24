@@ -744,7 +744,7 @@ spring:
 
 Nacos 就将同一机房内的实例 划分为一个**集群**。
 
-也就是说，user-service是服务，一个服务可以包含多个集群，如杭州、上海，每个集群下可以有多个实例，形成分级模型，如图：
+也就是说，user-service 是服务，一个服务可以包含多个集群，如杭州、上海，每个集群下可以有多个实例，形成分级模型，如图：
 
 ![image-20210713232522531](assets/image-20210713232522531.png)
 
@@ -754,9 +754,9 @@ Nacos 就将同一机房内的实例 划分为一个**集群**。
 
 ![image-20210713232658928](assets/image-20210713232658928.png)
 
-杭州机房内的order-service应该优先访问同机房的user-service。
+杭州机房内的 order-service 应该优先访问同机房的 user-service。
 
-### 给user-service配置集群
+### 给 user-service 配置集群
 
 修改 `user-service` 的 `application.yml` 文件，添加集群配置：
 
@@ -789,7 +789,7 @@ spring:
 
 ### 同集群优先的负载均衡
 
-默认的`ZoneAvoidanceRule`并不能实现根据同集群优先来实现负载均衡。
+默认的 `ZoneAvoidanceRule` 并不能实现根据同集群优先来实现负载均衡，它知识首次会访问同集群的服务，后面就是轮询，一个一个依次使用了。
 
 因此 `Nacos` 中提供了一个`NacosRule`的实现，可以优先从同集群中挑选实例。
 
@@ -822,11 +822,11 @@ userservice:
 
 服务器设备性能有差异，部分实例所在机器性能较好，另一些较差，我们希望性能好的机器承担更多的用户请求。
 
-但默认情况下NacosRule是同集群内随机挑选，不会考虑机器的性能问题。
+但默认情况下 NacosRule 是同集群内随机挑选，不会考虑机器的性能问题。
 
-因此，Nacos提供了权重配置来控制访问频率，权重越大则访问频率越高。
+因此，Nacos 提供了权重配置来控制访问频率，权重越大则访问频率越高。
 
-在nacos控制台，找到user-service的实例列表，点击编辑，即可修改权重：
+在nacos控制台，找到 user-service 的实例列表，点击编辑，即可修改权重：
 
 ![image-20210713235133225](assets/image-20210713235133225.png)
 
@@ -890,9 +890,9 @@ spring:
 
 ![image-20210714000941256](assets/image-20210714000941256.png)
 
-## Nacos与Eureka的区别
+## Nacos 与 Eureka 的区别
 
-Nacos的服务实例分为两种l类型：
+Nacos 的服务实例分为两种l类型：
 
 - 临时实例：如果实例宕机超过一定时间，会从服务列表剔除，默认的类型。
 
@@ -908,7 +908,7 @@ spring:
         ephemeral: false # 设置为非临时实例
 ```
 
-Nacos和Eureka整体结构类似，服务注册、服务拉取、心跳等待，但是也存在一些差异：
+Nacos 和 Eureka 整体结构类似，服务注册、服务拉取、心跳等待，但是也存在一些差异：
 
 ![image-20210714001728017](assets/image-20210714001728017.png)
 
@@ -945,7 +945,7 @@ Nacos除了可以做注册中心，同样可以做配置管理来使用。
 
 > 配置热更新
 
-![image-20210714164426792](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714164426792.png)
+![image-20210714164426792](assets/image-20210714164426792.png)
 
 
 
@@ -955,13 +955,13 @@ Nacos一方面可以将配置集中管理，另一方可以在配置变更时，
 
 如何在nacos中管理配置呢？
 
-![image-20210714164742924](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714164742924.png)
+![image-20210714164742924](assets/image-20210714164742924.png)
 
 然后在弹出的表单中，填写配置信息：
 
 - Data ID 就是配置文件的名称。配置文件的名称取名：`服务名称-[profile].[后缀名]`
 
-![image-20210714164856664](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714164856664.png)
+![image-20210714164856664](assets/image-20210714164856664.png)
 
 > 注意：项目的核心配置，需要热更新的配置才有放到nacos管理的必要。基本不会变更的一些配置还是保存在微服务本地比较好。
 
@@ -973,7 +973,7 @@ Nacos一方面可以将配置集中管理，另一方可以在配置变更时，
 
 因此 spring 引入了一种新的配置文件：bootstrap.yaml 文件，会在 application.yml 之前被读取，流程如下：
 
-![img](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/L0iFYNF.png)
+![img](assets/L0iFYNF.png)
 
 1）引入nacos-config依赖
 
@@ -1010,13 +1010,13 @@ spring:
 
 本例中，就是去读取`userservice-dev.yaml`：
 
-![image-20210714170845901](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714170845901.png)
+![image-20210714170845901](assets/image-20210714170845901.png)
 
 3）读取nacos配置
 
 在user-service中的UserController中添加业务逻辑，读取pattern.dateformat配置：
 
-![image-20210714170337448](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714170337448.png)
+![image-20210714170337448](assets/image-20210714170337448.png)
 
 完整代码：
 
@@ -1054,7 +1054,7 @@ public class UserController {
 
 在页面访问，可以看到效果：
 
-![image-20210714170449612](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714170449612.png)
+![image-20210714170449612](assets/image-20210714170449612.png)
 
 ## 配置热更新
 
@@ -1066,7 +1066,7 @@ public class UserController {
 
 在@Value注入的变量所在类上添加注解@RefreshScope：
 
-![image-20210714171036335](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714171036335.png)
+![image-20210714171036335](assets/image-20210714171036335.png)
 
 ### 方式二
 
@@ -1091,7 +1091,7 @@ public class PatternProperties {
 
 在UserController中使用这个类代替@Value：
 
-![image-20210714171316124](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714171316124.png)
+![image-20210714171316124](assets/image-20210714171316124.png)
 
 完整代码：
 
@@ -1147,7 +1147,7 @@ public class UserController {
 
 我们在nacos中添加一个userservice.yaml文件：
 
-![image-20210714173233650](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714173233650.png)
+![image-20210714173233650](assets/image-20210714173233650.png)
 
 
 
@@ -1155,11 +1155,11 @@ public class UserController {
 
 在user-service服务中，修改PatternProperties类，读取新添加的属性：
 
-![image-20210714173324231](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714173324231.png)
+![image-20210714173324231](assets/image-20210714173324231.png)
 
 在user-service服务中，修改UserController，添加一个方法：
 
-![image-20210714173721309](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714173721309.png)
+![image-20210714173721309](assets/image-20210714173721309.png)
 
 
 
@@ -1167,11 +1167,11 @@ public class UserController {
 
 修改UserApplication2这个启动项，改变其profile值：
 
-![image-20210714173538538](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714173538538.png)
+![image-20210714173538538](assets/image-20210714173538538.png)
 
 
 
-![image-20210714173519963](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714173519963.png)
+![image-20210714173519963](assets/image-20210714173519963.png)
 
 这样，UserApplication(8081)使用的profile是dev，UserApplication2(8082)使用的profile是test。
 
@@ -1179,11 +1179,11 @@ public class UserController {
 
 访问http://localhost:8081/user/prop，结果：
 
-![image-20210714174313344](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714174313344.png)
+![image-20210714174313344](assets/image-20210714174313344.png)
 
 访问http://localhost:8082/user/prop，结果：
 
-![image-20210714174424818](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714174424818.png)
+![image-20210714174424818](assets/image-20210714174424818.png)
 
 可以看出来，不管是dev，还是test环境，都读取到了envSharedValue这个属性的值。
 
@@ -1191,19 +1191,19 @@ public class UserController {
 
 当nacos、服务本地同时出现相同属性时，优先级有高低之分：
 
-![image-20210714174623557](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714174623557.png)
+![image-20210714174623557](assets/image-20210714174623557.png)
 
 ## 搭建Nacos集群
 
 Nacos生产环境下一定要部署为集群状态，部署方式参考课前资料中的文档：
 
-![image-20210714174728042](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714174728042.png)
+![image-20210714174728042](assets/image-20210714174728042.png)
 
 # Feign远程调用
 
 先来看我们以前利用RestTemplate发起远程调用的代码：
 
-![image-20210714174814204](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714174814204.png)
+![image-20210714174814204](assets/image-20210714174814204.png)
 
 存在下面的问题：
 
@@ -1215,7 +1215,7 @@ Feign是一个声明式的http客户端，官方地址：https://github.com/Open
 
 其作用就是帮助我们优雅的实现http请求的发送，解决上面提到的问题。
 
-![image-20210714174918088](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714174918088.png)
+![image-20210714174918088](assets/image-20210714174918088.png)
 
 ## Feign替代RestTemplate
 
@@ -1236,7 +1236,7 @@ Fegin的使用步骤如下：
 
 在order-service的启动类添加注解开启Feign的功能：
 
-![image-20210714175102524](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714175102524.png)
+![image-20210714175102524](assets/image-20210714175102524.png)
 
 ### 编写Feign的客户端
 
@@ -1271,7 +1271,7 @@ public interface UserClient {
 
 修改order-service中的OrderService类中的queryOrderById方法，使用Feign客户端代替RestTemplate：
 
-![image-20210714175415087](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714175415087.png)
+![image-20210714175415087](assets/image-20210714175415087.png)
 
 是不是看起来优雅多了。
 
@@ -1401,11 +1401,11 @@ feign:
 
 接下来，在FeignClientFactoryBean中的loadBalance方法中打断点：
 
-![image-20210714185925910](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714185925910.png)
+![image-20210714185925910](assets/image-20210714185925910.png)
 
 Debug方式启动order-service服务，可以看到这里的client，底层就是Apache HttpClient：
 
-![image-20210714190041542](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714190041542.png)
+![image-20210714190041542](assets/image-20210714190041542.png)
 
 > 总结，Feign的优化：
 
@@ -1425,11 +1425,11 @@ Debug方式启动order-service服务，可以看到这里的client，底层就�
 
 feign客户端：
 
-![image-20210714190542730](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714190542730.png)
+![image-20210714190542730](assets/image-20210714190542730.png)
 
 UserController：
 
-![image-20210714190528450](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714190528450.png)
+![image-20210714190528450](assets/image-20210714190528450.png)
 
 有没有一种办法简化这种重复的代码编写呢？
 
@@ -1441,9 +1441,7 @@ UserController：
 
 2）Feign客户端和Controller都集成改接口
 
-
-
-![image-20210714190640857](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714190640857.png)
+![image-20210714190640857](assets/image-20210714190640857.png)
 
 优点：
 
@@ -1462,7 +1460,7 @@ UserController：
 
 例如，将UserClient、User、Feign的默认配置都抽取到一个feign-api包中，所有微服务引用该依赖包，即可直接使用。
 
-![image-20210714214041796](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714214041796.png)
+![image-20210714214041796](assets/image-20210714214041796.png)
 
 
 
@@ -1472,11 +1470,11 @@ UserController：
 
 首先创建一个module，命名为feign-api：
 
-![image-20210714204557771](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714204557771.png)
+![image-20210714204557771](assets/image-20210714204557771.png)
 
 项目结构：
 
-![image-20210714204656214](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714204656214.png)
+![image-20210714204656214](assets/image-20210714204656214.png)
 
 在feign-api中然后引入feign的starter依赖
 
@@ -1489,7 +1487,7 @@ UserController：
 
 然后，order-service中编写的UserClient、User、DefaultFeignConfiguration都复制到feign-api项目中
 
-![image-20210714205221970](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714205221970.png)
+![image-20210714205221970](assets/image-20210714205221970.png)
 
 #### 在order-service中使用feign-api
 
@@ -1511,7 +1509,7 @@ UserController：
 
 重启后，发现服务报错了：
 
-![image-20210714205623048](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714205623048.png)
+![image-20210714205623048](assets/image-20210714205623048.png)
 
 这是因为UserClient现在在cn.itcast.feign.clients包下，
 
@@ -1549,7 +1547,7 @@ Gateway网关是我们服务的守门神，所有微服务的统一入口。
 - 权限控制
 - 限流
 
-架构图：![image-20210714210131152](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714210131152.png)
+架构图：![image-20210714210131152](assets/image-20210714210131152.png)
 
 **权限控制**：网关作为微服务入口，需要校验用户是是否有请求资格，如果没有则进行拦截。
 
@@ -1577,7 +1575,7 @@ Zuul是基于Servlet的实现，属于阻塞式编程。而SpringCloudGateway则
 
 创建服务：
 
-![image-20210714210919458](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714210919458.png)
+![image-20210714210919458](assets/image-20210714210919458.png)
 
 引入依赖：
 
@@ -1641,13 +1639,13 @@ spring:
 
 重启网关，访问http://localhost:10010/user/1时，符合`/user/**`规则，请求转发到uri：http://userservice/user/1，得到了结果：
 
-![image-20210714211908341](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714211908341.png)
+![image-20210714211908341](assets/image-20210714211908341.png)
 
 ### 网关路由的流程图
 
 整个访问的流程如下：
 
-![image-20210714211742956](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714211742956.png)
+![image-20210714211742956](assets/image-20210714211742956.png)
 
 总结：
 
@@ -1701,7 +1699,7 @@ spring:
 
 GatewayFilter是网关中提供的一种过滤器，可以对进入网关的请求和微服务返回的响应做处理：
 
-![image-20210714212312871](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714212312871.png)
+![image-20210714212312871](assets/image-20210714212312871.png)
 
 ### 路由过滤器的种类
 
@@ -1883,13 +1881,13 @@ public class AuthorizeFilter implements GlobalFilter {
 
 找到课前资料的页面文件：
 
-![image-20210714215713563](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714215713563.png)
+![image-20210714215713563](assets/image-20210714215713563.png)
 
 放入tomcat或者nginx这样的web服务器中，启动并访问。
 
 可以在浏览器控制台看到下面的错误：
 
-![image-20210714215832675](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714215832675.png)
+![image-20210714215832675](assets/image-20210714215832675.png)
 
 从localhost:8090访问localhost:10010，端口不同，显然是跨域的请求。
 
@@ -1918,3 +1916,4 @@ spring:
             allowCredentials: true # 是否允许携带cookie
             maxAge: 360000 # 这次跨域检测的有效期
 ```
+

@@ -1486,7 +1486,7 @@ spring:
 - 在配置文件中指定  spring.profiles.active=dev
 - 命令行：
     	java -jar spring-boot-02-config-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev；
-    	可以直接在测试的时候，配置传入命令行参数
+        	可以直接在测试的时候，配置传入命令行参数
 - 虚拟机参数；
     	-Dspring.profiles.active=dev
 - Program agruments中填写
@@ -1769,15 +1769,15 @@ public OrderedHiddenHttpMethodFilter hiddenHttpMethodFilter() {
 }
 ```
 
-Rest 原理（表单提交需要使用 Rest的时候）
+Rest 原理（表单提交需要使用 Rest的时候，debug 看 HiddenHttpMethodFilter 的 doFilter 方法；如果是自己实现，也可以考虑用 Filter 对请求进行拦截，判断，然后选择对应的 Controller 方法）
 
 - 表单提交会带上 \_method=PUT
 - 请求过来被 HiddenHttpMethodFilter 拦截
     - 请求是否正常，并且是 POST
         - 获取到 \_method 的值
         - 兼容以下请求：PUT、DELETE、PATCH
-        - 原生 request (post)，包装模式requestWarpper重写了 getMethod 方法，返回的是传入的值。
-        - 过滤器链放行的时候用 Warpper，以后的方法调用 getMethod 是调用 requestWarpper的。
+        - 原生 request (post)，包装模式 requestWarpper 重写了 getMethod 方法，返回的是传入的值。
+        - 过滤器链放行的时候放行的 Warpper，以后的方法调用 getMethod 是调用 requestWarpper的。
 
 ```java
 protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -1798,15 +1798,388 @@ protected void doFilterInternal(HttpServletRequest request, HttpServletResponse 
 }
 ```
 
+> 自定义 HiddenHttpMethodFilter  可以修改 _method 变量的名称
 
+methodParam 可以通过 set 方法进行修改
 
+```java
+@Configuration(proxyBeanMethods = false)
+public class WebMvcConfig {
 
+    @Bean
+    public HiddenHttpMethodFilter hiddenHttpMethodFilter() {
+        HiddenHttpMethodFilter hiddenHttpMethodFilter = new HiddenHttpMethodFilter();
+        hiddenHttpMethodFilter.setMethodParam("_m");
+        return hiddenHttpMethodFilter;
+    }
+}
+```
 
 #### 请求映射原理
+
+请求映射原理和原先 Spring MVC 的原理是一致的。稍微用到了一点设计模式 “模板方法”。具体用到了如下几个类：
+
+- HttpServlet：
+    - service 方法
+    - doGet、doPost、doPut、doDelete 等
+- HttpServletBean
+    - 对 HttpServlet 做一些信息的补充
+- FrameworkServlet
+    - 重写了 HttpServlet 的 service、doGet、doPost 等方法。重写的方法调用了 processRequest 方法，processRequest 调用了 doService（空实现）。
+    - service 中调用了 基类（HttpServlet）的 service 方法
+    - 而基类的 service 方法调用了 doGet、doPost 等
+- DispatcherServlet
+    - 实现了父类的 doService
+    - doService 调用 doDispatch 方法
+
+![image-20211023111242760](..\pics\Spring Boot\image-20211023111242760.png)
+
+总结：Spring MVC 功能分析都从 org.springframework.web.servlet.DispatcherServlet ---> doDispatch() 开始
+
+```java
+protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    HttpServletRequest processedRequest = request;
+    HandlerExecutionChain mappedHandler = null;
+    boolean multipartRequestParsed = false;
+    WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
+
+    try {
+        try {
+            ModelAndView mv = null;
+            Object dispatchException = null;
+
+            try {
+                processedRequest = this.checkMultipart(request);
+                multipartRequestParsed = processedRequest != request;
+                // 找到当前请求使用哪个 Handler（Controller的方法）处理
+                mappedHandler = this.getHandler(processedRequest);
+                if (mappedHandler == null) {
+                    this.noHandlerFound(processedRequest, response);
+                    return;
+                }
+
+                HandlerAdapter ha = this.getHandlerAdapter(mappedHandler.getHandler());
+                String method = request.getMethod();
+                boolean isGet = HttpMethod.GET.matches(method);
+                if (isGet || HttpMethod.HEAD.matches(method)) {
+                    long lastModified = ha.getLastModified(request, mappedHandler.getHandler());
+                    if ((new ServletWebRequest(request, response)).checkNotModified(lastModified) && isGet) {
+                        return;
+                    }
+                }
+
+                if (!mappedHandler.applyPreHandle(processedRequest, response)) {
+                    return;
+                }
+
+                mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
+                if (asyncManager.isConcurrentHandlingStarted()) {
+                    return;
+                }
+
+                this.applyDefaultViewName(processedRequest, mv);
+                mappedHandler.applyPostHandle(processedRequest, response, mv);
+            } catch (Exception var20) {
+                dispatchException = var20;
+            } catch (Throwable var21) {
+                dispatchException = new NestedServletException("Handler dispatch failed", var21);
+            }
+
+            this.processDispatchResult(processedRequest, response, mappedHandler, mv, (Exception)dispatchException);
+        } catch (Exception var22) {
+            this.triggerAfterCompletion(processedRequest, response, mappedHandler, var22);
+        } catch (Throwable var23) {
+            this.triggerAfterCompletion(processedRequest, response, mappedHandler, new NestedServletException("Handler processing failed", var23));
+        }
+
+    } finally {
+        if (asyncManager.isConcurrentHandlingStarted()) {
+            if (mappedHandler != null) {
+                mappedHandler.applyAfterConcurrentHandlingStarted(processedRequest, response);
+            }
+        } else if (multipartRequestParsed) {
+            this.cleanupMultipart(processedRequest);
+        }
+
+    }
+}
+```
+
+----
+
+getHandler 方法；RequestMappingHandlerMapping 中存储了所有@RequestMapping 和handler的映射规则。
+
+![image-20211023114049369](..\pics\Spring Boot\image-20211023114049369.png)
+
+![image-20211023114945974](..\pics\Spring Boot\image-20211023114945974.png)
+
+```java
+@Nullable
+protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
+    // 一共有五个
+    /*
+    RequestMappingHandlerMapping
+    WelcomePageHandlerMapping
+    BeanNameUrlHandlerMapping
+    RouterFunctionMapping
+    SimpleUrlHandlerMapping
+    */
+    if (this.handlerMappings != null) {
+        Iterator var2 = this.handlerMappings.iterator();
+
+        while(var2.hasNext()) {
+            HandlerMapping mapping = (HandlerMapping)var2.next();
+            HandlerExecutionChain handler = mapping.getHandler(request);
+            if (handler != null) {
+                return handler;
+            }
+        }
+    }
+    return null;
+}
+```
+
+所有的请求映射都在HandlerMapping中。
+
+- Spring Boot 自动配置欢迎页的 WelcomePageHandlerMapping 。访问 /能访问到 index.html；
+- Spring Boot 自动配置了默认的 RequestMappingHandlerMapping
+
+- 请求进来，挨个尝试所有的HandlerMapping看是否有请求信息。
+
+- - 如果有就找到这个请求对应的handler
+    - 如果没有就是下一个 HandlerMapping
+
+- 我们需要一些自定义的映射处理，我们也可以自己给容器中放**HandlerMapping**。自定义 **HandlerMapping**
+
+```java
+protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
+    if (this.handlerMappings != null) {
+        for (HandlerMapping mapping : this.handlerMappings) {
+            HandlerExecutionChain handler = mapping.getHandler(request);
+            if (handler != null) {
+                return handler;
+            }
+        }
+    }
+    return null;
+}
+```
 
 ### 普通参数与基本注解
 
 #### 注解
+
+- @PathVariable
+- @RequestHeader
+- @ModelAttribute
+- @RequestParam
+- @MatrixVariable：矩阵变量，需要额外配置一个属性。
+- @CookieValue
+- @RequestBody
+
+```java
+@RestController
+public class ParameterTestController {
+
+
+    //  car/2/owner/zhangsan
+    @GetMapping("/car/{id}/owner/{username}")
+    public Map<String,Object> getCar(@PathVariable("id") Integer id,
+                                     @PathVariable("username") String name,
+                                     @PathVariable Map<String,String> pv,
+                                     @RequestHeader("User-Agent") String userAgent,
+                                     @RequestHeader Map<String,String> header,
+                                     @RequestParam("age") Integer age,
+                                     @RequestParam("inters") List<String> inters,
+                                     @RequestParam Map<String,String> params,
+                                     @CookieValue("_ga") String _ga,
+                                     @CookieValue("_ga") Cookie cookie){
+
+
+        Map<String,Object> map = new HashMap<>();
+
+//        map.put("id",id);
+//        map.put("name",name);
+//        map.put("pv",pv);
+//        map.put("userAgent",userAgent);
+//        map.put("headers",header);
+        map.put("age",age);
+        map.put("inters",inters);
+        map.put("params",params);
+        map.put("_ga",_ga);
+        System.out.println(cookie.getName()+"===>"+cookie.getValue());
+        return map;
+    }
+
+
+    @PostMapping("/save")
+    public Map postMethod(@RequestBody String content){
+        Map<String,Object> map = new HashMap<>();
+        map.put("content",content);
+        return map;
+    }
+
+
+    //1、语法： 请求路径：/cars/sell;low=34;brand=byd,audi,yd
+    //2、SpringBoot默认是禁用了矩阵变量的功能
+    //      手动开启：原理。对于路径的处理。UrlPathHelper进行解析。
+    //              removeSemicolonContent（移除分号内容）支持矩阵变量的
+    //3、矩阵变量必须有url路径变量才能被解析
+    @GetMapping("/cars/{path}")
+    public Map carsSell(@MatrixVariable("low") Integer low,
+                        @MatrixVariable("brand") List<String> brand,
+                        @PathVariable("path") String path){
+        Map<String,Object> map = new HashMap<>();
+
+        map.put("low",low);
+        map.put("brand",brand);
+        map.put("path",path);
+        return map;
+    }
+
+    // /boss/1;age=20/2;age=10
+
+    @GetMapping("/boss/{bossId}/{empId}")
+    public Map boss(@MatrixVariable(value = "age",pathVar = "bossId") Integer bossAge,
+                    @MatrixVariable(value = "age",pathVar = "empId") Integer empAge){
+        Map<String,Object> map = new HashMap<>();
+
+        map.put("bossAge",bossAge);
+        map.put("empAge",empAge);
+        return map;
+
+    }
+}
+```
+
+----
+
+```java
+@Override
+// 配置矩阵参数
+public void configurePathMatch(PathMatchConfigurer configurer) {
+    if (this.mvcProperties.getPathmatch()
+        .getMatchingStrategy() == WebMvcProperties.MatchingStrategy.PATH_PATTERN_PARSER) {
+        configurer.setPatternParser(new PathPatternParser());
+    }
+    configurer.setUseSuffixPatternMatch(this.mvcProperties.getPathmatch().isUseSuffixPattern());
+    configurer.setUseRegisteredSuffixPatternMatch(
+        this.mvcProperties.getPathmatch().isUseRegisteredSuffixPattern());
+    this.dispatcherServletPath.ifAvailable((dispatcherPath) -> {
+        String servletUrlMapping = dispatcherPath.getServletUrlMapping();
+        if (servletUrlMapping.equals("/") && singleDispatcherServlet()) {
+            UrlPathHelper urlPathHelper = new UrlPathHelper();
+            urlPathHelper.setAlwaysUseFullPath(true);
+            configurer.setUrlPathHelper(urlPathHelper);
+        }
+    });
+}
+
+@Configuration(proxyBeanMethods = false)
+public class WebConfig implements WebMvcCofnigure{
+    @Bean
+	public void configurePathMatch(PathMatchConfigurer configurer) {
+		UrlPathHelper urlPathHelper = new UrlPathHelper();
+        urlPathHelper.setRemoveSemicolonContent(false); // 不移除逗号分隔符，就可以启用矩阵参数解析了。
+        configure.setUrlPathHelper(urlPathHelper)
+    }
+}
+```
+
+#### 各种类型参数解析原理
+
+大致源码流程分析
+
+```java
+@SuppressWarnings("deprecation")
+protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    HttpServletRequest processedRequest = request;
+    HandlerExecutionChain mappedHandler = null;
+    boolean multipartRequestParsed = false;
+
+    WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
+
+    try {
+        ModelAndView mv = null;
+        Exception dispatchException = null;
+
+        try {
+            processedRequest = checkMultipart(request);
+            multipartRequestParsed = (processedRequest != request);
+
+            // Determine handler for the current request.
+            // 查找出当前请求对应上的处理器
+            // 发现这个可以处理对应的请求 HandlerExecutionChain with [com.example.bootweb.controller.HelloController#saveUser()] and 2 interceptors
+            mappedHandler = getHandler(processedRequest);
+            if (mappedHandler == null) {
+                noHandlerFound(processedRequest, response);
+                return;
+            }
+
+            // Determine handler adapter for the current request.
+            // 查找可以处理这个处理器的处理器适配器
+            HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
+
+            // Process last-modified header, if supported by the handler.
+            String method = request.getMethod();
+            boolean isGet = HttpMethod.GET.matches(method);
+            if (isGet || HttpMethod.HEAD.matches(method)) {
+                long lastModified = ha.getLastModified(request, mappedHandler.getHandler());
+                if (new ServletWebRequest(request, response).checkNotModified(lastModified) && isGet) {
+                    return;
+                }
+            }
+
+            if (!mappedHandler.applyPreHandle(processedRequest, response)) {
+                return;
+            }
+
+            // Actually invoke the handler.
+            // 反射工具类执行对应的方法
+            mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
+
+            if (asyncManager.isConcurrentHandlingStarted()) {
+                return;
+            }
+
+            applyDefaultViewName(processedRequest, mv);
+            mappedHandler.applyPostHandle(processedRequest, response, mv);
+        }
+        catch (Exception ex) {
+            dispatchException = ex;
+        }
+        catch (Throwable err) {
+            // As of 4.3, we're processing Errors thrown from handler methods as well,
+            // making them available for @ExceptionHandler methods and other scenarios.
+            dispatchException = new NestedServletException("Handler dispatch failed", err);
+        }
+        processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
+    }
+    catch (Exception ex) {
+        triggerAfterCompletion(processedRequest, response, mappedHandler, ex);
+    }
+    catch (Throwable err) {
+        triggerAfterCompletion(processedRequest, response, mappedHandler,
+                               new NestedServletException("Handler processing failed", err));
+    }
+    finally {
+        if (asyncManager.isConcurrentHandlingStarted()) {
+            // Instead of postHandle and afterCompletion
+            if (mappedHandler != null) {
+                mappedHandler.applyAfterConcurrentHandlingStarted(processedRequest, response);
+            }
+        }
+        else {
+            // Clean up any resources used by a multipart request.
+            if (multipartRequestParsed) {
+                cleanupMultipart(processedRequest);
+            }
+        }
+    }
+}
+```
+
+
 
 #### Servlet API
 
@@ -1820,11 +2193,80 @@ protected void doFilterInternal(HttpServletRequest request, HttpServletResponse 
 
 #### HandlerAdapter
 
+- HandlerMapping 中找到能处理请求的 Handler（Controller#method）
+- 为当前 Handler 找一个适配器 HandlerAdapter
+    - HandlerAdapter 是 Spring 设计的一个接口，
+        - supports 支持那些方法
+        - handle 定义了如何处理的逻辑
+
+![image-20211024200517771](..\pics\Spring Boot\image-20211024200517771-16350771187701.png)
+
 #### 执行目标方法
+
+`mv = ha.handle(processedRequest, response, mappedHandler.getHandler());`
+
+```java
+mav = invokeHandlerMethod(request, response, handlerMethod); //执行目标方法
+
+//ServletInvocableHandlerMethod
+Object returnValue = invokeForRequest(webRequest, mavContainer, providedArgs); // 真正执行目标方法
+// 获取方法的参数值
+Object[] args = getMethodArgumentValues(request, mavContainer, providedArgs);
+```
+
+
+
+```java
+protected ModelAndView handleInternal(HttpServletRequest request,
+                                      HttpServletResponse response, HandlerMethod handlerMethod) throws Exception {
+
+    ModelAndView mav;
+    checkRequest(request);
+
+    // Execute invokeHandlerMethod in synchronized block if required.
+    if (this.synchronizeOnSession) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            Object mutex = WebUtils.getSessionMutex(session);
+            synchronized (mutex) {
+                // 执行目标方法
+                mav = invokeHandlerMethod(request, response, handlerMethod);
+            }
+        }
+        ...
+    }
+    ...
+    return mav;
+}
+```
 
 #### 参数解析器
 
+确定将要执行的目标方法的每一个参数的值是什么;
+
+SpringMVC目标方法能写多少种参数类型。取决于参数解析器。
+
+![image-20211024201053219](..\pics\Spring Boot\image-20211024201053219.png)
+
+参数解析器
+
+```java
+public interface HandlerMethodArgumentResolver {
+
+	// 当前解析器是否支持这种解析
+	boolean supportsParameter(MethodParameter parameter);
+
+	// 进行参数解析
+	@Nullable
+	Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer,
+			NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory) throws Exception;
+
+}
+```
+
 #### 返回值处理器
+
+![image-20211024201539502](..\pics\Spring Boot\image-20211024201539502.png)
 
 ### 确定目标方法每一个参数值
 

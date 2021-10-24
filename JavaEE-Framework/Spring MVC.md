@@ -693,7 +693,7 @@ ModelMap extends java.util.LinkedHashMap
 
 **类之间的简化后的UML关系如图**
 
-<img style="float:left" src="../pics/SpringMVC/BindingAwareModelMapUML.png" width="100%">
+<img  src="../pics/SpringMVC/BindingAwareModelMapUML.png">
 
 ----
 
@@ -908,7 +908,7 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 
 梳理完流程后，发现执行流程大概是这样的。
 
-<img src="../pics/SpringMVC/mvc_process5.png" style="float:left">
+<img src="../pics/SpringMVC/mvc_process5.png">
 
 **文字概述**
 
@@ -1978,7 +1978,7 @@ public class WebConfig implements WebMvcConfigurer {
 
 1）可以在修改前 用@ModelAttribute标注的方法先把数据查出来。这个感觉可以不看，因为有MyBatis的动态SQL！！
 
-## 9.1 概述
+## 概述
 
 做一个符合Rest风格的CRUD
 
@@ -2388,15 +2388,15 @@ use the `@EnableWebMvc` annotation to enable MVC configuration。
 
 **既没有配置 <mvc:default-servlet-handler/> 也没有配置 <mvc:annotation-driven/>**
 
-<img src="../pics/SpringMVC/mvc_driver_01.png" width="100%">
+<img src="../pics/SpringMVC/mvc_driver_01.png">
 
 **配置了 <mvc:default-servlet-handler/>  但没有配置 <mvc:annotation-driven/>**
 
-<img src="../pics/SpringMVC/mvc_driver_02.png" width="100%">
+<img src="../pics/SpringMVC/mvc_driver_02.png">
 
 **既配置了 <mvc:default-servlet-handler/>  又配置 <mvc:annotation-driven/>**
 
-<img src="../pics/SpringMVC/mvc_driver_03.png" width="100%">
+<img src="../pics/SpringMVC/mvc_driver_03.png">
 
 ## 格式化
 
