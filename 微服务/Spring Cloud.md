@@ -975,9 +975,9 @@ Nacos一方面可以将配置集中管理，另一方可以在配置变更时，
 
 ![img](assets/L0iFYNF.png)
 
-1）引入nacos-config依赖
+1）引入 nacos-config 依赖
 
-首先，在user-service服务中，引入nacos-config的客户端依赖：
+首先，在 user-service 服务中，引入 nacos-config 的客户端依赖：
 
 ```xml
 <!--nacos配置管理依赖-->
@@ -987,9 +987,9 @@ Nacos一方面可以将配置集中管理，另一方可以在配置变更时，
 </dependency>
 ```
 
-2）添加bootstrap.yaml
+2）添加 bootstrap.yaml
 
-然后，在user-service中添加一个bootstrap.yaml文件，内容如下：
+然后，在 user-service 中添加一个 bootstrap.yaml 文件，内容如下：
 
 ```yaml
 spring:
@@ -1004,7 +1004,7 @@ spring:
         file-extension: yaml # 文件后缀名
 ```
 
-这里会根据spring.cloud.nacos.server-addr获取nacos地址，再根据
+这里会根据 spring.cloud.nacos.server-addr 获取 nacos 地址，再根据
 
 `${spring.application.name}-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}`作为文件id，来读取配置。
 
@@ -1060,7 +1060,7 @@ public class UserController {
 
 我们最终的目的，是修改nacos中的配置后，微服务中无需重启即可让配置生效，也就是**配置热更新**。
 
-要实现配置热更新，可以使用两种方式：
+Nacos 中的配置文件变更后，微服务无需重启就可以感知，不过需要通过下面两种配置实现：
 
 ### 方式一
 
@@ -1201,19 +1201,16 @@ Nacos生产环境下一定要部署为集群状态，部署方式参考课前资
 
 # Feign远程调用
 
-先来看我们以前利用RestTemplate发起远程调用的代码：
+先来看我们以前利用 RestTemplate 发起远程调用的代码：
 
 ![image-20210714174814204](assets/image-20210714174814204.png)
 
-存在下面的问题：
+> 存在下面的问题：
 
-代码可读性差，编程体验不统一
+- 代码可读性差，编程体验不统一
+- 参数复杂URL难以维护
 
-参数复杂URL难以维护
-
-Feign是一个声明式的http客户端，官方地址：https://github.com/OpenFeign/feign
-
-其作用就是帮助我们优雅的实现http请求的发送，解决上面提到的问题。
+Feign是一个声明式的http客户端，官方地址：https://github.com/OpenFeign/feign；其作用就是帮助我们优雅的实现 http 请求的发送，解决上面提到的问题。
 
 ![image-20210714174918088](assets/image-20210714174918088.png)
 
@@ -1234,7 +1231,7 @@ Fegin的使用步骤如下：
 
 ### 添加注解
 
-在order-service的启动类添加注解开启Feign的功能：
+在order-service的启动类添加注解开启 Feign 的功能：
 
 ![image-20210714175102524](assets/image-20210714175102524.png)
 
@@ -1265,15 +1262,13 @@ public interface UserClient {
 - 请求参数：Long id
 - 返回值类型：User
 
-这样，Feign就可以帮助我们发送http请求，无需自己使用RestTemplate来发送了。
+这样，Feign 就可以帮助我们发送http请求，无需自己使用RestTemplate来发送了。
 
 ### 测试
 
-修改order-service中的OrderService类中的queryOrderById方法，使用Feign客户端代替RestTemplate：
+修改 order-service 中的 OrderService 类中的 queryOrderById 方法，使用 Feign 客户端代替 RestTemplate；看起来优雅多了。
 
 ![image-20210714175415087](assets/image-20210714175415087.png)
-
-是不是看起来优雅多了。
 
 ### 总结
 
@@ -1281,23 +1276,23 @@ public interface UserClient {
 
 ① 引入依赖
 
-② 添加@EnableFeignClients注解
+② 主程序启动类上添加 @EnableFeignClients 注解
 
-③ 编写FeignClient接口
+③ 编写 FeignClient 接口
 
-④ 使用FeignClient中定义的方法代替RestTemplate
+④ 使用 FeignClient 中定义的方法代替 RestTemplate
 
 ## 自定义配置
 
 Feign可以支持很多的自定义配置，如下表所示：
 
-| 类型                   | 作用             | 说明                                                   |
-| ---------------------- | ---------------- | ------------------------------------------------------ |
-| **feign.Logger.Level** | 修改日志级别     | 包含四种不同的级别：NONE、BASIC、HEADERS、FULL         |
-| feign.codec.Decoder    | 响应结果的解析器 | http远程调用的结果做解析，例如解析json字符串为java对象 |
-| feign.codec.Encoder    | 请求参数编码     | 将请求参数编码，便于通过http请求发送                   |
-| feign. Contract        | 支持的注解格式   | 默认是SpringMVC的注解                                  |
-| feign. Retryer         | 失败重试机制     | 请求失败的重试机制，默认是没有，不过会使用Ribbon的重试 |
+| 类型                   | 作用             | 说明                                                       |
+| ---------------------- | ---------------- | ---------------------------------------------------------- |
+| **feign.Logger.Level** | 修改日志级别     | 包含四种不同的级别：NONE、BASIC、HEADERS、FULL             |
+| feign.codec.Decoder    | 响应结果的解析器 | http远程调用的结果做解析，例如解析 json 字符串为 java 对象 |
+| feign.codec.Encoder    | 请求参数编码     | 将请求参数编码，便于通过 http 请求发送                     |
+| feign.Contract         | 支持的注解格式   | 默认是 Spring MVC 的注解                                   |
+| feign.Retryer          | 失败重试机制     | 请求失败的重试机制，默认是没有，不过会使用 Ribbon 的重试   |
 
 一般情况下，默认值就能满足我们使用，如果要自定义时，只需要创建自定义的@Bean覆盖默认Bean即可。
 
@@ -1305,7 +1300,7 @@ Feign可以支持很多的自定义配置，如下表所示：
 
 ### 配置文件方式
 
-基于配置文件修改feign的日志级别可以针对单个服务：
+基于配置文件修改feign的日志级别可以针对单个服务：（我们在 Order 里调用了 User，那么 Feign 的配置就写在 Order 的配置文件中）
 
 ```yaml
 feign:  
@@ -1327,10 +1322,10 @@ feign:
 
 而日志的级别分为四种：
 
-- NONE：不记录任何日志信息，这是默认值。
-- BASIC：仅记录请求的方法，URL以及响应状态码和执行时间
-- HEADERS：在BASIC的基础上，额外记录了请求和响应的头信息
-- FULL：记录所有请求和响应的明细，包括头信息、请求体、元数据。
+- NONE：不记录任何日志信息，这是默认值。<span style="color:red">（记录日志用 NONE 或 BASIC）</span>
+- BASIC：仅记录请求的方法，URL以及响应状态码和执行时间。
+- HEADERS：在BASIC的基础上，额外记录了请求和响应的头信息。
+- FULL：记录所有请求和响应的明细，包括头信息、请求体、元数据。<span style="color:red">（调试错误的时候用 Full）</span>
 
 ### Java代码方式
 
@@ -1348,28 +1343,26 @@ public class DefaultFeignConfiguration  {
 如果要**全局生效**，将其放到启动类的@EnableFeignClients这个注解中：
 
 ```java
-@EnableFeignClients(defaultConfiguration = DefaultFeignConfiguration .class) 
+@EnableFeignClients(defaultConfiguration = DefaultFeignConfiguration.class) 
 ```
 
-如果是**局部生效**，则把它放到对应的@FeignClient这个注解中：
+如果是**局部生效**，则把它放到对应的@FeignClient这个注解中：（uservice 只对 uservice 这个服务有效）
 
 ```java
-@FeignClient(value = "userservice", configuration = DefaultFeignConfiguration .class) 
+@FeignClient(value = "userservice", configuration = DefaultFeignConfiguration.class) 
 ```
 
 ## Feign使用优化
 
 Feign底层发起http请求，依赖于其它的框架。其底层客户端实现包括：
 
-•URLConnection：默认实现，不支持连接池
+- URLConnection：默认实现，不支持连接池
+- Apache HttpClient ：支持连接池
+- OKHttp：支持连接池
 
-•Apache HttpClient ：支持连接池
+因此提高Feign的性能主要手段就是使用**连接池**代替默认的 URLConnection。
 
-•OKHttp：支持连接池
-
-因此提高Feign的性能主要手段就是使用**连接池**代替默认的URLConnection。
-
-这里我们用Apache的HttpClient来演示。
+这里我们用 Apache 的 HttpClient 来演示。
 
 > 1）引入依赖
 
@@ -1399,7 +1392,7 @@ feign:
     max-connections-per-route: 50 # 每个路径的最大连接数
 ```
 
-接下来，在FeignClientFactoryBean中的loadBalance方法中打断点：
+接下来，在 FeignClientFactoryBean 中的 loadBalance 方法中打断点：
 
 ![image-20210714185925910](assets/image-20210714185925910.png)
 
@@ -1419,9 +1412,7 @@ Debug方式启动order-service服务，可以看到这里的client，底层就�
 
 ## 最佳实践
 
-所谓最近实践，就是使用过程中总结的经验，最好的一种使用方式。
-
-自习观察可以发现，Feign的客户端与服务提供者的controller代码非常相似：
+所谓最近实践，就是使用过程中总结的经验，最好的一种使用方式。观察可以发现，Feign 的客户端与服务提供者的 Controller 代码非常相似：
 
 feign客户端：
 
@@ -1432,6 +1423,11 @@ UserController：
 ![image-20210714190528450](assets/image-20210714190528450.png)
 
 有没有一种办法简化这种重复的代码编写呢？
+
+> Feign 的最佳实现
+
+- 让 Controller 和 FeignClient 继承同一接口
+- 将 FeignClient、POJO、Feign 的默认配置都定义到一个项目中，供所有消费者使用。
 
 ### 继承方式
 
@@ -1452,7 +1448,7 @@ UserController：
 
 - 服务提供方、服务消费方紧耦合
 
-- 参数列表中的注解映射并不会继承，因此Controller中必须再次声明方法、参数列表、注解
+- 参数列表中的注解映射并不会继承，因此 Controller 中必须再次声明方法、参数列表、注解
 
 ### 抽取方式
 
@@ -1491,9 +1487,9 @@ UserController：
 
 #### 在order-service中使用feign-api
 
-首先，删除order-service中的UserClient、User、DefaultFeignConfiguration等类或接口。
+首先，删除 order-service 中的 UserClient、User、DefaultFeignConfiguration 等类或接口。
 
-在order-service的pom文件中中引入feign-api的依赖：
+在 order-service 的 pom 文件中中引入 feign-api 的依赖：
 
 ```xml
 <dependency>
@@ -1503,7 +1499,7 @@ UserController：
 </dependency>
 ```
 
-修改order-service中的所有与上述三个组件有关的导包部分，改成导入feign-api中的包
+修改 order-service 中的所有与上述三个组件有关的导包部分，改成导入 feign-api 中的包
 
 #### 重启测试
 
@@ -1511,15 +1507,15 @@ UserController：
 
 ![image-20210714205623048](assets/image-20210714205623048.png)
 
-这是因为UserClient现在在cn.itcast.feign.clients包下，
+这是因为 UserClient 现在在 cn.itcast.feign.+clients 包下，
 
-而order-service的@EnableFeignClients注解是在cn.itcast.order包下，不在同一个包，无法扫描到UserClient。
+而 order-service 的 @EnableFeignClients 注解是在cn.itcast.order包下，不在同一个包，无法扫描到 UserClient。
 
 #### 解决扫描包问题
 
 方式一：
 
-指定Feign应该扫描的包：
+指定 Feign 应该扫描的包：
 
 ```java
 @EnableFeignClients(basePackages = "cn.itcast.feign.clients")
@@ -1539,13 +1535,13 @@ Spring Cloud Gateway 是 Spring Cloud 的一个全新项目，该项目是基于
 
 ## 为什么需要网关
 
-Gateway网关是我们服务的守门神，所有微服务的统一入口。
+Gateway 网关是我们服务的守门神，所有微服务的统一入口。
 
 网关的**核心功能特性**：
 
-- 请求路由
-- 权限控制
-- 限流
+- 服务路由、负载均衡
+- 身份认证和权限校验
+- 请求限流
 
 架构图：![image-20210714210131152](assets/image-20210714210131152.png)
 
@@ -1560,7 +1556,7 @@ Gateway网关是我们服务的守门神，所有微服务的统一入口。
 - gateway
 - zuul
 
-Zuul是基于Servlet的实现，属于阻塞式编程。而SpringCloudGateway则是基于Spring5中提供的WebFlux，属于响应式编程的实现，具备更好的性能。
+Zuul是基于Servlet的实现，属于阻塞式编程。而 SpringCloudGateway 则是基于 Spring5 中提供的 WebFlux，属于响应式编程的实现，具备更好的性能。
 
 ## gateway快速入门
 
@@ -1577,7 +1573,7 @@ Zuul是基于Servlet的实现，属于阻塞式编程。而SpringCloudGateway则
 
 ![image-20210714210919458](assets/image-20210714210919458.png)
 
-引入依赖：
+引入依赖：网关本身也是一个微服务，也要注册到 nacos 中去。
 
 ```xml
 <!--网关-->
@@ -1738,7 +1734,7 @@ spring:
 
 ### 默认过滤器
 
-如果要对所有的路由都生效，则可以将过滤器工厂写到default下。格式如下：
+如果要对所有的路由都生效，则可以将过滤器工厂写到 default 下。格式如下：
 
 ```yaml
 spring:
@@ -1761,7 +1757,7 @@ spring:
 
 ② 配置在路由下的过滤器只对当前路由的请求生效
 
-defaultFilters的作用是什么？
+defaultFilters 的作用是什么？
 
 ① 对所有路由都生效的过滤器
 
@@ -1771,9 +1767,9 @@ defaultFilters的作用是什么？
 
 ### 全局过滤器作用
 
-全局过滤器的作用也是处理一切进入网关的请求和微服务响应，与GatewayFilter的作用一样。区别在于GatewayFilter通过配置定义，处理逻辑是固定的；而GlobalFilter的逻辑需要自己写代码实现。
+全局过滤器的作用也是处理一切进入网关的请求和微服务响应，与 GatewayFilter 的作用一样。区别在于 GatewayFilter 通过配置定义，处理逻辑是固定的；**而 GlobalFilter 的逻辑需要自己写代码实现。**
 
-定义方式是实现GlobalFilter接口。
+定义方式是实现 GlobalFilter 接口。
 
 ```java
 public interface GlobalFilter {
@@ -1788,7 +1784,7 @@ public interface GlobalFilter {
 }
 ```
 
-在filter中编写自定义逻辑，可以实现下列功能：
+在 filter 中编写自定义逻辑，可以实现下列功能：
 
 - 登录状态判断
 - 权限校验
@@ -1846,9 +1842,9 @@ public class AuthorizeFilter implements GlobalFilter {
 
 请求进入网关会碰到三类过滤器：当前路由的过滤器、DefaultFilter、GlobalFilter
 
-请求路由后，会将当前路由过滤器和DefaultFilter、GlobalFilter，合并到一个过滤器链（集合）中，排序后依次执行每个过滤器：
+**请求路由后**，会将当前路由过滤器和DefaultFilter、GlobalFilter，合并到一个过滤器链（集合）中，排序后依次执行每个过滤器：
 
-![image-20210714214228409](D:/BaiduNetdiskDownload/微服务/day02-SpringCloud02/讲义/assets/image-20210714214228409.png)
+![image-20210714214228409](assets/image-20210714214228409.png)
 
 排序的规则是什么呢？
 
@@ -1873,9 +1869,9 @@ public class AuthorizeFilter implements GlobalFilter {
 
 - 域名相同，端口不同：localhost:8080和localhost8081
 
-跨域问题：浏览器禁止请求的发起者与服务端发生跨域ajax请求，请求被浏览器拦截的问题
+跨域问题：**浏览器禁止**请求的发起者与服务端发生**跨域ajax请求**，请求被浏览器拦截的问题
 
-解决方案：CORS，这个以前应该学习过，这里不再赘述了。不知道的小伙伴可以查看https://www.ruanyifeng.com/blog/2016/04/cors.html
+解决方案：CORS，这个以前应该学习过，这里不再赘述了。不知道的小伙伴可以查看 https://www.ruanyifeng.com/blog/2016/04/cors.html
 
 ### 模拟跨域问题
 
@@ -1903,7 +1899,7 @@ spring:
       globalcors: # 全局的跨域处理
         add-to-simple-url-handler-mapping: true # 解决options请求被拦截问题
         corsConfigurations:
-          '[/**]':
+          '[/**]': # 拦截一切请求
             allowedOrigins: # 允许哪些网站的跨域请求 
               - "http://localhost:8090"
             allowedMethods: # 允许的跨域ajax的请求方式
