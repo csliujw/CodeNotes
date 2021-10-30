@@ -1,8 +1,4 @@
-# Docker实用篇
-
-# 学习目标
-
-# 初识Docker
+# Docker
 
 ## 什么是Docker
 
@@ -181,7 +177,7 @@ DockerHub：一个镜像托管的服务器，类似的还有阿里云镜像服�
 
 ![image-20210731155002425](assets/image-20210731155002425.png)
 
-# Docker的基本操作
+# Docker 的基本操作
 
 ## 镜像操作
 
@@ -613,44 +609,53 @@ vi index.html
 
 实现思路如下：
 
-1）在将课前资料中的mysql.tar文件上传到虚拟机，通过load命令加载为镜像
+1）在将课前资料中的 mysql.tar 文件上传到虚拟机，通过 load 命令加载为镜像
 
-2）创建目录/tmp/mysql/data
+2）创建目录 /tmp/mysql/data
 
-3）创建目录/tmp/mysql/conf，将课前资料提供的hmy.cnf文件上传到/tmp/mysql/conf
+3）创建目录 /tmp/mysql/conf，将课前资料提供的 hmy.cnf 文件上传到 /tmp/mysql/conf
 
-4）去DockerHub查阅资料，创建并运行MySQL容器，要求：
+4）去 DockerHub 查阅资料，创建并运行 MySQL 容器，要求：
 
-① 挂载/tmp/mysql/data到mysql容器内数据存储目录
+① 挂载 /tmp/mysql/data 到 mysql 容器内数据存储目录
 
-② 挂载/tmp/mysql/conf/hmy.cnf到mysql容器的配置文件
+② 挂载 /tmp/mysql/conf/hmy.cnf 到 mysql 容器的配置文件
 
-③ 设置MySQL密码
+③ 设置 MySQL 密码
+
+```shell
+docker run --name mysql 
+-e MYSQL_ROOT_PASSWORD=root \
+-p 3306:3306 \ 
+-v /root/mysql/conf/hmy.cnf:/etc/mysql/conf.d/hmy.cnf \  
+-v /root/mysql/data:/var/lib/mysql \
+-d mysql:tag \
+```
+
+
 
 ### 小结
 
-docker run的命令中通过 -v 参数挂载文件或目录到容器中：
+docker run 的命令中通过 -v 参数挂载文件或目录到容器中：
 
-- -v volume名称:容器内目录
+- -v volume 名称:容器内目录
 - -v 宿主机文件:容器内文
 - -v 宿主机目录:容器内目录
 
 数据卷挂载与目录直接挂载的
 
-- 数据卷挂载耦合度低，由docker来管理目录，但是目录较深，不好找
+- 数据卷挂载耦合度低，由 docker 来管理目录，但是目录较深，不好找
 - 目录挂载耦合度高，需要我们自己管理目录，不过目录容易寻找查看
 
-# Dockerfile自定义镜像
+# Dockerfile 自定义镜像
 
-常见的镜像在DockerHub就能找到，但是我们自己写的项目就必须自己构建镜像了。
-
-而要自定义镜像，就必须先了解镜像的结构才行。
+常见的镜像在DockerHub就能找到，但是我们自己写的项目就必须自己构建镜像了。而要自定义镜像，就必须先了解镜像的结构才行。
 
 ## 镜像结构
 
 镜像是将应用程序及其需要的系统函数库、环境、配置、依赖打包而成。
 
-我们以MySQL为例，来看看镜像的组成结构：
+我们以 MySQL 为例，来看看镜像的组成结构：
 
 ![image-20210731175806273](assets/image-20210731175806273.png)
 
@@ -658,15 +663,15 @@ docker run的命令中通过 -v 参数挂载文件或目录到容器中：
 
 我们要构建镜像，其实就是实现上述打包的过程。
 
-## Dockerfile语法
+## Dockerfile 语法
 
 构建自定义的镜像时，并不需要一个个文件去拷贝，打包。
 
-我们只需要告诉Docker，我们的镜像的组成，需要哪些BaseImage、需要拷贝什么文件、需要安装什么依赖、启动脚本是什么，将来Docker会帮助我们构建镜像。
+我们只需要告诉 Docker，我们的镜像的组成，需要哪些 BaseImage、需要拷贝什么文件、需要安装什么依赖、启动脚本是什么，将来 Docker 会帮助我们构建镜像。
 
-而描述上述信息的文件就是Dockerfile文件。
+而描述上述信息的文件就是 Dockerfile 文件。
 
-**Dockerfile**就是一个文本文件，其中包含一个个的**指令(Instruction)**，用指令来说明要执行什么操作来构建镜像。每一个指令都会形成一层Layer。
+**Dockerfile **就是一个文本文件，其中包含一个个的**指令(Instruction)**，用指令来说明要执行什么操作来构建镜像。每一个指令都会形成一层 Layer。
 
 ![image-20210731180321133](assets/image-20210731180321133.png)
 
@@ -721,13 +726,11 @@ docker run的命令中通过 -v 参数挂载文件或目录到容器中：
   ENTRYPOINT java -jar /tmp/app.jar
   ```
 
-  
-
 - 步骤5：进入docker-demo
 
-  将准备好的docker-demo上传到虚拟机任意目录，然后进入docker-demo目录下
+  将准备好的 docker-demo 上传到虚拟机任意目录，然后进入docker-demo目录下
 
-- 步骤6：运行命令：
+- 步骤6：运行命令：. 代表 dockerfile 所在的目录
 
   ```sh
   docker build -t javaweb:1.0 .
@@ -736,13 +739,13 @@ docker run的命令中通过 -v 参数挂载文件或目录到容器中：
 
 最后访问 http://192.168.150.101:8090/hello/count，其中的ip改成你的虚拟机ip
 
-### 基于java8构建Java项目
+### 基于 Java8 构建 Java 项目
 
-虽然我们可以基于Ubuntu基础镜像，添加任意自己需要的安装包，构建镜像，但是却比较麻烦。所以大多数情况下，我们都可以在一些安装了部分软件的基础镜像上做改造。
+虽然我们可以基于 Ubuntu 基础镜像，添加任意自己需要的安装包，构建镜像，但是却比较麻烦。所以大多数情况下，我们都可以在一些安装了部分软件的基础镜像上做改造。
 
-例如，构建java项目的镜像，可以在已经准备了JDK的基础镜像基础上构建。
+例如，构建 Java 项目的镜像，可以在已经准备了 JDK 的基础镜像基础上构建。
 
-需求：基于java:8-alpine镜像，将一个Java项目构建为镜像
+需求：基于 java:8-alpine 镜像，将一个 Java 项目构建为镜像
 
 实现思路如下：
 
@@ -769,8 +772,6 @@ docker run的命令中通过 -v 参数挂载文件或目录到容器中：
     ENTRYPOINT java -jar /tmp/app.jar
     ```
 
-    
-
 - ④ 使用docker build命令构建镜像
 
 - ⑤ 使用docker run创建容器并运行
@@ -779,23 +780,23 @@ docker run的命令中通过 -v 参数挂载文件或目录到容器中：
 
 小结：
 
-1. Dockerfile的本质是一个文件，通过指令描述镜像的构建过程
+1. Dockerfile 的本质是一个文件，通过指令描述镜像的构建过程
 
-2. Dockerfile的第一行必须是FROM，从一个基础镜像来构建
+2. Dockerfile 的第一行必须是 FROM，从一个基础镜像来构建
 
-3. 基础镜像可以是基本操作系统，如Ubuntu。也可以是其他人制作好的镜像，例如：java:8-alpine
+3. 基础镜像可以是基本操作系统，如 Ubuntu。也可以是其他人制作好的镜像，例如：java:8-alpine
 
 # Docker-Compose
 
-Docker Compose可以基于Compose文件帮我们快速的部署分布式应用，而无需手动一个个创建和运行容器！
+Docker Compose 可以基于 Compose 文件帮我们快速的部署分布式应用，而无需手动一个个创建和运行容器！ 
 
 ![image-20210731180921742](assets/image-20210731180921742.png)
 
-## 初识DockerCompose
+## 初识
 
-Compose文件是一个文本文件，通过指令定义集群中的每个容器如何运行。格式如下：
+Compose 文件是一个文本文件，通过指令定义集群中的每个容器如何运行。格式如下：
 
-```json
+```yaml
 version: "3.8"
  services:
   mysql:
@@ -805,45 +806,44 @@ version: "3.8"
     volumes:
      - "/tmp/mysql/data:/var/lib/mysql"
      - "/tmp/mysql/conf/hmy.cnf:/etc/mysql/conf.d/hmy.cnf"
-  web:
-    build: .
-    ports:
+  web: # 容器名称  docker run --name web -p 8090:8090 -d web:1.0
+    build: . # 构建镜像
+    ports: # 指定端口
      - "8090:8090"
-
 ```
 
-上面的Compose文件就描述一个项目，其中包含两个容器：
+上面的 Compose 文件就描述一个项目，其中包含两个容器：
 
 - mysql：一个基于`mysql:5.7.25`镜像构建的容器，并且挂载了两个目录
 - web：一个基于`docker build`临时构建的镜像容器，映射端口时8090
 
-DockerCompose的详细语法参考官网：https://docs.docker.com/compose/compose-file/
+DockerCompose 的详细语法参考官网：https://docs.docker.com/compose/compose-file/
 
-其实DockerCompose文件可以看做是将多个docker run命令写到一个文件，只是语法稍有差异。
+其实 DockerCompose 文件可以看做是将多个 docker run 命令写到一个文件，只是语法稍有差异。
 
-## 安装DockerCompose
+## 安装
 
 参考课前资料
 
 ## 部署微服务集群
 
-**需求**：将之前学习的cloud-demo微服务集群利用DockerCompose部署
+**需求**：将之前学习的 cloud-demo 微服务集群利用 DockerCompose 部署
 
 **实现思路**：
 
-① 查看课前资料提供的cloud-demo文件夹，里面已经编写好了docker-compose文件
+① 查看课前资料提供的 cloud-demo 文件夹，里面已经编写好了 docker-compose文件
 
-② 修改自己的cloud-demo项目，将数据库、nacos地址都命名为docker-compose中的服务名
+② 修改自己的 cloud-demo 项目，将数据库、nacos地址都命名为docker-compose中的服务名
 
-③ 使用maven打包工具，将项目中的每个微服务都打包为app.jar
+③ 使用 maven 打包工具，将项目中的每个微服务都打包为app.jar
 
-④ 将打包好的app.jar拷贝到cloud-demo中的每一个对应的子目录中
+④ 将打包好的 app.jar 拷贝到 cloud-demo 中的每一个对应的子目录中
 
-⑤ 将cloud-demo上传至虚拟机，利用 docker-compose up -d 来部署
+⑤ 将 cloud-demo 上传至虚拟机，利用 docker-compose up -d 来部署
 
-### compose文件
+### compose 文件
 
-查看课前资料提供的cloud-demo文件夹，里面已经编写好了docker-compose文件，而且每个微服务都准备了一个独立的目录：
+查看课前资料提供的cloud-demo文件夹，里面已经编写好了 docker-compose 文件，而且每个微服务都准备了一个独立的目录：
 
 ![image-20210731181341330](assets/image-20210731181341330.png)
 

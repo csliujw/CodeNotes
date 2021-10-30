@@ -99,6 +99,24 @@
 - `tar -czvf filename`  压缩文件
 - `tar -xzvf filename.tar.gz`  解压文件
 
+## SSH 上传下载
+
+### SSH 下载文件
+
+在 windows terminal 上直接执行命令，将 /root/Manipulator.cpp 文件拷贝到 D:// 目录下。
+
+```shell
+scp root@114.132.43.225:/root/Manipulator.cpp D://
+```
+
+### SSH 上传文件
+
+同上，只是命令不一样
+
+```shell
+scp D:\test.bmp root@114.132.43.225:/root/
+```
+
 ## 网络管理
 
 ### 网络接口相关
