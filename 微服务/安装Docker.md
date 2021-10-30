@@ -1,4 +1,4 @@
-# 0.安装Docker
+# 安装Docker
 
 Docker 分为 CE 和 EE 两大版本。CE 即社区版（免费，支持周期 7 个月），EE 即企业版，强调安全，付费使用，支持周期 24 个月。
 
@@ -6,11 +6,11 @@ Docker CE 分为 `stable` `test` 和 `nightly` 三个更新频道。
 
 官方网站上有各种环境下的 [安装指南](https://docs.docker.com/install/)，这里主要介绍 Docker CE 在 CentOS上的安装。
 
-# 1.CentOS安装Docker
+# CentOS安装Docker
 
 Docker CE 支持 64 位版本 CentOS 7，并且要求内核版本不低于 3.10， CentOS 7 满足最低内核的要求，所以我们在CentOS 7安装Docker。
 
-## 1.1.卸载（可选）
+## 卸载（可选）
 
 如果之前安装过旧版本的Docker，可以使用下面命令卸载：
 
@@ -28,7 +28,7 @@ yum remove docker \
                   docker-ce
 ```
 
-## 1.2.安装docker
+## 安装docker
 
 首先需要大家虚拟机联网，安装yum工具
 
@@ -59,7 +59,7 @@ yum install -y docker-ce
 
 docker-ce为社区免费版本。稍等片刻，docker即可安装成功。
 
-## 1.3.启动docker
+## 启动docker
 
 Docker应用需要用到各种端口，逐一去修改防火墙设置。非常麻烦，因此建议大家直接关闭防火墙！
 
@@ -69,16 +69,12 @@ Docker应用需要用到各种端口，逐一去修改防火墙设置。非常�
 
 启动docker前，一定要关闭防火墙后！！
 
-
-
 ```sh
 # 关闭
 systemctl stop firewalld
 # 禁止开机启动防火墙
 systemctl disable firewalld
 ```
-
-
 
 通过命令启动docker：
 
@@ -90,8 +86,6 @@ systemctl stop docker  # 停止docker服务
 systemctl restart docker  # 重启docker服务
 ```
 
-
-
 然后输入命令，可以查看docker版本：
 
 ```
@@ -102,15 +96,15 @@ docker -v
 
 ![image-20210418154704436](assets/image-20210418154704436.png) 
 
-## 1.4.配置镜像加速
+## 配置镜像加速
 
 docker官方镜像仓库网速较差，我们需要设置国内镜像服务：
 
 参考阿里云的镜像加速文档：https://cr.console.aliyun.com/cn-hangzhou/instances/mirrors
 
-# 2.CentOS7安装DockerCompose
+# CentOS7安装DockerCompose
 
-## 2.1.下载
+## 下载
 
 Linux下需要通过命令下载：
 
@@ -125,7 +119,7 @@ curl -L https://github.com/docker/compose/releases/download/1.23.1/docker-compos
 
 上传到`/usr/local/bin/`目录也可以。
 
-## 2.2.修改文件权限
+## 修改文件权限
 
 修改文件权限：
 
@@ -134,7 +128,7 @@ curl -L https://github.com/docker/compose/releases/download/1.23.1/docker-compos
 chmod +x /usr/local/bin/docker-compose
 ```
 
-## 2.3.Base自动补全命令：
+## Base自动补全命令：
 
 ```sh
 # 补全命令
@@ -147,13 +141,13 @@ curl -L https://raw.githubusercontent.com/docker/compose/1.29.1/contrib/completi
 echo "199.232.68.133 raw.githubusercontent.com" >> /etc/hosts
 ```
 
-# 3.Docker镜像仓库
+# Docker镜像仓库
 
 搭建镜像仓库可以基于Docker官方提供的DockerRegistry来实现。
 
 官网地址：https://hub.docker.com/_/registry
 
-## 3.1.简化版镜像仓库
+## 简化版镜像仓库
 
 Docker官方的Docker Registry是一个基础版本的Docker镜像仓库，具备仓库管理的完整功能，但是没有图形化界面。
 
@@ -172,7 +166,7 @@ docker run -d \
 
 访问http://YourIp:5000/v2/_catalog 可以查看当前私有镜像服务中包含的镜像
 
-## 3.2.带有图形化界面版本
+## 带有图形化界面版本
 
 使用DockerCompose部署带有图象界面的DockerRegistry，命令如下：
 
@@ -194,7 +188,7 @@ services:
       - registry
 ```
 
-## 3.3.配置Docker信任地址
+## 配置Docker信任地址
 
 我们的私服采用的是http协议，默认不被Docker信任，所以需要做一个配置：
 
@@ -209,7 +203,19 @@ systemctl daemon-reload
 systemctl restart docker
 ```
 
+# Ubuntun 补充
 
+- sudo ufw disable 关闭防火墙
+- sudo ufw status 查看防火墙状态
+- sudo ufw enable 开启防火墙
+
+Ubuntu 启动 Docker
+
+```shell
+su root
+systemctl enable docker # 设置开机自动启用docker服务
+systemctl start docker # #启动docker 服务
+```
 
 
 

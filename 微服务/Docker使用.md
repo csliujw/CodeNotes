@@ -111,7 +111,7 @@ Docker可以让一个应用在任何操作系统中非常方便的运行。而�
 
 Docker和虚拟机的差异：
 
-- docker 是一个系统进程；虚拟机是在操作系统中的操作系统
+- docker 是一个系统进程；直接与操作系统做交互；虚拟机是在操作系统中的操作系统
 
 - docker 体积小、启动速度快、性能好；虚拟机体积大、启动速度慢、性能一般
 
@@ -137,23 +137,23 @@ Docker中有几个重要的概念：
 
 ### DockerHub
 
-开源应用程序非常多，打包这些应用往往是重复的劳动。为了避免这些重复劳动，人们就会将自己打包的应用镜像，例如Redis、MySQL镜像放到网络上，共享使用，就像GitHub的代码共享一样。
+开源应用程序非常多，打包这些应用往往是重复的劳动。为了避免这些重复劳动，人们就会将自己打包的应用镜像，例如 Redis、MySQL 镜像放到网络上，共享使用，就像 GitHub 的代码共享一样。
 
-- DockerHub：DockerHub是一个官方的Docker镜像的托管平台。这样的平台称为Docker Registry。
+- DockerHub：DockerHub 是一个官方的 Docker 镜像的托管平台。这样的平台称为 Docker Registry。
 
-- 国内也有类似于DockerHub 的公开服务，比如 [网易云镜像服务](https://c.163yun.com/hub)、[阿里云镜像库](https://cr.console.aliyun.com/)等。
+- 国内也有类似于 DockerHub 的公开服务，比如 [网易云镜像服务](https://c.163yun.com/hub)、[阿里云镜像库](https://cr.console.aliyun.com/)等。
 
-我们一方面可以将自己的镜像共享到DockerHub，另一方面也可以从DockerHub拉取镜像：
+我们一方面可以将自己的镜像共享到 DockerHub，另一方面也可以从 DockerHub 拉取镜像：
 
 <img src="assets/image-20210731153743354.png" width="80%">
 
 ### Docker架构
 
-我们要使用Docker来操作镜像、容器，就必须要安装Docker。
+我们要使用 Docker 来操作镜像、容器，就必须要安装 Docker。
 
-Docker是一个CS架构的程序，由两部分组成：
+Docker 是一个 CS 架构的程序，由两部分组成：
 
-- 服务端(server)：Docker守护进程，负责处理 Docker 指令，管理镜像、容器等
+- 服务端(server)：Docker 守护进程，负责处理 Docker 指令，管理镜像、容器等
 
 - 客户端(client)：通过命令或 RestAPI 向 Docker 服务端发送指令。可以在本地或远程向服务端发送指令。
 
@@ -190,13 +190,13 @@ DockerHub：一个镜像托管的服务器，类似的还有阿里云镜像服�
 首先来看下镜像的名称组成：
 
 - 镜名称一般分两部分组成：[repository]:[tag]。
-- 在没有指定tag时，默认是latest，代表最新版本的镜像
+- <span style="color:red">在没有指定 tag 时，默认是 latest，代表最新版本的镜像</span>
 
 如图：
 
 ![image-20210731155141362](assets/image-20210731155141362.png)
 
-这里的mysql就是repository，5.7就是tag，合一起就是镜像名称，代表5.7版本的MySQL镜像。
+这里的 MySQL 就是 repository，5.7 就是 tag，合一起就是镜像名称，代表 5.7 版本的 MySQL 镜像。
 
 ### 镜像命令
 
@@ -206,9 +206,9 @@ DockerHub：一个镜像托管的服务器，类似的还有阿里云镜像服�
 
 ### 案例1-拉取、查看镜像
 
-需求：从DockerHub中拉取一个nginx镜像并查看
+需求：从 DockerHub 中拉取一个 nginx 镜像并查看
 
-1）首先去镜像仓库搜索nginx镜像，比如[DockerHub](https://hub.docker.com/):
+1）首先去镜像仓库搜索 nginx 镜像，比如 [DockerHub](https://hub.docker.com/):
 
 ![image-20210731155844368](assets/image-20210731155844368.png)
 
@@ -222,9 +222,9 @@ DockerHub：一个镜像托管的服务器，类似的还有阿里云镜像服�
 
 ### 案例2-保存、导入镜像
 
-需求：利用docker save将nginx镜像导出磁盘，然后再通过load加载回来
+需求：利用 docker save 将 nginx 镜像导出磁盘，然后再通过 load 加载回来
 
-1）利用docker xx --help命令查看docker save和docker load的语法
+1）利用 docker xx --help 命令查看 docker save 和 docker load 的语法
 
 例如，查看save命令用法，可以输入命令：
 
@@ -242,7 +242,7 @@ docker save --help
 docker save -o [保存的目标文件名称] [镜像名称]
 ```
 
-2）使用docker save导出镜像到磁盘 
+2）使用 docker save 导出镜像到磁盘 
 
 运行命令：
 
@@ -254,7 +254,7 @@ docker save -o nginx.tar nginx:latest
 
 ![image-20210731161354344](assets/image-20210731161354344.png)
 
-3）使用docker load加载镜像
+3）使用 docker load 加载镜像
 
 先删除本地的nginx镜像：
 
@@ -274,21 +274,21 @@ docker load -i nginx.tar
 
 ### 练习
 
-需求：去DockerHub搜索并拉取一个Redis镜像
+需求：去 DockerHub 搜索并拉取一个 Redis 镜像
 
 目标：
 
-1）去DockerHub搜索Redis镜像
+1）去 DockerHub 搜索 Redis 镜像
 
-2）查看Redis镜像的名称和版本
+2）查看 Redis 镜像的名称和版本
 
-3）利用docker pull命令拉取镜像
+3）利用 docker pull 命令拉取镜像
 
-4）利用docker save命令将 redis:latest打包为一个redis.tar包
+4）利用 docker save 命令将 redis:latest 打包为一个 redis.tar 包
 
-5）利用docker rmi 删除本地的redis:latest
+5）利用 docker rmi 删除本地的 redis:latest
 
-6）利用docker load 重新加载 redis.tar文件
+6）利用 docker load 重新加载 redis.tar 文件
 
 ## 容器操作
 
@@ -301,8 +301,8 @@ docker load -i nginx.tar
 容器保护三个状态：
 
 - 运行：进程正常运行
-- 暂停：进程暂停，CPU不再运行，并不释放内存
-- 停止：进程终止，回收进程占用的内存、CPU等资源
+- 暂停：进程暂停，CPU 不再运行，并不释放内存
+- 停止：进程终止，回收进程占用的内存、CPU 等资源
 
 其中：
 
@@ -312,11 +312,11 @@ docker load -i nginx.tar
 - docker stop：停止一个运行的容器
 - docker start：让一个停止的容器再次运行
 
-- docker rm：删除一个容器
+- docker rm：删除一个容器（释放 CPU、内存、文件系统）
 
 ### 案例-创建并运行一个容器
 
-创建并运行nginx容器的命令：
+创建并运行 nginx 容器的命令：
 
 ```sh
 docker run --name containerName -p 80:80 -d nginx
@@ -332,21 +332,21 @@ docker run --name containerName -p 80:80 -d nginx
 
 这里的`-p`参数，是将容器端口映射到宿主机端口。
 
-默认情况下，容器是隔离环境，我们直接访问宿主机的80端口，肯定访问不到容器中的nginx。
+默认情况下，容器是隔离环境，我们直接访问宿主机的80端口，肯定访问不到容器中的 nginx。
 
-现在，将容器的80与宿主机的80关联起来，当我们访问宿主机的80端口时，就会被映射到容器的80，这样就能访问到nginx了：
+现在，将容器的 80 与宿主机的 80 关联起来，当我们访问宿主机的 80 端口时，就会被映射到容器的 80，这样就能访问到nginx了：
 
 ![image-20210731163255863](assets/image-20210731163255863.png)
 
 ### 案例-进入容器，修改文件
 
-**需求**：进入Nginx容器，修改HTML文件内容，添加“传智教育欢迎您”
+**需求**：进入 Nginx 容器，修改 HTML 文件内容，添加“传智教育欢迎您”
 
-**提示**：进入容器要用到docker exec命令。
+**提示**：进入容器要用到 docker exec 命令。
 
 **步骤**：
 
-1）进入容器。进入我们刚刚创建的nginx容器的命令为：
+1）进入容器。进入我们刚刚创建的 nginx 容器的命令为：
 
 ```sh
 docker exec -it mn bash
@@ -360,17 +360,17 @@ docker exec -it mn bash
 
 - mn ：要进入的容器的名称
 
-- bash：进入容器后执行的命令，bash是一个linux终端交互命令
+- bash：进入容器后执行的命令，bash 是一个 linux 终端交互命令
 
-2）进入nginx的HTML所在目录 /usr/share/nginx/html
+2）进入 nginx 的 HTML 所在目录 /usr/share/nginx/html
 
-容器内部会模拟一个独立的Linux文件系统，看起来如同一个linux服务器一样：
+容器内部会模拟一个独立的 Linux 文件系统，看起来如同一个 Linux 服务器一样：
 
 ![image-20210731164159811](assets/image-20210731164159811.png)
 
-nginx的环境、配置、运行文件全部都在这个文件系统中，包括我们要修改的html文件。
+nginx 的环境、配置、运行文件全部都在这个文件系统中，包括我们要修改的 html 文件。
 
-查看DockerHub网站中的nginx页面，可以知道nginx的html目录位置在`/usr/share/nginx/html`
+查看 DockerHub 网站中的 nginx 页面，可以知道 nginx 的 html 目录位置在`/usr/share/nginx/html`
 
 我们执行命令，进入该目录：
 
@@ -382,23 +382,72 @@ cd /usr/share/nginx/html
 
 ![image-20210731164455818](assets/image-20210731164455818.png)
 
-3）修改index.html的内容
+3）修改 index.html 的内容
 
-容器内没有vi命令，无法直接修改，我们用下面的命令来修改：
+容器内没有 vi 命令，无法直接修改，我们用下面的命令来修改：
 
 ```sh
 sed -i -e 's#Welcome to nginx#传智教育欢迎您#g' -e 's#<head>#<head><meta charset="utf-8">#g' index.html
 ```
 
-
-
 在浏览器访问自己的虚拟机地址，例如我的是：http://192.168.150.101，即可看到结果：
 
 ![image-20210731164717604](assets/image-20210731164717604.png)
 
+### 案例-运行 redis
+
+**步骤**：
+
+1）拉取镜像
+
+```shell
+docker pull redis:latest
+```
+
+2）运行容器
+
+```shell
+docker run -d -p 6379:6379 --name docker-redis redis
+```
+
+容器取名为 docker-redis
+
+3）查看日志输出
+
+```shell
+docker logs docker-redis
+```
+
+4）在容器中运行 Redis CLI
+
+`docker exec -it` 进入容器执行一个命令
+
+```bash
+docker exec -it docker-redis /bin/bash
+# 或
+docker exec -it docker-redis bash
+# 或
+docker exec -it mr redis-cli
+```
+
+执行完上面的命令后运行 redis-cli
+
+```bash
+root@07bf18105e35:/data# redis-cli
+```
+
+5）然后就可以在容器中进行一些操作了。
+
+6）停止 docker-redis 容器并删除
+
+```bash
+docker stop docker-redis
+docker rm docker-redis
+```
+
 ### 小结
 
-docker run命令的常见参数有哪些？
+docker run 命令的常见参数有哪些？
 
 - --name：指定容器名称
 - -p：指定端口映射
@@ -416,7 +465,7 @@ docker run命令的常见参数有哪些？
 
 ## 数据卷（容器数据管理）
 
-在之前的nginx案例中，修改nginx的html页面时，需要进入nginx内部。并且因为没有编辑器，修改文件也很麻烦。
+在之前的 nginx 案例中，修改 nginx 的 html 页面时，需要进入 nginx 内部。并且因为没有编辑器，修改文件也很麻烦。
 
 这就是因为容器与数据（容器内文件）耦合带来的后果。
 
@@ -432,7 +481,7 @@ docker run命令的常见参数有哪些？
 
 一旦完成数据卷挂载，对容器的一切操作都会作用在数据卷对应的宿主机目录了。
 
-这样，我们操作宿主机的/var/lib/docker/volumes/html目录，就等于操作容器内的/usr/share/nginx/html目录了
+这样，我们操作宿主机的 /var/lib/docker/volumes/html 目录，就等于操作容器内的 /usr/share/nginx/html 目录了
 
 ### 数据集操作命令
 
@@ -442,13 +491,13 @@ docker run命令的常见参数有哪些？
 docker volume [COMMAND]
 ```
 
-docker volume命令是数据卷操作，根据命令后跟随的command来确定下一步的操作：
+docker volume 命令是数据卷操作，根据命令后跟随的 command 来确定下一步的操作：
 
-- create 创建一个volume
-- inspect 显示一个或多个volume的信息
-- ls 列出所有的volume
-- prune 删除未使用的volume
-- rm 删除一个或多个指定的volume
+- create 创建一个 volume
+- inspect 显示一个或多个 volume 的信息
+- ls 列出所有的 volume
+- prune 删除未使用的 volume
+- rm 删除一个或多个指定的 volume
 
 ### 创建和查看数据卷
 
@@ -525,6 +574,7 @@ docker run \
 ① 创建容器并挂载数据卷到容器内的HTML目录
 
 ```sh
+# /usr/share/nginx/html 这个是 dockerhub 官网查到的
 docker run --name mn -v html:/usr/share/nginx/html -p 80:80 -d nginx
 ```
 
@@ -538,6 +588,8 @@ cd /var/lib/docker/volumes/html/_data
 # 修改文件
 vi index.html
 ```
+
+> <span style="color:red">**PS：如果数据卷不存在，则会自动创建！**</span>
 
 ### 案例-给MySQL挂载本地目录
 
