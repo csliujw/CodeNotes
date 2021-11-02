@@ -181,8 +181,8 @@ Comparable接口/ Comparator接口
 
 @Test
 
-- @Before 无论Test是否出现异常，都会执行 【初始化资源】
-- @After 无论Test是否出现异常，都会执行 【销毁资源】
+- @Before 无论 Test 是否出现异常，都会执行 【初始化资源】
+- @After 无论 Test 是否出现异常，都会执行 【销毁资源】
 
 ```java
 public class JunitDemo {
