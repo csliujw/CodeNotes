@@ -303,7 +303,7 @@ public class MainDemo {
 
 ### 原理
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/juc/reentrantLock.png">
+<img src="../pics/JavaStrengthen/juc/reentrantLock.png">
 
 #### 加锁解锁流程 1.8
 
@@ -331,7 +331,7 @@ final void lock() {
 
 没有竞争时
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/juc/ReentrantLock-01.png">
+<img src="../pics/JavaStrengthen/juc/ReentrantLock-01.png">
 
 第一个竞争出现时，若加锁失败（state 修改），则走 else 语句的 `acquire(1)`
 
@@ -345,7 +345,7 @@ public final void acquire(int arg) {
 
 
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/juc/ReentrantLock-02.png">
+<img src="../pics/JavaStrengthen/juc/ReentrantLock-02.png">
 
 Thread-1 执行了
 
@@ -356,7 +356,7 @@ Thread-1 执行了
     - Node 的创建时懒惰的
     - 其中第一个 Node 称为 Dummy（哑元）或哨兵，用来占位，并不关联线程
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/juc/reentrant-lock-cas-1.png">
+<img src="../pics/JavaStrengthen/juc/reentrant-lock-cas-1.png">
 
 当前线程进入 acquireQueued 逻辑
 
@@ -388,17 +388,17 @@ final boolean acquireQueued(final Node node, int arg) {
 - 如果自己是紧邻着 head（排第二位），那么再次 tryAcquire 尝试获取锁，当然这时 state 仍为 1，失败
 - 进入 shouldParkAfterFailedAcquire 逻辑，将前驱 node，即 head 的 waitStatus 改为 -1，这次返回 false。（-1表示有责任唤醒它的后继节点。你这个 Thread 尝试好几遍都没获取到锁，应该阻塞了，你要阻塞，那得有个节点唤醒你，那就是自己的前驱节点）
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/juc/reentrant-lock-cas-2.png">
+<img src="../pics/JavaStrengthen/juc/reentrant-lock-cas-2.png">
 
 - shouldParkAfterFailedAcquire 执行完毕回到 acquireQueued ，再次 tryAcquire 尝试获取锁，当然这时 state 仍为 1，失败 
 - 当再次进入 shouldParkAfterFailedAcquire 时，这时因为其前驱 node 的 waitStatus 已经是 -1，这次返回 true 
 - 进入 parkAndCheckInterrupt， Thread-1 park（灰色表示）`就是 LockSupport.part(this)`。ReentrantLock 用 LockSupport 实现的，所以需要一个线程来唤醒 它，
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/juc/reentrant-lock-cas-3.png">
+<img src="../pics/JavaStrengthen/juc/reentrant-lock-cas-3.png">
 
 再次有多个线程经历上述过程竞争失败，变成这个样子。
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/juc/reentrant-lock-cas-4.png">
+<img src="../pics/JavaStrengthen/juc/reentrant-lock-cas-4.png">
 
 Thread-0 释放锁，进入 tryRelease 流程，如果成功
 
@@ -430,13 +430,13 @@ protected final boolean tryRelease(int releases) {
 - 设置 exclusiveOwnerThread 为 null
 - state = 0
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/juc/reentrant-try_release-01.png">
+<img src="../pics/JavaStrengthen/juc/reentrant-try_release-01.png">
 
 - 当前队列不为 null，并且 head 的 waitStatus = -1，进入 unparkSuccessor 流程 
 - 找到队列中离 head 最近的一个 Node（没取消的），unpark 恢复其运行，本例中即为 Thread-1 
 - 回到 Thread-1 的 acquireQueued 流程
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/juc/reentrant-try-release-02.png">
+<img src="../pics/JavaStrengthen/juc/reentrant-try-release-02.png">
 
 如果加锁成功（没有竞争），会设置 
 
@@ -446,7 +446,7 @@ protected final boolean tryRelease(int releases) {
 
 如果这时候有其它线程来竞争（非公平的体现），例如这时有 Thread-4 来了
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/juc/image-20210814161505500.png">
+<img src="../pics/JavaStrengthen/juc/image-20210814161505500.png">
 
 如果不巧又被 Thread-4 占了先
 
