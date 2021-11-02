@@ -2979,3 +2979,20 @@ spring:
 # SpringBoot整合示例
 
 https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples
+
+# 其他
+
+ymal 读数据
+
+- Java代码中 读数组 `${xx[1]}$`
+- 使用 `${属性名}$` 引用 在 yml 种引用数据
+    - 如果用引号包裹起来了，会进行转义，比如  \t 被识别为水平制表符
+- yml 引用对象赋值
+    - @Component + @ConfigurationProperties
+    - @EnableConfigurationProperties
+
+## 整合 Junit
+
+Spring + Junit 需要指定引导类
+
+-  @RunWith(设置运行器) + @ContextConfiguration
