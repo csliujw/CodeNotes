@@ -4,17 +4,32 @@
 
 ### 概述
 
-全称是 AbstractQueuedSynchronizer，是阻塞式锁和相关的同步器工具的框架。
+全称是 AbstractQueuedSynchronizer，是阻塞式锁和相关的同步器工具的框架。UML 图如下：
 
-> 特点：
+![image-20211104115533825](..\pics\JavaStrengthen\juc\image-20211104115533825.png)
 
-- 用 state 属性来表示资源的状态（分独占模式和共享模式，比如0代表xx，1代表oo，这都是由子类自己维护的），子类需要定义如何维护这个状态，控制如何获取 锁和释放锁 
+- 由图中 AQS 的内部类 Node 可以看出， AQS 是一个 FIFO 的双向队列。
+- Node 类中：
+    - SHARED：标记该线程是获取共享资源时被阻塞挂起后放入 AQS 队列的
+    - EXCLUSIVE： 标记线程是获取独占资源时被挂起后放入AQS队列的
+    - waitStatus：记录当前线程等待状态
+        - CANCELLED： 线程被取消了
+        - SIGNAL： 线程需要被唤醒
+        - CONDITION：  线程在条件队列里面等待
+        - PROPAGAE：释放共享资源时需要通知其他节点
+- AQS 类中
+    - state：维持了一个单一的状态信息；不同类 state 代表的含义不同。
+    - ConditionObject：用来结合锁实现线程同步
+
+> 特点总结
+
+- 用 state 属性来表示资源的状态（分独占模式和共享模式，比如0代表xx，1代表oo，这都是由子类自己维护的），子类需要定义如何维护这个状态，控制如何获取锁和释放锁 
     - `getState` - 获取 state 状态 
     - `setState` - 设置 state 状态 
     - `compareAndSetState - cas` 机制设置 state 状态。**保证 state 赋值时的原子性。**
     - 独占模式是只有一个线程能够访问资源，而共享模式可以允许多个线程访问资源 
 - 提供了基于 FIFO 的等待队列，类似于 Monitor 的 `EntryList` 
-- 条件变量来实现等待、唤醒机制，支持多个条件变量，类似于 Monitor 的 `WaitSet`
+- 条件变量来实现等待、唤醒机制，支持多个条件变量（ConditionObject），类似于 Monitor 的 `WaitSet`
 
 > 子类主要实现这样一些方法（默认抛出 `UnsupportedOperationException`）
 
@@ -24,9 +39,7 @@
 - `tryReleaseShared` 
 - `isHeldExclusively`
 
-----
-
-> <span style="color:red">**获取锁**</span>
+<span style="color:red">**获取锁**</span>
 
 ```java
 // 如果获取锁失败
@@ -35,7 +48,7 @@ if (!tryAcquire(arg)) {
 }
 ```
 
-> <span style="color:red">**释放锁**</span>
+<span style="color:red">**释放锁**</span>
 
 ```java
 // 如果释放锁成功
@@ -44,7 +57,73 @@ if (tryRelease(arg)) {
 }
 ```
 
-### 实现不可重入锁
+### AQS - state
+
+#### 回顾
+
+用 state 属性来表示资源的状态，具体的含义需要 AQS 的子类自行定义。state 可以通过 getState、setState、compareAndSetState 函数修改其值。
+
+#### state 代表的含义
+
+> 对于 ReentrantLock 的实现来说
+
+state 表示当前线程获取锁的可重入次数；当一个线程获取了 ReentrantLock 的锁后，在 AQS 内部会首先使用 CAS 操作把 state 状态值从0变为1，然后设置当前锁的持有者为当前线程，当该线程再次获取锁时发现它就是锁的持有者，则会把状态值从1变为2，也就是设置可重入次数，而当另外一个线程获取锁时发现自己并不是该锁的持有者就会被放入 AQS 阻塞队列后挂起。
+
+> 对于读写锁 ReentrantReadWriteLock 来说
+
+- state 的高16位表示读状态，也就是**获取该读锁的次数**，
+- 低16位表示获取到写锁的线程的**可重入次数**；
+
+> 对于 semaphore 来说
+
+state 用来表示**当前可用信号的个数**；每 acquire 一次，state 值就减一
+
+> 对于 CountDownlatch 来说
+
+state 用来表示**计数器当前的值**；每 countDown 一次，state 值就加一
+
+### 阻塞队列
+
+对于竞争锁失败的线程，AQS 会将线程放入阻塞队列。<span style="color:red">而线程的阻塞与唤醒是通过 LockSupport 这个工具类来实现的。</span>
+
+对于 **独占/共享** 方式获取锁的线程，获取失败会将失败的线程封装为类型为 **Node.EXCLUSIVE/Node.SHARED** 的 Node 节点插入 AQS 队列的尾部。
+
+> AQS 入队操作
+
+```java
+/**
+     * Inserts node into queue, initializing if necessary. See picture above.
+     * @param node the node to insert
+     * @return node's predecessor
+     */
+private Node enq(final Node node) {
+    for (;;) {
+        Node t = tail;
+        if (t == null) { // Must initialize
+            // 共享变量的修改操作 用 CAS 保证
+            if (compareAndSetHead(new Node()))
+                tail = head; // CAS 设置一个哨兵节点为头节点
+        } else {
+            node.prev = t;
+            // 共享变量的修改操作 用 CAS 保证
+            if (compareAndSetTail(t, node)) { 
+                t.next = node;
+                return t;
+            }
+        }
+    }
+}
+```
+
+![image-20211104122707478](..\pics\JavaStrengthen\juc\image-20211104122707478.png)
+
+### 条件变量
+
+synchronized 同时只能与一个共享变量的 notify 或 wait 方法实现同步，而 AQS 的一个锁可以对应多个条件变量 ConditionObject。
+
+每个 ConditionObject 对象都有 await()、signal() 方法和属于自己的条件队列。因条件不满足而阻塞的会存放在条件队列中。等满足条件了（调用了 signal）会就从条件队列移除，放入到 AQS 阻塞队列中，然后激活（`LockSupport.unpark`）这个线程。
+
+### 实现不可重入锁 
 
 #### 自定义同步器
 
@@ -181,11 +260,11 @@ log.debug("locking...");
 
 ### 心得
 
-#### 起源
+> 起源
 
-早期程序员会自己通过一种同步器去实现另一种相近的同步器，例如用可重入锁去实现信号量，或反之。这显然不 够优雅，于是在 JSR166（Java 规范提案）中创建了 AQS，提供了这种通用的同步器机制。
+早期程序员会自己通过一种同步器去实现另一种相近的同步器，例如用可重入锁去实现信号量，或反之。这显然不够优雅，于是在 JSR166（Java 规范提案）中创建了 AQS，提供了这种通用的同步器机制。
 
-#### 目标
+> 目标
 
 AQS 要实现的功能目标 
 
@@ -199,7 +278,7 @@ AQS 要实现的功能目标
 
 Instead, the primary performance goal here is scalability: to predictably maintain efficiency even, or especially, when synchronizers are contended.
 
-#### 设计
+> 设计
 
 `AQS` 的基本思想其实很简单
 
@@ -207,13 +286,11 @@ Instead, the primary performance goal here is scalability: to predictably mainta
 // 获取锁的逻辑
 while(state 状态不允许获取) {
      if(队列中还没有此线程) {
-     入队并阻塞
+         入队并阻塞
      }
 }
 当前线程出队
 ```
-
-
 
 ## `ReentrantLock` 
 
