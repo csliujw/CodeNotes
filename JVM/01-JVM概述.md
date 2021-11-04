@@ -30,19 +30,13 @@ Java Virtual Machine，JAVA程序的**运行环境**（JAVA二进制字节码的
 
 > **常见的JVM**
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/jvm/JVM_Version.png">
+<img src="../pics/JavaStrengthen/jvm/JVM_Version.png">
 
 > **比较：JVM JRE JDK的区别**
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/jvm/JVM_JRE_JDK.png" style="width:70%">
+<img src="../pics/JavaStrengthen/jvm/JVM_JRE_JDK.png" style="width:70%">
 
 > **学习路线**
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/jvm/JVM_Study.png" style="width:70%">
-
-
-
-
-
-
+<img src="../pics/JavaStrengthen/jvm/JVM_Study.png" style="width:70%">
 

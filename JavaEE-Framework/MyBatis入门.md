@@ -318,8 +318,6 @@ maven项目下，所有的非 `*.java` 文件都要放在 resources 目录下。
 
 <img src="../pics/mybatis/maven.png">
 
-
-
 `mybatis` 多对多 是两个一对一组成的哦
 
 ​	user 一对多role

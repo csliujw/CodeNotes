@@ -1,4 +1,4 @@
-# J.U.C
+J.U.C
 
 ## `AQS` 原理
 
@@ -6,7 +6,7 @@
 
 全称是 AbstractQueuedSynchronizer，是阻塞式锁和相关的同步器工具的框架。UML 图如下：
 
-![image-20211104115533825](..\pics\JavaStrengthen\juc\image-20211104115533825.png)
+<img src="..\pics\JavaStrengthen\juc\image-20211104115533825.png">
 
 - 由图中 AQS 的内部类 Node 可以看出， AQS 是一个 FIFO 的双向队列。
 - Node 类中：
@@ -115,7 +115,7 @@ private Node enq(final Node node) {
 }
 ```
 
-![image-20211104122707478](..\pics\JavaStrengthen\juc\image-20211104122707478.png)
+<img src="..\pics\JavaStrengthen\juc\image-20211104122707478.png">
 
 ### 条件变量
 
@@ -419,8 +419,6 @@ public final void acquire(int arg) {
         selfInterrupt();
 }
 ```
-
-
 
 <img src="../pics/JavaStrengthen/juc/ReentrantLock-02.png">
 
@@ -730,33 +728,33 @@ static final class FairSync extends Sync {
 
 创建新的 Node 状态为 -2（Node.CONDITION），关联 Thread-0，加入等待队列尾部
 
-![image-20210814164343710](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\lock-await-01.png)
+<img src="../pics/JavaStrengthen/juc/lock-await-01.png">
 
 接下来进入 AQS 的 fullyRelease 流程，释放同步器上的锁
 
-![image-20210814164435452](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\lock-await-02.png)
+<img src="../pics/JavaStrengthen/juc/lock-await-02.png">
 
 unpark AQS 队列中的下一个节点，竞争锁，假设没有其他竞争线程，那么 Thread-1 竞争成功
 
-![image-20210814164509549](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814164509549.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814164509549.png">
 
 park 阻塞 Thread-0
 
-![image-20210814164527861](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\lock-await-03.png)
+<img src="../pics/JavaStrengthen/juc/lock-await-03.png">
 
 > singal 流程
 
 假设 Thread-1 要来唤醒 Thread-0
 
-![image-20210814164612062](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\lock-signal-01.png)
+<img src="../pics/JavaStrengthen/juc/lock-signal-01.png">
 
 进入 ConditionObject 的 doSignal 流程，取得等待队列中第一个 Node，即 Thread-0 所在 Node
 
-![image-20210814164648950](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\lock-signal-02.png)
+<img src="../pics/JavaStrengthen/juc/lock-signal-02.png">
 
 执行 transferForSignal 流程，将该 Node 加入 AQS 队列尾部，将 Thread-0 的 waitStatus 改为 0，Thread-3 的 waitStatus 改为 -1
 
-![image-20210814164720981](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\lock-signal-03.png)
+<img src="../pics/JavaStrengthen/juc/lock-signal-03.png">
 
 Thread-1 释放锁，进入 unlock 流程，略
 
@@ -1121,13 +1119,11 @@ class CachedData {
 
 <span style="color:red">**先清除缓存的话：可能会查询到过时数据！！！造成数据库和缓存数据的不一致！！！**</span>
 
-![image-20210814174942981](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\clear_cache.png)
+<img src="../pics/JavaStrengthen/juc/clear_cache.png">
 
 <span style="color:red">**先更新数据库的话：也可能造成数据库和缓存数据的不一致！！！但是持续的时间比较短，可以纠正过来。所以最后采取先更新库，再清空缓存**</span>
 
-
-
-![image-20210814175203335](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\update_database.png)
+<img src="../pics/JavaStrengthen/juc/update_database.png">
 
 <span style="color:red">**最后！加锁，保证安全！**</span>
 
@@ -1190,7 +1186,7 @@ protected final boolean tryAcquire(int acquires) {
 
 ```
 
-![image-20210814181529491](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\read_write-01.png)
+<img src="../pics/JavaStrengthen/juc/read_write-01.png">
 
 2）t2 执行 r.lock，这时进入读锁的 sync.acquireShared(1) 流程，首先会进入 tryAcquireShared 流程。如果有写 锁占据，那么 tryAcquireShared 返回 -1 表示失败，结合读锁的加锁代码 lock 看看。
 
@@ -1213,13 +1209,13 @@ tryAcquireShared 返回值表示
 
 3）这时会进入 sync.doAcquireShared(1) 流程，首先也是调用 addWaiter 添加节点，不同之处在于节点被设置为 Node.SHARED 模式而非 Node.EXCLUSIVE 模式，注意此时 t2 仍处于活跃状态
 
-![image-20210814210138700](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814210138700.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814210138700.png">
 
 4）t2 会看看自己的节点是不是老二，如果是，还会再次调用 tryAcquireShared(1) 来尝试获取锁 
 
 5）如果没有成功，在 doAcquireShared 内 for (;;) 循环一次，把前驱节点的 waitStatus 改为 -1，再 for (;;) 循环一 次尝试 tryAcquireShared(1) 如果还不成功，那么在 parkAndCheckInterrupt() 处 park。
 
-![image-20210814212057267](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814212057267.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814212057267.png">
 
 > **`t3 r.lock，t4 w.lock`**
 
@@ -1227,7 +1223,7 @@ tryAcquireShared 返回值表示
 
 t2、t3加的读锁，所以状态是共享的，t4是写锁（Ex 独占）。-1代表它有职责唤醒后继节点。
 
-![image-20210814211839290](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814211839290.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814211839290.png">
 
 > **`t1 w.unlock`**
 
@@ -1235,29 +1231,29 @@ t2、t3加的读锁，所以状态是共享的，t4是写锁（Ex 独占）。-1
 
 这时会走到写锁的 `sync.release(1)` 流程，调用 `sync.tryRelease(1)`成功，变成下面的样子。
 
-![image-20210814212238151](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814212238151.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814212238151.png">
 
 接下来执行唤醒流程 sync.unparkSuccessor，即让老二恢复运行，这时 t2 在 doAcquireShared 内 parkAndCheckInterrupt() 处恢复运行 
 
 这回再来一次 for (;;) 执行 tryAcquireShared 成功则让读锁计数加一
 
-![image-20210814214030312](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814214030312.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814214030312.png">
 
 这时 t2 已经恢复运行，接下来 t2 调用 setHeadAndPropagate(node, 1)，它原本所在节点被置为头节点
 
-![image-20210814214126131](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814214126131.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814214126131.png">
 
 事情还没完，在 `setHeadAndPropagate` 方法内还会检查下一个节点是否是 shared，如果是则调用 `doReleaseShared()` 将 head 的状态从 -1 改为 0 并唤醒老二，这时 `t3` 在 `doAcquireShared` 内 `parkAndCheckInterrupt()` 处恢复运行
 
-![image-20210814214627059](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814214627059.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814214627059.png">
 
 这回再来一次 for (;;) 执行 tryAcquireShared 成功则让读锁计数加一
 
-![image-20210814215401268](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814215401268.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814215401268.png">
 
 这时 t3 已经恢复运行，接下来 t3 调用 setHeadAndPropagate(node, 1)，它原本所在节点被置为头节点
 
-![image-20210814215453436](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814215453436.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814215453436.png">
 
 下一个节点不是 shared 了，因此不会继续唤醒 t4 所在节点
 
@@ -1267,15 +1263,15 @@ t2、t3加的读锁，所以状态是共享的，t4是写锁（Ex 独占）。-1
 
 t2 进入 sync.releaseShared(1) 中，调用 tryReleaseShared(1) 让计数减一，但由于计数还不为零
 
-![image-20210814220141437](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814220141437.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814220141437.png">
 
 t3 进入 sync.releaseShared(1) 中，调用 tryReleaseShared(1) 让计数减一，这回计数为零了，进入 doReleaseShared() 将头节点从 -1 改为 0 并唤醒老二，即
 
-![image-20210814220516019](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814220516019.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814220516019.png">
 
 之后 t4 在 acquireQueued 中 parkAndCheckInterrupt 处恢复运行，再次 for (;;) 这次自己是老二，并且没有其他 竞争，tryAcquire(1) 成功，修改头结点，流程结束
 
-![image-20210814221014306](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814221014306.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814221014306.png">
 
 #### 源码分析
 
@@ -1916,19 +1912,19 @@ Semaphore 有点像一个停车场，permits 就好像停车位数量，当线�
 
 刚开始，permits（state）为 3，这时 5 个线程来获取资源
 
-![image-20210814225814618](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\semaphore-1.png)
+<img src="../pics/JavaStrengthen/juc/semaphore-1.png">
 
 假设其中 Thread-1，Thread-2，Thread-4 cas 竞争成功，而 Thread-0 和 Thread-3 竞争失败，进入 AQS 队列 park 阻塞
 
-![image-20210814230917299](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814230917299.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814230917299.png">
 
 这时 Thread-4 释放了 permits，状态如下
 
-![image-20210814230935424](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814230935424.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814230935424.png">
 
 接下来 Thread-0 竞争成功，permits 再次设置为 0，设置自己为 head 节点，断开原来的 head 节点，unpark 接 下来的 Thread-3 节点，但由于 permits 是 0，因此 Thread-3 在尝试不成功后再次进入 park 状态
 
-![image-20210814231316346](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210814231316346.png)
+<img src="../pics/JavaStrengthen/juc/image-20210814231316346.png">
 
 ## `CountDownLatch`
 
@@ -2097,7 +2093,7 @@ await 是对 count（记录栅栏数的） 变量进行减一。
 
 ## 线程安全集合类概述
 
-![image-20210815140249394](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\thread_safe_jihe.png)
+<img src="../pics/JavaStrengthen/juc/thread_safe_jihe.png">
 
 线程安全集合类可以分为三大类： 
 
@@ -2664,7 +2660,7 @@ public ConcurrentHashMap(int initialCapacity, float loadFactor, int concurrencyL
 
 构造完成，如下图所示
 
-![image-20210815161743908](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210815161743908.png)
+<img src="../pics/JavaStrengthen/juc/image-20210815161743908.png">
 
 可以看到 `ConcurrentHashMap` 没有实现懒惰初始化，空间占用不友好
 
@@ -2672,11 +2668,11 @@ public ConcurrentHashMap(int initialCapacity, float loadFactor, int concurrencyL
 
 例如，根据某一 hash 值求 segment 位置，先将高位向低位移动 `this.segmentShift` 位
 
-![image-20210815161822810](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210815161822810.png)
+<img  src="../pics/JavaStrengthen/juc/image-20210815161822810.png">
 
 结果再与 `this.segmentMask` 做位于运算，最终得到 1010 即下标为 10 的 segment
 
-![image-20210815161838228](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210815161838228.png)
+<img src="../pics/JavaStrengthen/juc/image-20210815161838228.png">
 
 #### put流程
 
@@ -3180,15 +3176,15 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
 
 初始化链表 `last = head = new Node<E>(null);` Dummy 节点用来占位，item 为 null
 
-![image-20210815162451300](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210815162451300.png)
+<img src="../pics/JavaStrengthen/juc/image-20210815162451300.png">
 
 当一个节点入队，`last = last.next = node;`
 
-![image-20210815162529645](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210815162529645.png)
+<img src="../pics/JavaStrengthen/juc/image-20210815162529645.png">
 
 再来一个节点入队 `last = last.next = node`
 
-![image-20210815162640483](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210815162640483.png)
+<img src="../pics/JavaStrengthen/juc/image-20210815162640483.png">
 
 #### 出队操作
 
@@ -3202,19 +3198,19 @@ return x;
 
 `h = head`
 
-![image-20210815162817100](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210815162817100.png)
+<img src="../pics/JavaStrengthen/juc/image-20210815162817100.png">
 
 `first = h.next`
 
-![image-20210815162952395](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210815162952395.png)
+<img src="../pics/JavaStrengthen/juc/image-20210815162952395.png">
 
 `h.next = h` 发生在出队时会自己指向自己，主要是不让 next 乱指向其他节点，保证可以安全的被 GC，Help GC。
 
-![image-20210815163058309](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210815163058309.png)
+<img src="../pics/JavaStrengthen/juc/image-20210815163058309.png">
 
 `head = first`
 
-![image-20210815163312892](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210815163312892.png)
+<img src="../pics/JavaStrengthen/juc/image-20210815163312892.png">
 
 ```java
 E x = first.item;
@@ -3222,7 +3218,7 @@ first.item = null; // 相当于 first 变成 dummy，用来占位了！
 return x;
 ```
 
-![image-20210815163711740](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210815163711740.png)
+<img src="../pics/JavaStrengthen/juc/image-20210815163711740.png">
 
 ### 加锁分析
 
@@ -3334,7 +3330,7 @@ ConcurrentLinkedQueue 的设计与 LinkedBlockingQueue 非常像，也是
 
 例如之前讲的 Tomcat 的 Connector 结构时，Acceptor 作为生产者向 Poller 消费者传递事件信息时，正是采用了 ConcurrentLinkedQueue 将 SocketChannel 给 Poller 使用
 
-![image-20210815165433376](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210815165433376.png)
+<img src="../pics/JavaStrengthen/juc/image-20210815165433376.png">
 
 ### 原理
 
@@ -3389,7 +3385,7 @@ public void forEach(Consumer<? super E> action) {
 
 #### get 弱一致性
 
-![image-20210815170614724](E:\note\JavaEE-Study\Java-Thread\08-JUC.assets\image-20210815170614724.png)
+<img src="../pics/JavaStrengthen/juc/image-20210815170614724.png">
 
 | 时间点 | 操作                        |
 | ------ | --------------------------- |

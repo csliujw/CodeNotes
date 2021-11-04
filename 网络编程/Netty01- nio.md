@@ -12,8 +12,7 @@ channel 有一点类似于 stream，它就是读写数据的**双向通道**，�
 
 ```mermaid
 graph LR
-channel --> buffer
-buffer --> channel
+channel --- buffer
 ```
 
 常见的 Channel 有
@@ -1083,7 +1082,8 @@ System.out.println(end - start);
 服务器端
 =======
 > 服务器端
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
+>
+> >>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
 
 ```java
 // 使用 nio 来理解阻塞模式, 单线程

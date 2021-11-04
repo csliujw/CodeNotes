@@ -1044,7 +1044,7 @@ class文件通过**类加载器**装载至JVM中的。为了防止内存中存�
 
 JDK中的本地方法类一般由根加载器（Bootstrap loader）装载；JDK中内部实现的扩展类一般由扩展加载器（ExtClassLoader）实现装载；而程序中的类文件则由系统加载器（AppClassLoader）实现装载。
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/jvm/ClassLoader.jpg">
+<img src="../pics/JavaStrengthen/jvm/ClassLoader.jpg">
 
 ### 打破双亲委派机制
 
@@ -1070,7 +1070,7 @@ JDK中的本地方法类一般由根加载器（Bootstrap loader）装载；JDK�
 
 > Tomcat的类加载结构图
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/jvm/Tomcat_ClassLoader.jpg">
+<img src="../pics/JavaStrengthen/jvm/Tomcat_ClassLoader.jpg">
 
 > JDBC破坏了双亲委派？
 
@@ -1306,7 +1306,7 @@ HotSpot使用的是 计数器 的方式进行探测，为每个方法准备了�
     - 「解释」则是把字节码转换成操作系统可识别的执行指令，在JVM中会有字节码解释器和即时编译器。在解释时会对代码进行分析，查看是否为「热点代码」，如果为「热点代码」则触发JIT编译，下次执行时就无需重复进行解释，提高解释速度
     - 「执行」调用系统的硬件执行最终的程序指令
 
-  <img src="E:/note/JavaEE-Study/pics/JavaStrengthen/jvm/From_Java2Class.jpg">
+  <img src="../pics/JavaStrengthen/jvm/From_Java2Class.jpg">
 
 ### Java内存模型
 
@@ -1326,13 +1326,13 @@ Java 内存模型定义了：Java 线程对内存数据进行交互的规范。
 
 本地内存是 Java 内存模型的抽象概念，并不是真实存在的。
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/jvm/JMM.jpg">
+<img src="../pics/JavaStrengthen/jvm/JMM.jpg">
 
 Java 内存模型规定了：线程对变量的所有操作都必须在 **本地内存** 进行，**不能直接读写主内存** 的变量。
 
 Java内存模型定义了 8 种 操作来完成 变量如何从主内存到本地内存，以及变量如何从本地内存到主内存。分别是 read/load/use/assign/store/writer/lock/unlock操作。
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/jvm/eight_op.jpg">
+<img src="../pics/JavaStrengthen/jvm/eight_op.jpg">
 
 > happen-before
 
@@ -1366,7 +1366,7 @@ JVM的内存结构，往往指的就是 JVM 定义的 运行时数据区域。
 
 ==JVM内存结构分为5块：==方法区、堆、程序计数器、虚拟机栈、本地方法栈。=
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/jvm/JVM_Memory.jpg">
+<img src="../pics/JavaStrengthen/jvm/JVM_Memory.jpg">
 
 ### 程序计数器
 
@@ -1384,7 +1384,7 @@ JVM的内存结构，往往指的就是 JVM 定义的 运行时数据区域。
 
 Java 虚拟机栈的作用与传统语言中的栈非常类似，用于存储局部变量与一些尚未算好的结果。
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/jvm/JVM_Stack.jpg">
+<img src="../pics/JavaStrengthen/jvm/JVM_Stack.jpg">
 
 ### 本地方法栈
 
@@ -1418,7 +1418,7 @@ Java 虚拟机栈的作用与传统语言中的栈非常类似，用于存储局
 
 元空间存储不在虚拟机中，而是使用本地内存，JVM 不会再出现方法区的内存溢出，以往永久代经常因为内存不够用导致OOM异常。
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/jvm/Method_Area.jpg">
+<img src="../pics/JavaStrengthen/jvm/Method_Area.jpg">
 
 > **小结**
 
@@ -1432,7 +1432,7 @@ Java堆是被所有线程共享的一块内存区域，在虚拟机启动时创�
 
 **堆**被划分为新时代和老年代，新时代又被进一步划分为Eden和Survivor区，Surivivor由From Survivor和To Survivor组成。
 
-<img src="E:/note/JavaEE-Study/pics/JavaStrengthen/jvm/Heap_Split.jpg">
+<img src="../pics/JavaStrengthen/jvm/Heap_Split.jpg">
 
 **一般情况下 Eden：from：to = 8：1：1**
 

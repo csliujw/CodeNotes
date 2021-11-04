@@ -2,7 +2,7 @@
 
 [OpenJDK (java.net)](http://openjdk.java.net/) 查阅 JDK 变更信息；如永久代的移除。
 
-![image-20211103172035745](..\pics\JavaStrengthen\jvm\image-20211103172035745.png)
+<img src="..\pics\JavaStrengthen\jvm\image-20211103172035745.png">
 
 # Remove the Permanent Generation
 

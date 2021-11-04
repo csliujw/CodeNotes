@@ -72,7 +72,7 @@ mvn启动springboot项目
 
 mvn编译java代码
 
-## maven常见错误★★★
+## maven常见错误
 -   运行maven命令时报错： 
     No compiler is provided in this environment. Perhaps you are running on a JRE rather than a JDK?
 ```

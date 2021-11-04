@@ -894,7 +894,6 @@ response.getWriter().write("你好");
     System.out.println(a);
     ```
     
-    
 
 ## 5.3 文件的下载
 
@@ -1384,7 +1383,7 @@ public class LoginFilter implements Filter {
     - `@WebFilter(value = "/index.jsp",dispatcherTypes = DispatcherType.FORWARD)`
     - **当xx转发到index.jsp时，会被过滤器拦截**
   - web.xml配置
-    - 设置<dispatcher></dispatcher>标签即可
+    - 设置`<dispatcher></dispatcher>`标签即可
 
 ### 7.3.5 过滤器链(配置多个过滤器)
 
@@ -1392,9 +1391,7 @@ public class LoginFilter implements Filter {
   - 过滤器1;过滤器2;资源执行;过滤器2;过滤器1
 - 过滤器先后顺序问题：
   - 注解配置：按照类名的字符串比较规则比较，值小的先执行；如： AFilter 和 BFilter，AFilter就先执行了。【字典顺序小的先执行】
-  - web.xml配置： <filter-mapping>谁定义在上边，谁先执行
-
-----
+  - web.xml配置： `<filter-mapping>`谁定义在上边，谁先执行
 
 ## 7.4 过滤器案例
 
@@ -1506,8 +1503,6 @@ public class SensitiveWordsFilter implements Filter {
 }
 ```
 
-
-
 ## 7.5 增强对象的功能
 
 ## 7.5.1 装饰模式
@@ -1604,10 +1599,6 @@ Proxy.newProxyInstance(lc.getClassLoader(),lc.getInterfaces(),(proxy,method,ags)
         });
 */
 ```
-
-
-
-----
 
 # 八、Listener
 
@@ -1747,8 +1738,6 @@ public class Listener implements ServletContextListener {
 ## 10.1 Ajax
 
 > 概念：Asynchronous JavaScript And XML 异步的JavaScript和xml。【这里说的同步异步与线程关系不大】
-
-----
 
 ### 10.1.1 原生JavaScript实现
 
