@@ -118,8 +118,6 @@ public class ConcurrencyTest {
 }
 ```
 
-
-
 ## 几个概念
 
 ### 同步和异步
@@ -492,8 +490,6 @@ public class ThreadApplication {
   - 也不是所有任务都需要拆分，任务的目的如果不同，谈拆分和效率没啥意义 
 - IO 操作不占用 cpu，只是我们一般拷贝文件使用的是【阻塞 IO】，这时相当于线程虽然不用 cpu，但需要一 直等待 IO 结束，没能充分利用线程。所以才有后面的【非阻塞 IO】和【异步 IO】优化
 
-
-
 # 线程基础
 
 基本 `API` 的使用和基本原理
@@ -595,8 +591,6 @@ public class CreateByFutureTask {
     }
 }
 ```
-
-
 
 ----
 
