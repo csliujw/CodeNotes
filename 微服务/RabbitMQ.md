@@ -1,8 +1,8 @@
 # RabbitMQ
 
-# 1.初识MQ
+# 初识MQ
 
-## 1.1.同步和异步通讯
+## 同步和异步通讯
 
 微服务间通讯有同步和异步两种方式：
 
@@ -14,7 +14,7 @@
 
 两种方式各有优劣，打电话可以立即得到响应，但是你却不能跟多个人同时通话。发送邮件可以同时与多个人收发邮件，但是往往响应会有延迟。
 
-### 1.1.1.同步通讯
+### 同步通讯
 
 我们之前学习的 Feign 调用就属于同步方式，虽然调用可以实时得到结果，但存在下面的问题：
 
@@ -31,7 +31,7 @@
 - 有额外的资源消耗
 - 有级联失败问题
 
-### 1.1.2.异步通讯
+### 异步通讯
 
 <span style="color:green">**异步调用可以避免上述问题，异步调用常见实现是事件驱动模型**</span>
 
@@ -68,7 +68,7 @@ Broker 是一个像数据总线一样的东西，所有的服务要接收数据�
 
 好在现在开源软件或云平台上 Broker 的软件是非常成熟的，比较常见的一种就是我们今天要学习的MQ技术。
 
-## 1.2.技术对比：
+## 技术对比：
 
 MQ，中文是消息队列（MessageQueue），字面来看就是存放消息的队列。也就是事件驱动架构中的Broker。
 
@@ -99,9 +99,9 @@ MQ，中文是消息队列（MessageQueue），字面来看就是存放消息的
 
 追求消息低延迟：RabbitMQ、Kafka
 
-# 2.快速入门
+# 快速入门
 
-## 2.1.安装RabbitMQ
+## 安装RabbitMQ
 
 安装RabbitMQ，参考课前资料：
 
@@ -119,13 +119,13 @@ MQ的基本结构：
 - queue：队列，存储消息
 - virtualHost：虚拟主机，隔离不同租户的exchange、queue、消息的隔离
 
-## 2.2.RabbitMQ消息模型
+## RabbitMQ消息模型
 
 RabbitMQ官方提供了5个不同的Demo示例，对应了不同的消息模型：
 
 ![image-20210717163332646](assets/image-20210717163332646.png)
 
-## 2.3.导入Demo工程
+## 导入Demo工程
 
 课前资料提供了一个Demo工程，mq-demo:
 
@@ -141,7 +141,7 @@ RabbitMQ官方提供了5个不同的Demo示例，对应了不同的消息模型�
 - publisher：消息的发送者
 - consumer：消息的消费者
 
-## 2.4.入门案例
+## 入门案例
 
 简单队列模式的模型图：
 
@@ -153,7 +153,7 @@ RabbitMQ官方提供了5个不同的Demo示例，对应了不同的消息模型�
 - queue：消息队列，负责接受并缓存消息
 - consumer：订阅队列，处理队列中的消息
 
-### 2.4.1.publisher实现
+### publisher实现
 
 思路：
 
@@ -210,7 +210,7 @@ public class PublisherTest {
 }
 ```
 
-### 2.4.2.consumer实现
+### consumer实现
 
 代码思路：
 
@@ -265,7 +265,7 @@ public class ConsumerTest {
 }
 ```
 
-## 2.5.总结
+## 总结
 
 基本消息队列的消息发送流程：
 
@@ -289,7 +289,7 @@ public class ConsumerTest {
 
 5. 利用channel将消费者与队列绑定
 
-# 3.SpringAMQP
+# SpringAMQP
 
 SpringAMQP是基于RabbitMQ封装的一套模板，并且还利用SpringBoot对其实现了自动装配，使用起来非常方便。
 
@@ -307,7 +307,7 @@ SpringAMQP提供了三个功能：
 - 基于注解的监听器模式，异步接收消息
 - 封装了RabbitTemplate工具，用于发送消息 
 
-## 3.1.Basic Queue 简单队列模型
+## Basic Queue 简单队列模型
 
 在父工程mq-demo中引入依赖
 
@@ -319,7 +319,7 @@ SpringAMQP提供了三个功能：
 </dependency>
 ```
 
-### 3.1.1.消息发送
+### 消息发送
 
 首先配置MQ地址，在publisher服务的application.yml中添加配置：
 
@@ -364,7 +364,7 @@ public class SpringAmqpTest {
 }
 ```
 
-### 3.1.2.消息接收
+### 消息接收
 
 首先配置MQ地址，在consumer服务的application.yml中添加配置：
 
@@ -396,11 +396,11 @@ public class SpringRabbitListener {
 }
 ```
 
-### 3.1.3.测试
+### 测试
 
 启动consumer服务，然后在publisher服务中运行测试代码，发送MQ消息
 
-## 3.2.WorkQueue
+## WorkQueue
 
 Work queues，也被称为（Task queues），任务模型。简单来说就是**让多个消费者绑定到一个队列，共同消费队列中的消息**。
 
@@ -410,7 +410,7 @@ Work queues，也被称为（Task queues），任务模型。简单来说就是*
 
 此时就可以使用work 模型，多个消费者共同处理消息处理，速度就能大大提高了。
 
-### 3.2.1.消息发送
+### 消息发送
 
 这次我们循环发送，模拟大量消息堆积现象。
 
@@ -435,7 +435,7 @@ public void testWorkQueue() throws InterruptedException {
 }
 ```
 
-### 3.2.2.消息接收
+### 消息接收
 
 要模拟多个消费者绑定同一个队列，我们在consumer服务的SpringRabbitListener中添加2个新的方法：
 
@@ -455,7 +455,7 @@ public void listenWorkQueue2(String msg) throws InterruptedException {
 
 注意到这个消费者sleep了1000秒，模拟任务耗时。
 
-### 3.2.3.测试
+### 测试
 
 启动ConsumerApplication后，在执行publisher服务中刚刚编写的发送测试方法testWorkQueue。
 
@@ -463,7 +463,7 @@ public void listenWorkQueue2(String msg) throws InterruptedException {
 
 也就是说消息是平均分配给每个消费者，并没有考虑到消费者的处理能力。这样显然是有问题的。
 
-### 3.2.4.能者多劳
+### 能者多劳
 
 在spring中有一个简单的配置，可以解决这个问题。我们修改consumer服务的application.yml文件，添加配置：
 
@@ -475,14 +475,14 @@ spring:
         prefetch: 1 # 每次只能获取一条消息，处理完成才能获取下一个消息
 ```
 
-### 3.2.5.总结
+### 总结
 
 Work模型的使用：
 
 - 多个消费者绑定到一个队列，同一条消息只会被一个消费者处理
 - 通过设置prefetch来控制消费者预取的消息数量
 
-## 3.3.发布/订阅
+## 发布/订阅
 
 发布订阅的模型如图：
 
@@ -500,7 +500,7 @@ Work模型的使用：
 
 **Exchange（交换机）只负责转发消息，不具备存储消息的能力**，因此如果没有任何队列与 Exchange 绑定，或者没有符合路由规则的队列，那么消息会丢失！
 
-## 3.4.Fanout
+## Fanout
 
 Fanout，英文翻译是扇出，我觉得在MQ中叫广播更合适。
 
@@ -521,7 +521,7 @@ Fanout，英文翻译是扇出，我觉得在MQ中叫广播更合适。
 
 ![image-20210717165509466](assets/image-20210717165509466.png)
 
-### 3.4.1.声明队列和交换机
+### 声明队列和交换机
 
 Spring提供了一个接口Exchange，来表示所有不同类型的交换机：
 
@@ -584,7 +584,7 @@ public class FanoutConfig {
 }
 ```
 
-### 3.4.2.消息发送
+### 消息发送
 
 在publisher服务的SpringAmqpTest类中添加测试方法：
 
@@ -599,7 +599,7 @@ public void testFanoutExchange() {
 }
 ```
 
-### 3.4.3.消息接收
+### 消息接收
 
 在consumer服务的SpringRabbitListener中添加两个方法，作为消费者：
 
@@ -615,7 +615,7 @@ public void listenFanoutQueue2(String msg) {
 }
 ```
 
-### 3.4.4.总结
+### 总结
 
 交换机的作用是什么？
 
@@ -630,7 +630,7 @@ public void listenFanoutQueue2(String msg) {
 - FanoutExchange
 - Binding
 
-## 3.5.Direct
+## Direct
 
 在Fanout模式中，一条消息，会被所有订阅的队列都消费。但是，在某些场景下，我们希望不同的消息被不同的队列消费。这时就要用到Direct类型的Exchange。
 
@@ -652,7 +652,7 @@ public void listenFanoutQueue2(String msg) {
 
 ![image-20210717170223317](assets/image-20210717170223317.png)
 
-### 3.5.1.基于注解声明队列和交换机
+### 基于注解声明队列和交换机
 
 基于@Bean的方式声明队列和交换机比较麻烦，Spring还提供了基于注解方式来声明。
 
@@ -678,7 +678,7 @@ public void listenDirectQueue2(String msg){
 }
 ```
 
-### 3.5.2.消息发送
+### 消息发送
 
 在publisher服务的SpringAmqpTest类中添加测试方法：
 
@@ -694,7 +694,7 @@ public void testSendDirectExchange() {
 }
 ```
 
-### 3.5.3.总结
+### 总结
 
 描述下Direct交换机与Fanout交换机的差异？
 
@@ -707,9 +707,9 @@ public void testSendDirectExchange() {
 - @Queue
 - @Exchange
 
-## 3.6.Topic
+## Topic
 
-### 3.6.1.说明
+### 说明
 
 `Topic`类型的`Exchange`与`Direct`相比，都是可以根据`RoutingKey`把消息路由到不同的队列。只不过`Topic`类型`Exchange`可以让队列在绑定`Routing key` 的时候使用通配符！
 
@@ -727,18 +727,14 @@ public void testSendDirectExchange() {
 
 `item.*`：只能匹配`item.spu`
 
-
-
 图示：
 
- ![](assets/image-20210717170705380.png)
+![](assets/image-20210717170705380.png)
 
 解释：
 
 - Queue1：绑定的是`china.#` ，因此凡是以 `china.`开头的`routing key` 都会被匹配到。包括china.news和china.weather
 - Queue2：绑定的是`#.news` ，因此凡是以 `.news`结尾的 `routing key` 都会被匹配。包括china.news和japan.news
-
-
 
 案例需求：
 
@@ -750,15 +746,9 @@ public void testSendDirectExchange() {
 
 3. 在publisher中编写测试方法，向itcast. topic发送消息
 
-
-
 ![image-20210717170829229](assets/image-20210717170829229.png)
 
-
-
-
-
-### 3.6.2.消息发送
+### 消息发送
 
 在publisher服务的SpringAmqpTest类中添加测试方法：
 
@@ -777,9 +767,7 @@ public void testSendTopicExchange() {
 }
 ```
 
-
-
-### 3.6.3.消息接收
+### 消息接收
 
 在consumer服务的SpringRabbitListener中添加方法：
 
@@ -803,11 +791,7 @@ public void listenTopicQueue2(String msg){
 }
 ```
 
-
-
-
-
-### 3.6.4.总结
+### 总结
 
 描述下Direct交换机与Topic交换机的差异？
 
@@ -816,9 +800,7 @@ public void listenTopicQueue2(String msg){
 - `#`：代表0个或多个词
 - `*`：代表1个词
 
-
-
-## 3.7.消息转换器
+## 消息转换器
 
 之前说过，Spring会把你发送的消息序列化为字节发送给MQ，接收消息的时候，还会把字节反序列化为Java对象。
 
@@ -832,11 +814,7 @@ public void listenTopicQueue2(String msg){
 
 我们来测试一下。
 
-
-
-### 3.7.1.测试默认转换器
-
-
+### 测试默认转换器
 
 我们修改消息发送的代码，发送一个Map对象：
 
@@ -852,11 +830,7 @@ public void testSendMap() throws InterruptedException {
 }
 ```
 
-
-
 停止consumer服务
-
-
 
 发送消息后查看控制台：
 
@@ -864,7 +838,7 @@ public void testSendMap() throws InterruptedException {
 
 
 
-### 3.7.2.配置JSON转换器
+### 配置JSON转换器
 
 显然，JDK序列化方式并不合适。我们希望消息体的体积更小、可读性更高，因此可以使用JSON方式来做序列化和反序列化。
 
@@ -888,18 +862,4 @@ public MessageConverter jsonMessageConverter(){
     return new Jackson2JsonMessageConverter();
 }
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

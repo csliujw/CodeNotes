@@ -1,10 +1,10 @@
 # RabbitMQ部署指南
 
-# 1.单机部署
+# 单机部署
 
 我们在Centos7虚拟机中使用Docker来安装。
 
-## 1.1.下载镜像
+## 下载镜像
 
 方式一：在线拉取
 
@@ -24,7 +24,7 @@ docker pull rabbitmq:3-management
 docker load -i mq.tar
 ```
 
-## 1.2.安装MQ
+## 安装MQ
 
 执行下面的命令来运行MQ容器：
 
@@ -40,11 +40,11 @@ docker run \
  rabbitmq:3-management
 ```
 
-# 2.集群部署
+# 集群部署
 
 接下来，我们看看如何安装RabbitMQ的集群。
 
-## 2.1.集群分类
+## 集群分类
 
 在RabbitMQ的官方文档中，讲述了两种集群的配置方式：
 
@@ -53,7 +53,7 @@ docker run \
 
 我们先来看普通模式集群。
 
-## 2.2.设置网络
+## 设置网络
 
 首先，我们需要让3台MQ互相知道对方的存在。
 
