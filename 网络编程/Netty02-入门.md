@@ -11,7 +11,6 @@ for rapid development of maintainable high performance protocol servers & client
 
 Netty 是一个异步的、基于事件驱动的网络应用框架，用于快速开发可维护、高性能的网络服务器和客户端
 
-<<<<<<< HEAD
 ### 1.2 Netty 的作者
 
 ![](img/0005.png)
@@ -19,10 +18,6 @@ Netty 是一个异步的、基于事件驱动的网络应用框架，用于快�
 他还是另一个著名网络应用框架 Mina 的重要贡献者
 
 ### 1.3 Netty 的地位
-=======
-### 1.2 Netty 的地位
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
-
 Netty 在 Java 网络应用框架中的地位就好比：Spring 框架在 JavaEE 开发中的地位
 
 以下的框架都使用了 Netty，因为它们有网络通信需求！
@@ -37,12 +32,7 @@ Netty 在 Java 网络应用框架中的地位就好比：Spring 框架在 JavaEE
 * Spring 5.x - flux api 完全抛弃了 tomcat ，使用 netty 作为服务器端
 * Zookeeper - 分布式协调框架
 
-<<<<<<< HEAD
 ### 1.4 Netty 的优势
-=======
-### 1.3 Netty 的优势
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
-
 * Netty vs NIO，工作量大，bug 多
   * 需要自己构建协议
   * 解决 TCP 传输问题，如粘包、半包
@@ -56,13 +46,10 @@ Netty 在 Java 网络应用框架中的地位就好比：Spring 框架在 JavaEE
     * 4.x 2013
     * 5.x 已废弃（没有明显的性能提升，维护成本高）
 
-<<<<<<< HEAD
-=======
-## 1.4 Netty 的注意事项
+> Netty 的注意事项
 
 Netty 中的很多方法都是异步的，遇到这些异步的方法，不能直接在异步后面加放啊进行处理，要么同步（sync方法阻塞）关闭，要么配合异步（addListener 异步关闭）关闭。
 
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 ## 2. Hello World
 
 ```java
@@ -182,8 +169,7 @@ public class QuickServer {
 }
 ```
 
-<<<<<<< HEAD
-代码解读
+> 代码解读
 
 * 1 处，创建 NioEventLoopGroup，可以简单理解为 `线程池 + Selector` 后面会详细展开
 
@@ -199,8 +185,6 @@ public class QuickServer {
 
 * 6 处，SocketChannel 的业务处理器，使用上一个处理器的处理结果
 
-=======
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 ### 2.3 客户端
 
 ```java
@@ -228,8 +212,7 @@ public class QuickClient {
 }
 ```
 
-<<<<<<< HEAD
-代码解读
+>代码解读
 
 * 1 处，创建 NioEventLoopGroup，同 Server
 
@@ -238,15 +221,19 @@ public class QuickClient {
   ![](img/0007.png)
 
 * 3 处，添加 SocketChannel 的处理器，ChannelInitializer 处理器（仅执行一次），它的作用是待客户端 SocketChannel 建立连接后，执行 initChannel 以便添加更多的处理器
+
 * 4 处，指定要连接的服务器和端口
+
 * 5 处，Netty 中很多方法都是异步的，如 connect，这时需要使用 sync 方法等待 connect 建立连接完毕
+
 * 6 处，获取 channel 对象，它即为通道抽象，可以进行数据读写操作
+
 * 7 处，写入消息并清空缓冲区
+
 * 8 处，消息会经过通道 handler 处理，这里是将 String => ByteBuf 发出
+
 * 数据经过网络传输，到达服务器端，服务器端 5 和 6 处的 handler 先后被触发，走完一个流程
 
-=======
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 ### 2.4 流程梳理
 
 ![](img/0040.png)
@@ -265,11 +252,7 @@ public class QuickClient {
 > * 把 eventLoop 理解为处理数据的工人（使用单线程的线程池实现的？）
 >   * 工人可以管理多个 channel 的 io 操作，并且一旦工人负责了某个 channel，就要负责到底（绑定）。一个 channel 只被一个线程操作，线程安全。
 >   * 工人既可以执行 io 操作，也可以进行任务处理，每位工人有任务队列，队列里可以堆放多个 channel 的待处理任务，任务分为普通任务、定时任务
-<<<<<<< HEAD
->   * 工人按照 pipeline 顺序，依次按照 handler 的规划（代码）处理数据，可以为每道工序指定不同的工人
-=======
 >   * 工人按照 pipeline 顺序，依次按照 handler 的规划（代码）处理数据，可以为每道工序指定不同的工人（非 IO 操作的处理可以换工人）
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 
 ## 3. 组件
 
@@ -281,7 +264,6 @@ public class QuickClient {
 
 它的继承关系比较复杂
 
-<<<<<<< HEAD
 * 一条线是继承自 j.u.c.ScheduledExecutorService 因此包含了线程池中所有的方法
 * 另一条线是继承自 netty 自己的 OrderedEventExecutor，
   * 提供了 boolean inEventLoop(Thread thread) 方法判断一个线程是否属于此 EventLoop
@@ -294,7 +276,6 @@ EventLoopGroup 是一组 EventLoop，Channel 一般会调用 EventLoopGroup 的 
 * 继承自 netty 自己的 EventExecutorGroup
   * 实现了 Iterable 接口提供遍历 EventLoop 的能力
   * 另有 next 方法获取集合中下一个 EventLoop
-=======
 * 一条线是继承自 `j.u.c.ScheduledExecutorService` 因此包含了线程池中所有的方法
 * 另一条线是继承自 `netty` 自己的 `OrderedEventExecutor`，
   * 提供了 `boolean inEventLoop(Thread thread)` 方法判断一个线程是否属于此 `EventLoop`
@@ -307,7 +288,6 @@ EventLoopGroup 是一组 EventLoop，Channel 一般会调用 EventLoopGroup 的 
 * 继承自 `netty` 自己的 `EventExecutorGroup`
   * 实现了 `Iterable` 接口提供遍历 `EventLoop` 的能力
   * 另有 `next` 方法获取集合中下一个 `EventLoop`
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 
 以一个简单的实现为例：
 
@@ -337,18 +317,210 @@ io.netty.channel.nio.NioEventLoop@3e96bacf
 io.netty.channel.nio.NioEventLoop@484970b0
 ```
 
-<<<<<<< HEAD
-=======
-也可以使用 for 循环。
+也可以使用 for 循环
 
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
+```java
+DefaultEventLoopGroup group = new DefaultEventLoopGroup(2);
+for (EventExecutor eventLoop : group) {
+    System.out.println(eventLoop);
+}
+```
+
+输出
+
+```
+io.netty.channel.DefaultEventLoop@60f82f98
+io.netty.channel.DefaultEventLoop@35f983a6
+```
+
 #### 💡 优雅关闭
 
 优雅关闭 `shutdownGracefully` 方法。该方法会首先切换 `EventLoopGroup` 到关闭状态从而拒绝新的任务的加入，然后在任务队列的任务都处理完成后，停止线程的运行。从而确保整体应用是在正常有序的状态下退出的
 
-<<<<<<< HEAD
 #### 演示 NioEventLoop 处理 io 事件
-=======
+
+服务器端两个 nio worker 工人
+
+```java
+new ServerBootstrap()
+    .group(new NioEventLoopGroup(1), new NioEventLoopGroup(2))
+    .channel(NioServerSocketChannel.class)
+    .childHandler(new ChannelInitializer<NioSocketChannel>() {
+        @Override
+        protected void initChannel(NioSocketChannel ch) {
+            ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+                @Override
+                public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                    ByteBuf byteBuf = msg instanceof ByteBuf ? ((ByteBuf) msg) : null;
+                    if (byteBuf != null) {
+                        byte[] buf = new byte[16];
+                        ByteBuf len = byteBuf.readBytes(buf, 0, byteBuf.readableBytes());
+                        log.debug(new String(buf));
+                    }
+                }
+            });
+        }
+    }).bind(8080).sync();
+```
+
+客户端，启动三次，分别修改发送字符串为 zhangsan（第一次），lisi（第二次），wangwu（第三次）
+
+```java
+public static void main(String[] args) throws InterruptedException {
+    Channel channel = new Bootstrap()
+            .group(new NioEventLoopGroup(1))
+            .handler(new ChannelInitializer<NioSocketChannel>() {
+                @Override
+                protected void initChannel(NioSocketChannel ch) throws Exception {
+                    System.out.println("init...");
+                    ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
+                }
+            })
+            .channel(NioSocketChannel.class).connect("localhost", 8080)
+            .sync()
+            .channel();
+
+    channel.writeAndFlush(ByteBufAllocator.DEFAULT.buffer().writeBytes("wangwu".getBytes()));
+    Thread.sleep(2000);
+    channel.writeAndFlush(ByteBufAllocator.DEFAULT.buffer().writeBytes("wangwu".getBytes()));
+```
+
+最后输出
+
+```
+22:03:34 [DEBUG] [nioEventLoopGroup-3-1] c.i.o.EventLoopTest - zhangsan       
+22:03:36 [DEBUG] [nioEventLoopGroup-3-1] c.i.o.EventLoopTest - zhangsan       
+22:05:36 [DEBUG] [nioEventLoopGroup-3-2] c.i.o.EventLoopTest - lisi           
+22:05:38 [DEBUG] [nioEventLoopGroup-3-2] c.i.o.EventLoopTest - lisi           
+22:06:09 [DEBUG] [nioEventLoopGroup-3-1] c.i.o.EventLoopTest - wangwu        
+22:06:11 [DEBUG] [nioEventLoopGroup-3-1] c.i.o.EventLoopTest - wangwu         
+```
+
+可以看到两个工人轮流处理 channel，但工人与 channel 之间进行了绑定
+
+![](E:\note\JavaEE-Study\网络编程\Netty02-入门.assets\0042.png)
+
+再增加两个非 nio 工人
+
+```java
+DefaultEventLoopGroup normalWorkers = new DefaultEventLoopGroup(2);
+new ServerBootstrap()
+    .group(new NioEventLoopGroup(1), new NioEventLoopGroup(2))
+    .channel(NioServerSocketChannel.class)
+    .childHandler(new ChannelInitializer<NioSocketChannel>() {
+        @Override
+        protected void initChannel(NioSocketChannel ch)  {
+            ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
+            ch.pipeline().addLast(normalWorkers,"myhandler",
+              new ChannelInboundHandlerAdapter() {
+                @Override
+                public void channelRead(ChannelHandlerContext ctx, Object msg) {
+                    ByteBuf byteBuf = msg instanceof ByteBuf ? ((ByteBuf) msg) : null;
+                    if (byteBuf != null) {
+                        byte[] buf = new byte[16];
+                        ByteBuf len = byteBuf.readBytes(buf, 0, byteBuf.readableBytes());
+                        log.debug(new String(buf));
+                    }
+                }
+            });
+        }
+    }).bind(8080).sync();
+```
+
+客户端代码不变，启动三次，分别修改发送字符串为 zhangsan（第一次），lisi（第二次），wangwu（第三次）
+
+输出
+
+```
+22:19:48 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x251562d5, L:/127.0.0.1:8080 - R:/127.0.0.1:52588] REGISTERED
+22:19:48 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x251562d5, L:/127.0.0.1:8080 - R:/127.0.0.1:52588] ACTIVE
+22:19:48 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x251562d5, L:/127.0.0.1:8080 - R:/127.0.0.1:52588] READ: 8B
+         +-------------------------------------------------+
+         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
++--------+-------------------------------------------------+----------------+
+|00000000| 7a 68 61 6e 67 73 61 6e                         |zhangsan        |
++--------+-------------------------------------------------+----------------+
+22:19:48 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x251562d5, L:/127.0.0.1:8080 - R:/127.0.0.1:52588] READ COMPLETE
+22:19:48 [DEBUG] [defaultEventLoopGroup-2-1] c.i.o.EventLoopTest - zhangsan        
+22:19:50 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x251562d5, L:/127.0.0.1:8080 - R:/127.0.0.1:52588] READ: 8B
+         +-------------------------------------------------+
+         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
++--------+-------------------------------------------------+----------------+
+|00000000| 7a 68 61 6e 67 73 61 6e                         |zhangsan        |
++--------+-------------------------------------------------+----------------+
+22:19:50 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x251562d5, L:/127.0.0.1:8080 - R:/127.0.0.1:52588] READ COMPLETE
+22:19:50 [DEBUG] [defaultEventLoopGroup-2-1] c.i.o.EventLoopTest - zhangsan        
+22:20:24 [DEBUG] [nioEventLoopGroup-4-2] i.n.h.l.LoggingHandler - [id: 0x94b2a840, L:/127.0.0.1:8080 - R:/127.0.0.1:52612] REGISTERED
+22:20:24 [DEBUG] [nioEventLoopGroup-4-2] i.n.h.l.LoggingHandler - [id: 0x94b2a840, L:/127.0.0.1:8080 - R:/127.0.0.1:52612] ACTIVE
+22:20:25 [DEBUG] [nioEventLoopGroup-4-2] i.n.h.l.LoggingHandler - [id: 0x94b2a840, L:/127.0.0.1:8080 - R:/127.0.0.1:52612] READ: 4B
+         +-------------------------------------------------+
+         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
++--------+-------------------------------------------------+----------------+
+|00000000| 6c 69 73 69                                     |lisi            |
++--------+-------------------------------------------------+----------------+
+22:20:25 [DEBUG] [nioEventLoopGroup-4-2] i.n.h.l.LoggingHandler - [id: 0x94b2a840, L:/127.0.0.1:8080 - R:/127.0.0.1:52612] READ COMPLETE
+22:20:25 [DEBUG] [defaultEventLoopGroup-2-2] c.i.o.EventLoopTest - lisi            
+22:20:27 [DEBUG] [nioEventLoopGroup-4-2] i.n.h.l.LoggingHandler - [id: 0x94b2a840, L:/127.0.0.1:8080 - R:/127.0.0.1:52612] READ: 4B
+         +-------------------------------------------------+
+         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
++--------+-------------------------------------------------+----------------+
+|00000000| 6c 69 73 69                                     |lisi            |
++--------+-------------------------------------------------+----------------+
+22:20:27 [DEBUG] [nioEventLoopGroup-4-2] i.n.h.l.LoggingHandler - [id: 0x94b2a840, L:/127.0.0.1:8080 - R:/127.0.0.1:52612] READ COMPLETE
+22:20:27 [DEBUG] [defaultEventLoopGroup-2-2] c.i.o.EventLoopTest - lisi            
+22:20:38 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x79a26af9, L:/127.0.0.1:8080 - R:/127.0.0.1:52625] REGISTERED
+22:20:38 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x79a26af9, L:/127.0.0.1:8080 - R:/127.0.0.1:52625] ACTIVE
+22:20:38 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x79a26af9, L:/127.0.0.1:8080 - R:/127.0.0.1:52625] READ: 6B
+         +-------------------------------------------------+
+         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
++--------+-------------------------------------------------+----------------+
+|00000000| 77 61 6e 67 77 75                               |wangwu          |
++--------+-------------------------------------------------+----------------+
+22:20:38 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x79a26af9, L:/127.0.0.1:8080 - R:/127.0.0.1:52625] READ COMPLETE
+22:20:38 [DEBUG] [defaultEventLoopGroup-2-1] c.i.o.EventLoopTest - wangwu          
+22:20:40 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x79a26af9, L:/127.0.0.1:8080 - R:/127.0.0.1:52625] READ: 6B
+         +-------------------------------------------------+
+         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
++--------+-------------------------------------------------+----------------+
+|00000000| 77 61 6e 67 77 75                               |wangwu          |
++--------+-------------------------------------------------+----------------+
+22:20:40 [DEBUG] [nioEventLoopGroup-4-1] i.n.h.l.LoggingHandler - [id: 0x79a26af9, L:/127.0.0.1:8080 - R:/127.0.0.1:52625] READ COMPLETE
+22:20:40 [DEBUG] [defaultEventLoopGroup-2-1] c.i.o.EventLoopTest - wangwu          
+```
+
+可以看到，nio 工人和 非 nio 工人也分别绑定了 channel（LoggingHandler 由 nio 工人执行，而我们自己的 handler 由非 nio 工人执行）
+
+![](E:\note\JavaEE-Study\网络编程\Netty02-入门.assets\0041.png)
+
+#### 💡 handler 执行中如何换人？
+
+关键代码 `io.netty.channel.AbstractChannelHandlerContext#invokeChannelRead()`
+
+```java
+static void invokeChannelRead(final AbstractChannelHandlerContext next, Object msg) {
+    final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
+    // 下一个 handler 的事件循环是否与当前的事件循环是同一个线程
+    EventExecutor executor = next.executor();
+    
+    // 是，直接调用
+    if (executor.inEventLoop()) {
+        next.invokeChannelRead(m);
+    } 
+    // 不是，将要执行的代码作为任务提交给下一个事件循环处理（换人）
+    else {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                next.invokeChannelRead(m);
+            }
+        });
+    }
+}
+```
+
+* 如果两个 handler 绑定的是同一个线程，那么就直接调用
+* 否则，把要调用的代码封装为一个任务对象，由下一个 handler 的线程来调用
+
 #### 演示 `NioEventLoop` 处理普通&定时任务
 
 ```java
@@ -377,8 +549,6 @@ public class TestEventLoop {
     }
 }
 ```
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
-
 #### 演示 `NioEventLoop` 处理 `io` 事件
 
 服务器端两个 `nio` `worker` 工人
@@ -442,9 +612,8 @@ public static void main(String[] args) throws InterruptedException {
 
 ![](img/0042.png)
 
-<<<<<<< HEAD
 再增加两个非 nio 工人
-=======
+
 #### 演示 `NioEventLoop` 分工细化
 
 > 将 boss 与 worker 细分下。调用 group 里接收带两个参数的方法即可。
@@ -454,7 +623,6 @@ public static void main(String[] args) throws InterruptedException {
 - 第二个参数是 worker 只负责 `sockerChannel` 上的读写。
 
 **服务器端代码**
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 
 ```java
 @Slf4j(topic = "c.EventLoopServer2")
@@ -522,13 +690,11 @@ public class EventLoopClient {
 > - 创建一个新的 `EventLoopGroup` 专门处理耗时长的操作。而不是让 `NIO` 的 `EventLoopGroup` 去执行这些耗时长的操作。
 > - 即，把 handler 的执行权交给额外的 group。并且他也会做一个绑定。
 
-<<<<<<< HEAD
+
 ![](img/0041.png)
 
 #### 💡 handler 执行中如何换人？
-=======
 **服务器端代码**
-
 ```java
 @Slf4j(topic = "c.EventLoopServer3")
 public class EventLoopServer3 {
@@ -579,7 +745,6 @@ public class EventLoopServer3 {
 #### 💡 源码分析 handler 执行中如何换人？
 
 就是我们上面写的代码，多个 handler 是不同的 group 如何进行线程的切换。
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 
 关键代码 `io.netty.channel.AbstractChannelHandlerContext#invokeChannelRead()`
 
@@ -608,7 +773,6 @@ static void invokeChannelRead(final AbstractChannelHandlerContext next, Object m
 * 如果两个 handler 绑定的是同一个线程，那么就直接调用
 * 否则，把要调用的代码封装为一个任务对象，由下一个 handler 的线程来调用
 
-<<<<<<< HEAD
 #### 演示 NioEventLoop 处理普通任务
 
 NioEventLoop 除了可以处理 io 事件，同样可以向它提交普通任务
@@ -655,18 +819,12 @@ nioWorkers.scheduleAtFixedRate(() -> {
 ...
 ```
 
-> 可以用来执行定时任务
-=======
-----
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
+可以用来执行定时任务
 
 ### 3.2 Channel
 
-#### 主要作用
+Cahnnel 的主要作用
 
-<<<<<<< HEAD
-#### ChannelFuture
-=======
 * `close()` 可以用来关闭 `channel`
 * `closeFuture()` 用来处理 `channel` 的关闭：`close` 执行后，需要进行一些善后的处理的话，可以用 `closeFuture` 完成。
   * `sync` 方法作用是同步等待 `channel` 关闭
@@ -676,9 +834,6 @@ nioWorkers.scheduleAtFixedRate(() -> {
 * `writeAndFlush()` 方法将数据写入并刷出：会立即发出数据。
 
 #### `ChannelFuture`
-
-> main线程处理结果
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 
 客户端代码
 
@@ -799,16 +954,12 @@ public class ChannelFutureClient {
 }
 ```
 
-<<<<<<< HEAD
-#### CloseFuture
-=======
 * 执行到 1 时，连接未建立，打印 `[id: 0x077235fb]`
 * `ChannelFutureListener` 会在连接建立时被调用（其中 `operationComplete` 方法），因此执行到 2 时，连接肯定建立了，打印 `[id: 0x077235fb, L:/127.0.0.1:7468 - R:localhost/127.0.0.1:8080]`
 
 #### `CloseFuture`
 
 > 不合理的关闭方式
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 
 ```java
 package netty.quick.channel;
@@ -916,8 +1067,6 @@ public class GoodCloseFutureClient {
 }
 ```
 
-<<<<<<< HEAD
-=======
 可以看到，`处理关闭之后的操作` 一定是在 close 后执行的
 
 ```shell
@@ -943,9 +1092,6 @@ closeFuture.addListener(new ChannelFutureListener() {
 });
 ```
 
-
-
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 #### 💡 异步提升的是什么
 
 * 有些同学看到这里会有疑问：为什么不在一个线程中去执行建立连接、去执行关闭 channel，那样不是也可以吗？非要用这么复杂的异步方式：比如一个线程发起建立连接，另一个线程去真正建立连接
@@ -995,8 +1141,6 @@ closeFuture.addListener(new ChannelFutureListener() {
 | setSuccess   | -                              | -                                                            | 设置成功结果 |
 | setFailure   | -                              | -                                                            | 设置失败结果 |
 
-<<<<<<< HEAD
-=======
 #### `JDK Tuture`
 
 ```java
@@ -1090,7 +1234,6 @@ public class TestNettyPromise {
 }
 ```
 
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 #### 例1
 
 同步处理任务成功
@@ -1334,28 +1477,19 @@ io.netty.util.concurrent.BlockingOperationException: DefaultPromise@47499c2a(inc
 
 ### 3.4 Handler & Pipeline
 
-<<<<<<< HEAD
+
 ChannelHandler 用来处理 Channel 上的各种事件，分为入站、出站两种。所有 ChannelHandler 被连成一串，就是 Pipeline
 
 * 入站处理器通常是 ChannelInboundHandlerAdapter 的子类，主要用来读取客户端数据，写回结果
 * 出站处理器通常是 ChannelOutboundHandlerAdapter 的子类，主要对写回结果进行加工
-=======
-`ChannelHandler` 用来处理 Channel 上的各种事件，**分为入站、出站两种**。所有 `ChannelHandler` 被连成一串，就是 Pipeline
-
-* 入站处理器通常是 `ChannelInboundHandlerAdapter` 的子类，主要用来读取客户端数据，写回结果
-* 出站处理器通常是 `ChannelOutboundHandlerAdapter` 的子类，主要对写回结果进行加工
 
 打个比喻，每个 `Channel` 是一个产品的加工车间，Pipeline 是车间中的流水线，`ChannelHandler` 就是流水线上的各道工序，而后面要讲的 `ByteBuf` 是原材料，经过很多工序的加工：先经过一道道入站工序，再经过一道道出站工序最终变成产品
 
 先搞清楚顺序，服务端
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 
 ```java
 package netty.quick.pipeline;
 
-<<<<<<< HEAD
-先搞清楚顺序，服务端
-=======
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -1421,8 +1555,6 @@ public class TestPipelineServer {
                                 super.write(ctx, msg, promise);
                             }
                         });
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
-
                     }
                 })
                 .bind(8080);
@@ -1487,7 +1619,6 @@ public class TestPipelineClient {
 
 ![](img/0008.png)
 
-<<<<<<< HEAD
 * 入站处理器中，ctx.fireChannelRead(msg) 是 **调用下一个入站处理器**
   * 如果注释掉 1 处代码，则仅会打印 1
   * 如果注释掉 2 处代码，则仅会打印 1 2
@@ -1501,19 +1632,14 @@ public class TestPipelineClient {
   * ctx.write(msg) 是从当前节点找上一个出站处理器
   * 3 处的 ctx.channel().write(msg) 如果改为 ctx.write(msg) 仅会打印 1 2 3，因为节点3 之前没有其它出站处理器了
   * 6 处的 ctx.write(msg, promise) 如果改为 ctx.channel().write(msg) 会打印 1 2 3 6 6 6... 因为 ctx.channel().write() 是从尾部开始查找，结果又是节点6 自己
-=======
 * 入站处理器中，`ctx.fireChannelRead(msg)` 是 **调用下一个入站处理器**
 * `ch.writeAndFlush(ctx.alloc().buffer().writeBytes("xxx".getBytes()));` 分配了一个 `buf` 对象，然后写入一些字节。（为了触发出站处理器）,会从 tail 开始向前找 出站 处理器 一个一个运行
 * `ctx.writeAndFlush(ctx.alloc().buffer().writeBytes("xxx".getBytes()));`  只会从当前开始向前找。
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 
 图1 - 服务端 pipeline 触发的原始流程，图中数字代表了处理步骤的先后次序
 
 ![](img/0009.png)
 
-<<<<<<< HEAD
-### 3.5 ByteBuf
-=======
 ### 3.5 EmbeddedChannel
 
 Netty 提供的用来测试的 channel。这样测试起来就不用启动服务器端和客户端了。
@@ -1565,11 +1691,7 @@ public class TestEmbeddedChannel {
 }
 ```
 
-
-
 ### 3.6 ByteBuf
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
-
 是对字节数据的封装
 
 #### 1）创建
@@ -1848,7 +1970,7 @@ try {
 }
 ```
 
-请思考，因为 pipeline 的存在，一般需要将 `ByteBuf` 传递给下一个 `ChannelHandler`，如果在 finally 中 release 了，就失去了传递性（当然，如果在这个 `ChannelHandler` 内这个 `ByteBuf` 已完成了它的使命，那么便无须再传递），虽然有头和尾管着，但是如果中间就用完了，把 `ByteBuf` 转为了字符串，后面再传递的就是字符串了，没法当成 `ByteBuf` 释放了！
+请思考，因为 pipeline 的存在，一般需要将 ByteBuf 传递给下一个 ChannelHandler，如果在 finally 中 release 了，就失去了传递性（当然，如果在这个 ChannelHandler 内这个 ByteBuf 已完成了它的使命，那么便无须再传递），虽然有头和尾管着，但是如果中间就用完了，把 ByteBuf 转为了字符串，后面再传递的就是字符串了，没法当成 ByteBuf 释放了！
 
 <span style="color:green">**基本规则是，谁是最后使用 ByteBuf，谁负责 release，详细分析如下：**</span>
 
@@ -1864,15 +1986,13 @@ try {
 * 异常处理原则
   * 有时候不清楚 ByteBuf 被引用了多少次，但又必须彻底释放，可以循环调用 release 直到返回 true
 
-<<<<<<< HEAD
 TailContext 释放未处理消息逻辑
-=======
+
 >`TailContext` 源码
 
 `TailContext` 释放未处理消息逻辑：实现了入站接口（它需要收尾，也得关心入站的信息，所以实现了 `ChannelInboundHandler`）
 
 入站消息 ---> 看 `chanelRead` 方法 --> 调用了 `onUnhandledInboundMessage` 方法 --> `onUnhandledInboundMessage` 方法 --> `ReferenceCountUtil.release(msg);`
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 
 ```java
 // io.netty.channel.DefaultChannelPipeline#onUnhandledInboundMessage(java.lang.Object)
@@ -2057,11 +2177,7 @@ System.out.println(ByteBufUtil.prettyHexDump(origin));
 
 #### 11）copy
 
-<<<<<<< HEAD
-会将底层内存数据进行深拷贝，因此无论读写，都与原始 ByteBuf 无关
-=======
 <span style="color:red">**会将底层内存数据进行深拷贝，因此无论读写，都与原始 ByteBuf 无关**</span>
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 
 #### 12）CompositeByteBuf
 
@@ -2270,11 +2386,7 @@ new Thread(() -> {
 
 ### 💡 读和写的误解
 
-<<<<<<< HEAD
-我最初在认识上有这样的误区，认为只有在 netty，nio 这样的多路复用 IO 模型时，读写才不会相互阻塞，才可以实现高效的双向通信，但实际上，Java Socket 是全双工的：在任意时刻，线路上存在`A 到 B` 和 `B 到 A` 的双向信号传输。即使是阻塞 IO，读和写是可以同时进行的，只要分别采用读线程和写线程即可，读不会阻塞写、写也不会阻塞读
-=======
 我最初在认识上有这样的误区，认为只有在 netty，nio 这样的多路复用 IO 模型时，读写才不会相互阻塞，才可以实现高效的双向通信，但实际上，**Java Socket 是全双工的（读写可以同时进行，发一条数据，不必非得等接收到了响应再处理）**：在任意时刻，线路上存在`A 到 B` 和 `B 到 A` 的双向信号传输。即使是阻塞 IO，读和写是可以同时进行的，只要分别采用读线程和写线程即可，读不会阻塞写、写也不会阻塞读
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 
 例如
 
@@ -2345,11 +2457,3 @@ public class TestClient {
     }
 }
 ```
-<<<<<<< HEAD
-
-
-
-
-
-=======
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81

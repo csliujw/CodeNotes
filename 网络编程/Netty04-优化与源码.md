@@ -92,8 +92,6 @@ enum SerializerAlgorithm implements Serializer {
 }
 ```
 
-
-
 增加配置类和配置文件
 
 ```java
@@ -126,15 +124,11 @@ public abstract class Config {
 }
 ```
 
-
-
 配置文件
 
 ```properties
 serializer.algorithm=Json
 ```
-
-
 
 修改编解码器
 
@@ -190,8 +184,6 @@ public class MessageCodecSharable extends MessageToMessageCodec<ByteBuf, Message
     }
 }
 ```
-
-
 
 其中确定具体消息类型，可以根据 `消息类型字节` 获取到对应的 `消息 class`
 
@@ -351,11 +343,7 @@ s ->> s : accept()
   * 其大小通过 /proc/sys/net/core/somaxconn 指定，在使用 listen 函数时，内核会根据传入的 backlog 参数与系统参数，取二者的较小值
   * 如果 accpet queue 队列满了，server 将发送一个拒绝连接的错误信息到 client
 
-netty 中
-
-可以通过  option(ChannelOption.SO_BACKLOG, 值) 来设置大小
-
-可以通过下面源码查看默认大小
+netty 中可以通过 option(ChannelOption.SO_BACKLOG, 值) 来设置大小；可以通过下面源码查看默认大小
 
 ```java
 public class DefaultServerSocketChannelConfig extends DefaultChannelConfig
@@ -1797,14 +1785,15 @@ public final void read() {
 ```java
 public boolean continueReading(UncheckedBooleanSupplier maybeMoreDataSupplier) {
     return 
-           // 一般为 true
-           config.isAutoRead() &&
-           // respectMaybeMoreData 默认为 true
-           // maybeMoreDataSupplier 的逻辑是如果预期读取字节与实际读取字节相等，返回 true
-           (!respectMaybeMoreData || maybeMoreDataSupplier.get()) &&
-           // 小于最大次数，maxMessagePerRead 默认 16
-           totalMessages < maxMessagePerRead &&
-           // 实际读到了数据
-           totalBytesRead > 0;
+        // 一般为 true
+        config.isAutoRead() &&
+        // respectMaybeMoreData 默认为 true
+        // maybeMoreDataSupplier 的逻辑是如果预期读取字节与实际读取字节相等，返回 true
+        (!respectMaybeMoreData || maybeMoreDataSupplier.get()) &&
+        // 小于最大次数，maxMessagePerRead 默认 16
+        totalMessages < maxMessagePerRead &&
+        // 实际读到了数据
+        totalBytesRead > 0;
 }
 ```
+

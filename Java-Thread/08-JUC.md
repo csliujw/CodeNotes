@@ -3340,7 +3340,7 @@ ConcurrentLinkedQueue 的设计与 LinkedBlockingQueue 非常像，也是
 
 ### 用法
 
-`CopyOnWriteArraySet` 是它的马甲 底层实现采用了 写入时拷贝 的思想，增删改操作会将底层数组拷贝一份，更 改操作在新数组上执行，这时不影响其它线程的并发读，读写分离。 以新增为例：
+`CopyOnWriteArraySet` 是它的底层实现采用了写入时拷贝的思想，<span style="color:red">增删改</span>操作会将底层数组拷贝一份，更改操作在新数组上执行，这时不影响其它线程的并发读，读写分离。 以新增为例：
 
 ```java
 public boolean add(E e) {

@@ -1,36 +1,3 @@
-```
-@Slf4j
-public class Server2 {
-    public static void main(String[] args) throws InterruptedException {
-        NioEventLoopGroup boss = new NioEventLoopGroup();
-        NioEventLoopGroup worker = new NioEventLoopGroup(2);
-        try {
-
-            ServerBootstrap bootstrap = new ServerBootstrap();
-            bootstrap.group(boss, worker);
-            bootstrap.channel(NioServerSocketChannel.class);
-            bootstrap.childOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(16, 16, 16));
-            bootstrap.childHandler(new ChannelInitializer<NioSocketChannel>() {
-
-                @Override
-                protected void initChannel(NioSocketChannel ch) throws Exception {
-                    // 解码器先解码，在打日志，这样拿到的才是解码正确的数据
-                    ch.pipeline().addLast(new FixedLengthFrameDecoder(10));
-                    ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
-                }
-            });
-            ChannelFuture sync = bootstrap.bind(8080).sync();
-            sync.channel().closeFuture().sync();
-        } catch (Exception e) {
-            log.error("server error {}", e);
-        } finally {
-            boss.shutdownGracefully();
-            worker.shutdownGracefully();
-        }
-    }
-}
-```
-
 # 三. Netty 进阶
 
 ## 1. 粘包与半包
@@ -229,8 +196,6 @@ serverBootstrap.option(ChannelOption.SO_RCVBUF, 10);
   * 滑动窗口：假设接收方的窗口只剩了 128 bytes，发送方的报文大小是 256 bytes，这时放不下了，只能先发送前 128 bytes，等待 ack 后才能发送剩余部分，这就造成了半包
   * MSS 限制：当发送的数据超过 MSS 限制后，会将数据切分发送，就会造成半包
 
-本质是因为 TCP 是流式协议，消息无边界
-
 **本质是因为 TCP 是流式协议，消息无边界**
 
 > 滑动窗口
@@ -345,8 +310,6 @@ public class HelloWorldClient {
 public class HelloWorldServer {
     static final Logger log = LoggerFactory.getLogger(HelloWorldServer.class);
 
-<<<<<<< HEAD
-=======
     void start() {
         NioEventLoopGroup boss = new NioEventLoopGroup(1);
         NioEventLoopGroup worker = new NioEventLoopGroup();
@@ -400,9 +363,9 @@ public class HelloWorldServer {
 
 #### 方法2，固定长度
 
-`FixedLengthFrameDecoder`
+`FixedLengthFrameDecoder`服务器端代码 让所有数据包长度固定（假设长度为 8 字节），服务器端加入
 
-> 服务器端代码 让所有数据包长度固定（假设长度为 8 字节），服务器端加入 `ch.pipeline().addLast(new FixedLengthFrameDecoder(10));`
+`ch.pipeline().addLast(new FixedLengthFrameDecoder(10));`
 
 ```java
 @Slf4j
@@ -906,10 +869,8 @@ public class TestLengthFieldDecoder {
         buffer.writeBytes(bytes);
     }
 }
-```
-
-<<<<<<< HEAD
 客户端输出
+```
 
 ```
 14:37:10 [DEBUG] [nioEventLoopGroup-2-1] c.i.n.HelloWorldClient - connetted...
@@ -1125,12 +1086,9 @@ try {
 }
 ```
 
-<<<<<<< HEAD
 ### 2.3 http 协议举例
-=======
-与 `redis` 进行交互
 
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
+与 `redis` 进行交互
 
 ```java
 public class TestRedis {
@@ -1783,7 +1741,7 @@ public class ChatRequestMessageHandler extends SimpleChannelInboundHandler<ChatR
 }
 ```
 
---
+----
 
 ### 3.4 聊天室业务群聊
 

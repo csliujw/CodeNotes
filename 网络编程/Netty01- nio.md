@@ -8,7 +8,7 @@ non-blocking io 非阻塞 IO
 
 channel 数据的传输通道。buffer 内存缓冲区，用来暂存从 channel 中 读/写 入的数据。
 
-channel 有一点类似于 stream，它就是读写数据的**双向通道**，可以从 channel 将数据读入 buffer，也可以将 buffer 的数据写入 channel，而之前的 stream 要么是输入，要么是输出，channel 比 stream 更为底层
+channel 有一点类似于 stream，它就是读写数据的**双向通道**，可以从 channel 将数据读入 buffer，也可以将 buffer 的数据写入 channel，而之前的 `		stream 要么是输入，要么是输出，channel 比 stream 更为底层
 
 ```mermaid
 graph LR
@@ -87,7 +87,7 @@ selector --> c3(channel)
 end
 ```
 
-调用 selector 的 select() 会阻塞直到 channel 发生了读写就绪事件，这些事件发生，select 方法就会返回这些事件交给 thread 来处理
+调用 selector 的 select() 会阻塞，直到 channel 发生了读写就绪事件，这些事件发生，select 方法就会返回这些事件交给 thread 来处理
 
 ## 2. ByteBuffer
 
@@ -371,14 +371,13 @@ public class ByteBufferUtil {
 
 ByteBuffer.allocate()：分配指定字节大小的空间
 
-put：写入数据
-
-flip：开启读模式 
+- put：写入数据
+- flip：开启读模式 
 
 compact
 
 - 只是把未读取的数据移动到了前面而已，并不会清空数据
-- 例如 61 62 63 61被读取了，然后 compact
+- 例如 61 62 63 61 被读取了，然后 compact
 - 变成 62 63 64 64
 
 ### 2.3 ByteBuffer 常见方法
@@ -447,8 +446,6 @@ public void read() {
 }
 ```
 
-
-
 #### mark 和 reset
 
 mark 是在读取时，做一个标记，即使 position 改变，只要调用 reset 就能回到 mark 的位置
@@ -471,11 +468,6 @@ public void markAndRest() {
     // 其实就是对1对 rewind 的增强
 }
 ```
-<<<<<<< HEAD:网络编程/Netty01-nio.md
-=======
-
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
-
 
 <span style="color:red">**注意：rewind 和 flip 都会清除 mark 位置**</span>
 
@@ -521,13 +513,9 @@ java.nio.HeapByteBuffer[pos=0 lim=5 cap=5]
 
 > ByteBuffer===>String
 
-
-
 #### ⚠️ Buffer 的线程安全
 
 > Buffer 是**非线程安全的**
-
-
 
 ### 2.4 Scattering Reads
 
@@ -559,8 +547,6 @@ public void test() {
 ```
 
 结果：都读取到了数据
-
-
 
 ### 2.5 Gathering Writes
 
@@ -618,8 +604,6 @@ position: [0], limit: [5]
 ```
 helloworldjava
 ```
-
-
 
 ### 2.6 练习
 
@@ -849,8 +833,6 @@ d:\data\projects\a\..\b
 d:\data\projects\b
 ```
 
-
-
 ### 3.4 Files
 
 #### 基本操作
@@ -1078,12 +1060,8 @@ System.out.println(end - start);
   * 32 位 jvm 一个线程 320k，64 位 jvm 一个线程 1024k，如果连接数过多，必然导致 OOM，并且线程太多，反而会因为频繁上下文切换导致性能降低
   * 可以采用线程池技术来减少线程数和线程上下文切换，但治标不治本，如果有很多连接建立，但长时间 inactive，会阻塞线程池中所有线程，因此不适合长连接，只适合短连接
 
-<<<<<<< HEAD:网络编程/Netty01-nio.md
-服务器端
-=======
 > 服务器端
 >
-> >>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
 
 ```java
 // 使用 nio 来理解阻塞模式, 单线程
@@ -1127,7 +1105,7 @@ System.out.println("waiting...");
 #### 非阻塞
 
 * 非阻塞模式下，相关方法都会不会让线程暂停
-<<<<<<< HEAD:网络编程/Netty01-nio.md
+  <<<<<<< HEAD:网络编程/Netty01-nio.md
   * 在 ServerSocketChannel.accept 在没有连接建立时，会返回 null，继续运行
   * SocketChannel.read 在没有数据可读时，会返回 0，但线程不必阻塞，可以去执行其它 SocketChannel 的 read 或是去执行 ServerSocketChannel.accept 
   * 写数据时，线程只是等待数据写入 Channel 即可，无需等 Channel 通过网络把数据发送出去
@@ -1135,7 +1113,7 @@ System.out.println("waiting...");
 * 数据复制过程中，线程实际还是阻塞的（AIO 改进的地方）
 
 服务器端，客户端代码不变
-=======
+
   * 在 `ServerSocketChannel.accept` 在没有连接建立时，会返回 `null`，继续运行
   * `SocketChannel.read` 在没有数据可读时，会返回 0，但线程不必阻塞，可以去执行其它 `SocketChannel` 的 `read` 或是去执行 `ServerSocketChannel.accept` 
   * 写数据时，线程只是等待数据写入 `Channel` 即可，无需等 `Channel` 通过网络把数据发送出去
@@ -1143,7 +1121,6 @@ System.out.println("waiting...");
 * 数据复制过程中，线程实际还是阻塞的（`AIO` 改进的地方）
 
 服务器端，客户端代码不变。这样写，虽然是非阻塞的，但是即便客户端没有发送数据过来，服务器的线程也要不断进行循环。有读取事件时再进行处理比较好。
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
 
 ```java
 // 使用 nio 来理解非阻塞模式, 单线程
@@ -1263,8 +1240,6 @@ int count = selector.selectNow();
 > * 调用 selector.close()
 > * selector 所在线程 interrupt
 
-<<<<<<< HEAD:网络编程/Netty01-nio.md
-=======
 #### 处理事件
 
 ```java
@@ -1306,7 +1281,6 @@ public class Server2 {
 }
 ```
 
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
 ### 4.3 处理 accept 事件
 
 客户端代码为
@@ -1965,11 +1939,7 @@ public class UdpClient {
 
 * stream 不会自动缓冲数据，channel 会利用系统提供的发送缓冲区、接收缓冲区（更为底层）
 * stream 仅支持阻塞 API，channel 同时支持阻塞、非阻塞 API，网络 channel 可配合 selector 实现多路复用
-<<<<<<< HEAD:网络编程/Netty01-nio.md
-* 二者均为全双工，即读写可以同时进行
-=======
 * **二者均为全双工，即读写可以同时进行**
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
 
 ### 5.2 IO 模型
 
@@ -1978,11 +1948,7 @@ public class UdpClient {
 * 同步：线程自己去获取结果（一个线程）
 * 异步：线程自己不去获取结果，而是由其它线程送结果（至少两个线程）
 
-<<<<<<< HEAD:网络编程/Netty01-nio.md
-当调用一次 channel.read 或 stream.read 后，会切换至操作系统内核态来完成真正数据读取，而读取又分为两个阶段，分别为：
-=======
 当调用一次 channel.read 或 stream.read 后，会切换至操作系统内核态来完成真正数据读取，而**读取又分为两个阶段**，分别为：
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
 
 * 等待数据阶段
 * 复制数据阶段
@@ -2104,7 +2070,6 @@ socket.getOutputStream().write(buf);
 * 零拷贝适合小文件传输，不适合大文件的传输。
   * 如果文件比较大，那需要把大量的数据读到缓冲区去，缓冲区是为了方便反复获取数据，如果文件比较大，要把文件发生到网卡，数据从头到尾只读取了一次，没发挥到缓存的效果，反而因为文件较大，把缓冲区内存都占满了，导致其他文件的读写受到影响。
   * 适合读取频繁的小文件。
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81:网络编程/Netty01- nio.md
 
 ### 5.3 AIO
 
