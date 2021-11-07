@@ -12,6 +12,8 @@ JCStress：https://www.jb51.net/article/209076.htm
 
 JMH：http://openjdk.java.net/projects/code-tools/jmh/ 
 
+JVM：[JEP 122: Remove the Permanent Generation (java.net)](http://openjdk.java.net/jeps/122)
+
 > 定义
 
 Java Virtual Machine，JAVA程序的**运行环境**（JAVA二进制字节码的运行环境）
