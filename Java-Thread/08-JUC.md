@@ -1,4 +1,349 @@
-J.U.C
+# 基本使用快速入门
+
+## ReentrantLock
+
+可重入锁，与 `synchroized` 类似，但是可以用 `Condition` 精准唤醒某个线程。
+
+> 多生产者，多消费者
+
+库存容量为 10
+
+```java
+/**
+ * 最多持有10个资源
+ */
+public class Resource {
+    private int count = 0;
+    private Lock lock = new ReentrantLock();
+    private Condition condition = lock.newCondition();
+
+    public void increment() {
+        lock.lock();
+        // 有产品，可以唤醒消费者
+        while (count >= 10) {
+            try {
+                // 放弃得到的锁，并把自身阻塞
+                condition.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.printf("当前线程的名字%s，当前count=%d\n", Thread.currentThread().getName(),++count);
+        // 唤醒所有进程
+        condition.signalAll();
+        lock.unlock();
+    }
+
+    public void decrement() {
+        lock.lock();
+        // 没有产品，无法消费了，唤醒生产者
+        while (count <= 0) {
+            try {
+                // 放弃得到的锁，并把自身阻塞
+                condition.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.printf("当前线程的名字%s，当前count=%d\n", Thread.currentThread().getName(),--count);
+        // 唤醒所有进程
+        condition.signalAll();
+        lock.unlock();
+    }
+}
+
+
+public class MainDemo {
+    public static void main(String[] args) {
+        Resource resource = new Resource();
+        new Thread(() -> {
+            for (int i = 0; i < 66; i++)
+                resource.increment();
+        }, "A").start();
+
+        new Thread(() -> {
+            for (int i = 0; i < 66; i++)
+                resource.increment();
+        }, "AA").start();
+
+        new Thread(() -> {
+            for (int i = 0; i < 66; i++)
+                resource.decrement();
+        }, "B").start();
+        new Thread(() -> {
+            for (int i = 0; i < 66; i++)
+                resource.decrement();
+        }, "BB").start();
+    }
+}
+```
+
+## CountDownLatch
+
+CountDownLatch主要有两个方法，当一个或多个线程调用await方法时，这些线程会阻塞。
+
+其它线程调用countDown方法会将计数器减1(调用countDown方法的线程不会阻塞)，
+
+当计数器的值变为0时，因await方法阻塞的线程会被唤醒，继续执行。
+
+```java
+/**
+ * 
+ * @Description: *让一些线程阻塞直到另一些线程完成一系列操作后才被唤醒。
+ * 
+ *               CountDownLatch主要有两个方法，当一个或多个线程调用await方法时，这些线程会阻塞。
+ *               其它线程调用countDown方法会将计数器减1(调用countDown方法的线程不会阻塞)，
+ *               当计数器的值变为0时，因await方法阻塞的线程会被唤醒，继续执行。
+ * 
+ *               解释：6个同学陆续离开教室后值班同学才可以关门。
+ * 
+ *               main主线程必须要等前面6个线程完成全部工作后，自己才能开干
+ */
+public class CountDownLatchDemo {
+    public static void main(String[] args) throws InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(6);
+        for (int i = 1; i <= 6; i++) {
+            new Thread(() -> {
+                System.out.println(Thread.currentThread().getName() + "\t 号同学离开教室");
+                // 这个方法，当计数为0时，会唤醒被wait阻塞的线程。
+                countDownLatch.countDown();
+            }, String.valueOf(i)).start();
+        }
+        //阻塞当前正在运行的线程
+        countDownLatch.await();
+        System.out.println(Thread.currentThread().getName() + "\t****** 班长关门走人，main线程是班长");
+    }
+}
+```
+
+## CyclicBarrier
+
+满足条件就运行
+
+CyclicBarrier的字面意思是可循环（Cyclic）使用的屏障（Barrier）。它要做的事情是，**让一组线程到达一个屏障（也可以叫同步点）时被阻塞，直到最后一个线程到达屏障时，屏障才会开门**，所有被屏障拦截的线程才会继续干活。线程进入屏障通过CyclicBarrier的await()方法。
+
+```java
+/**
+ * CyclicBarrier
+ * 的字面意思是可循环（Cyclic）使用的屏障（Barrier）。它要做的事情是，
+ * 让一组线程到达一个屏障（也可以叫同步点）时被阻塞，
+ * 直到最后一个线程到达屏障时，屏障才会开门，所有
+ * 被屏障拦截的线程才会继续干活。
+ * 线程进入屏障通过CyclicBarrier的await()方法。
+ * 
+ * 集齐7颗龙珠就可以召唤神龙
+ */
+public class CyclicBarrierDemo{
+  private static final int NUMBER = 7;
+
+  public static void main(String[] args) {
+    // CyclicBarrier(int parties, Runnable barrierAction)
+    CyclicBarrier cyclicBarrier = new CyclicBarrier(NUMBER, () -> System.out.println("召唤神龙"));
+    for (int i = 1; i <= 7; i++)
+      new Thread(() -> {
+        try {
+          System.out.println(Thread.currentThread().getName() + "\t 星龙珠被收集 ");
+          cyclicBarrier.await();
+        } catch (InterruptedException | BrokenBarrierException e) {
+          e.printStackTrace();
+        }
+      }, String.valueOf(i)).start();
+  }
+}
+```
+
+## Semaphore
+
+信号量，可用来限流。
+
+在信号量上我们定义两种操作：
+
+- acquire（获取） 当一个线程调用acquire操作时，它要么通过成功获取信号量（信号量减1），要么一直等下去，直到有线程释放信号量，或超时
+- release（释放）实际上会将信号量的值加1，然后唤醒等待的线程。
+- 信号量主要用于两个目的，一个是用于多个共享资源的互斥使用，另一个用于并发线程数的控制。
+
+```java
+package com.atguigu.thread;
+import java.util.Random;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+/**
+ * 
+ * @Description: TODO(这里用一句话描述这个类的作用)  
+ * 
+ * 在信号量上我们定义两种操作：
+ * acquire（获取） 当一个线程调用acquire操作时，它要么通过成功获取信号量（信号量减1），
+ *             要么一直等下去，直到有线程释放信号量，或超时。
+ * release（释放）实际上会将信号量的值加1，然后唤醒等待的线程。
+ * 
+ * 信号量主要用于两个目的，一个是用于多个共享资源的互斥使用，另一个用于并发线程数的控制。
+ */
+public class SemaphoreDemo
+{
+  public static void main(String[] args)
+  {
+     Semaphore semaphore = new Semaphore(3);//模拟3个停车位
+     for (int i = 1; i 
+     {
+       new Thread(() -> {
+          try 
+          {
+            semaphore.acquire();
+            System.out.println(Thread.currentThread().getName()+"\t 抢到了车位");
+            TimeUnit.SECONDS.sleep(new Random().nextInt(5));
+            System.out.println(Thread.currentThread().getName()+"\t------- 离开");
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }finally {
+            semaphore.release();
+          }
+       }, String.valueOf(i)).start();
+     }
+  }
+}
+```
+
+## Exchanger
+
+两个线程交换数据
+
+```java
+// 不同线程进行交换数据【两个线程之间的数据交换】
+public class Exchange {
+    static Exchanger<String> exchanger = new Exchanger<>();
+
+    public static void main(String[] args) {
+        new Thread(()->{
+            String s = "T1";
+            try {
+                s = exchanger.exchange(s);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println(Thread.currentThread().getName() + " " + s);
+        }, "t1").start();
+
+
+        new Thread(()->{
+            String s = "T2";
+            try {
+                s = exchanger.exchange(s);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println(Thread.currentThread().getName() + " " + s);
+
+        }, "t2").start();
+    }
+}
+
+```
+
+
+
+## ReentrantReadWriterLock
+
+- 读-读 可以共存
+- 读-写 不能共存
+- 写-写 不能共存
+
+```java
+package com.bbxx.callable;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+/**
+ * 独占锁（写锁） 一次只能被一个线程占有 
+   共享锁（读锁） 多个线程可以同时占有 ReadWriteLock 
+     读-读 可以共存！ 
+     读-写 不能共存！ 
+     写-写 不能共存！
+ */
+public class ReadWriteLockDemo {
+  public static void main(String[] args) {
+    MyCache myCache = new MyCache();
+    // 写入
+    for (int i = 1; i <= 5; i++) {
+      final int temp = i;
+      new Thread(() -> {
+        myCache.put(temp + "", temp + "");
+      }, String.valueOf(i)).start();
+    }
+    // 读取
+    for (int i = 1; i <= 5; i++) {
+      final int temp = i;
+      new Thread(() -> {
+        myCache.get(temp + "");
+      }, String.valueOf(i)).start();
+    }
+  }
+}
+
+// 加锁的
+class MyCacheLock {
+  private volatile Map<String, Object> map = new HashMap<>();
+  // 读写锁： 更加细粒度的控制
+  private ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+  private Lock lock = new ReentrantLock();
+
+  // 存，写入的时候，只希望同时只有一个线程写
+  public void put(String key, Object value) {
+    readWriteLock.writeLock().lock();
+    try {
+      System.out.println(Thread.currentThread().getName() + "写入" + key);
+      map.put(key, value);
+      System.out.println(Thread.currentThread().getName() + "写入OK");
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      readWriteLock.writeLock().unlock();
+    }
+  }
+
+  // 取，读，所有人都可以读！
+  public void get(String key) {
+    // readLock是为为了防止 写数据
+    readWriteLock.readLock().lock();
+    try {
+      System.out.println(Thread.currentThread().getName() + "读取" + key);
+      Object o = map.get(key);
+      System.out.println(Thread.currentThread().getName() + "读取OK");
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+      readWriteLock.readLock().unlock();
+    }
+  }
+}
+
+/**
+ * 自定义缓存
+ */
+class MyCache {
+  private volatile Map<String, Object> map = new HashMap<>();
+
+  // 存，写
+  public void put(String key, Object value) {
+    System.out.println(Thread.currentThread().getName() + "写入" + key);
+    map.put(key, value);
+    System.out.println(Thread.currentThread().getName() + "写入OK");
+  }
+
+  // 取，读
+  public void get(String key) {
+    System.out.println(Thread.currentThread().getName() + "读取" + key);
+    Object o = map.get(key);
+    System.out.println(Thread.currentThread().getName() + "读取OK");
+  }
+}
+```
+
+# 深入理解
 
 ## `AQS` 原理
 
