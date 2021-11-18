@@ -6715,6 +6715,12 @@ Java 的基本理念是 “结构不佳的代码不能运行”。
 
 异常往往能降低错误处理代码的复杂度。如果不使用异常，那么就必须检查特定的错误，并在程序中的许多地方去处理它。这样非常麻烦。
 
+异常处理机制可以告诉我们
+
+- 异常类型信息告诉我们什么被抛出了
+- 异常堆栈跟踪告诉我们在哪里抛出了
+- 异常信息回答了为什么被抛出
+
 ### 基本异常
 
 > 异常参数
@@ -6856,24 +6862,20 @@ public static int test(){
 <span style="color:green">**字节码验证猜想：**</span>走一遍字节码流程，发现返回的是0。`return retVal` 和 `retVal` 用的不是同一个局部变量表中的内容。
 
 ```shell
-  public static int test();
-    descriptor: ()I
-    flags: (0x0009) ACC_PUBLIC, ACC_STATIC
-    Code:
-      stack=1, locals=3, args_size=0
-         0: iconst_0 # 将 int 类型 0 推至栈顶
-         1: istore_0 # 将栈顶 int 类型数值存入第 1 个本地变量
-         2: iload_0 # 将第 1 个 int 类型本地变量推送至栈顶
-         3: istore_1
-         4: iconst_2
-         5: istore_0
-         6: iload_1
-         7: ireturn
-         8: astore_2 # 将栈顶引用类型数值存入第 3 个本地变量
-         9: iconst_2
-        10: istore_0
-        11: aload_2
-        12: athrow
+stack=1, locals=3, args_size=0
+    0: iconst_0 # 将 int 类型 0 推至栈顶
+    1: istore_0 # 将栈顶 int 类型数值存入第 1 个本地变量
+    2: iload_0 # 将第 1 个 int 类型本地变量推送至栈顶
+    3: istore_1
+    4: iconst_2
+    5: istore_0
+    6: iload_1
+    7: ireturn
+    8: astore_2 # 将栈顶引用类型数值存入第 3 个本地变量
+    9: iconst_2
+    10: istore_0
+    11: aload_2
+    12: athrow
 ```
 
 ----
@@ -6979,8 +6981,6 @@ public class AutoCloseableDemo {
 ```
 
 Java 5 中的 `Closeable` 已经被修改，修改之后的接口继承了 `AutoCloseable` 接口。所以实现了 `Closeable` 接口的对象，都支持了 `try-with-resources` 特性。
-
----
 
 > 自定义 `AutoCloseable`
 
@@ -7319,6 +7319,10 @@ throw dfe;
 -  进行简化。(如果你的异常模式使问题变得太复杂，那用起来会非常痛苦也很烦
     人
 - 让类库和程序更安全
+- 异常处理消耗性能
+    - try-catch 块影响 JVM 的优化
+    - 异常对象实例需要保存栈快照等信息，开销较大
+
 
 ## 第十七章 文件、IO
 
@@ -8141,7 +8145,7 @@ Some textSome more
 - 第一个 **FileChannel** 用于读取；
 - 第二个 **FileChannel** 用于写入。
 
-```- java
+```java
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -8531,16 +8535,11 @@ public void fn1() throws IOException {
 ```
 
 - 关于文件的路径问题
+    - 对于File类构造方法，他需要的传入的是一个“路径名字符串”，而并不是一个单纯的文件名，对吧兄弟。
+    - 对于jvm来说，在classloader加载时候，你所以存放的d.txt也会随classloader进行加载，因此他们属于同级目录。
+    - 如果楼主真心想采用d.txt来读取的话。可以使用classloader加载原理来读取。
+    - 此方法需要注意，静态方法（通过当前的classloader加载的类来获取当前d.txt被加载的路径）
 
-```
-1、对于File类构造方法，他需要的传入的是一个“路径名字符串”，而并不是一个单纯的文件名，对吧兄弟。
-
-2、对于jvm来说，在classloader加载时候，你所以存放的d.txt也会随classloader进行加载，因此他们属于同级目录。
-
-3、如果楼主真心想采用d.txt来读取的话。可以使用classloader加载原理来读取。
-
-此方法需要注意，静态方法（通过当前的classloader加载的类来获取当前d.txt被加载的路径）
-```
 
 > 文件的输出（写入）
 
@@ -9092,30 +9091,26 @@ public class PropertiesDemo {
 
 ### 概述
 
-> **字符串：程序中凡是所有的双引号字符串都是String类的对象【就算没有new，也照样是】**
+> **字符串：程序中凡是所有的双引号字符串都是 String 类的对象【就算没有new，也照样是】**
 
 #### 字符串的特点
 
 - 字符串的内容永不可变。【常量池？】
 - 因字符串不可变，故字符串可共享使用【不可变，不会出现线程安全问题】
-- 字符串效果相当于char[]字符数组，但底层原理是byte[]字节数组
+- 字符串效果相当于 char[] 字符数组，但底层原理是 byte[] 字节数组
 - String str = "Hello" 也是字符串对象
 
 #### 字符串常量池
 
-> **字符串常量池**：程序中直接写上双引号的字符串，就在字符串常量池中。从jdk1.7开始，字符串常量在堆中。【方便gc嘛？】
+- **字符串常量池**：程序中直接写上双引号的字符串，就在字符串常量池中。从jdk1.7开始，字符串常量在堆中。【方便gc】
+- 对于基本类型来说， == 是进行数值比较
+- 对应用类型来说，==是进行【地址值】的比较
 
-> 对于基本类型来说， == 是进行数值比较
+就算不 new 字符串直接双引号也是一个对象。故 String str1 是一个对象。
 
-> 对应用类型来说，==是进行【地址值】的比较
+字符串常量池中的对象保持的其实是 byte 数组的地址值。
 
-就算不new 字符串直接双引号也是一个对象。故String str1 是一个对象。
-
-字符串常量池中的对象保持的其实是byte数组的地址值。
-
-而直接new出来的，是不在常量池中的。【具体过程看图。用new String(char型数组)有一个中转过程】
-    char[] --> byte[] --> 字符串对象
-    字符串对象再指向byte数组
+而直接 new 出来的，是不在常量池中的。【具体过程看图。用 new String(char型数组) 有一个中转过程】char[] --> byte[] --> 字符串对象，字符串对象再指向byte数组
 
 **总结：双引号直接写的在常量池中，new的不在池中。**
 
@@ -9140,7 +9135,7 @@ public static void main(String[] args) {
 
 ### 字符串常用API
 
-#### 字符串的比较▲
+#### 字符串的比较
 
 > **== 是进行对象的地址值比较。如果确实需要比较字符串的内容，可以使用如下的方法**
 
@@ -9165,37 +9160,37 @@ String 对equals进行了重写！
 
 #### 字符串获取相关方法
 
-- ```java
-  - length
-  - concat(String str) 拼接会产生新的字符串
-  - charAt(int index)
-  - indexOf(String str) 查找首次出现的位置，没有返回-1
-  
-  public static void testGetStr(){
-      String str1 = "abc";
-      String str2 = "df";
-      System.out.println(str1.length()); // 3
-      System.out.println(str1.charAt(0)); // a
-      System.out.println(str1.concat(str2)); // abcdf
-      System.out.println(str1.indexOf("ab")); // 0
-      System.out.println(str2.indexOf('d')); // 0
-  }
-  ```
+```java
+- length
+- concat(String str) 拼接会产生新的字符串
+- charAt(int index)
+- indexOf(String str) 查找首次出现的位置，没有返回-1
 
-- concat的测试▲
+public static void testGetStr(){
+    String str1 = "abc";
+    String str2 = "df";
+    System.out.println(str1.length()); // 3
+    System.out.println(str1.charAt(0)); // a
+    System.out.println(str1.concat(str2)); // abcdf
+    System.out.println(str1.indexOf("ab")); // 0
+    System.out.println(str2.indexOf('d')); // 0
+}
+```
 
-  ```java
-  public void testConcat(){
-      String str1 = "abc";
-      String str2 = "df";
-      String concat = str1.concat(str2);
-      String concat2 = "abcdf";
-      String concat3 = "abcdf";
-      System.out.println(concat == concat2); // false
-      System.out.println(concat2 == concat3);// true
-  }
-  concat内部返回的字符串是使用的new。故会有上述结果！
-  ```
+- concat的测试
+
+```java
+public void testConcat(){
+    String str1 = "abc";
+    String str2 = "df";
+    String concat = str1.concat(str2);
+    String concat2 = "abcdf";
+    String concat3 = "abcdf";
+    System.out.println(concat == concat2); // false
+    System.out.println(concat2 == concat3);// true
+}
+concat内部返回的字符串是使用的new。故会有上述结果！
+```
 
 #### 字符串截取、转换、分割
 
@@ -9250,13 +9245,11 @@ public void testSplit2() {
 }
 ```
 
-
-
-### 特性-不可变
+### 特性,不可变
 
 String 对象是不可变的。，String 类中每一个看起来会修改 String 值的方法，实际上都是创建了一个全新的 String 对象。而最初的 String 对象则丝毫未动。
 
-### +的重载与 StringBuilder 的优化
+### +的重载与优化
 
 不可变性会降低效率，但是编译器会为其做一定的优化。将对 String 的操作改为对 `StringBuilder` 类的操作。
 
@@ -9422,13 +9415,33 @@ public class InfiniteRecursion {
 |   `regionMatches()`    |                起始偏移量&长度                |                  比较指定区域的内容是否相等                  |
 |      `matches()`       |                  正则表达式                   |                     是否与正则表达式匹配                     |
 | `join()（Java8 引入）` |            分隔符，待拼字符序列。             |          用分隔符拼接字符片段， 产生一个新的 String          |
-|       `intern()`       |                                               | 主动将串池中还没有的字符串对象放入串池中，如果已经有了，则放入失败 |
+|       `intern()`       |                                               | 主动将串池中还没有的字符串对象放入串池中，如果已经有了，则放入失败；成功或失败都会返回串池中的对象 |
 |       `format()`       | 要格式化的字符串，要替 换到格式化字符串的参数 |        要格式化的字符串，要替 换到格式化字符串的参数         |
 
 > intern() 测试
 
+结合虚拟机的 StringTable 来看。
+
 ```java
-// 先空着
+public class StringInterview {
+    public static void main(String[] args) {
+        String s1 = "a";
+        String s2 = "b";
+        String s3 = "a" + "b";
+        String s4 = s1 + s2; // StringBuilder操作的 ab 对象
+        String s5 = "ab";
+        String s6 = s4.intern(); // jdk1.8 尝试把s4放入 StringTable 发现有了，放入失败，返回StringTable中的 “ab”
+        // 问
+        System.out.println(s3 == s4); // false
+        System.out.println(s3 == s5); // true
+        System.out.println(s3 == s6); // true
+        String x2 = new String("c") + new String("d");
+        String x1 = "cd";
+        x2.intern();  // cd 在常量池中，尝试把x2放入常量池中失败。
+        // 问，如果调换了【最后两行代码】的位置呢，如果是jdk1.6呢
+        System.out.println(x1 == x2); // false
+    }
+}
 ```
 
 > join() 测试
