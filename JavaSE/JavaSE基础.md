@@ -513,7 +513,184 @@ System.out.println(n >>> 10); // 不分正负的右移位运算。
 
 ## 第三章 初始化和清理
 
-Thinking in Java
+### 构造器
+
+Java 通过构造器完成对象的初始化过程。如果一个类有构造器，那么 Java 会在用户使用对象之前（即对象刚创建完成）自动调用对象的构造器方法，从而保证初始化。
+
+问题在于编译器必须知道构造器方法名称，从而调用，且要避免和类中已有元素命名冲突。Java 的采用的做法是让构造器名称和类名保持一致，且构造方法没有返回值。
+
+```java
+class Demo{
+   public static void main(String[]args){
+       new Demo();
+   }
+}
+```
+
+在 Java 中，对象的创建与初始化是统一的概念，二者不可分割。
+
+### 方法重载
+
+相同的词表示不同的含义。
+
+```java
+public int sum(int a,int b){
+    return a+b;
+}
+
+public void sum(int a,int b,int c){
+    return a+b+c;
+}
+```
+
+#### 区分重载方法
+
+每个被重载的方法必须有独一无二的参数列表；也可以根据参数列表中的参数顺序来区分不同的方法
+
+#### 重载与基本类型
+
+- 基本类型可以自动从较小的类型转型为较大的类型。
+    - 常量传入 f(char) f(short) f(int) 最后打印 f(int) f(int) f(int)
+    - char 传入 f(char) f(long) f(float) 最后打印 f(char) f(long) f(float) 
+    - byte 传入 f(short) f(int) f(long)最后打印 f(short) f(int) f(long)
+    - 常量会默认找 int，非常量如 char，short变量会默认找匹配的，没有匹配的就向上找一级，如 byte 找 byte，没找到 byte 有 char 就用 char
+    - byte -128~127
+    - short -32768~32767 
+    - int -2^31^~2^31^-1 4字节
+    - long 8字节
+- 如果传入的参数类型大于方法期望接收的参数类型，你必须首先做下转换，如果你不做的话，编译器就会报错。
+
+```java
+public class Overloading {
+    void f(char c) {
+        System.out.println("char");
+    }
+
+    void f(short c) {
+        System.out.println("short");
+    }
+
+    public static void main(String[] args) {
+        Overloading overloading = new Overloading();
+        byte b = 1;
+        overloading.f(b);
+    }
+}
+```
+
+#### 返回值的重载
+
+为什么只能通过方法名和参数列表，不能通过方法名和返回值区分方法呢?
+
+```java
+void f(){} // 直觉上，我们很容易就可以区分出这两个方法
+int f() {return 1;}
+// 编译器也可以通过
+int x = f() // 来分辨到底使用那个
+```
+
+但是，你可以调用一个方法且忽略返回值。这叫做调用一个函数的副作用，因为你 不在乎返回值，只是想利用方法做些事。所以如果你直接调用 f()，Java 编译器就不知道你想调用哪个方法，阅读者也不明所以。因为这个原因，所以你不能根据返回值类型区分重载的方法。
+
+### 无参构造器
+
+一个无参构造器就是不接收参数的构造器，如果你创建一个类，类中没有构造器，那么编译器就会自动为你创建一个无参构造器。
+
+```java
+class Bird {}
+public class DefaultConstructor {
+    public static void main(String[] args) {
+    	Bird bird = new Bird(); // 有默认的构造器
+    }
+}
+```
+
+一旦你显式地定义了构造器（无论有参还是无参），编译器就不会自动为你创建无参构 造器。
+
+```java
+class Bird2 {
+    Bird2(int i) {}
+    Bird2(double d) {}
+}
+public class NoSynthesis {
+    public static void main(String[] args) {
+        //- Bird2 b = new Bird2(); // No default
+        Bird2 b2 = new Bird2(1);
+        Bird2 b3 = new Bird2(1.0);
+    }
+}
+```
+
+如果调用了 new Bird2() ，编译器会提示找不到匹配的构造器。
+
+### this 关键字
+
+通过谁调用的方法谁就是 this。
+
+this 参数的传递是隐式传递的。在字节码中有所体现。
+
+- this 只能在方法内部使用，且不能在静态方法中使用。为什么？看JVM。
+    - 静态随类的加载而加载，所以静态先出现，而对象后出现（对象要等类加载完毕了，才可以 new 出来）。
+    - 我出现了，但是你没出现，我就不能使用你（使用未出现的）
+- 类加载机制！静态的使用不必对类进行实例化。this 指的是当前对象的引用。
+
+#### this关键字的一些作用
+
+- 在构造器中调用构造器
+
+```java
+public class Flower{
+	private int price;
+	private String name;
+	public Flower(int price){
+		this.price = price;
+	}
+	public Flower(String name){
+		this(12);
+        this.name = name;
+	}
+}  
+```
+
+> PS：this 只能调用一个构造器；this 调用的构造器要放在最前面  
+
+- 向其他方法传递当前对象
+- this.成员变量 表明指的是成员变量，避免参数列表中的参数和要赋值的变量重复
+
+```java
+public class ThisDemo {
+    private int x;
+
+    public void set(int x) {
+        x = x; // 左边的x不是成员变量x。用 this.x = x;可以解决
+    }
+
+    public static void main(String[] args) {
+        ThisDemo thisDemo = new ThisDemo();
+        thisDemo.set(1);
+        System.out.println(thisDemo.x); // 0
+    }
+}
+```
+
+### static 关键字
+
+- static 方法中不会存在 this。你不能在静态方法中调用非静态方法（反之可以）。
+- 静态方法是为类而创建的，不需要任何对象。这也是静态方法的主要目的
+- 静态方法看起来就像全局方法一样，但是 Java 中不允许全局方法，一个类中的静态方法可以访问其他静态方法和静态属性。
+- 一些人认为静态方法不是面向对象的，因为它们的确具有全局方法的语义。使用静态方法，因为不存在 this，所以你没有向一个对象发送消息。如果你发现代码中出现了大量的 static 方法，就该重新考虑自己的设计了。
+
+### 垃圾回收
+
+Java 中有垃圾回收器回收无用对象占用的内存。但 Java 中，对象并非总是别垃圾回收
+
+- 对象可能不被垃圾回收
+- 垃圾回收不等同于C++中的析构
+
+只要程序没有濒临内存用完的那一刻，对象占用的空间就总也得不到释放。如果程序执行结束，而垃圾回收器一直没有释放你创建的任何对象的内存，则当程序退出时，那些资源会全部交还给操作系统。因为垃圾回收本身也有开销，这种策略可以减少不必要的GC开支。
+
+#### 垃圾回收器工作
+
+在堆上分配对象的代价十分高昂，你可能自然会觉得 Java 中所有对象（基本类型除外）在堆上分配的方式也十分高昂。然而，垃圾回收器能很明显地提高对象的创建速度。这听起来很奇怪——存储空间的释放影响了存储空间的分配，但这确实是某些 Java 虚拟机的工作方式。这也意味着，Java 从堆空间分配的速度 可以和其他语言在栈上分配空间的速度相媲美。
 
 ## 第四章 静态关键字
 
