@@ -2255,7 +2255,7 @@ public class AnonymityClassWithParam {
 
 **[3]** 匿名内部类，要使用一个在其外部定义的对象，那么编译 器会要求其参数引用是 final 的。
 
-如果想在匿名内部类中做一些类似构造器的行为，该怎么办呢？在匿名类中不可能有命名构造器（因为它根本没名 字！），但通过实例初始化，就能够达到为匿名内部类创建一个构造器的效果，就像这样：
+如果想在匿名内部类中做一些类似构造器的行为，该怎么办呢？在匿名类中不可能有命名构造器（因为它根本没名字！），但通过实例初始化，就能够达到为匿名内部类创建一个构造器的效果，就像这样：
 
 ```java
 abstract class Base {
@@ -2330,7 +2330,6 @@ interface InterfaceStaticClass {
 }
 
 class DemoSon extends InterfaceStaticClass.Demo { // 不是 final 哦
-    
 }
 ```
 
@@ -2833,7 +2832,7 @@ java.util 库提供了一套相当完整的集合类（collection classes）来�
 
 ### 基本概念
 
-Java 集合类库采用 “持有对象”（holding objects）的思想，并将其分为两个不同的 概念，表示为类库的基本接口：
+Java 集合类库采用 “持有对象”（holding objects）的思想，并将其分为两个不同的概念，表示为类库的基本接口：
 
 - **集合（Collection）：**一个独立元素的序列，这些元素都服从一条或多条规则。List 必须以插入的顺序保存元素，Set 不能包含重复元素，Queue 按照排队规则来确 定对象产生的顺序
   - HashSet、TreeSet、LinkedHashSet，仅保存每个相同项中的一个。
