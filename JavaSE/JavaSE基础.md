@@ -248,171 +248,6 @@ public Class Counter{
 }
 ```
 
-###  this关键字
-
-#### this关键字的一些概念
-
-> **通过谁调用的方法谁就是 this。**
-
-this 参数的传递是隐式传递的。在字节码中有所体现。
-
-- this 只能在方法内部使用，且不能在静态方法中使用。为什么？看JVM。
-    - 静态随类的加载而加载，所以静态先出现，而对象后出现（对象要等类加载完毕了，才可以 new 出来）。
-    - 我出现了，但是你没出现，我就不能使用你（使用未出现的）
-- 类加载机制！静态的使用不必对类进行实例化。this 指的是当前对象的引用。
-
-#### this关键字的一些作用
-
-- 在构造器中调用构造器
-
-```java
-public class Flower{
-	private int price;
-	private String name;
-	public Flower(int price){
-		this.price = price;
-	}
-	public Flower(String name){
-		this(12);
-        this.name = name;
-	}
-}  
-```
-
-> PS：this 只能调用一个构造器；this 调用的构造器要放在最前面  
-
-### 构造器初始化
-
-#### 初始化顺序
-
-在类的内部，变量定义的先后顺序决定了初始化的顺序。即使变量定义散布于方法定义之间，它们仍旧会在任何方法（包括构造器）被调用之前得到初始化。简而言之，构造方法做 new 对象的最后的初始化。
-
-```java
-public class InitSequerence {
-    Windows w1 = new Windows("w1");
-
-    public InitSequerence() {
-        Windows w2 = new Windows("w2");
-    }
-
-    Windows w3 = new Windows("w3");
-
-    public static void main(String[] args) {
-        new InitSequerence();
-    }
-
-    static class Windows {
-        public Windows(String name) {
-            System.out.println(name);
-        }
-    }
-}
-// w1 w3 w2 先执行成员变量的初始化，在调用构造器
-```
-
-#### 静态数据的初始化
-
-静态初始化只有在必要的时候才会进行。
-
-- 静态成员变量的初始化，会在非静态成员变量之前。
-- 静态内部类的初始化，只有在使用到静态内部类/类中的变量，方法时才会初始化。即：<span style="color:red">静态内部类用到时才会加载。（类的懒加载）</span>
-
-#### 非静态实例初始化
-
-- 也是按代码的顺序进行初始化的。且均在构造方法之后。<span style="color:red">构造方法最后初始化</span>
-
-```java
-public class UnStaticInit {
-
-    public UnStaticInit() {
-        System.out.println("unStaticInit");
-    }
-
-    Test t1;
-
-    {
-        t1 = new Test("用于初始化成员变量的代码块");
-    }
-
-    {
-        Test test = new Test("单纯的代码块");
-    }
-
-
-    public static void main(String[] args) {
-        new UnStaticInit().t1.say();
-    }
-}
-
-class Test {
-    public Test(String msg) {
-        System.out.println(msg);
-    }
-
-    public void say() {
-        System.out.println("hello");
-    }
-}
-
-/**
-用于初始化成员变量的代码块
-单纯的代码块
-unStaticInit
-hello
-*/
-```
-
-#### 数组的初始化
-
-```java
-int[] a = {};
-System.out.println(a.length);// 这种是被允许的。
-```
-
-### 匿名对象
-
-没有名字的对象。好处是用一次后就可以被销毁了，节省内存空间。缺点是只能使用一次。安卓中常用。
-
-### 枚举对象
-
-- 枚举对象可以更加清楚的表明程序的意义。
-- 打印枚举对象时，会自动调用 `toString()` 方法，枚举的 `values()` 方法 ，用来按照 enum 常量的声明顺序，产生由这些常量值构成的数组。
-- 简而言之：enum 修饰的类，隐式的继承了 Enum 对象，枚举对象中的枚举实例，本质上是一个对象，最后所有的实例会组成一个数组；values 方法可以拿到这个数组。
-    - 代码中 sout value 会自动调用 toString 方法，value.ordinal 可以得到它在数组中的顺序（索引）。
-
-
-```java
-public enum SpicinessEnum {
-    NOT, MILD, MEDIUM, HOT, FLAMING
-}
-
-class SimpleUseEnum {
-    public static void main(String[] args) {
-        for (SpicinessEnum value : SpicinessEnum.values()) {
-            System.out.println(value + ":" + value.ordinal());
-        }
-    }
-}
-/*
-NOT:0
-MILD:1
-MEDIUM:2
-HOT:3
-FLAMING:4
-*/
-```
-
-### 访问控制符
-
-把变动的事物与保持不变的事物区分开来。
-
-Java 有四种访问权限：`public` `protected` `包访问权限` `private`
-
-- `public` 公有的，任何类都可以访问
-- `protected` 受保护的，子类和同一包下的都可以访问
-- `包访问权限 default` 只能同一个类，或同一个包下的进行访问。不同包的，即便是子类也不能访问！
-- `private` 私有的，仅在自己类内部可以访问
-
 ## 第二章 万物皆对象
 
 这个，不好说。
@@ -624,9 +459,8 @@ public class NoSynthesis {
 
 ### this 关键字
 
-通过谁调用的方法谁就是 this。
-
-this 参数的传递是隐式传递的。在字节码中有所体现。
+- [x] 通过谁调用的方法谁就是 this。
+- [x] this 参数的传递是隐式传递的。在字节码中有所体现。
 
 - this 只能在方法内部使用，且不能在静态方法中使用。为什么？看JVM。
     - 静态随类的加载而加载，所以静态先出现，而对象后出现（对象要等类加载完毕了，才可以 new 出来）。
@@ -674,45 +508,23 @@ public class ThisDemo {
 
 ### static 关键字
 
-- static 方法中不会存在 this。你不能在静态方法中调用非静态方法（反之可以）。
-- 静态方法是为类而创建的，不需要任何对象。这也是静态方法的主要目的
+#### static 的含义
+
+- static 方法中不会存在 this。你不能在静态方法中调用非静态方法（反之可以， 静态不能直接访问非静态。）
+    - 因为内存中是【先】有静态内容，【后】有非静态内容
+    - 因为this代表当前对象，通过谁调用的方法就是当前对象。但是静态与对象无关。静态是【类名称.静态方法】
+    - `new Object().staticMethod();  // 最终会翻译成ClassName.staticMethod();`
+
+- 静态方法是为类而创建的，不需要任何对象。这也是静态方法的主要目的（static 修饰的成员方法是静态方法，静态方法不属于对象，而是属于类。）
 - 静态方法看起来就像全局方法一样，但是 Java 中不允许全局方法，一个类中的静态方法可以访问其他静态方法和静态属性。
 - 一些人认为静态方法不是面向对象的，因为它们的确具有全局方法的语义。使用静态方法，因为不存在 this，所以你没有向一个对象发送消息。如果你发现代码中出现了大量的 static 方法，就该重新考虑自己的设计了。
 
-### 垃圾回收
+#### static 的作用
 
-Java 中有垃圾回收器回收无用对象占用的内存。但 Java 中，对象并非总是别垃圾回收
+- **可实现数据共享。static修饰的内容不再属于对象自己，而是属于类的，所以凡是本类的对象，都共享同一份。**
+- 什么时候用 static：只想为某特定域分配单一存储空间，而不去考虑究竟要创建多少对象，甚至更本不用创建对象；不希望某个方法、成员变量与类的任何对象关联起来。
 
-- 对象可能不被垃圾回收
-- 垃圾回收不等同于C++中的析构
-
-只要程序没有濒临内存用完的那一刻，对象占用的空间就总也得不到释放。如果程序执行结束，而垃圾回收器一直没有释放你创建的任何对象的内存，则当程序退出时，那些资源会全部交还给操作系统。因为垃圾回收本身也有开销，这种策略可以减少不必要的GC开支。
-
-#### 垃圾回收器工作
-
-在堆上分配对象的代价十分高昂，你可能自然会觉得 Java 中所有对象（基本类型除外）在堆上分配的方式也十分高昂。然而，垃圾回收器能很明显地提高对象的创建速度。这听起来很奇怪——存储空间的释放影响了存储空间的分配，但这确实是某些 Java 虚拟机的工作方式。这也意味着，Java 从堆空间分配的速度 可以和其他语言在栈上分配空间的速度相媲美。
-
-## 第四章 静态关键字
-
-> **可实现数据共享。static修饰的内容不再属于对象自己，而是属于类的，所以凡是本类的对象，都共享同一份。**
-
-什么时候用 static：只想为某特定域分配单一存储空间，而不去考虑究竟要创建多少对象，甚至更本不用创建对象；不希望某个方法、成员变量与类的任何对象关联起来。
-
-### 静态概述
-
-- static修饰的成员方法是静态方法，静态方法不属于对象，而是属于类。
-
-- PS： 静态不能直接访问非静态。
-
-  - 因为内存中是【先】有静态内容，【后】有非静态内容
-
-- PS：静态中不能使用this。
-
-  - 因为this代表当前对象，通过谁调用的方法就是当前对象。但是静态与对象无关。静态是【类名称.静态方法】
-
-  - `new Object().staticMethod();  // 最终会翻译成ClassName.staticMethod();`
-
-### 静态代码块
+#### 静态代码块
 
 > 格式
 
@@ -726,10 +538,35 @@ public class ClassName{
 // 用到类就行。就是只是类名称.staticMethod()调用也是用到了类，static会被执行。
 ```
 
-#### 静态代码块的注意事项
+- [x] 静态代码块的注意事项
 
 - 静态代码块的执行顺序与定义的顺序有关。先定义的先执行。
 - 静态代码块的执行顺序优于静态方法，构造方法！【先有静态，再有堆中的对象。静态总是优于非静态。】
+
+#### 静态的加载时机
+
+静态随类的加载而加载（静态内部类是类，加载遵从类的加载机制，所以静态内部类不会随外部类的加载而加载，而是在使用的时候才会加载 [ 惰性加载 ]）。
+
+> 类加载概述
+
+`.class` 文件中的信息最终都需要加载到虚拟机中之后才会被运行和使用。
+
+虚拟机把描述类的数据从 Class 文件加载到内存，并对数据进行校验、转换解析和初始化，最终形成可以被虚拟机直接使用的Java类型，这就是虚拟机的类加载机制。
+
+类从被加载到虚拟机内存中开始，到卸载出内存为止，它的整个生命周期包括：加载（Loading）、验证（Verification）、准备（Preparation）、解析（Resolution）、初始化（Initialization）、使用（Using）和卸载（Unloading）7个阶段。其中验证、准备、解析3个部分统称为连接（Linking），这7个阶段的发生顺序如图所示：
+
+<img src="../pics/JavaStrengthen/jvm/epub_603120_351.jpg">
+
+- 遇到 new、getstatic、putstatic 或 invokestatic 这4条字节码指令时，如果类没有进行过初始化，则需要先触发其初始化。生成这4条指令的最常见的 Java 代码场景是：
+    - 使用 new 关键字实例化对象的时候、
+    - 读取或设置一个类的静态字段（被 final 修饰、已在编译期把结果放入常量池的静态字段除外）的时候，
+    - 以及调用一个类的静态方法的时候。
+
+> 初始化
+
+类的初始化阶段是类加载过程的最后一个步骤。进行准备阶段时，变量已经赋过一次系统要求的初始零值，而在初始化阶段则会按照所写的代码去初始化类变量和其他资源；即执行类构造器`<clinit>` 方法。
+
+`clinit` 方法是 Java 编译器自动生成的；具体是收集类中所有类变量的赋值动作和静态语句块（`static{}` 块）中的语句合并产生的，编译器收集的顺序是由语句在源文件中出现的顺序收集的。
 
 #### 静态工具类Arrays
 
@@ -762,30 +599,416 @@ public void test1(){
 }
 ```
 
-### 静态的加载时机
+### 垃圾回收
 
-静态随类的加载而加载（静态内部类是类，加载遵从类的加载机制，所以静态内部类不会随外部类的加载而加载，而是在使用的时候才会加载 [ 惰性加载 ]）。
+Java 中有垃圾回收器回收无用对象占用的内存。但 Java 中，对象并非总是别垃圾回收
 
-> 类加载概述
+- 对象可能不被垃圾回收
+- 垃圾回收不等同于C++中的析构
 
-`.class` 文件中的信息最终都需要加载到虚拟机中之后才会被运行和使用。
+只要程序没有濒临内存用完的那一刻，对象占用的空间就总也得不到释放。如果程序执行结束，而垃圾回收器一直没有释放你创建的任何对象的内存，则当程序退出时，那些资源会全部交还给操作系统。因为垃圾回收本身也有开销，这种策略可以减少不必要的GC开支。
 
-虚拟机把描述类的数据从 Class 文件加载到内存，并对数据进行校验、转换解析和初始化，最终形成可以被虚拟机直接使用的Java类型，这就是虚拟机的类加载机制。
+#### 垃圾回收器工作
 
-类从被加载到虚拟机内存中开始，到卸载出内存为止，它的整个生命周期包括：加载（Loading）、验证（Verification）、准备（Preparation）、解析（Resolution）、初始化（Initialization）、使用（Using）和卸载（Unloading）7个阶段。其中验证、准备、解析3个部分统称为连接（Linking），这7个阶段的发生顺序如图所示：
+在堆上分配对象的代价十分高昂，你可能自然会觉得 Java 中所有对象（基本类型除外）在堆上分配的方式也十分高昂。然而，垃圾回收器能很明显地提高对象的创建速度。这听起来很奇怪——存储空间的释放影响了存储空间的分配，但这确实是某些 Java 虚拟机的工作方式。这也意味着，Java 从堆空间分配的速度 可以和其他语言在栈上分配空间的速度相媲美。
 
-<img src="../pics/JavaStrengthen/jvm/epub_603120_351.jpg">
+### 成员初始化
 
-- 遇到 new、getstatic、putstatic 或 invokestatic 这4条字节码指令时，如果类没有进行过初始化，则需要先触发其初始化。生成这4条指令的最常见的 Java 代码场景是：
-    - 使用 new 关键字实例化对象的时候、
-    - 读取或设置一个类的静态字段（被 final 修饰、已在编译期把结果放入常量池的静态字段除外）的时候，
-    - 以及调用一个类的静态方法的时候。
+Java 会尽量保证所有变量在使用前都能得到恰当的初始化。对于方法的局部变量，会议编译时错误的方式出现。
 
-> 初始化
+```java
+public class MemberVar {
+    public static void main(String[] args) {
+        int i;
+        i++; // 会报错
+    }
+}
+```
 
-类的初始化阶段是类加载过程的最后一个步骤。进行准备阶段时，变量已经赋过一次系统要求的初始零值，而在初始化阶段则会按照所写的代码去初始化类变量和其他资源；即执行类构造器`<clinit>` 方法。
+### 构造器初始化
 
-`clinit` 方法是 Java 编译器自动生成的；具体是收集类中所有类变量的赋值动作和静态语句块（`static{}` 块）中的语句合并产生的，编译器收集的顺序是由语句在源文件中出现的顺序收集的。
+我们可以使用构造器初始化成员变量。但是这自动初始化仍会进行，且会在构造器被调用之前发生。
+
+```java
+public class Counter {
+    int i; // 在构造器调用之前会发生默认初始化，初始化为0。
+
+    Counter() {
+        i++; // 默认初始化完成之后，才会调用构造器初始化
+    }
+
+    public static void main(String[] args) {
+        Counter counter = new Counter();
+        System.out.println(counter.i);
+    }
+}
+```
+
+因此，编译器不会强制我们一定要在构造器某个地方或在使用它们之前进行元素的初始化。
+
+#### 初始化的顺序
+
+在类的内部，变量定义的先后顺序决定了初始化的顺序。即使变量定义散布于方法定义之间，它们仍旧会在任何方法（包括构造器）被调用之前得到初始化。简而言之，构造方法做 new 对象的最后的初始化。
+
+```java
+public class InitSequerence {
+    Windows w1 = new Windows("w1");
+
+    public InitSequerence() {
+        Windows w2 = new Windows("w2");
+    }
+
+    Windows w3 = new Windows("w3");
+
+    public static void main(String[] args) {
+        new InitSequerence();
+    }
+
+    static class Windows {
+        public Windows(String name) {
+            System.out.println(name);
+        }
+    }
+}
+// w1 w3 w2 先执行成员变量的初始化，在调用构造器
+```
+
+#### 静态数据的初始化
+
+静态初始化只有在必要的时候才会进行。
+
+- 静态成员变量的初始化，会在非静态成员变量之前。（先静态在非静态）
+- 静态内部类的初始化，只有在使用到静态内部类/类中的变量，方法时才会初始化。即：<span style="color:red">静态内部类用到时才会加载。（类的懒加载）</span>
+
+> 看代码说结果
+
+```java
+package tij.chapter6;
+
+import static java.lang.System.out;
+
+class Bowl {
+    Bowl(int marker) {
+        out.println("Bowl(" + marker + ")");
+    }
+
+    void f1(int marker) {
+        out.println("f1(" + marker + ")");
+    }
+}
+
+class Table {
+    static Bowl bowl1 = new Bowl(1);
+
+    Table() {
+        out.println("Table()");
+        bowl2.f1(1);
+    }
+
+    void f2(int marker) {
+        out.println("f2(" + marker + ")");
+    }
+
+    static Bowl bowl2 = new Bowl(2);
+}
+
+class Cupboard {
+    Bowl bowl3 = new Bowl(3);
+    static Bowl bowl4 = new Bowl(4);
+
+    Cupboard() {
+        out.println("Cupboard()");
+        bowl4.f1(2);
+    }
+
+    void f3(int marker) {
+        out.println("f3(" + marker + ")");
+    }
+
+    static Bowl bowl5 = new Bowl(5);
+}
+
+public class StaticInitialization {
+    public static void main(String[] args) {
+        out.println("Creating new Cupboard() in main");
+        new Cupboard();
+        out.println("Creating new Cupboard() in main");
+        new Cupboard();
+        table.f2(1);
+        cupboard.f3(1);
+    }
+
+    static Table table = new Table(); // 先执行这个的初始化
+    /**
+     * Bowl(1)
+     * Bowl(2)
+     * Table()
+     * f1(1)
+     */
+    static Cupboard cupboard = new Cupboard();
+    /**
+     * Bowl(4)
+     * Bowl(5)
+     * Bowl(3)
+     * Cupboard()
+     * f1(2)
+     */
+    /**
+     * Creating new Cupboard() in main
+     * Bowl(3)
+     * Cupboard()
+     * f1(2)
+     * Creating new Cupboard() in main
+     * Bowl(3)
+     * Cupboard()
+     * f1(2)
+     * f2(1)
+     * f3(1)
+     */
+}
+```
+
+概括下创建对象的过程，假设有个名为 Dog 的类
+
+- 1、即使没有显示地使用 static 关键字，构造器实际上也是静态方法。
+- 2、加载完 Dog.class 后，有关静态初始化的所有动作都会执行。静态只会在首次加载 Class 对象时初始化一次。
+- 3、用 new Dog() 创建对象时，首先会在堆上为 Dog 分配足够的空间
+- 4、分配的存储空间首先会被清零，即将 Dog 对象中所有的基本数据类型设置为默认值，引用类型被设置为 null
+- 5、执行所有出现在字段定义出的初始化动作
+- 6、执行构造器
+
+#### 显示的静态初始化
+
+```java
+public class Spoon {
+    static int i;
+
+    static {
+        i = 10;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(Spoon.i);
+    }
+}
+```
+
+#### 非静态实例初始化
+
+- 也是按代码的顺序进行初始化的。且均在构造方法之后。<span style="color:red">构造方法最后初始化</span>
+
+```java
+public class UnStaticInit {
+
+    public UnStaticInit() {
+        System.out.println("unStaticInit");
+    }
+
+    Test t1;
+
+    {
+        t1 = new Test("用于初始化成员变量的代码块");
+    }
+
+    {
+        Test test = new Test("单纯的代码块");
+    }
+
+
+    public static void main(String[] args) {
+        new UnStaticInit().t1.say();
+    }
+}
+
+class Test {
+    public Test(String msg) {
+        System.out.println(msg);
+    }
+
+    public void say() {
+        System.out.println("hello");
+    }
+}
+
+/**
+用于初始化成员变量的代码块
+单纯的代码块
+unStaticInit
+hello
+*/
+```
+
+#### 数组的初始化
+
+数组：相同类型的、用一个标识符名称封装到一起的一个对象序列或基本类型数据序列。
+
+```java
+int[] a = {};
+int[] a1 = {1,2,3};
+System.out.println(a.length);// 这种是被允许的。
+```
+
+非基本类型的数组（引用数组）
+
+```java
+Integer[] ac = new Integer[100];
+// 花括号括起来的列表初始化数组
+Integer[] a = {1,2,3}; //
+Integer[] b = new Integer[]{1,2,3};
+```
+
+#### 可变参数列表
+
+```java
+public static void test1(String... arg) {
+    // arg 实际上是一个数组。jdk 5 的语法糖
+    System.out.println(arg);
+    System.out.println(arg.length);
+}
+
+public static void main(String[] args) {
+    System.out.println(Spoon.i);
+    test1("1", "2", "3");
+    test1(new String[]{"1", "2"});
+}
+```
+
+有了可变成参数，就不用显式地编写数组语法了，可以直接传递多个数据对象了。<span style="color:red">且如果传递的是数组的话，该方法会把它们当作可变长参数列表来接受。</span>
+
+> 可变长参数与重载
+
+```java
+
+public class OverloadingVarargs {
+    static void f(Character... args) {
+        System.out.println("first");
+    }
+
+    static void f(Integer... args) {
+        System.out.println("second");
+    }
+
+    static void f(Long... args) {
+        System.out.println("third");
+    }
+
+    public static void main(String[] args) {
+        f('a', 'b', 'c'); // first
+        f(1, 2); // second
+        f(1);// second
+        f(1L);// third
+    }
+}
+```
+
+在每种情况下，编译器都会使用自动装箱来匹配重载的方法，然后调用最明确匹配的方法。<span style="color:red">但是如果调用不含参数的 f() 编译器就无法知道应该调用那个方法。</span>（包装类会出现这种情况）
+
+```java
+public class OverloadingVarargs2 {
+    static void f(float i, Character... args) {
+        System.out.println("first");
+    }
+
+    static void f(Character... args) {
+        System.out.println("second");
+    }
+
+    public static void main(String[] args) {
+        f(1, 'a');
+        f('a', 'b');
+    }
+}
+//java: 对f的引用不明确
+//  tij.chapter6.OverloadingVarargs2 中的方法 f(float,java.lang.Character...) 和 tij.chapter6.OverloadingVarargs2 中的方法 f(java.lang.Character...) 都匹配
+```
+
+非包装类
+
+```java
+public class OverloadingVarargs2 {
+    static void f(float i, int... args) {
+        System.out.println("first");
+    }
+
+    static void f(int... args) {
+        System.out.println("second");
+    }
+
+    public static void main(String[] args) {
+        f(1.0f, 'a');
+        f('a', 'b');
+    }
+}
+// 正常执行
+```
+
+### 匿名对象
+
+没有名字的对象。好处是用一次后就可以被销毁了，节省内存空间。缺点是只能使用一次。安卓中常用。
+
+### 枚举对象
+
+- 枚举对象可以更加清楚的表明程序的意义。
+- 打印枚举对象时，会自动调用 `toString()` 方法；枚举的 `values()` 方法 ，会按照 enum 常量的声明顺序，产生由这些常量值构成的数组。
+- 简而言之：enum 修饰的类，隐式的继承了 Enum 对象，枚举对象中的枚举实例，本质上是一个对象，最后所有的实例会组成一个数组；values 方法可以拿到这个数组。
+    - 代码中 sout value 会自动调用 toString 方法，value.ordinal 可以得到它在数组中的顺序（索引）。
+
+
+```java
+public enum SpicinessEnum {
+    NOT, MILD, MEDIUM, HOT, FLAMING
+}
+
+class SimpleUseEnum {
+    public static void main(String[] args) {
+        for (SpicinessEnum value : SpicinessEnum.values()) {
+            System.out.println(value + ":" + value.ordinal());
+        }
+    }
+}
+/*
+NOT:0
+MILD:1
+MEDIUM:2
+HOT:3
+FLAMING:4
+*/
+```
+
+### 访问控制符
+
+把变动的事物与保持不变的事物区分开来。
+
+Java 有四种访问权限：`public` `protected` `包访问权限` `private`
+
+- `public` 公有的，任何类都可以访问
+- `protected` 受保护的，子类和同一包下的都可以访问
+- `包访问权限 default` 只能同一个类，或同一个包下的进行访问。不同包的，即便是子类也不能访问！
+- `private` 私有的，仅在自己类内部可以访问
+
+## 第四章 封装
+
+写了一段代码，过段时间再看这些代码，可能会发现更好的实现方式，这时可以考虑重构这些代码，使之更加可读、易懂，更易维护。
+
+### 包的概念
+
+包含一组类，代码的命名空间；包本质上其实就是一个文件夹，用来防止文件重名的。
+
+如果需要使用一些额外的包，那么需要设置 CLASSPATH 属性。
+
+如果两个包包含相同的名字，会发生冲突，此时只能通过写类全名解决。`java.util.Vertor v = new java.util.Vertor()`
+
+- [x] 使用包的注意事项
+    - [x] 当创建一个包时，包名就隐含了目录结构。这个包必须位于包名指定的目录中，该目录必须在以 CLASSPATH 开始的目录中可以查询到。
+    - [x] 如果查找不到，运行时会报错，找不到特定的类。
+
+### 访问权限修饰符
+
+待补充（二刷 Thinking in Java）
+
+### 接口和实现
+
+### 类访问权限
 
 ## 第五章 继承
 
