@@ -77,8 +77,6 @@ Java 有三个显式关键字来设置类中的访问权限：public（公开）
 
 “异常机制” 提供了一种可靠地从错误状况中恢复的方法，使得我们可以编 写出更健壮的程序。有时你只要处理好抛出的异常情况并恢复程序的运行即可，无需退出。
 
-
-
 ### 快速回顾
 
 > 什么叫面向对象
@@ -140,31 +138,23 @@ Java 有三个显式关键字来设置类中的访问权限：public（公开）
 
 Java通过成员变量是否有 static 修饰来区分是类的还是属于对象的。
 
-static == 静态 == 修饰的成员（方法和成员变量）属于类本身。
+static \=\=\>静态\=\=\> 修饰的成员（方法和成员变量）属于类本身。
 
-有 static，静态成员变量：属于类本身。
-
-无 static，实例成员变量：属于每个实例对象，必须用类的对象来访问。
+- 有 static，静态成员变量：属于类本身。
+- 无 static，实例成员变量：属于每个实例对象，必须用类的对象来访问。
 
 成员方法也类似：
 
-1、静态方法
+- 静态方法
+- 实例方法
 
-2、实例方法
-
-static修饰，属于类本身，与类加载一次，因为只有一份所以可以被类和类的对象共享。
-
-----
-
-成员变量的分类和访问内存图
-
-![image-20210421212413778](..\pics\JavaStrengthen\image-20210421212413778.png)
+static 修饰，属于类本身，随类的加载而加载，因为只有一份所以可以被类和类的对象共享。
 
 ### 类与类之间的关系
 
 - **依赖（user-a）**：一个类使用了另一个类的方法，A调用了B的方法，B出bug了，A也可能出bug，软件工程中称之为耦合。
 - **聚合（has-a）**：一个对象将一个或者多个其它对象作为自己的成员
-- **继承（is-a）**：一个子类继承父类，那么子类会拥有父类的非 private 修饰的方法、变量。
+- **继承（is-a）**：一个子类继承父类，那么子类会拥有父类的<span style="color:red">非 private 修饰的方法、变量。</span>
 
 ### 类和对象
 
@@ -175,7 +165,7 @@ static修饰，属于类本身，与类加载一次，因为只有一份所以�
   - 属性：名字、体重、年龄、颜色。  
   - 行为：走、跑、叫。
 - **什么是对象** 
-  - 对象：是一类事物的具体体现。对象是类的一个实例（对象并不是找个女朋友），必然具备该类事物的属性 和行为。
+  - 对象：是一类事物的具体体现。对象是类的一个实例，必然具备该类事物的属性 和行为。
   - 现实中，一类事物的一个实例：一只小猫。
   - 属性：tom、5kg、2 years、yellow。   
   - 行为：溜墙根走、蹦跶的跑、喵喵叫。 
@@ -320,7 +310,7 @@ System.out.println(n >> 2);
 
 但是 Java 也提供了一种不分正负的右移位运算符（>>>）。
 
-```shell
+```java
 int n = 20;
 System.out.println(n >>> 10); // 不分正负的右移位运算。
 ```
@@ -1027,7 +1017,7 @@ class PublicConstructor{
 
 ### 接口和实现
 
-访问控制为类库划定了使用界限。public 供普通开发人员正常使用。private 修饰的不对外开发。普通开发人员通过统一的方式使用类库开发者提供的接口，具体的实现被隐藏在了 private 中。一旦类库需要做出一些变动，类库开发者只需要修改 private 中的内容，提供的 public 接口不会有变动，不会对普通开发者使用类库产生影响。
+访问控制为类库的使用划定了界限。public 供普通开发人员正常使用。private 修饰的不对外开放。普通开发人员通过统一的方式使用类库开发者提供的接口，具体的实现被隐藏在了 private 中。一旦类库需要做出一些变动，类库开发者只需要修改 private 中的内容，提供的 public 接口不会有变动，不会对普通开发者使用类库产生影响。
 
 在创建类时可以考虑：public 成员放在类开头，接着是 protected，包访问权限，最后是 private。
 
@@ -1064,7 +1054,7 @@ public class Soup1 {
 
 Java 通过类来解决代码复用。
 
-- [x] 组合：把一个对象作为另一个类的成员对象。
+- [x] 组合：<span style="color:red">把一个对象作为另一个类的成员对象。</span>
 - [x] 用继承来实现代码的复用
 
 组合与继承的语法、行为上有很多相似的地方，都是基于现有类型构造新的类型。
@@ -1083,6 +1073,7 @@ public class WaterSource {
 
 ```java
 public class Bath {
+    // s4 暂时用不到，等需要使用时在进行初始化。
     private String s1 = "s1", s2, s3, s4;
 
     public Bath() {
@@ -1147,7 +1138,149 @@ Java 中所有的对象都会隐式的继承 Object 类。
 
 ​	【有争议的观点】子类能否继承父类的静态成员？
 
-### 继承中成员变量的访问特点
+#### 初始化父类
+
+当我们创建子类对象的时候，也会（隐式）创建出一个父类对象，因为子类需要使用（或者说继承了）父类的成员变量、方法。因此我们必须正确初始化父类对象。有且只有一种凡是可以正确初始化父类对象，就是调用父类的构造方法（子类的构造会默认调用父类的无参构造）。
+
+- [x] 会先调用父类的构造
+
+```java
+public class Cartoon extends Drawing {
+    public Cartoon() {
+        System.out.println("Cartoon constructor");
+    }
+
+    public static void main(String[] args) {
+        Cartoon cartoon = new Cartoon();
+    }
+}
+
+class Art {
+    Art() {
+        System.out.println("Art constructor");
+    }
+}
+
+class Drawing extends Art {
+    Drawing() {
+        System.out.println("Drawing constructor");
+    }
+}
+/**
+Art constructor
+Drawing constructor
+Cartoon constructor
+*/
+```
+
+- [x] 如果带构造代码块呢
+- 先执行构造代码块，再执行构造方法；这样父类就初始化完毕了，子类就可以开始初始化了（子类在初始化的时候可能会用到父类的变量）
+
+```java
+public class Cartoon extends Drawing {
+    {
+        System.out.println("Cartoon code1");
+    }
+    public Cartoon() {
+        System.out.println("Cartoon constructor");
+    }
+
+    public static void main(String[] args) {
+        Cartoon cartoon = new Cartoon();
+    }
+}
+
+class Art {
+    {
+        System.out.println("art code1");
+    }
+    Art() {
+        System.out.println("Art constructor");
+    }
+}
+
+class Drawing extends Art {
+    {
+        System.out.println("Drawing code1");
+    }
+    Drawing() {
+        System.out.println("Drawing constructor");
+    }
+}
+/**
+art code1
+Art constructor
+Drawing code1
+Drawing constructor
+Cartoon code1
+Cartoon constructor
+*/
+```
+
+- [x] 如果带静态代码块呢
+- 先依次初始化爷爷-->父亲-->女儿的静态，在构造代码块，构造方法
+
+```java
+public class Cartoon extends Drawing {
+    static {
+        System.out.println("static Cartoon");
+    }
+    public Cartoon() {
+        System.out.println("Cartoon constructor");
+    }
+
+    public static void main(String[] args) {
+        Cartoon cartoon = new Cartoon();
+    }
+}
+
+class Art {
+    static {
+        System.out.println("static Art");
+    }
+    Art() {
+        System.out.println("Art constructor");
+    }
+}
+
+class Drawing extends Art {
+    static {
+        System.out.println("static Drawing");
+    }
+    Drawing() {
+        System.out.println("Drawing constructor");
+    }
+}
+/**
+static Art
+static Drawing
+static Cartoon
+Art constructor
+Drawing constructor
+Cartoon constructor
+**/
+```
+
+#### 带参数的构造
+
+- [x] 父类只有显示构造方法的话，必须手动调用父类的构造方法。
+
+```java
+class Art {
+    Art(int i) {
+        System.out.println("Art的有参构造 只是意思一下");
+    }
+}
+
+class Drawing extends Art {
+    Drawing() {
+        super(1); // 显示调用构造
+        System.out.println("Drawing constructor");
+    }
+}
+```
+
+#### 成员变量的访问特点
 
 > 目前关系数据库有六种范式：第一范式（1NF）、第二范式（2NF）、第三范式（3NF）、巴斯-科德范式（BCNF）、第四范式(4NF）和第五范式（5NF，又称完美范式）。
 
@@ -1174,50 +1307,7 @@ class Fu{
 父类的成员变量 super.成员变量
 ```
 
-### 重写和重载
-
-- 重写：在继承关系中，**方法名称一样，参数列表【也一样】**。覆盖、覆写 === 【返回值有协变的特点！】
-- 重载：方法名称一样，参数列表【不一样】
-
-> **方法覆盖重写的特点**：创建的是子类对象，则优先用子类方法
-
-- 方法覆盖重写的注意事项
-
-  - 必须保证父子类之间方法名相同，参数列表也相同
-
-  - 子类方法的返回值必须【小于等于】父类方法的返回值范围。
-
-      - 简而言之，参数必须要一样，且返回类型必须要兼容。
-
-  
-      ```java
-      // 子类的返回类型小于等于父类
-      public class Zi extends Fu{
-          @Override
-          public String method(){
-              return "123";
-          }
-      }
-      class Fu{
-          public Object method(){
-              return null;
-          }
-      }
-      // 为什么？ 是因为向上转型安全，向下转型不安全吗？ 百度的，不确定!
-      ```
-  
-  - 不管父类使用了那种参数，覆盖此方法的子类也一定要使用相同的参数。而不论父类声明的返回类型是声明，**子类必须要声明返回一样的类型或该类型的子类**（<span style="color:red">协变对象</span>）。要记得，子类对象得保证能够执行父类得一切。
-  
-- 子类方法的权限必须【大于等于】父类方法的权限修饰符
-
-  -   public > protected > (default) > private
-  - PS : (default)不是关键字default，而是什么都不写，留空！
-
-- 方法重写的应用场景
-
-  - **设计原则**：对于已经投入使用的类，尽量不要进行修改。推荐定义一个新的类，来重复利用其中共性内容，并且添加改动新内容。
-
-### 继承中构造方法的访问特点
+#### 构造方法的访问特点
 
 子类构造方法中默认隐含有一个super()调用，所以一定是先调用父类构造
 
@@ -1260,7 +1350,7 @@ public Zi(int x){
 }
 ```
 
-super和this不能同时显式调用.
+super 和 this 不能同时显式调用.
 
 ```java
 // 报错 因为 super or this都需要放在第一行！
@@ -1277,48 +1367,63 @@ public Zi(){
 }
 ```
 
-### 初始化顺序
+### 重写和重载
 
-先初始化父类，在初始化子类
+- 重写：在继承关系中，**方法名称一样，参数列表【也一样】**。覆盖、覆写 === 【返回值有协变的特点！】
+- 重载：方法名称一样，参数列表【不一样】；方法重载时，尽量加上`@Overried`注解，可以帮我们检测是否正确重写了。
 
-```java
-// 父类初始化的顺序
-public class SuperInit {
-    public static void main(String[] args) {
-        new Cartoon();
-    }
-}
+> **方法覆盖重写的特点**：创建的是子类对象，则优先用子类方法
 
-class Art {
-    public Art() {
-        System.out.println("Art");
-    }
-}
+- 方法覆盖重写的注意事项
 
-class Drawing extends Art {
-    public Drawing() {
-        System.out.println("Drawing");
-    }
-}
+  - 必须保证父子类之间方法名相同，参数列表也相同
 
-class Cartoon extends Drawing {
-    public Cartoon() {
-        System.out.println("Cartoon");
-    }
-}
-/*
-Art
-Drawing
-Cartoon
-*/
-```
+  - 子类方法的返回值必须【小于等于】父类方法的返回值范围。
+
+      - 简而言之，参数必须要一样，且返回类型必须要兼容。
+
+  
+      ```java
+      // 子类的返回类型小于等于父类
+      public class Zi extends Fu{
+          @Override
+          public String method(){
+              return "123";
+          }
+      }
+      class Fu{
+          public Object method(){
+              return null;
+          }
+      }
+      // 为什么？ 是因为向上转型安全，向下转型不安全吗？ 百度的，不确定!
+      ```
+  
+  - 不管父类使用了那种参数，覆盖此方法的子类也一定要使用相同的参数。而不论父类声明的返回类型是声明，**子类必须要声明返回一样的类型或该类型的子类**（<span style="color:red">协变对象</span>）。要记得，子类对象得保证能够执行父类得一切。
+  
+- 子类方法的权限必须【大于等于】父类方法的权限修饰符
+
+  -   public > protected > (default) > private
+  - PS : (default)不是关键字default，而是什么都不写，留空！
+
+- 方法重写的应用场景
+
+  - **设计原则**：对于已经投入使用的类，尽量不要进行修改。推荐定义一个新的类，来重复利用其中共性内容，并且添加改动新内容。
+
+### 向上转型
+
+继承最重要的方面不是为新类（子类）提供方法，而是，所有给父类发送的消息，父类可以处理，那么发送给子类，子类也可以处理。（即：多态）
+
+#### 组合和继承
+
+判断使用组合还是继承，最清晰的方式就是，问一问自己是否需要把新类向上转型为基类，如果必须向上转型，那么继承是必要的；反之，则需要进一步考虑是否该采用继承。
 
 ### 组合与继承
 
 > 组合与继承都允许在新的类中放置子对象，组合是显式的这样做，而继承是隐式地做。二者的区别在哪里，如何做出选择？
 
-- 组合技术通常用于想在新类中使用类的功能而非它的结构这种情况（多态）。
-- 如果需要子类向父类 向上转型，那么继承是必需的，如果不是，那么要考虑好是不是真的要用继承。（少用继承）
+- 组合技术通常用于想在新类中使用类的功能而非它的结构这种情况（即我们想在新类中包含一个已有类的功能时，使用组合，而非继承。）
+- 如果需要子类向父类向上转型，那么继承是必需的，如果不是，那么要考虑好是不是真的要用继承。（少用继承）
 
 ### final 关键字
 
@@ -1406,6 +1511,7 @@ public class FinalArguments {
 - [x] 使用 final 方法的原因
     - 给方法上锁，防止子类通过覆写改变方法的行为
     - 出于效率，final 修饰的方法可能会被转为内联函数，JVM 不会将那些不会提升性能的 final 方法转为内联函数
+    - final 可以有效关闭动态绑定，让编译器为 final 方法生成更高效的代码，但是一般不会为了这个而使用 final。
 
 final 修饰的方法是最终方法，不能覆盖重写（override）
 
@@ -1446,6 +1552,8 @@ public final class FinalDemo {
 类的初始化（类，不是对象）：类的代码在首次使用时加载，比如创建了一个对象、调用了类的 static 属性或方法（构造器也是一个 static 方法）。static 的初始化会按照定义的顺序进行。
 
 #### 继承和初始化
+
+看代码说结果。
 
 ```java
 // reuse/Beetle.java
@@ -1507,66 +1615,64 @@ j = 39
 ### 抽象概述
 
 - 抽象方法：就是加上 abstract 关键字，然后去掉大括号，直接分号结束
-- 抽象类：抽象方法所在的类，必须是抽象类才行！在class之前写上abstract即可
+- 抽象类：抽象方法所在的类，必须是抽象类才行！在 class 之前写上abstract即可
 - 抽象类**可以没有**一个抽象方法
-- 子类继承了抽象类，如果有未给父类（抽象类）的抽象方法方法体，那么子类也必须声明为抽象类
+- 子类继承了抽象类，如果没有给父类所有（抽象类）的抽象方法方法体，那么子类也必须声明为抽象类
 
 ### 如何使用抽象类和抽象方法
 
-- 不能直接创建new抽象类对象。
+- 不能直接创建(new)抽象类对象。
 
 - 必须用一个子类来继承抽象父类。
 
 - **子类必须覆盖重写抽象父类当中所有的抽象方法。**
-
-  - 子类重写时，去掉抽象方法的abstract关键字，然后补上方法体。
+  - 子类重写时，去掉抽象方法的 abstract 关键字，然后补上方法体。
 
 - 创建子类对象进行使用。
 
 - **PS：Please attention**
 
   - 抽象类可以自己写构造函数
+  - 如果抽象类只有"有参构造"，那么子类的构造函数一定要显示调用这个有参构造！（子类要用父类的数据、方法）
 
-  - 如果抽象类只有 有参构造，那么子类的构造函数一定要显示调用这个有参构造！
+```java
+public abstract class Animal {
+    public Animal(int x){ // 父类只有有参构造
+        System.out.println(x);
+    }
+    public void say(){
+        System.out.println("hello");
+    }
+    public abstract void walk();
+}
 
-    ```java
-    public abstract class Animal {
-        public Animal(int x){
-            System.out.println(x);
-        }
-    
-        public void say(){
-            System.out.println("hello");
-        }
-    
-        public abstract void walk();
+public class Cat extends Animal {
+    public Cat(int x) {
+        super(x); // 子类必须调用这个有参构造
     }
-    
-    public class Cat extends Animal {
-    
-        public Cat(int x) {
-            super(x);
-        }
-    
-        public Cat() {
-            super(1);
-        }
-    
-        @Override
-        public void walk() {
-            System.out.println(":walk");
-        }
-    
-        @Test
-        public void test1(){
-            new Cat();
-        }
+    public Cat() {
+        super(1); // 子类必须调用这个有参构造
     }
-    ```
-    
-  - 抽象类可以实例化，但是不能直接实例化。只能在子类被实例化的过程中，间接实例化。因为实例化子类的时候抽象类也会被实例化。【用的是extends关键字。父类的super会被隐式调用】
-  
-    <a href="https://zhuanlan.zhihu.com/p/95406830">建议看这篇博文</a>
+    public void walk() {
+        System.out.println(":walk");
+    }
+    @Test
+    public void test1(){
+        new Cat();
+    }
+}
+```
+
+- 抽象类可以实例化，但是不能直接实例化。只能在子类被实例化的过程中，间接实例化。因为实例化子类的时候抽象类也会被实例化。【用的是extends关键字。父类的super会被隐式调用】
+
+  <a href="https://zhuanlan.zhihu.com/p/95406830">建议看这篇博文</a>
+
+### 为什么抽象类不能被实例化
+
+- [x] 语法规定
+- [x] 内存考虑：new 申请内存，而抽象类没有具体的成员（变量、方法），没法准确分配内存
+- [x] 现实逻辑：抽象是从现实实物的抽离
+- [x] 设计层面：为了实现[多态](https://www.zhihu.com/search?q=多态&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A95406830})，当某些类只希望作为父类使用，不希望被实例化。
 
 ## 第七章 多态
 
@@ -1585,42 +1691,153 @@ obj.method();
 obj.methodFu();
 ```
 
-### 访问成员变量的两种方式
+> 访问规则
 
-- 直接通过对象名称访问成员变量：看等号左边是谁，优先使用谁，没有则向上找
-- 间接通过成员方法访问
-- 老毕在讲到多态执行问题时，结合下面的例子，给我们总结了一套口诀：“成员变量，静态方法看左边；非静态方法：编译看左边，运行看右边。”意思是：当父类变量引用子类对象时（Fu f = new Zi();），在这个引用变量f指向的对象中，他的成员变量和静态方法与父类是一致的，他的非静态方法，在编译时是与父类一致的，运行时却与子类一致（发生了复写）。
-- 简而言之
-  - **成员变量：编译看左边，运行还看左边**
-  - **成员方法：编译看左边，运行看右边**
+- 变量：编译看左边，运行还看左边
+- 成员方法：编译看左边，运行看右边
+- 静态方法：编译看左边，运行还看左边
 
-### 多态的好处
+### 转型
 
-**无论右边new的时候换成那个子类对象，等号左边调用方法都不会变化！**
+向上转型，把一个对象视为它的自己的类型或者是他的父类类型（向上转型）。那为什么要故意向上转型呢？向上转型是为了编写只与基类打交道的代码，这样的代码扩展性更强。代码示例如下：即便需要喂养再多的动物，也只需要编写一个 feed 方法。
 
 ```java
-Employee one = new Teacher();
-Employee two = new Assistant();
+public class PloyDemo {
+    public static void feed(Animal animal) {
+        animal.eat();
+    }
+    public static void main(String[] args) {
+        feed(new Dog());
+        feed(new Cat());
+    }
+}
+class Animal {
+    void eat() {System.out.println("animal eat");}
+}
+class Dog extends Animal {
+    void eat() {System.out.println("dog eat");}
+}
+class Cat extends Animal {
+    void eat() {System.out.println("cat eat");}
+}
 ```
 
-### 对象的向上\下转型
+向上转型一定是安全的，没有问题的，正确的。弊端在于，对象一旦向上转型为父类，就无法调用子类原本持有的内容。向下转型是不安全的，使用时一定要保证他本来是猫才能向下转型变成猫，可以用 instanceof 进行类型判断
 
-- 向上转型一定是安全的，没有问题的，正确的。弊端在于，对象一旦向上转型为父类，就无法调用子类原本持有的内容。
+```java
+if( animal instanceof Dog){
+	syso("是狗");
+}
+一般先判断是否是该类，是才进行向下转型！
+```
 
-- 向下转型是不安全的，使用时一定要保证他本来是猫才能向下转型变成猫
+### 方法绑定
 
-- instanceof 进行类型判断
+将一个方法调用和一个方法主体关联起来称作绑定。若绑定发生在程序运行前（如果有的话，由编译器和链接器实现），叫做前期绑定。而feed方法只知道又一个animal引用，又如何得知是调用那个方法呢？
 
-  ```java
-  if( animal instanceof Dog){
-  	syso("是狗");
-  }
-  一般先判断是否是该类，是才进行向下转型！
-  ```
+解决方法就是后期绑定，意味着在运行时根据对象的类型进行绑定。后期绑定也称为动态绑定或运行时绑定。当一种语言实现了后期绑定，就必须具有某种机制在运行时能判断对象的类型，从而调用恰当的方法。也就是说，编译器仍然不知道对象的类型，但是方法调用机制能找到正确的方法体并调用。每种语言的后期绑定机制都不同，但是可以想到，对象中一定存在某种类型信息。
 
-### 构造器内调用多态方法
+<span style="color:red">Java 中除了 static 和 final 方法（private 方法也是隐式的 final）外，其他所有方法都是后期绑定。</span>
 
-在构造器中调用了正在构造的对象的动态绑定方法，会发生什么?
+final 可以有效地”关闭“动态绑定，或者说告诉编译器不需要对其进行动态绑定。这可以让编译器为 final 方法生成更高效的代码。然而，大部分情况下这样做不会对程序的整体性能带来什么改变，因此最好是为了设计使用 final，而不是为了提升性能而使用。
+
+### 陷阱: 重写私有方法
+
+```java
+public class PrivateOverride {
+    private void f() {
+        System.out.println("private f()");
+    }
+
+    public static void main(String[] args) {
+        PrivateOverride po = new Derived();
+        po.f();
+    }
+}
+
+class Derived extends PrivateOverride {
+    public void f() {
+        System.out.println("public f()");
+    }
+}
+```
+
+你可能期望输出是 public f()，然而 private 方法可以当作是 final 的，对于派生类来说是隐蔽的。因此，这里 Derived 的 f() 是一个全新的方法；因为基类版本的 f() 屏蔽了 Derived ，因此它都不算是重写方法。
+
+### 陷阱: 属性与静态方法
+
+只有普通的方法调用可以是多态的。例如，如果你直接访问一个属性，该访问会在编译时解析.
+
+> 属性没有静态
+
+```java
+public class FieldAccess {
+    public static void main(String[] args) {
+        Super sup = new Sub(); // Upcast
+        System.out.println("sup.field = " + sup.field +
+                ", sup.getField() = " + sup.getField());
+        Sub sub = new Sub();
+        System.out.println("sub.field = " + sub.field +
+                ", sub.getField() = " + sub.getField()
+                + ", sub.getSuperField() = " + sub.getSuperField());
+    }
+}
+class Super {
+    public int field = 0;
+    public int getField() {return field;}
+}
+class Sub extends Super {
+    public int field = 1;
+    public int getField() {return field;}
+    public int getSuperField() {return super.field;}
+}
+/**
+sup.field = 0, sup.getField() = 1
+sub.field = 1, sub.getField() = 1, sub.getSuperField() = 0
+*/
+```
+
+> 静态方法没有静态
+
+如果一个方法是静态 (static) 的，它的行为就不具有多态性：
+
+```java
+public class StaticPolymorphism {
+    public static void main(String[] args) {
+        StaticSuper sup = new StaticSub(); // Upcast
+        System.out.println(StaticSuper.staticGet());
+        System.out.println(sup.staticGet());
+        System.out.println(sup.dynamicGet());
+    }
+}
+class StaticSuper {
+    public static String staticGet() {
+        return "Base staticGet()";
+    }
+    public String dynamicGet() {
+        return "Base dynamicGet()";
+    }
+}
+class StaticSub extends StaticSuper {
+    public static String staticGet() {
+		return "Derived staticGet()";
+    }
+    public String dynamicGet() {
+        return "Derived dynamicGet()";
+    }
+}
+/**
+Base staticGet()
+Base staticGet()
+Derived dynamicGet()
+*/
+```
+
+静态的方法只与类关联，与单个的对象无关。
+
+### 构造器和多态
+
+通常，构造器不同于其他类型的方法。在涉及多态时也是如此。尽管构造器不具有多态性（事实上人们会把它看作是隐式声明的静态方法）那么，在构造器中调用了正在构造的对象的动态绑定方法，会发生什么?
 
 调用 RoundGlyph 构造器时，会先初始化 Glyph 的构造器，而 Glyph 构造器会调用 draw() 方法，由于多态，最终调用的是 RoundGlyph 的 draw() , 此时 radius 还未初始化，是默认值0，所以 radius 第一次打印的值是0。
 
@@ -1629,28 +1846,23 @@ class Glyph {
     void draw() {
         System.out.println("Glyph.draw()");
     }
-
     Glyph() {
         System.out.println("Glyph() before draw()");
-        draw();
+        draw(); // 由于多态，实际调用的是子类的 draw 方法
         System.out.println("Glyph() after draw()");
     }
 }
-
 class RoundGlyph extends Glyph {
     private int radius = 1;
-
     RoundGlyph(int r) {
         radius = r;
         System.out.println("RoundGlyph.RoundGlyph(), radius = " + radius);
     }
-
     @Override
     void draw() {
         System.out.println("RoundGlyph.draw(), radius = " + radius);
     }
 }
-
 public class PolyConstructors {
     public static void main(String[] args) {
         new RoundGlyph(5);
@@ -1663,6 +1875,16 @@ Glyph() after draw()
 RoundGlyph.RoundGlyph(), radius = 5
 */
 ```
+
+- [x] 初始化的实际过程是：
+- 在所有事发生前，分配给对象的存储空间会被初始化为二进制 0。 
+- 如前所述调用基类构造器。此时调用重写后的 draw() 方法（是的，在调用 RoundGraph 构造器之前调用），由步骤 1 可知，radius 的值为 0。 
+- 按声明顺序初始化成员。 
+- 最终调用派生类的构造器。
+
+<span style="color:red">**警示**</span>
+
+编写构造器有一条良好规范：做尽量少的事让对象进入良好状态。如果有可 能的话，尽量不要调用类中的任何方法。在基类的构造器中能安全调用的只有基类的 final 方法（这也适用于可被看作是 final 的 private 方法）。这些方法不能被重写，因 此不会产生意想不到的结果。你可能无法永远遵循这条规范，但应该朝着它努力。
 
 ### 协变返回类型
 
@@ -7305,13 +7527,18 @@ public Throwable(String message);
 public Throwable(String message, Throwable cause);
 public Throwable(Throwable cause);
 
-Throwable initCause(Throwable cause)
+Throwable initCause(Throwable cause);
 ```
 
 - message 表示异常消息
 - <span style="color:red">**cause 触发该异常的其他异常（常用于追踪异常链）**</span>
 
 异常可以形成一个异常链，上层的异常由底层异常触发，cause表示底层异常。
+
+```mermaid
+graph LR
+1==>2==>3==>4调用cause触发3这个异常
+```
 
 `Throwable` 的某些子类没有带 cause 参数的构造方法，可以通过 `fillInStackTrace()` 来设置，这个方法最多只能被调用一次。`fillInStackTrace` 会将异常栈信息保存下来。
 
@@ -7331,7 +7558,7 @@ Throwable getCause() // 获取异常的 cause
 
 小的异常放前面，大的放后面。
 
-在使用 try-catch 语句时，要注意子类异常要写在父类异常前面。try-catch 捕获异常时，如果前面的 catch 捕获到了就不会执行后面的了。你把一个模糊不清的父类异常放在前面，语义清晰的子类异常放在后面，这样捕获到的异常内容也是模糊的。
+在使用 try-catch 语句时，要注意子类异常要写在父类异常前面。<span style="color:red">try-catch 捕获异常时，如果前面的 catch 捕获到了就不会执行后面的了</span>。你把一个模糊不清的父类异常放在前面，语义清晰的子类异常放在后面，这样捕获到的异常内容也是模糊的。
 
 ```java
 try {
@@ -7375,13 +7602,13 @@ try{
     throw new NewException("空指针异常",e);
 }catch( Exception e){
     e.printStackTrace();
-    throw e;
+    throw e; // 抛出了原始的异常。
 }
 ```
 
 #### finally
 
-finally 内的代码不管有无异常发生，都会执行。一般用于释放资源，如 socket连接、数据库连接、文件流等。
+finally 内的代码不管有无异常发生，都会执行。一般用于释放资源，如 socket 连接、数据库连接、文件流等。
 
 **请注意：**无论异常是否被抛出，finally 子句总能被执行。这也为解决 Java 不允许我们回到异常抛出点这一问题，提供了一个思路。<span style="color:green">如果将 try 块放在循环里，就可以设置一种在程序执行前一定会遇到的异常状况。</span>还可以加入一个 static 类型的计数器或者别的装置，使循环在结束以前能尝试一定的次数。这将使程序的健壮性更上一个台阶。
 
@@ -7389,7 +7616,7 @@ finally 内的代码不管有无异常发生，都会执行。一般用于释放
 
 - 如果在 try 或者 catch 语句内有 return 语句，则 return 语句在 finally 语句执行结束后才执行，但 finally 并不能改变返回值
 
-这段代码最后得到的返回值是0。实际执行过程是：在执行到 `try` 内的 `return retVal`；语句前，会先将返回值 `retVal` 保存在一个临时变量中，然后才执行 `finally` 语句，最后`try` 再返回那个临时变量，`finally` 中对 `retVal` 的修改不会被返回。
+<span style="color:red">这段代码最后得到的返回值是0。实际执行过程是：在执行到 `try` 内的 `return retVal`；语句前，会先将返回值 `retVal` 保存在一个临时变量中，然后才执行 `finally` 语句，最后`try` 再返回那个临时变量，`finally` 中对 `retVal` 的修改不会被返回。</span>
 
 ```java
 public static int test(){
@@ -7423,7 +7650,7 @@ stack=1, locals=3, args_size=0
 
 ----
 
-如果在 finally 中也有 return 语句，try 和 catch 内的 return 会丢失，实际会返回 finally 中的返回值。finally 中有 return 不仅会覆盖 try 和 catch 内的返回值，还会掩盖 try 和 catch 内的异常，就像异常没有发生一样，比如：
+<span style="color:red">如果在 finally 中也有 return 语句，try 和 catch 内的 return 会丢失，实际会返回 finally 中的返回值。finally 中有 return 不仅会覆盖 try 和 catch 内的返回值，还会掩盖 try 和 catch 内的异常，就像异常没有发生一样，比如：</span>
 
 ```java
 package base;
@@ -7611,7 +7838,7 @@ class WarpCheckedException {
                     return;
             }
         } catch (IOException | RuntimeException e) {
-            // 转为 未检查异常
+            // 转为 未检查异常(即上层方法不必非得捕获)
             throw new RuntimeException(e);
         }
     }
@@ -7805,7 +8032,7 @@ catch(Exception e){
 
 重新抛出异常会把异常抛给上一级环境中的异常处理程序，同一个 try 块的后续 catch 子句将被忽略。
 
-如果只是把当前异常对象重新抛出，那么 `printStackTrace()` 方法显示的将是原来异常抛出点的调用栈信息，而并非重新抛出点的信息。要想更新这个信息，可以调用 `fillInStackTrace()` 方法，这将返回一个 `Throwable` 对象，它是通过把当前调用栈信息填 入原来那个异常对象而建立的
+如果只是把当前异常对象重新抛出，那么 `printStackTrace()` 方法显示的将是原来异常抛出点的调用栈信息，而并非重新抛出点的信息。要想更新这个信息，可以调用 `fillInStackTrace()` 方法，这将返回一个 `Throwable` 对象，它是通过把当前调用栈信息填 入原来那个异常对象而建立的。
 
 ```java
 try{
@@ -7839,13 +8066,13 @@ public class PreciseRethrow {
 
 #### 异常链（自定义类库要用）
 
-想要在捕获一个异常后抛出另一个异常，并且希望把原始异常的信息保存下 来，这被称为异常链。在 `JDK1.4` 以前，程序员必须自己编写代码来保存原始异常的信 息。现在所有 `Throwable` 的子类在构造器中都可以接受一个 `cause`（因由）对象作为参数。这个 cause 就用来表示原始异常，这样通过<span style="color:red">**把原始异常传递给新的异常，使得即使 在当前位置创建并抛出了新的异常，也能通过这个异常链追踪到异常最初发生的位置。**</span>
+**想要在捕获一个异常后抛出另一个异常，并且希望把原始异常的信息保存下 来，这被称为异常链。**在 `JDK1.4` 以前，程序员必须自己编写代码来保存原始异常的信息。现在所有 `Throwable` 的子类在构造器中都可以接受一个 `cause`（因由）对象作为参数。这个 cause 就用来表示原始异常，这样通过<span style="color:red">**把原始异常传递给新的异常，使得即使在当前位置创建并抛出了新的异常，也能通过这个异常链追踪到异常最初发生的位置。**</span>
 
 在 `Throwable` 的子类中，只有三种基本的异常类提供了带 `cause` 参数的构造器。它们是 `Error`（用于 Java 虚拟机报告系统错误）、`Exception` 以及 `RuntimeException`。如果要把其他类型的异常链接起来，应该使用 `initCause()` 方法而不是构造 器。
 
 ```java
 DynamicFieldsException dfe = new DynamicFieldsException();
-dfe.initCause(new NullPointerException());
+dfe.initCause(new NullPointerException()); // 由 NullPointerException 造成的异常，记录这个原因，形成异常链 
 throw dfe;
 ```
 
@@ -7859,8 +8086,7 @@ throw dfe;
 - 把当前运行环境下能做的事情尽量做完，然后把相同的异常重抛到更高层
 - 把当前运行环境下能做的事情尽量做完，然后把不同的异常抛到更高层
 - 终止程序
--  进行简化。(如果你的异常模式使问题变得太复杂，那用起来会非常痛苦也很烦
-    人
+- 进行简化。(如果你的异常模式使问题变得太复杂，那用起来会非常痛苦也很烦人
 - 让类库和程序更安全
 - 异常处理消耗性能
     - try-catch 块影响 JVM 的优化
