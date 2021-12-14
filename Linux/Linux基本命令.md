@@ -12,6 +12,50 @@
 
 删除 kill -9 194746  `There is a screen on"194746.name` 在 screen -wipe 就可以杀死进程了。
 
+## tmux
+
+- [x] 安装
+
+```shell
+# Ubuntu 或 Debian
+$ sudo apt-get install tmux
+
+# CentOS 或 Fedora
+$ sudo yum install tmux
+
+# Mac
+$ brew install tmux
+```
+
+- [x] 启动&推出
+
+```shell
+tmux # 启动
+exit # 退出 或 快捷键 ctrl + d
+```
+
+- [x] 创建&杀死会话
+
+```shell
+tmux new -s session-name # 创建会话
+tmux kill-session # 命令用于杀死某个会话
+# 使用会话编号
+$ tmux kill-session -t 0
+
+# 使用会话名称
+$ tmux kill-session -t <session-name>
+```
+
+- [x] 接入会话 重新连接某个已经存在的会话
+
+```shell
+# 使用会话编号
+$ tmux attach -t 0
+
+# 使用会话名称
+$ tmux attach -t <session-name>
+```
+
 ## 文件和目录操作
 
 - ls
