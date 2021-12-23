@@ -132,4 +132,3 @@ mysql> show variables like 'default_password_lifetime';
 alter user user() identified by "123456";
 ```
 
-

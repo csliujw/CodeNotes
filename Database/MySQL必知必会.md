@@ -23,8 +23,6 @@
 
 - SQL（Structured Query Language）：结构化查询语言
 
-----
-
 # `MySQL简介`
 
 ## `MySQL版本`
@@ -32,8 +30,6 @@
 - 4---InnoDB引擎，增加事务处理、改进全文本搜索。
 - 4.1---对函数库，子查询，集成帮助等的重要增加
 - 5----存储过程、触发器、游标、视图
-
-----
 
 # 使用`MySQL`
 
@@ -138,8 +134,6 @@
 
 `select prod_name from products limit 5,5`  从行5开始，查5条数据。 会查到 5 6 7 8 9。
 
-----
-
 # 排序检索数据
 
 使用order by子句。
@@ -170,8 +164,6 @@
 > 查询价格最高的【order + limit】
 
 `select * from products order by prod_price desc limit 1`
-
-----
 
 # 过滤数据
 
@@ -252,8 +244,6 @@ in指定条件范围
 
 `MySQL中的NOT 支持对IN BETWEEN和EXISTS子句取反`
 
-----
-
 # 用通配符进行条件过滤
 
 使用Like和通配符进行通配搜索。
@@ -286,8 +276,6 @@ s开头，e结尾的
 - 不要过度使用通配符
 - 确实需要时才使用。除非必要，否在不要把它用在搜索模式的开始处。
 - 仔细注意通配符的位置。若放错地方，可能不会返回想要的数据。
-
-----
 
 # 使用正则表达式
 
@@ -372,13 +360,6 @@ s开头，e结尾的
 | [:alpha:] | 任意字符 (同[a-zA-Z])               |
 | [:blank:] | 空格和制表符(`同 [\\t]` )           |
 | [:cntrl:] | ASCII控制字符  (ASCII 0 到31 和127) |
-|           |                                     |
-|           |                                     |
-|           |                                     |
-|           |                                     |
-|           |                                     |
-
-![image-20200913031529100](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20200913031529100.png)
 
 > **匹配多个实例**
 
@@ -420,8 +401,6 @@ sticks?  中的s? 表示为s可出现一次或0次
 高版本`MySQL`不区分大小写（3.23.4以后的版本）。
 
 要区分大小写的话用<span style="color:red">BINARY</span>关键字
-
-----
 
 # 计算字段
 
@@ -487,8 +466,6 @@ select * from customers where soundex(cust_contact) = soundex('Y Lie');
 
 反例：`WHERE order_date = '2005-09-01’` 可能含有 `00：00：00`
 
----
-
 # 数据汇总/聚集函数
 
 <span style="color:red">聚集函数，用的很频繁</span>
@@ -531,8 +508,6 @@ select count(distinct  prod_price) from products;
     -> from products;
 ```
 
-----
-
 # 分组数据
 
 group by & having。【弱项】
@@ -561,7 +536,7 @@ group by & having。【弱项】
 - GROUP BY子句可以包含任意数目的列。这使得能对分组进行嵌套，为数据分组提供更细致的控制。
 - 如果在GROUP BY子句中嵌套了分组，数据将在最后规定的分组上进行汇总。换句话说，在建立分组时，指定的所有列都一起计算（所以不能从个别的列取回数据）。
 - GROUP BY子句中列出的每个列都必须是检索列或有效的表达式（<span style="color:red">但不能是聚集函数</span>）。如果在SELECT中使用表达式，则必须在GROUP BY子句中指定相同的表达式。不能使用别名。
--  除聚集计算语句外，SELECT语句中的每个列都必须在GROUP BY子句中给出。【前面试了，发现不必给出~~~】
+-  除聚集计算语句外，SELECT语句中的每个列都必须在GROUP BY子句中给出。【前面试了，发现不必给出~】
 -  如果分组列中具有NULL值，则NULL将作为一个分组返回。如果列中有多行NULL值，它们将分为一组。
 - GROUP BY子句必须出现在WHERE子句之后，ORDER BY子句之前。
 
@@ -613,8 +588,6 @@ order by  排序 【默认升序 asc[上升] desc[下降]】
 limit
 ```
 
-----
-
 # 子查询
 
 嵌套在其他查询中的查询。
@@ -649,8 +622,6 @@ select cust_name,cust_state,
 order by cust_name;
 ```
 
-----
-
 # 联结表
 
 这块还是看王姗的数据库系统概论。
@@ -673,8 +644,6 @@ order by vend_name, prod_name;
 ```
 
 - 联结的表越多，越耗性能。
-
-----
 
 # 高级联结
 
@@ -713,8 +682,6 @@ from customers
 left outer join orders on customers.cust_id = orders.cust_id;
 
 ```
-
-----
 
 # 组合查询
 
@@ -763,8 +730,6 @@ select * from products
 where vend_id in(1001,1002)
 order by vend_id
 ```
-
-----
 
 # 全文本搜索
 
