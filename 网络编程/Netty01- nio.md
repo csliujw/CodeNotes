@@ -6,7 +6,7 @@ non-blocking io 非阻塞 IO
 
 ### 1.1 Channel & Buffer
 
-channel 数据的传输通道。buffer 内存缓冲区，用来暂存从 channel 中 读/写 入的数据。
+channel 数据的传输通道（可以想象成一个水管）。buffer 内存缓冲区，用来暂存从 channel 中 读/写的数据。
 
 channel 有一点类似于 stream，它就是读写数据的**双向通道**，可以从 channel 将数据读入 buffer，也可以将 buffer 的数据写入 channel，而之前的 `		stream 要么是输入，要么是输出，channel 比 stream 更为底层
 
@@ -17,7 +17,7 @@ channel --- buffer
 
 常见的 Channel 有
 
-* FileChannel：文件的数据传输通道
+* FileChannel：文件的数据传输通道，高版本JDK把IO流重写了，可以用NIO进行文件流的传输了
 * DatagramChannel：UDP 网络编程时的数据传输通道
 * SocketChannel：TCP 网络编程时的数据传输通道（客户端/服务器端）
 * ServerSocketChannel：TCP 网络编程时的数据传输通道（服务器端）
@@ -49,7 +49,7 @@ t2(thread) --> s2(socket2)
 t3(thread) --> s3(socket3)
 end
 ```
-连接数少时没什么问题，但是连接数一多的话：
+连接数少时没什么问题，但是连接数一多的话缺点就体现出来了。
 
 #### ⚠️ 多线程版缺点
 
@@ -70,12 +70,12 @@ end
 ```
 #### ⚠️ 线程池版缺点
 
-* 阻塞模式下，线程仅能处理一个 socket 连接
-* 仅适合短连接场景，短连接，连接断开了线程就可以腾出手出执行其他任务了。
+* 阻塞模式下，线程同一时间仅能处理一个 socket 连接
+* 仅适合短连接场景，短连接，连接断开了线程就可以腾出手出执行其他任务了。早期的 tomcat 就是用的线程池设计的，适用于HTTP这种短连接的请求。
 
 #### selector 版设计
 
-selector 的作用就是配合一个线程来管理多个 channel，获取这些 channel 上发生的事件，<span style="color:green">**这些 channel 工作在非阻塞模式下，不会让线程吊死在一个 channel 上。适合连接数特别多，但流量低的场景（low traffic）**</span>，做到了 IO 多路复用。
+selector 的作用就是配合一个线程来管理多个 channel，获取这些 channel 上发生的事件，<span style="color:green">**这些 channel 工作在非阻塞模式下，不会让线程吊死在一个 channel 上。适合连接数特别多，但流量低的场景（low traffic，channel不是频繁的发送读写操作）**</span>，做到了 IO 多路复用。
 
 ```mermaid
 graph TD
@@ -153,7 +153,7 @@ public class ChannelDemo1 {
 ### 2.1  ByteBuffer 正确使用姿势
 
 1. 向 buffer 写入数据，例如调用 channel.read(buffer)
-2. 调用 flip() 切换至**读模式**
+2. 调用 flip() 切换至**读模式**（flip 浏览）
 3. 从 buffer 读取数据，例如调用 buffer.get()
 4. 调用 clear() 或 compact() 切换至**写模式**
 5. 重复 1~4 步骤
@@ -163,12 +163,12 @@ public class ChannelDemo1 {
 ByteBuffer 有以下重要属性
 
 * capacity：容量，一共可以装多少数据。
-* position：读写指针，即读/写 到那个位置了。
-* limit：读/写 限制点。
+* position：读写指针，即 读/写 到那个位置了。会在 position 的位置进行写入数据或读取数据。
+* <span style="color:green">**limit：读/写 限制点。**</span>
   * 写模式就是最多写到哪个索引。
   * 读模式就是最多读到哪个索引。
 
-一开始
+一开始，position指向index=0，写模式下就是在index=0处写入数据，读模式下就是读取index=0处的数据。
 
 ![](img/0021.png)
 
@@ -382,6 +382,8 @@ compact
 
 ### 2.3 ByteBuffer 常见方法
 
+JDK自带的 ByteBuffer 申请的 Buffer 大小是固定的。
+
 #### 分配空间
 
 可以使用 allocate 方法为 ByteBuffer 分配空间，其它 buffer 类也有该方法
@@ -391,9 +393,9 @@ Bytebuffer buf = ByteBuffer.allocate(16); // class java.nio.HeapByteBuffer
 Bytebuffer dir = ByteBuffer.allocateDirect(10) // class java.nio.DirectByteBuffer
 ```
 
-`class java.nio.HeapByteBuffer` - Java 堆内存，读写效率低，受到  GC 影响
+`class java.nio.HeapByteBuffer` - Java 堆内存，读写效率低，受到  GC 影响（GC算法可能会有内存移动/整理，数据得重新复制，会来回搬迁）
 
-`class java.nio.DirectByteBuffer` - 直接内存，读写效率高（少一次拷贝），不会受  GC 影响，分配效率低。
+`class java.nio.DirectByteBuffer` - 直接内存，读写效率高（少一次拷贝），不会受  GC 影响，分配效率低。但是 netty 为我们设计了一个 Buffer 池，尽可能的提高分配效率，减小内存泄漏的概率。
 
 #### 向 buffer 写入数据
 
@@ -448,7 +450,7 @@ public void read() {
 
 #### mark 和 reset
 
-mark 是在读取时，做一个标记，即使 position 改变，只要调用 reset 就能回到 mark 的位置
+<span style="color:green">**mark 是在读取时，做一个标记，**</span>即使 position 改变，只要调用 reset 就能回到 mark 的位置
 
 ```java
 @Test
@@ -607,8 +609,7 @@ helloworldjava
 
 ### 2.6 练习
 
-网络上有多条数据发送给服务端，数据之间使用 \n 进行分隔
-但由于某种原因这些数据在接收时，被进行了重新组合，例如原始数据有3条为
+网络上有多条数据发送给服务端，数据之间使用 \n 进行分隔，但由于某种原因这些数据在接收时，被进行了重新组合，例如原始数据有3条为
 
 * Hello,world\n
 * I'm zhangsan\n
@@ -736,15 +737,13 @@ channel.position(newPos);
 
 ```java
 public class TestFileChannelTransferTo {
-    @Test
-    public void main() {
+    public static void main(String[] args) {
         try (FileChannel from = new FileInputStream("from.txt").getChannel();
              FileChannel to = new FileOutputStream("to.txt").getChannel();
         ) {
-            // 效率高。
+            // 起始位置，传多少字节，传到哪里去【效率高】
             from.transferTo(0, from.size(), to);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
         }
     }
 }
@@ -1105,7 +1104,6 @@ System.out.println("waiting...");
 #### 非阻塞
 
 * 非阻塞模式下，相关方法都会不会让线程暂停
-  <<<<<<< HEAD:网络编程/Netty01-nio.md
   * 在 ServerSocketChannel.accept 在没有连接建立时，会返回 null，继续运行
   * SocketChannel.read 在没有数据可读时，会返回 0，但线程不必阻塞，可以去执行其它 SocketChannel 的 read 或是去执行 ServerSocketChannel.accept 
   * 写数据时，线程只是等待数据写入 Channel 即可，无需等 Channel 通过网络把数据发送出去
@@ -1120,7 +1118,7 @@ System.out.println("waiting...");
 * 但非阻塞模式下，即使没有连接建立，和可读数据，线程仍然在不断运行，白白浪费了 `cpu`
 * 数据复制过程中，线程实际还是阻塞的（`AIO` 改进的地方）
 
-服务器端，客户端代码不变。这样写，虽然是非阻塞的，但是即便客户端没有发送数据过来，服务器的线程也要不断进行循环。有读取事件时再进行处理比较好。
+<span style="color:green">**服务器端，客户端代码不变。这样写，虽然是非阻塞的，但是即便客户端没有发送数据过来，服务器的线程也要不断进行循环，很消耗 CPU。有读取事件时再进行处理比较好。**</span>
 
 ```java
 // 使用 nio 来理解非阻塞模式, 单线程

@@ -2952,7 +2952,7 @@ Vue+Vant 压缩图片，提高上传速度。
 </van-uploader>
 ```
 
-```java
+```javascript
  // base64 转 file
     dataURLtoFile(dataurl, filename) {
       var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
@@ -3027,5 +3027,15 @@ try{
         Toast("请求未响应，请检查网络是否正常！");
       }
     }
+```
+
+## 跨域问题
+
+后端已经允许跨域了，也响应成功了，但是前端无法接受到数据，提示跨域错误。（为什么？好像是前端接受数据的时候发现后端传过来的数据和自己不是同源，所以依旧是跨域错误，取消凭证即可）
+
+```javascript
+axios.defaults.crossDomain = false
+axios.defaults.withCredentials = false // 不用凭证
+axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded'
 ```
 
