@@ -56,6 +56,14 @@ $ tmux attach -t 0
 $ tmux attach -t <session-name>
 ```
 
+## nohup
+
+**ohup** 英文全称 no hang up（不挂起），用于在系统后台不挂断地运行命令，退出终端不会影响程序的运行。
+
+```shell
+nohup java demo # 在后台运行 demo 这个 Java 代码
+```
+
 ## 文件和目录操作
 
 - ls
