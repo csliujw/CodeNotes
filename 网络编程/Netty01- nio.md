@@ -8,7 +8,7 @@ non-blocking io 非阻塞 IO
 
 channel 数据的传输通道（可以想象成一个水管）。buffer 内存缓冲区，用来暂存从 channel 中 读/写的数据。
 
-channel 有一点类似于 stream，它就是读写数据的**双向通道**，可以从 channel 将数据读入 buffer，也可以将 buffer 的数据写入 channel，而之前的 `		stream 要么是输入，要么是输出，channel 比 stream 更为底层
+channel 有一点类似于 stream，它就是读写数据的**双向通道**，数据可以是 从 channel-->buffer，也可以是从 buffer-->channel，而之前的 stream 只是单向的，要么是输入，要么是输出。channel 比 stream 更为底层。
 
 ```mermaid
 graph LR
@@ -1433,7 +1433,7 @@ sun.nio.ch.ServerSocketChannelImpl[/0:0:0:0:0:0:0:0:8080]
 
 > 因为 select 在事件发生后，就会将相关的 key 放入 selectedKeys 集合，但不会在处理完后从 selectedKeys 集合中移除，需要我们自己编码删除。例如
 >
-> * 第一次触发了 ssckey 上的 accept 事件，没有移除 ssckey 
+> * 第一次触发了 ssckey 上的 accept 事件，没有移除 ssckey （key会绑定）
 > * 第二次触发了 sckey 上的 read 事件，但这时 selectedKeys 中还有上次的 ssckey ，在处理时因为没有真正的 serverSocket 连上了，就会导致空指针异常
 
 #### 💡 cancel 的作用
