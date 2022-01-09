@@ -13,157 +13,35 @@
 - 分类 ----> 解题 ----> 多种思路 ----> 最优解
 - 5-10分钟无思路 直接看题解，不要浪费时间
 - 有思路就写，写完后看能否优化，然后看他人题解，然后背诵默写优秀题解。
--  写代码时不要纠结，先给出主干逻辑，再填充细节（自顶向下写代码，避免被无水平的繁琐细节打扰）
+- 写代码时不要纠结，先给出主干逻辑，再填充细节（自顶向下写代码，避免被无水平的繁琐细节打扰）
 - 解题常见思路：升维，空间换时间
+- 先理清思路，考虑好边界问题，临时变量问题。
 
-----
+# 基本数据结构回顾
 
-# 基本数据结构
+# 常见解题思路
 
-数组、链表、跳表。只写跳表，其他简单不写。
+## 链表解题思路
 
-## 跳表基本概念
+-  设置哑结点简化操作。
+-  如链表元素的删除，如果有哑结点，那么删除第一个和第k个元素的操作就是一样的。
+-  双指针 三指针 快慢指针
+-  双指针找倒数第k个结点
+-  三指针删除链表中重复过的所有元素
+-  快慢指针判断链表有无换
+-  合理使用数据结构：栈，队列，优先队列[堆]等。
+-  利用栈找链表公共结点。
+-  利用优先队列找出k个最小（大）的元素
+-  注意常见的边界问题。
+-  如是否为空
+-  next是否存在等
+-  链表的插入删除操作要熟练书写。
 
-跳表是为了优化，补足链表的缺陷。
+# 陌生算法概念
 
-链表的缺陷是什么？
+## 递归
 
-查找慢，时间复杂度为O(N)
-
-如何提升查找效率，加索引，加索引。
-
-<img src="..\pics\leetcode\skip_list01.png">
-
-<img src="..\pics\leetcode\skip_list02.png">
-
-总结：升维 + 空间换时间
-
-## 刷题
-
-### 移动零
-
-- 法一：
-  - count记录0的个数，然后有不为0的数就直接移动到 cur - count的位置上
-- 法二：
-  - 开新数组，把非0的数字加进去
-
-### 盛水最多的容器
-
-- 法一：
-  - 暴力求解，双重for循环
-- 法二：
-  - 双指针，一个头指针一个尾指针
-  - 计算当前头尾指针的最大盛水量，在将高度小的一端向内移动。
-
-### 爬楼梯
-
-- 本质是斐波那契数列
-- 法一：
-  - 发现规律 f3 = f2 + f1循环迭代
-- 法二：
-  - DP
-
-### 3数之和
-
-PS：法一超时，法二不会，法三看了题解才会。总结：我好菜啊！
-
-- 法一：
-  
-  - 暴力求解，三重for循环，out of time
-  
-- 法二：
-  - 双重for循环+hash表
-    - A + B + C = Target ==> A+B = Target-C
-  
-- 法三：
-  
-  - 先排序，再双指针。 
-  
-  <a href="https://leetcode-cn.com/problems/3sum/solution/li-yong-pai-xu-jia-shuang-zhi-zhen-qiu-san-shu-zhi/">优秀题解</a>
-  
-  ```java
-  /**
-       * 先排序在双指针
-       * <p>
-       * 边界条件 难受啊
-       * 菜是原罪 备注题解
-       */
-  public List<List<Integer>> fun2(int nums[]) {
-      List<List<Integer>> list = new ArrayList<>();
-      // 先排序 默认升序
-      Arrays.sort(nums);
-      // 边界条件
-      if (nums == null || nums.length < 3) return list;
-  
-      for (int i = 0; i < nums.length - 2 && nums[i] <= 0; i++) {
-          if (i > 0 && nums[i] == nums[i - 1]) continue;
-          int fixed = nums[i];
-          int start = i + 1;
-          int end = nums.length - 1;
-  
-          while (start < end) {
-              if (fixed + nums[start] + nums[end] == 0) {  //  符合条件加入
-                  list.add(addToList(fixed, nums[start], nums[end]));
-                  // 排除重复的
-                  while (start < end && nums[start] == nums[start + 1]) start++;
-                  while (start < end && nums[end] == nums[end - 1]) end--;
-                  start++;
-                  end--;
-              } else if (fixed + nums[start] + nums[end] < 0 && end > 0) {
-                  start++;
-              } else {
-                  end--;
-              }
-          }
-      }
-      return list;
-  }
-  
-  public List<List<Integer>> copy(int[] nums) {
-      List<List<Integer>> result = new ArrayList<>();
-      if (nums == null || nums.length < 3) return result;
-      Arrays.sort(nums);
-      int low, high, sum;
-      for (int i = 0; i < nums.length - 2 && nums[i] <= 0; i++) {
-          // 如果 当前数和上一次的数一样则直接跳过 这次循环。【防止数据重复】
-          if (i > 0 && nums[i] == nums[i - 1]) continue;
-          low = i + 1;
-          high = nums.length - 1;
-          while (low < high) {
-              sum = nums[i] + nums[low] + nums[high];
-              if (sum == 0) {
-                  result.add(Arrays.asList(nums[i], nums[low], nums[high]));
-                  while (low < high && nums[low] == nums[low + 1]) low++;
-                  while (low < high && nums[high] == nums[high - 1]) high--;
-                  low++;
-                  high--;
-              } else if (sum < 0) {
-                  low++;
-              } else {
-                  high--;
-              }
-          }
-      }
-      return result;
-  }
-  ```
-  
-  
-
-### 环形链表
-
-- 法一：
-  - hash判重
-- 法二：
-  - 快慢指针【反人类解法】
-
----
-
-
-
-# 递归
-
-## 经典汉诺塔问题
+### 经典汉诺塔问题
 
 把A的盘子 移到B上。下面盘大，下面盘小
 
@@ -177,9 +55,9 @@ void hanoi(int n, int A, int B, int C){
 }
 ```
 
-# 动态规划
+## 动态规划
 
-**闫式DP值得拥有（大雪菜 牛批）**
+**闫式DP值得拥有**
 
 > **基本要素：最优子结构性质与重叠子问题性质**
 
@@ -207,7 +85,7 @@ void hanoi(int n, int A, int B, int C){
 - 应用的局限性，实际问题中很多能够设置的状态变量无法满足无后效性，使得动态规划的思想应用受到限制
 - 存在的维数限制：但维数过大时虽然可以解决，但是求解很困难！，一般超过三维的问题不采用动态规划思想求解。
 
-# 贪心算法
+## 贪心算法
 
 - 学习如何处理不可能完成的任务
 - 没有快速算法的问题（NP完全问题）
@@ -215,13 +93,13 @@ void hanoi(int n, int A, int B, int C){
 - 学习近似算法，使用它们可快速找到NP完全问题的近似解
 - 学习贪婪策略——一种非常简单的问题解决策略。
 
-## 贪心思想
+### 贪心思想
 
 每次都找局部最优解，从而找到全局最优解【需要严格的数学证明是否可以找到全局最优解】
 
 如果不求最优解，只要找个一个差不多的解就可以的话，可以考虑采用贪心做，找到一个和最优解近似的解。
 
-## P问题，NP问题
+### P问题，NP问题
 
 **P类问题**：能在多项式时间内可解的问题。==【或：一个问题可以在多项式（O(n^k)）的时间复杂度内解决。】==
 
@@ -229,8 +107,7 @@ void hanoi(int n, int A, int B, int C){
 
 **`NPC`问题**：存在这样一个NP问题，所有的NP问题都可以约化成它。换句话说，只要解决了这个问题，那么所有的NP问题都解决了。其定义要满足2个条件：
 
-
-## 如何识别NP完全问题
+### 如何识别NP完全问题
 
 - 元素较少时算法的运行速度非常快，但随着元素数量的增加，速度会变得非常慢。
 - 涉及“所有组合”的问题通常是NP完全问题。 
@@ -245,9 +122,9 @@ void hanoi(int n, int A, int B, int C){
 - 8.7 在一堆人中找出最大的朋友圈（即其中任何两个人都相识）是NP完全问题吗？ ==是==
 - 8.8 你要制作美国地图，需要用不同的颜色标出相邻的州。为此，你需要确定最少需要使 用多少种颜色，才能确保任何两个相邻州的颜色都不同。请问这是NP完全问题吗？ ==是==
 
-# 并行算法
+## 并行算法
 
-## 并行算法介绍
+### 并行算法介绍
 
 可并行执行的算法有：归并排序【有相关论文】；快速排序。
 

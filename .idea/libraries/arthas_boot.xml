@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="arthas-boot">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/arthas-boot.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

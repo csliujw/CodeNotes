@@ -145,8 +145,6 @@ pom文件中的内容
 mvn tomcat7:run
 ```
 
-
-
 # VSCode查看源码不打开新窗口
 
 ```json

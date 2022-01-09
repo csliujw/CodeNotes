@@ -1,3 +1,18 @@
+# 常用工具及命令
+
+- `javac - java compiler java编译器`
+- `javadoc - 抽取Java 文档`
+    - 只能为 public protected 成员进行文档注释。
+    - 常见使用方法如下：
+    - `@see` 引用其他类。`@see classname / @see full-qualified-classname`
+    - `@version` 版本号
+    - `@author` 作者
+    - `@since` 代码的最早使用版本
+    - `@param` 修饰参数
+    - `@return` 返回值
+    - `@throws` 抛出的异常
+    - `@description` 表示方法废弃。已经被 `@Deprecated` 注解替代了
+
 # `第二部分` 基础
 
 ## 第一章 面向对象概述

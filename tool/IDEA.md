@@ -62,8 +62,6 @@ Ctrl + Shift + F8 查看所有断点
 
 全局 新建 Ctrl+N
 
-
-
 作用域 功能 快捷键
 
 全局 撤销重构 Alt+Shift+Z
