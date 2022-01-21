@@ -1,5 +1,7 @@
 # Windows 上安装 MySQL
 
+安装版：[MySQL安装指南_技术交流_牛客网 (nowcoder.com)](https://www.nowcoder.com/discuss/825171?type=all&order=recall&pos=&page=1&ncTraceId=&channel=-1&source_id=search_all_nctrack&gio_id=649BB42AA30733488E2E468CA0F7721F-1642732433430)
+
 Windows 上安装 MySQL 相对来说会较为简单，最新版本可以在 [MySQL 下载](http://dev.mysql.com/downloads/mysql) 中下载中查看。
 
 ![图片说明](https://uploadfiles.nowcoder.com/images/20191011/334190970_1570776156000_6466136D1077A4900F42C47E312D4188)
@@ -15,7 +17,23 @@ Windows 上安装 MySQL 相对来说会较为简单，最新版本可以在 [MyS
 打开刚刚解压的文件夹 **C:\web\mysql-8.0.11** ，在该文件夹下创建 **my.ini** 配置文件，编辑 **my.ini** 配置以下基本信息：
 
 ```
-[client]``# 设置mysql客户端默认字符集``default``-character-set=utf8` `[mysqld]``# 设置``3306``端口``port = ``3306``# 设置mysql的安装目录``basedir=C:\\web\\mysql-``8.0``.``11``# 设置 mysql数据库的数据的存放目录，MySQL ``8``+ 不需要以下配置，系统自己生成即可，否则有可能报错``# datadir=C:\\web\\sqldata``# 允许最大连接数``max_connections=``20``# 服务端使用的字符集默认为``8``比特编码的latin1字符集``character-set-server=utf8``# 创建新表时将使用的默认存储引擎``default``-storage-engine=INNODB
+[client]
+# 设置mysql客户端默认字符集
+default-character-set=utf8
+
+[mysqld]
+# 设置3306端口
+port = 3306
+# 设置mysql的安装目录
+basedir=C:\\web\\mysql-8.0.11
+# 设置 mysql数据库的数据的存放目录，MySQL 8+ 不需要以下配置，系统自己生成即可，否则有可能报错
+# datadir=C:\\web\\sqldata
+# 允许最大连接数
+max_connections=20
+# 服务端使用的字符集默认为8比特编码的latin1字符集
+character-set-server=utf8
+# 创建新表时将使用的默认存储引擎
+default-storage-engine=INNODB
 ```
 
 **接下来我们来启动下 MySQL 数据库：**
@@ -23,7 +41,7 @@ Windows 上安装 MySQL 相对来说会较为简单，最新版本可以在 [MyS
 以管理员身份打开 cmd 命令行工具，切换目录：
 
 ```
-cd C:\web\mysql-``8.0``.``11``\bin
+cd C:\web\mysql-8.0.11\bin
 ```
 
 初始化数据库：
@@ -35,10 +53,12 @@ mysqld --initialize --console
 执行完成后，会输出 root 用户的初始默认密码，如：
 
 ```
-...``2018``-``04``-20T02:``35``:``05``.464644Z ``5` `[Note] [MY-``010454``] [Server] A temporary password is generated ``for` `root``@localhost``: APWCY5ws&hjQ``...
+...
+2018-04-20T02:35:05.464644Z 5 [Note] [MY-010454] [Server] A temporary password is generated for root@localhost: APWCY5ws&hjQ
+...
 ```
 
-**APWCY5ws&hjQ** 就是初始密码，后续登录需要用到，你也可以在登陆后修改密码。
+**APWCY5ws&hjQ** 就是初始密码，后续登录需要用到，你也可以在登陆后修改密码。[ikOws<oyi7Gg]
 
 输入以下安装命令：
 
@@ -55,7 +75,8 @@ net start mysql
 **注意**: 在 5.7 需要初始化 data 目录：
 
 ```
-cd C:\web\mysql-``8.0``.``11``\bin``mysqld --initialize-insecure
+cd C:\web\mysql-8.0.11\bin 
+mysqld --initialize-insecure 
 ```
 
 初始化后再运行 net start mysql 即可启动 mysql。
