@@ -44,7 +44,7 @@
 
 至此， TCP 协议的 Socket 程序的调用过程就结束了，整个过程如下图：
 
-<img src="../pics/JavaStrengthen/blog/640.webp">
+<img src="img/io/640.webp">
 
 ### Socket在内核中的表示
 
@@ -83,7 +83,7 @@ sk_buff 可以表示各个层的数据包，在应用层数据包叫 data，在 
 
 下面这张图描述了从连接请求到连接建立，父进程创建生子进程为客户服务。
 
-<img src="../pics/JavaStrengthen/blog/641.webp">
+<img src="img/io/641.webp">
 
 另外，当「子进程」退出时，实际上内核里还会保留该进程的一些信息，也是会占用内存的，如果不做好“回收”工作，就会变成**僵尸进程**，随着僵尸进程越多，会慢慢耗尽我们的系统资源。
 
@@ -103,7 +103,7 @@ sk_buff 可以表示各个层的数据包，在应用层数据包叫 data，在 
 
 那么，我们可以使用**线程池**的方式来避免线程的频繁创建和销毁，所谓的线程池，就是提前创建若干个线程，这样当由新连接建立时，将这个已连接的 Socket 放入到一个队列里，然后线程池里的线程负责从队列中取出已连接 Socket 进程处理。
 
-<img src="../pics/JavaStrengthen/blog/642.webp">
+<img src="img/io/642.webp">
 
 需要注意的是，这个队列是全局的，每个线程都会操作，为了避免多线程竞争，线程在操作这个队列前要加锁。
 
@@ -113,7 +113,7 @@ sk_buff 可以表示各个层的数据包，在应用层数据包叫 data，在 
 
 只使用一个进程来维护多个 Socket： **I/O 多路复用**技术。
 
-<img src="../pics/JavaStrengthen/blog/643.webp">
+<img src="img/io/643.webp">
 
 一个进程虽然任一时刻只能处理一个请求，但是处理每个请求的事件时，耗时控制在 1 毫秒以内，这样 1 秒内就可以处理上千个请求，把时间拉长来看，多个请求复用了一个进程，这就是多路复用，这种思想很类似一个 CPU 并发多个进程，所以也叫做时分多路复用。
 
@@ -147,7 +147,7 @@ epoll 通过两个方面，很好解决了 select/poll 的问题。
 
 从下图你可以看到 epoll 相关的接口作用：
 
-<img src="../pics/JavaStrengthen/blog/644.webp">
+<img src="img/io/644.webp">
 
 epoll 的方式即使监听的 Socket 数量越多的时候，效率不会大幅度降低，能够同时监听的 Socket 的数目也非常的多了，上限就为系统定义的进程打开的最大文件描述符个数。因而，**epoll 被称为解决 C10K 问题的利器**。
 
@@ -155,7 +155,7 @@ epoll 的方式即使监听的 Socket 数量越多的时候，效率不会大幅
 
 这是错的！看过 epoll 内核源码的都知道，**压根就没有使用共享内存这个玩意**。你可以从下面这份代码看到， epoll_wait 实现的内核代码中调用了 `__put_user` 函数，这个函数就是将数据从内核拷贝到用户空间。
 
-<img src="../pics/JavaStrengthen/blog/645.webp">
+<img src="img/io/645.webp">
 
 epoll 支持两种事件触发模式，分别是**边缘触发（\*edge-triggered，ET\*）**和**水平触发（\*level-triggered，LT\*）**。
 
@@ -201,10 +201,8 @@ epoll 是解决 C10K 问题的利器，通过两个方面解决了 select/poll �
 
 而且，epoll 支持边缘触发和水平触发的方式，而 select/poll 只支持水平触发，一般而言，边缘触发的方式会比水平触发的效率高。
 
-----
-
 # Reactor和Proactor
 
 Redis、Nginx、Netty 等都采用了Reactor这个方案。
 
-<img src="../pics/JavaStrengthen/blog/651.webp">
+<img src="img/io/651.webp">

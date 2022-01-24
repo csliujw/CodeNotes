@@ -1040,7 +1040,7 @@ Java线程3==>工作内存3==>Save和Load操作
 - **Store：**将工作内存中变量副本的值，传递到主内存中【工作内存----->主内存】
 - **Write：**将变量副本作为一个主内存中的变量进行存储【**把工作内存读到的数据，存入主内存，Store拿到要存的数据，Write存数据**】
 
-<img src="./jvm_image/1568776570724.png" style="float:left">
+<img src="./jvm_image/1568776570724.png" >
 
 ### 针对long和double型变量的特殊规则
 

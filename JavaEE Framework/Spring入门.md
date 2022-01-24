@@ -2265,7 +2265,7 @@ try{
 
 > 重要概念图
 
-<img src="../pics/Spring/SpringAOP.png">
+<img src="img/spring/SpringAOP.png">
 
 ## AOP代码
 
@@ -2475,7 +2475,7 @@ try{
 @Order(1)//使用Order改变切面顺序
 ```
 
-<img src="../pics/Spring/advices.png">
+<img src="img/spring/advices.png">
 
 ## AOP源码解析
 
@@ -2597,7 +2597,7 @@ TransactionFilter{
 
 > Spring支持的事务控制
 
-<img src="../pics/Spring/transactionManager.png" style="float:left">
+<img src="img/spring/transactionManager.png">
 
 ```java
 package com.atguigu.service;
@@ -2755,7 +2755,7 @@ public class MulService {
 
 > 嵌套事务
 
-<img src="../pics/Spring/shiwu.png">
+<img src="img/spring/shiwu.png">
 
 本类方法的嵌套调用是一个事务
 
@@ -3008,7 +3008,7 @@ Shared libraries（共享库） / `runtimes pluggability`（运行时插件能�
 
 maven工厂，`JavaWeb`项目，工程目录结构如下：
 
-<img src="../pics/Spring/Spring_ann_runtimes_pluggability.png" style="float:left">
+<img src="img/spring/Spring_ann_runtimes_pluggability.png" style="float:left">
 
 ```java
 package lg;
@@ -3192,7 +3192,7 @@ public class UserListener implements ServletContextListener, Hello {
 
 SpringMVC文件中指定了SpringServletContainerInitializer
 
-<img src="../pics/Spring/SpringMVC_config.png" syle="color:float:left">
+<img src="img/spring/SpringMVC_config.png" syle="color:float:left">
 
 用监听器启动Spring的配置（配置ContextLoaderListener加载Spring的配置启动Spring容器）
 启动SpringMVC的配置（配置DispatcherServlet启动SpringMVC，配好映射）
@@ -3469,9 +3469,9 @@ public class HelloController {
 
 3）webapp是web目录；WEB-INF目录下的最后是输出到WEB-INF。static与webapp的WEB-INF同级，那么它也会与最终输出文件的WEB-INF同级。
 
-<img src="../pics/spring/maven_mvc.png" style="float:left">
+<img src="img/spring/maven_mvc.png" style="float:left">
 
-<img src="../pics/spring/maven_mvc2.png" style="float:left">
+<img src="img/spring/maven_mvc2.png" style="float:left">
 
 # 原生异步请求
 
@@ -3479,7 +3479,7 @@ Servlet 3.0 异步请求
 
 ## 概述
 
-<img src="../pics/spring/servlet3.0_async.png">
+<img src="img/spring/servlet3.0_async.png">
 
 ## 代码
 

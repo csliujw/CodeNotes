@@ -2128,7 +2128,7 @@ abstract class AbstractAccess {
   - **如果接口的实现类没有覆盖重写接口中所有的抽象方法，那么这个类必须是抽象类！**
   - 接口中的成员变量默认是，且只能 `public static final` 修饰的，无方法体的方法默认是且只能是 `public abstract` 修饰的；
   
-  <img src="..\pics\JavaSE\image-20210827192635164.png">
+  <img src="img\image-20210827192635164.png">
 
 ```java
 // 这是一个抽象方法
@@ -11142,9 +11142,9 @@ public class LostInformation
 
 Manipulator 类存储了一个 T 类型的对象。manipulate() 方法会调用 obj 上的 f() 方法。它是如何知道类型参数 T 中存在 f() 方法的呢？C++ 编译器会在你实例化模版时进行检查，所以在 Manipulator 实例化的那一刻，它看到 HasF 中含有一个方法 f()。如果情况并非如此，你就会得到一个编译期错误，保持类型安全。
 
-![image-20210928204623550](..\pics\JavaSE\image-20210928204623550.png)
+![image-20210928204623550](img\image-20210928204623550.png)
 
-![image-20210928204711352](..\pics\JavaSE\image-20210928204711352.png)
+![image-20210928204711352](img\image-20210928204711352.png)
 
 将语法换成 Java 的，发现无法通过编译。
 

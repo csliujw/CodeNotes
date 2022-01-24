@@ -52,15 +52,15 @@ Linux的curl也可以发起请求，curl可以用来做压力测试，win10用�
 
 > **常见HTTP请求头**
 
-<img src="../pics/JavaWeb/Http_Header.png">
+<img src="img/web/Http_Header.png">
 
 > **常见HTTP响应头**
 
-<img src="../pics/JavaWeb/Http_Response.png">
+<img src="img/web/Http_Response.png">
 
 > **常见HTTP状态码**
 
-<img src="../pics/JavaWeb/Http_State.png">
+<img src="img/web/Http_State.png">
 
 > **浏览器缓存机制**
 
@@ -78,7 +78,7 @@ Last-Modified字段一般用于表示一个服务器上的资源的最后修改�
 
 Cache-Control/Pragma 查看是否是缓存
 
-<img src="../pics/JavaWeb/Http_Cache.png">
+<img src="img/web/Http_Cache.png">
 
 **Etag字段，**这个字段的作用是让服务端给每个页面分配一个唯一的编号，然后通过这个编号来区分当前这个页面是否是最新的。但是在后端的Web服务器有多台时比较难处理，因为每个Web服务器都要记住网站的所有资源，否则浏览器返回这个编号就没有意义了。
 

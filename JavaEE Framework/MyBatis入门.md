@@ -316,7 +316,7 @@ maven项目下，所有的非 `*.java` 文件都要放在 resources 目录下。
 
 如：src/main/java 目录下的包和类都是以 classes 为根目录进行发布。resources 下的资源也是以classes 为根目录。
 
-<img src="../pics/mybatis/maven.png">
+<img src="img/ibatis/maven.png">
 
 `mybatis` 多对多 是两个一对一组成的哦
 

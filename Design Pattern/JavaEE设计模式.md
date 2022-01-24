@@ -240,7 +240,7 @@ public class FilterChain implements Filter {
 
 > 服务工作者模式UML图
 
-<img src="..\pics\J2EE_dp\image-20210525173000575.png">
+<img src="img\EE\image-20210525173000575.png">
 
 - 控制器提供了每个请求进入的初始点。
 - 调度器封装了页面选择。

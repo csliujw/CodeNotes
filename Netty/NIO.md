@@ -229,13 +229,13 @@ epoll 是在 Linux 2.6 内核正式提出，完善了 select 的一些缺点。�
 
 客户端是否有数据传输，相应的线程都需要进行等待（阻塞了）
 
-<img src="../pics/JavaStrengthen/io/Java_BIO.png">
+<img src="img/io/Java_BIO.png">
 
 ### Java NIO
 
 多路复用器会自动轮询所有的管道，去看那些管道有数据请求操作，有才会分配新的线程去处理管道通信，如果管道没有数据请求，那么线程可以去做其他的事情，不用等待。【依然需要轮询访问通道，但是通道无数据的时候，线程无需等待】
 
-<img src="../pics/JavaStrengthen/io/Java_NIO.png">
+<img src="img/io/Java_NIO.png">
 
 ### Java AIO
 
@@ -243,7 +243,7 @@ Java AIO(NIO.2) ： 异步 异步非阻塞，服务器实现模式为一个有�
 
 客户端的数据都是通过OS进行处理，OS处理完数据后才会通知相应的服务端的线程进行数据的接收。
 
-<img src="../pics/JavaStrengthen/io/Java_AIO.png">
+<img src="img/io/Java_AIO.png">
 
 ## 2.3 BIO、NIO、AIO适用场景
 
@@ -262,7 +262,7 @@ Java AIO(NIO.2) ： 异步 异步非阻塞，服务器实现模式为一个有�
 
 ## 3.2 Java BIO 工作机制
 
-<img src="../pics/JavaStrengthen/io/BIO_model.png">
+<img src="img/io/BIO_model.png">
 
 对BIO编程流程的梳理
 
@@ -460,7 +460,7 @@ public class ServerDemo {
 
  在上述的案例中，一个服务端只能接收一个客户端的通信请求，**那么如果服务端需要处理很多个客户端的消息通信请求应该如何处理呢**，此时我们就需要在服务端引入线程了，也就是说客户端每发起一个请求，服务端就创建一个新的线程来处理这个客户端的请求，这样就实现了一个客户端一个线程的模型，图解模式如下：
 
-<img src="../pics/JavaStrengthen/io/Java_BIO.png">
+<img src="img/io/Java_BIO.png">
 
 ### 客户端案例代码如下
 
@@ -571,7 +571,7 @@ class DealClient implements Runnable {
 
  图示如下:
 
-<img src="../pics/JavaStrengthen/io/fake_async.png">
+<img src="img/io/fake_async.png">
 
 ### 线程池介绍
 
@@ -786,7 +786,7 @@ public class Server {
 
 需求：需要实现一个客户端的消息可以发送给所有的客户端去接收。（类似于群聊实现）
 
-<img src="../pics/JavaStrengthen/io/port_trans.png">
+<img src="img/io/port_trans.png">
 
 大致流程梳理：
 
@@ -991,14 +991,14 @@ class ServerReaderThread implements Runnable {
 
 **项目代码结构演示。**
 
-<img src="../pics/JavaStrengthen/io/image-20200223212913139.png">
+<img src="img/io/image-20200223212913139.png">
 
 **项目启动步骤：**
 
 * 1.首先需要启动服务端，点击ServerChat类直接右键启动，显示服务端启动成功！
 * 2.其次，点击客户端类ClientChat类，在弹出的方框中输入服务端的ip和当前客户端的昵称
 
-<img src="../pics/JavaStrengthen/io/image-20200223214123052.png">
+<img src="img/io/image-20200223214123052.png">
 
 * 3.登陆进入后的聊天界面如下，即可进行相关操作。
 
@@ -1008,9 +1008,9 @@ class ServerReaderThread implements Runnable {
 
   * 如果选中右侧在线列表某个用户，然后选择右下侧私聊按钮默，认发送私聊消息。
 
-  <img src="../pics/JavaStrengthen/io/image-20200223214143465.png">
+  <img src="img/io/image-20200223214143465.png">
 
-  <img src="../pics/JavaStrengthen/io/image-20200223214155975.png">
+  <img src="img/io/image-20200223214155975.png">
 
 
 
@@ -1737,7 +1737,7 @@ public class ClientReader extends Thread {
 ##### 实现步骤
 
 * 客户端启动后，在聊天界面需要通过发送按钮推送群聊消息，@消息，以及私聊消息。
-* <img src="../pics/JavaStrengthen/io/image-20200223232406727.png">
+* <img src="img/io/image-20200223232406727.png">
 * 如果直接点击发送，默认发送群聊消息
 * 如果选中右侧在线列表某个用户，默认发送@消息
 * 如果选中右侧在线列表某个用户，然后选择右下侧私聊按钮默，认发送私聊消息。
@@ -2060,7 +2060,7 @@ class ClientReader extends Thread {
 
 > NIO示意图
 
-<img src="../pics/JavaStrengthen/io/image-20210522103002504.png">
+<img src="img/io/image-20210522103002504.png">
 
 ## 4.3 NIO 三大核心原理示意图
 
@@ -2094,7 +2094,7 @@ Selector是 一个Java NIO组件，可以能够检查一个或多个 NIO 通道�
 
 一个用于特定基本数据类 型的容器。由 java.nio 包定义的，所有缓冲区 都是 Buffer 抽象类的子类.。Java NIO 中的 Buffer 主要用于与 NIO 通道进行 交互，数据是从通道读入缓冲区，从缓冲区写入通道中的
 
-<img src="../pics/JavaStrengthen/io/Buffer_PIC.png">
+<img src="img/io/Buffer_PIC.png">
 
 ### **Buffer 类及其子类**
 
@@ -2124,7 +2124,7 @@ Buffer 中的重要概念：
 - **标记 (mark)与重置 (reset)**：标记是一个索引，通过 Buffer 中的 mark() 方法 指定 Buffer 中一个特定的 position，之后可以通过调用 reset() 方法恢复到这 个 position. **标记、位置、限制、容量遵守以下不变式： 0 <= mark <= position <= limit <= capacity**
 - **图示:**
 
-<img src="../pics/JavaStrengthen/io/allocate_1.png">
+<img src="img/io/allocate_1.png">
 
 ### Buffer常见方法
 
@@ -2527,7 +2527,7 @@ public void test02() throws Exception {
 
 选择器（Selector） 是 SelectableChannle 对象的多路复用器，Selector 可以同时监控多个 SelectableChannel 的 IO 状况，也就是说，利用 Selector可使一个单独的线程管理多个 Channel。Selector 是非阻塞 IO 的核心
 
-<img src="../pics/JavaStrengthen/io/selector_imp.png">
+<img src="img/io/selector_imp.png">
 
 - Java 的 NIO，用非阻塞的 IO 方式。可以用一个线程，处理多个的客户端连接，就会使用到 Selector(选择器)
 - Selector 能够检测多个注册的通道上是否有事件发生(注意:多个 Channel 以事件的方式可以注册到同一个 Selector)，如果有事件发生，便获取事件然后针对每个事件进行相应的处理。这样就可以只用一个单线程去管 理多个通道，也就是管理多个连接和请求。
@@ -2575,7 +2575,7 @@ int interestSet = SelectionKey.OP_READ|SelectionKey.OP_WRITE
 
 Selector可以实现： 一个 I/O 线程可以并发处理 N 个客户端连接和读写操作，这从根本上解决了传统同步阻塞 I/O 一连接一线程模型，架构的性能、弹性伸缩能力和可靠性都得到了极大的提升。
 
-<img src="../pics/JavaStrengthen/io/NIO_Three.png">
+<img src="img/io/NIO_Three.png">
 
 ### 服务端流程
 

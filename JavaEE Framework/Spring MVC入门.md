@@ -26,7 +26,7 @@
 
 ### 2.3.1 tomcat的拦截规则
 
-<img src="../pics/SpringMVC/DispatcherServlet.png" style="float:left" width="100%">
+<img src="img/mvc/DispatcherServlet.png" style="float:left" width="100%">
 
 在使用tomcat的基本api进行开发时，资源的拦截规则，默认用的是tomcat中web.xml中的配置。
 
@@ -693,7 +693,7 @@ ModelMap extends java.util.LinkedHashMap
 
 **类之间的简化后的UML关系如图**
 
-<img  src="../pics/SpringMVC/BindingAwareModelMapUML.png">
+<img  src="img/mvc/BindingAwareModelMapUML.png">
 
 ----
 
@@ -802,7 +802,7 @@ public void ModelAttribute(Model model) {
 
 **ModelAttribute图解**
 
-<img src="../pics/SpringMVC/ModelAttribute.png" style="float:left">
+<img src="img/mvc/ModelAttribute.png" style="float:left">
 
 # 前端控制器源码
 
@@ -826,7 +826,7 @@ public void ModelAttribute(Model model) {
 
 **1）我们发现DispatcherServlet的继承关系如图所示：**
 
-<img src="../pics/SpringMVC/DispatcherServlet_UML.png" style="float:left">
+<img src="img/mvc/DispatcherServlet_UML.png" style="float:left">
 
 **2）我们知道Servlet的方法是从Service方法开始的，于是我们去找这些类重写的Service方法**
 
@@ -908,7 +908,7 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 
 梳理完流程后，发现执行流程大概是这样的。
 
-<img src="../pics/SpringMVC/mvc_process5.png">
+<img src="img/mvc/mvc_process5.png">
 
 **文字概述**
 
@@ -1111,17 +1111,17 @@ protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Ex
 
 debug发现，有三种类别的handlerMappings（Spring 5.x），使用的是RequestMappingHandlerMapping@6585（因为我们是打的RequestMapping这个注解！）
 
-<img src="../pics/SpringMVC/getHandler_01.png" style="float:left">
+<img src="img/mvc/getHandler_01.png" style="float:left">
 
 最后返回的handler的值是 被打上注解，要执行的方法的：<span style="color:red">**全类名#方法名**</span>
 
-<img src="../pics/SpringMVC/getHandler_02.png" style="float:left">
+<img src="img/mvc/getHandler_02.png" style="float:left">
 
 **我们再回过头来看看this.handlerMappings中RequestMappingHandlerMapping的成员变量：**
 
 mappingRegistry：ioc容器启动创建Controller对象的时候扫描每个处理器都能处理什么请求，保存在mappingRegistry属性的registry中。下一次请求过来，就来看那个handlerMapping中有这个请求的映射信息就好了。
 
-<img src="../pics/SpringMVC/getHandler_03.png" style="float:left">
+<img src="img/mvc/getHandler_03.png" style="float:left">
 
 #### getHandlerAdapter方法
 
@@ -1155,7 +1155,7 @@ protected HandlerAdapter getHandlerAdapter(Object handler) throws ServletExcepti
 
 **RequestMappingHandlerAdapter能解析注解方法的适配器；处理器类中只要有标了注解的这些方法就能用。**
 
-<img src="../pics/SpringMVC/getHandlerAdapter_01.png" style="float:left">
+<img src="img/mvc/getHandlerAdapter_01.png" style="float:left">
 
 #### handle方法
 
@@ -1490,7 +1490,7 @@ mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
 执行完目标方法后，其返回值会被包装成一个ModelAndView，而ModelAndView对象中包含视图名。如图：
 
-<img src="../pics/SpringMVC/ModelAndView.png">
+<img src="img/mvc/ModelAndView.png">
 
 > <span  style="color:green">**来到页面**</span>
 
@@ -1609,7 +1609,7 @@ protected void render(ModelAndView mv, HttpServletRequest request, HttpServletRe
 
 this.viewResolvers中的数据如图：
 
-<img style="float:left" src="../pics/SpringMVC/viewResolvers.png">
+<img style="float:left" src="img/mvc/viewResolvers.png">
 
 我们配了视图解析器就用，没配就用默认的。
 
@@ -1807,7 +1807,7 @@ protected void exposeModelAsRequestAttributes(Map<String, Object> model, HttpSer
 
 ### 流程图
 
-<img src="../pics/SpringMVC/viewResolversFlow.png">
+<img src="img/mvc/viewResolversFlow.png">
 
 视图对象才是真正的渲染页面
 
@@ -2244,7 +2244,7 @@ ConversionService组件负责数据类型的转换以及格式化。
 
 Spring MVC 通过反射机制对目标处理方法进行解析，将请求消息绑定到处理方法的入参中。数据绑定的核心部件是 DataBinder，运行机制如下：
 
-<img src="../pics/SpringMVC/WebDataBinderFlow.png" style="float:left">
+<img src="img/mvc/WebDataBinderFlow.png" style="float:left">
 
 ## 自定义数据类型转换
 
@@ -2388,15 +2388,15 @@ use the `@EnableWebMvc` annotation to enable MVC configuration。
 
 **既没有配置 <mvc:default-servlet-handler/> 也没有配置 <mvc:annotation-driven/>**
 
-<img src="../pics/SpringMVC/mvc_driver_01.png">
+<img src="img/mvc/mvc_driver_01.png">
 
 **配置了 <mvc:default-servlet-handler/>  但没有配置 <mvc:annotation-driven/>**
 
-<img src="../pics/SpringMVC/mvc_driver_02.png">
+<img src="img/mvc/mvc_driver_02.png">
 
 **既配置了 <mvc:default-servlet-handler/>  又配置 <mvc:annotation-driven/>**
 
-<img src="../pics/SpringMVC/mvc_driver_03.png">
+<img src="img/mvc/mvc_driver_03.png">
 
 ## 格式化
 
@@ -3161,7 +3161,7 @@ class MyDispatcherServlet extends DispatcherServlet {
 
 ## 运行流程
 
-<img src="../pics/SpringMVC/mvc_flow.png">
+<img src="img/mvc/mvc_flow.png">
 
 <span style="color:green">**1、所有请求，前端前端控制器（DispatcherServlet）收到请求，调用doDispatch进行处理**</span>
 
@@ -3229,9 +3229,9 @@ springmvc和spring分容器，各司其职。
 
 Spring 的 IOC 容器不应该扫描 SpringMVC 中的 bean, 对应的 SpringMVC 的 IOC 容器不应该扫描 Spring 中的 bean
 
-<img src="../pics/SpringMVC/spring_with_mvc.png">
+<img src="img/mvc/spring_with_mvc.png">
 
-<img src="../pics/SpringMVC/spring_with_mvc2.png">
+<img src="img/mvc/spring_with_mvc2.png">
 
 在 Spring MVC 配置文件中引用业务层的 Bean
 
@@ -3240,7 +3240,7 @@ Spring MVC WEB 层容器可作为 “业务层” Spring 容器的子容器：�
 
 Spring容器是作为父容器的，SpringMVC容器是作为子容器的。子容器的Controller要用父容器的Service没问题。但是如果父容器要拿子容器的，就不行！！
 
-<img src="../pics/SpringMVC/spring_with_mvc3.png" width="100%">
+<img src="img/mvc/spring_with_mvc3.png" width="100%">
 
 # 乱码处理
 

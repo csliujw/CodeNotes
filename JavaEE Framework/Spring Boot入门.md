@@ -171,11 +171,11 @@ public class HelloController {
 
 创建工程时，切换选择starter服务路径，然后手工输入阿里云地址即可，地址：http://start.aliyun.com或https://start.aliyun.com
 
-![image-20211122163605950](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211122163605950.png)
+![image-20211122163605950](img\boot\image-20211122163605950.png)
 
 阿里为了便于自己公司开发使用，特此在依赖坐标中添加了一些阿里自主的技术，也是为了推广自己的技术吧，所以在依赖选择列表中，你有了更多的选择。此外，阿里提供的地址更符合国内开发者的使用习惯，里面有一些SpringBoot官网上没有给出的坐标。
 
-![image-20211122163937408](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211122163937408.png)
+![image-20211122163937408](img\boot\image-20211122163937408.png)
 
 阿里云地址默认创建的SpringBoot工程版本是<font color="#ff0000"><b>2.4.1</b></font>，所以如果你想更换其他的版本，创建项目后在pom文件中手工修改即可，别忘了刷新一下，加载新版本信息。
 
@@ -226,7 +226,7 @@ public class CommunityApplication {
 
 SpringBoot通过配置文件application.properties就可以修改默认的配置
 
-![image-20211123165428245](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211123165428245.png)
+![image-20211123165428245](img\boot\image-20211123165428245.png)
 
 将默认端口改为80端口。properties格式的文件书写规范是key=value
 
@@ -413,23 +413,23 @@ server:
 
 **步骤①**：打开设置，【Files】→【Project Structure...】
 
-![image-20211126160548690](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211126160548690.png)
+![image-20211126160548690](img\boot\image-20211126160548690.png)
 
 **步骤②**：在弹出窗口中左侧选择【Facets】，右侧选中Spring路径下对应的模块名称，也就是你自动提示功能消失的那个模块
 
-<img src="C:/development/Code/note/CodeNotes/JavaEE Framework/img/image-20211126160726589.png" alt="image-20211126160726589" style="zoom:67%;" />![image-20211126160844372](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211126160844372.png)
+<img src="C:/development/Code/note/CodeNotes/JavaEE Framework/img/image-20211126160726589.png" alt="image-20211126160726589" style="zoom:67%;" />![image-20211126160844372](img\boot\image-20211126160844372.png)
 
 **步骤③**：点击Customize Spring Boot按钮，此时可以看到当前模块对应的配置文件是哪些了。如果没有你想要称为配置文件的文件格式，就有可能无法弹出提示
 
-![image-20211126160946448](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211126160946448.png)<img src="C:/development/Code/note/CodeNotes/JavaEE Framework/img/image-20211126160954338.png" alt="image-20211126160954338" style="zoom:80%;" />
+![image-20211126160946448](img\boot\image-20211126160946448.png)<img src="C:/development/Code/note/CodeNotes/JavaEE Framework/img/image-20211126160954338.png" alt="image-20211126160954338" style="zoom:80%;" />
 
 **步骤④**：选择添加配置文件，然后选中要作为配置文件的具体文件就OK了
 
-<img src="C:/development/Code/note/CodeNotes/JavaEE Framework/img/image-20211126161145082.png" alt="image-20211126161145082" style="zoom:80%;" /><img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211126161156324.png" alt="image-20211126161156324" style="zoom: 67%;" />
+<img src="C:/development/Code/note/CodeNotes/JavaEE Framework/img/image-20211126161145082.png" alt="image-20211126161145082" style="zoom:80%;" /><img src="img\boot\image-20211126161156324.png" alt="image-20211126161156324" style="zoom: 67%;" />
 
 ​		到这里就做完了，其实就是Idea的一个小功能
 
-![image-20211126161301699](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211126161301699.png)
+![image-20211126161301699](img\boot\image-20211126161301699.png)
 
 
 
@@ -537,7 +537,7 @@ map:
 
 ​		yaml中保存的单个数据，可以使用Spring中的注解@Value读取单个数据，属性名引用方式：<font color="#ff0000"><b>${一级属性名.二级属性名……}</b></font>
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211126180433356.png" alt="image-20211126180433356" style="zoom:80%;" />
+<img src="img\boot\image-20211126180433356.png" alt="image-20211126180433356" style="zoom:80%;" />
 
 ​		记得使用@Value注解时，要将该注解写在某一个指定的Spring管控的bean的属性名上方，这样当bean进行初始化时候就可以读取到对应的单一数据了。
 
@@ -550,7 +550,7 @@ map:
 
 ​		读取单一数据可以解决读取数据的问题，但是如果定义的数据量过大，这么一个一个书写肯定会累死人的，SpringBoot提供了一个对象，能够把所有的数据都封装到这一个对象中，这个对象叫做Environment，使用自动装配注解可以将所有的yaml数据封装到这个对象中
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211126180738569.png" alt="image-20211126180738569" style="zoom:80%;" />
+<img src="img\boot\image-20211126180738569.png" alt="image-20211126180738569" style="zoom:80%;" />
 
 ​		数据封装到了Environment对象中，获取属性时，通过Environment的接口操作进行，具体方法是getProperties（String），参数填写属性名即可
 
@@ -565,11 +565,11 @@ map:
 
 ​		首先定义一个对象，并将该对象纳入Spring管控的范围，也就是定义成一个bean，然后使用注解@ConfigurationProperties指定该对象加载哪一组yaml中配置的信息。
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211126181126382.png" alt="image-20211126181126382" style="zoom:80%;" />
+<img src="img\boot\image-20211126181126382.png" alt="image-20211126181126382" style="zoom:80%;" />
 
 ​		这个@ConfigurationProperties必须告诉他加载的数据前缀是什么，这样指定前缀下的所有属性就封装到这个对象中。记得数据属性名要与对象的变量名一一对应啊，不然没法封装。其实以后如果你要定义一组数据自己使用，就可以先写一个对象，然后定义好属性，下面到配置中根据这个格式书写即可。
 
-​	<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211126181423432.png" alt="image-20211126181423432" style="zoom:80%;" />
+​	<img src="img\boot\image-20211126181423432.png" alt="image-20211126181423432" style="zoom:80%;" />
 
 <font color="#f0f"><b>温馨提示</b></font>
 
@@ -886,7 +886,7 @@ protected AutoConfigurationEntry getAutoConfigurationEntry(AnnotationMetadata an
 }
 ```
 
-![image-20211003173551017](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\AutoConfigurationImportSelector.png)
+![image-20211003173551017](img\boot\AutoConfigurationImportSelector.png)
 
 ```java
 protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes) {
@@ -1196,7 +1196,7 @@ public class HelloController {
 
 # Web 开发基础
 
-![yuque_diagram](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\yuque_diagram.jpg)
+![yuque_diagram](img\boot\yuque_diagram.jpg)
 
 
 
@@ -1534,7 +1534,7 @@ public class WebMvcConfig {
     - 实现了父类的 doService
     - doService 调用 doDispatch 方法
 
-![image-20211023111242760](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211023111242760.png)
+![image-20211023111242760](img\boot\image-20211023111242760.png)
 
 总结：Spring MVC 功能分析都从 org.springframework.web.servlet.DispatcherServlet ---> doDispatch() 开始
 
@@ -1611,9 +1611,9 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 
 getHandler 方法；RequestMappingHandlerMapping 中存储了所有@RequestMapping 和handler的映射规则。
 
-![image-20211023114049369](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211023114049369.png)
+![image-20211023114049369](img\boot\image-20211023114049369.png)
 
-![image-20211023114945974](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211023114945974.png)
+![image-20211023114945974](img\boot\image-20211023114945974.png)
 
 ```java
 @Nullable
@@ -1901,7 +1901,7 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
         - supports 支持那些方法
         - handle 定义了如何处理的逻辑
 
-![image-20211024200517771](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211024200517771-16350771187701.png)
+![image-20211024200517771](img\boot\image-20211024200517771-16350771187701.png)
 
 #### 执行目标方法
 
@@ -1948,7 +1948,7 @@ protected ModelAndView handleInternal(HttpServletRequest request,
 
 SpringMVC目标方法能写多少种参数类型。取决于参数解析器。
 
-![image-20211024201053219](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211024201053219.png)
+![image-20211024201053219](img\boot\image-20211024201053219.png)
 
 参数解析器
 
@@ -1968,7 +1968,7 @@ public interface HandlerMethodArgumentResolver {
 
 #### 返回值处理器
 
-![image-20211024201539502](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211024201539502.png)
+![image-20211024201539502](img\boot\image-20211024201539502.png)
 
 ### 确定目标方法每一个参数值
 
@@ -3238,11 +3238,11 @@ jdbc.password=root
 
 **步骤①**：创建模块
 
-![image-20211129092156020](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129092156020.png)
+![image-20211129092156020](img\boot\image-20211129092156020.png)
 
 **步骤②**：勾选要使用的技术，MyBatis，由于要操作数据库，还要勾选对应数据库
 
-![image-20211129092210993](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129092210993.png)
+![image-20211129092210993](img\boot\image-20211129092210993.png)
 
 或者手工导入对应技术的starter，和对应数据库的坐标
 
@@ -3426,7 +3426,7 @@ public interface BookDao extends BaseMapper<Book> {
 
 ​	核心在于Dao接口继承了一个BaseMapper的接口，这个接口中帮助开发者预定了若干个常用的API接口，简化了通用API接口的开发工作。
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129100313919.png" alt="image-20211129100313919" style="zoom:80%;" />
+<img src="img\boot\image-20211129100313919.png" alt="image-20211129100313919" style="zoom:80%;" />
 
 ​	下面就可以写一个测试类进行测试了，此处省略。
 
@@ -3533,7 +3533,7 @@ spring:
 
 注意观察，配置项中，在datasource下面并不是直接配置url这些属性的，而是先配置了一个druid节点，然后再配置的url这些东西。言外之意，url这个属性是druid下面的属性，那你能想到什么？除了这4个常规配置外，还有druid专用的其他配置。通过提示功能可以打开druid相关的配置查阅
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129112610729.png" alt="image-20211129112610729" style="zoom:80%;" />
+<img src="img\boot\image-20211129112610729.png" alt="image-20211129112610729" style="zoom:80%;" />
 
 与druid相关的配置超过200条以上，这就告诉你，如果想做druid相关的配置，使用这种格式就可以了，这里就不展开描述了，太多了。
 
@@ -3553,25 +3553,25 @@ spring:
 
 **主页面**
 
-![image-20211129113447844](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129113447844.png)
+![image-20211129113447844](img\boot\image-20211129113447844.png)
 
 **添加**
 
-![image-20211129113522459](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129113522459.png)
+![image-20211129113522459](img\boot\image-20211129113522459.png)
 
 **删除**
 
-![image-20211129113550829](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129113550829.png)
+![image-20211129113550829](img\boot\image-20211129113550829.png)
 
 **修改**
 
 **分页**
 
-![image-20211129113628969](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129113628969.png)
+![image-20211129113628969](img\boot\image-20211129113628969.png)
 
 **条件查询**
 
-![image-20211129113650369](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129113650369.png)
+![image-20211129113650369](img\boot\image-20211129113650369.png)
 
 ​	整体案例中需要采用的技术如下，先了解一下，做到哪一个说哪一个
 
@@ -3596,11 +3596,11 @@ spring:
 
 ​		对于这个案例如果按照企业开发的形式进行应该制作后台微服务，前后端分离的开发。
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129114306062.png" alt="image-20211129114306062" style="zoom:80%;" />
+<img src="img\boot\image-20211129114306062.png" alt="image-20211129114306062" style="zoom:80%;" />
 
 ​		我知道这个对初学的小伙伴要求太高了，咱们简化一下。后台做单体服务器，前端不使用前后端分离的制作了。
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129114328967.png" alt="image-20211129114328967" style="zoom:80%;" />
+<img src="img\boot\image-20211129114328967.png" alt="image-20211129114328967" style="zoom:80%;" />
 
 ​		一个服务器即充当后台服务调用，又负责前端页面展示，降低学习的门槛。
 
@@ -3889,7 +3889,7 @@ JDBC Connection [com.mysql.cj.jdbc.ConnectionImpl@6ca30b8a] will not be managed 
 
 ​		此处设置的是日志的显示形式，当前配置的是控制台输出，当然还可以由更多的选择，根据需求切换即可
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129143207295.png" alt="image-20211129143207295" style="zoom:80%;" />
+<img src="img\boot\image-20211129143207295.png" alt="image-20211129143207295" style="zoom:80%;" />
 
 
 
@@ -4279,11 +4279,11 @@ public class BookController2 {
 
 **普通GET请求**
 
-![image-20211129152237371](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129152237371.png)
+![image-20211129152237371](img\boot\image-20211129152237371.png)
 
 **PUT请求传递json数据，后台实用@RequestBody接收数据**
 
-![image-20211129152300177](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129152300177.png)
+![image-20211129152300177](img\boot\image-20211129152300177.png)
 
 **GET请求传递路径变量，后台实用@PathVariable接收数据**
 
@@ -4368,11 +4368,11 @@ public class R {
 
 ​		表现层开发格式也需要转换一下
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129153301262.png" alt="image-20211129153301262" style="zoom:80%;" />
+<img src="img\boot\image-20211129153301262.png" alt="image-20211129153301262" style="zoom:80%;" />
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129153319052.png" alt="image-20211129153319052" style="zoom:80%;" />
+<img src="img\boot\image-20211129153319052.png" alt="image-20211129153319052" style="zoom:80%;" />
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129153332499.png" alt="image-20211129153332499" style="zoom:80%;" />
+<img src="img\boot\image-20211129153332499.png" alt="image-20211129153332499" style="zoom:80%;" />
 
 ​		结果这么一折腾，全格式统一，现在后端发送给前端的数据格式就统一了，免去了不少前端解析数据的烦恼。
 
@@ -4392,7 +4392,7 @@ public class R {
 
 ​		将前端人员开发的页面保存到lresources目录下的static目录中，建议执行maven的clean生命周期，避免缓存的问题出现。
 
-​	<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211129153831990.png" alt="image-20211129153831990" style="zoom:67%;" />
+​	<img src="img\boot\image-20211129153831990.png" alt="image-20211129153831990"/>
 
 ​		在进行具体的功能开发之前，先做联通性的测试，通过页面发送异步提交（axios），这一步调试通过后再进行进一步的功能开发。
 
@@ -4412,8 +4412,6 @@ getAll() {
 1. 单体项目中页面放置在resources/static目录下
 2. created钩子函数用于初始化页面时发起调用
 3. 页面使用axios发送异步请求获取数据后确认前后端是否联通
-
-
 
 #### 9.页面基础功能开发
 
@@ -4443,11 +4441,7 @@ getAll() {
 
 ​		这样在页面加载时就可以获取到数据，并且由VUE将数据展示到页面上了。
 
-总结：
-
-1. 将查询数据返回到页面，利用前端数据绑定进行数据展示
-
-
+**总结**：将查询数据返回到页面，利用前端数据绑定进行数据展示
 
 ##### 	F-2.添加功能
 
@@ -4537,8 +4531,6 @@ cancel(){
 3. 根据操作结果不同，显示对应的提示信息
 4. 弹出添加Div时清除表单数据
 
-
-
 ##### 	F-3.删除功能
 
 ​		模仿添加操作制作删除功能，差别之处在于删除操作仅传递一个待删除的数据id到后台即可。
@@ -4593,8 +4585,6 @@ handleDelete(row) {
 3. 删除操作结束后动态刷新页面加载数据
 4. 根据操作结果不同，显示对应的提示信息
 5. 删除操作前弹出提示框避免误操作
-
-
 
 ##### 	F-4.修改功能
 
@@ -4655,8 +4645,6 @@ handleEdit() {
 3. 请求方式使用PUT调用后台对应操作（同新增传递数据）
 4. 修改操作结束后动态刷新页面加载数据（同新增）
 5. 根据操作结果不同，显示对应的提示信息（同新增）
-
-​	
 
 #### 10.业务消息一致性处理
 
@@ -4750,8 +4738,6 @@ handleAdd () {
 2. 异常处理器必须被扫描加载，否则无法生效
 3. 表现层返回结果的模型类中添加消息属性用来传递消息到页面
 
-​	
-
 #### 11.页面功能开发
 
 ##### 	F-5.分页功能
@@ -4833,8 +4819,6 @@ handleCurrentChange(currentPage) {
 2. 定义分页组件绑定的数据模型
 3. 异步调用获取分页数据
 4. 分页数据页面回显
-
-
 
 ##### 	F-6.删除功能维护
 
@@ -4965,8 +4949,6 @@ public R getPage(@PathVariable int currentPage,@PathVariable int pageSize){
 1. 定义查询条件数据模型（当前封装到分页数据模型中）
 2. 异步调用分页功能并通过请求参数传递数据到后台
 
-
-
 # 运维实用篇
 
 ​		小伙伴解决了一些遇到的问题，并且已经发现了部分问题具有典型性，预计将有些问题在后面篇章的合适位置添加到本套课程中，作为解决方案提供给大家。
@@ -5034,7 +5016,7 @@ java -jar 工程包名.jar
 
 打包以后执行会出现一些问题，导致程序无法正常执行，例如下面的现象
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211201094223991.png" alt="image-20211201094223991" style="zoom:67%;" />
+<img src="img\boot\image-20211201094223991.png" alt="image-20211201094223991" style="zoom:67%;" />
 
 要想搞清楚这个问题就要说说.jar文件的工作机制了，知道了这个东西就知道如何避免此类问题的发生了。
 
@@ -5061,13 +5043,13 @@ java -jar 工程包名.jar
 
 先看第一个现象，文件大小不同。带有配置时打包生成的程序包大小如下：
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211201095610270.png" alt="image-20211201095610270" style="zoom:150%;" />
+<img src="img\boot\image-20211201095610270.png" alt="image-20211201095610270" style="zoom:150%;" />
 
 不难看出，带有配置的程序包体积比不带配置的大了30倍。
 
 大的程序包中除了包含小的程序包中的内容，还有别的东西。都有什么呢？回到BOOT-INF目录下，打开lib目录，里面显示了很多个jar文件。
 
-​		<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211201102025791.png" alt="image-20211201102025791" style="zoom:50%;" />
+​		<img src="img\boot\image-20211201102025791.png" alt="image-20211201102025791" style="zoom:50%;" />
 
 ​		仔细翻阅不难发现，这些jar文件都是我们制作这个工程时导入的坐标对应的文件。大概可以想明白了，SpringBoot程序为了让自己打包生成的程序可以独立运行，不仅将项目中自己开发的内容进行了打包，还把当前工程运行需要使用的jar包全部打包进来了。为什么这样做呢？就是为了可以独立运行。不依赖程序包外部的任何资源可以独立运行当前程序。这也是为什么大的程序包容量是小的程序包容量的30倍的主要原因。
 
@@ -5116,7 +5098,7 @@ SpringBoot打出来了包为了能够独立运行，将所有需要使用的资�
 
 再来看之前的报错信息：
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211201094223991.png" alt="image-20211201094223991" style="zoom:67%;" />
+<img src="img\boot\image-20211201094223991.png" alt="image-20211201094223991" style="zoom:67%;" />
 
 由于打包时没有使用那段配置，结果打包后形成了一个普通的jar包，在MANIFEST.MF文件中也就没有了Main-Class对应的属性了，所以运行时提示找不到主清单属性，这就是报错的原因。
 
@@ -5155,7 +5137,7 @@ taskkill -f -t -im "进程名称"
 
 程序包打好以后，里面的配置都已经是固定的了，比如配置了服务器的端口是8080。如果我要启动项目，发现当前我的服务器上已经有应用启动起来并且占用了8080端口，这时候可以通过临时属性的方式快速修改某些配置。
 
-![image-20211206095113771](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211206095113771.png)             ![image-20211206095524343](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211206095524343.png)             ![image-20211206095101581](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211206095101581.png)
+![image-20211206095113771](img\boot\image-20211206095113771.png)             ![image-20211206095524343](img\boot\image-20211206095524343.png)             ![image-20211206095101581](img\boot\image-20211206095101581.png)
 
 ```shell
 java –jar springboot.jar –-server.port=80
@@ -5173,7 +5155,7 @@ java –jar springboot.jar –-server.port=80 --logging.level.root=debug
 
 现在我们的程序配置受两个地方控制了，第一配置文件，第二临时属性。并且我们发现临时属性的加载优先级要高于配置文件的。那是否还有其他的配置方式呢？其实是有的，而且还不少，打开官方文档中对应的内容，就可以查看配置读取的优先顺序。地址奉上：[https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-external-config](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html)
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211206100859236.png" alt="image-20211206100859236" style="zoom:67%;" />
+<img src="img\boot\image-20211206100859236.png" alt="image-20211206100859236" style="zoom:67%;" />
 
 我们可以看到，居然有14种配置的位置，而我们现在使用的是这里面的2个。第3条Config data说的就是使用配置文件，第11条Command line arguments说的就是使用命令行临时参数。而这14种配置的顺序就是SpringBoot加载配置的顺序，言外之意，命令行临时属性比配置文件的加载优先级高，所以这个列表**上面的优先级低，下面的优先级高**。其实这个东西不用背的，你就记得一点，你最终要什么效果，你自己是知道的，不管这个顺序是怎么个高低排序，开发时一定要配置成你要的顺序为准。这个顺序只是在你想不明白问题的时候帮助你分析罢了。
 
@@ -5194,7 +5176,7 @@ java –jar springboot.jar –-server.port=80 --logging.level.root=debug
 
 打开SpringBoot引导类的运行界面，在里面找到配置项。其中Program arguments对应的位置就是添加临时属性的，可以加几个试试效果。
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211206101947622.png" alt="image-20211206101947622" style="zoom:80%;" />
+<img src="img\boot\image-20211206101947622.png" alt="image-20211206101947622" style="zoom:80%;" />
 
 我们运行main方法的时候，如果想使用main方法的参数，也就是下面的args参数，就是在上面这个位置添加的参数。
 
@@ -5277,15 +5259,15 @@ SpringBoot提供了配置文件和临时属性的方式来对程序进行配置�
 
 **方式一：使用临时属性设置配置文件名，注意仅仅是名称，不要带扩展名**
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211206105548238.png" alt="image-20211206105548238"/>
+<img src="img\boot\image-20211206105548238.png" alt="image-20211206105548238"/>
 
 **方式二：使用临时属性设置配置文件路径，这个是全路径名**
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211206105716450.png" alt="image-20211206105716450"/>
+<img src="img\boot\image-20211206105716450.png" alt="image-20211206105716450"/>
 
 也可以设置加载多个配置文件
 
-<img src="C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211206105750285.png" alt="image-20211206105750285" />
+<img src="img\boot\image-20211206105750285.png" alt="image-20211206105750285" />
 
 使用的属性一个是spring.config.name，另一个是spring.config.location，这个一定要区别清楚。
 
@@ -5679,7 +5661,7 @@ public class BookController extends BaseClass{
 
 日志已经能够记录了，但是目前记录的格式是SpringBoot给我们提供的，如果想自定义控制就需要自己设置了。先分析一下当前日志的记录格式。
 
-![image-20211206123431222](C:\development\Code\note\CodeNotes\JavaEE Framework\Spring Boot入门.assets\image-20211206123431222.png)
+![image-20211206123431222](img\boot\image-20211206123431222.png)
 
 - PID：进程ID，用于表明当前操作所处的进程，当多服务同时记录日志时，该值可用于协助程序员调试程序 
 - 所属类/接口名：当前显示信息为SpringBoot重写后的信息，名称过长时，简化包名书写为首字母，甚至直接删除

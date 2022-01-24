@@ -52,7 +52,7 @@ new、反射、工厂模式、作用域。
 
 配置文件中定义的是 bean 的定义信息。
 
-<img src="..\pics\src\Spring\quick_start.png" style="width:100%">
+<img src="img\spring\quick_start.png" style="width:100%">
 
 ## refresh
 

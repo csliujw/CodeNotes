@@ -172,7 +172,7 @@ public class ApplicationTest {
 
 通过继承BaseMapper就可以获取到各种各样的单表操作，接下来详细讲解这些操作。
 
-![image-20211105220903263](..\pics\mybatis\plus\image-20211105220903263.png)
+![image-20211105220903263](img\ibatis\plus\image-20211105220903263.png)
 
 没啥好记的，现查现用。只记录一个分页查询
 
@@ -214,7 +214,7 @@ MP 在启动后会将 BaseMapper 中的一系列的方法注册到 meppedStateme
 
 在 MP 中，ISqlInjector 负责 SQL 的注入工作，它是一个接口，AbstractSqlInjector 是它的实现类，实现关系如下：
 
-![image-20211105224958774](..\pics\mybatis\plus\image-20211105224958774.png)
+![image-20211105224958774](img\ibatis\plus\image-20211105224958774.png)
 
 在 AbstractSqlInjector 中，主要是由 inspectInject() 方法进行注入的，如下：
 
@@ -250,7 +250,7 @@ public void inject(MapperBuilderAssistant builderAssistant, Class<?> mapperClass
 
 在实现方法中，`methodList.forEach(m -> m.inject(builderAssistant, mapperClass, modelClass, tableInfo));` 是关键，循环遍历方法，进行注入。 最终调用抽象方法 injectMappedStatement进行真正的注入；该抽象方法的实现如下：
 
-![image-20211105225432807](..\pics\mybatis\plus\image-20211105225432807.png)
+![image-20211105225432807](img\ibatis\plus\image-20211105225432807.png)
 
 以 DeleteById 为例
 
@@ -278,7 +278,7 @@ public class DeleteById extends AbstractMethod {
 }
 ```
 
-![image-20211105225944851](..\pics\mybatis\plus\image-20211105225944851.png)
+![image-20211105225944851](img\ibatis\plus\image-20211105225944851.png)
 
 ## 配置
 
