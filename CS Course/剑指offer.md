@@ -1,4 +1,483 @@
-### **1.二维数组中的查找**
+# 剑指专项练习
+
+## 整数
+
+### 整数除法
+
+给定两个整数 `a` 和 `b` ，求它们的除法的商 `a/b` ，要求不得使用乘号 `'*'`、除号 `'/'` 以及求余符号 `'%'` 。
+
+注意：
+
+整数除法的结果应当截去（truncate）其小数部分，例如：truncate(8.345) = 8 以及 truncate(-2.7335) = -2
+假设我们的环境只能存储 32 位有符号整数，其数值范围是 [−2^31, 2^31−1]。本题中，如果除法结果溢出，则返回 231 − 1
+
+> 解题思路
+
+- 注意边界条件。int 的最小负数 / -1 会爆 int 的max。
+- O(N)的解法，直接用减法的话，复杂度太高
+- O(logN)的解法：
+    - a 减去 $b*2^n$ 的整数倍数，得到部分的商。
+    - $a  -  b*2^n$  的结果继续减去 $b*2^n$ 的整数倍数，得到部分的商。
+
+```java
+// 暴力解题 out of time。
+public int divide(int a,int b){
+    if(a == Integer.MIN_VALUE && b == -1) return Integer.MAX_VALUE;
+    int neg = 2;
+    if(a>0){
+        a = -a;neg--;
+    }
+    if(b>0){
+        b=-b;neg--;
+    }
+    int retVal = 0;
+    while(a<=b){
+        a-=b;
+        retVal++;
+    }
+    return neg%2==0?retVal:-retVal;
+}
+```
+
+```java
+// longN的解法 
+// 先考虑 a 是 b 的多少偶数倍（2^n）。然后在 a = a - b*2^n，继续考虑
+class Solution {
+    public int divide(int a,int b){
+        if(a == Integer.MIN_VALUE && b == -1) return Integer.MAX_VALUE;
+        int neg = 2;
+        if(a>0){
+            a = -a;neg--;
+        }
+        if(b>0){
+            b=-b;neg--;
+        }
+        int retVal = divideCore(a,b);
+        return neg % 2 ==0?retVal:-retVal;
+    }
+
+    public int divideCore(int a,int b){
+        int retVal = 0; // 商的结果
+        while(a<=b){
+            int position = 1;
+            int tmp = b;
+            while(tmp>(Integer.MIN_VALUE>>1) &&a<=tmp+tmp){
+                position = position<<1;
+                tmp = tmp<<1;
+            }
+            a=a-tmp;
+            retVal+=position;
+        }
+        return retVal;
+    }
+}
+```
+
+### 二进制加法
+
+给定两个 01 字符串 `a` 和 `b` ，请计算它们的和，并以二进制字符串的形式输出。
+
+输入为 **非空** 字符串且只包含数字 `1` 和 `0`。
+
+> 解题思路
+
+- 按位相加记录进位
+- 没加完的，后面for循环继续加。
+- 累加的时候记得加上进位
+
+```java
+class Solution {
+    public String addBinary(String a, String b) {
+        // 字符串最后一位是低位。位数短的，高位补0
+        // 从低位向高位加。记录进位。
+        int add = 0;
+        int aindex = a.length() - 1;
+        int bindex = b.length() - 1;
+        StringBuffer sb = new StringBuffer();
+        while(aindex>=0 || bindex>=0){
+            int n1 = aindex>=0?a.charAt(aindex--)-'0':0;
+            int n2 = bindex>=0?b.charAt(bindex--)-'0':0;
+            int tmp = n1+n2+add;
+            add = tmp>=2?1:0;
+            sb.append(tmp%2);
+        }
+        if(add==1) sb.append(add);
+        return sb.reverse().toString();
+    }
+}
+```
+
+### 前n个数字二进制中1的个数
+
+给定一个非负整数 `n` ，请计算 `0` 到 `n` 之间的每个数字的二进制表示中 1 的个数，并输出一个数组。
+
+```shell
+输入: n = 2
+输出: [0,1,1]
+解释: 
+0 --> 0
+1 --> 1
+2 --> 10
+```
+
+> 解法
+
+- 法一：暴力循环，求出每个数字1的个数。
+    - 如何求1的数量？
+    - 1.数字的每位一次 & 1，统计。
+    - 2.直接数1的个数。 n & (n-1)可以做到。
+        - n= 0111；n-1 = 0110
+        - n & (n-1) = 0111 & 0110 = 0110 直接把最后一位的1去掉了。
+        - 如果最后 n == 0，则说明没有1了。 
+- 法二：发现 n 比 n & (n-1) 多一个1！！ 
+
+```java
+// 暴力求解 KlogN
+class Solution {
+    public int[] countBits(int n) {
+        int[]nums = new int[n+1];
+        for(int i=1;i<=n;i++){
+            int tmp = i;
+            while(tmp>0){
+                if((tmp & 1)==1){
+                    nums[i]++;
+                }
+                tmp = tmp>>1; 
+            }
+        }
+        return nums;
+    }
+}
+```
+
+```java
+// O(N)
+class Solution {
+    public int[] countBits(int n) {
+        int nums[]=new int[n+1];
+        for(int i=1;i<=n;i++){
+            nums[i] = nums[i&(i-1)]+1;
+        }
+        return nums;
+    }
+}
+```
+
+### 只出现一次的数字
+
+给你一个整数数组 `nums` ，除某个元素仅出现 **一次** 外，其余每个元素都恰出现 **三次 。**请你找出并返回那个只出现了一次的元素。
+
+> 解法
+
+- 哈希表判重
+- 根据数字的 bit 位来判断。
+    - 统计所有数字每个bit位出现1的次数。
+    - 如果，该bit位出现的次数是3的倍数，则说明只出现一次的元素该bit位是0，否则是1。
+
+```java
+// hash 暴力解题
+class Solution {
+    public int singleNumber(int[] nums) {
+        HashMap<Integer, Integer> map = new HashMap<>();
+        for (int i = 0; i < nums.length; i++) {
+            if (map.containsKey(nums[i])) {
+                map.replace(nums[i], map.get(nums[i]) + 1);
+            } else {
+                map.put(nums[i], 1);77\\\7
+                
+            }
+        }
+        Set<Integer> integers = map.keySet();
+        Iterator<Integer> iterator = integers.iterator();
+        while (iterator.hasNext()) {
+            Integer key = iterator.next();
+            if (map.get(key) == 1) {
+                return key;
+            }
+        }
+        return -1;
+    }
+}
+```
+
+```java
+// bit 位 统计，还原，怎么计算出原数字的不明白。
+class Solution {
+    public int singleNumber(int[] nums) {
+        // 统计每个bit出现1的次数
+        int res = 0;
+        int[] cnt = new int[32];
+        for(int num : nums){
+            for(int i = 0; i < 32; i++){
+                cnt[i] += (num >> i) & 1;
+            }
+        }
+        for(int i = 31; i >= 0; i--){
+            // 如果t=0 说明这位是0
+            int t = cnt[i] % 3 == 0 ? 0 : 1;
+            res = (res << 1) + t;
+        }
+        return res;
+    }
+}
+```
+
+### 单词长度的最大乘积
+
+给定一个字符串数组 words，请计算当两个字符串 words[i] 和 words[j] 不包含相同字符时，它们长度的乘积的最大值。假设字符串中只包含英语的小写字母。如果没有不包含相同字符的一对字符串，返回 0。
+
+> 解法
+
+- 都是双重for循环判断那几个字符串不同。
+- 问题在于如何判断是否不同
+    - 法一：map判重。
+    - 法二：用位运算判重；字符串中存在a则第0个位置的bit设置为1，存在b则第1个位置的bit设置为1。最后判断两个字符串是否有相同的字符，做一次 & 运算就知道了
+
+```java
+class Solution {
+    public  int maxProduct(String... words) {
+        // for 循环找出两两不同的，然后找max 会超时
+        int max = 0;
+        for (int i = 0; i < words.length; i++) {
+            for (int j = i + 1; j < words.length; j++) {
+                // 判断 i j 是否包含相同的字符
+                if (!judge(words[i], words[j])) {
+                    max = max > words[i].length() * words[j].length() ? max : words[i].length() * words[j].length();
+                }
+            }
+        }
+        return max;
+    }
+
+    public static boolean judge(String a, String b) {
+        boolean[]c = new boolean[26];
+        for (int i = 0; i < a.length(); i++) {
+            c[a.charAt(i)-'a']=true;
+        }
+
+        for (int i = 0; i < b.length(); i++) {
+            if(c[b.charAt(i)-'a']){
+                return true;
+            }
+        }
+        return false;
+    }
+}
+```
+
+```java
+// 位运算判重
+class Solution {
+    public  int maxProduct(String... words) {
+        int[] flags = new int[words.length];
+        for (int i = 0; i < words.length; i++) {
+            String word = words[i];
+            for (int j = 0; j < word.length(); j++) {
+                flags[i]|=1<< (word.charAt(j)-'a'); // 比如一个字符串中可能有多个 e e e，我们想把e对应的1放到flags中，所以用|，因为有多个，所以不用+
+            }
+        }
+        int max = 0;
+        for (int i = 0; i <words.length ; i++) {
+            for (int j = i+1; j <words.length ; j++) {
+                if((flags[i] & flags[j])==0){
+                    int curlen = words[i].length()*words[j].length();
+                    max = Math.max(max,curlen);
+                }
+            }
+        }
+        return max;
+    }
+}
+```
+
+## 数组
+
+### 排序数组中两个数字之和
+
+给定一个已按照 升序排列  的整数数组 numbers ，请你从数组中找出两个数满足相加之和等于目标数 target 。
+
+函数应该以长度为 2 的整数数组的形式返回这两个数的下标值。numbers 的下标 从 0 开始计数 ，所以答案数组应当满足 0 <= answer[0] < answer[1] < numbers.length 。
+
+假设数组中存在且只存在一对符合条件的数字，同时一个数字不能使用两次。
+
+> 解法
+
+- 双指针。
+
+```java
+class Solution {
+    public int[] twoSum(int[] numbers, int target) {
+        for (int start = 0, end = numbers.length - 1; start < end; ) {
+            if (numbers[start] + numbers[end] == target) return new int[]{start, end};
+            if (numbers[start] + numbers[end] > target) {
+                end--;
+            } else {
+                start++;
+            }
+        }
+        return null;
+    }
+}
+```
+
+## 链表
+
+### 两个链表的第一个重合节点
+
+给定两个单链表的头节点 `headA` 和 `headB` ，请找出并返回两个单链表相交的起始节点。如果两个链表没有交点，返回 `null` 。
+
+> 解法
+
+- 法一：哈希表判重
+- 法二：stack 存入，然后同时出栈对比是否是同一个节点。
+
+```java
+// 法一：哈希表判重
+public class Solution {
+    public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+        // 法一：hashmap。判断。
+        if(headA == null || headB == null) return null;
+        HashMap<ListNode,Object> map = new HashMap<>();
+        while(headA!=null){
+            map.put(headA,new Object());
+            headA = headA.next;
+        }
+        while(headB!=null){
+            if(map.containsKey(headB)) return headB;
+            headB = headB.next;
+        }
+        return null;
+    }
+}
+```
+
+```java
+// stack
+public class Solution {
+    public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+        if(headA == null || headB == null) return null;
+        LinkedList<ListNode> s1 = new LinkedList<>();
+        LinkedList<ListNode> s2 = new LinkedList<>();
+        while(headA!=null){
+            s1.push(headA);
+            headA = headA.next;
+        }
+        while(headB!=null){
+            s2.push(headB);
+            headB = headB.next;
+        }
+        ListNode lastNode = null;
+        while(!s1.isEmpty() && !s2.isEmpty()){
+            ListNode t1 = s1.pop();
+            ListNode t2 = s2.pop();
+            if(t1==t2) lastNode = t1;
+        }
+        return lastNode;
+    }
+}
+```
+
+### 反转链表
+
+给定单链表的头节点 `head` ，请反转链表，并返回反转后的链表的头节点。
+
+> 解法
+
+- 哑节点，头插法，先插入的数据在后面。
+- 用 stack。
+- 双指针？
+
+```java
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        // 虚拟头节点。头插法
+        if(head == null || head.next == null) return head;
+        ListNode dummy = new ListNode(-1);
+        while(head!=null){
+            // 头插
+            ListNode tmp = head;
+            head = head.next;
+            tmp.next = dummy.next;
+            dummy.next = tmp;
+        }
+        return dummy.next;
+    }
+}
+```
+
+### 链表中的两数相加
+
+给定两个 非空链表 l1和 l2 来代表两个非负整数。数字最高位位于链表开始位置。它们的每个节点只存储一位数字。将这两数相加会返回一个新的链表。
+
+可以假设除了数字 0 之外，这两个数字都不会以零开头。
+
+> 解法
+
+- 链表中的数据分别放入，两个 stack，然后出stack，计算，创建节点。
+
+```java
+class Solution {
+    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+        LinkedList<Integer> s1 = new LinkedList<>();
+        LinkedList<Integer> s2 = new LinkedList<>();
+        // 链表的数据入栈7 --> 2 --> 4 --> 3 依次入栈
+        while(l1!=null){
+            s1.push(l1.val); // 高位就在下面了
+            l1 = l1.next;
+        }
+        while(l2!=null){
+            s2.push(l2.val);
+            l2 = l2.next;
+        }
+        int add = 0;
+        ListNode dummy = new ListNode(-1);
+        ListNode cur = dummy;
+        while(!s1.isEmpty() || !s2.isEmpty()){
+            int n1 = s1.isEmpty()?0:s1.pop();    
+            int n2 = s2.isEmpty()?0:s2.pop();
+            System.out.println(n1+":"+n2+":"+add);
+            dummy.next = new ListNode((n1+n2+add)%10,dummy.next);
+            add = (n1+n2+add)>=10?1:0;
+        }
+        if(add==1)dummy.next = new ListNode(1,dummy.next);
+        return dummy.next;
+    }
+}
+```
+
+### 回文链表
+
+给定一个链表的 **头节点** `head` **，**请判断其是否为回文链表。
+
+如果一个链表是回文，那么链表节点序列从前往后看和从后往前看是相同的。
+
+> 解法
+
+- 法一：数组存储数据，双指针判断
+- 法二：扫一遍链表，找到中间位置，再把后面的链表反转，前半部分和后半部分分别比较，后半部分比较的时候，再将链表反转
+
+```java
+class Solution {
+    public boolean isPalindrome(ListNode head) {
+        int[]arr = new int[100000];
+        int countsNode = -1;
+        while(head!=null){
+            arr[++countsNode] = head.val;
+            head = head.next; 
+        }
+        for(int start=0,end = countsNode;start<=end;){
+            if(arr[start++]!=arr[end--]) return false;
+        }
+        return true;
+    }
+}
+```
+
+
+
+# 老版剑指offer
+
+## **二维数组中的查找**
 
 - [x] 矩阵有序
 - 基本思路就是给矩阵降低阶数
@@ -28,9 +507,8 @@ public boolean Find(int target, int[][] array) {
 }
 ```
 
+## **替换空格**
 
-
-### **2.替换空格**
 - [x] 建立队列，元素全部入队再出队拼接字符串，空格用"%20"替代。
 - [x] 先扫描数组的长度，统计空字符串的数目，确定好新数组的大小，在遍历替换存入数组
 - [x] 以上方法都不优，未考虑内存消耗。
@@ -48,7 +526,8 @@ public String replaceSpace(StringBuffer str) {
 }
 ```
 
-### **3.从头到尾打印链表**
+## 从头到尾打印链表
+
 - [x] 用堆栈
 - [x] 单链表逆置再输出
 ```java
@@ -71,7 +550,8 @@ public ArrayList<Integer> printList(ListNode listNode) {
 	return arrayList;
 }
 ```
-### **4.前序中序重建二叉树**
+## 前序中序重建二叉树
+
 - [x] 递归建立左右子树
 - 先获取前序发现根元素，在遍历中序序列得到它的左右子树
 - 找到了就对这个左右子树进行递归在确定左右子树
@@ -97,7 +577,8 @@ TreeNode helper(int[] preorder, int[] inorder, int inStart, int inEnd){
     return null;
 }
 ```
-### **5.用两个栈实现队列**
+## 用两个栈实现队列
+
 - [x] 题目思路
 - stack1负责元素入栈。stack2负责元素出栈
 - 1 2 3 4 5入栈 栈顶是5
@@ -122,7 +603,7 @@ public int pop() {
 	}
 }
 ```
-### **6.旋转数组的最小数字**
+## 旋转数组的最小数字
 
 >题目描述：
 
@@ -147,7 +628,7 @@ public int pop() {
     - 我们无法进行二分查找，因为不知道mid是在A部分还是在B部分
     - 此时只能进行顺序查找，移动left【这样也和前面移动left统一起来了】
 ```java
-暴力解
+//暴力解
 public int minNumberInRotateArray(int[] array) {
 	int len = array.length;
 	if (len == 0)
@@ -159,7 +640,7 @@ public int minNumberInRotateArray(int[] array) {
 	return 0;
 }
 
-二分查找
+//二分查找
 public int minNumberInRotateArray(int[] array) {
 	int len = array.length-1;
 	int left = 0;
@@ -177,10 +658,10 @@ public int minNumberInRotateArray(int[] array) {
 	}
 	return array[left];
 }
-
-牛客上的测试结果 我的暴力解答速度更快。
+//牛客上的测试结果 我的暴力解答速度更快。
 ```
-### **7.斐波那契数列**
+## 斐波那契数列
+
 - [x] 递归太慢
 - [x] 循环计算 速度可以
 ```java
@@ -205,7 +686,7 @@ public int F(int n) {
 }
 ```
 
-### **8.跳台阶**
+## 跳台阶
 
 一只青蛙一次可以跳上1级台阶，也可以跳上2级。求该青蛙跳上一个n级的台阶总共有多少种跳法（先后次序不同算不同的结果）。
 - [x] 这是一个斐波那契的变形题。
@@ -227,7 +708,8 @@ public int JumpFloor(int n) {
     return fn;
 }
 ```
-### **9.变态跳台阶**
+## 变态跳台阶
+
 - [x] fn = f1+f2+f3+...fn
 - 计算就行
 - [x] 官方题解 数学归纳证明出了 2^(n-1)种跳法
@@ -252,7 +734,8 @@ public int RectCover(int n) {
 }
 ```
 
-### **10.链表中倒数第k个结点**
+## 链表中倒数第k个结点
+
 - [x] 双指针。
 - 设置快慢指针。快指针比慢指针多走k个结点
 ```java
@@ -272,7 +755,8 @@ public ListNode FindKthToTail(ListNode head,int k) {
 	return pre;
 }
 ```
-### **11.反转链表**
+## 反转链表
+
 - [x] 头插法
 ```java
 public ListNode ReverseList(ListNode head) {
@@ -289,7 +773,8 @@ public ListNode ReverseList(ListNode head) {
 }
 ```
 
-### **12.合并两个排序的链表**
+## 合并两个排序的链表
+
 ```java
 public ListNode Merge(ListNode list1, ListNode list2) {
 	ListNode head = new ListNode(-1);//定义一个哑结点方便操作
@@ -311,7 +796,8 @@ public ListNode Merge(ListNode list1, ListNode list2) {
 }
 ```
 
-### **13.从上往下打印二叉树**
+## 从上往下打印二叉树
+
 - [x] 层序遍历
 ```java
 public ArrayList<Integer> PrintFromTopToBottom(TreeNode root) {
@@ -331,7 +817,8 @@ public ArrayList<Integer> PrintFromTopToBottom(TreeNode root) {
 }
 ```
 
-### **14.二叉搜索树的后序遍历序列**
+## 二叉搜索树的后序遍历序列
+
 ```java
 public boolean VerifySquenceOfBST(int [] sequence) {
     return Verify(sequence,0,sequence.length);
@@ -363,10 +850,8 @@ public boolean Verify(int[] sequence, int start, int end) {
 }
 ```
 
+## 二叉树的下一个结点
 
-
-### **15.二叉树的下一个结点**
-```
 题目描述
 给定一个二叉树和其中的一个结点，请找出中序遍历顺序的下一个结点并且返回。
 注意，树中的结点不仅包含左右子结点，同时包含指向父结点的指针。
@@ -375,6 +860,8 @@ public boolean Verify(int[] sequence, int start, int end) {
 
 最后还是看懂了。方法中给出的参数A，我们要求的就是A的下一个结点
 下面是结构体
+
+```java
 public class TreeLinkNode {
     int val;
     TreeLinkNode left = null;
@@ -392,12 +879,9 @@ public class TreeLinkNode {
 - 在中序遍历时，发现结点A，我们用temp=A
 - 在出栈时发现temp!=null,则当前出栈的结点就是我们要的结点。
 - [x] 解法二
-![image](https://note.youdao.com/yws/res/7759/7BDF2575C5D044AA9E24BDB211EFF87A)
-![image](https://note.youdao.com/yws/res/7761/108B0F2BDB624C26BA54A5FC82D3E78B)
-![image](https://note.youdao.com/yws/res/7764/325D1D8CD4964F25B4794F9A2AEB8106)
 实际上 最后两种情况是一样的。
 ```java
-采用解法一进行解题
+//采用解法一进行解题
 public TreeLinkNode GetNext(TreeLinkNode pNode) {
 	TreeLinkNode temp = null;
 	int val = pNode.val;// 我们要找到中序遍历val的下一个点
@@ -424,7 +908,7 @@ public TreeLinkNode GetNext(TreeLinkNode pNode) {
 	}
 	return null;
 }
-采用解法二进行解题
+//采用解法二进行解题
 TreeLinkNode GetNext(TreeLinkNode node) {
 	if (node == null)
 		return null;
@@ -444,7 +928,8 @@ TreeLinkNode GetNext(TreeLinkNode node) {
 ```
 >**PS 我想不到解法二 太强了！**
 
-### **16.最小的k个数**
+## 最小的k个数
+
 - [x] 优先队列 == Max(O(KlongN),O(N)) 建堆时间最优是O(N)
 - [x] 先快排 在输出 == NlongN + K
 ```java
