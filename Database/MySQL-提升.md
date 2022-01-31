@@ -511,6 +511,46 @@ select workaddress,count(*) as address_count from emp where age<45 group by work
     - DESC：降序
 - 注意：如果是多字段排序，当第一个字段值相同时，才会根据第二个字段进行排序。
 
+#### 分页查询
+
+`select 字段列表 from 表名 limit 起始索引,查询记录数;`
+
+```sql
+select * from emp limit 0,5;
+```
+
+<span style="color:red">**注意：**</span>
+
+- 起始索引从0开始，起始索引 = （查询页码 - 1）* 每页显示记录数。
+- 分页查询是数据库的方言，不同的数据库有不同的实现，MySQL中是LIMIT。
+- 如果查询的是第一页数据，起始索引可以省略，直接简写为 limit 10。
+
+#### 习题
+
+按照需求完成如下DQL语句编写 
+
+1. 查询年龄为20,21,22,23岁的员工信息。 
+2. 查询性别为男 ，并且年龄在 20-40 岁(含)以内的姓名为三个字的员工。 
+3. 统计员工表中, 年龄小于60岁的 , 男性员工和女性员工的人数。 
+4. 查询所有年龄小于等于35岁员工的姓名和年龄，并对查询结果按年龄升序排序，如果年龄相同按入职时间降序排序。 
+5. 查询性别为男，且年龄在20-40 岁(含)以内的前5个员工信息，对查询的结果按年龄升序排序，年龄相同按入职时间升序排序。
+
+```sql
+select * from emp where age in(20,21,22,23);
+
+select sex,age,name from emp where sex='男' and (age between 20 and 40) and name like '___';
+
+select sex,count(*) from emp where age<60 group by sex;
+
+select name,age from emp where age<=35 order by age asc,entrydate desc;
+
+select * from emp where sex='男' and age between 20 and 40 order by age asc,entrydate desc limit 0,5;
+```
+
+#### 执行顺序
+
+![image-20220201004522563](img\image-20220201004522563.png)
+
 ### DCL
 
 
