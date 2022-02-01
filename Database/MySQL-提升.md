@@ -553,15 +553,863 @@ select * from emp where sex='男' and age between 20 and 40 order by age asc,ent
 
 ### DCL
 
+DCL英文全称是Data Control Language (数据控制语言)，用来管理数据库用户 、控制数据库的访问权限。
 
+- 用户管理
+    - `create user '用户'@'主机名' identified by '密码';`
+    - `alter user '用户'@'主机名' identified  with mysql_native_password by '密码';`
+    - `drop user '用户'@'主机名';`
+- 权限控制
+    - `grant 权限列表 on 数据库名.表名 to '用户'@'主机名';`
+    - `revoke 权限列表 on 数据库名.表名 from '用户'@'主机名';`
+
+#### 管理用户
+
+查询用户：
+
+```sql
+use mysql;
+select * from user;
+```
+
+创建用户：
+
+```sql
+create user '用户名'@'主机名' identified by '密码';
+# 虽然创建了用户 user2 但是没有对数据库的访问权限，只能登录
+create user 'user2'@'localhost' identified by 'root';
+# 任意主机都可以登录。 % 是通配符，表示任意
+create user 'user2'@'%' identified by 'root';
+```
+
+修改用户密码
+
+```sql
+alter user '用户名'@'主机名' identified with mysql_native_password by '新密码';
+
+ alter user 'user2'@'localhost' identified with mysql_native_password by '1234'
+```
+
+删除用户
+
+```sql
+drop user 'user2'@'localhost';
+```
+
+**注意：** 
+
+- 主机名可以使用 % 通配。
+- 这类SQL开发人员操作的比较少，主要是DBA（ Database Administrator 数据库管理员）使用。
+
+#### 权限控制
+
+MySQL中定义了很多种权限，<a href="https://dev.mysql.com/doc/refman/8.0/en/privileges-provided.html#priv_all">官方文档</a> ，但是常用的就以下几种：
+
+| 权限                | 说明               |
+| ------------------- | ------------------ |
+| ALL, ALL PRIVILEGES | 所有权限           |
+| SELECT              | 查询数据           |
+| INSERT              | 插入数据           |
+| UPDATE              | 修改数据           |
+| DELETE              | 删除数据           |
+| ALTER               | 修改表             |
+| DROP                | 删除数据库/表/视图 |
+| CREATE              | 创建数据库/表      |
+
+查询权限：
+
+```sql
+show grants for '用户名'@'主机';
+```
+
+授予权限
+
+```sql
+grant 权限列表 on 数据库名.表名 to '用户名'@'主机';
+# 授予 user2 用户demo数据库所有表的所有权限。
+grant all on demo.* to 'user2'@'%'; 
+```
+
+撤销权限
+
+```sql
+revoke 权限列表 on 数据库名.表名 to '用户名'@'主机';
+
+revoke all on demo.* to 'user2'@'%';
+```
 
 ## 函数
 
+- 字符串函数
+    - `concat,lower,upper,lpad,rpad,trim,substring`
+- 数值函数
+    - `ceil,floor,mod,rand,round`
+- 日期函数
+    - `curdate,curtime,now,year,month,day,date_add,datediff`
+- 流程函数
+    - `if,ifnull,case[...] when... then... else... end`
+
+### 字符串函数
+
+常用的字符串函数如下：
+
+| 函数                     | 功能                                                         |
+| ------------------------ | ------------------------------------------------------------ |
+| concat(s1,s2,...sn)      | 字符串拼接，将 s1,s2,...sn 拼接成一个字符串                  |
+| lower(str)               | 将字符串str全部转为小写                                      |
+| upper(str)               | 将字符串str全部转为大写                                      |
+| LPAD(str,n,pad)          | 左填充，用字符串 pad 对 str 的左边进行填充，达到 n 个字符串长度 |
+| RPAD(str,n,pad)          | 右填充，用字符串 pad 对 str 的右边进行填充，达到 个字符串长度 |
+| TRIM(str)                | 去掉字符串头部和尾部的空格（LTRIM、RTRIM）                   |
+| SUBSTRING(str,start,len) | 返回从字符串 str 从 start 位置起的 len 个长度的字符串        |
+
+```sql
+mysql> select concat('s1','asf','demo');
++---------------------------+
+| concat('s1','asf','demo') |
++---------------------------+
+| s1asfdemo                 |
++---------------------------+
+1 row in set (0.00 sec)
+
+mysql> select lower("BIG");
++--------------+
+| lower("BIG") |
++--------------+
+| big          |
++--------------+
+1 row in set (0.01 sec)
+
+mysql> select upper("small");
++----------------+
+| upper("small") |
++----------------+
+| SMALL          |
++----------------+
+1 row in set (0.00 sec)
+
+mysql> select LPAD('00101',32,'0');
++----------------------------------+
+| LPAD('00101',32,'0')             |
++----------------------------------+
+| 00000000000000000000000000000101 |
++----------------------------------+
+1 row in set (0.01 sec)
+
+mysql> select RPAD('320.0',6,'0');
++---------------------+
+| RPAD('320.0',6,'0') |
++---------------------+
+| 320.00              |
++---------------------+
+1 row in set (0.07 sec)
+
+mysql> select trim('   hello world  ');
++--------------------------+
+| trim('   hello world  ') |
++--------------------------+
+| hello world              |
++--------------------------+
+1 row in set (0.01 sec)
+
+mysql> select substring('hello world java','2','3');
++---------------------------------------+
+| substring('hello world java','2','3') |
++---------------------------------------+
+| ell                                   |
++---------------------------------------+
+1 row in set (0.00 sec)
+
+
+# 由于业务需求变更，企业员工的工号，统一为5位数，目前不足5位数的全部在前面补0。比如： 1号员
+# 工的工号应该为00001
+update emp set workernumber=lpad(workernumber,5,'0');
+```
+
+### 数值函数
+
+| 函数       | 功能                               |
+| ---------- | ---------------------------------- |
+| CELL(x)    | 向上取整                           |
+| FLOOR(x)   | 向下取整                           |
+| MOD(x,y)   | 返回x/y的模                        |
+| RAND()     | 返回0~1内的随机数                  |
+| ROUND(x,y) | 求参数x的四舍五入的值，保留y位小数 |
+
+```mysql
+-- 通过数据库的函数，生成一个六位数的随机验证码
+mysql> select LPAD(ROUND(rand()*1000000),6,'0');
++-----------------------------------+
+| LPAD(ROUND(rand()*1000000),6,'0') |
++-----------------------------------+
+| 429655                            |
++-----------------------------------+
+1 row in set (0.00 sec)
+
+mysql> select LPAD(ROUND(rand()*1000000),6,'0');
++-----------------------------------+
+| LPAD(ROUND(rand()*1000000),6,'0') |
++-----------------------------------+
+| 063800                            |
++-----------------------------------+
+1 row in set (0.00 sec)
+
+mysql> select LPAD(ROUND(rand()*1000000),6,'0');
++-----------------------------------+
+| LPAD(ROUND(rand()*1000000),6,'0') |
++-----------------------------------+
+| 030035                            |
++-----------------------------------+
+1 row in set (0.00 sec)
+```
+
+### 日期函数
+
+| 函数                              | 功能                                                |
+| --------------------------------- | --------------------------------------------------- |
+| CURDATE()                         | 返回当前日期                                        |
+| CURTIME()                         | 返回当前时间                                        |
+| NOW()                             | 返回当前日期和时间                                  |
+| YEAR(date)                        | 获取指定 date 的年份                                |
+| MONTH(date)                       | 获取指定 date 的月份                                |
+| DAY(date)                         | 获取指定 date 的日期                                |
+| DATE_ADD(date,INTERVAL expr type) | 返回一个日期 时间值加上一个时间间隔 expr 后的时间值 |
+| DATEDIFF(date1,date2)             | 返回起始时间 date1 和 结束时间 data2 之间的天数     |
+
+```SQL
+mysql> select curdate();
++------------+
+| curdate()  |
++------------+
+| 2022-02-01 |
++------------+
+1 row in set (0.01 sec)
+
+mysql> select curtime();
++-----------+
+| curtime() |
++-----------+
+| 14:41:15  |
++-----------+
+1 row in set (0.01 sec)
+
+mysql> select now();
++---------------------+
+| now()               |
++---------------------+
+| 2022-02-01 14:41:28 |
++---------------------+
+1 row in set (0.00 sec)
+
+mysql> select year(now());
++-------------+
+| year(now()) |
++-------------+
+|        2022 |
++-------------+
+1 row in set (0.00 sec)
+
+mysql> select year('2021-11-11 12:22');
++--------------------------+
+| year('2021-11-11 12:22') |
++--------------------------+
+|                     2021 |
++--------------------------+
+1 row in set (0.00 sec)
+
+mysql> select date_add(now(),interval 70 day);
++---------------------------------+
+| date_add(now(),interval 70 day) |
++---------------------------------+
+| 2022-04-12 14:43:23             |
++---------------------------------+
+1 row in set (0.00 sec)
+
+mysql> select date_add(now(),interval 70 month);
++-----------------------------------+
+| date_add(now(),interval 70 month) |
++-----------------------------------+
+| 2027-12-01 14:43:29               |
++-----------------------------------+
+1 row in set (0.00 sec)
+
+mysql> select date_add(now(),interval 70 hour);
++----------------------------------+
+| date_add(now(),interval 70 hour) |
++----------------------------------+
+| 2022-02-04 12:43:36              |
++----------------------------------+
+1 row in set (0.00 sec)
+
+mysql> select datediff('2022-2-1','2021-1-1');
++---------------------------------+
+| datediff('2022-2-1','2021-1-1') |
++---------------------------------+
+|                             396 |
++---------------------------------+
+1 row in set (0.01 sec)
+
+mysql> select datediff('2022-2-1','2023-1-1');
++---------------------------------+
+| datediff('2022-2-1','2023-1-1') |
++---------------------------------+
+|                            -334 |
++---------------------------------+
+1 row in set (0.00 sec)
+```
+
+```sql
+-- 查询所有员工的入职天数，并根据入职天数倒序排序。
+select name, datediff(curdate(),entrydate) ddiff from emp order by ddiff desc;
+```
+
+### 流程函数
+
+在SQL语句中实现条件筛选，从而提高语句的效率。
+
+| 函数                                                       | 功能                                                         |
+| ---------------------------------------------------------- | ------------------------------------------------------------ |
+| IF(value, t, f)                                            | 如果 value 为 true，则返回 t，否则返回 f                     |
+| IFNULL(value1, value2)                                     | 如果 value 不为空，返回 value1，否则返 value2                |
+| CASE WHEN [val1] THEN [res1] ... ELSE [default] END        | 如果 val1 为 true，返回 res1，... 否则返回 default 默认值    |
+| CASE [expr] WHEN [val1] THEN [res1] ... ELSE [default] END | 如果 expr 的值等于 val，返回 res1 ， 否则返回 default 默认值 |
+
+```sql
+mysql> select ifnull('','Default');
++----------------------+
+| ifnull('','Default') |
++----------------------+
+|                      |
++----------------------+
+1 row in set (0.00 sec)
+
+mysql> select ifnull(null,'Default');
++------------------------+
+| ifnull(null,'Default') |
++------------------------+
+| Default                |
++------------------------+
+1 row in set (0.00 sec)
+-- case when then else end
+-- 查询emp表的员工，姓名和工作地址(北京/上海 ---> 一线城市，其他 ---> 二线城市)
+select name,
+	(case workaddress when '北京' then '一线城市'
+	when '上海' then '一线城市'
+	else '二线城市' end) as 工作地址
+from emp;
+```
+
+```sql
+- 统计班级各个学员的成绩，展示的规则如下：
+- • >= 85，展示优秀
+- • >= 60，展示及格
+- • 否则，展示不及格
+create table score(
+	id int comment 'ID',
+    name varchar(20) comment '姓名',
+    math int comment '数学',
+    english int comment '英语',
+    chinese int comment '语文'
+);
+insert into score(id,name,math,english,chinese) 
+values(1,'tom',67,88,95),
+(2,'rose',23,66,90),
+(3,'jack',56,98,76);
+
+select id,
+name,
+(case when math>=85 then '优秀' when math>=60 then '及格' else '不及格' end) '数学',
+(case when english>=85 then '优秀' when english>=60 then '及格' else '不及格' end) '英语',
+(case when chinese>=85 then '优秀' when chinese>=60 then '及格' else '不及格' end) '语文'
+from score;
+```
+
 ## 约束
+
+- 非空约束： NOT NULL 
+- 唯一约束： UNIQUE 
+- 主键约束： PRIMARY KEY (自增: AUTO_INCREMENT)
+-  默认约束： DEFAULT 
+- 检查约束： CHECK 
+- 外键约束：FOREIGN KEY
+
+### 概念
+
+- 概念：约束是作用于表中字段上的规则，用于限制存储在表中的数据。
+- 目的：保证数据库中数据的正确、有效性和完整性。
+- 分类：
+
+| 约束                     | 描述                                                     | 关键字      |
+| ------------------------ | -------------------------------------------------------- | ----------- |
+| 非空约束                 | 限制该字段的数据不能为 NULL                              | NOT NULL    |
+| 唯一约束                 | 保证该字段的所有数据都是唯一、不重复的                   | UNIQUE      |
+| 主键约束                 | 主键是一行数据的唯一标识，要求非空且唯一                 | PRIMARY KEY |
+| 默认约束                 | 保存数据时，如果未指定该字段的值，则采用默认值           | DEFAULT     |
+| 检测约束(8.0.16版本之后) | 保证字段值满足某一个条件                                 | CHECK       |
+| 外键约束                 | 用来让两张表的数据之间建立连接，保证数据的一致性和完整性 | FOREIGN KEY |
+
+<span style="color:red">**注意：约束是作用于表中字段上的，可以在创建表/修改表的时候添加约束。**</span>
+
+### 演示
+
+根据需求，完成表结构的创建
+
+| 字段名 | 字段含义    | 字段类型    | 约束条件                  |
+| ------ | ----------- | ----------- | ------------------------- |
+| id     | ID 唯一标识 | int         | 主键，且自动增长          |
+| name   | 姓名        | varchar(10) | 不为空，且唯一            |
+| age    | 年龄        | int         | 大于0，并且小于等于120    |
+| status | 状态        | char(1)     | 如果没有指定该值，默认为1 |
+| gender | 性别        | char(2)     | 无                        |
+
+```sql
+create table tb_user(
+id int AUTO_OMCRE,EMT PRIMARY KEY COMMENT '',
+name varchar(10) NOT NULL UNIQUE COMMENT '',
+age int check(age>0 && age<=120) COMMENT '',
+status char(1) default '1' COMMENT '',
+gender char(1) COMMENT ''
+);
+```
+
+### 外键约束
+
+外键用来让两张表的数据之间建立连接，从而保证数据的一致性和完整性。
+
+![image-20220201153732702](img\image-20220201153732702.png)
+
+注意：目前上述的两张表，在数据库层面，并未建立外键关联，所以是无法保证数据的一致性和完整性的。
+
+语法：
+
+```sql
+create table 表名(
+	字段名 数据类型,
+    ...
+    [constraint] [外键名] foreign key (外键字段名) references 主表(主表列名)
+);
+alter table 表名 add constraint 外键名称 foreign key(外键字段名) references 主表(主表列名);
+
+-- 删除外键
+alter table 表名 drop foreign key 外键名称;
+```
+
+![image-20220201154122979](img\image-20220201154122979.png)
+
+```sql
+alter table 表名 add constraint 外键名称 foreign key(外键字段名) references 主表(主表字段名)
+on update cascade on delete cascade;
+```
 
 ## 多表查询
 
+- 多表关系：一对一、一对多、多对多
+- 多表查询
+    - 笛卡儿积：两个集合的所有的组合情况。
+    - 连接查询：
+        - 左外连接：查询左表所有数据，以及两张表交集部分数据
+        - 右外连接：查询右表所有数据，以及两张表交集部分数据
+        - 自连接：当前表与自身的连接查询，自连接必须使用表别名
+        - 内连接：相当于查询A、B交集部分数据
+- 子查询：标量子查询（子查询结果为单个值）；列子查询(子查询结果为一列)；行子查询(子查询结果为一行)；表子查询(子查询结果为多行多列)
+
+ ### 多表关系
+
+项目开发中，在进行数据库表结构设计时，会根据业务需求及业务模块之间的关系，分析并设计表结构，由于业务之间相互关联，所 以各个表结构之间也存在着各种联系，基本上分为三种：
+
+- 一对多(多对一) 
+- 多对多 
+- 一对一
+
+> 一对多（多对一）
+
+➢ 案例: 部门与员工的关系 
+➢ 关系: 一个部门对应多个员工，一个员工对应一个部门 
+➢ 实现: 在多的一方建立外键，指向一的一方的主键
+![image-20220201162055837](img\image-20220201162055837.png)
+
+> 多对多
+
+案例: 学生与课程的关系 
+➢ 关系: 一个学生可以选修多门课程，一门课程也可以供多个学生选择 
+➢ 实现: 建立第三张中间表，中间表至少包含两个外键，分别关联两方主键
+
+![image-20220201162206455](img\image-20220201162206455.png)
+
+> 一对一
+
+➢ 案例: 用户与用户详情的关系 
+➢ 关系: 一对一关系，多用于单表拆分，将一张表的基础字段放在一张表中，其他详情字段放在另一张表中，以提升操作效率 
+➢ 实现: 在任意一方加入外键，关联另外一方的主键，并且设置外键为唯一的(UNIQUE)
+![image-20220201162313709](img\image-20220201162313709.png)
+
+### 多表查询概述
+
+多表查询是指: 指从多张表中查询数据 
+
+笛卡尔积: 笛卡尔乘积是指在数学中，两个集合A集合和B集合的所有组合情况。(在多表查询时，需要消除无效的笛卡尔积)
+
+![image-20220201162441949](img\image-20220201162441949.png)
+
+### 内连接 
+
+**内连接查询的是两张表交集的部分。**
+
+- 隐式内连接
+
+```sql
+select 字段列表 
+from table1,table2 
+where 条件...;
+```
+
+- 显示外连接
+
+```sql
+select 字段列表 
+from table1 [INNER] JOIN table2
+ON 连接条件...;
+```
+
+### 外连接 
+
+- 左外连接
+
+```sql
+select 字段列表 
+from table1 LEFT [INNER] JOIN table2
+ON 连接条件...;
+```
+
+<span style="color:red">**相当于查询表1(左表)的所有数据 包含 表1和表2交集部分的数据**</span>
+
+- 右外连接
+
+```sql
+select 字段列表 
+from table1 RIGHT [INNER] JOIN table2
+ON 连接条件...;
+```
+
+<span style="color:red">**相当于查询表2(右表)的所有数据 包含 表1和表2交集部分的数据**</span>
+
+### 自连接
+
+```sql
+select 字段列表
+from tableA 别名A
+JOIN tableA 别名B
+ON 条件...;
+```
+
+<span style="color:red">**自连接查询，可以是内连接查询，也可以是外连接查询。**</span>
+
+### 联合查询-union,union all
+
+对于union查询，就是把多次查询的结果合并起来，形成一个新的查询结果集。
+
+```sql
+select 字段列表 from tableA...;
+UNION [ALL]
+select 字段列表 from tableB...;
+```
+
+对于联合查询的多张表的列数必须保持一致，字段类型也需要保持一致。 
+union all 会将全部的数据直接合并在一起；union 会对合并之后的数据去重。
+
+### 子查询 
+
+概念：SQL语句中嵌套SELECT语句，称为嵌套查询，又称子查询。
+
+```sql
+select * from t1 
+where column1 = (select column1 from t2);
+```
+
+子查询外部的语句可以是INSERT / UPDATE / DELETE / SELECT 的任何一个。
+
+根据子查询结果不同，分为： 
+
+- 标量子查询（子查询结果为单个值）
+- 列子查询(子查询结果为一列)
+- 行子查询(子查询结果为一行)
+- 表子查询(子查询结果为多行多列)
+
+根据子查询位置，分为：WHERE之后 、FROM之后、SELECT 之后。
+
+#### 标量子查询
+
+子查询返回的结果是单个值（数字、字符串、日期等），最简单的形式，这种子查询成为标量子查询。 
+常用的操作符：= <> > >= < <=
+
+#### 列子查询
+
+子查询返回的结果是一列（可以是多行），这种子查询称为列子查询。 
+常用的操作符：IN 、NOT IN 、 ANY 、SOME 、 ALL
+
+| 操作符 | 描述                                 |
+| ------ | ------------------------------------ |
+| IN     | 在指定的集合范围之内，多选一         |
+| NOT IN | 在指定的集合范围之内，多选一         |
+| ANY    | 子查询返回列表中，有任意一个满足即可 |
+| SOME   | 与ANY等同，使用 的地方都可以使用ANY  |
+| ALL    | 子查询返回列表的所有值都必须满足     |
+
+#### 行子查询
+
+子查询返回的结果是一行（可以是多列），这种子查询称为行子查询。 
+常用的操作符：= 、<> 、IN 、NOT IN
+
+#### 表子查询
+
+子查询返回的结果是多行多列，这种子查询称为表子查询。 
+常用的操作符：IN
+
+### 多表查询案例
+
+1 .查询员工的姓名、年龄、职位、部门信息。 
+2 .查询年龄小于30岁的员工姓名、年龄、职位、部门信息。
+3 .查询拥有员工的部门ID、部门名称。
+4 .查询所有年龄大于40岁的员工, 及其归属的部门名称; 如果员工没有分配部门, 也需要展示出来。
+5 .查询所有员工的工资等级。
+6 .查询 "研发部" 所有员工的信息及工资等级。
+7 .查询 "研发部" 员工的平均工资。
+8 .查询工资比 "灭绝" 高的员工信息。
+9 .查询比平均薪资高的员工信息。
+10.查询低于本部门平均工资的员工信息。
+11.查询所有的部门信息, 并统计部门的员工人数。
+12.查询所有学生的选课情况, 展示出学生名称, 学号, 课程名称
+
+```sql
+-- 准备数据
+create database mydb1;
+use mydb1;
+create table dept(
+    id   int auto_increment comment 'ID' primary key,
+    name varchar(50) not null comment '部门名称'
+)comment '部门表';
+
+create table emp(
+    id  int auto_increment comment 'ID' primary key,
+    name varchar(50) not null comment '姓名',
+    age  int comment '年龄',
+    job varchar(20) comment '职位',
+    salary int comment '薪资',
+    entrydate date comment '入职时间',
+    managerid int comment '直属领导ID',
+    dept_id int comment '部门ID'
+)comment '员工表';
+
+create table salgrade(
+    grade int,
+    losal int,
+    hisal int
+) comment '薪资等级表';
+```
+
+```sql
+-- 插入数据
+insert into salgrade values (1,0,3000);
+insert into salgrade values (2,3001,5000);
+insert into salgrade values (3,5001,8000);
+insert into salgrade values (4,8001,10000);
+insert into salgrade values (5,10001,15000);
+insert into salgrade values (6,15001,20000);
+insert into salgrade values (7,20001,25000);
+insert into salgrade values (8,25001,30000);
+
+INSERT INTO dept (id, name) VALUES (1, '研发部'), 
+(2, '市场部'),
+(3, '财务部'), 
+(4, '销售部'),
+(5, '总经办'), 
+(6, '人事部');
+INSERT INTO emp (id, name, age, job,salary, entrydate, managerid, dept_id) 
+VALUES(1, '金庸', 66, '总裁',20000, '2000-01-01', null,5),
+(2, '张无忌', 20, '项目经理',12500, '2005-12-05', 1,1),
+(3, '杨逍', 33, '开发', 8400,'2000-11-03', 2,1),
+(4, '韦一笑', 48, '开发',11000, '2002-02-05', 2,1),
+(5, '常遇春', 43, '开发',10500, '2004-09-07', 3,1),
+(6, '小昭', 19, '程序员鼓励师',6600, '2004-10-12', 2,1),
+
+(7, '灭绝', 60, '财务总监',8500, '2002-09-12', 1,3),
+ (8, '周芷若', 19, '会计',48000, '2006-06-02', 7,3),
+(9, '丁敏君', 23, '出纳',5250, '2009-05-13', 7,3),
+
+(10, '赵敏', 20, '市场部总监',12500, '2004-10-12', 1,2),
+(11, '鹿杖客', 56, '职员',3750, '2006-10-03', 10,2),
+(12, '鹤笔翁', 19, '职员',3750, '2007-05-09', 10,2),
+(13, '方东白', 19, '职员',5500, '2009-02-12', 10,2),
+
+(14, '张三丰', 88, '销售总监',14000, '2004-10-12', 1,4),
+(15, '俞莲舟', 38, '销售',4600, '2004-10-12', 14,4),
+(16, '宋远桥', 40, '销售',4600, '2004-10-12', 14,4),
+(17, '陈友谅', 42, null,2000, '2011-10-12', 1,null);
+```
+
+```sql
+# 1 .查询员工的姓名、年龄、职位、部门信息。
+-- 这种会漏掉没有部门信息的人
+select e.name, e.age, e.job, d.name
+from emp e,
+     dept d
+where e.dept_id = d.id;
+-- 这种不会
+select e.name, e.age, e.job, d.name
+from emp e
+         left join dept d on d.id = e.dept_id;
+# 2 .查询年龄小于30岁的员工姓名、年龄、职位、部门信息。
+select e.name, e.age, e.job, d.name
+from emp e
+         left join dept d on d.id = e.dept_id where e.age<30;
+
+# 3 .查询拥有员工的部门ID、部门名称。
+select d.* from dept d where d.id in (select emp.dept_id from emp group by emp.dept_id);
+
+# 4 .查询所有年龄大于40岁的员工, 及其归属的部门名称; 如果员工没有分配部门, 也需要展示出来。
+select e.*,d.name from emp e left join dept d on d.id = e.dept_id where e.age>40;
+
+# 5 .查询所有员工的工资等级。
+select e.name,e.salary,s.grade from emp e,salgrade s where e.salary between s.losal and s.hisal;
+
+# 6 .查询 "研发部" 所有员工的信息及工资等级。
+select e.name,d.name,e.salary,s.grade from  emp e,salgrade s,dept d where e.dept_id=1 and e.dept_id=d.id and e.salary between s.losal and s.hisal;
+
+# 7 .查询 "研发部" 员工的平均工资。
+select avg(e.salary) from emp e where e.dept_id=1;
+# 8 .查询工资比 "灭绝" 高的员工信息。
+select e.name,e.salary from emp e where e.salary>(select salary from emp where emp.name='灭绝');
+# 9 .查询比平均薪资高的员工信息。
+select name,salary from emp where emp.salary>(select avg(emp.salary) from emp);
+# 10.查询低于本部门平均工资的员工信息。
+select e.name,e.salary,e.dept_id from emp e where e.salary<(select avg(emp.salary) from emp where emp.dept_id=e.dept_id)
+# 11.查询所有的部门信息, 并统计部门的员工人数。
+select d.name '部门名称',(select count(*) from emp where emp.dept_id=d.id) '人数'
+from dept d;
+```
+
+
+
 ## 事务
+
+- 简介：事务是一组操作的集合，这组操作，要么全部执行成功，要么全部执行失败。
+- 操作：
+    - `start transaction; -- 开启事务`
+    - `commit / rollback;-- 提交/回滚事务`
+- 四大特性：原子性、一致性、隔离性、持久性
+- 并发事务问题：脏读、不可重复读、幻读
+- 隔离级别：READ INCOMMITED、READ COMMITED、REPEATABLE READ、SERIALIZABLE。
+
+### 事务简介
+
+<span style="color:red">**事务**</span> 是一组操作的集合，它是一个不可分割的工作单位，事务会把所有的操作作为一个整体一起向系统提交或撤销操作 请求，即这些操作<span style="color:red">**要么同时成功，要么同时失败。**</span>
+
+![image-20220201163223983](img\image-20220201163223983.png)
+
+<span style="color:red">**默认MySQL的事务是自动提交的，也就是说，当执行一条DML语句，MySQL会立即隐式的提交事务。**</span>
+
+### 事务操作
+
+查看/设置事务提交方式
+
+```sql
+select @@autocommit; -- 1 表示事务默认自动提交。
++--------------+
+| @@autocommit |
++--------------+
+|            1 |
++--------------+
+1 row in set (0.00 sec)
+
+set @@autocommit = 0;
+```
+
+提交事务
+
+```sql
+commit
+```
+
+回滚事务
+
+```mysql
+ROLLBAK
+```
+
+开启事务
+
+```sql
+start TRANSACTION 或 BEGIN
+```
+
+案例
+
+```sql
+create table account(
+	id int auto_increment primary key,
+    name varchar(10),
+    momeny int
+);
+insert into account(id,name,momeny) value(null,'张三',2000),(null,'李四',2000);
+
+-- 转账操作 张三给李四转账1000
+-- 1.查询张三的用户
+
+-- 2. 张三用户-1000
+-- 程序抛出异常，事务回滚。
+-- 3. 李四用户+1000
+```
+
+
+
+### 事务四大特性(ACID)
+
+- 原子性（Atomicity）：事务是不可分割的最小操作单元，要么全部成功，要么全部失败。 
+- 一致性（Consistency）：事务完成时，必须使所有的数据都保持一致状态。 
+- 隔离性（Isolation）：数据库系统提供的隔离机制，保证事务在不受外部并发操作影响的独立环境下运行。 
+- 持久性（Durability）：事务一旦提交或回滚，它对数据库中的数据的改变就是永久的。（一般，事务提交后，会把数据持久化到磁盘里，这个持久化时机是可以设置的）
+
+### 并发事务问题
+
+| 问题       | 描述                                                         |
+| ---------- | ------------------------------------------------------------ |
+| 脏读       | 一个事务读到另一个事务还没提交的数据                         |
+| 不可重复读 | 事务 A 多次读取同一数据，事务B在事务A多次读取的过程中，对数据作了**更新并提交**，**导致事务A多次读取同一数据时，结果不一致**<br />（一个事务先后读取同一条记录，但两次读取的数据不同，称之为不可重复读。） |
+| 幻读       | 一个事务先根据某些条件查询出一些记录，之后另一个事务又向表中插入了符合这些条件的记录，原先的事务再次按照该条件查询时，能把另一个事务插入的记录也读出来。（幻读在读未提交、读已提交、可重复读隔离级别都可能会出现） |
+
+![image-20220201164120794](img\image-20220201164120794.png)
+
+![image-20220201164153913](img\image-20220201164153913.png)
+
+![image-20220201164216281](img\image-20220201164216281.png)
+
+**总结**：不可重复读的和幻读很容易混淆，**不可重复读侧重于修改，幻读侧重于新增或删除**
+
+### 事务隔离级别
+
+- 读未提交 read uncommitted
+- 读已提交 read committed
+- 可以重复读 repeatable read
+- 串行化 serializable
+
+[彻底搞懂 MySQL 事务的隔离级别-阿里云开发者社区 (aliyun.com)](https://developer.aliyun.com/article/743691)
+
+| 5隔离级别                  | 脏读 | 不可重复读 | 幻读 |
+| -------------------------- | ---- | ---------- | ---- |
+| Read uncommitted           | √    | √          | √    |
+| Read committed(Oracle默认) | ×    | √          | √    |
+| Repeatable Read(MySQL默认) | ×    | ×          | √    |
+| Serializable               | ×    | ×          | ×    |
+
+```sql
+-- 查看事务隔离级别
+select @@TRANSACTION_ISOLATION;
+
+-- 设置事务隔离级别
+SET [SESSION|GLOBAL] TRANSATION ISOLATION LEVEL [READ UNCOMMITED | READ COMMITED | SERIALIZABLE]
+```
+
+注意：事务隔离级别越高，数据越安全，但是性能越低。
 
 # 进阶
 
