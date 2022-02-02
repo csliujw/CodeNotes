@@ -1,17 +1,9 @@
-[ **Nyima** ](https://nyimac.gitee.io/)
-
-Redis设计与实现 _
-
- November 8, 2020 am
-
- 29.7k 字 327 分钟
-
-# Redis设计与实现
+Redis设计与实现
 
 参考资料：
 
 - 《Redis设计与实现》
-- [Redis设计与实现 - Nyima's Blog (gitee.io)](https://nyimac.gitee.io/2020/11/08/Redis设计与实现/#Redis设计与实现)
+- [Redis设计与实现 - Nyima's Blog (gitee.io)](https://nyimac.gitee.io/2020/11/08/Redis设计与实现/#Redis设计与实现) 基于此博客的内容进行修正，填充，删除。
 
 # Redis中的数据结构
 
@@ -132,7 +124,9 @@ dup、free和match成员则是用于实现多态链表所需的类型特定函�
 
 ### Redis中字典的实现
 
-Redis的字典使用**哈希表**作为底层实现，一个哈希表里面可以有**多个**哈希表节点，而每个哈希表节点就保存了字典中的**一个**键值对
+Redis的字典使用**哈希表**作为底层实现，一个哈希表里面可以有**多个**哈希表节点，而每个哈希表节点就保存了字典中的**一个**键值对。
+
+字典在Redis中的应用相当广泛，比如Redis的数据库就是使用字典来作为底层实现的，对数据库的增、删、查、改操作也是构建在对字典的操作之上的。
 
 #### 哈希表
 
@@ -141,14 +135,13 @@ Redis中的哈希表实现如下
 ```c
 typedef struct dictht {
     // 哈希表数组
-    // 类似于Java中HashMap的
-    //transient Node<K,V>[] table;
+    // 类似于Java中HashMap的transient Node<K,V>[] table;
     dictEntry **table;
     
     // 哈希表大小
     unsigned long size;
     
-    // 哈希表掩码，大小为size-1
+    // 哈希表掩码，用于计算索引值，大小为size-1
     unsigned long sizemask;
     
     // 哈希表中已有的节点数
@@ -157,69 +150,61 @@ typedef struct dictht {
 ```
 
 - table为一个dictEntry类型的数组
-    - 每个dictEntry中保存了一个键值对
+    - 数组中的每个元素都是一个指向dict.h/dictEntry结构的指针，每个dictEntry结构保存着一个键值对。
 - size记录了哈希表的大小
 - sizemask为size-1，用于哈希计算，决定一个键应该被放到哪个桶中
 - used记录了哈希表目前已有节点（**键值对**）的数量
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201027133500.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201027133500.png)
+一个空的哈希表。
+
+![image-20220202140738598](img\image-20220202140738598.png)
 
 #### 哈希节点
 
-Redis中哈希节点的实现如下
+Redis中哈希节点的实现如下，最新的redis在union里多了一个double d.
 
-```
-typedef struct dictEntry {
-    // 键
-    void *key;
-    // 值
-    union {
-        void *val;
-        uint64_t u64;
-        int64_t s64;
-        double d;
-    } v;
-    // 指向下一个哈希节点，形成链表
-    struct dictEntry *next;
-} dictEntry;Copy
-```
+![image-20220202140937104](img\image-20220202140937104.png)
 
 类似于Java中HashMap的Node
 
-```
+```java
 static class Node<K,V> implements Map.Entry<K,V> {
     final int hash;
     final K key;
     V value;
     Node<K,V> next;
-    
-	// 方法省去
     ...
-}Copy
+}
 ```
 
 - key保存了键值对中键的值
-- value保存了键值对中值的值，其中值可以为指针类型，uint64_t、int64_t和double
-- next用于解决哈希冲突，使用拉链法
+- value保存了键值对中值的值，其中值可以为指针类型，uint64_tu64、int64_t64
+- next 用于解决哈希冲突，使用拉链法
+
+![image-20220202141206247](img\image-20220202141206247.png)
 
 #### 字典
 
-Redis中的字典实现如下
+Redis中的字典由dict.h/dict结构表示：
 
-```
+```c
 typedef struct dict {
+    // 类型特定函数
     dictType *type;
+    // 私有数据
     void *privdata;
+    // 哈希表
     dictht ht[2];
+    // rehash索引，当rehash不在进行时，值为-1
     long rehashidx; /* rehashing not in progress if rehashidx == -1 */
     unsigned long iterators; /* number of iterators currently running */
-} dict;Copy
+} dict;
 ```
 
 - type属性是一个指向**dictType**结构的指针，每个dictType结构保存了一簇用于操作特定类型键值对的函数，Redis会为用途不同的字典设置不同的类型特定函数
 - 而privdata属性则保存了需要传给那些类型特定函数的可选参数
 
-```
+```c
 typedef struct dictType {
     // 计算哈希值的函数
     uint64_t (*hashFunction)(const void *key);
@@ -238,18 +223,24 @@ typedef struct dictType {
     
    	// 销毁值的函数
     void (*valDestructor)(void *privdata, void *obj);
-} dictType;Copy
+} dictType;
 ```
 
 - ht属性为包含了两个ditht元素的数组
     - 一般情况下，只是用ht[0]作为哈希表，ht[1]只会在对ht[0]进行rehash时才会使用
 - rehashidx是除了ht[1]以外，另一个与rehash有关的属性，它**记录了rehash目前的进度**，如果没有rehash，那么它的值为-1
 
-**一个普通状态下（未进行rehash）的字典如下图所示**
+**一个普通状态下（未进行rehash）的字典**
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201027202040.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201027202040.png)
+![image-20220202141803755](img\image-20220202141803755.png)
 
 ### 字典中的算法
+
+- 字典被广泛用于实现Redis的各种功能，其中包括数据库和哈希键。
+- Redis中的字典使用哈希表作为底层实现，每个字典带有两个哈希表，一个平时使用，另一个仅在进行rehash时使用。
+- 当字典被用作数据库的底层实现，或者哈希键的底层实现时，Redis使用MurmurHash2算法来计算键的哈希值。
+- 哈希表使用链地址法来解决键冲突，被分配到同一个索引上的多个键值对会连接成一个单向链表。
+- 在对哈希表进行扩展或者收缩操作时，程序需要将现有哈希表包含的所有键值对rehash到新哈希表里面，并且这个rehash过程并不是一次性地完成的，而是渐进式地完成的。
 
 #### 哈希算法
 
@@ -257,32 +248,32 @@ typedef struct dictType {
 
 **Redis计算哈希值和索引值的方法如下**：
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107133850.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107133850.png)
+![image-20220202141933171](img\image-20220202141933171.png)
 
 - 将key通过hashFunction方法计算出对应的hash值
-- 再结合sizemask(值为size-1，和Java中的HashMap求索引的方法类似)，获得该key对应的索引值
+- 再结合sizemask(值为size-1)，获得该key对应的索引值
 
-**例**：如果我们要将一个键值对k0和v0添加到容量为4字典里面，那么程序会先使用语句：
+**例如**：我们要将一个键值对为 k0，v0 添加到容量为4字典里面，那么程序会先使用语句：
 
-```
-hash = dict->type->hashFunction(key0);Copy
+```c
+hash = dict->type->hashFunction(key0);
 ```
 
 计算出对应的hash值
 
 假设计算的hash值为8，则再通过sizemask（值为3）来计算出索引
 
-```
-index = hash & dict->ht[x].sizemask; // 8 & 3 = 0Copy
+```c
+index = hash & dict->ht[x].sizemask; // 8 & 3 = 0
 ```
 
 计算出key0的索引值为0，放入对应的位置上
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107134331.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107134331.png)
+<img src="img/image-20220202142449687.png">
 
-Redis底层使用MurmurHash2算法来计算键的哈希值
+Redis底层使用MurmurHash2算法来计算键的哈希值，这种算法的优点在于，即使输入的键是有规律的，算法仍能给出一个很好的随机分布性，并且算法的计算速度也非常快。
 
-```
+```c
 uint32_t MurmurHash2 ( const void * key, int len, uint32_t seed )
 {
   // 'm' and 'r' are mixing constants generated offline.
@@ -332,42 +323,34 @@ uint32_t MurmurHash2 ( const void * key, int len, uint32_t seed )
   h ^= h >> 15;
  
   return h;
-}Copy
+}
 ```
 
 #### 哈希冲突的解决方法
 
 当有两个或以上数量的键被分配到了哈希表数组的同一个索引上面时，我们称这些键发生了冲突（collision）。
 
-Redis的哈希表使用**链地址法**（separate chaining）来解决键冲突（和Java 7 中的HashMap类似），每个哈希表节点都有一个next指针，多个哈希表节点可以用next指针构成一个单向链表，被分配到同一个索引上的多个节点可以用这个单向链表连接起来，这就解决了键冲突的问题。
+Redis的哈希表使用**拉链法**（separate chaining）来解决键冲突，每个哈希表节点都有一个next指针，多个哈希表节点可以用next指针构成一个**单向链表**，被分配到同一个索引上的多个节点可以用这个单向链表连接起来，这就解决了键冲突的问题。拉链法采用的头插法插入新节点，因为dictEntry数字没有记录链表的尾指针。
 
 **冲突前**
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107134917.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107134917.png)
+![image-20220202143004775](img\image-20220202143004775.png)
 
 **冲突后**
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107134951.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107134951.png)
+![image-20220202143058696](img\image-20220202143058696.png)
 
 #### rehash
 
-随着操作的不断执行，哈希表保存的键值对会逐渐地增多或者减少，为了让哈希表的负载因子（load_factor）维持在一个合理的范围之内（可以减少出现哈希冲突的几率），当哈希表保存的键值对数量太多或者太少时，程序需要对哈希表的大小进行相应的**扩展或者收缩**。
-
-扩展和收缩哈希表的工作可以通过执行**rehash（重新散列）**操作来完成，Redis对字典的哈希表执行rehash的步骤如下：
+随着操作的不断执行，哈希表保存的键值对会逐渐地增多或者减少，为了让哈希表的负载因子（load_factor）维持在一个合理的范围之内（可以减少出现哈希冲突的几率），当哈希表保存的键值对数量太多或者太少时，程序需要对哈希表的大小进行相应的**扩展或者收缩**。<span style="color:red">而扩展和收缩哈希表的工作可以通过执行**rehash（重新散列）**操作来完成，Redis对字典的哈希表执行rehash的步骤如下：</span>
 
 - 为字典的ht[1]哈希表分配空间，这个哈希表的空间大小取决于要执行的操作，以及ht[0]当前包含的键值对数量（dictht.used的大小）
 
     - 如果执行的是**扩展操作**，那么ht[1]的大小为**第一个**大于ht[0].used*2 的 2n （和Java 中的 HashMap一样，这样可以保证sizemask的值必定为11…11）
 
-    - 如果执行的是
-
-        收缩操作
-
-        ，那么ht[1]的大小为第一个小于ht[0].used的 2
+    - 如果执行的是收缩操作，那么ht[1]的大小为第一个小于ht[0].used的 2
 
         n
-
-        - 注：Redis中的字典是有**缩容**操作的，而Java中的HashMap没有缩容操作
 
 - 将保存在ht[0]中的所有键值对rehash到ht[1]上面
 
@@ -377,38 +360,32 @@ Redis的哈希表使用**链地址法**（separate chaining）来解决键冲突
 
     - 上面有两步有点像垃圾回收算法中的**标记-复制算法**（FROM-TO，然后交换FROM 和 TO）
 
-**例**
+**举例说明**
 
 假设程序要对下图所示字典的ht[0]进行**扩展操作**，那么程序将执行以下步骤：
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107140647.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107140647.png)
+![image-20220202170234745](img\image-20220202170234745.png)
 
 - ht[0].used当前的值为4，4*2=8，所以程序会将ht[1]哈希表的大小设置为8。下图展示了ht[1]在分配空间之后，字典的样子
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107140815.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107140815.png)
+![img](img/image-20220202170235735.png)
 
 - 将ht[0]包含的四个键值对都**rehash**到ht[1]
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107140838.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107140838.png)
+![image-20220202170626787](C:\development\Code\note\CodeNotes\中间件\img\image-20220202170626787.png)
 
 - 释放ht[0]，并将ht[1]设置为ht[0]，然后为ht[1]分配一个空白哈希表，如下图所示。至此，对哈希表的扩展操作执行完毕，程序成功将哈希表的大小从原来的4改为了现在的8
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107141210.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107141210.png)
+<img src="img/image-20220202170628787.png">
 
 **哈希表的扩展与收缩**
 
 当以下条件中的任意一个被满足时，程序会自动开始对哈希表执行扩展操作
 
 - 服务器目前**没有在执行**BGSAVE命令或者BGREWRITEAOF命令，并且哈希表的负载因子大于等于1
-
 - 服务器目前**正在执行**BGSAVE命令或者BGREWRITEAOF命令，并且哈希表的负载因子大于等于5
-
-    - 负载因子的计算方法如下
-
-    ```
-    // 负载因子的计算
-    load_factory = ht[0].used/ht[0].sizeCopy
-    ```
+    - 负载因子的计算方法如下 
+        `load_factory = ht[0].used/ht[0].sizeCopy`
 
 根据BGSAVE命令或BGREWRITEAOF命令是否正在执行，服务器执行扩展操作所需的负载因子并不相同，这是因为在执行BGSAVE命令或BGREWRITEAOF命令的过程中，Redis需要创建当前服务器进程的子进程，而大多数操作系统都采用写时复制（copy-on-write）技术来优化子进程的使用效率，所以在子进程存在期间，服务器会提高执行扩展操作所需的负载因子，从而**尽可能地避免在子进程存在期间进行哈希表扩展操作，这可以避免不必要的内存写入操作，最大限度地节约内存**。
 
@@ -416,50 +393,65 @@ Redis的哈希表使用**链地址法**（separate chaining）来解决键冲突
 
 #### 渐进rehash
 
-扩展或收缩哈希表需要将ht[0]里面的所有键值对rehash到ht[1]里面，但是，**这个rehash动作并不是一次性、集中式地完成的，而是分多次、渐进式地完成的。**这样做主要因为在数据量较大时，如果一次性，集中式地完成，庞大的计算量可能会导致服务器在一段时间内停止服务。
+数据量很大时，一次性将ht[0]里面的所有键值对rehash到ht[1]里面，庞大的计算量可能会导致服务器在一段时间内停止服务。因此，**reshash采用的是分多次、渐进式地完成的。**这样做主要因为在数据量较大时，如果一次性，集中式地完成，
 
 **详细步骤**
 
 - 为ht[1]分配空间，让字典同时持有ht[0]和ht[1]两个哈希表
-- 在字典中维持一个索引计数器变量rehashidx，并将它的值设置为0，表示rehash工作正式开始
-    - 索引计数器rehashidx类似程序计数器PC，用于保存进行rehash的进度（rehash到哪个索引了）
+- 在字典中维持一个索引计数器变量rehashidx，并将它的值设置为0，表示rehash工作正式开始（<span style="color:green">**索引计数器用于记录rehash到哪个索引了**</span>）
 - 在rehash进行期间，每次对字典执行添加、删除、查找或者更新操作时，程序除了执行指定的操作以外，还会顺带将ht[0]哈希表在rehashidx索引上的键值对rehash到ht[1]，当rehash工作完成之后，程序将rehashidx属性的值增一（指向下一个索引）
 - 随着字典操作的不断执行，最终在某个时间点上，ht[0]的所有键值对都会被rehash至ht[1]，这时程序将rehashidx属性的值设为-1，表示rehash操作已完成
 
-**图解步骤**
+**下图为一次完整的渐进式rehash过程，注意观察在整个rehash过程中，字典的rehashidx属性的变化。**
 
 - 准备开始rehash
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107151610.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107151610.png)
+<img src="img/rehash01.png">
 
 - 开始rehash，rehash索引为0的键值对
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107151709.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107151709.png)
+<img src="img/rehash02.png">
 
 - rehash索引为1的键值对
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107151744.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107151744.png)
+<img src="img/rehash03.png">
 
-- … 依次rehash
+- ......
 - rehash完成，rehashidx再次变为-1
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107151834.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107151834.png)
+<img src="img/complete rehash.png">
 
-因为在进行渐进式rehash的过程中，**字典会同时使用ht[0]和ht[1]两个哈希表**，所以在渐进式rehash进行期间，字典的删除（delete）、查找（find）、更新（update）等操作会**在两个哈希表上进行**
+**在进行渐进式rehash的过程中，字典会同时使用ht[0]和ht[1]两个哈希表**，因此在渐进式rehash进行期间，字典的删除（delete）、查找（find）、更新（update）等操作会**在两个哈希表上进行**
 
  例如，要在字典里面查找一个键的话，程序会先在ht[0]里面进行查找，如果没找到的话，就会继续到ht[1]里面进行查找，诸如此类
 
-另外，在渐进式rehash执行期间，**新添加到字典的键值对一律会被保存到ht[1]里面**，而ht[0]则不再进行任何添加操作，这一措施保证了ht[0]包含的键值对数量会只减不增，并随着rehash操作的执行而最终变成空表
+另外，在渐进式rehash执行期间，<span style="color:red">**新添加到字典的键值对一律会被保存到ht[1]里面**</span>，而ht[0]则不再进行任何添加操作，这一措施保证了ht[0]包含的键值对数量会只减不增，并随着rehash操作的执行而最终变成空表
 
 ## 四、跳跃表
 
-### 1、什么是跳跃表
+跳跃表（skiplist）是一种有序数据结构，它通过在每个节点中维持多个指向其他节点的指针，从而达到快速访问节点的目的。
 
-跳跃链表是一种随机化数据结构，**基于并联的链表**，其效率可比拟于二叉排序树(对于大多数操作需要O(log n)平均时间)，并且对并发算法友好。
+跳跃表支持平均O（logN）、最坏O（N）复杂度的节点查找，还可以通过顺序性操作来批量处理节点。
 
-基本上，跳跃列表是对有序的链表增加上附加的前进链接，增加是以随机化（抛硬币）的方式进行的，所以在列表中的查找可以快速的跳过部分列表(因此得名)。所有操作都以对数随机化的时间进行。
+在大部分情况下，跳跃表的效率可以和平衡树相媲美，并且因为跳跃表的实现比平衡树要来得更为简单，所以有不少程序都使用跳跃表来代替平衡树。
 
-### 2、跳跃表原理
+Redis使用跳跃表作为有序集合键的底层实现之一，如果一个有序集合包含的元素数量比较多，又或者有序集合中元素的成员（member）是比较长的字符串时，Redis就会使用跳跃表来作为有序集合键的底层实现。
+
+<span style="color:red">**Redis只在两个地方用到了跳跃表，一个是实现有序集合键，另一个是在集群节点中用作内部数据结构，除此之外，跳跃表在Redis里面没有其他用途。**</span>
+
+> Redis中的跳跃表
+
+❑跳跃表是有序集合的底层实现之一。
+
+❑Redis的跳跃表实现由zskiplist和zskiplistNode两个结构组成，其中zskiplist用于保存跳跃表信息（比如表头节点、表尾节点、长度），而zskiplistNode则用于表示跳跃表节点。
+
+❑每个跳跃表节点的层高都是1至32之间的随机数。
+
+❑在同一个跳跃表中，多个节点可以包含相同的分值，但每个节点的成员对象必须是唯一的。
+
+❑跳跃表中的节点按照分值大小进行排序，当分值相同时，节点按照成员对象的大小进行排序。
+
+### 跳跃表原理
 
 #### 查询链表的时间复杂度
 
@@ -521,29 +513,16 @@ Redis中使用跳跃表好像就是因为一是B+树的实现过于复杂，二�
 
 **以上便是跳跃表的插入过程**
 
-### 3、Redis中的跳跃表
+### Redis中的跳跃表
 
 #### 为什么Redis要使用跳跃表而不是用B+树
 
 引用Redis作者 antirez 的原话
 
-```
- There are a few reasons:
-
-1) They are not very memory intensive. It's up to you basically. Changing parameters about the probability of a node to have a given number of levels will make then less memory intensive than btrees.
-
-2) A sorted set is often target of many ZRANGE or ZREVRANGE operations, that is, traversing the skip list as a linked list. With this operation the cache locality of skip lists is at least as good as with other kind of balanced trees.
-
-3) They are simpler to implement, debug, and so forth. For instance thanks to the skip list simplicity I received a patch (already in Redis master) with augmented skip lists implementing ZRANK in O(log(N)). It required little changes to the code.
-
-翻译一下
-
-1) 它们不需要太多的内存。这基本上取决于你。改变一个节点具有给定级别数的概率的参数，会比btree占用更少的内存。
-
-2) 排序集通常是许多ZRANGE或ZREVRANGE操作的目标，即作为链表遍历跳跃表。使用这种操作，跳跃表的缓存局部性至少与其他类型的平衡树一样好。
-
-3)它们更容易实现、调试等等。例如，感谢跳跃表的简单性，我收到了一个补丁(已经在Redis master)，增强跳跃表实现ZRANK在O(log(N))。它只需要对代码做一点小小的修改。Copy
-```
+- There are a few reasons:
+    - They are not very memory intensive. It's up to you basically. Changing parameters about the probability of a node to have a given number of levels will make then less memory intensive than btrees.
+    - A sorted set is often target of many ZRANGE or ZREVRANGE operations, that is, traversing the skip list as a linked list. With this operation the cache locality of skip lists is at least as good as with other kind of balanced trees.
+    - They are simpler to implement, debug, and so forth. For instance thanks to the skip list simplicity I received a patch (already in Redis master) with augmented skip lists implementing ZRANK in O(log(N)). It required little changes to the code.
 
 MySQL使用B+树的是因为：**叶子节点存储数据，非叶子节点存储索引**，B+树的每个节点可以存储多个关键字，它将节点大小设置为磁盘页的大小，**充分利用了磁盘预读的功能**。每次读取磁盘页时就会读取一整个节点,每个叶子节点还有指向前后节点的指针，为的是最大限度的降低磁盘的IO;因为数据在内存中读取耗费的时间是从磁盘的IO读取的百万分之一
 
@@ -571,12 +550,12 @@ MySQL使用B+树的是因为：**叶子节点存储数据，非叶子节点存�
 
 **而Redis是基于内存的操作，没有I/O操作，所以单线程执行效率更高**
 
-### 4、Redis中跳表的实现
+### Redis中跳表的实现
 
 Redis中的sort_set主要由跳表实现，sort_set的添加语句如下
 
-```
-zadd key score1 member1 score2 member2 ...Copy
+```shell
+zadd key score1 member1 score2 member2 ...
 ```
 
 Redis中的跳表结构如下
@@ -587,7 +566,7 @@ Redis中的跳表主要由节点**zskiplistNode**和跳表**zskiplist**来实现
 
 #### zskiplistNode
 
-```
+```c
 typedef struct zskiplistNode {
     // 存储的元素 就是语句中的member
     sds ele;
@@ -606,7 +585,7 @@ typedef struct zskiplistNode {
         // 跨度，用于记录该节点与forward指向的节点之间，隔了多少各节点。主要用于计算Rank
         unsigned long span;
     } level[];
-} zskiplistNode;Copy
+} zskiplistNode;
 ```
 
 **各个属性的详细解释**
@@ -627,7 +606,7 @@ typedef struct zskiplistNode {
 
 zskiplist的源码如下
 
-```
+```c
 typedef struct zskiplist {
     // 头尾指针，用于保存头结点和尾节点
     struct zskiplistNode *header, *tail;
@@ -637,7 +616,7 @@ typedef struct zskiplist {
     
     // 最大层数，保存了节点中拥有的最大层数（不包括头结点）
     int level;
-} zskiplist;Copy
+} zskiplist;
 ```
 
 #### 遍历过程
@@ -665,13 +644,13 @@ typedef struct zskiplist {
 
 ## 五、整数集合
 
-### 1、简介
+### 简介
 
 整数集合（intset）是集合键的底层实现之一，**当一个集合只包含整数值元素，并且这个集合的元素数量不多时**，Redis就会使用整数集合作为集合键的底层实现，例如
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201113112602.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201113112602.png)
 
-### 2、整数集合的实现
+### 整数集合的实现
 
 整数集合（intset）是Redis用于保存整数值的集合抽象数据结构，它可以保存类型为int16_t、int32_t或者int64_t的整数值，并且**保证集合中不会出现重复元素且按照从小到大的顺序排列**
 
@@ -702,7 +681,7 @@ typedef struct intset {
 
 - 该整数解中有5个元素，contents的类型为int16_t
 
-### 3、升级
+### 升级
 
 每当我们要将一个新元素添加到整数集合里面，并且**新元素的类型比整数集合现有所有元素的类型都要长时**，整数集合需要先进行**升级**（upgrade），然后才能将新元素添加到整数集合里面
 
@@ -746,14 +725,14 @@ typedef struct intset {
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201113115909.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201113115909.png)
 
-### 4、升级的好处
+#### 升级的好处
 
 - **自适应**：会根据contents中的元素位数选择最合适的类型，来进行内存的分配
 - **节约内存**：基于自适应，不会为一个位数较少的整数分配较大的空间
 
 ## 六、压缩列表
 
-### 1、简介
+### 简介
 
 压缩列表（ziplist）是列表键(list)和哈希键(hash)的底层实现之一
 
@@ -767,7 +746,7 @@ typedef struct intset {
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201113162843.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201113162843.png)
 
-### 2、压缩列表的组成
+### 压缩列表的组成
 
 压缩列表是Redis为了**节约内存**而开发的，是由一系列特殊编码的连续内存块组成的顺序型（sequential）数据结构。一个压缩列表可以包含任意多个节点（entry），每个节点可以保存**一个字节数组**或者**一个整数值**。具体组成如下
 
@@ -781,7 +760,7 @@ typedef struct intset {
 - zllen：压缩列表中的**节点数**
 - entry：压缩列表中的节点
 
-### 3、压缩列表中的节点
+### 压缩列表中的节点
 
 每个压缩列表节点都由**previous_entry_length、encoding、content**三个部分组成，如下图
 
@@ -803,24 +782,9 @@ typedef struct zlentry {
 
 节点的previous_entry_length属性以**字节为单位，记录了压缩列表中前一个节点的长度**，其值长度为1个字节**或者**5个字节
 
-- 如果前一节点的长度
-
-    小于254字节
-
-    ，那么previous_entry_length属性的
-
-    长度为1字节
-
+- 如果前一节点的长度小于254字节，那么previous_entry_length属性的长度为1字节
     - 前一节点的长度就保存在这一个字节里面
-
-- 如果前一节点的长度
-
-    大于等于254字节
-
-    ，那么previous_entry_length属性的
-
-    长度为5字节
-
+- 如果前一节点的长度大于等于254字节，那么previous_entry_length属性的长度为5字节
     - 其中属性的第一字节会被设置为0xFE（十进制值254），而之后的四个字节则用于保存前一节点的长度
 
 若前一个节点的长度为5个字节，那么压缩列表的previous_entry_length属性为0x05（1个字节保存长度）
@@ -839,11 +803,11 @@ typedef struct zlentry {
 
 ## 七、快表
 
-### 1、简介
+### 简介
 
 quicklist是Redis 3.2中新引入的数据结构，**能够在时间效率和空间效率间实现较好的折中**。Redis中对quciklist的注释为A doubly linked list of ziplists。顾名思义，quicklist是一个双向链表，链表中的每个节点是一个ziplist结构。quicklist可以看成是用双向链表将若干小型的ziplist连接到一起组成的一种数据结构。当ziplist节点个数过多，quicklist退化为双向链表，一个极端的情况就是每个ziplist节点只包含一个entry，即只有一个元素。当ziplist元素个数过少时，quicklist可退化为ziplist，一种极端的情况就是quicklist中只有一个ziplist节点
 
-### 2、快表的结构
+### 快表的结构
 
 quicklist是由quicklist node组成的双向链表，quicklist node中又由ziplist充当节点。quicklist的存储结构如图
 
@@ -971,7 +935,7 @@ typedef struct quicklistEntry {
 } quicklistEntry;Copy
 ```
 
-### 3、基本操作
+### 基本操作
 
 #### 初始化
 
@@ -1014,7 +978,7 @@ quicklist查找元素主要是针对index，即通过元素在链表中的下标
 
 ## 八、对象
 
-### 1、简介
+### 简介
 
 #### 基本数据结构与对象的关系
 
@@ -1031,7 +995,7 @@ Redis的对象系统还实现了基于**引用计数**技术的内存回收机�
 
 Redis还**通过引用计数技术实现了对象共享机制**，这一机制可以在适当的条件下，通过让多个数据库键共享同一个对象来节约内存
 
-### 2、对象的类型与编码
+### 对象的类型与编码
 
 Redis使用对象来表示数据库中的键和值，每次当我们在Redis的数据库中新创建一个键值对时，我们**至少会创建两个对象**，一个对象用作键值对的键（键对象），另一个对象用作键值对的值（值对象），如
 
@@ -1124,7 +1088,7 @@ OBJECT ENCODING keyCopy
 
 通过encoding属性来设定对象所使用的编码，而不是为特定类型的对象关联一种固定的编码，**极大地提升了Redis的灵活性和效率**，因为Redis可以根据不同的使用场景来为一个对象设置不同的编码，从而优化对象在某一场景下的效率
 
-### 3、字符串对象
+### 字符串对象
 
 字符串对象的编码可以是**int、raw或者embstr**
 
@@ -1173,13 +1137,13 @@ int编码的字符串对象和embstr编码的字符串对象在条件满足的�
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201116155653.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201116155653.png)
 
-### 4、列表对象
+### 列表对象
 
 列表对象的编码是quicklist，quicklist在上面部分已经介绍过了，在此不再赘述
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201117214036.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201117214036.png)
 
-### 5、哈希对象
+### 哈希对象
 
 哈希对象的编码可以是ziplist或者hashtable
 
@@ -1224,7 +1188,7 @@ hashtable编码的哈希对象使用字典作为底层实现，哈希对象中�
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201117215637.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201117215637.png)
 
-### 6、集合(set)对象
+### 集合(set)对象
 
 集合对象的编码可以是intset或者hashtable
 
@@ -1257,7 +1221,7 @@ hashtable编码的集合对象使用字典作为底层实现，字典的每个**
 
 不能满足这两个条件的集合对象需要使用hashtable编码
 
-### 7、有序(sorted_set)集合
+### 有序(sorted_set)集合
 
 有序集合的编码可以是ziplist或者skiplist
 
@@ -1270,8 +1234,6 @@ ziplist编码的压缩列表对象使用压缩列表作为底层实现，每个�
 其结构如下图所示
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201118194930.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201118194930.png)
-
-#### 
 
 #### skiplist
 
@@ -1311,7 +1273,7 @@ zset结构中的zsl跳跃表按分值(score)**从小到大保存了所有集合�
 
 **跳表**可以保证数据是有序的，范围查询效率较高，但是单个查询效率较低
 
-### 8、内存回收
+### 内存回收
 
 因为C语言并不具备自动内存回收功能，所以Redis在自己的对象系统中构建了一个**引用计数**（reference counting）技术实现的内存回收机制，通过这一机制，程序可以通过跟踪对象的引用计数信息，在适当的时候自动释放对象并进行内存回收
 
@@ -1340,13 +1302,13 @@ typedef struct redisObject {
 
 ## 一、RDB持久化
 
-### 1、简介
+### 简介
 
 因为**Redis是内存数据库**，它将自己的数据库状态储存在内存里面，所以如果不想办法将储存在内存中的数据库状态保存到磁盘里面，那么一旦服务器进程退出，服务器中的数据库状态也会消失不见。为了解决这个问题，**Redis提供了RDB持久化功能**，这个功能可以将Redis在内存中的数据库状态保存到磁盘里面，避免数据意外丢失
 
 更多关于RDB持久化的操作可以查看[**Redis学习文档——RDB**](https://nyimac.gitee.io/2020/06/07/Redis学习文档/#2、RDB)
 
-### 2、 RDB文件的创建与载入
+### RDB文件的创建与载入
 
 有两个Redis命令可以用于生成RDB文件，一个是save，另一个是bgsave
 
@@ -1369,7 +1331,7 @@ typedef struct redisObject {
     - 如果bgsave命令正在执行，那么客户端发送的bgwriteaof命令会被延迟到bgsave命令执行完毕之后执行
     - 如果bgwriteaof命令正在执行，那么客户端发送的bgsave命令**会被服务器拒绝**
 
-### 3、自动间隔性保存
+### 自动间隔性保存
 
 用户可以通过save选项设置多个保存条件，但只要其中任意一个条件被满足，服务器就会执行bgsave命令，如果我们向服务器提供以下配置
 
@@ -1434,7 +1396,7 @@ Redis的服务器周期性操作函数**serverCron**默认每隔100毫秒就会�
 
 ## 二、AOF持久化
 
-### 1、简介
+### 简介
 
 除了RDB持久化功能之外，Redis还提供了AOF（Append Only File）持久化功能。与RDB持久化通过保存数据库中的键值对来记录数据库状态不同，**AOF持久化是通过保存Redis服务器所执行的写命令来记录数据库状态的**，如图下图所示
 
@@ -1442,7 +1404,7 @@ Redis的服务器周期性操作函数**serverCron**默认每隔100毫秒就会�
 
 更多关于AOF持久化的操作可以查[**Redis学习文档——AOF**](https://nyimac.gitee.io/2020/06/07/Redis学习文档/#3、AOF)
 
-### 2、实现
+### 实现
 
 AOF持久化功能的实现可以分为**命令追加**（append）、**文件写入**、**文件同步**（sync）三个步骤
 
@@ -1477,7 +1439,7 @@ Redis的服务器进程就是一个事件循环（loop），这个循环中的**
 
 因为服务器在处理文件事件时可能会执行写命令，使得一些内容被追加到aof_buf缓冲区里面，所以在服务器**每次结束一个事件循环之前，它都会调用flushAppendOnlyFile函数**，考虑是否需要将aof_buf缓冲区中的内容写入和保存到AOF文件里面
 
-### 3、文件的载入与数据还原
+### 文件的载入与数据还原
 
 因为AOF文件里面包含了重建数据库状态所需的所有写命令，所以**服务器只要读入并重新执行一遍AOF文件里面保存的写命令，就可以还原服务器关闭之前的数据库状态**
 
@@ -1493,7 +1455,7 @@ Redis的服务器进程就是一个事件循环（loop），这个循环中的**
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201119153503.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201119153503.png)
 
-### 4、重写
+### 重写
 
 #### 为什么需要重写
 
@@ -1557,7 +1519,7 @@ rpush list b a c dCopy
 
 ## 三、数据库
 
-### 1、服务器中的数据库
+### 服务器中的数据库
 
 Redis服务器将所有数据库都保存在服务器状态redisServer结构的**db数组**中，db数组的每个项都是一个redisDb结构，每个redisDb结构代表一个数据库。在初始化服务器时，程序会根据服务器状态的**dbnum属性来决定应该创建多少个数据库**，默认为16个
 
@@ -1588,7 +1550,7 @@ typedef struct redisDb {
 } redisDb;Copy
 ```
 
-### 2、数据库键空间
+### 数据库键空间
 
 Redis是一个键值对（key-value pair）数据库服务器，服务器中的每个数据库都由一个redisDb结构表示，其中，redisDb结构的**dict字典保存了数据库中的所有键值对**，我们将这个字典称为键空间（key space）
 
@@ -1605,7 +1567,7 @@ Redis是一个键值对（key-value pair）数据库服务器，服务器中的�
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201122141457.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201122141457.png)
 
-### 3、设置键的生存时间或过期时间
+### 设置键的生存时间或过期时间
 
 通过**EXPIRE**命令或者**PEXPIRE**命令，客户端可以以秒或者毫秒精度为数据库中的某个键设置生存时间（Time To Live，TTL），在经过指定的秒数或者毫秒数之后，服务器就会自动删除生存时间为0的键
 
@@ -1636,7 +1598,7 @@ Redis是一个键值对（key-value pair）数据库服务器，服务器中的�
 
 redisDb结构的**expires**字典保存了数据库中所有键的过期时间，我们称这个字典为**过期字典**
 
-```
+```c
 typedef struct redisDb {
     ...
         
@@ -1645,7 +1607,7 @@ typedef struct redisDb {
    
     ...
         
-} redisDb;Copy
+} redisDb;
 ```
 
 - 过期字典的**键**是一个指针，这个指针**指向键空间中的某个键对象**（也即是某个数据库键）
@@ -1665,7 +1627,7 @@ TTL命令以**秒**为单位返回键的剩余生存时间，而PTTL命令则以
     - 是的话，那么键已经过期
     - 不是的话，键未过期
 
-### 4、删除策略
+### 删除策略
 
 通过上面的知识，我们知道了数据库键的过期时间都保存在过期字典中，又知道了如何根据过期时间去判断一个键是否过期，现在剩下的问题是：**如果一个键过期了，那么它什么时候会被删除呢？**
 
@@ -1716,7 +1678,7 @@ TTL命令以**秒**为单位返回键的剩余生存时间，而PTTL命令则以
 - 定期删除策略**每隔一段时间执行一次删除过期键操作**，并通过限制删除操作执行的时长和频率来**减少删除操作对CPU时间的影响**
 - 通过定期删除过期键，定期删除策略**有效地减少了**因为过期键而带来的**内存浪费**
 
-### 5、Redis中的删除策略
+### Redis中的删除策略
 
 Redis服务器实际使用的是**惰性删除**和**定期删除**两种策略
 
@@ -1739,7 +1701,7 @@ activeExpireCycle函数的工作模式可以总结如下
 
 ## 四、事件
 
-### 1、简介
+### 简介
 
 Redis服务器是一个事件驱动程序，服务器需要处理以下两类事件
 
@@ -1759,7 +1721,7 @@ Redis服务器是一个事件驱动程序，服务器需要处理以下两类事
 
 ## 五、复制
 
-### 1、简介
+### 简介
 
 在Redis中，用户可以通过执行SLAVEOF命令或者设置slaveof选项，让一个服务器去复制（replicate）另一个服务器，我们称呼被复制的服务器为主服务器（master），而对主服务器进行复制的服务器则被称为从服务器（slave）
 
@@ -1775,7 +1737,7 @@ slaveof 127.0.0.1 1111Copy
 
 进行复制中的主从服务器双方的数据库将保存相同的数据，概念上将这种现象称作“**数据库状态一致**”，或者简称“一致”
 
-### 2、主从复制实现（旧版）
+### 主从复制实现（旧版）
 
 Redis的复制功能分为**同步**（sync）和**命令传播**（command propagate）两个操作：
 
@@ -1866,7 +1828,7 @@ Redis的复制功能分为**同步**（sync）和**命令传播**（command prop
 - 从服务器想要将自己更新至主服务器当前所处的状态，真正需要的是主从服务器连接中断期间，主服务器新添加的key1112、key1113这两个键的数据
 - 但旧版复制功能并没有利用以上列举的两点条件，而是继续让主服务器生成并向从服务器发送包含键k1至键k1112的RDB文件，但**实际上RDB文件包含的键k1至键k10086的数据对于从服务器来说都是不必要的**。并且如上面所说，SYNC操作是非常消耗资源的一种操作，所以要尽量避免不必要的同步操作
 
-### 3、主从复制实现（新版）
+### 主从复制实现（新版）
 
 为了解决旧版复制功能在处理断线重复制情况时的低效问题，Redis从2.8版本开始，使用**PSYNC**命令代替SYNC命令来执行复制时的同步操作
 
@@ -1899,7 +1861,7 @@ PSYNC命令具有**完整重同步**（full resynchronization）和**部分重�
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201120165728.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201120165728.png)
 
-### 4、部分重同步的实现
+### 部分重同步的实现
 
 部分重同步功能由以下三个部分构成
 
@@ -2035,7 +1997,7 @@ PSYNC命令的调用方法有两种，主服务器通过**PSYNC所带的参数**
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201120192712.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201120192712.png)
 
-### 5、心跳检测
+### 心跳检测
 
 在命令传播阶段，从服务器默认会以每秒一次的频率，向主服务器发送命令，以确保主从服务器连接正常
 
@@ -2082,7 +2044,7 @@ min-slaves-max-lag 10Copy
 
 ## 六、Sentinel(哨兵)
 
-### 1、简介
+### 简介
 
 Sentinel（哨岗、哨兵）是Redis的高可用性（high availability）解决方案
 
@@ -2110,7 +2072,7 @@ Sentinel（哨岗、哨兵）是Redis的高可用性（high availability）解�
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201120201001.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201120201001.png)
 
-### 2、启动与初始化
+### 启动与初始化
 
 当一个Sentinel启动时，它需要执行以下步骤
 
@@ -2144,7 +2106,7 @@ Sentinel**本质上只是一个运行在特殊模式下的Redis服务器**，所
 
 在应用了Sentinel的专用代码之后，接下来，服务器会初始化一个**sentinelState结构**（后面简称“Sentinel状态”），这个结构保存了服务器中所有和Sentinel功能有关的状态（服务器的一般状态仍然由redisServer结构保存）。其代码如下
 
-```
+```c
 struct sentinelState {
     char myid[CONFIG_RUN_ID_SIZE+1]; /* This sentinel ID. */
     // 当前纪元，用于故障转移
@@ -2169,7 +2131,7 @@ struct sentinelState {
                                   paths at runtime? */
     char *sentinel_auth_pass;    /* Password to use for AUTH against other sentinel */
     char *sentinel_auth_user;    /* Username for ACLs AUTH against other sentinel. */
-} sentinel;Copy
+} sentinel;
 ```
 
 #### 初始化Sentinel状态的masters属性
@@ -2245,7 +2207,7 @@ Sentinel状态以及masters**字典**
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201122105405.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201122105405.png)
 
-### 3、获取主服务器信息
+### 获取主服务器信息
 
 Sentinel默认会以每十秒一次的频率，通过命令连接**向被监视的主服务器发送INFO命令**，并通过分析INFO命令的**回复**来获取主服务器的当前信息
 
@@ -2263,7 +2225,7 @@ Sentinel在分析INFO命令中包含的**从服务器**信息时，会检查从�
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201122110831.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201122110831.png)
 
-### 4、获取从服务器信息
+### 获取从服务器信息
 
 当Sentinel发现主服务器有**新的从服务器**出现时，Sentinel除了会为这个新的从服务器创建相应的实例结构之外，Sentinel还会创建连接到从服务器的**命令连接和订阅连接**
 
@@ -2275,7 +2237,7 @@ Sentinel将对slave0、slave1和slave2**三个从服务器分别创建命令连�
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201122111758.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201122111758.png)
 
-### 5、接收主从服务器的频道信息
+### 接收主从服务器的频道信息
 
 当Sentinel与一个主服务器或者从服务器建立起**订阅连接**之后，Sentinel就会通过订阅连接，向服务器发送以下命令
 
@@ -2321,7 +2283,7 @@ Sentinel为主服务器创建的实例结构中的sentinels字典保存了除Sen
 
 ### 出现故障的解决方案
 
-### 6、检测主观下线状态
+### 检测主观下线状态
 
 在默认情况下，Sentinel会以每秒一次的频率向所有与它创建了命令连接的实例（包括主服务器、从服务器、其他Sentinel在内）发送PING命令，并通过实例返回的PING命令回复来判断实例是否在线
 
@@ -2336,13 +2298,13 @@ Sentinel为主服务器创建的实例结构中的sentinels字典保存了除Sen
 
 Sentinel配置文件中的down-after-milliseconds选项指定了Sentinel判断实例进入主观下线所需的时间长度：如果一个实例在down-after-milliseconds毫秒内，连续向Sentinel返回无效回复，那么Sentinel会修改这个实例所对应的实例结构，在结构的flags属性中打开SRI_S_DOWN标识，以此来表示这个实例已经**进入主观下线状态**
 
-### 7、检查客观下线状态
+### 检查客观下线状态
 
 当Sentinel将一个主服务器判断为主观下线之后，为了确认这个主服务器是否真的下线了，**它会向同样监视这一主服务器的其他Sentinel进行询问，看它们是否也认为主服务器已经进入了下线状态**（可以是主观下线或者客观下线）。当Sentinel从其他Sentinel那里接收到足够数量的已下线判断之后，Sentinel就会将从服务器判定为客观下线，并对主服务器执行故障转移操作
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201122130223.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201122130223.png)
 
-### 8、选举领头Sentinel
+### 选举领头Sentinel
 
 当一个主服务器被判断为客观下线时，监视这个下线主服务器的各个Sentinel会进行协商，**选举出一个领头Sentinel，并由领头Sentinel对下线主服务器执行故障转移操作**
 
@@ -2362,7 +2324,7 @@ Sentinel配置文件中的down-after-milliseconds选项指定了Sentinel判断�
 - 因为领头Sentinel的产生需要半数以上Sentinel的支持，并且每个Sentinel在每个配置纪元里面只能设置一次局部领头Sentinel，所以在一个配置纪元里面，只会出现一个领头Sentinel
 - 如果在给定时限内，没有一个Sentinel被选举为领头Sentinel，那么各个Sentinel将在一段时间之后**再次进行选举，直到选出领头Sentinel为止**
 
-### 9、故障转移
+### 故障转移
 
 在选举产生出领头Sentinel之后，**领头Sentinel将对已下线的主服务器执行故障转移操作**，该操作包含以下三个步骤
 
@@ -2394,11 +2356,11 @@ Sentinel配置文件中的down-after-milliseconds选项指定了Sentinel判断�
 
 [**Redis事务的基本使用**](https://nyimac.gitee.io/2020/06/07/Redis学习文档/#五、Redis事务)
 
-### 1、简介
+### 简介
 
 Redis通过**MULTI、EXEC、WATCH**等命令来实现事务（transaction）功能。事务提供了一种将多个命令请求打包，然后一次性、按顺序地执行多个命令的机制，并且**在事务执行期间，服务器不会中断事务而改去执行其他客户端的命令请求**，它会将事务中的所有命令都执行完毕，然后才去处理其他客户端的命令请求
 
-### 2、事务的实现
+### 事务的实现
 
 一个事务从开始到结束通常会经历以下**三个阶段**
 
@@ -2492,7 +2454,7 @@ typedef struct multiCmd {
 
 当一个处于**事务状态的客户端向服务器发送EXEC命令时**，这个EXEC命令将立即被服务器执行。服务器会遍历这个客户端的事务队列，执行队列中保存的所有命令，最后将执行命令所得的结果全部返回给客户端
 
-### 3、 WATCH命令的实现
+### WATCH命令的实现
 
 WATCH命令是一个**乐观锁**（optimistic locking），它可以在EXEC命令执行之前，监视任意数量的数据库键，并在EXEC命令执行时，检查被监视的键**是否至少有一个已经被修改过了**，如果是的话，服务器将拒绝执行事务，并向客户端返回代表事务执行失败的空回复
 
@@ -2538,18 +2500,5 @@ touchWatchKey的伪代码如下
 
 [![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201123103819.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201123103819.png)
 
-------
-
- [后端开发](https://nyimac.gitee.io/categories/后端开发/)
-
- [原理](https://nyimac.gitee.io/tags/原理/)
-
-本博客所有文章除特别声明外，均采用 [CC BY-SA 4.0 协议](https://creativecommons.org/licenses/by-sa/4.0/deed.zh) ，转载请注明出处！
-
-[Java NIO](https://nyimac.gitee.io/2020/11/30/Java NIO/)
-
-[代理模式](https://nyimac.gitee.io/2020/11/03/代理模式/)
 
 
-
-[Hexo](https://hexo.io/) [Fluid](https://github.com/fluid-dev/hexo-theme-fluid)
