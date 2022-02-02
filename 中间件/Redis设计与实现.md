@@ -1,4 +1,4 @@
-Redis设计与实现
+# Redis设计与实现
 
 参考资料：
 
@@ -457,7 +457,7 @@ Redis使用跳跃表作为有序集合键的底层实现之一，如果一个有
 
 **搜索链表中的元素时，无论链表中的元素是否有序，时间复杂度都为O(n)**，如下图，搜索103需要查询9次才能找到该节点
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107211857.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107211857.png)
+<img src="img/skip-list-01.png">
 
 但是能够提高搜索的其他数据结构，如：二叉排序树、红黑树、B树、B+树等等的实现又过于复杂。有没有一种相对简单，同时又能提搜索效率的数据结构呢，跳跃表就是这样一种数据结构。
 
@@ -467,7 +467,7 @@ Redis中使用跳跃表好像就是因为一是B+树的实现过于复杂，二�
 
 为了能够更快的查找元素，我们可以在该链表之上，再添加一个新链表，新链表中保存了部分旧链表中的节点，以加快搜索的速度。如下图所示
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107212138.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107212138.png)
+<img src="img/skip-list-02.png">
 
 我们搜索元素时，从最上层的链表开始搜索。当找到某个节点大于目标值或其后继节点为空时，从该节点向下层链表搜寻，然后顺着该节点到下一层继续搜索。
 
@@ -475,13 +475,13 @@ Redis中使用跳跃表好像就是因为一是B+树的实现过于复杂，二�
 
 这样还是查找了5次，当我们再将链表的层数增高以后，查找的次数会明显降低，如下图所示。3次便找到了目标元素103
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107212157.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107212157.png)
+<img src="img/skip-list-03.png">
 
 **代码中实现的跳表结构如下图所示**
 
 一个节点拥有多个指针，指向不同的节点
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201108152446.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201108152446.png)
+<img src="img/skip-list-04.png">
 
 #### 跳跃表实现——插入
 
@@ -498,31 +498,38 @@ Redis中使用跳跃表好像就是因为一是B+树的实现过于复杂，二�
 
 - 为了避免以下情况，需要在每个链表的头部设置一个 **负无穷** 的元素
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201108100544.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201108100544.png)
+<img src="img/skip-list-05.png">
 
 设置负无穷后，若要查找元素2，过程如下图所示
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201108100641.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201108100641.png)
+<img src="img/skip-list-06.png">
 
 **插入图解**
 
-- 若我们要将45插入到跳跃表中[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107214001.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107214001.png)
-- 先找到插入位置，将45插入到合适的位置[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107214125.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107214125.png)
-- 抛掷硬币：**为正**，晋升[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107214603.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107214603.png)
-- 假设硬币一直为正，插入元素一路晋升，当晋升的次数超过跳跃表的层数时，**需要再创建新的链表以放入晋升的插入元素。新创建的链表的头结点为负无穷**[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107214928.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201107214928.png)
+- 若我们要将45插入到跳跃表中
 
-**以上便是跳跃表的插入过程**
+    <img src="img/skip-list-07.png">
+
+- 先找到插入位置，将45插入到合适的位置
+
+    <img src="img/skip-list-08.png">
+
+- 抛掷硬币：**为正**，晋升
+
+    <img src="img/skip-list-09.png">
+
+- 假设硬币一直为正，插入元素一路晋升，当晋升的次数超过跳跃表的层数时，**需要再创建新的链表以放入晋升的插入元素。新创建的链表的头结点为负无穷**
+
+    <img src="img/skip-list-10.png">
 
 ### Redis中的跳跃表
 
 #### 为什么Redis要使用跳跃表而不是用B+树
 
-引用Redis作者 antirez 的原话
-
-- There are a few reasons:
-    - They are not very memory intensive. It's up to you basically. Changing parameters about the probability of a node to have a given number of levels will make then less memory intensive than btrees.
-    - A sorted set is often target of many ZRANGE or ZREVRANGE operations, that is, traversing the skip list as a linked list. With this operation the cache locality of skip lists is at least as good as with other kind of balanced trees.
-    - They are simpler to implement, debug, and so forth. For instance thanks to the skip list simplicity I received a patch (already in Redis master) with augmented skip lists implementing ZRANK in O(log(N)). It required little changes to the code.
+There are a few reasons:
+- They are not very memory intensive. It's up to you basically. Changing parameters about the probability of a node to have a given number of levels will make then less memory intensive than btrees.
+- A sorted set is often target of many ZRANGE or ZREVRANGE operations, that is, traversing the skip list as a linked list. With this operation the cache locality of skip lists is at least as good as with other kind of balanced trees.
+- They are simpler to implement, debug, and so forth. For instance thanks to the skip list simplicity I received a patch (already in Redis master) with augmented skip lists implementing ZRANK in O(log(N)). It required little changes to the code.
 
 MySQL使用B+树的是因为：**叶子节点存储数据，非叶子节点存储索引**，B+树的每个节点可以存储多个关键字，它将节点大小设置为磁盘页的大小，**充分利用了磁盘预读的功能**。每次读取磁盘页时就会读取一整个节点,每个叶子节点还有指向前后节点的指针，为的是最大限度的降低磁盘的IO;因为数据在内存中读取耗费的时间是从磁盘的IO读取的百万分之一
 
@@ -560,7 +567,7 @@ zadd key score1 member1 score2 member2 ...
 
 Redis中的跳表结构如下
 
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201108155128.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201108155128.png)
+<img src="img/skip-list-11.png">
 
 Redis中的跳表主要由节点**zskiplistNode**和跳表**zskiplist**来实现，他们的源码如下
 
@@ -591,16 +598,26 @@ typedef struct zskiplistNode {
 **各个属性的详细解释**
 
 - ele：sds变量，保存member。
+
 - score：double变量，用于保存score
     - **注意**：**score和ele共同来决定一个元素在跳表中的顺序**。score不同则根据score进行排序，score相同则根据ele来进行排序
     - **跳表中score是可以相同的，而ele是肯定不同的**
+
 - backward：前驱指针，用于保存节点的前驱节点，**每个节点只有一个backward**
-    - 例：如果要从第四层的节点访问第三层的节点，则可以通过backward直接访问[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201108160050.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201108160050.png)
-- level[]：节点的层，每个节点拥有1~32个层，除头结点外（32层），其他节点的层数是随机的。**注意**：Redis中没有使用抛硬币的晋升策略，而是直接随机一个层数值。下图展示了层数不同的几个节点[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201108160122.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201108160122.png)
-    - level：保存了该节点指向的下一个节点，但是不一定是紧挨着的节点。还保存了两个节点之间的跨度
-        - forward：后继节点，该节点指向的下一个节点，但是不一定是紧挨着的节点
-        - span：跨度，用于记录从该节点到forward指向的节点之间，要走多少步。主要用于计算Rank
-            - rank：排位，头节点开始到目标节点的跨度，由沿途的span相加获得
+    - 例：如果要从第四层的节点访问第三层的节点，则可以通过backward直接访问
+
+        <img src="img/skip-list-12.png">
+
+- level[]：节点的层，每个节点拥有1~32个层，除头结点外（32层），其他节点的层数是随机的。**注意**：Redis中没有使用抛硬币的晋升策略，而是直接随机一个层数值。下图展示了层数不同的几个节点
+
+    <img src="img/skip-list-13.png">
+
+- level：保存了该节点指向的下一个节点，但是不一定是紧挨着的节点。还保存了两个节点之间的跨度
+
+- forward：后继节点，该节点指向的下一个节点，但是不一定是紧挨着的节点
+
+- span：跨度，用于记录从该节点到forward指向的节点之间，要走多少步。主要用于计算Rank
+    - rank：排位，头节点开始到目标节点的跨度，由沿途的span相加获得
 
 #### **zskiplist**
 
@@ -626,8 +643,7 @@ typedef struct zskiplist {
 #### 搜索过程
 
 如我们要访问该跳表中score = 2.0的节点
-
-[![img](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201108162654.png)](https://nyimapicture.oss-cn-beijing.aliyuncs.com/img/20201108162654.png)
+<img src="img/skip-list-14.png">
 
 从高层依次向下层遍历
 
@@ -640,7 +656,7 @@ typedef struct zskiplist {
 
 #### 插入过程
 
-插入节点时，需要找到节点的插入位置。并给节点的各个属性赋值。插入后判断是否需要拓展上层
+插入节点时，需要找到节点的插入位置。并给节点的各个属性赋值。插入后判断是否需要拓展上层。
 
 ## 五、整数集合
 
