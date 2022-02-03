@@ -27,43 +27,6 @@ Spring Boot 是整合 Spring 技术栈的一站式框架，是简化 Spring 技�
 
 - 封装太深，内部原理复杂，不易精通
 
-> 时代背景
-
-[James Lewis and Martin Fowler (2014)](https://martinfowler.com/articles/microservices.html)  提出微服务完整概念。https://martinfowler.com/microservices/
-
-In short, the **microservice architectural style** is an approach to developing a single application as a **suite of small services**, each **running in its own process** and communicating with **lightweight** mechanisms, often an **HTTP** resource API. These services are **built around business capabilities** and **independently deployable** by fully **automated deployment** machinery. There is a **bare minimum of centralized management** of these services, which may be **written in different programming languages** and use different data storage technologies.-- [James Lewis and Martin Fowler (2014)](https://martinfowler.com/articles/microservices.html)
-
-- 微服务是一种架构风格
-- 一个应用拆分为一组小型服务
-- 每个服务运行在自己的进程内，也就是可独立部署和升级
-- 服务之间使用轻量级HTTP交互
-- 服务围绕业务功能拆分
-- 可以由全自动部署机制独立部署
-- 去中心化，服务自治。服务可以使用不同的语言、不同的存储技术
-
-> 分布式
-
-![image](https://cdn.nlark.com/yuque/0/2020/png/1613913/1599562347965-a617a866-4270-44e9-9c5b-ced552683eda.png?x-oss-process=image%2Fwatermark%2Ctype_d3F5LW1pY3JvaGVp%2Csize_14%2Ctext_YXRndWlndS5jb20g5bCa56GF6LC3%2Ccolor_FFFFFF%2Cshadow_50%2Ct_80%2Cg_se%2Cx_10%2Cy_10)
-
-分布式的困难
-
-- 远程调用
-- 服务发现
-- 负载均衡
-- 服务容错
-- 配置管理
-- 服务监控
-- 链路追踪
-- 日志管理
-- 任务调度
-- ......
-
-分布式的解决
-
-- SpringBoot + SpringCloud
-
-![image](https://cdn.nlark.com/yuque/0/2020/png/1613913/1599799119457-841ef47a-6585-4ca4-8e3d-8298e796012c.png?x-oss-process=image%2Fwatermark%2Ctype_d3F5LW1pY3JvaGVp%2Csize_10%2Ctext_YXRndWlndS5jb20g5bCa56GF6LC3%2Ccolor_FFFFFF%2Cshadow_50%2Ct_80%2Cg_se%2Cx_10%2Cy_10)
-
 ## 创建SpringBoot项目
 
 ### IDEA 创建项目
@@ -86,7 +49,7 @@ In short, the **microservice architectural style** is an approach to developing 
 </dependencies>
 ```
 
-编写一个主程序；启动Spring Boot应用
+编写一个主程序；启动 Spring Boot应用
 
 ```java
 /**
@@ -115,7 +78,6 @@ public class HelloController {
         return "Hello World!";
     }
 }
-
 ```
 
 运行主程序测试
@@ -169,7 +131,7 @@ public class HelloController {
 
 ### 阿里云镜像创建
 
-创建工程时，切换选择starter服务路径，然后手工输入阿里云地址即可，地址：http://start.aliyun.com或https://start.aliyun.com
+创建工程时，切换选择starter服务路径，然后手工输入阿里云地址即可，地址：http://start.aliyun.com 或 https://start.aliyun.com
 
 ![image-20211122163605950](img\boot\image-20211122163605950.png)
 
@@ -228,23 +190,19 @@ SpringBoot通过配置文件application.properties就可以修改默认的配置
 
 ![image-20211123165428245](img\boot\image-20211123165428245.png)
 
-将默认端口改为80端口。properties格式的文件书写规范是key=value
+将默认端口改为80端口。properties格式的文件书写规范是key=value  `如：name=itheima`
 
-```properties
-name=itheima
-```
-
-<img src="img\image-20211123165719091.png" alt="image-20211123165719091" style="zoom:80%;" />
+<img src="img\boot\image-20211123165719091.png" />
 
 ```properties
 server.port=80
 ```
 
-以前修改端口在 tomcat 服务器的配置文件中改，现在在 SpringBoot专 用的配置文件中改，简化开发者配置的书写位置，集中管理。
+以前修改端口在 tomcat 服务器的配置文件中改，现在在 Spring Boot专用的配置文件中改，**简化开发者配置的书写位置，集中管理。**
 
-1. SpringBoot程序可以在application.properties文件中进行属性配置
-2. application.properties文件中只要输入要配置的属性关键字就可以根据提示进行设置
-3. SpringBoot将配置信息集中在一个文件中写，不管你是服务器的配置，还是数据库的配置，总之都写在一起，逃离一个项目十几种配置文件格式的尴尬局面
+1. SpringBoot 程序可以在 application.properties 文件中进行属性配置
+2. application.properties 文件中只要输入要配置的属性关键字就可以根据提示进行设置
+3. SpringBoot 将配置信息集中在一个文件中写，不管你是服务器的配置，还是数据库的配置，总之都写在一起，逃离一个项目十几种配置文件格式的尴尬局面
 
 **总结**
 
@@ -358,7 +316,7 @@ server:
   port: 82
 ```
 
-​		启动后发现目前的启动端口为80，把80对应的文件删除掉，然后再启动，现在端口又改成了81。现在我们就已经知道了3个文件的加载优先顺序是什么。
+启动后发现目前的启动端口为80，把80对应的文件删除掉，然后再启动，现在端口又改成了81。现在我们就已经知道了3个文件的配置信息使用的优先顺序是什么。
 
 ```XML
 application.properties  >  application.yml  >  application.yaml
@@ -417,15 +375,15 @@ server:
 
 **步骤②**：在弹出窗口中左侧选择【Facets】，右侧选中Spring路径下对应的模块名称，也就是你自动提示功能消失的那个模块
 
-<img src="C:/development/Code/note/CodeNotes/JavaEE Framework/img/image-20211126160726589.png" alt="image-20211126160726589" style="zoom:67%;" />![image-20211126160844372](img\boot\image-20211126160844372.png)
+<img src="img/boot/image-20211126160726589.png" alt="image-20211126160726589" style="zoom:67%;" />![image-20211126160844372](img\boot\image-20211126160844372.png)
 
 **步骤③**：点击Customize Spring Boot按钮，此时可以看到当前模块对应的配置文件是哪些了。如果没有你想要称为配置文件的文件格式，就有可能无法弹出提示
 
-![image-20211126160946448](img\boot\image-20211126160946448.png)<img src="C:/development/Code/note/CodeNotes/JavaEE Framework/img/image-20211126160954338.png" alt="image-20211126160954338" style="zoom:80%;" />
+![image-20211126160946448](img\boot\image-20211126160946448.png)<img src="img/boot/image-20211126160954338.png" alt="image-20211126160954338" style="zoom:80%;" />
 
 **步骤④**：选择添加配置文件，然后选中要作为配置文件的具体文件就OK了
 
-<img src="C:/development/Code/note/CodeNotes/JavaEE Framework/img/image-20211126161145082.png" alt="image-20211126161145082" style="zoom:80%;" /><img src="img\boot\image-20211126161156324.png" alt="image-20211126161156324" style="zoom: 67%;" />
+<img src="img/boot/image-20211126161145082.png" alt="image-20211126161145082" style="zoom:80%;" /><img src="img\boot\image-20211126161156324.png" alt="image-20211126161156324" style="zoom: 67%;" />
 
 ​		到这里就做完了，其实就是Idea的一个小功能
 
@@ -535,11 +493,11 @@ map:
 
 #### 读取单一数据
 
-​		yaml中保存的单个数据，可以使用Spring中的注解@Value读取单个数据，属性名引用方式：<font color="#ff0000"><b>${一级属性名.二级属性名……}</b></font>
+yaml中保存的单个数据，可以使用Spring中的注解@Value读取单个数据，属性名引用方式：<font color="#ff0000"><b>${一级属性名.二级属性名……}</b></font>
 
 <img src="img\boot\image-20211126180433356.png" alt="image-20211126180433356" style="zoom:80%;" />
 
-​		记得使用@Value注解时，要将该注解写在某一个指定的Spring管控的bean的属性名上方，这样当bean进行初始化时候就可以读取到对应的单一数据了。
+记得使用@Value注解时，要将该注解写在某一个指定的Spring管控的bean的属性名上方，这样当bean进行初始化时候就可以读取到对应的单一数据了。
 
 **总结**
 
@@ -548,11 +506,11 @@ map:
 
 #### 读取全部数据
 
-​		读取单一数据可以解决读取数据的问题，但是如果定义的数据量过大，这么一个一个书写肯定会累死人的，SpringBoot提供了一个对象，能够把所有的数据都封装到这一个对象中，这个对象叫做Environment，使用自动装配注解可以将所有的yaml数据封装到这个对象中
+读取单一数据可以解决读取数据的问题，但是如果定义的数据量过大，这么一个一个书写肯定会累死人的，SpringBoot提供了一个对象，能够把所有的数据都封装到这一个对象中，这个对象叫做Environment，使用自动装配注解可以将所有的yaml数据封装到这个对象中
 
 <img src="img\boot\image-20211126180738569.png" alt="image-20211126180738569" style="zoom:80%;" />
 
-​		数据封装到了Environment对象中，获取属性时，通过Environment的接口操作进行，具体方法是getProperties（String），参数填写属性名即可
+数据封装到了Environment对象中，获取属性时，通过Environment的接口操作进行，具体方法是getProperties（String），参数填写属性名即可
 
 **总结**
 
@@ -561,26 +519,22 @@ map:
 
 #### 读取对象数据
 
-​		单一数据读取书写比较繁琐，全数据读取封装的太厉害了，每次拿数据还要一个一个的getProperties（）,总之用起来都不是很舒服。由于Java是一个面向对象的语言，很多情况下，我们会将一组数据封装成一个对象。SpringBoot也提供了可以将一组yaml对象数据封装一个Java对象的操作
+单一数据读取书写比较繁琐，全数据读取封装的太厉害了，每次拿数据还要一个一个的getProperties（）,总之用起来都不是很舒服。由于Java是一个面向对象的语言，很多情况下，我们会将一组数据封装成一个对象。SpringBoot也提供了可以将一组yaml对象数据封装一个Java对象的操作
 
-​		首先定义一个对象，并将该对象纳入Spring管控的范围，也就是定义成一个bean，然后使用注解@ConfigurationProperties指定该对象加载哪一组yaml中配置的信息。
+首先定义一个对象，并将该对象纳入Spring管控的范围，也就是定义成一个bean，然后使用注解@ConfigurationProperties指定该对象加载哪一组yaml中配置的信息。
 
 <img src="img\boot\image-20211126181126382.png" alt="image-20211126181126382" style="zoom:80%;" />
 
-​		这个@ConfigurationProperties必须告诉他加载的数据前缀是什么，这样指定前缀下的所有属性就封装到这个对象中。记得数据属性名要与对象的变量名一一对应啊，不然没法封装。其实以后如果你要定义一组数据自己使用，就可以先写一个对象，然后定义好属性，下面到配置中根据这个格式书写即可。
+这个@ConfigurationProperties必须告诉他加载的数据前缀是什么，这样指定前缀下的所有属性就封装到这个对象中。记得数据属性名要与对象的变量名一一对应啊，不然没法封装。其实以后如果你要定义一组数据自己使用，就可以先写一个对象，然后定义好属性，下面到配置中根据这个格式书写即可。
 
 ​	<img src="img\boot\image-20211126181423432.png" alt="image-20211126181423432" style="zoom:80%;" />
 
-<font color="#f0f"><b>温馨提示</b></font>
-
-​		细心的小伙伴会发现一个问题，自定义的这种数据在yaml文件中书写时没有弹出提示，咱们到原理篇再揭秘如何弹出提示。
+<font color="#f0f"><b>温馨提示</b></font>：细心的小伙伴会发现一个问题，自定义的这种数据在yaml文件中书写时没有弹出提示，咱们到原理篇再揭秘如何弹出提示。
 
 **总结**
 
 1. 使用@ConfigurationProperties注解绑定配置信息到封装类中
 2. 封装类需要定义为Spring管理的bean，否则无法进行属性注入
-
-
 
 #### yaml文件中的数据引用
 
@@ -625,12 +579,6 @@ lesson: "Spring\tboot\nlesson"
 
 1. 在配置文件中可以使用${属性名}方式引用属性值
 2. 如果属性中出现特殊字符，可以使用双引号包裹起来作为字符解析
-
-​		到这里有关yaml文件的基础使用就先告一段落，实用篇中再继续研究更深入的内容。
-
-```yaml
-
-```
 
 ## 配置信息的加载顺序
 
