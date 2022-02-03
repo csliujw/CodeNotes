@@ -512,7 +512,7 @@ eg：这里我配置文件设置`taskmanager.numberOfTaskSlots: 4`，实际Job�
 
 ## 4.1 Flink运行时的组件
 
-	Flink运行时架构主要包括四个不同的组件，它们会在运行流处理应用程序时协同工作：
+Flink运行时架构主要包括四个不同的组件，它们会在运行流处理应用程序时协同工作：
 
 + **作业管理器（JobManager）**
 + **资源管理器（ResourceManager）**
@@ -523,9 +523,9 @@ eg：这里我配置文件设置`taskmanager.numberOfTaskSlots: 4`，实际Job�
 
 ### 作业管理器（JobManager）
 
-	控制一个应用程序执行的主进程，也就是说，每个应用程序都会被一个不同的JobManager所控制执行。
-	
-	JobManager会先接收到要执行的应用程序，这个应用程序会包括：
+控制一个应用程序执行的主进程，也就是说，每个应用程序都会被一个不同的JobManager所控制执行。
+
+JobManager会先接收到要执行的应用程序，这个应用程序会包括：
 
 + 作业图（JobGraph）
 + 逻辑数据流图（logical dataflow graph）
@@ -539,43 +539,43 @@ eg：这里我配置文件设置`taskmanager.numberOfTaskSlots: 4`，实际Job�
 
 ### 资源管理器（ResourceManager）
 
-	主要负责管理任务管理器（TaskManager）的插槽（slot），TaskManger插槽是Flink中定义的处理资源单元。
-	
-	Flink为不同的环境和资源管理工具提供了不同资源管理器，比如YARN、Mesos、K8s，以及standalone部署。
-	
-	**当JobManager申请插槽资源时，ResourceManager会将有空闲插槽的TaskManager分配给JobManager**。如果ResourceManager没有足够的插槽来满足JobManager的请求，它还可以向资源提供平台发起会话，以提供启动TaskManager进程的容器。
-	
-	另外，**ResourceManager还负责终止空闲的TaskManager，释放计算资源**。
+主要负责管理任务管理器（TaskManager）的插槽（slot），TaskManger插槽是Flink中定义的处理资源单元。
+
+Flink为不同的环境和资源管理工具提供了不同资源管理器，比如YARN、Mesos、K8s，以及standalone部署。
+
+**当JobManager申请插槽资源时，ResourceManager会将有空闲插槽的TaskManager分配给JobManager**。如果ResourceManager没有足够的插槽来满足JobManager的请求，它还可以向资源提供平台发起会话，以提供启动TaskManager进程的容器。
+
+另外，**ResourceManager还负责终止空闲的TaskManager，释放计算资源**。
 
 ### 任务管理器（TaskManager）
 
-	Flink中的工作进程。通常在Flink中会有多个TaskManager运行，每一个TaskManager都包含了一定数量的插槽（slots）。**插槽的数量限制了TaskManager能够执行的任务数量**。
-	
-	启动之后，TaskManager会向资源管理器注册它的插槽；收到资源管理器的指令后，TaskManager就会将一个或者多个插槽提供给JobManager调用。JobManager就可以向插槽分配任务（tasks）来执行了。
-	
-	**在执行过程中，一个TaskManager可以跟其它运行同一应用程序的TaskManager交换数据**。
+Flink中的工作进程。通常在Flink中会有多个TaskManager运行，每一个TaskManager都包含了一定数量的插槽（slots）。**插槽的数量限制了TaskManager能够执行的任务数量**。
+
+启动之后，TaskManager会向资源管理器注册它的插槽；收到资源管理器的指令后，TaskManager就会将一个或者多个插槽提供给JobManager调用。JobManager就可以向插槽分配任务（tasks）来执行了。
+
+**在执行过程中，一个TaskManager可以跟其它运行同一应用程序的TaskManager交换数据**。
 
 ### 分发器（Dispatcher）
 
-	可以跨作业运行，它为应用提交提供了REST接口。
-	
-	当一个应用被提交执行时，分发器就会启动并将应用移交给一个JobManager。由于是REST接口，所以Dispatcher可以作为集群的一个HTTP接入点，这样就能够不受防火墙阻挡。Dispatcher也会启动一个Web UI，用来方便地展示和监控作业执行的信息。
-	
-	*Dispatcher在架构中可能并不是必需的，这取决于应用提交运行的方式。*
+可以跨作业运行，它为应用提交提供了REST接口。
+
+当一个应用被提交执行时，分发器就会启动并将应用移交给一个JobManager。由于是REST接口，所以Dispatcher可以作为集群的一个HTTP接入点，这样就能够不受防火墙阻挡。Dispatcher也会启动一个Web UI，用来方便地展示和监控作业执行的信息。
+
+*Dispatcher在架构中可能并不是必需的，这取决于应用提交运行的方式。*
 
 ## 4.2 任务提交流程
 
-	我们来看看当一个应用提交执行时，Flink的各个组件是如何交互协作的：
+我们来看看当一个应用提交执行时，Flink的各个组件是如何交互协作的：
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200524212126844.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwMTgwMjI5,size_16,color_FFFFFF,t_70)
 
-	*ps：上图中7.指TaskManager为JobManager提供slots，8.表示JobManager提交要在slots中执行的任务给TaskManager。*
-	
-	上图是从一个较为高层级的视角来看应用中各组件的交互协作。
-	
-	如果部署的集群环境不同（例如YARN，Mesos，Kubernetes，standalone等），其中一些步骤可以被省略，或是有些组件会运行在同一个JVM进程中。
-	
-	具体地，如果我们将Flink集群部署到YARN上，那么就会有如下的提交流程：
+*ps：上图中7.指TaskManager为JobManager提供slots，8.表示JobManager提交要在slots中执行的任务给TaskManager。*
+
+上图是从一个较为高层级的视角来看应用中各组件的交互协作。
+
+如果部署的集群环境不同（例如YARN，Mesos，Kubernetes，standalone等），其中一些步骤可以被省略，或是有些组件会运行在同一个JVM进程中。
+
+具体地，如果我们将Flink集群部署到YARN上，那么就会有如下的提交流程：
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200524212247873.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwMTgwMjI5,size_16,color_FFFFFF,t_70)
 
