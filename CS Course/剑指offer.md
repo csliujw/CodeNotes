@@ -11,13 +11,15 @@
 整数除法的结果应当截去（truncate）其小数部分，例如：truncate(8.345) = 8 以及 truncate(-2.7335) = -2
 假设我们的环境只能存储 32 位有符号整数，其数值范围是 [−2^31, 2^31−1]。本题中，如果除法结果溢出，则返回 231 − 1
 
-> 解题思路
+#### 解题思路
 
 - 注意边界条件。int 的最小负数 / -1 会爆 int 的max。
 - O(N)的解法，直接用减法的话，复杂度太高
 - O(logN)的解法：
     - a 减去 $b*2^n$ 的整数倍数，得到部分的商。
     - $a  -  b*2^n$  的结果继续减去 $b*2^n$ 的整数倍数，得到部分的商。
+
+#### 代码
 
 ```java
 // 暴力解题 out of time。
@@ -79,11 +81,13 @@ class Solution {
 
 输入为 **非空** 字符串且只包含数字 `1` 和 `0`。
 
-> 解题思路
+#### 解题思路
 
 - 按位相加记录进位
 - 没加完的，后面for循环继续加。
 - 累加的时候记得加上进位
+
+#### 代码
 
 ```java
 class Solution {
@@ -120,7 +124,7 @@ class Solution {
 2 --> 10
 ```
 
-> 解法
+#### 解题思路
 
 - 法一：暴力循环，求出每个数字1的个数。
     - 如何求1的数量？
@@ -130,6 +134,8 @@ class Solution {
         - n & (n-1) = 0111 & 0110 = 0110 直接把最后一位的1去掉了。
         - 如果最后 n == 0，则说明没有1了。 
 - 法二：发现 n 比 n & (n-1) 多一个1！！ 
+
+#### 代码
 
 ```java
 // 暴力求解 KlogN
@@ -167,12 +173,14 @@ class Solution {
 
 给你一个整数数组 `nums` ，除某个元素仅出现 **一次** 外，其余每个元素都恰出现 **三次 。**请你找出并返回那个只出现了一次的元素。
 
-> 解法
+#### 解题思路
 
 - 哈希表判重
 - 根据数字的 bit 位来判断。
     - 统计所有数字每个bit位出现1的次数。
     - 如果，该bit位出现的次数是3的倍数，则说明只出现一次的元素该bit位是0，否则是1。
+
+#### 解法
 
 ```java
 // hash 暴力解题
@@ -226,12 +234,14 @@ class Solution {
 
 给定一个字符串数组 words，请计算当两个字符串 words[i] 和 words[j] 不包含相同字符时，它们长度的乘积的最大值。假设字符串中只包含英语的小写字母。如果没有不包含相同字符的一对字符串，返回 0。
 
-> 解法
+#### 解题思路
 
 - 都是双重for循环判断那几个字符串不同。
 - 问题在于如何判断是否不同
     - 法一：map判重。
     - 法二：用位运算判重；字符串中存在a则第0个位置的bit设置为1，存在b则第1个位置的bit设置为1。最后判断两个字符串是否有相同的字符，做一次 & 运算就知道了
+
+#### 代码
 
 ```java
 class Solution {
@@ -300,9 +310,11 @@ class Solution {
 
 假设数组中存在且只存在一对符合条件的数字，同时一个数字不能使用两次。
 
-> 解法
+#### 解题思路
 
 - 双指针。
+
+#### 代码
 
 ```java
 class Solution {
@@ -320,22 +332,629 @@ class Solution {
 }
 ```
 
+### ★数组中和为0的三个数
+
+给定一个包含 n 个整数的数组 nums，判断 nums 中是否存在三个元素 a ，b ，c ，使得 a + b + c = 0 ？请找出所有和为 0 且不重复的三元组。
+
+#### 解题思路
+
+- 法一：固定一个数字，在其他数字中找是否存在 a = -(b+c) 的数
+- 法二：先排序，在固定一个数，双指针查找其余两个数
+
+#### 代码
+
+```java
+class Solution {
+    public List<List<Integer>> threeSum(int[] nums) {
+        List<List<Integer>> res = new ArrayList<>();
+        int len = nums.length;
+        if(len < 3) return res;
+        Arrays.sort(nums);
+        // 三元组的下标 i, j , k
+        for(int i = 0; i < len-2; i++){
+            int a = nums[i];
+            int j = i + 1, k = len - 1;
+            // 固定 a ,等价于 b + c 两数之和为 -a
+            while(j < k){
+                int b = nums[j], c = nums[k];
+                if(a + b + c > 0){
+                    k--;
+                }else if (a + b + c < 0){
+                    j++;
+                }else{
+                    res.add(Arrays.asList(a, b, c));
+                    // 保证不重复的三元组
+                    while(j < k && nums[j] == b){
+                        j++;
+                    }
+                }
+            }
+            // 保证不重复的三元组
+            while(i < len - 2 && nums[i + 1] == a){
+                i++;
+            }
+        }
+        return res;
+    }
+}
+```
+
+### ★和大于等于 target 的最短子数组
+
+给定一个含有 n 个正整数的数组和一个正整数 target 。
+
+找出该数组中满足其和 ≥ target 的长度最小的连续子数组 [numsl, numsl+1, ..., numsr-1, numsr] ，并返回其长度。如果不存在符合条件的子数组，返回 0 。
+
+#### 解题思路
+
+- 法一：双指针。判断指针区域内的数组和是否符合条件，符合则更新长度。时间复杂度较高。可以继续优化。
+- 法二：对法一进行优化。记录先前
+
+#### 代码
+
+```java
+class Solution {
+    public int minSubArrayLen(int s, int[] nums) {
+        int n = nums.length;
+        if (n == 0) {
+            return 0;
+        }
+        int ans = Integer.MAX_VALUE;
+        int[] sums = new int[n + 1]; 
+        // 为了方便计算，令 size = n + 1 
+        // sums[0] = 0 意味着前 0 个元素的前缀和为 0
+        // sums[1] = A[0] 前 1 个元素的前缀和为 A[0]
+        // 以此类推
+        for (int i = 1; i <= n; i++) {
+            sums[i] = sums[i - 1] + nums[i - 1];
+        }
+        for (int i = 1; i <= n; i++) {
+            int target = s + sums[i - 1];
+            int bound = Arrays.binarySearch(sums, target);
+            if (bound < 0) {
+                bound = -bound - 1;
+            }
+            if (bound <= n) {
+                ans = Math.min(ans, bound - (i - 1));
+            }
+        }
+        return ans == Integer.MAX_VALUE ? 0 : ans;
+    }
+}
+```
+
+### ★乘积小于k的子数组
+
+给定一个正整数数组 `nums`和整数 `k` ，请找出该数组内乘积小于 `k` 的连续的子数组的个数。
+
+#### 解题思路
+
+双指针的思路，求出双指针范围内数组的乘积。right-left+1
+
+比如某次遍历符合题意的子数组为 ABCX，那么在该条件下符合条件的有X，CX，BCX，ABCX共四个（可以进行多个例子，发现个数符合right-left+1）
+我们可能会有疑问：AB，BC也算，为什么不算进去？
+记住一点我们是以最右边的X为必要条件，进行计算符合条件的子数组，否则会出现重复的！
+比如在X为右侧边界时（ABCX），我们把BC算进去了，可是我们在C为最右侧时（ABC），BC已经出现过，我们重复加了BC这个子数组两次！
+换言之，我们拆分子数组时，让num[right]存在，能避免重复计算。
+
+#### 代码
+
+```java
+class Solution {
+    public int numSubarrayProductLessThanK(int[] nums, int k) {
+        int ret = 0;
+        int total = 1;
+        int left = 0;
+        for(int right=0;right<nums.length;right++){
+            total*=nums[right];
+            while(total>=k && left<=right){
+                total/=nums[left++];
+            }
+            ret+= (right>=left?right-left+1:0);
+        }
+        return ret;
+    }
+}
+```
+
+### 和为k的子数组
+
+给定一个整数数组和一个整数 `k` **，**请找到该数组中和为 `k` 的连续子数组的个数。
+
+#### 解题思路
+
+由于数字并非是正数数组，所以双指针的思路行不通。最简单的办法是 双重for，暴力求解。
+比较高效的解法是：用hash表记录前面累加的和。查找前面有多少满足 sum-k=0 的。就是（？~k范围内）符合要求的子数组个数。
+
+#### 代码
+
+```java
+class Solution {
+    public int subarraySum(int[] nums, int k) {
+        /**
+        存在负数。所以不能用双指针。
+        用hash表记录前面累加的和。
+         */
+        HashMap<Integer,Integer> map = new HashMap<>();
+        int sum = 0;
+        int countNumber=0;
+        map.put(0, 1);
+        for(int i=0;i<nums.length;i++){
+            sum+=nums[i];
+            countNumber+=map.getOrDefault(sum-k,0);
+            map.put(sum,map.getOrDefault(sum,0)+1);
+        }
+        return countNumber;
+    }
+}
+```
+
+### 0和1个数相同的子数组
+
+#### 解题思路
+
+把0改成-1，解题思路就和上面的一样了。求和为0的子数组的个数。
+
+#### 代码
+
+```java
+class Solution {
+    public int findMaxLength(int[] nums) {
+        HashMap<Integer, Integer> map = new HashMap<>();
+        map.put(0, -1);
+        int sum = 0;
+        int ret = 0;
+        int tmp = 0;
+        for(int i=0;i<nums.length;i++){
+            sum+=nums[i]==0?-1:1;
+            // 存储上一次出现 sum-k 数字出现的最远的距离
+            tmp = map.getOrDefault(-sum,i);
+            if(!map.containsKey(-sum)){
+                map.put(-sum,i);
+            }
+            ret = Math.max(ret,i-tmp);
+        }
+        return ret;
+    }
+}
+```
+
+### 左右两边子数组的和相等
+
+给你一个整数数组 nums ，请计算数组的中心下标 。
+
+数组中心下标是数组的一个下标，其左侧所有元素相加的和等于右侧所有元素相加的和。
+
+如果中心下标位于数组最左端，那么左侧数之和视为 0 ，因为在下标的左侧不存在元素。这一点对于中心下标位于数组最右端同样适用。
+
+如果数组有多个中心下标，应该返回最靠近左边的那一个。如果数组不存在中心下标，返回 -1 。
+
+#### 解题思路
+
+先求出数组的总和sum。然后在遍历一次数组，统计当前遍历过的数字的总和curSum，如果curSum-cur = sum - curSum，则找到了中心下标。 
+
+#### 代码
+
+```java
+class Solution {
+    public int pivotIndex(int[] nums) {
+        /**
+        先求出total
+        在扫描数组，判断 cur 前面的数据和 和 cur 后面的数据和是不是一样
+         */
+         int total = 0;
+         for(int i=0;i<nums.length;i++){
+             total+=nums[i];
+         }
+         int sum = 0;
+         for(int i=0;i<nums.length;i++){
+             sum+=nums[i];
+             if(total-sum == sum-nums[i]) return i;
+         }
+         return -1;
+    }
+}
+```
+
+### ★★二维子矩阵的和
+
+不会
+
 ## 字符串
 
-常见套路：双指针，hash表记录
+### 字符串中的变位词
 
-回文串：双指针，头尾判断；从回文串可能的中心点出发统计（奇数长度的start 和 end 从同一点展开；偶数的从相邻点展开）明天补充这两天的题解。
+给定两个字符串 `s1` 和 `s2`，写一个函数来判断 `s2` 是否包含 `s1` 的某个变位词。
+
+换句话说，第一个字符串的排列之一是第二个字符串的 **子串** 。
+
+```shell
+输入: s1 = "ab" s2 = "eidbaooo"
+输出: True
+解释: s2 包含 s1 的排列之一 ("ba").
+```
+
+#### 解题思路
+
+主要是要明白题目的意思。比如 s1="ab", 如果s2中的子串包含 “ab” 或 “ba”，那就是有变位词。
+
+先统计 s1 中字符串的频率（大数组当hash表）。在用双指针遍历 s2 中的字符串，统计字符出现的次数。如果当前范围内，所有字符出现的频率都一样，则这个范围内的字符串是变位词。
+
+#### 代码
+
+```java
+class Solution {
+    /**
+    很简单，就是判断 s1 是否是 s2 其中一个连续子串的全排列。
+    存在特殊的边界条件嘛？
+    - s1.length > s2.length
+    两个map记录。mapA 记录 s1的词频，map2记录当前s2子串的词频。对比看词频是否一样。
+     */
+
+    public boolean checkInclusion(String s1, String s2) {
+        if(s1.length()>s2.length()) return false;
+        int[]map1 = new int[26];
+        int[]map2 = new int[26];
+        for(int i=0;i<s1.length();i++){
+            map1[s1.charAt(i)-'a']++;
+            map2[s2.charAt(i)-'a']++;
+        }
+        if(s1.length()==s2.length()) return judege(map1,map2);
+        // 不符合要求，则继续查找
+        for(int pre=0,next=s1.length()-1;next<s2.length()-1;){
+            if(judege(map1,map2)) return true;
+            map2[s2.charAt(pre++)-'a']--;
+            map2[s2.charAt(++next)-'a']++;
+        }
+        return judege(map1,map2);
+    }
+
+    public boolean judege(int[]map1,int[]map2){
+        for(int i=0;i<26;i++){
+            if(map1[i]!=map2[i]) return false;
+        }
+        return true;
+    }
+}
+```
+
+### 字符串中的所有变位词
+
+给定两个字符串 s 和 p，找到 s 中所有 p 的变位词的子串，返回这些子串的起始索引。不考虑答案输出的顺序。
+
+变位词指字母相同，但排列不同的字符串。
+
+```shell
+输入: s = "cbaebabacd", p = "abc"
+输出: [0,6]
+解释:
+起始索引等于 0 的子串是 "cba", 它是 "abc" 的变位词。
+起始索引等于 6 的子串是 "bac", 它是 "abc" 的变位词。
+```
+
+#### 解题思路
+
+和上一题类似，不过需要遍历完字符串。边界条件需要注意下。
+
+#### 代码
+
+```java
+class Solution {
+    public List<Integer> findAnagrams(String s, String p) {
+        List<Integer> list = new ArrayList<Integer>();
+        if(p.length()>s.length()) return list;
+        int[]map1 = new int[26];
+        int[]map2 = new int[26];
+        for(int i=0;i<p.length();i++){
+            map1[p.charAt(i)-'a']++;
+            map2[s.charAt(i)-'a']++;
+        }
+        if(s.length()==p.length()) {
+            if(juedge(map1,map2)) list.add(0);
+            return list;
+        }
+        if(juedge(map1,map2)) list.add(0);
+        for(int pre=0,next=p.length()-1;next<s.length()-1;){
+            map2[s.charAt(pre++)-'a']--;
+            map2[s.charAt(++next)-'a']++;
+            if(juedge(map1,map2)) list.add(pre);
+        }
+        return list;
+    }
+    private boolean juedge(int[]map1,int []map2){
+        for(int i=0;i<26;i++){
+            if(map1[i]!=map2[i]) return false;
+        }
+        return true;
+    }
+}
+```
+
+### 不含重复字符串的最长子字符串
+
+给定一个字符串 `s` ，请你找出其中不含有重复字符的 **最长连续子字符串** 的长度。
+
+```shell
+输入: s = "abcabcbb"
+输出: 3 
+解释: 因为无重复字符的最长子字符串是 "abc"，所以其长度为 3。
+```
+
+#### 解题思路
+
+双指针，hash表判重
+
+#### 代码
+
+```java
+class Solution {
+    public int lengthOfLongestSubstring(String s) {
+        // 双指针
+        if(s.length()==0 || s.length()==1) return s.length();
+        int[]map = new int[128];
+        int ret = 0;
+        int pre = 0,next=1;
+        map[s.charAt(pre)]+=1;
+        while(next<s.length()){
+            map[s.charAt(next)]+=1;
+            // 加完后，看是否重复
+            if(map[s.charAt(next)]>1){
+                while(map[s.charAt(next)]>1){
+                    map[s.charAt(pre++)]-=1;
+                }
+            }
+            ret = Math.max(ret,next-pre+1);
+            next++;
+        }
+        return ret;
+    }
+}
+```
+
+### ★含有所有字符的最短字符串
+
+直接放弃
+
+### 有效回文
+
+给定一个字符串 `s` ，验证 `s` 是否是 **回文串** ，只考虑字母和数字字符，可以忽略字母的大小写。
+
+本题中，将空字符串定义为有效的 **回文串** 。
+
+```shell
+输入: s = "A man, a plan, a canal: Panama"
+输出: true
+解释："amanaplanacanalpanama" 是回文串
+```
+
+#### 解题思路
+
+双指针，start，end 移动。唯一的问题是需要过滤掉非数组和字母的字符，考察 API `Character.isLetterOrDigit` 的使用。
+
+#### 代码
+
+```java
+class Solution {
+    public boolean isPalindrome(String s) {
+        for (int start = 0, end = s.length() - 1; start < end; ) {
+            int startChar = s.charAt(start);
+            int endChar = s.charAt(end);
+            if (Character.isLetterOrDigit(startChar) && Character.isLetterOrDigit(endChar)) {
+                if(Character.toLowerCase(startChar)!=Character.toLowerCase((endChar))) return false;
+                start++;end--;
+            }
+            while (!Character.isLetterOrDigit(s.charAt(start)) && start<end) start++;
+            while (!Character.isLetterOrDigit(s.charAt(end))&&end>0) end--;
+        }
+        return true;
+    }
+}
+```
+
+### 最多删除一个字符得到回文
+
+给定一个非空字符串 `s`，请判断如果 **最多** 从字符串中删除一个字符能否得到一个回文字符串。
+
+```shell
+输入: s = "abca"
+输出: true
+解释: 可以删除 "c" 字符 或者 "b" 字符
+
+输入: s = "abc"
+输出: false
+```
+
+#### 解题思路
+
+也是用双指针去做。如果发现，start 和 end 两个字符不相等，则考虑是去除 start 的字符还是去除 end 的字符。两者都试一试，继续判断剩下还未判断的，只要有一个为 true，那就是true。
+
+#### 代码
+
+```java
+class Solution {
+    public boolean validPalindrome(String s) {
+        /**
+        也是双指针。
+        start,end
+        如果发现当前的start!=end 则考虑是删除start 还是 end。
+         */
+         int start=0,end=s.length()-1;
+         while(start<end){
+             if(s.charAt(start)!=s.charAt(end)) break;
+             start++;end--;
+         }
+        return judeg(start+1,end,s) || judeg(start,end-1,s);
+    }
+
+    public boolean judeg(int start,int end,String s){
+        while(start<end){
+            if(s.charAt(start)!=s.charAt(end)) return false;
+            start++;end--;
+        }
+        return true;
+    }
+}
+```
+
+### 回文字符串的个数
+
+给定一个字符串 `s` ，请计算这个字符串中有多少个回文子字符串。
+
+具有不同开始位置或结束位置的子串，即使是由相同的字符组成，也会被视作不同的子串。
+
+```shell
+输入：s = "abc"
+输出：3
+解释：三个回文子串: "a", "b", "c"
+
+输入：s = "aaa"
+输出：6
+解释：6个回文子串: "a", "a", "a", "aa", "aa", "aaa"
+```
+
+#### 解题思路
+
+这个题的思路是：找到每个可能是回文串的中心点，发散开来找回文串。
+如：以index=0为中心的找回文串，以index=1为中心的找回文串，以index=2为中心的找回文串...
+
+#### 代码
+
+```java
+class Solution {
+    public int countSubstrings(String s) {
+        if(s.length()==0 || s.length()==1) return s.length();
+        int count = 0;
+        for(int i=0;i<s.length();i++){
+            count += counter(i,i,s);
+            count += counter(i,i+1,s);
+        }
+        return count;
+    }
+
+    private int counter(int start,int end, String s){
+        int ret = 0;
+        while(start>=0 && end<s.length() && s.charAt(start)==s.charAt(end)){
+            start--;
+            end++;
+            ret++;
+        }
+        return ret;
+    }
+
+    //从字符串的第start位置向左，end位置向右，比较是否为回文并计数
+    private int countPalindrome(String s, int start, int end) {
+        int count = 0;
+        while (start >= 0 && end < s.length() && s.charAt(start) == s.charAt(end)) {
+            count++;
+            start--;
+            end++;
+        }
+        return count;
+    }
+}
+```
 
 ## 链表
+
+### 删除链表的倒数第n个结点
+
+给定一个链表，删除链表的倒数第 `n` 个结点，并且返回链表的头结点
+
+![img](https://assets.leetcode.com/uploads/2020/10/03/remove_ex1.jpg)
+
+```shell
+输入：head = [1,2,3,4,5], n = 2
+输出：[1,2,3,5]
+```
+
+#### 解题思路
+
+设置一个哑节点（方便删除第一个node）+快慢指针。具体块指针多走几步，举个例子算下就知道了。
+
+#### 代码
+
+```java
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
+class Solution {
+    // 典型的双指针。
+    public ListNode removeNthFromEnd(ListNode head, int n) {
+        // 快慢指针，快指针比慢指针领先 n 步骤。
+        // 特殊情况为删除头节点
+        if(head.next==null && n==1) return null;
+        ListNode dummy = new ListNode(-1,head);
+        ListNode fast=dummy,slow=dummy;
+        while(n>0){
+            fast = fast.next;
+            n--;
+        }
+        while(fast.next!=null){
+            slow = slow.next;
+            fast = fast.next;
+        }
+        slow.next = slow.next.next;
+        return dummy.next;
+    }
+}
+```
+
+### 链表中环的入口节点
+
+给定一个链表，返回链表开始入环的第一个节点。 从链表的头节点开始沿着 next 指针进入环的第一个节点为环的入口节点。如果链表无环，则返回 null。
+
+为了表示给定链表中的环，我们使用整数 pos 来表示链表尾连接到链表中的位置（索引从 0 开始）。 如果 pos 是 -1，则在该链表中没有环。注意，pos 仅仅是用于标识环的情况，并不会作为参数传递到函数中。
+
+说明：不允许修改给定的链表
+
+![img](https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/12/07/circularlinkedlist.png)
+
+```shell
+输入：head = [3,2,0,-4], pos = 1
+输出：返回索引为 1 的链表节点
+解释：链表中有一个环，其尾部连接到第二个节点。
+```
+
+#### 解题思路
+
+- 直接上 hash 表判重。第一个遇到的重复的节点就是环的入口节点
+- 快慢指针。发现有环后，快指针重新指向头节点，然后快慢指针每次都直走一步。快慢指针相遇的节点就是环的入口节点（这题刷过就会，不刷就不会）
+
+#### 代码
+
+```java
+public class Solution {
+    public ListNode detectCycle(ListNode head) {
+        HashMap<ListNode,Boolean> map = new HashMap<>();
+        while(head!=null){
+            if(!map.getOrDefault(head,false)) map.put(head,true);
+            else return head;
+            head = head.next;
+        }
+        return null;
+    }
+}
+```
+
+
 
 ### 两个链表的第一个重合节点
 
 给定两个单链表的头节点 `headA` 和 `headB` ，请找出并返回两个单链表相交的起始节点。如果两个链表没有交点，返回 `null` 。
 
-> 解法
+#### 解题思路
 
 - 法一：哈希表判重
 - 法二：stack 存入，然后同时出栈对比是否是同一个节点。
+
+#### 代码
 
 ```java
 // 法一：哈希表判重
@@ -387,11 +1006,13 @@ public class Solution {
 
 给定单链表的头节点 `head` ，请反转链表，并返回反转后的链表的头节点。
 
-> 解法
+#### 解题思路
 
 - 哑节点，头插法，先插入的数据在后面。
 - 用 stack。
 - 双指针？
+
+#### 代码
 
 ```java
 class Solution {
@@ -417,9 +1038,11 @@ class Solution {
 
 可以假设除了数字 0 之外，这两个数字都不会以零开头。
 
-> 解法
+#### 解题思路
 
 - 链表中的数据分别放入，两个 stack，然后出stack，计算，创建节点。
+
+#### 代码
 
 ```java
 class Solution {
@@ -457,10 +1080,12 @@ class Solution {
 
 如果一个链表是回文，那么链表节点序列从前往后看和从后往前看是相同的。
 
-> 解法
+#### 解题思路
 
 - 法一：数组存储数据，双指针判断
 - 法二：扫一遍链表，找到中间位置，再把后面的链表反转，前半部分和后半部分分别比较，后半部分比较的时候，再将链表反转
+
+#### 代码
 
 ```java
 class Solution {
@@ -478,8 +1103,6 @@ class Solution {
     }
 }
 ```
-
-
 
 # 老版剑指offer
 
