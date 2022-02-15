@@ -1824,7 +1824,7 @@ if( animal instanceof Dog){
 
 将一个方法调用和一个方法主体关联起来称作绑定。若绑定发生在程序运行前（如果有的话，由编译器和链接器实现），叫做前期绑定。而feed方法只知道又一个animal引用，又如何得知是调用那个方法呢？
 
-解决方法就是后期绑定，意味着在运行时根据对象的类型进行绑定。后期绑定也称为动态绑定或运行时绑定。当一种语言实现了后期绑定，就必须具有某种机制在运行时能判断对象的类型，从而调用恰当的方法。也就是说，编译器仍然不知道对象的类型，但是方法调用机制能找到正确的方法体并调用。每种语言的后期绑定机制都不同，但是可以想到，对象中一定存在某种类型信息。
+解决方法就是后期绑定，意味着在运行时根据对象的类型进行绑定。后期绑定也称为动态绑定或运行时绑定。当一种语言实现了后期绑定，就必须具有某种机制在运行时能判断对象的类型，从而调用恰当的方法。也就是说，编译器仍然不知道对象的类型，但是方法调用机制能找到正确的方法体并调用。每种语言的后期绑定机制都不同，但是可以想到，对象中一定存在某种类型信息（**JVM中，是Java对象可以找到对应的kclass对象，kclass对象中记录了实际的对象）**。
 
 <span style="color:red">Java 中除了 static 和 final 方法（private 方法也是隐式的 final）外，其他所有方法都是后期绑定。</span>
 
@@ -1849,6 +1849,7 @@ class Derived extends PrivateOverride {
         System.out.println("public f()");
     }
 }
+// private f()
 ```
 
 你可能期望输出是 public f()，然而 private 方法可以当作是 final 的，对于派生类来说是隐蔽的。因此，这里 Derived 的 f() 是一个全新的方法；因为基类版本的 f() 屏蔽了 Derived ，因此它都不算是重写方法。
@@ -1857,7 +1858,7 @@ class Derived extends PrivateOverride {
 
 只有普通的方法调用可以是多态的。例如，如果你直接访问一个属性，该访问会在编译时解析.
 
-> 属性没有静态
+> 属性没有多态
 
 ```java
 public class FieldAccess {
@@ -1886,7 +1887,7 @@ sub.field = 1, sub.getField() = 1, sub.getSuperField() = 0
 */
 ```
 
-> 静态方法没有静态
+> 静态方法没有多态
 
 如果一个方法是静态 (static) 的，它的行为就不具有多态性：
 
@@ -1957,6 +1958,9 @@ public class PolyConstructors {
         new RoundGlyph(5);
     }
 }
+
+
+
 /**
 Glyph() before draw()
 RoundGlyph.draw(), radius = 0
@@ -2059,15 +2063,13 @@ RoundGlyph.RoundGlyph(), radius = 10
 */
 ```
 
-
-
 <span style="color:red">**警示**</span>
 
-编写构造器有一条良好规范：做尽量少的事让对象进入良好状态。如果有可 能的话，尽量不要调用类中的任何方法。在基类的构造器中能安全调用的只有基类的 final 方法（这也适用于可被看作是 final 的 private 方法）。这些方法不能被重写，因此不会产生意想不到的结果。你可能无法永远遵循这条规范，但应该朝着它努力。
+编写构造器有一条良好规范：做尽量少的事让对象进入良好状态。可能的话，尽量不要调用类中的任何方法。在基类（父类）的构造器中能安全调用的只有基类（父类）的 final 方法（这也适用于可被看作是 final 的 private 方法）。这些方法不能被重写，因此不会产生意想不到的结果。你可能无法永远遵循这条规范，但应该朝着它努力。
 
 ### 协变返回类型
 
-Java 5 中引入了协变返回类型，子类重写父类的方法，返回值可以是更具体的类型。即方法的返回值类型可以变为父类返回值类型的子类，子类重写方法，返回值类型可以`缩窄`。重写方法时，子类不能降低父类的权限。例如：父类是 public，但子类重写的权限不能低于 public。
+Java 5 中引入了协变返回类型，子类重写父类的方法，返回值可以是更具体的类型。即方法的返回值类型可以是父类返回值类型的子类，子类重写方法，返回值类型可以`缩窄`。重写方法时，子类不能降低父类的权限。例如：父类是 public，子类重写的权限不能低于 public。
 
 ```java
 class Grain {
@@ -2111,19 +2113,25 @@ public class CovariantReturn {
 
 ### RTTI
 
-RTTI：运行时类型识别。在运行时检查类型的行为称为 RTTI。在 Java 中，每次转型都会被检查！所以即使只是进行一次普通的加括号形式的类型转换，在运行时这个转换仍会被检查，以确保它的确是希望的那种类型。如果不是，就会得到 ClassCastException。
+RTTI：运行时类型识别。在运行时检查类型的行为称为 RTTI。在 Java 中，每次转型都会被检查！所以即使只是进行一次普通的加括号形式的类型转换，在运行时，会检查类型转换是否正确。如果不正确，会抛出 ClassCastException 异常。
 
-### 易错点
+### <span style="color:red">易错点</span>
 
 只有普通方法的调用可以是多态的。成员变量、静态变量、静态方法、私有方法、final修饰的方法都是没有的。
 
 ## 第八章 接口
 
+接口和抽象类提供了一种将接口与实现分离的更加结构化的方法。
+
+这种机制在编程语言中不常见，例如 C++ 只对这种概念有间接的支持。而在 Java 中存在这些关键字，说明这些思想很重要，Java 为它们提供了直接支持。 
+
+抽象类，一种介于普通类和接口之间的折中手段。尽管我们的第一 想法往往是创建接口，但是对于构建具有属性和未实现方法的类来说，抽象类也是重要且必要的工具。我们不可能总是使用纯粹的接口。
+
 ### 抽象类和方法
 
-抽象方法机制，方法是不完整的，只有声明没有方法体。`abstract void f();`
+抽象方法机制：方法是不完整的，只有声明没有方法体。`abstract void f();`
 
-如果一个类包含一个或多个抽象方法，那么类本身也必须被限定未抽象的，否则编译器会报错。抽象类中可以没有抽象方法，这么做的意义在于，可以避免这个类被直接实例化，只能通过子类继承父类实例化。
+如果一个类包含一个或多个抽象方法，那么类本身也必须被限定为抽象的，否则编译器会报错。<span style="color:blue">抽象类中可以没有抽象方法，这么做的意义在于，可以避免这个类被直接实例化，只能通过子类继承父类实例化。</span>
 
 ```java
 abstract class Basic {
@@ -2147,7 +2155,7 @@ abstract class AbstractAccess {
     protected void m2(){};
     protected abstract void m2a(); // abstract 可以是 default protected public 修饰
     void m3(){}
-    abstract void m3a();
+    abstract void m3a(); // 默认是 default 权限（代码验证）
     public void m4(){}
     public abstract void m4a();
 }
@@ -2155,7 +2163,74 @@ abstract class AbstractAccess {
 
 ### 接口创建
 
+使用 interface 关键字创建接口。
 
+```java
+public interface PureInterface {
+    int m1(); // 相当于 public abstract int m1();
+    void m2();
+    double m3();
+}
+```
+
+我们不用为接口的方法添加 `public abstract` 修饰符，因为默认就是 `public abstract` 修饰的。
+
+Java 8 之前，接口中无法提供任何实现，只能描述类应该像什么，做什么，但不能描述怎么做。而在 Java 8 中，接口稍微有些变化， **Java 8 允许接口包含默认方法和静态方法**
+
+接口同样可以包含属性，这些属性被隐式指明为 static 和 final。使用 implements 关键字使一个类遵循某个特定接口（或一组接口），它表示：接 口只是外形，现在我要说明它是如何工作的。
+
+```java
+interface Concept{
+    void idea1();
+    void idea2();
+    // 相当于 static final int a = 10; 
+    int a = 10; // 如果不为 a 赋值的话，会报错，因为是 final 修饰的。
+}
+
+class Implementation implements Concept {
+    @Override
+    public void idea1() {
+    	System.out.println("idea1");
+    }
+    @Override
+    public void idea2() {
+    	System.out.println("idea2");
+    }
+}
+```
+
+#### 默认方法
+
+Java 8 为关键字 default 增加了一个新的用途，在接口中使用 default 创建方法体。
+
+```java
+interface InterfaceWithDefault {
+    void firstMethod();
+    void secondMethod();
+    default void newMethod() {
+        System.out.println("newMethod");
+    }
+}
+
+
+public class Implementation2 implements InterfaceWithDefault {
+    @Override
+    public void firstMethod() {
+        System.out.println("firstMethod");
+    }
+    @Override
+    public void secondMethod() {
+        System.out.println("secondMethod");
+    }
+    public static void main(String[] args) {
+        InterfaceWithDefault i = new Implementation2();
+        i.firstMethod();
+        i.secondMethod();
+        i.newMethod();
+        // InterfaceWithDefault.newMethod(); 报错。default 方法不是静态方法
+    }
+}
+```
 
 ### 接口
 
@@ -2170,14 +2245,14 @@ abstract class AbstractAccess {
 
 - 接口的语法
 
-  - 接口中定义的方法**默认使用public abstract修饰**‘
+  - 接口中定义的方法**默认使用public abstract修饰**
 
     ```java
     public interface Name{
     }
     ```
 
-  - 接口可以包含成员变量，成员变量会被隐式的添加 static final 关键字。通过 `接口名.变量` 可以访问。
+  - **接口可以包含成员变量，成员变量会被隐式的添加 static final 关键字。**通过 `接口名.变量` 可以访问。
 
   - 接口中的方法都是 public abstract 修饰的。
 
@@ -2186,7 +2261,7 @@ abstract class AbstractAccess {
   - 如果是 **Java 8** 还可以额外包含有
 
     - 默认方法 public default 返回值类型 方法名称( 参数列表 ){  方法体 }
-    - 静态方法
+    - 静态方法 static 返回值类型 方法名称( 参数列表 ){  方法体 }
 
   - 如果是**Java 9**还可以额外包含有
 
@@ -2356,6 +2431,19 @@ class FilterAdapter implements Processor{ // 实现 Processor 接口，这样就
 ### 多重继承
 
 接口允许多重继承
+
+```java
+interface Monster{}
+
+interface DangerousMonster extends Monster{}
+
+interface Lethal{}
+
+class DragonZilla implements DangerousMonster{}
+
+// 接口多重继承
+interface Vampire extends DangerousMonster, Lethal {}
+```
 
 ### 组合接口时名字冲突
 
