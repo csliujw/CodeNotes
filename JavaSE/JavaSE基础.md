@@ -77,7 +77,7 @@ public class OpBin {
 - n & 1判断奇偶 n & 1 == 1 为奇数；n & 1 == 0 为偶数。
 - n1 \^ n2 \^ n1 = n2
 
-# `第二部分` 基础
+# 第二部分 基础
 
 ## 第一章 面向对象概述
 
@@ -2127,163 +2127,19 @@ RTTI：运行时类型识别。在运行时检查类型的行为称为 RTTI。�
 
 抽象类，一种介于普通类和接口之间的折中手段。尽管我们的第一 想法往往是创建接口，但是对于构建具有属性和未实现方法的类来说，抽象类也是重要且必要的工具。我们不可能总是使用纯粹的接口。
 
-### 抽象类和方法
-
-抽象方法机制：方法是不完整的，只有声明没有方法体。`abstract void f();`
-
-如果一个类包含一个或多个抽象方法，那么类本身也必须被限定为抽象的，否则编译器会报错。<span style="color:blue">抽象类中可以没有抽象方法，这么做的意义在于，可以避免这个类被直接实例化，只能通过子类继承父类实例化。</span>
-
-```java
-abstract class Basic {
-    void implemented() {
-        System.out.println("hello");
-    }
-}
-
-public class AttemptToUseBasic {
-    public static void main(String[] args) {
-        new Basic(); // 报错，抽象类无法直接实例化
-    }
-}
-```
-
-接口只允许 public 方法，如果不加访问修饰符的话，接口的方法不是 firednly（default） 而是 public。但是，抽象类中是允许所有修饰符的。
-
-```java
-abstract class AbstractAccess {
-    private void m1(){} // 普通方法，四种修饰符都可
-    protected void m2(){};
-    protected abstract void m2a(); // abstract 可以是 default protected public 修饰
-    void m3(){}
-    abstract void m3a(); // 默认是 default 权限（代码验证）
-    public void m4(){}
-    public abstract void m4a();
-}
-```
-
-### 接口创建
-
-使用 interface 关键字创建接口。
-
-```java
-public interface PureInterface {
-    int m1(); // 相当于 public abstract int m1();
-    void m2();
-    double m3();
-}
-```
-
-我们不用为接口的方法添加 `public abstract` 修饰符，因为默认就是 `public abstract` 修饰的。
-
-Java 8 之前，接口中无法提供任何实现，只能描述类应该像什么，做什么，但不能描述怎么做。而在 Java 8 中，接口稍微有些变化， **Java 8 允许接口包含默认方法和静态方法**
-
-接口同样可以包含属性，这些属性被隐式指明为 static 和 final。使用 implements 关键字使一个类遵循某个特定接口（或一组接口），它表示：接 口只是外形，现在我要说明它是如何工作的。
-
-```java
-interface Concept{
-    void idea1();
-    void idea2();
-    // 相当于 static final int a = 10; 
-    int a = 10; // 如果不为 a 赋值的话，会报错，因为是 final 修饰的。
-}
-
-class Implementation implements Concept {
-    @Override
-    public void idea1() {
-    	System.out.println("idea1");
-    }
-    @Override
-    public void idea2() {
-    	System.out.println("idea2");
-    }
-}
-```
-
-#### 默认方法
-
-Java 8 为关键字 default 增加了一个新的用途，在接口中使用 default 创建方法体。
-
-```java
-interface InterfaceWithDefault {
-    void firstMethod();
-    void secondMethod();
-    default void newMethod() {
-        System.out.println("newMethod");
-    }
-}
-
-
-public class Implementation2 implements InterfaceWithDefault {
-    @Override
-    public void firstMethod() {
-        System.out.println("firstMethod");
-    }
-    @Override
-    public void secondMethod() {
-        System.out.println("secondMethod");
-    }
-    public static void main(String[] args) {
-        InterfaceWithDefault i = new Implementation2();
-        i.firstMethod();
-        i.secondMethod();
-        i.newMethod();
-        // InterfaceWithDefault.newMethod(); 报错。default 方法不是静态方法
-    }
-}
-```
-
-### 接口
-
-接口和抽象类提供了一种将接口与现实分离的更加结构化的方法。
-
-抽象类是一种介于普通类和接口之间的折中手段。尽管我们的第一想法往往是创建接口，但是对于构建具有属性和未实现方法的类来说，抽象类也是重要且必要的工具，我们不可能总是使用纯粹的接口。
-
-- 接口是什么？
-
-  - **一种公共的规范标准。【定义规范】【多个类的公共规范】**
-  - 结构是一种引用数据类型，最重要的内容就是其中的：抽象方法
-
-- 接口的语法
-
-  - 接口中定义的方法**默认使用public abstract修饰**
-
-    ```java
-    public interface Name{
-    }
-    ```
-
-  - **接口可以包含成员变量，成员变量会被隐式的添加 static final 关键字。**通过 `接口名.变量` 可以访问。
-
-  - 接口中的方法都是 public abstract 修饰的。
-
-  - 如果是 **Java 7** 那么接口中可以包含有：常量；抽象方法
-
-  - 如果是 **Java 8** 还可以额外包含有
-
-    - 默认方法 public default 返回值类型 方法名称( 参数列表 ){  方法体 }
-    - 静态方法 static 返回值类型 方法名称( 参数列表 ){  方法体 }
-
-  - 如果是**Java 9**还可以额外包含有
-
-    - 私有方法
-
-- 为什么使用接口?
-
-  - 为了能够向上转型为多个父类（代码更加灵活）
-  - 防止客户端程序员创建该类的对象，确保这仅仅是建立一个接口。
-
 ### 基本使用
 
-> 在任何版本的Java中，接口都能定义抽象方法。格式：public abstract 返回值类型 方法名称(参数列表);
+在任何版本的Java中，接口都能定义抽象方法。格式：public abstract 返回值类型 方法名称(参数列表);
 
-- 注意事项：
-  - 接口当中的抽象方法，修饰符必须是两个固定的关键字：public abstract
-  - 这两个关键字修饰符，可以选择性地省略。
-  - 方法的三要素，可以随意定义。
-  - **如果接口的实现类没有覆盖重写接口中所有的抽象方法，那么这个类必须是抽象类！**
-  - 接口中的成员变量默认是，且只能 `public static final` 修饰的，无方法体的方法默认是且只能是 `public abstract` 修饰的；
-  
-  <img src="img\image-20210827192635164.png">
+**注意事项：**
+
+- 接口当中的抽象方法，修饰符必须是两个固定的关键字：public abstract
+- 这两个关键字修饰符，可以选择性地省略。
+- 方法的三要素，可以随意定义。
+- **如果接口的实现类没有覆盖重写接口中所有的抽象方法，那么这个类必须是抽象类！**
+- 接口中的成员变量默认是，且只能 `public static final` 修饰的，无方法体的方法默认是且只能是 `public abstract` 修饰的；
+
+<img src="img\image-20210827192635164.png">
 
 ```java
 // 这是一个抽象方法
@@ -2359,14 +2215,271 @@ public static final int num = 10;
 接口名.num调用！
 ```
 
-### 注意事项
+### 抽象类和方法
 
-- 接口中不能有构造方法，不能有静态代码块
-- 一个类的直接父类只有一个，但是可同时实现多个接口
-- **如果实现类所实现的多个接口中，存在重复的默认方法，那么实现类一定要对冲突的默认方法进行覆盖重写。**
-- **一个类如果直接父类当中的方法和接口中的默认方法产生了冲突，优先用父类当中的方法！**
+抽象方法机制：方法是不完整的，只有声明没有方法体。`abstract void f();`
 
-### 设计模式
+如果一个类包含一个或多个抽象方法，那么类本身也必须被限定为抽象的，否则编译器会报错。<span style="color:blue">抽象类中可以没有抽象方法，这么做的意义在于，可以避免这个类被直接实例化，只能通过子类继承父类实例化。</span>
+
+```java
+abstract class Basic {
+    void implemented() {
+        System.out.println("hello");
+    }
+}
+
+public class AttemptToUseBasic {
+    public static void main(String[] args) {
+        new Basic(); // 报错，抽象类无法直接实例化
+    }
+}
+```
+
+#### 修饰符
+
+接口只允许 public 方法，如果不加访问修饰符的话，接口的方法不是 firednly（default） 而是 public。但是，抽象类中是允许所有修饰符的。
+
+```java
+abstract class AbstractAccess {
+    private void m1(){} // 普通方法，四种修饰符都可
+    protected void m2(){};
+    protected abstract void m2a(); // abstract 可以是 default protected public 修饰
+    void m3(){}
+    abstract void m3a(); // 默认是 default 权限（代码验证）
+    public void m4(){}
+    public abstract void m4a();
+}
+```
+
+### 接口创建
+
+使用 interface 关键字创建接口。
+
+```java
+public interface PureInterface {
+    int m1(); // 相当于 public abstract int m1();
+    void m2();
+    double m3();
+}
+```
+
+我们不用为接口的方法添加 `public abstract` 修饰符，因为默认就是 `public abstract` 修饰的，且接口中的抽象方法只能是 `public abstract` 修饰。
+
+<img src="img\image-20210827192635164.png">
+
+Java 8 之前，接口中无法提供任何实现，只能描述类应该像什么，做什么，但不能描述怎么做。而在 Java 8 中，接口稍微有些变化， **Java 8 允许接口包含默认方法和静态方法**
+
+接口同样可以包含属性，这些属性被隐式指明为 static 和 final。使用 implements 关键字使一个类遵循某个特定接口（或一组接口），它表示：接 口只是外形，现在我要说明它是如何工作的。
+
+```java
+interface Concept{
+    void idea1();
+    void idea2();
+    // 相当于 static final int a = 10; 
+    int a = 10; // 如果不为 a 赋值的话，会报错，因为是 final 修饰的。
+}
+
+class Implementation implements Concept {
+    @Override
+    public void idea1() {
+    	System.out.println("idea1");
+    }
+    @Override
+    public void idea2() {
+    	System.out.println("idea2");
+    }
+}
+```
+
+#### 默认方法
+
+Java 8 为关键字 default 增加了一个新的用途，在接口中使用 default 创建方法体。注意，default 方法不能直接通过`接口名.方法名`调用。
+
+```java
+interface InterfaceWithDefault {
+    void firstMethod();
+    void secondMethod();
+    default void newMethod() {
+        System.out.println("newMethod");
+    }
+}
+
+public class Implementation2 implements InterfaceWithDefault {
+    @Override
+    public void firstMethod() {
+        System.out.println("firstMethod");
+    }
+    @Override
+    public void secondMethod() {
+        System.out.println("secondMethod");
+    }
+    public static void main(String[] args) {
+        InterfaceWithDefault i = new Implementation2();
+        i.firstMethod();
+        i.secondMethod();
+        i.newMethod();
+        // InterfaceWithDefault.newMethod(); 报错。default 方法不是静态方法
+    }
+}
+```
+
+#### 多继承
+
+Java的接口允许多继承
+
+```java
+interface Bob1{}
+interface Bob2{}
+
+class Bob implements Bob1,Bob2{}
+```
+
+在引入 default 方法的 Java8 中，如果两个接口中存在一模一样的 default 方法会怎么样？
+
+```java
+interface Bob1{
+    default void say(){
+        System.out.println("Bob1::say");
+    }
+}
+
+interface Bob2{
+    default void say(){
+        System.out.println("Bob2::say");
+    }
+}
+// 会报错，无法判断是继承Bob1的say还是Bob2的say
+// InterfaceMutilExtends inherits unrelated defaults for say() 
+// from types Bob1 and Bob2
+public class InterfaceExtends implements Bob1,Bob2{
+
+}
+```
+
+重定义say方法即可。使用 super 关键字选择 基类实现中的一种。`接口名.super.方法名`，调用接口中的 default 方法。
+
+```java
+interface Bob1{
+    default void say(){
+        System.out.println("Bob1::say");
+    }
+}
+
+interface Bob2{
+    default void say(){
+        System.out.println("Bob2::say");
+    }
+}
+// 即便只是 implements Bob1,Bob1.super.say的接口名前缀也不能省略。
+public class InterfaceExtends implements Bob1,Bob2{
+
+    @Override
+    public void say() {
+        Bob1.super.say();
+    }
+
+    public static void main(String[] args) {
+        new InterfaceExtends().say(); // Bob1::say
+    }
+}
+
+```
+
+如果方法的名称相同，但是方法签名不一样，编译器是可以进行区分的，不会报错。
+
+```java
+interface Sam1 {
+    default void samm() {
+        System.out.println("Sam1::sam");
+    }
+}
+
+interface Sam2 {
+    default void samm(int i) {
+        System.out.println("Sam2::sam");
+    }
+}
+
+public class Sam implements Sam1, Sam2 {
+
+    public void print(){
+        Sam1.super.samm();
+        Sam2.super.samm(2);
+    }
+    public static void main(String[] args) {
+        Sam sam = new Sam();
+        sam.print();
+    }
+}
+```
+
+#### 接口中的静态方法
+
+Java 8 允许在接口中添加静态方法。这么做能恰当地把工具功能置于接口中，从而 操作接口，或者成为通用的工具。
+
+Java 8 接口版本的模板方法。
+
+```java
+interface Operations{
+    void execute();
+    static void runOps(Operations... ops){
+        for(Operations op: ops){
+            op.execute();
+        }
+    }
+    static void show(String msg){
+        System.out.println(msg);
+    }
+}
+
+class Bing implements Operations{
+    @Override
+    public void execute(){
+        Operations.show("Bing");
+    }
+}
+
+class Crack implements Operations{
+    @Override
+    public void execute(){
+        Operations.show("Crack");
+    }
+}
+
+public class Machine{
+    public static void main(String[] args){
+        Operations.runOps(new Bing(),new Crack());
+    }
+}
+
+//Bing
+//Crack
+```
+
+#### default 与 static 带来的改进
+
+default 方法可以让接口的升级变得更为简单，只需添加 default 方法，无需修改那些实现了该接口的类。
+static 允许把静态方法放在更合适的地方。
+
+### 抽象类和接口
+
+在 Java 8 引入 default 方法之后，选择用抽象类还是用接口变得更加令人困惑。下表做了明确的区分。
+
+| 特性               | 接口                                                       | 抽象类                                   |
+| ------------------ | ---------------------------------------------------------- | ---------------------------------------- |
+| 组合               | 新类可以组合多个接口                                       | 值能继承单一抽象类                       |
+| 状态               | 不能包含属性（除了静态属性，不支持对象状态）               | 可以包含属性，非抽象方法可能引用这些属性 |
+| 默认方法和抽象方法 | 不需要在子类中实现默认方法。默认方法可以引用其他接口的方法 | 必须在子类中实现抽象方法                 |
+| 构造器             | 没有构造器                                                 | 可以有构造器                             |
+| 可见性             | 隐式 public                                                | 可以是 protected 或友元                  |
+
+抽象类仍然是一个类，在创建新类时只能继承它一个。而创建类的过程中可以实现多个接口。 
+
+有一条实际经验：尽可能地抽象。我们更倾向使用接口而不是抽象类。只有当必 要时才使用抽象类。除非必须使用，否则不要用接口和抽象类。大多数时候，普通类就可以了，如果不行的话，再移动到接口或抽象类中。
+
+### 完全解耦/设计模式
+
+当方法的形参数类型是一个类而非接口时，它就只能作用于那个类或其子类。如果使用接口，则可以放宽这种限制，凡是实现了该接口的类都可被该方法操纵。
 
 #### 策略模式
 
@@ -2410,29 +2523,90 @@ class Main {
 
 #### 适配器模式
 
-利用的也是多态。适用于<span style="color:green">将一个类的接口变换成客户端所期待的另一种接口，从而使原本因接口不匹配而无法在一起工作的两个类能够在一起工作</span>。这段代码讲的不清楚。
+利用多态。适用于<span style="color:green">将一个类的接口变换成客户端所期待的另一种接口，从而使原本因接口不匹配而无法在一起工作的两个类能够在一起工作</span>。
 
 ```java
 // 中间类。
-class FilterAdapter implements Processor{ // 实现 Processor 接口，这样就可以被向上转型为 Processor 了。
+class FilterAdapter implements Processor{ 
+    // 实现 Processor 接口，这样就可以被向上转型为 Processor 了。
     Filter filter;// filter 需要可以用 Processor 的 processor 方法
     public FilterAdapter(Filter filter){
         this.filter = filter;
     }
-    
+    // 中间类，做个function -> function 的转换
     public Waveform process(Object input){
         return filter.process((Waveform)input);
     }
 }
 ```
 
-最后不论是上面的 StringUpper 类 还是 Filter 类，都可以统一使用 Processor 接口进行调用。可以在不修改原有代码的基础上，把 Filter 这个对象传入到原有代码中使用。
+都可以统一使用 Processor 接口进行调用。可以在不修改原有代码的基础上，把 Filter 这个对象传入到原有代码中使用。
 
-### 多重继承
+### 多接口组合
 
-接口允许多重继承
+一个类可以实现多个接口，且可分别向上转型为他实现的接口。
 
 ```java
+interface CanFight {
+	void fight();
+}
+interface CanSwim {
+	void swim();
+}
+class Hero implements CanFight,CanSwin{
+    public void fight(){}
+    public void void swim(){}
+}
+// Hero 可以转型为CanFight，CanSwin
+```
+
+#### 组合类和接口
+
+类 Hero 结合了具体类 ActionCharacter 和接口 CanFight、CanSwim 和 CanFly。当通过这种方式结合具体类和接口时，需要将具体类放在前面，后面跟着接口（否则编译器会报错）。
+
+CanFight 和 ActionCharacter 有相同的方法签名，但是 Hero 继承了 ActionCharacter  又实现了 CanFight ，并未重写 fight 方法，这样是允许的。因为 ActionCharacter  类中又 fight 的具体实现。
+
+```java
+interface CanFight {
+    void fight();
+}
+
+interface CanSwim {
+    void swim();
+}
+
+interface CanFly {
+    void fly();
+}
+
+class ActionCharacter {
+    public void fight() {
+    }
+}
+
+public class Hero extends ActionCharacter implements CanFight, CanSwim, CanFly {
+    @Override
+    public void swim() {
+    }
+    
+    @Override
+    public void fly() {
+    }
+}
+```
+
+### 使用继承扩展接口
+
+#### 多重继承
+
+接口继承接口，增加方法。
+
+```java
+interface A{}
+interface B{}
+interface C extends A,B{
+}
+
 interface Monster{}
 
 interface DangerousMonster extends Monster{}
@@ -2445,7 +2619,9 @@ class DragonZilla implements DangerousMonster{}
 interface Vampire extends DangerousMonster, Lethal {}
 ```
 
-### 组合接口时名字冲突
+#### 组合接口时名字冲突
+
+当实现多个接口时可能会存在一个小陷阱。在前面的例子中，CanFight 和 ActionCharacter 具有完全相同的 fight() 方法。完全相同的方法没有问题，但是如果 它们的签名或返回类型不同会怎么样呢？
 
 ```java
 interface I1 {
@@ -2474,15 +2650,30 @@ class C3 extends C implements I2 { // C 和 I2 的参数不一样
 }
 
 class C4 extends C implements I3 {
-    public int f() {return 1;} // 正常运行
+    public int f() {return 1;} // 正常运行 
+    // 不重写这个方法也行，因为 C 中有 int f() 的具体实现
 }
 
-class C5 extends C implements I1 {} // 报错  C 和 I1 都有 f() 方法，只是返回值不一样，会冲突。
+// 方法的返回类型不同
+//- class C5 extends C implements I1 {}
+//- interface I4 extends I1, I3 {}
 
+class C5 extends C implements I1 {} // 报错  C 和 I1 都有 f() 方法，只是返回值不一样，会冲突。
 interface I4 extends I1, I3 {} // 报错 I1 和 I3 都有 void f() 方法，无法正确区分是哪个接口的方法，所以报错。
 ```
 
+当打算组合接口时，在不同的接口中使用相同的方法名通常会造成代码可读性的混 乱，尽量避免这种情况。
+
+### 注意事项
+
+- 接口中不能有构造方法，不能有静态代码块
+- 一个类的直接父类只有一个，但是可同时实现多个接口
+- **如果实现类所实现的多个接口中，存在重复的默认方法，那么实现类一定要对冲突的默认方法进行覆盖重写。**
+- **一个类如果直接父类当中的方法和接口中的默认方法产生了冲突，优先用父类当中的方法！**
+
 ### 适配接口
+
+接口最吸引人的原因之一是相同的接口可以有多个实现。在简单情况下体现在一 个方法接受接口作为参数，该接口的实现和传递对象则取决于方法的使用者。 因此，接口的一种常见用法是前面提到的策略设计模式。编写一个方法执行某些操 作并接受一个指定的接口作为参数。可以说：“只要对象遵循接口，就可以调用方法” ， 这使得方法更加灵活，通用，并更具可复用性。
 
 Scanner 的参数要求为 Readable 接口，我们自定义一个随机读取 char 的类，实现这个接口，就可以适配 Sacnner 类了。
 
@@ -2522,7 +2713,58 @@ class ReadChar implements Readable {
 }
 ```
 
+### 接口字段
+
+**因为接口中的字段都自动是 static 和 final 的**，所以接口就成为了创建一组常量的 方便的工具。在 Java 5 之前，这是产生与 C 或 C++ 中的 enum (枚举类型) 具有相同 效果的唯一方式。所以你可能在 Java 5 之前的代码中看到：
+
+```java
+public interface Months {
+    int
+    JANUARY = 1, FEBRUARY = 2, MARCH = 3,
+    APRIL = 4, MAY = 5, JUNE = 6, JULY = 7,
+    AUGUST = 8, SEPTEMBER = 9, OCTOBER = 10,
+    NOVEMBER = 11, DECEMBER = 12;
+}
+```
+
+#### 初始化接口字段
+
+接口中定义的字段不能是 “空 final”，但是可以用非常量表达式初始化。
+
+```java
+public interface RandVals {
+    Random RAND = new Random(47);
+    int RANDOM_INT = RAND.nextInt(10);
+    long RANDOM_LONG = RAND.nextLong() * 10;
+    float RANDOM_FLOAT = RAND.nextLong() * 10;
+    double RANDOM_DOUBLE = RAND.nextDouble() * 10;
+}
+```
+
+因为字段是 static 的，所以它们在类第一次被加载时初始化，这发生在任何字段 首次被访问时。下面是个简单的测试：
+
+```java
+public class TestRandVals {
+    public static void main(String[] args) {
+        System.out.println(RandVals.RANDOM_INT);
+        System.out.println(RandVals.RANDOM_LONG);
+        System.out.println(RandVals.RANDOM_FLOAT);
+        System.out.println(RandVals.RANDOM_DOUBLE);
+    }
+}
+/*
+8
+-32032247016559954
+-8.5939291E18
+5.779976127815049
+*/
+```
+
+这些字段不是接口的一部分，它们的值被存储在接口的静态存储区域中。
+
 ### 嵌套接口
+
+接口可以嵌套在类或其他接口中。
 
 ```java
 package tij.chapter9;
@@ -2662,15 +2904,17 @@ public class NestingInterfaces {
 
 用 IDE 阅读代码，然后看下面的文字描述：简而言之，限定接口的使用权限，更好的封装。要暴露接口的话，只能类内部中定义方法进行暴露。
 
-private 嵌套接口有什么好处呢？你可能猜测它只是被用来实现一个 private 内部类，就像 DImp。然而 A.DImp2 展示了它可以被实现为 public 类，**但是 A.DImp2 只能被自己使用（因为外部类也无法实现D接口，就不能通过多态使用A.DImp2了）**，你无法说它实现了 private 接口 D，所 以实现 private 接口是一种可以强制该接口中的方法定义不会添加任何类型信息（即 **不可以向上转型**）的方式。
+private 嵌套接口有什么好处呢？你可能猜测它只是被用来实现一个 private 内部类，就像 DImp。然而 A.DImp2 展示了它可以被实现为 public 类，**但是 A.DImp2 只能被自己使用（因为外部类也无法实现D接口，就不能通过多态使用A.DImp2了）**，你无法说它实现了 private 接口 D，所以实现 private 接口是一种可以强制该接口中的方法定义不会添加任何类型信息（即 **不可以向上转型**）的方式。
 
-getD() 方法产生了一个与 private 接口有关的窘境。它是一个 public 方法却返回 了对 private 接口的引用。能对这个返回值做些什么呢？main() 方法里进行了一些使 用返回值的尝试但都失败了。返回值必须交给有权使用它的对象，本例中另一个 A 通 过 receiveD() 方法接受了它。
+getD() 方法产生了一个与 private 接口有关的窘境。它是一个 public 方法却返回 了对 private 接口的引用。能对这个返回值做些什么呢？main() 方法里进行了一些使用返回值的尝试但都失败了。返回值必须交给有权使用它的对象，本例中另一个 A 通 过 receiveD() 方法接受了它。
 
 接口 E 说明了接口之间也能嵌套。然而，作用于接口的规则——尤其是，接口中的元素必须是 public 的——在此都会被严格执行，所以嵌套在另一个接口中的接口自动就是 public 的，不能指明为 private。
 
+类 NestingInterfaces 展示了嵌套接口的不同实现方式。尤其是当实现某个接口 时，并不需要实现嵌套在其内部的接口。同时，private 接口不能在定义它的类之外被实现。 
+
 ### 接口与工厂
 
-接口是多实现的途径，而生成符合某个接口的对象的典型方式是**工厂方法设计模式**。不同于直接调用构造器，只需调用工厂对象中的创建方法就能生成对象的实现—— 理论上，通过这种方式可以将接口与实现的代码完全分离，使得可以透明地将某个实现。
+接口是多实现的途径，而生成符合某个接口的对象的典型方式是**工厂方法设计模式**。不同于直接调用构造器，只需调用工厂对象中的创建方法就能生成对象的实现——理论上，通过这种方式可以将接口与实现的代码完全分离，使得可以透明地将某个实现替换为另一个实现。
 
 ```java
 // 定义接口
@@ -2752,34 +2996,17 @@ public class Factories {
 
 ### 总结
 
-> **在Java 9+版本中，接口的内容可以有：**
+认为接口是好的选择，从而使用接口不用具体类，这具有诱惑性。几乎任何时候， 创建类都可以替代为创建一个接口和工厂。 
 
-1. - 成员变量其实是常量，格式：
-     [public] [static] [final] 数据类型 常量名称 = 数据值;
-      注意：
-     常量必须进行赋值，而且一旦赋值不能改变。
-     常量名称完全大写，用下划线进行分隔。
+很多人都掉进了这个陷阱，只要有可能就创建接口和工厂。这种逻辑看起来像是可 能会使用不同的实现，所以总是添加这种抽象性。这变成了一种过早的设计优化。 
 
-2. - 接口中最重要的就是抽象方法，格式：
-     [public] [abstract] 返回值类型 方法名称(参数列表);
-      注意：实现类必须覆盖重写接口所有的抽象方法，除非实现类是抽象类。
+任何抽象性都应该是由真正的需求驱动的。当有必要时才应该使用接口进行重构， 而不是到处添加额外的间接层，从而带来额外的复杂性。这种复杂性非常显著，如果你 让某人去处理这种复杂性，只是因为你意识到 “以防万一” 而添加新接口，而没有其他具有说服力的原因——好吧，如果我碰上了这种设计，就会质疑此人所作的所有其他设 计了。 
 
-3. - 从Java 8开始，接口里允许定义默认方法，格式：
-     [public] default 返回值类型 方法名称(参数列表) { 方法体 }
-      注意：默认方法也可以被覆盖重写
+恰当的原则是优先使用类而不是接口。从类开始，如果使用接口的必要性变得很明确，那么就重构。接口是一个伟大的工具，但它们容易被滥用。
 
-4. - 从Java 8开始，接口里允许定义静态方法，格式：
-     [public] static 返回值类型 方法名称(参数列表) { 方法体 }
-      注意：应该通过接口名称进行调用，不能通过实现类对象调用接口静态方法
+## 第九章 内部类 
 
-5. - 从Java 9开始，接口里允许定义私有很乏，格式：
-     普通私有方法：private 返回值类型 方法名称(参数列表) { 方法体 }
-      静态私有方法：private static 返回值类型 方法名称(参数列表) { 方法体 }
-      注意：private的方法只有接口自己才能调用，不能被实现类或别人使用。
-
-## 第十章 内部类 
-
-### 概述
+一个定义在另一个类中的类，叫作内部类。内部类是一个独立的实体，无法被覆盖。
 
 内部类是一种非常有用的特性，因为它允许你把一些逻辑相关的类组织在一起，并控制位于内部的类的可见性。在最初，内部类看起来就像是一种代码隐藏机制：将类置于其他类的内部。但，内部类远不止如此，它了解外部类，并能与之通信，而且你用内部类写出的代码更加优雅而清晰。
 
@@ -2789,11 +3016,11 @@ public class Factories {
 
 ### 创建内部类
 
-把类的定义置于外部类的里面。
+把类的定义放在外部类里面。
 
 ```java
 public class CreateInnerClass {
-    class InnerClass {
+    class InnerClass { // 内部类
         public void innerSay() {
             System.out.println("I am inner class");
         }
@@ -2805,7 +3032,7 @@ public class CreateInnerClass {
 }
 ```
 
-常用的方式是，通过外部类的一个方法，得到内部类的引用。
+获得内部类引用的常用方式是，通过外部类的一个方法，得到内部类的引用。
 
 ```java
 public class CreateInnerClass {
@@ -2827,6 +3054,7 @@ public class CreateInnerClass {
 class Main {
     public static void main(String[] args) {
         CreateInnerClass.InnerClass innerClass = new CreateInnerClass().getInnerClass();
+        CreateInnerClass.InnerClass innerClass1 = new CreateInnerClass().new InnerClass();
     }
 }
 ```
@@ -2839,11 +3067,75 @@ class Main {
 
 当生成一个内部类的对象时，此对象与制造它的外部对象（enclosing object）之间就有了一种联系，所以**它能访问其外部对象的所有成员**，而不需要任何特殊条件。此外，**内部类还拥有其外部类的所有元素的访问权**。
 
-内部类自动拥有对其外部类所有成员的访问权。这是如何做到的呢？当某个外部类的对象创建了一个内部类对象时，此内部类对象必定会秘密地**捕获一个指向那个外部类对象的引用**。然后，在你访问此外部类的成员时，就是用那个引用来选择外部类的成员。
+内部类自动拥有对其外部类所有成员的访问权。这是如何做到的呢？当某个外部类的对象创建了一个内部类对象时，此内部类对象必定会秘密地**捕获一个指向那个外部类对象的引用**。然后，使用外部类对象的引用来访问外部类的成员。
 
 内部类的对象只能在与其外部类的对象相关联的情况下才能被创建（就像你应该看到的，内部类是非 static 类时）。构建内部类对象时，需要一个指向其外部类对象的引用，如果编译器访问不到这个引用就会报错。
 
+```java
+interface Selector {
+    boolean end();
+
+    Object current();
+
+    void next();
+}
+
+public class Sequence {
+    private Object[] items;
+    private int next = 0;
+
+    public Sequence(int size) {
+        items = new Object[size];
+    }
+
+    public void add(Object x) {
+        if (next < items.length)
+            items[next++] = x;
+    }
+
+    private class SequenceSelector implements Selector {
+        private int i = 0;
+        // 拿到外部类的引用
+        // Sequence that = Sequence.this;
+
+        @Override
+        public boolean end() {
+            return i == items.length;
+        }
+
+        @Override
+        public Object current() {
+            return items[i];
+        }
+
+        @Override
+        public void next() {
+            if (i < items.length) i++;
+        }
+    }
+
+    public Selector selector() {
+        return new SequenceSelector();
+    }
+
+    public static void main(String[] args) {
+        Sequence sequence = new Sequence(10);
+        for (int i = 0; i < 10; i++) {
+            sequence.add(Integer.toString(i));
+        }
+        Selector selector = sequence.selector();
+        while (!selector.end()) {
+            System.out.print(selector.current() + " ");
+            selector.next();
+        }
+    }
+}
+// 0 1 2 3 4 5 6 7 8 9
+```
+
 ### 使用.this 和 .new
+
+使用 `外部类名.this` 生成对外部类对象的引用。
 
 ```java
 public class DotThis {
@@ -2933,7 +3225,7 @@ public static void main(String[] args) {
 
 ### 内部类与向上转型
 
-内部类实现接口，外部类返回内部类的实例对象，然后其他类通过接口引用拿到了内部类的对象。这样可以隐藏内部类的实现，并调用相关方法。
+内部类实现接口，外部类返回内部类的实例对象，然后其他类通过接口引用拿到了内部类的对象。这样可以隐藏实现细节（内部类的实现），并调用相关方法。
 
 ```java
 interface Contents {
@@ -2953,22 +3245,23 @@ public class Parcel {
     }
 
     public static void main(String[] args) {
+        // 如果是在其他类中调用改方法得到对象，都无法向下转型，因为类是私有的。
         Contents con = new Parcel().createContents();
         con.values();
     }
 }
 ```
 
-private 内部类给类的设计者提供了一种途径，通过这种方式可以完全阻止任何依赖于类型的编码，并且完全隐藏了实现的细节。
+private 内部类给类的设计者提供了一种途径，通过这种方式可以完全阻止任何依赖于（具体）类型的编码，并且完全隐藏了实现的细节。都是使用接口所提供的方法，没有任何·特殊的方法·。
 
 ### 内部类方法和作用域
 
-> 可以在任意一个方法内部定义内部类。
+我们可以在一个方法里面或者在任意的作用域内定义内部类。
 
 - 可以创建并返回对其的引用。 
 - 要解决一个复杂的问题，想创建一个类来辅助你的解决方案，但是又不希望这 个类是公共可用的
 
-> 涉及的内容主要是：
+涉及的内容主要是
 
 - 一个定义在方法中的类。 
 - 一个定义在作用域内的类，此作用域在方法的内部。
@@ -2977,9 +3270,7 @@ private 内部类给类的设计者提供了一种途径，通过这种方式可
 - 一个匿名类，它执行字段初始化。
 - 一个匿名类，它通过实例初始化实现构造（匿名内部类不可能有构造器）。
 
-#### 局部内部类
-
-> 语法如下：
+可以在任意作用域内定义一个内部类
 
 ```java
 public class LocalInnerClass {
@@ -3001,7 +3292,7 @@ public class LocalInnerClass {
 
 ```
 
-> 局部内部类访问所在方法的局部变量，那么这个局部变量必须是【有效final的】（内容感觉有点问题，要再斟酌下）
+<span style="color:blue">局部内部类访问所在方法的局部变量，那么这个局部变量必须是 final 修饰的</span>
 
 ```java
 /*这样写是可以的。因为保证了num确实是不变的，final关键字是可以省略的【java8开始】。如果class前面加了一句num = 29，那就不对了，因为num改变了。*/
@@ -3048,6 +3339,10 @@ public void demo() {
 
 > 局部内部类的使用场景
 
+匿名内部类的缺点在于，无法自定义构造函数。请看以下代码，如果我们希望在创建对象的时候，给对象设置一个name并打印。使用匿名内部类无法完成这种需求，因为它只有隐式的构造函数。而创建一个可接受name并打印的显示的构造函数可以完成此需求。
+
+**当隐式的构造函数不能满足我们的需求，需要显示的构造函数时，使用局部内部类而非匿名内部类！**
+
 ```java
 // 当隐式的构造函数不能满足我们的需求，需要显示的构造函数时，使用局部内部类而非匿名内部类！
 // 如果不考虑构造函数的问题，两者的功能是一样的。
@@ -3095,14 +3390,22 @@ public class LocalInnerClass {
 }
 ```
 
-#### 匿名内部类
+### 匿名内部类
 
 “创建一个继承自 Contents 的匿名类的对象。” 通过 new 表达式返回的引用被自动向上转型为对 Contents 的引用。
 
 ```java
+public interface Contents {
+	int value();
+}
+
 public class AnonymityClass {
 
     public Contents contents() {
+        /*
+        “创建一个继承自 Contents 的匿名类的对象。” 通过 new
+		表达式返回的引用被自动向上转型为对 Contents 的引用
+        */
         return new Contents() {
             @Override
             public void values() {
@@ -3118,7 +3421,30 @@ public class AnonymityClass {
 }
 ```
 
-如果父类需要的是一个有参构造器，那么把参数传递过去。
+上述的语法是下面代码的简化形式
+
+```java
+public class AnonymityClass {
+
+    public Contents contents() {
+        class C implements Contents {
+            @Override
+            public void values() {
+                System.out.println(123);
+            }
+        }
+        C c = new C();
+        return c;
+    }
+
+    public static void main(String[] args) {
+        AnonymityClass anonymityClass = new AnonymityClass();
+        anonymityClass.contents().values();
+    }
+}
+```
+
+<span style="color:red">**如果父类需要的是一个有参构造器，那么把参数传递过去。**</span>
 
 ```java
 class Objects {
@@ -3134,6 +3460,8 @@ class Objects {
 public class AnonymityClassWithParam {
 
     public Objects objs() {
+        // 尽管 Objects 只是一个具有具体实现的普通类，
+        //但它还是被导出类当作公共 “接口” 来使用。
         return new Objects(3) {
             @Override
             public void say(String msg) {
@@ -3150,10 +3478,8 @@ public class AnonymityClassWithParam {
 ```
 
 **[1]** 将合适的参数传递给基类的构造器。
-
 **[2]** 在匿名内部类末尾的分号，并不是用来标记此内部类结束的。实际上，它标记 的是表达式的结束，只不过这个表达式正巧包含了匿名内部类罢了。因此，这与 别的地方使用的分号是一致的。
-
-**[3]** 匿名内部类，要使用一个在其外部定义的对象，那么编译 器会要求其参数引用是 final 的。
+**[3]** 匿名内部类，要使用一个在其外部定义的对象，那么编译器会要求其参数引用是 final 的。
 
 如果想在匿名内部类中做一些类似构造器的行为，该怎么办呢？在匿名类中不可能有命名构造器（因为它根本没名字！），但通过实例初始化，就能够达到为匿名内部类创建一个构造器的效果，就像这样：
 
@@ -3170,8 +3496,7 @@ public class AnonymousConstructor {
     public static Base getBase(int i) {
         return new Base(i) {
             {
-                System.out.println(
-                        "Inside instance initializer");
+                System.out.println("Inside instance initializer");
             }
 
             @Override
@@ -3183,27 +3508,27 @@ public class AnonymousConstructor {
 
     public static void main(String[] args) {
         Base base = getBase(47);
-
         base.f();
     }
 }
 
-//在此例中，不要求变量一定是 final 的。因为被传递给匿名类的基类的构造器，它并不会在匿名类内部被直接使用
+//在此例中，不要求变量一定是 final 的。因为被传递给匿名类的基类的构造器，
+//它并不会在匿名类内部被直接使用
 ```
 
 #### 局部-匿名辨析
 
 用局部内部类和匿名内部类，具有相同的行为和能力。<span style="color:red">**那什么时候使用局部内部类？**</span>
 
-- 我们需要 一个已命名的构造器，或者需要重载构造器，而匿名内部类只能使用实例初始化。
-- 需要不止一个该内部 类的对象。 内部类标识符 由于编译后每个类都会产生一个 .class 文件，其中包含了如何创建该类型的对象 的全部信息（此信息产生一个 “meta-class”，叫做 Class 
+- 我们需要一个已命名的构造器，或者需要重载构造器，而匿名内部类只能使用实例初始化。
+- 需要不止一个该内部类的对象。 内部类标识符由于编译后每个类都会产生一个 .class 文件，其中包含了如何创建该类型的对象的全部信息（此信息产生一个 “meta-class”，叫做 Class 
 
 ### 嵌套类
 
-如果不需要内部类对象与其外部类对象之间有联系，那么可以将内部类声明为 static，这通常称为嵌套类。普通内部类（非静态的）隐式地保存了一个引用，指向创建它的外部类对象，静态内部类则不是。
+**如果不需要内部类对象与其外部类对象之间有联系，那么可以将内部类声明为 static，这通常称为嵌套类。**普通内部类（非静态的）隐式地保存了一个引用，指向创建它的外部类对象，静态内部类则不是。
 
 - 要创建嵌套类的对象，并不需要其外部类的对象。 
-- 不能从嵌套类的对象中访问非静态的外部类对象
+- 不能从嵌套类的对象中访问非静态的外部类对象。
 
 嵌套类与普通的内部类还有一个区别：普通的内部类不能有 static 数据和 static 字段，也不能包含嵌套类。，但是嵌套类可以包含所有这些东西：
 
@@ -3235,7 +3560,7 @@ class DemoSon extends InterfaceStaticClass.Demo { // 不是 final 哦
 
 ### 为什么需要内部类
 
-每个内部类都能独立地继承自一个（接口的）实现，所以无论外部类是否已 经继承了某个（接口的）实现，对于内部类都没有影响。
+每个内部类都能独立地继承自一个（接口的）实现，所以无论外部类是否已经继承了某个（接口的）实现，对于内部类都没有影响。
 
 如果没有内部类提供的、可以继承多个具体的或抽象的类的能力，一些设计与编程问题就很难解决。从这个角度看，内部类使得多重继承的解决方案变得完整。接口解决了部分问题，而<span style="color:red">**内部类有效地实现了 “多重继承”**</span>。也就是说，内部类允许继承多个非接口类型（类或抽象类）。
 
@@ -3253,8 +3578,6 @@ class DemoSon extends InterfaceStaticClass.Demo { // 不是 final 哦
 ​		闭包（closure）是一个可调用的对象，它记录了一些信息，这些信息来自于创建 它的作用域。通过这个定义，可以看出内部类是面向对象的闭包，因为它不仅包含外部 类对象（创建内部类的作用域）的信息，还自动拥有一个指向此外部类对象的引用，在 此作用域内，内部类有权操作所有的成员，包括 private 成员。
 
 ​		在 Java 8 之前，内部类是实现闭包的唯一方式。在 Java 8 中，我们可以使用 lambda 表达式来实现闭包行为，并且语法更加优雅和简洁。
-
-----
 
 > 一个回调的示意代码：
 
@@ -3274,40 +3597,45 @@ class Caller {
 
 回调的价值在于它的灵活性-可以在运行时动态地决定需要调用什么方法。例如，在 图形界面实现 GUI 功能的时候，到处都用到回调。
 
-### 内部类与控制框架
+#### 内部类与控制框架
 
-> 模板方法
+模板方法包含算法的基本结构，并且会调 用一个或多个可覆盖的方法，以完成算法的动作。设计模式总是将变化的事物与保持不变的事物分离开，在这个模式中，模板方法是保持不变的事物，而可覆盖的方法就是变化的事物。
 
-模板方法包含算法的基本结构，并且会调 用一个或多个可覆盖的方法，以完成算法的动作。设计模式总是将变化的事物与保持不变的事物分离开，在这个模式中，模板方法是保持不变的事物，而可覆盖的方法就是变 化的事物。
-
-GUI 的事件就是用内部类实习的。
+GUI 的事件就是用内部类实现的。
 
 ### 继承内部类
 
-因为**内部类的构造器必须连接到指向其外部类对象的引用**，所以在继承内部类的时候，事情会变得有点复杂。问题在于，那个指向外部类对象的 “秘密的” 引用必须被初 始化，而在派生类中不再存在可连接的默认对象。要解决这个问题，必须使用特殊的语 法来明确说清它们之间的关联：
+因为**内部类的构造器必须连接到指向其外部类对象的引用**，所以在继承内部类的时候，要确保内部类仍然可以拿到外部类的引用。因此，必须使用特殊的语法来明确说清它们之间的关联。
 
 ```java
 class WithInner {
+    void withInnerSay() {
+        System.out.println("WithInner say");
+    }
+
     class Inner {
+        void say(){
+            WithInner.this.withInnerSay();
+        }
     }
 }
 
 class InheritInner extends WithInner.Inner {
     // 这样才提供了必要的引用，程序才能编译通过。
     InheritInner(WithInner wi) {
-        wi.super();
+        wi.super(); // 调用外部类的构造方法。确保 Inner 可以拿到外部类的引用
     }
 
     public static void main(String[] args) {
-        WithInner withInner = new WithInner();
-        InheritInner inheritInner = new InheritInner(withInner);
+        InheritInner inheritInner = new InheritInner(new WithInner());
+        inheritInner.say();
     }
 }
 ```
 
 ### 内部类可以被覆盖吗？
 
-不可以。代码验证如下：
+不可以。代码验证如下：这两个内部类是完全独立的两个实体，各自在自己的命名空间内。
 
 ```java
 class Egg {
@@ -3342,117 +3670,17 @@ Egg.Yolk()
 */
 ```
 
-既然创建了 BigEgg 的对象，那么所使用的应该是 “覆盖后” 的 Yolk 版本，但从输 出中可以看到实际情况并不是这样的。 这个例子说明，当继承了某个外部类的时候，内部类并没有发生什么特别神奇的变 化。这两个内部类是完全独立的两个实体，各自在自己的命名空间内。
+既然创建了 BigEgg 的对象，那么所使用的应该是 “覆盖后” 的 Yolk 版本，但从输 出中可以看到实际情况并不是这样的。 这个例子说明，当继承了某个外部类的时候，内部类并没有发生什么特别神奇的变 化。**这两个内部类是完全独立的两个实体，各自在自己的命名空间内。**
 
-### 内部类标识符
+### 局部内部类
 
-内部类的标识符：`外部类的名字，加上 “$” ，再加上内部类的名字`
+局部内部类不能有访问说明符，因为它不是外部类的一部分；但是它可以访问当前代码块内的常量，以及此外部类的所有成员。
 
-```java
-Counter.class
-LocalInnerClass$1.class // 匿名内部类，编译器会简单地产生一个数字作为其标识符
-LocalInnerClass$LocalCounter.class // 内部类LocalCounter; 内部类的内部类以此类推
-LocalInnerClass.class
-```
+定义一个类的时候，权限修饰符规则
 
-### 如何使用成员部类
-
-> 内用外，随便访问；外用内，需要内部类对象。
-
-外部类定义一个方法，通过这个方法获取内部类的实例对象
-
-```java
-public InClass getInClass(){
-    return new InClass();
-}
-```
-
-直接new出内部类
-
-```java
-OutClass.InClass inClass = new OutClass().new InClass();
-```
-
-内部类 外部类的成员变量
-
-```java
-public class Outer{
-	int num = 10;
-	
-	public class Inner(){
-		int num = 20;
-		
-		public void method(){
-			int num = 30;
-			syso(num);// 内部类方法局部变量
-			syso(this.num);// 内部类成员变量
-			syso(Outer.this.num);//外部类成员变量 区分重名
-		}	
-	}
-}
-```
-
-### 如何使用局部内部类
-
-```java
-@Test
-public void test(){
-    class inner{
-        public void innerSay(){
-            System.out.println("inner to say hello");
-        }
-    }
-    inner n = new inner();
-    n.innerSay();
-}
-```
-
-> **局部内部类访问所在方法的局部变量，那么这个局部变量必须是【有效final的】**
-
-```java
-/*这样写是可以的。因为保证了num确实是不变的，final关键字是可以省略的【java8开始】。如果class前面加了一句num = 29，那就不对了，因为num改变了。*/
-/*
-为什么要这样做？
-	这是害怕类还在，局部变量缺消失了，导致局部内部类无法访问局部变量！
-*/
-@Test
-public void test(){
-    int num = 10;
-    class inner{
-        public void innerSay(){
-            System.out.println("inner to say hello"+num);
-        }
-    }
-    inner n = new inner();
-    n.innerSay();
-}
-```
-
-```java
-/*
-原因：
-    1.new出来的对象在堆内存中
-    2.局部变量是跟着方法走的，在栈内存中
-    3.方法运行结束后，立刻出栈，局部变量就会立刻消失
-    4.但是new出来的对象会在堆中持续存在，直到垃圾回收消失。
-*/
-public Object test() {
-    int num = 10;
-    class inner {
-        public void innerSay() {
-            System.out.println("inner to say hello" + num);
-        }
-    }
-    return n;
-}
-
-@Test
-public void demo() {
-    Object test = test();
-}
-```
-
-- 局部内部类的使用场景
+- **外部类： public or default**
+- **成员内部类： public protected default private**
+- **局部内部类： 什么都不能写！**
 
 ```java
 // 当隐式的构造函数不能满足我们的需求，需要显示的构造函数时，使用局部内部类而非匿名内部类！
@@ -3501,116 +3729,33 @@ public class LocalInnerClass {
 }
 ```
 
-定义一个类的时候，权限修饰符规则
+### 局部内部类 VS 匿名内部类
 
-- **外部类： public or default**
-- **成员内部类： public protected default private**
-- **局部内部类： 什么都不能写！**
+我们分别使用局部内部类和匿名内部类实现某个功能（如 Counter 类的 next 方法），它们具有相同的行为和能力，既然局部内部类的名字在方法外是不可见。
 
-### 匿名内部类
+那什么时候使用局部内部类，什么时候使用匿名内部类呢？
 
-> **类只需要使用一次，那么可省略其定义！改而使用【匿名内部类】**
+- 如果我们需要 一个已命名的构造器，或者需要重载构造器，我们需要使用局部内部类。因为匿名内部类只能使用实例初始化。 
+- 如果我们需要多个内部类对象，那么只能使用局部内部类。
 
-```java
-MyInterface some = new MyInterface(){
-	@Override
-	public void method(){
-		syso();
-	}
-}
-```
+### 内部类标识符
+
+Java 代码编译后，每个类都会产生一个 .class 文件，其中包含了如何创建该类型的对象 的全部信息（此信息产生一个 “meta-class”，叫做 Class 对象）。
+
+内部类也必须生成一个 .class 文件以包含它们的 Class 对象信息。 
+
+这些类文件的命名有严格的规则：`外部类的名字，加上 “$” ，再加上内部类的名字`。例 如，LocalInnerClass.java 生成的 .class 文件包括：
 
 ```java
-//具体例子
-interface MyInterface{
-    public abstract void say();
-}
-
-public class DemoInnerPart {
-    public Object testObject(){
-        return new Object(){
-            @Override
-            public String toString(){
-                System.out.println("Override toString");
-            }
-        };
-    }
-    public MyInterface testObject2(){
-        return new MyInterface() {
-            @Override
-            public void say() {
-                System.out.println("say hello!");
-            }
-        };
-    }
-}
+Counter.class
+LocalInnerClass$1.class // 匿名内部类，编译器会简单地产生一个数字作为其标识符
+LocalInnerClass$LocalCounter.class // 内部类LocalCounter; 内部类的内部类以此类推
+LocalInnerClass.class
 ```
 
+如果内部类是匿名的，编译器会简单地产生一个数字作为其标识符。如果内部类是 嵌套在别的内部类之中，只需直接将它们的名字加在其外部类标识符与 “$” 的后面。
 
-- **匿名内部类的注意事项**
-  - 匿名内部类在创建对象的时候，只能使用唯一一次。
-  - 如果希望多次创建对象，而且类的内容一样的话，那么必须使用单独定义的实现类！
-- **匿名内部类的使用场景**
-
-  - 情况一： 接口、抽象类使用：相当于不用特意去写一个类去实现这个接口的方法，直接在实例化的时候就写好这个方法（接口、抽象类不能实例化，所以采用匿名内部类的方式来写）
-  - 情况二：当接口作为参数放在方法体里的时候，用new 接口()的方式来实例独享，则匿名内部类必须要实现这两个方法。
-- **为什么需要内部类**
-
-> 一般来说，内部类继承自某个类或实现某个接口，内部类的代码操作创建它的外围类的对象。所以可以认为内部类提供了某种进入其外围类的窗口。
-
-> 内部类最吸引人的原因是，每个内部类都能独立地继承自一个（接口的）实现，所以无论外围类是否已经继承了某个（接口的）实现，对于内部类都没有影响。内部类允许继承多个非接口类型（类或抽象类）
-
-> 个人认为允许多重继承的意思是，内部类对某个类进行重写再调用它的方法。让一个类可以同时使用两个类的特性。【继承一个类，内部类继承其他类，对必要方法进行重写！可以一个类为载体，内部使用多个内部类，从而实现多继承！】
-
-#### 10.5 内部类的继承
-
-**外部类继承另一个外部类的内部类**
-
-```java
-class WithInner{
-    class Inner{}
-}
-public class ExtendInnerClass extends WithInner.Inner{
-    // public ExtendInnerClass(){} won't compile  写这个构造会导致编译不成功
-    public ExtendInnerClass(WithInner w){
-        w.super();
-    }
-    
-    public static void main(String[] agrs){
-        WithInner wi = new WithInner();
-        ExtendInnerClass c = new ExtendInnerClass(wi);
-    }
-}
-```
-
-**内部类的覆盖**
-
-```java
-class WithInner2{
-    public class Inner{
-        public void say(){ System.out.println("I am say1"); }
-
-        public void walk(){ System.out.println("I am walk"); }
-    }
-}
-
-public class ExtendInnerClass2 extends WithInner2{
-    public class Inner2 extends WithInner2.Inner{
-        @Override
-        public void say(){ System.out.println("I am say2"); }
-    }
-
-    public static void main(String[] args) {
-        ExtendInnerClass2 class2 = new ExtendInnerClass2();
-        Inner inner2 = new ExtendInnerClass2().new Inner2();
-        inner2.say();   // I am say2
-        inner2.walk(); // I am walk
-    }
-}
-
-```
-
-## 第十一章 Object & 日期
+## 第十章 Object & 日期
 
 ### Object
 
@@ -3641,15 +3786,14 @@ public void fn2(){
 }
 ```
 
-- Java8 提供的日期类 **都是final修饰的**
-    - Instant——它代表的是时间戳
-    - LocalDate——不包含具体时间的日期，比如2014-01-14。它可以用来存储生日，周年纪念日，入职日期等。
-    - LocalTime——它代表的是不含日期的时间
-    - LocalDateTime——它包含了日期及时间，不过还是没有偏移信息或者说时区。
-    - ZonedDateTime——这是一个包含时区的完整的日期时间，偏移量是以UTC/格林威治时间为基准的
+Java8 提供的日期类 **都是final修饰的**
+- Instant——它代表的是时间戳
+- LocalDate——不包含具体时间的日期，比如2014-01-14。它可以用来存储生日，周年纪念日，入职日期等。
+- LocalTime——它代表的是不含日期的时间
+- LocalDateTime——它包含了日期及时间，不过还是没有偏移信息或者说时区。
+- ZonedDateTime——这是一个包含时区的完整的日期时间，偏移量是以UTC/格林威治时间为基准的
 
-
-- Date仅仅含日期。不包含具体时间，有time的才有具体的时间（精确到时分秒）
+Date仅仅含日期。不包含具体时间，有time的才有具体的时间（精确到时分秒）
 
 ```java
 public void fn3(){
@@ -3724,6 +3868,8 @@ public void fn6(){
 }
 ```
 
+## 第十一章 日期专题
+
 ## 第十二章 集合
 
 java.util 库提供了一套相当完整的集合类（collection classes）来解决非固定长度数据的问题，其中基本的类型有 List 、Set 、Queue 和 Map。
@@ -3732,7 +3878,7 @@ java.util 库提供了一套相当完整的集合类（collection classes）来�
 
 Java 集合类库采用 “持有对象”（holding objects）的思想，并将其分为两个不同的概念，表示为类库的基本接口：
 
-- **集合（Collection）：**一个独立元素的序列，这些元素都服从一条或多条规则。List 必须以插入的顺序保存元素，Set 不能包含重复元素，Queue 按照排队规则来确 定对象产生的顺序
+- **集合（Collection）：**一个独立元素的序列，这些元素都服从一条或多条规则。List 必须以插入的顺序保存元素，Set 不能包含重复元素，Queue 按照排队规则来确定对象产生的顺序
   - HashSet、TreeSet、LinkedHashSet，仅保存每个相同项中的一个。
   - `HashSet` 存储元素的方法复杂，检索元素快
   - `TreeSet` 按比较结果升序保存对象
@@ -3782,6 +3928,36 @@ public class AddElements {
 //        list.add(100); 报错，asList 产生的集合大小是不可变的，会抛出 Unsupported Operation
     }
 }
+```
+
+也可以直接使用 Arrays.asList() 的输出作为一个 List ，但是这里的底层实现是 数组，没法调整大小。如果尝试在这个 List 上调用 add() 或 remove()，由于这两个 方法会尝试修改数组大小，所以会在运行时得到 “Unsupported Operation（不支持的操作）” 错误
+
+### 集合打印
+
+Java 集合的 toString 方法被重写过，直接打印集合就可以看到里面的元素。
+
+```java
+import java.util.ArrayList;
+import java.util.HashMap;
+
+public class PrintCollection {
+    public static void main(String[] args) {
+        // Java 10 的自动类型推断
+        var list = new ArrayList<>();
+        list.add("Cat");
+        list.add("Dog");
+        list.add("Fish");
+        System.out.println(list);
+
+        var map = new HashMap<String,String>();
+        map.put("Dog","dog");
+        map.put("Cat","Cat");
+
+        System.out.println(map);
+    }
+}
+// [Cat, Dog, Fish]
+// {Cat=Cat, Dog=dog}
 ```
 
 ### 列表 List
