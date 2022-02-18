@@ -15,7 +15,7 @@
 
 # 位运算补充
 
-## 计算方式
+## 计算方式 
 
 | 运算符 |    运算    |          规则          |     示例     |   结果    |
 | :----: | :--------: | :--------------------: | :----------: | :-------: |
@@ -4581,7 +4581,7 @@ public class myxx implements Comparator{
 
 ### Lambda 表达式
 
-- Lambda 表达式产生函数，而不是类。在 JVM（Java Virtual Machine，Java 虚拟机）上，一切都是一个类。
+- Lambda 表达式产生函数，而不是类。在 JVM（Java Virtual Machine，Java 虚拟机）上，一切都是一个类。而 Java 努力让 Lambda 表达式看起来像函数。
 - 语法尽可能少，易于编写和使用。
 
 > **lambda 语法**
@@ -4590,19 +4590,13 @@ public class myxx implements Comparator{
 - ->
 - -> 之后的内容都是方法体
 
-[1] 当只用一个参数，可以不需要括号 ()。然而，这是一个特例。
-
-[2] 正常情况使用括号 () 包裹参数。为了保持一致性，也可以使用括号 () 包裹 单个参数，虽然这种情况并不常见。
-
-[3] 如果没有参数，则必须使用括号 () 表示空参数列表
-
-[4] 对于多个参数，将参数列表放在括号 () 中。单行表达式的结果自动成为 Lambda 表达式的返回值，在单行表达式中使用 return 关键字是非法的。
-
-[5] 如果在 Lambda 表达式中确实需要多行，则必须将这些行放在花括号中。在这 种情况下，就需要使用 return。
+**[1]** 当只用一个参数，可以不需要括号 ()。然而，这是一个特例。
+**[2]** 正常情况使用括号 () 包裹参数。为了保持一致性，也可以使用括号 () 包裹 单个参数，虽然这种情况并不常见。
+**[3]** 如果没有参数，则必须使用括号 () 表示空参数列表。
+**[4]** 对于多个参数，将参数列表放在括号 () 中。单行表达式的结果会自动成为 Lambda 表达式的返回值，在单行表达式中使用 return 关键字是非法的。
+**[5]** 如果在 Lambda 表达式中确实需要多行，则必须将这些行放在花括号中。在这种情况下，就需要使用 return。
 
 ```java
-package tij.chapter12;
-
 public class LambdaExpressions {
     static Body bod = h -> h + "No Parent!";
     static Body bod2 = (h) -> h + "More details!";
@@ -4637,7 +4631,7 @@ interface Multi {
 
 ### 递归
 
-递归函数是一个自我调用的函数。可以编写递归的 Lambda 表达式，但需要注意： 递归方法必须是实例变量或静态变量，否则会出现编译时错误。
+递归函数是一个自我调用的函数。可以编写递归的 Lambda 表达式，<span style="color:red">但需要注意： 递归方法必须是实例变量或静态变量，否则会出现编译时错误。</span>
 
 > 阶乘递归
 
@@ -4678,9 +4672,9 @@ interface IntCall1 {
 
 ### 方法引用
 
-类名或对象名，后面跟 :: ，然后 跟方法名称。`Math::abs`
+Java8 方法引用指向的是方法。方法应用的语法是，类名或对象名，后面跟 :: ，然后跟方法名称。如：`Math::abs`
 
-方法引用的赋值，要求函数的签名（参数类型和返回类型）相符合。 
+方法引用的赋值，要求函数的签名（参数类型和返回类型）相符合。 可以将一个方法的行为赋给另一个方法。让两个方法可以完成相同的功能。
 
 ```java
 package tij.chapter12;
@@ -4732,25 +4726,16 @@ class Describe {
 }
 ```
 
-[1] lambda要求接口中只有一个方法，且建议用  `@FunctionalInterface` 修饰。 
-
-[2] show() 的签名（参数类型和返回类型）符合 Callable 的 call() 的签名。 
-
-[3] hello() 也符合 call() 的签名。 
-
-[4] help() 也符合，它是静态内部类中的非静态方法。 
-
-[5] assist() 是静态内部类中的静态方法。 
-
-[6] 我们将 Describe 对象的方法引用赋值给 Callable ，它没有 show() 方法，而是 call() 方法。但是，Java 似乎接受用这个看似奇怪的赋值，因为方法引用符合 Callable 的 call() 方法的签名。 
-
-[7] 我们现在可以通过调用 call() 来调用 show()，因为 Java 将 call() 映射到 show()。 
-
-[8] 这是一个静态方法引用。 
-
-[9] 这是 [6] 的另一个版本：对已实例化对象的方法的引用，有时称为绑定方法引 用。 
-
-[10] 最后，获取静态内部类中静态方法的引用与 [8] 中通过外部类引用相似。
+**[1]** lambda要求接口中只有一个方法，且建议用  `@FunctionalInterface` 修饰。 
+**[2]** show() 的签名（参数类型和返回类型）符合 Callable 的 call() 的签名。 
+**[3]** hello() 也符合 call() 的签名。 
+**[4]** help() 也符合，它是静态内部类中的非静态方法。 
+**[5]** assist() 是静态内部类中的静态方法。 
+**[6]** 我们将 Describe 对象的方法引用赋值给 Callable ，它没有 show() 方法，而是 call() 方法。但是，Java 似乎接受用这个看似奇怪的赋值，因为方法引用符合 Callable 的 call() 方法的签名。 
+**[7]** 我们现在可以通过调用 call() 来调用 show()，因为 Java 将 call() 映射到 show()。 
+**[8]** 这是一个静态方法引用。 
+**[9]** 这是 [6] 的另一个版本：对已实例化对象的方法的引用，有时称为绑定方法引 用。 
+**[10]** 最后，获取静态内部类中静态方法的引用与 [8] 中通过外部类引用相似。
 
 #### Runnable 接口
 
@@ -4812,13 +4797,48 @@ public class UnboundMethodReference {
 }
 ```
 
-在 [1]，我们尝试把 X 的 f() 方法引用赋值给 MakeString。结果即使 make() 与 f() 具有相同的签名，编译也会报 “invalid method reference”（无效方法引用）错误。这是因为实际上还有另一个隐藏的参数：this。你不能在没有 X 对象的前提下调用 f()。因此，X :: f 表示未绑定的方法引用，因为它尚未 “绑定” 到对象。
+在 [1]，我们尝试把 X 的 f() 方法引用赋值给 MakeString。结果即使 make() 与 f() 具有相同的签名，编译也会报 “invalid method reference”（无效方法引用）错误。这是因为实际上还有另一个隐藏的参数：this。我们不能在没有 X 对象的前提下调用实例方法 f()。因此，X :: f 表示未绑定的方法引用，因为它尚未 “绑定” 到对象。
 
-要解决这个问题，我们需要一个 X 对象，所以我们的接口实际上需要一个额外的参数，如上例中的 TransformX。如果将 X :: f 赋值给 TransformX，在 Java 中是允许的。我们必须做第二个心理调整——使用未绑定的引用时，函数式方法的签名（接 口中的单个方法）不再与方法引用的签名完全匹配。原因是：你需要一个对象来调用方 法。
+<span style="color:blue">为了解决这个问题，我们需要将方法和对象绑定起来，所以我们的接口还需要一个额外的参数，如TransformX所示。如果将 X :: f 赋值给 TransformX，在 Java 中是允许的。使用未绑定的引用时，函数式方法的签名（接口中的单个方法）不再与方法引用的签名完全匹配。原因是：你需要一个对象来调用方 法。</span>
 
-拿到未绑定的方法引用，并且调用它的 transform() 方法，将一个 X 类的对象传递给它，最后使得 x.f() 以某种方式被调用。 Java 知道它必须拿到第一个参数，该参数实际就是 this，然后调用方法作用在它之上。
+拿到未绑定的方法引用，并且调用它的 transform() 方法，将一个 X 类的对象传递给它，最后使得 x.f() 以某种方式被调用。 Java 知道它必须拿到第一个参数，该参数实际就是 this，然后调用方法作用在它之上。<span style="color:blue">如果方法有更多参数，只要遵循第一个参数去的是 this 即可，我测试了几个方法，字节码中的 this 参数始终都是第一个。</span>
 
 PS：方法引用只是把方法的引用赋值给了其他方法。我们赋值给接口，利用多态，让 **接口.方法** 可以调用赋值给他的那个方法，但是这个方法的调用需要一个对象！
+
+**关于隐藏参数This的问题**
+
+This的传递在代码层面看不出来，在字节码上有所体现。
+
+```java
+public class ShowThisByByteCode {
+    public void say(){
+        System.out.println("Hello");
+    }
+
+    public static void main(String[] args) {
+        new ShowThisByByteCode().say();
+    }
+}
+
+// javac -g:vars ShowThisByByteCode.java
+// javap -v ShowThisByByteCode.class  或者 javap -l ShowThisByByteCode.class 只看局部变量表 l-->小写L
+```
+
+```shell
+public void say();
+    descriptor: ()V
+    flags: (0x0001) ACC_PUBLIC
+    Code:
+        stack=2, locals=1, args_size=1
+            0: getstatic     #7                 
+            ntStream;
+            3: ldc           #13                 
+            5: invokevirtual #15                
+            8: return
+        LocalVariableTable:
+        	Start  Length  Slot  Name   Signature
+        	0       9     0  this   Lenhance/base/ShowThisByByteCode;
+```
 
 > 多个参数的 Demo
 
@@ -4861,34 +4881,26 @@ public class MultiUnbound {
 }
 ```
 
-#### 构造函数引用
+#### 构造方法引用
+
+我们也可以捕获对某个构造器的引用，之后通过该引用来调用对应的构造器。
 
 ```java
-package tij.chapter12;
-
 class Dog {
     String name;
     int age = -1; // For "unknown"
 
-    Dog() {
-        name = "stray";
-    }
+    Dog() { name = "stray"; }
 
-    Dog(String nm) {
-        name = nm;
-    }
+    Dog(String nm) { name = nm; }
 
     Dog(String nm, int yrs) {
-        name = nm;
-        age = yrs;
+        name = nm;age = yrs;
     }
 
     @Override
     public String toString() {
-        return "Dog{" +
-                "name='" + name + '\'' +
-                ", age=" + age +
-                '}';
+        return "Dog{" +"name='" + name + '\'' +", age=" + age +'}';
     }
 }
 
@@ -4903,7 +4915,6 @@ interface Make1Arg {
 interface Make2Args {
     Dog make(String nm, int age);
 }
-
 
 public class CtorReference {
     public static void main(String[] args) {
@@ -4925,13 +4936,13 @@ public class CtorReference {
 
 Dog 有三个构造函数，函数式接口内的 make() 方法反映了构造函数参数列表 （make() 方法名称可以不同）。 
 
-注意我们如何对 [1]，[2] 和 [3] 中的每一个使用 Dog :: new。这三个构造函数只 有一个相同名称：:: new，但在每种情况下赋值给不同的接口，编译器可以从中知道具 体使用哪个构造函数。 **编译器知道调用函数式方法（本例中为 make()）就相当于调用构造函数。**
+注意我们如何对 [1]，[2] 和 [3] 中的每一个使用 Dog :: new。这三个构造函数只有一个相同名称：:: new，但在每种情况下赋值给不同的接口，编译器可以根据接口中的方法推断出使用哪个构造函数。 **编译器知道调用函数式方法（本例中为 make()）就相当于调用构造函数。**
 
 ### 函数式接口
 
-Java 8 引入了 java.util.function 包。它包含一组接口，这 些接口是 Lambda 表达式和方法引用的目标类型。在编写接口时，可以使用 @FunctionalInterface 注解强制执行此 “函数式方法” 模式。
+Java 8 引入了 java.util.function 包。它包含一组接口，这些接口是 Lambda 表达式和方法引用的目标类型。每个接口都只包含一个抽象方法。在编写接口时，可以使用 @FunctionalInterface 注解强制执行此 “函数式方法” 模式。
 
-如果将方法引用或 Lambda 表达式赋值给函数式接口（类型需要匹配），Java 会适配你的赋值到目标接口。编译器会在后台把方法引用或 Lambda 表达式包装进实现目标接口的类 的实例中。
+如果将方法引用或 Lambda 表达式赋值给函数式接口（类型需要匹配），Java 会适配你的赋值到目标接口。编译器会在后台把方法引用或 Lambda 表达式包装进实现目标接口的类的实例中。
 
 > 个人理解
 
@@ -4944,7 +4955,7 @@ Java 8 引入了 java.util.function 包。它包含一组接口，这 些接口�
 - 如果<span style="color:red">**返回值为基本类型**</span>，则用 To 表示，如 ToLongFunction  和 IntToLongFunction。
 - 如果<span style="color:red">**返回值类型与参数类型一致**</span>，则是一个运算符：单个参数使用 UnaryOperator， 两个参数使用 BinaryOperator。
 - 如果<span style="color:red">**接收两个参数且返回值为布尔值**</span>，则是一个谓词（Predicate）。
-- 如果<span style="color:red">**接收的两个参数类型不同**</span>，则名称中有一个 Bi。
+- 如果<span style="color:red">**接收的两个参数类型不同**</span>，则名称中有一个 Bi，如 BiPredicate。
 
 #### 四大函数式接口
 
@@ -4962,17 +4973,17 @@ Java 8 引入了 java.util.function 包。它包含一组接口，这 些接口�
   - 确定类型为T的对象是否满足某约束，并返回boolean值。包含方法
   - boolean test(T t)
 
-##### 供给型接口：Supplier
+##### 供给型接口 Supplier\<T\>
 
 > 该方法不需要参数，它会按照某种实现逻辑（由Lambda表达式实现）返回一个数据
 
-Supplier<T>接口也被称为生产型接口，如果我们指定了接口的泛型式是什么类型，那么接口中的get（）方法就会产生什么类型的数据供我们使用！
+`Supplier<T>`接口也被称为生产型接口，如果我们指定了接口的泛型式是什么类型，那么接口中的get（）方法就会产生什么类型的数据供我们使用！
 
-- Supplier<T>：包含一个无参的方法
-- T get（）：获得结果
+- `Supplier<T>`：包含一个无参的方法
+- `T get（）`：获得结果
 - 该方法不需要参数，它会按照某种实现逻辑（由Lambda表达式实现）返回一个数据
-- Supplier<T>接口也被称为生产型接口，如果我们指定了接口的泛型式是什么类型，那么接口中的get（）方法就会产生什么类型的数据供我们使用！
-- **简单说来，他就是一个容易，用来存Lambda表达式生成的数据的。可用get方法得到这个生成的数据
+- `Supplier<T>`接口也被称为生产型接口，如果我们指定了接口的泛型式是什么类型，那么接口中的get（）方法就会产生什么类型的数据供我们使用！
+- 简单说来，他就是一个容器，用来存Lambda表达式生成的数据的。可用get方法得到这个生成的数据
 
 ```java
 public class Student {
@@ -5010,14 +5021,14 @@ public class SupplierDemo {
 }
 ```
 
-##### 消费型接口：Consumer
+##### 消费型接口 Consumer\<T\>
 
 > 只需要消费对象，无需返回值。
 
-- Consumer<T>：包含两个方法
+- Consumer\<T\>：包含两个方法
 - void accept(T t)：对给的的参数执行此操作
-- default Consumer<T>andThen(Consumer after)：返回一个组合的Consumer，依次执行此操作，然后执行after操作
-- Consumer<T>接口也被称为消费型接口，它消费数据的数据类型由泛型指定
+- default Consumer\<T\>andThen(Consumer after)：返回一个组合的Consumer，依次执行此操作，然后执行after操作
+- Consumer\<T\>接口也被称为消费型接口，它消费数据的数据类型由泛型指定
 - **大概意思就是，你定义消费规则。然后调用它的消费方法，他会按这个消费规则进行消费**
 
 ```java
@@ -5040,7 +5051,7 @@ public class ConsumerDemo {
 }
 ```
 
-##### 断定型接口 Predicate
+##### 断定型接口 Predicate\<T\>
 
 > 就是判断是否符合要求
 
@@ -5049,19 +5060,19 @@ public class ConsumerDemo {
 - Predicate常用的四个方法
 
   - ```java
-    boolean test(T t) 对给定参数进行逻辑判断，判断表达式由Lambda实现。
+    boolean test(T t) //对给定参数进行逻辑判断，判断表达式由Lambda实现。
     ```
 
   - ```java
-    default Predicate<T>negate(); 返回一个逻辑的否定， 对应逻辑非
+    default Predicate<T>negate(); //返回一个逻辑的否定， 对应逻辑非
     ```
 
   - ```java
-    default Predicate<T>and(Predicate other) 返回一个组合逻辑判断，对应短路与
+    default Predicate<T>and(Predicate other) //返回一个组合逻辑判断，对应短路与
     ```
 
   - ```java
-    default Predicate<T>or(Predicate other) 返回一个组合判断，对应短路或
+    default Predicate<T>or(Predicate other) //返回一个组合判断，对应短路或
     ```
 
 - **Predicate常用于判断参数是否满足xx条件**
@@ -5098,7 +5109,7 @@ public class PredicateDemo {
 }
 ```
 
-##### Function 接口
+##### 转换接口 Function\<T,R\>
 
 - Function 接口是一个功能型接口，是一个转换数据的作用。
 
@@ -5107,29 +5118,94 @@ public class PredicateDemo {
 - 常用方法
 
   - R apply（T t）将此函数应用于给定的参数
-  - default<V> Function andThen(Function after) ：返回一个组合函数，首先将函数应用于输入，然后将after函数应用于结果
+  - default\<V\> Function andThen(Function after) ：返回一个组合函数，首先将函数应用于输入，然后将after函数应用于结果
 
-  ```java
-  public class FunctionDemo {
-  
-      public static void main(String[] args) {
-          convert("132", Integer::parseInt);
-          convert("132", Integer::parseInt);
-  
-  
-          // 直接使用 String是传入数据的类型，Integer是apply处理后返回的数据类型
-          Function<String,Integer> fn = (s)->Integer.parseInt(s)*10;
-          Integer apply = fn.apply("10");
-          System.out.println(apply);
-  
-      }
-      // 要求 把一个字符串转换为int类型并乘以10输出
-      private static void convert(String s, Function<String,Integer> fun){
-          Integer apply = fun.apply(s);
-          System.out.println(apply*10);
-      }
-  }
-  ```
+
+```java
+public class FunctionDemo {
+
+    public static void main(String[] args) {
+        convert("132", Integer::parseInt);
+        convert("132", Integer::parseInt);
+
+        // 直接使用 String是传入数据的类型，Integer是apply处理后返回的数据类型
+        Function<String,Integer> fn = (s)->Integer.parseInt(s)*10;
+        Integer apply = fn.apply("10");
+        System.out.println(apply);
+
+    }
+    // 要求 把一个字符串转换为int类型并乘以10输出
+    private static void convert(String s, Function<String,Integer> fun){
+        Integer apply = fun.apply(s);
+        System.out.println(apply*10);
+    }
+}
+```
+
+Function 接口的所有变种
+
+```java
+import java.util.function.*;
+class Foo {}
+
+class Bar {
+    Foo f;
+    Bar(Foo f) { this.f = f;}
+}
+
+class IBaz {
+    int i;
+    IBaz(int i) { this.i = i; }
+}
+
+class LBaz {
+    long l;
+
+    LBaz(long l) {
+        this.l = l;
+    }
+}
+
+class DBaz {
+    double d;
+
+    DBaz(double d) {
+        this.d = d;
+    }
+}
+
+public class FunctionVariants {
+    static Function<Foo, Bar> f1 = f -> new Bar(f);
+    static IntFunction<IBaz> f2 = i -> new IBaz(i);
+    static LongFunction<LBaz> f3 = l -> new LBaz(l);
+    static DoubleFunction<DBaz> f4 = d -> new DBaz(d); // 参数是 Double 类型，返回值是 DBaz 类型。
+    static ToIntFunction<IBaz> f5 = ib -> ib.i;
+    static ToLongFunction<LBaz> f6 = lb -> lb.l;
+    static ToDoubleFunction<DBaz> f7 = db -> db.d;
+    static IntToLongFunction f8 = i -> i;
+    static IntToDoubleFunction f9 = i -> i;
+    static LongToIntFunction f10 = l -> (int) l;
+    static LongToDoubleFunction f11 = l -> l;
+    static DoubleToIntFunction f12 = d -> (int) d;
+    static DoubleToLongFunction f13 = d -> (long) d;
+
+    public static void main(String[] args) {
+        Bar b = f1.apply(new Foo());
+        IBaz ib = f2.apply(11);
+        LBaz lb = f3.apply(11);
+        DBaz db = f4.apply(11);
+        int i = f5.applyAsInt(ib);
+        long l = f6.applyAsLong(lb);
+        double d = f7.applyAsDouble(db);
+        l = f8.applyAsLong(12);
+        d = f9.applyAsDouble(12);
+        i = f10.applyAsInt(12);
+        d = f11.applyAsDouble(12);
+        i = f12.applyAsInt(13.0);
+        l = f13.applyAsLong(13.0);
+    }
+}
+```
 
 #### 常见案例
 
@@ -5410,17 +5486,28 @@ public class Something {
         System.out.println(fid2.applyAsDouble(10));
     }
 }
+// 缺少的话，只能自己定义了
+import java.util.function.Function;
+
+class FunctionWithWarp{
+    public static void main(String[]args){
+        Function<Integer,Double> fid = i->(double)i;
+        System.out.println(fid.apply(10));
+    }
+}
 ```
 
 为什么会缺少基本类型的函数式接口?
 
-用基本类型的唯一原因是可以避免传递参数和返回结果过程中的自动装箱和自动拆箱，进而提升性能。 似乎是考虑到使用频率，某些函数类型并没有预定义。 当然，如果因为缺少针对基本类型的函数式接口造成了性能问题，你可以轻松编写 自己的接口（参考 Java 源代码）——尽管这里出现性能瓶颈的可能性不大。
+<span style="color:blue">用基本类型的唯一原因是可以避免传递参数和返回结果过程中的自动装箱和自动拆箱，进而提升性能。 似乎是考虑到使用频率，某些函数类型并没有预定义。 当然，如果因为缺少针对基本类型的函数式接口造成了性能问题，你可以轻松编写自己的接口（参考 Java 源代码）——尽管这里出现性能瓶颈的可能性不大。</span>
 
 ### 高阶函数
 
 一个消费或产生函数的函数。
 
 #### 产生函数的函数
+
+A函数返回了一个B函数\=\=\>高阶函数。(A函数，返回了一个对象，因为 lambda 看起来是函数，但是，实际上是一个对象。)
 
 ```java
 interface FP extends Function<String, String> {
@@ -5441,19 +5528,16 @@ public class ProduceFunction {
 
 这里，produce() 是高阶函数。 
 
-[1] 使用继承，可以轻松地为专用接口创建别名。 
-
-[2] 使用 Lambda 表达式，可以轻松地在方法中创建和返回一个函数。
+**[1]** 使用继承，可以轻松地为专用接口创建别名。 
+**[2]** 使用 Lambda 表达式，可以轻松地在方法中创建和返回一个函数。
 
 #### 消费函数的函数
 
-> 先看下消费函数
-
-要消费一个函数，消费函数需要在参数列表正确地描述函数类型。代码示例：
+先看下消费函数。要消费一个函数，消费函数需要在参数列表正确地描述函数类型。代码示例：
 
 ```java
 public class ConsumeFunction {
-    // 传了一个函数。
+    // 传了一个函数。执行这个函数的功能。并将执行结果返回。
     static Two consume(Function<One, Two> onetwo) {
         // 开始使用
         return onetwo.apply(new One());
@@ -5465,14 +5549,30 @@ public class ConsumeFunction {
 }
 ```
 
-> 基于消费函数生成新函数
+> 根据所接受的函数生成一个新函数
 
 先看下 addThen 的源码
 
 ```java
+    /**
+     * Returns a composed function that first applies this function to
+     * its input, and then applies the {@code after} function to the result.
+     * If evaluation of either function throws an exception, it is relayed to
+     * the caller of the composed function.
+     *
+     * @param <V> the type of output of the {@code after} function, and of the
+     *           composed function
+     * @param after the function to apply after this function is applied
+     * @return a composed function that first applies this function and then
+     * applies the {@code after} function
+     * @throws NullPointerException if after is null
+     *
+     * @see #compose(Function)
+     */
 default <V> Function<T, V> andThen(Function<? super R, ? extends V> after) {
     Objects.requireNonNull(after);
     // 先消费 t 在消费 t 产生的函数
+    // 简而言之，addThen 里的方法，最后执行。Function 方法中的 apply 的结果作为 addThen 中 after的 input。
     return (T t) -> after.apply(apply(t));
 }
 ```
@@ -5511,7 +5611,7 @@ class O {
 }
 ```
 
-这里使用到了 Function 接口中名为 andThen() 的默认方法，该方法专门用于操作 函数。顾名思义，在调用 in 函数之后调用 andThen()（还有个 compose() 方法，它在 in 函数之前应用新函数）。要附加一个 andThen() 函数，我们只需将该函数作为参数传 递。transform() 产生的是一个新函数，它将 in 的动作与 andThen() 参数的动作结合 起来。
+这里使用到了 Function 接口中名为 andThen() 的默认方法，该方法专门用于操作 函数。顾名思义，在调用 in 函数之后调用 andThen()（还有个 compose() 方法，它在 in 函数之前应用新函数）。要附加一个 andThen() 函数，我们只需将该函数作为参数传递。transform() 产生的是一个新函数，它将 in 的动作与 andThen() 参数的动作结合起来。
 
 ### 闭包
 
@@ -5523,11 +5623,9 @@ class O {
 
 **持久性：**一般的函数，调用完毕之后，系统自动注销函数，而对于闭包来说，在外部函数被调用之后，闭包结构依然保存在。
 
-PS：有一说一，我看不懂闭包这块。
-
 #### lambda表达式内的变量
 
-被 Lambda 表达式引用的局部变量必须是 final 或者是等同 final 效果的。
+被 Lambda 表达式引用的局部变量必须是 final 或者是等同 final 效果的。即，如果这个变量需要被 return 出去，那么必须是 final 修饰的！
 
 > 验证代码
 
@@ -5550,9 +5648,9 @@ IntSupplier makeFun(final int x) {
 
 > 等同 final 效果
 
-做等同 final 效果，Java 8 出现的，表示虽然没有明确地声明变量是 final 的，但是因变量值没被改变过而实际有了 final 同等的效果。如果局部变量的初始值永远不会改变，那么它实际上就是 final 的。 
+做等同 final 效果，Java 8 出现的，表示虽然没有明确地声明变量是 final 的，**但是因变量值没被改变过而实际有了 final 同等的效果**。如果局部变量的初始值永远不会改变，那么它实际上就是 final 的。 
 
-如果 x 和 i 的值在方法中的其他位置发生改变（但不在返回的函数内部），则编译 器仍将视其为错误。每个递增操作则会分别产生错误消息。代码示例：
+如果 x 和 i 的值在方法中的其他位置发生改变（但不在返回的函数内部），则编译器仍将视其为错误。每个递增操作则会分别产生错误消息。代码示例：
 
 ```java
 public class Closure5 {
@@ -5638,9 +5736,9 @@ public class Closure8 {
 
 如果它是对象中的字段，那么它拥有独立的生存周期，并且不需要任何特殊的捕获，以便稍后在调用 Lambda 时存在。如果是方法内部的，则会隐式声明为 final。
 
-#### 作为闭包的内部类
+#### 内部类作为闭包
 
-与 lambda 表达式类似，变量 x 和 i 必须被明确声明为 final。在 Java 8 中，内部类的规则放宽，包括等 同 final 效果。【为什么要这样，它使用函数作用域之外的变量，闭包是为了解决当你调用函数时，可以知道，它对那些 “外部” 变量引用了什么】
+与 lambda 表达式类似，变量 x 和 i 必须被明确声明为 final。在 Java 8 中，内部类的规则放宽，包括等同 final 效果。【为什么要这样，它使用函数作用域之外的变量，闭包是为了解决当你调用函数时，可以知道，它对那些 “外部” 变量引用了什么】
 
 ```java
 public class AnonymousClosure {
@@ -5664,11 +5762,11 @@ public class AnonymousClosure {
 
 #### 常见函数组合示例
 
-- `andThen(arg)` 根据参数执行原始操作 `before.andThen(after)`
-- `compose(arg)` 根据参数执行原始操作 `after.compose(before)`
-- `and(argument)` 短路逻辑与原始谓词和参数谓词 
-- `or(argument)` 短路逻辑或原始谓词和参数谓词
-- `negate()` 该谓词的逻辑否谓词
+- `andThen(arg)` ：先执行原始操作，再执行参数（arg）操作；
+- `compose(arg)` ：先执行参数操作，再执行原始操作
+- `and(argument)`：对原始谓词和参数谓词执行短路逻辑与（AND）计算 
+- `or(argument)` ：对原始谓词和参数谓词执行逻辑或（OR）计算
+- `negate()` ：所得谓词为该谓词的逻辑取反
 
 #### 代码示例
 
@@ -5727,7 +5825,6 @@ public class PredicateComposition {
 
     public static void main(String[] args) {
         // 如果字符串中不包含 bar 且长度小于 5，或者它包含 foo ，则结果为 true。
-
         Stream.of("bar", "foobar", "foobaz", "fongopuckey")
                 .filter(p4)
                 .forEach(System.out::println);
@@ -5790,6 +5887,7 @@ public class Curry3Args {
         System.out.println(ho.apply("Hup"));
     }
 }
+// Hi Ho Hup
 ```
 
 - 基本类型和装箱时的柯里化
@@ -5861,8 +5959,8 @@ public class InterDemo {
 ### 为什么使用流
 
 - 集合优化了对象的存储，而流则是关于一组对象的处理。
-- 流（Streams）是与任何特定存储机制无关的元素序列——实际上，我们说流是 “没 有存储” 的。
-- 取代了在集合中迭代元素的做法，使用流即可从管道中提取元素并对其操作。这些 管道通常被串联在一起形成一整套的管线，来对流进行操作。
+- 流（Streams）是与任何特定存储机制无关的元素序列——实际上，我们说流是 “没有存储” 的。
+- 取代了在集合中迭代元素的做法，使用流即可从管道中提取元素并对其操作。这些管道通常被串联在一起形成一整套的管线，来对流进行操作。
 - 把焦点从集合转到了流上
 - 程序短小，容易理解
 - **流是懒加载的**。它只在**绝对必要时才计算**。可以将流看作 “延迟列表”。由于计算延迟，流使我们能够表示非常大（甚至无限）的序列，而**不需要考虑内存问题**。
@@ -5935,27 +6033,27 @@ Randoms 是声明式编程，ImperativeRandoms 是命令式编程。必须研究
 
 > 创建流的几种方式
 
-- Collection体系的集合可以使用默认方法stream（）生成流
-  - default Stream<E>() stream()
-- Map体系的集合间接生成流
-- 数组可以通过Stream接口的静态方法of(T ...value)生成流
+- Collection 体系的集合可以使用默认方法 stream() 生成流
+  - default Stream\<E\>() stream()
+- Map 体系的集合间接生成流
+- 数组可以通过 Stream 接口的静态方法 of(T ...value) 生成流
 
 ```java
 @Test
 public void fn1() {
-    // Collection的 直接生成流
+    // Collection 直接生成流
     ArrayList<String> arr = new ArrayList<String>();
     Stream<String> arrStream = arr.stream();
 
     HashSet<String> set = new HashSet<>();
     Stream<String> setStream = set.stream();
 
-    // Map体系间接的生成流
+    // Map 体系间接的生成流
     HashMap<String, Integer> map = new HashMap<>();
     Stream<Map.Entry<String, Integer>> mapStream = map.entrySet().stream();
     mapStream.filter(s -> s.getKey().length() > 2).forEach(System.out::println);
 
-    // 数组变为Stream流
+    // 数组变为 Stream 流
     String[] str = {"12313", "asda"};
     Stream<String> strSteam1 = Stream.of(str);
     Stream<String> strSteam2 = Stream.of("123", "!231", "!!");
@@ -6022,11 +6120,9 @@ public class CollectionToStream {
 
 #### 随机数流
 
-这块没看懂
-
 > 生成随机数
 
-- boxed() 流操作将会自动地把基 本类型包装成为对应的装箱类型，从而使得 show() 能够接受流。
+- boxed() 流操作将会自动地把基本类型包装成为对应的装箱类型，从而使得 show() 能够接受流。
 
 ```java
 // IntStream 中的 boxed 方法
@@ -6037,7 +6133,7 @@ Stream<Integer> boxed();
 public class RandomGenerators {
     public static <T> void show(Stream<T> stream) {
         stream
-                .limit(4)
+                .limit(4) // 取前四个元素
                 .forEach(System.out::println);
         System.out.println("++++++++");
     }
@@ -6052,12 +6148,12 @@ public class RandomGenerators {
         show(rand.longs(50, 100).boxed());
         show(rand.doubles(20, 30).boxed());
         // 控制流大小：
-        show(rand.ints(2).boxed());
+        show(rand.ints(2).boxed()); // 生成2个元素
         show(rand.longs(2).boxed());
         show(rand.doubles(2).boxed());
         // 控制流的大小和界限 产生三个元素
-        show(rand.ints(3, 3, 9).boxed());
-        show(rand.longs(3, 12, 22).boxed());
+        show(rand.ints(3, 3, 9).boxed()); // 3个元素 范围 3<=x<=9
+        show(rand.longs(3, 12, 22).boxed()); // 3个元素 范围 12<=x<=22
         show(rand.doubles(3, 11.5, 12.3).boxed());
     }
 }
@@ -8603,7 +8699,6 @@ public class PathInfo {
         System.out.println(id + ": " + p);
     }
 
-
     public void show(Path path) {
         System.out.println(path);
         System.out.println("是否存在===>" + Files.exists(path));
@@ -8646,7 +8741,7 @@ public class PathInfo {
     public void test4() {
         Path path = Paths.get("PathInfo.java");
         URI uri = path.toUri();
-        System.out.println(uri); // 同一资源定位符
+        System.out.println(uri); // 统一资源定位符
         Path puri = Paths.get(uri);
         System.out.println(Files.exists(puri));
         File file = path.toAbsolutePath().toFile(); //表示目录或者文件本身
@@ -11837,7 +11932,7 @@ class Generic2<T> {
 }
 ```
 
-- 创建一个 Object 数组，在必要的时候才进行类型转换0，<span style="color:red">**强烈推荐**</span>
+- 创建一个 Object 数组，在必要的时候才进行类型转换，<span style="color:red">**强烈推荐**</span>
 
 ```java
 @SuppressWarnings("all") // 压制警告
@@ -11953,8 +12048,9 @@ public class NoCovariantGenerics {
 如果我们想在两个类型之间建立某种向上转型的关系，需要使用通配符。
 
 - <span style="color:red">`<?>` 指定了没有限制的泛型类型，只能读不能写。</span>
-- <span style="color:red">`<? extends Parent>`  指定了泛型类型的上界，只能往外面拿，不能往里面写（假如可以写，那你写的是哪个子类？不确定，因此不能写）。</span>
-- <span style="color:red">`<? super Child>`  指定了泛型类型的下界，只能往里面写，不能往外面拿</span>
+- <span style="color:red">`<? extends Parent>`  指定了泛型类型的上界。里面所有的类都要是他的子类；只能往外面拿，不能往里面写（假如可以写，那你写的是哪个子类？不确定，因此不能写）。</span>
+- <span style="color:red">`<? super Child>`  指定了泛型类型的下界，里面所有的类都要是 Child 的父类，只能往里面写，不能往外面拿</span>
+- 上述说的不能拿，意思是拿出来的数据没有具体的类型，只能用 Object 接收的意思。
 
 > ? 只能拿，不能写
 
@@ -12004,7 +12100,7 @@ list ->    Apple
            Orange
 ```
 
-- 不能写：你可能传进去的是个`List<Apple>`,那你还能往里面随便丢个`Orang`e进去吗？
+- 不能写：你可能传进去的是个`List<Apple>`,那你还能往里面随便丢个`Orange`进去吗？
 - 可以读：你取出来的都只能被当成`Fruit`，无论你取出来的是`Apple`还是`Orange`，**根据向上转型**，你都可以把它当成是`Fruit`，但你无法确定它具体是哪一种类型，所以被取出来的只能当做Fruit处理
 
 > 下界通配符
@@ -12028,8 +12124,6 @@ list ->    Food
 
 [Java 泛型中的通配符 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/105602087)
 
-----
-
 何时使用上限有界通配符以及何时使用下限有界通配符？官方文档中提供了一些准则.
 
 - "in"类型： “in”类型变量向代码**提供**数据。 如`copy（src，dest）` src参数提供要复制的数据，因此它是“in”类型变量的参数。
@@ -12037,8 +12131,8 @@ list ->    Food
 
 > 准则
 
-- "in" 类型使用 上边界通配符 `? extends`.
-- "out" 类型使用 下边界通配符 `? super`.
+- "in" 类型使用上边界通配符 `? extends`.
+- "out" 类型使用下边界通配符 `? super`.
 - 如果即需要提供数据(in), 又需要接收数据(out), 就不要使用通配符.
 
 ```java
