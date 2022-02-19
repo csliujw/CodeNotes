@@ -189,7 +189,7 @@ use demo;
 
 查询指定表的建表语句 `show create table 表名`
 
-![image-20220131155715763](img\image-20220131155715763.png)
+<img src="img\image-20220131155715763.png">
 
 #### 表操作-创建
 
@@ -280,15 +280,17 @@ create table tb_emp(
 添加字段：`alter table 表名 add 字段名 类型(长度) [comment 注释] [约束];`
 `alter table tb_emp add nickname varchar(20) comment '昵称';` 
 
-![image-20220131162848796](img\image-20220131162848796.png)
+<img src="img\image-20220131162848796.png">
 
 修改数据类型：`alter table 表名 modify 字段名 新数据类型(长度);`
 `alter table tb_emp modify nickname int;`
-![image-20220131163101591](img\image-20220131163101591.png)
+
+<img src="img\image-20220131163101591.png">
 
 修改字段名和字段类型：`alter table 表名 change 旧字段名 新字段名 类型(长度) [comment 注释] [约束]`
 `alter table tb_emp change nickname username varchar(30) comment '用户名' not null;`
-![image-20220131163452393](img\image-20220131163452393.png)
+
+<img src="img\image-20220131163452393.png">
 
 删除字段：`alter table 表名 drop 字段名`;
 `alter table tb_emp drop username;`
@@ -389,7 +391,7 @@ select 字段列表 from 表名 where 条件列表;
 
 <div style="text-align:center;"><h3>条件</h3></div>
 
-![image-20220131170613284](img\image-20220131170613284.png)
+<img src="img\image-20220131170613284.png">
 
 ![image-20220131170637473](img\image-20220131170637473.png)
 
@@ -549,7 +551,7 @@ select * from emp where sex='男' and age between 20 and 40 order by age asc,ent
 
 #### 执行顺序
 
-![image-20220201004522563](img\image-20220201004522563.png)
+<img src="img\image-20220201004522563.png">
 
 ### DCL
 
@@ -976,7 +978,7 @@ gender char(1) COMMENT ''
 
 外键用来让两张表的数据之间建立连接，从而保证数据的一致性和完整性。
 
-![image-20220201153732702](img\image-20220201153732702.png)
+<img src="img\image-20220201153732702.png">
 
 注意：目前上述的两张表，在数据库层面，并未建立外键关联，所以是无法保证数据的一致性和完整性的。
 
@@ -994,7 +996,7 @@ alter table 表名 add constraint 外键名称 foreign key(外键字段名) refe
 alter table 表名 drop foreign key 外键名称;
 ```
 
-![image-20220201154122979](img\image-20220201154122979.png)
+<img src="img\image-20220201154122979.png">
 
 ```sql
 alter table 表名 add constraint 外键名称 foreign key(外键字段名) references 主表(主表字段名)
@@ -1128,8 +1130,6 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
         (null,'本科','应用数学','阳泉第一小学','阳泉区第一中学','清华大学',4);
 ```
 
-
-
 ## 多表查询
 
 - 多表关系：一对一、一对多、多对多
@@ -1155,7 +1155,7 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 ➢ 案例: 部门与员工的关系 
 ➢ 关系: 一个部门对应多个员工，一个员工对应一个部门 
 ➢ 实现: 在多的一方建立外键，指向一的一方的主键
-![image-20220201162055837](img\image-20220201162055837.png)
+<img src="img\image-20220201162055837.png">
 
 > 多对多
 
@@ -1163,14 +1163,14 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 ➢ 关系: 一个学生可以选修多门课程，一门课程也可以供多个学生选择 
 ➢ 实现: 建立第三张中间表，中间表至少包含两个外键，分别关联两方主键
 
-![image-20220201162206455](img\image-20220201162206455.png)
+<img src="img\image-20220201162206455.png">
 
 > 一对一
 
 ➢ 案例: 用户与用户详情的关系 
 ➢ 关系: 一对一关系，多用于单表拆分，将一张表的基础字段放在一张表中，其他详情字段放在另一张表中，以提升操作效率 
 ➢ 实现: 在任意一方加入外键，关联另外一方的主键，并且设置外键为唯一的(UNIQUE)
-![image-20220201162313709](img\image-20220201162313709.png)
+<img src="img\image-20220201162313709.png">
 
 ### 多表查询概述
 
@@ -1178,7 +1178,7 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 
 笛卡尔积: 笛卡尔乘积是指在数学中，两个集合A集合和B集合的所有组合情况。(在多表查询时，需要消除无效的笛卡尔积)
 
-![image-20220201162441949](img\image-20220201162441949.png)
+<img src="img\image-20220201162441949.png">
 
 ### 内连接 
 
@@ -1478,7 +1478,7 @@ select count(*) from emp where dept_id = 1;
 
 <span style="color:red">**事务**</span> 是一组操作的集合，它是一个不可分割的工作单位，事务会把所有的操作作为一个整体一起向系统提交或撤销操作 请求，即这些操作<span style="color:red">**要么同时成功，要么同时失败。**</span>
 
-![image-20220201163223983](img\image-20220201163223983.png)
+<img src="img\image-20220201163223983.png">
 
 <span style="color:red">**默认MySQL的事务是自动提交的，也就是说，当执行一条DML语句，MySQL会立即隐式的提交事务。**</span>
 
@@ -1551,11 +1551,11 @@ insert into account(id,name,momeny) value(null,'张三',2000),(null,'李四',200
 | 不可重复读 | 事务 A 多次读取同一数据，事务B在事务A多次读取的过程中，对数据作了**更新并提交**，**导致事务A多次读取同一数据时，结果不一致**<br />（一个事务先后读取同一条记录，但两次读取的数据不同，称之为不可重复读。） |
 | 幻读       | 一个事务先根据某些条件查询出一些记录，之后另一个事务又向表中插入了符合这些条件的记录，原先的事务再次按照该条件查询时，能把另一个事务插入的记录也读出来。（幻读在读未提交、读已提交、可重复读隔离级别都可能会出现） |
 
-![image-20220201164120794](img\image-20220201164120794.png)
+<img src="img\image-20220201164120794.png">
 
-![image-20220201164153913](img\image-20220201164153913.png)
+<img src="img\image-20220201164153913.png">
 
-![image-20220201164216281](img\image-20220201164216281.png)
+<img src="img\image-20220201164216281.png">
 
 **总结**：不可重复读的和幻读很容易混淆，**不可重复读侧重于修改，幻读侧重于新增或删除**
 
@@ -1658,8 +1658,6 @@ set session transaction isolation level read uncommitted ;
 set session transaction isolation level repeatable read ;
 ```
 
-
-
 # 进阶
 
 ## MySQL8.0.26-Linux版安装
@@ -1676,11 +1674,11 @@ Linux的版本为 CentOS7;
 
 https://downloads.mysql.com/archives/community/
 
-![image-20211031230239760](img/image-20211031230239760.png) 
+<img src="img/image-20211031230239760.png">
 
 ### 3. 上传MySQL安装包
 
-![image-20211031231930205](img/image-20211031231930205.png) 
+<img src="img/image-20211031231930205.png">
 
 ### 4. 创建目录,并解压
 
@@ -1794,7 +1792,7 @@ mysql -u root -p
 
 ### MySQL体系结构
 
-![image-20220122173547178](img\image-20220122173547178.png)
+<img src="img\image-20220122173547178.png">
 
 **连接层**：最上层是一些客户端和链接服务，主要完成一些类似于连接处理、授权认证、及相关的安全方案。服务器也会为安全接入的每个客户 端验证它所具有的操作权限。
 
@@ -1834,7 +1832,7 @@ show ENGINES;
     - 支持 FOREIGN KEY约束，保证数据的完整性和正确性；
 - 文件：xxx.ibd：xxx代表的是表名，innoDB引擎的每张表都会对应这样一个表空间文件，存储该表的表结构（frm、sdi）、数据和索引。 参数：innodb_file_per_table
 
-![image-20220122175230096](img\image-20220122175230096.png)
+<img src="img\image-20220122175230096.png">
 
 > MyISAM
 
@@ -1852,7 +1850,7 @@ show ENGINES;
 
 文件 xxx.sdi中存储表结构信息
 
-![image-20220122175842514](img\image-20220122175842514.png)
+<img src="img\image-20220122175842514.png">
 
 InnoDB 与 MyISAM 直接的区别：InnoDB支持事务、锁机制为行级锁、支持外键。
 
@@ -1923,7 +1921,7 @@ InnoDB 与 MyISAM 直接的区别：InnoDB支持事务、锁机制为行级锁�
 
 > 剖析各种平衡树结构做索引的优缺点：
 
-![image-20220202102720134](img\image-20220202102720134.png)
+<img src="img\image-20220202102720134.png">
 
 二叉树缺点：顺序插入时，会形成一个链表，查询性能大大降低。 大数据量情况下，层级较深，检索速度慢。 
 
@@ -1931,13 +1929,13 @@ InnoDB 与 MyISAM 直接的区别：InnoDB支持事务、锁机制为行级锁�
 
 - B-Tree（多路平衡查找树）：以一颗最大度数（max-degree）为5(5阶)的b-tree为例(每个节点最多存储4个key，5个指针)：
 
-![image-20220202102904364](img\image-20220202102904364.png)
+<img src="img\image-20220202102904364.png">
 
 具体动态变化的过程可以参考网站: https://www.cs.usfca.edu/~galles/visualization/BTree.html
 
 - B+Tree：以一颗最大度数（max-degree）为4（4阶）的b+tree为例：
 
-![image-20220202103024493](img\image-20220202103024493.png)
+<img src="img\image-20220202103024493.png">
 
 B-Tree 和 B+Tree 的区别：
 
@@ -1945,12 +1943,14 @@ B-Tree 和 B+Tree 的区别：
 - 叶子节点形成一个单向链表
 
 MySQL索引数据结构对经典的B+Tree进行了优化。在原B+Tree的基础上，增加一个指向相邻叶子节点的链表指针，就形成了带有顺 序指针的B+Tree，提高区间访问的性能。
-![image-20220202103738086](img\image-20220202103738086.png)
+
+<img src="img\image-20220202103738086.png">
 
 - 哈希索引
 
 哈希索引，哈希索引就是采用一定的hash算法，将键值换算成新的hash值，映射到对应的槽位上，然后存储在hash表中。 如果两个(或多个)键值，映射到一个相同的槽位上，他们就产生了hash冲突（也称为hash碰撞），可以通过链表来解决。
-![image-20220202103833246](img\image-20220202103833246.png)
+
+<img src="img\image-20220202103833246.png">
 
 哈希索引特点
 
@@ -1996,7 +1996,7 @@ MySQL索引数据结构对经典的B+Tree进行了优化。在原B+Tree的基础
 
 ➢ 如果表没有主键，或没有合适的唯一索引，则InnoDB会自动生成一个rowid作为隐藏的聚集索引。
 
-![image-20220202104706091](img\image-20220202104706091.png)
+<img src="img\image-20220202104706091.png">
 
 二级索引可能会存在一个回表查询。二级索引中存储的是二级索引和主键（此处是name和id），如果需要查询的数据不止name和id，则会触发一次回表查询，根据主键id，再查询一次数据，拿到需要的字段值。
 

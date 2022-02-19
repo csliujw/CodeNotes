@@ -224,7 +224,7 @@ set global innodb_old_blocks_pct = 10
 
 **自适应哈希索引原理：**
 
-<img src="../pics/SQL/MySQL/adaptive_hash_index.png" style="float:left">
+<img src="../pics/SQL/MySQL/adaptive_hash_index.png" >
 
 Innodb存储引擎会监控对表上二级索引的查找，如果发现某二级索引被频繁访问，二级索引成为热数据，建立哈希索引可以带来速度的提升，则：
 

@@ -170,29 +170,27 @@ ByteBuffer 有以下重要属性
 
 一开始，position指向index=0，写模式下就是在index=0处写入数据，读模式下就是读取index=0处的数据。
 
-![](img/0021.png)
+<img src="img/0021.png">
 
 写模式下，position 是写入位置，limit 等于容量，下图表示写入了 4 个字节后的状态
 
-![](img/0018.png)
+<img src="img/0018.png">
 
 flip 动作发生后，position 切换为读取位置，limit 切换为读取限制
 
-![](img/0019.png)
+<img src="img/0019.png">
 
 读取 4 个字节后，状态
 
-![](img/0020.png)
+<img src="img/0020.png">
 
 clear 动作发生后，状态
 
-![](img/0021.png)
+<img src="img/0021.png">
 
 compact 方法，是把未读完的部分向前压缩，然后切换至写模式。【数据没读完，就切换为写模式】
 
-![](img/0022.png)
-
-
+<img src="img/0022.png">
 
 #### 💡 调试工具类
 
@@ -1495,7 +1493,7 @@ ld�
 
 #### 处理消息的边界
 
-![](img/0023.png)
+<img src="img/0023.png">
 
 * 一种思路是固定消息长度，数据包大小一样，服务器按预定长度读取，缺点是浪费带宽
 * 另一种思路是按分隔符拆分，缺点是效率低
@@ -1517,7 +1515,7 @@ s ->> b2: 第二次 read 存入 3333\r
 b2 ->> b2: 01234567890abcdef3333\r
 ```
 
-<img src="..\pics\net_coding\image-20210817145844382.png">
+<img src="img\image-20210817145844382.png">
 
 服务器端
 
@@ -1951,34 +1949,34 @@ public class UdpClient {
 * 等待数据阶段
 * 复制数据阶段
 
-![](img/0033.png)
+<img src="img/0033.png">
 
 * <span style="color:green">**阻塞 IO**</span>：用户线程被阻塞了，用户线程在读取数据的时候，数据可能没准备好，需要等待。等内核空间处理好数据，可以读取后，用户线程才可以继续运行。在等待数据准备完毕的时候，用户线程什么事都不能做，只能干等着。
 
-  ![](img/0039.png)
+  <img src="img/0039.png">
 
 * <span style="color:green">**同步非阻塞  IO**</span>：读数据时，调用一次 read 方法，这时候数据还没传输过来，会立刻返回，告诉用户线程，我读到了0（没读到数据），然后回继续调用 read 方法，继续看数据有没有好；用户线程并没有停下来，而是一直在问，数据有没有好。但是，某一次调用时，发现有数据了！这时候就不会立刻返回了，就会去完成第二个阶段**赋值数据**，赋值数据的时候，用户线程还是会被阻塞。等待数据赋值完毕，返回，用户线程可以继续运行。这里的非阻塞只是等待数据非阻塞的（这里不就是空转cpu吗，而且牵扯到多次系统空间和用户空间的切换，开销也大）。
 
-  ![](img/0035.png)
+  <img src="img/0035.png">
 
 * <span style="color:green">**同步多路复用**</span>：关键在于 select，select 方法先阻塞住，看有没有事件，有事件发生了，内核就会通知 select，用户线程就可以根据 selectKey 拿到 channel，去调用相应的事件。read 期间需要赋值数据了，还是需要阻塞。两个阶段都是阻塞的，但是
 
-  ![](img/0038.png)
+  <img src="img/0038.png">
 
 * <span style="color:green">**信号驱动**</span>
 
 * <span style="color:green">**异步 IO**</span>：read 是非阻塞的，不用等待 ”等待数据“和”复制数据“的阶段，只是通知 OS 我要读一个数据，什么时候数据准备好了就告诉我。
 
-  ![](img/0037.png)
+  <img src="img/0037.png">
 
 * <span style="color:green">**阻塞 IO vs 多路复用**</span>
 
   * 阻塞 IO，做一件事的时候，就不能做另一件事。比如，你在等待连接，那么就不可以进行建立连接。
   * 多路复用，一个 select 可以检测多个 channel 的事件。 select 方法执行后，就在等待事件发生，只要事件发生了，就可以触发 select，让 select 继续向下运行。
   
-  ![](img/0034.png)
+  <img src="img/0034.png">
   
-  ![](img/0036.png)
+  <img src="img/0036.png">
 
 #### 🔖 参考
 
@@ -2003,7 +2001,7 @@ socket.getOutputStream().write(buf);
 
 内部工作流程是这样的：
 
-![](img/0024.png)
+<img src="img/0024.png">
 
 1. java 本身并不具备 IO 读写能力，因此 read 方法调用后，要从 java 程序的**用户态**切换至**内核态**，去调用操作系统（Kernel）的读能力，将数据读入**内核缓冲区**。这期间用户线程阻塞，操作系统使用 DMA（Direct Memory Access）来实现文件读，其间也不会使用 cpu
 
@@ -2027,7 +2025,7 @@ socket.getOutputStream().write(buf);
 * ByteBuffer.allocate(10)  HeapByteBuffer 使用的还是 java 内存
 * ByteBuffer.allocateDirect(10)  DirectByteBuffer 使用的是操作系统内存
 
-![](img/0025.png)
+<img src="img/0025.png">
 
 **大部分步骤与优化前相同**，不再赘述。唯有一点：java 可以使用 DirectByteBuf 将堆外内存映射到 jvm 内存中来直接访问使用
 
@@ -2039,7 +2037,7 @@ socket.getOutputStream().write(buf);
 
 进一步优化（底层采用了 linux 2.1 后提供的 sendFile 方法），java 中对应着两个 channel 调用 transferTo/transferFrom 方法拷贝数据
 
-![](img/0026.png)
+<img src="img/0026.png">
 
 1. java 调用 transferTo 方法后，要从 java 程序的**用户态**切换至**内核态**，使用 DMA将数据读入**内核缓冲区**，不会使用 cpu
 2. 数据从**内核缓冲区**传输到 **socket 缓冲区**，cpu 会参与拷贝
@@ -2052,7 +2050,7 @@ socket.getOutputStream().write(buf);
 
 进一步优化（linux 2.4）
 
-![](img/0027.png)
+<img src="img/0027.png">
 
 1. java 调用 transferTo 方法后，要从 java 程序的**用户态**切换至**内核态**，使用 DMA将数据读入**内核缓冲区**，不会使用 cpu
 2. 只会将一些 offset 和 length 信息拷入 **socket 缓冲区**，几乎无消耗
@@ -2062,9 +2060,6 @@ socket.getOutputStream().write(buf);
 
 * 更少的用户态与内核态的切换
 * 不利用 cpu 计算，减少 cpu 缓存伪共享
-<<<<<<< HEAD:网络编程/Netty01-nio.md
-* 零拷贝适合小文件传输
-=======
 * 零拷贝适合小文件传输，不适合大文件的传输。
   * 如果文件比较大，那需要把大量的数据读到缓冲区去，缓冲区是为了方便反复获取数据，如果文件比较大，要把文件发生到网卡，数据从头到尾只读取了一次，没发挥到缓存的效果，反而因为文件较大，把缓冲区内存都占满了，导致其他文件的读写受到影响。
   * 适合读取频繁的小文件。

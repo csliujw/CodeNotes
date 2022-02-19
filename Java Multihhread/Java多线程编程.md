@@ -2605,19 +2605,15 @@ https://www.cnblogs.com/LemonFive/p/11248248.html
 
 - wait：阻塞线程并释放锁。
   - 如果一个线程调用了object.wait()方法，那么它就会进入object对象的等待队列。这个等待队列中，可能会有多个线程，因为系统运行多个线程同时等待某一个对象。
-
 - notify：唤醒阻塞队列中的某个线程。
   - 当object.notify()方法被调用时，它就会从这个等待队列中随机选择一个线程，并将其唤醒。
   - PS：选择唤醒某个线程，这个选择是不公平的，完全随机！
-
 - notifyAll：唤醒阻塞队列中的所有线程。
 - `注意：Thread.sleep是不会释放锁的！`
 
-----
-
 > 原理
 
-<img src="..\pics\JavaStrengthen\juc\wait_theory.png" style="width:100%">
+<img src="juc\wait_theory.png" style="width:80%">
 
 - Owner 线程发现条件不满足，调用 wait 方法，即可进入 WaitSet 变为 WAITING 状态 
 - BLOCKED 和 WAITING 的线程都处于阻塞状态，不占用 CPU 时间片 
@@ -2659,7 +2655,7 @@ wait(long n) 有时限的等待, 到 n 毫秒后结束等待，或是被 notify
 - JDK 中，join 的实现、Future 的实现，采用的就是此模式 
 - 因为要等待另一方的结果，因此归类到同步模式
 
-<img src="..\pics\JavaStrengthen\juc\Guarded_Suspension.png">
+<img src="juc\Guarded_Suspension.png">
 
 ### 实现
 
@@ -2854,8 +2850,6 @@ class GuardedObject {
     }
 }
 ```
-
-
 
 ### join 原理
 
@@ -5207,7 +5201,7 @@ AQS = state + CLH队列
 
 **`AQS`是怎么排队的：**是用`LockSupport.pork()`来进行排队的
 
-<img src="../pics/JavaStrengthen/juc/AQS03.png" styyle="float:left">
+<img src="juc/AQS03.png" styyle="float:left">
 
 ### 源码解析
 

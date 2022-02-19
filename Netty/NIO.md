@@ -243,7 +243,7 @@ Java AIO(NIO.2) ： 异步 异步非阻塞，服务器实现模式为一个有�
 
 客户端的数据都是通过OS进行处理，OS处理完数据后才会通知相应的服务端的线程进行数据的接收。
 
-<img src="img/io/Java_AIO.png">
+<img src="img/io/Java_AIO.png" width="40%">
 
 ## 2.3 BIO、NIO、AIO适用场景
 

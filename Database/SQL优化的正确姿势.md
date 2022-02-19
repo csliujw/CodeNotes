@@ -4,7 +4,7 @@
 
 ## 全文内容预览：
 
-<img src="../pics/wechat/mysql/MySQL_optimization.webp" style="float:left">
+<img src="../pics/wechat/mysql/MySQL_optimization.webp">
 
 **<span style="color:green">性能优化就应该一把梭子吗？还是要符合一些规范和原则呢？</span>**
 
@@ -27,7 +27,7 @@
 2. 优化的过程和结果都要保证服务的**<span style="color:green">安全性</span>**；
 3. 要保证服务的**<span style="color:green">稳定性</span>**，不能为了追求性能牺牲程序的稳定性。比如不能为了提高 `Redis` 的运行速度，而关闭持久化的功能，因为这样在 `Redis` 服务器重启或者掉电之后会丢失存储的数据。
 
-<img src="../pics/wechat/mysql/optimization_rule.webp" style="float:left">
+<img src="../pics/wechat/mysql/optimization_rule.webp" >
 
 以上原则看似都是些废话，但却给了我们一个启发，那就是我们**<span style="color:green">性能优化手段应该是：预防性能问题为主+被动优化为辅</span>**。
 
@@ -51,7 +51,7 @@
 2. **<span style="color:green">部分 SQL 运行慢；</span>**
 3. **<span style="color:green">整个 SQL 运行慢。</span>**
 
-<img src="../pics/wechat/mysql/MySQL_three_Question.webp" style="float:left">
+<img src="../pics/wechat/mysql/MySQL_three_Question.webp">
 
 ### 问题 1：单条 `SQL` 运行慢
 
