@@ -12048,8 +12048,14 @@ public class NoCovariantGenerics {
 如果我们想在两个类型之间建立某种向上转型的关系，需要使用通配符。
 
 - <span style="color:red">`<?>` 指定了没有限制的泛型类型，只能读不能写。</span>
-- <span style="color:red">`<? extends Parent>`  指定了泛型类型的上界。里面所有的类都要是他的子类；只能往外面拿，不能往里面写（假如可以写，那你写的是哪个子类？不确定，因此不能写）。</span>
-- <span style="color:red">`<? super Child>`  指定了泛型类型的下界，里面所有的类都要是 Child 的父类，只能往里面写，不能往外面拿</span>
+- `<? extends Parent>`  指定了泛型类型的上界。集合里面所有的类都要是他的子类；
+    - 可以向里面添加数据吗？不可以！因为这里只指定了集合里面的所有类都是他的子类，但是不知道具体是那个类型的子类，添加后可能会导致不安全的转型操作，所以不能添加。
+    - 可以向拿数据出来吗？可以！拿出来的数据都可以安全的转型为 Parent 类。
+
+- `<? super Child>`  指定了泛型类型的下界，集合里面所有的类都是 Child 的父类
+    - 可以向里面添加数据吗？可以，可以添加 Child 的子类，它可以安全的转型为集合中限定的下界 Child
+    - 不能往外面拿，拿到的数据，只能转型为 Object，因为集合中的数据是 Child 的父类类型，无法确定到底是那个父类类型
+
 - 上述说的不能拿，意思是拿出来的数据没有具体的类型，只能用 Object 接收的意思。
 
 > ? 只能拿，不能写
@@ -12162,6 +12168,58 @@ public class NoCovariantGenerics {
 通配符形式可以减少类型参数，形式上更简单，可读性更好，能用通配符就用通配符
 
 通配符和类型参数往往配合使用
+
+### 泛型上界和下界
+
+**泛型中上界和下界的定义**
+
+上界 `<? extends Fruit>`
+
+下界`<? super Fruit>`
+
+**上界和下界的特点**
+
+上界的 list 只能 get，不能 add（确切地说不能 add 出除 null 之外的对象，包括 Object ）
+
+下界的 list 只能 add，不能 get
+
+> Thinking In Java 中的代码示例：
+
+```java
+import java.util.ArrayList;
+import java.util.List;
+
+class Fruit {}
+class Apple extends Fruit {}
+class Jonathan extends Apple {}
+class Orange extends Fruit {}
+public class CovariantArrays {
+
+  public static void main(String[] args) {
+    //上界
+    List flistTop = new ArrayList();
+    flistTop.add(null);
+    //add Fruit对象会报错
+    //flist.add(new Fruit());
+    Fruit fruit1 = flistTop.get(0);
+
+    //下界
+    List flistBottem = new ArrayList();
+    flistBottem.add(new Apple());
+    flistBottem.add(new Jonathan());
+    //get Apple对象会报错
+    //Apple apple = flistBottem.get(0);
+  }
+}
+```
+
+**这些特点的原因**
+
+上界 ，表示所有继承Fruit的子类，但是具体是哪个子类，无法确定，所以调用add的时候，要add什么类型，谁也不知道。但是get的时候，不管是什么子类，不管追溯多少辈，肯定有个父类是Fruit，所以，我都可以用最大的父类Fruit接着，也就是把所有的子类向上转型为Fruit。
+
+下界 ，表示Apple的所有父类，包括Fruit，一直可以追溯到老祖宗Object 。那么当我add的时候，我不能add Apple的父类，因为不能确定List里面存放的到底是哪个父类。但是我可以add Apple及其子类。因为不管我的子类是什么类型，它都可以向上转型为Apple及其所有的父类甚至转型为Object 。但是当我get的时候，Apple的父类这么多，我用什么接着呢，除了Object，其他的都接不住。
+
+所以，归根结底可以用一句话表示，那就是编译器可以支持向上转型，但不支持向下转型。具体来讲，我可以把Apple对象赋值给Fruit的引用，但是如果把Fruit对象赋值给Apple的引用就必须得用cast
 
 ### 特殊情况
 
