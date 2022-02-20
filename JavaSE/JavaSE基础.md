@@ -5961,8 +5961,8 @@ public class InterDemo {
 - 集合优化了对象的存储，而流则是关于一组对象的处理。
 - 流（Streams）是与任何特定存储机制无关的元素序列——实际上，我们说流是 “没有存储” 的。
 - 取代了在集合中迭代元素的做法，使用流即可从管道中提取元素并对其操作。这些管道通常被串联在一起形成一整套的管线，来对流进行操作。
-- 把焦点从集合转到了流上
-- 程序短小，容易理解
+- 把焦点从集合转到了流上。
+- 程序短小，容易理解。
 - **流是懒加载的**。它只在**绝对必要时才计算**。可以将流看作 “延迟列表”。由于计算延迟，流使我们能够表示非常大（甚至无限）的序列，而**不需要考虑内存问题**。
 
 代码举例：随机展示 5 至 20 之间不重复的整数并进行排序
@@ -6031,7 +6031,7 @@ Randoms 是声明式编程，ImperativeRandoms 是命令式编程。必须研究
 
 ### 流创建
 
-> 创建流的几种方式
+> 创建流的几种方式：非 kye：value的集合可以直接调用stream方法生成流，而key，value形式的需要间接生成流
 
 - Collection 体系的集合可以使用默认方法 stream() 生成流
   - default Stream\<E\>() stream()
@@ -6087,7 +6087,7 @@ class Bubble {
 每个集合都可以通过调用 stream() 方法来产生一个流
 
 - map  `<R> Stream<R> map(Function<? super T, ? extends R> mapper);` 会产生一个新流。
-- `mapToInt()` `mapToInt() 方法将一个对象流（object stream）转换成为包含整型数字的 IntStream`
+- `mapToInt()` `mapToInt() 方法将一个对象流（object stream）转换成为包含整型数字的 IntStream`，可以避免自动装箱拆箱，提高性能。
 
 ```java
 public class CollectionToStream {
@@ -6161,7 +6161,7 @@ public class RandomGenerators {
 
 > 使用 Random 为 String 对象集合创建 Supplier
 
-- collect() 操作，它根据参数来结合 所有的流元素
+- collect() 操作，它根据参数来结合所有的流元素
 -  Collectors.joining() 作为 collect() 的参数时，将得到一个 String 类型的结果，该结果是流中的所有元素被 joining() 的参数隔开
 - Stream.generate() 的用法，它可以把任意 Supplier 用于生成 T 类型的流
 
@@ -6321,6 +6321,9 @@ public class Fibonacci {
                 .skip(20) // 过滤前 20 个
                 .limit(10) // 然后取 10 个
                 .forEach(System.out::println);
+        Stream.iterate(1, x -> x * 10)
+            .limit(3)
+            .forEach(System.out::println); // 1 10 100
     }
 }
 ```
@@ -6416,10 +6419,10 @@ public class FileToWordsRegexp {
 }
 ```
 
-在构造器中我们读取了文件中的所有内容（跳过第一行注释，并将其转化成为单行 字符串）。现在，当你调用 stream() 的时候，可以像往常一样获取一个流，但这回你可 以多次调用 stream() ，每次从已存储的字符串中创建一个新的流。这里有个限制，整 个文件必须存储在内存中；在大多数情况下这并不是什么问题，但是这丢掉了流操作非 常重要的优势： 
+在构造器中我们读取了文件中的所有内容（跳过第一行注释，并将其转化成为单行 字符串）。现在，当你调用 stream() 的时候，可以像往常一样获取一个流，但这回你可以多次调用 stream() ，每次从已存储的字符串中创建一个新的流。这里有个限制，整 个文件必须存储在内存中；在大多数情况下这并不是什么问题，但是这丢掉了流操作非常重要的优点： 
 
-- “不需要把流存储起来。” 当然，流确实需要一些内部存储，但存储的只是序列的 一小部分，和存储整个序列不同。 
-- 它们是懒加载计算的。
+- “不需要把流存储起来。” 当然，流确实需要一些内部存储，但存储的只是序列的一小部分，和存储整个序列不同。 
+- 它们是懒加载的，调用时才计算。
 
 ### 中间操作
 
@@ -6435,7 +6438,7 @@ public class FileToWordsRegexp {
 
 - **`concat`**：`concat(Steam a,Stream b)` 合并a，b两个流
 
-- **`distinct`**：基于`hashCode（）`和`equals（）`去重
+- **`distinct`**：基于`hashCode（）`和`equals（）`的去重
 
 - **`sorted`**：**按照指的规则排序，无参数按照自然排序，有参数按照指的排序规则**
   - `sorted(Comparator<? super T> comparator)`
@@ -6462,12 +6465,20 @@ public class Peeking {
                 .skip(1)
                 .limit(5)
                 .map(w -> w % 2) // 执行完 map 后，用 peek 输出看下结果
-                .peek(e -> System.out.println(e))
+                .peek(e -> System.out.print("first peek:" + e + "\t"))
                 .map(w -> w * 5) // 执行完 map 后，用 peek 输出看下结果
-                .peek(e -> System.out.println(e))
-                .forEach(System.out::print);
+                .peek(e -> System.out.print("second peek:" + e + "\t"))
+                .forEach(e -> System.out.println("final value:" + e));
     }
 }
+/*
+逐个元素进行输出。map -- peek -- map -- peek -- forEach
+first peek:0	second peek:0	final value:0
+first peek:1	second peek:5	final value:5
+first peek:0	second peek:0	final value:0
+first peek:1	second peek:5	final value:5
+first peek:0	second peek:0	final value:0
+*/
 ```
 
 #### 流元素排序
@@ -6482,6 +6493,7 @@ public class SortedComparator {
     public static void main(String[] args) throws Exception {
         Arrays.stream(new String[]{"!@!#", "A", "B", "s", "ASFASF"})
                 .limit(10)
+            	//你定义了比较器，这里可以定义排序规则，正序还是反序
                 .sorted(Comparator.reverseOrder())
                 .forEach(System.out::print);
     }
@@ -6497,7 +6509,6 @@ public class SortedComparator {
 package tij.chapter13;
 
 import java.util.stream.LongStream;
-
 import static java.util.stream.LongStream.*;
 
 public class Prime {
@@ -6528,7 +6539,7 @@ public class Prime {
 
 rangeClosed() 包含了上限值。如果不能整除，即余数不等于 0，则 noneMatch() 操作返回 true，如果出现任何等于 0 的结果则返回 false。noneMatch() 操作一旦有 失败就会退出。
 
-#### 应用函数
+#### 映射函数
 
 **map\=\=>映射**  将A数据映射为B数据。比如 String 映射为 Integer
 
@@ -6646,44 +6657,26 @@ flatMap() 做了两件事：将产生流的函数应用在每个元素上（与 
 ```java
 public class StreamOfStreams {
     public static void main(String[] args) {
-        // 产生了一个 Stream 流， forEach 逐个打印流中的元素
-        Stream.of(1, 2, 3, 4).forEach(System.out::println);
-        System.out.println("===============");
-
-        // 产生了一个 Stream 流 的流。 of 一层 Stream，map 里又后，为 1 2 3 4 又套了一层流。流的流。
-        // 所以最后打印的是流中的元素（元素流的流）
-        Stream.of(1, 2, 3, 4).map(i -> Stream.of("Gonzo", "Fozzie", "Beaker")).forEach(System.out::println);
-        System.out.println("===============");
-
-        // 如何解决呢？flat 展平
-        Stream.of(1, 2, 3, 4).flatMap(i -> Stream.of("Gonzo", "Fozzie", "Beaker")).forEach(System.out::println);
+        // 我希望把 Stream 中的元素 1 2 3 4 5 6 都映射成 "Gonzo", "Fozz" 后输出。但是 i -> Stream.of("Gonzo", "Fozz")
+        // 将每个元素映射成了 Stream 流。最后结果就是 Stream(Stream)
+        // forEach 打印 Stream 中的每个元素，即打印了一个Stream 中的 Stream
+        Stream.of(1, 2)
+                .map(i -> Stream.of("AA", "BB").map(e -> e + i))
+                .forEach(System.out::print);
+        System.out.println("\n==================\n");
+        // 有没有什么办法，可以实现打印的是元素呢？
+        // 使用 flatMap, 进行 map 后，map后的结果展平为元素
+        Stream.of(1, 2)
+                .flatMap(i -> Stream.of("AA", "BB").map(e -> e + i))
+                .forEach(System.out::print);
     }
 }
-```
+/*
+java.util.stream.ReferencePipeline$3@150c158java.util.stream.ReferencePipeline$3@4524411f
+==================
 
-```shell
-1
-2
-3
-4
-===============
-java.util.stream.ReferencePipeline$Head@7ba4f24f
-java.util.stream.ReferencePipeline$Head@3b9a45b3
-java.util.stream.ReferencePipeline$Head@7699a589
-java.util.stream.ReferencePipeline$Head@58372a00
-===============
-Gonzo
-Fozzie
-Beaker
-Gonzo
-Fozzie
-Beaker
-Gonzo
-Fozzie
-Beaker
-Gonzo
-Fozzie
-Beaker
+AA1BB1AA2BB2
+*/
 ```
 
 > 功能需求：从一个整数流开始，然后使用每一个整数去创建更多的随机数。
@@ -6696,11 +6689,19 @@ public class StreamOfRandoms {
     static Random random = new Random(45);
 
     public static void main(String[] args) {
+        IntStream.range(1, 6)
+                .flatMap(i -> new Random(i).ints(0, 100).limit(3))
+                .forEach(e -> System.out.format("%d\t", e));
+
         Stream.of(1, 2, 3, 4, 5)
-                .flatMapToInt(i -> IntStream.concat(random.ints(0, 100).limit(3), IntStream.of(-1)))
-                .forEach(System.out::print);
+                .flatMapToInt(i -> IntStream.concat(new Random(i).ints(0, 100).limit(3), IntStream.of(-1)))
+                .forEach(e -> System.out.format("%d\t", e));
     }
 }
+/*
+85	88	47	8	72	40	34	60	10	62	52	3	87	92	74	
+85	88	47	-1	8	72	40	-1	34	60	10	-1	62	52	3	-1	87	92	74	-1	
+*/
 ```
 
 ### Optional  类
@@ -6710,7 +6711,7 @@ public class StreamOfRandoms {
 - 在流中防止 null
 - 使用 Optional 
 
-Optional ：可作为流元素 的持有者，即使查看的元素不存在也能友好地提示我们。
+Optional ：可作为流元素的持有者，即使查看的元素不存在也能友好地提示我们。
 
 #### Optional 对象
 
@@ -6718,7 +6719,7 @@ Optional ：可作为流元素 的持有者，即使查看的元素不存在也�
 
 - findFirst() 返回一个包含第一个元素的 Optional 对象，如果流为空则返回 Optional.empty 
 - findAny() 返回包含任意元素的 Optional 对象，如果流为空则返回 Optional.empty 
-- max() 和 min() 返回一个包含最大值或者最小值的 Optional 对象，如果流为空 则返回 Optional.empty
+- max() 和 min() 返回一个包含最大值或者最小值的 Optional 对象，如果流为空则返回 Optional.empty
 
 > Optional 判空的示意代码
 
@@ -6772,6 +6773,10 @@ Option 感觉没啥用，后期再说。
 
 ### 终止操作
 
+获取流的最终结果，终端操作后无法再继续向后传递流。
+
+#### 常见方法汇总
+
 > **匹配与查找**
 
 | 方法名                       | 描述                     |
@@ -6786,37 +6791,18 @@ Option 感觉没啥用，后期再说。
 | `min(Comparator c)`          | 返回流中最小值           |
 | `forEach(Consumer c)`        | 内部迭代                 |
 
-> **归约操作**
+> **归约操作**：根据指定的计算模型将 Stream 中的值计算得到一个最终结果
 
-| 方法名                               | 描述                                                  |
-| ------------------------------------ | ----------------------------------------------------- |
-| `reduce(T identity, BinaryOperator)` | 将流中的元素反复结合起来，得到一个值。返回T           |
-| `reduce(BinaryOperator b)`           | 将流中的元素反复结合起来，得到一个值。返回Optional<T> |
+| 方法名                               | 描述                                                         |
+| ------------------------------------ | ------------------------------------------------------------ |
+| `reduce(T identity, BinaryOperator)` | 将流中的元素反复结合起来，得到一个值。返回 T。会使用 identity 作为其组合的初始值。 |
+| `reduce(BinaryOperator b)`           | 将流中的元素反复结合起来，得到一个值。返回Optional\<T\>      |
 
-map和reduce的连接称为map-reduce。
-
-```java
-public class ReduceDemo {
-    public static void main(final String[] args) {
-        fn1();
-    }
-
-    public static void fn1() {
-        final List<Integer> asList = Arrays.asList(1, 23, 4, 5, 6, 74, 234, 5, 45);
-        final Integer reduce = asList.stream().reduce(0, Integer::sum);
-        System.out.println(reduce);
-        Optional<Integer> reduce2 = asList.stream().reduce(Integer::sum);
-        System.out.println(reduce2.get());
-
-    }
-}
-```
-
-> **收集**：如收集List，Set，Map
+> **收集操作**：如收集List，Set，Map
 
 | 方法                   | 描述                                                         |
 | ---------------------- | ------------------------------------------------------------ |
-| `collect(Collector c)` | 将流转为其他形式。接收一个Collector接口的实现，用于给Stream中元素做汇总的方法 |
+| `collect(Collector c)` | 将流转为其他形式。接收一个 Collector 接口的实现，用于给 Stream 中元素做汇总的方法 |
 
 Collector接口中方法的实现决定了如何对流执行收集操作。
 
@@ -6832,23 +6818,6 @@ Collectors实现类提供了很多静态方法，可以方便地创建常见收�
 | averagingInt   | Double               | 计算流中元素Integer属性的平均值           |
 | summarizingInt | IntSummaryStatistics | 收集流中的Integer属性的统计值。如平均值！ |
 
-> 示例代码
-
-```java
-public class Colle {
-    public static void main(final String[] args) {
-        final List<Integer> asList = Arrays.asList(1, 23, 4, 5, 78, 34, 456, 678, 34456, 234);
-        Stream<Integer> stream = asList.stream();
-        List<Integer> collect = stream.collect(Collectors.toList());
-        collect.forEach(System.out::println);
-    }
-}
-```
-
-### 终端操作
-
-获取流的最终结果，终端操作后无法再继续向后传递流。
-
 #### 数组
 
 - toArray()：将流转换成适当类型的数组。
@@ -6861,7 +6830,6 @@ public class RandInts {
         Arrays.stream(ints);
     }
 }
-
 ```
 
 #### 循环
@@ -6893,14 +6861,39 @@ public class ForEach {
 
 #### 集合
 
-- `collect(Collector)：`使用 Collector 收集流元素到结果集合中。
-- `collect(Supplier, BiConsumer, BiConsumer)：`同上，第一个参数 Supplier 创 建了一个新的结果集合，第二个参数 `BiConsumer` 将下一个元素收集到结果集 合中，第三个参数 `BiConsumer` 用于将两个结果集合合并起来。
+- collect(Collector)：使用 Collector 收集流元素到结果集合中。
+- collect(Supplier, BiConsumer, BiConsumer)：同上，第一个参数 Supplier 创建了一个新的结果集合，第二个参数 BiConsumer 将下一个元素收集到结果集 合中，第三个参数BiConsumer 用于将两个结果集合合并起来。
+
+```java
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
+
+public class CollectOpDemo {
+    @Test
+    public void collect() {
+        var collect = Arrays.asList("AA", "BB", "CC", "DD")
+                .stream()
+                .collect(Collectors.toCollection(TreeSet::new));
+
+        var collect1 = Arrays.asList("AA", "BB", "CC", "DD")
+                .stream()
+                .collect(Collectors.toMap(String::toString, String::toString));
+        var collect2 = Arrays.asList("AA", "BB", "CC", "DD")
+                .stream()
+                .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+    }
+}
+```
+
+
 
 #### 组合
 
 - reduce(BinaryOperator)：使用 BinaryOperator 来组合所有流中的元素。因为流可能为空，其返回值为 Optional。 
-- reduce(identity, BinaryOperator)：功能同上，但是使用 identity 作为其组 合的初始值。因此如果流为空，identity 就是结果。
-- reduce(identity, BiFunction, BinaryOperator)：更复杂的使用形式（暂不介 绍），这里把它包含在内，因为它可以提高效率。通常，我们可以显式地组合 map() 和 reduce() 来更简单的表达它。
+- reduce(identity, BinaryOperator)：功能同上，但是使用 identity 作为其组合的初始值。因此如果流为空，identity 就是结果。
+- reduce(identity, BiFunction, BinaryOperator)：更复杂的使用形式（暂不介绍），这里把它包含在内，因为它可以提高效率。通常，我们可以显式地组合 map() 和 reduce() 来更简单的表达它。
 
 ```java
 class Frobnitz {
@@ -6933,6 +6926,13 @@ public class Reduce {
                 .reduce((fr0, fr1) -> fr0.size < 50 ? fr0 : fr1)
                 .ifPresent(System.out::println);
     }
+    @Test
+    public void reduce() {
+        Integer reduce = Arrays.asList(1, 2, 3)
+                .stream()
+                .reduce(100, (x, y) -> x += y);
+        // reduce = 106。
+    }
 }
 /*
 Frobnitz(58)
@@ -6949,6 +6949,133 @@ Frobnitz(29)
 */
 ```
 
+#### 匹配
+
+- allMatch(Predicate) ：如果流的每个元素提供给 Predicate 都返回 true ，结果返回为 true。在第一个 false 时，则停止执行计算。
+- anyMatch(Predicate)：如果流的任意一个元素提供给 Predicate 返回 true，结果返回为 true。在第一个 true 是停止执行计算。
+- noneMatch(Predicate)：如果流的每个元素提供给 Predicate 都返回 false 时，结果返回为 true。在第一个 true 时停止执行计算。
+
+```java
+public class MatchStream {
+    @Test
+    public void match() {
+        boolean r1 = IntStream.range(1, 10)
+                .peek(System.out::print)
+                .allMatch(i -> i > 0);
+        boolean r2 = IntStream.range(1, 10)
+                .peek(System.out::print)
+                .anyMatch(i -> i > 5);
+        boolean r3 = IntStream.range(1, 10)
+                .peek(System.out::print)
+                .noneMatch(i -> i < 0);
+        System.out.format("%b,%b,%b", r1, r2, r3);
+        // true,true,true
+    }
+}
+```
+
+#### 查找
+
+- findFirst()：返回第一个流元素的 Optional，如果流为空返回 Optional.empty。
+- findAny()：返回含有任意流元素的 Optional，如果流为空返回 Optional.empty。
+
+```java
+import java.util.Random;
+
+public class FindStream {
+    @Test
+    public void find() {
+        Random random = new Random();
+        System.out.println(random.ints(0, 20).limit(10).findFirst().getAsInt());
+        System.out.println(random.ints(0, 20).limit(10).parallel().findFirst().getAsInt());
+        System.out.println(random.ints(0, 20).limit(10).findAny().getAsInt());
+        System.out.println(random.ints(0, 20).limit(10).parallel().findAny().getAsInt());
+    }
+    }
+    /*
+    * 7
+    * 8
+    * 16
+    * 14
+    * */
+}
+```
+
+无论流是否为并行化，findFirst() 总是会选择流中的第一个元素。对于非并行流， findAny() 会选择流中的第一个元素（虽然从方法名上来看是选择任意元素）。在这个例子中，用 parallel() 将流并行化，演示 findAny() 不会只选择流的第一个元素。
+
+**如果需要选择最后一个元素，可以使用 reduce。**
+
+```java
+@Test
+public void parallel() {
+    OptionalInt last = IntStream.range(10, 20)
+        .reduce((n1, n2) -> n2); // 每次都把后面的那个值作为结果返回
+    System.out.println(last.orElse(-1));
+    // Non-numeric object:
+    Optional<String> lastobj =
+        Stream.of("one", "two", "three")
+        .reduce((n1, n2) -> n2);
+    System.out.println(
+        lastobj.orElse("Nothing there!"));
+}
+// 19
+// three
+```
+
+#### 统计
+
+- count()：流中的元素个数。 
+- max(Comparator)：根据 Comparator 的比较规则，查找最大的元素。 
+- min(Comparator)：根据 Comparator 的比较规则，查找最小的元素。 
+- min() 和 max() 的返回类型为 Optional，可以使用 orElse() 来解包
+
+```java
+import java.util.stream.Stream;
+import static java.lang.System.*;
+
+public class Statistics {
+    @Test
+    public void countMaxMin() {
+        // 使用 orElse 解包 Optional
+        out.println(Stream.of(1, 2, 3, 4, 5, 6, 7)
+                .count());
+        out.println(Stream.of(1, 2, 3, 4, 5, 6, 7) 
+                .max((a, b) -> a - b).orElse(Integer.MIN_VALUE));
+        out.println(Stream.of(1, 2, 3, 4, 5, 6, 7)
+                .min((a, b) -> a - b).orElse(Integer.MAX_VALUE));
+    }
+}
+// 7 7 1
+```
+
+#### 数字流信息
+
+- average() ：求取流元素平均值。 
+- max() 和 min()：数值流操作无需 Comparator。 
+- sum()：对所有流元素进行求和。 
+- summaryStatistics()：生成可能有用的数据。目前并不太清楚这个方法存在的必要性，因为我们可以用更直接的方法获得需要的数据。
+
+```java
+public class NumericStreamInfo {
+    public static void main(String[] args) {
+        System.out.println(IntStream.range(1, 10).limit(9).average().getAsDouble());
+        System.out.println(IntStream.range(1, 10).limit(9).max().getAsInt());
+        System.out.println(IntStream.range(1, 10).limit(9).min().getAsInt());
+        System.out.println(IntStream.range(1, 10).limit(9).sum());
+        System.out.println(IntStream.range(1, 10).limit(9).summaryStatistics());
+    }
+}
+/*
+5.0
+9
+1
+45
+IntSummaryStatistics{count=9, sum=45, min=1, average=5.000000, max=9}
+*/
+```
+
+
+
 ## 第十五章 容器深入研究
 
 学习散列机制，如何编写 `hashCode` 和 `equals`，容器为什么会有不同版本的实现，如何进行选择；学习通用工具类和特殊类。
@@ -6961,7 +7088,7 @@ Java SE5 添加了
   - `PriorityQueue`
 - `ConcurrentMap` 接口及其实现 `ConcurrentHashMap`，并发编程部分的，用于多线程机制。
 - `CopyOnWriteArrayList` 和 `CopyOnWriteSet`，用于多线程 
-- `EnumSet` 和 `EnumMap`，为使用 `enum` 而设计的 Set 和 Map的特殊实现。
+- `EnumSet` 和 `EnumMap`，为使用 `enum` 而设计的 Set 和 Map 的特殊实现。
 - `Collections` 类中的多个便利方法
 
 ### 剖析 ArrayList
@@ -6970,18 +7097,18 @@ Java SE5 添加了
 
 ```java
 public boolean add(E e) //添加元素到末尾
-public boolean isEmpty() //判断是否为空￼
-public int size() //获取长度￼
+public boolean isEmpty() //判断是否为空
+public int size() //获取长度
 public E get(int index) //访问指定位置的元素
 public int indexOf(Object o) //查找元素， 如果找到，返回索引位置，否则返回-1
 public int lastIndexOf(Object o) //从后往前找
-public boolean contains(Object o) //是否包含指定元素，依据是equals方法的返回值￼
+public boolean contains(Object o) //是否包含指定元素，依据是equals方法的返回值
 public E remove(int index) //删除指定位置的元素， 返回值为被删对象
 //删除指定对象，只删除第一个相同的对象，返回值表示是否删除了元素
-//如果o为null，则删除值为null的元素￼
-public boolean remove(Object o)￼
-public void clear() //删除所有元素￼
-//在指定位置插入元素，index为0表示插入最前面，index为ArrayList的长度表示插到最后面￼ 
+//如果o为null，则删除值为null的元素
+public boolean remove(Object o);
+public void clear() //删除所有元素
+//在指定位置插入元素，index为0表示插入最前面，index为ArrayList的长度表示插到最后面
 public void add(int index, E element)
 public E set(int index, E element) //修改指定位置的元素内容
 ```
@@ -6990,7 +7117,7 @@ public E set(int index, E element) //修改指定位置的元素内容
 
 动态数组：数组+扩容+modCount
 
-ArrayLIst 内部有一个 Object 类型的数组 elementData，size 变量记录 elementData 中有多数元素。
+ArrayList 内部有一个 Object 类型的数组 elementData，size 变量记录 elementData 中有多数元素。
 
 #### 方法源码
 
@@ -7089,7 +7216,7 @@ Exception in thread "main" java.util.ConcurrentModificationException
 */
 ```
 
-因为增强for循环（foreach循环）本质上是隐式的 iterator，由于在删除和添加的时候会导致 modCount 发生变化，但是没有重新设置 expectedModCount，使用 list.remove() 后遍历执行 iterator.next() 时，方法检验 modCount 的值和的 expectedModCount 值，如果不相等，就会报ConcurrentModificationException。
+因为增强 for 循环（foreach 循环）本质上是隐式的 iterator，由于在删除和添加的时候会导致 modCount 发生变化，但是没有重新设置 expectedModCount，使用 list.remove() 后遍历执行 iterator.next() 时，方法检验 modCount 的值和的 expectedModCount 值，如果不相等，就会报ConcurrentModificationException。
 
 解决办法是使用迭代器进行删除。
 
@@ -7130,9 +7257,9 @@ public void remove() {
 #### 特点总结
 
 - 可以随机访问，按照索引位置进行访问效率很高，用算法描述中的术语，效率是O(1)，简单说就是可以一步到位。
-- 除非数组已排序，否则按照内容查找元素效率比较低，具体是O(N), N为数组内容长度，也就是说，性能与数组长度成正比。
-- 添加元素的效率还可以，重新分配和复制数组的开销被平摊了，具体来说，添加N个元素的效率为O(N)。
-- 插入和删除元素的效率比较低，因为需要移动元素，具体为O(N)。
+- 除非数组已排序，否则按照内容查找元素效率比较低，具体是 O(N), N为数组内容长度，也就是说，性能与数组长度成正比。
+- 添加元素的效率还可以，重新分配和复制数组的开销被平摊了，具体来说，添加N个元素的效率为 O(N)。
+- 插入和删除元素的效率比较低，因为需要移动元素，具体为 O(N)。
 
 ### 剖析 LinkedList
 
@@ -7171,7 +7298,7 @@ public interface Queue<E> extends Collection<E> {
     boolean add(E e);
     boolean offer(E e);
     
-    // 删除头部元素，返回元素并伤处
+    // 删除头部元素，返回元素并删除
     E remove(); // 队空时抛出异常
     E poll(); // 队空返回 null
     
@@ -7312,11 +7439,11 @@ E unlink(Node<E> x) {
 #### 特点总结
 
 - 按需分配空间，不需要预先分配很多空间。
-- 不可以随机访问，按照索引位置访问效率比较低，必须从头或尾顺着链接找，效率为O(N/2)。
-- 不管列表是否已排序，只要是按照内容查找元素，效率都比较低，必须逐个比较，效率为O(N)。
-- 在两端添加、删除元素的效率很高，为O(1)。
-- 在中间插入、删除元素，要先定位，效率比较低，为O(N)，但修改本身的效率很高，效率为O(1)。
-- 如果列表长度未知，添加、删除操作比较多，尤其经常从两端进行操作，而按照索引位置访问相对比较少，则LinkedList是比较理想的选择。
+- 不可以随机访问，按照索引位置访问效率比较低，必须从头或尾顺着链接找，效率为 O(N/2)。
+- 不管列表是否已排序，只要是按照内容查找元素，效率都比较低，必须逐个比较，效率为 O(N)。
+- 在两端添加、删除元素的效率很高，为 O(1)。
+- 在中间插入、删除元素，要先定位，效率比较低，为 O(N)，但修改本身的效率很高，效率为 O(1)。
+- 如果列表长度未知，添加、删除操作比较多，尤其经常从两端进行操作，而按照索引位置访问相对比较少，则 LinkedList 是比较理想的选择。
 
 ### 剖析 ArrayDeque
 
@@ -7356,8 +7483,8 @@ public ArrayDeque(int numElements) {
 
 不是简单地分配给定的长度，而是调用了allocateElements。它主要就是在计算应该分配的数组的长度，计算逻辑如下：
 
-- 如果numElements小于8，就是8。
-- 在numElements大于等于8的情况下，分配的实际长度是严格大于numElements并且为2的整数次幂的最小数。比如，如果numElements为10，则实际分配16，如果num-Elements为32，则为64。
+- 如果 numElements 小于8，就是 8。
+- 在 numElements 大于等于8的情况下，分配的实际长度是严格大于 numElements 并且为 2 的整数次幂的最小数。比如，如果 numElements 为 10，则实际分配 16，如果 num-Elements 为 32，则为 64。
 
 2 的幂次数操作高效。
 
