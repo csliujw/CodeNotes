@@ -8939,25 +8939,206 @@ base.SomeOtherException
     - try-catch 块影响 JVM 的优化
     - 异常对象实例需要保存栈快照等信息，开销较大
 
+## 代码校验
+
+**记住这句话：**你永远不能保证你的代码是正确的，你只能证明它是错的。代码通过编译只是没有语法错误，不代表没有逻辑错误。
+
+### JUnit
+
+最初的 JUnit 发布于 2000 年，大概是基于 Java 1.0，因此不能使用 Java 的反射工具。因此，用旧的 JUnit 编写单元测试是一项相当繁忙和冗长的工作。后来 JUnit 通过反射和注解得到了极大的改进，大大简化了编写单元测试代码的过程。在 Java8 中，还增加了对 lambdas 表达式的支持。此处采用 JUnit5 进行测试。
+
+在 JUnit 最简单的使用中，使用 @Test 注解标记表示测试的每个方法。JUnit 将这些方法标识为单独的测试，可以一次只运行一个单独的测试。
+
+- @BeforeAll：在任何其他测试操作之前运行一次的方法，必须是静态方法。
+- @AfterAll：所有其他测试操作之后只运行一次，必须是静态方法。
+- @BeforeEach：通常用于创建和初始化公共对象的方法，并在每次测试前运 行。也可以使用测试类的构造方法初始化需要的内容。
+- @AfterEach：如果你必须在每次测试后执行清理（如果修改了需要恢复的静态文件，关闭 IO、Socket 连接等）可以使用 @AfterEach 注解。
+- @Test：将方法标注为测试方法。在方法内部，可以执行任何所需的操作并使用 JUnit 断言方法（以 “assert” 开头）验证测试的正确性。
+
+```java
+import org.junit.jupiter.api.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class CountedList extends ArrayList<String> {
+    private static int counter = 0;
+    private int id = counter++;
+
+    public CountedList() {
+        System.out.println("CountedList #" + id);
+    }
+
+    public int getId() {
+        return id;
+    }
+}
+
+class CountedListTest {
+    private CountedList list;
+
+    @BeforeAll
+    static void beforeAllMsg() {
+        System.out.println(">>> Starting CountedListTest");
+    }
+
+    @AfterAll
+    static void afterAllMsg() {
+        System.out.println(">>> Finished CountedListTest");
+    }
+
+    @BeforeEach
+    public void initialize() {
+        list = new CountedList();
+        System.out.println("Set up for " + list.getId());
+        for (int i = 0; i < 3; i++)
+            list.add(Integer.toString(i));
+    }
+
+    @AfterEach
+    public void cleanup() {
+        System.out.println("Cleaning up " + list.getId());
+    }
+
+    @Test
+    public void insert() {
+        System.out.println("Running testInsert()");
+        assertEquals(list.size(), 3);
+        list.add(1, "Insert");
+        assertEquals(list.size(), 4);
+        assertEquals(list.get(1), "Insert");
+    }
+
+    @Test
+    public void replace() {
+        System.out.println("Running testReplace()");
+        assertEquals(list.size(), 3);
+        list.set(1, "Replace");
+        assertEquals(list.size(), 3);
+        assertEquals(list.get(1), "Replace");
+    }
+
+    // A helper method to simplify the code. As
+    // long as it's not annotated with @Test, it will
+    // not be automatically executed by JUnit.
+    private void compare(List<String> lst, String[] strs) {
+        assertArrayEquals(lst.toArray(new String[0]), strs);
+    }
+
+    @Test
+    public void order() {
+        System.out.println("Running testOrder()");
+        compare(list, new String[]{"0", "1", "2"});
+    }
+
+    @Test
+    public void remove() {
+        System.out.println("Running testRemove()");
+        assertEquals(list.size(), 3);
+        list.remove(1);
+        assertEquals(list.size(), 2);
+        compare(list, new String[]{"0", "2"});
+    }
+
+    @Test
+    public void addAll() {
+        System.out.println("Running testAddAll()");
+        list.addAll(Arrays.asList(new String[]{"An", "African", "Swallow"}));
+        assertEquals(list.size(), 6);
+        compare(list, new String[]{"0", "1", "2", "An", "African", "Swallow"});
+    }
+}
+```
+
+#### 测试覆盖率
+
+测试覆盖率，同样也称为代码覆盖率，度量代码的测试百分比。百分比越高，测试的覆盖率越大。
+
+100% 的测试覆盖率并不意味着是对测试有效性的良好测量。有可能只需要 65% 的覆盖率就可测试完我们需要的内容。 如果非要进行 100% 的覆盖，我们会浪费大量时间来生成剩余的代码，花费大量的时间在项目里添加代码。
+
+**当分析一个未知的代码库时，测试覆盖率作为一个粗略的度量是有用的。**如果覆盖率工具报告的值特别低（比如，少于百分之 40），则说明覆盖不够充分。然而，一个非常高的值也同样值得怀疑，这表明对编程领域了解不足的人迫使团队做出了武断的决定。 覆盖工具的最佳用途是发现代码库中未测试的部分。但是，不要依赖覆盖率来得到测试 质量的任何信息。
+
+### 前置条件
+
+前置条件的概念来自于契约式设计 (Design By Contract, DbC), 利用断言机制实现。我们从 Java 的断言机制开始来介绍 DBC，最后使用谷歌的 Guava 库作为前置条件。
+
+#### 断言
+
+断言通过验证在程序执行期间满足某些条件，从而增加了程序的健壮性。如，判断数字是否处于某个范围。
+
+#### Java 断言语法
+
+断言语句的两种形式。
+assert boolean-expression； 
+assert boolean-expression: information-expression;
+“我断言这个布尔表达式会产生 true”,否则，将抛出 AssertionError 异常。
+
+AssertionError 是 Throwable 的派生类，因此不需要异常说明。
+
+第一种断言形式的异常不会生成包含布尔表达式的任何信息。
+
+```java
+public class Assert1 {
+    public static void main(String[] args) {
+        assert false;
+    }
+}
+// 如果直接运行程序不会有任何信息。需要在运行的时候添加虚拟机参数。
+// -ea -ea 表示为 -enableassertion。添加开启断言的虚拟机参数后，就会执行断言语句
+```
+
+```java
+public class Assert2 {
+    public static void main(String[] args) {
+        assert false : "Here's a message saying what happened";
+    }
+}
+// 运行时添加 -ea 参数
+/*
+Exception in thread "main" java.lang.AssertionError: Here's a message saying what happened
+	at tij.chapter16.Assert2.main(Assert2.java:5)
+*/
+```
+
+information-expression 可以产生任何类型的对象，通常我们会构造一个包含对象值的复杂字符串，字符串里面会给出断言的失败一些信息。
+
+### 契约式设计
+
+契约式设计 (DbC) 是 Eiffel 语言的发明者 Bertrand Meyer 提出的一个概念，通过 确保对象遵循某些规则来帮助创建健壮的程序。
+
+- 应该明确指定行为，就好像它是一个契约一样。
+- 通过实现某些运行时检查来保证这种行为，他将这些检查称为前置条件、后置条件和不变项。
+
+### 结对编程
+
+结对编程是指两个程序员一起编程的实践活动。通常来说，一个人 “驱动”（敲击键盘，输入代码），另一人（观察者或指引者）重审和分析代码，同时也要思考策略。这 产生了一种实时的代码重审。通常程序员会定期地互换角色。 
+
+结对编程有很多好处，但最显著的是分享知识和防止阻塞。最佳传递信息的方式之 一就是一起解决问题，我已经在很多次研讨会使用了结对编程，都取得了很好的效果 （同时，研讨会上的众人可以通过这种方式互相了解对方）。而且两个人一起工作时，可以更容易地推进开发的进展，而只有一个程序员的话，可能被轻易地卡住。结对编程的程序员通常可以从工作中感到更高的满足感。有时很难向管理人员们推行结对编程，因 为他们可能觉得两个程序员解决同一个问题的效率比他们分开解决不同问题的效率低。 尽管短期内是这样，但是结对编程能带来更高的代码质量；除了结对编程的其他益处， 如果你眼光长远的话，这会产生更高的生产力。
+
+。。。。。这个还是后面再看~。买了实体书，我再看这部分的内容。这个翻译一言难尽啊。
 
 ## 第十七章 文件、IO
 
+Java 的 IO 编程方式在 Java7 上终于简化了~。这些新的 IO 操作位于 java.nio.file 包下。
+
 ### 文件
 
-不包含传统的 I/O 方法。Java 的 I/O 都用 `NIO` 重写了。本部分内容涉及到的是 `java.nio.file` 下的类库。文件操作包含的两个基本组件如下：
+不介绍传统的 I/O 方式。Java 的 I/O 都用 `NIO` 重写了。本部分内容涉及到的是 `java.nio.file` 下的类库。文件操作包含的两个基本组件如下：
 
 - 文件或目录的路径
 - 文件本身
 
 #### 文件和目录路径
 
-一个 **Path** 对象表示一个文件或者目录的路径，是一个跨操作系统（OS）和文件系统的抽象，目的是在构造路径时不必关注底层操作系统，代码可以在不进行修改的情况下运行在不同的操作系统上。**java.nio.file.Paths** 类包含一个重载方法 **static get()**，该方法接受一系列 **String** 字符串或一个统一资源标识符 (URI) 作为参数，并且进行转换返回一个 **Path** 对象：
+一个 **Path** 对象表示一个文件或者目录的路径，是一个跨操作系统（OS）和文件系统的抽象，目的是在构造路径时不必关注底层操作系统，代码可以在不进行修改的情况下运行在不同的操作系统上。**java.nio.file.Paths** 类包含一个重载方法 **static get()**，该方法接受一系列 **String** 字符串或一个统一资源标识符 (URI) 作为参数，并且进行转换返回一个 **Path** 对象；
 
 > 基本用法
 
 很奇怪的一件事，我 `PathInfo.java` 所在的目录为 `D:\JavaSE\src\chapter17\PathInfo.java` 但是我代码得到的绝对路径是 `D:\JavaSE\PathInfo.java` 有点不解。但是用 `Files.readAllBytes( path )` 是可以正常读取到文件的。
 
-不用 IDEA 进行了一下测试，应该是开发工具编译的问题。
+不使用 IDEA 进行了一下测试，应该是开发工具编译的问题。
 
 ```java
 public class PathInfo {
@@ -10712,7 +10893,7 @@ public class PropertiesDemo {
 
 - 字符串的内容永不可变。【常量池？】
 - 因字符串不可变，故字符串可共享使用【不可变，不会出现线程安全问题】
-- 字符串效果相当于 char[] 字符数组，但底层原理是 byte[] 字节数组
+- 字符串效果相当于 char[] 字符数组，但底层原理是 byte[] 字节数组。（翻了下 String 源码，确实是 byte 数组）
 - String str = "Hello" 也是字符串对象
 
 #### 字符串常量池
@@ -10866,7 +11047,67 @@ String 对象是不可变的。，String 类中每一个看起来会修改 Strin
 
 ### +的重载与优化
 
-不可变性会降低效率，但是编译器会为其做一定的优化。将对 String 的操作改为对 `StringBuilder` 类的操作。
+String 对象是不可变的，你可以给一个 String 对象添加任意多的别名。因为 String 是只读的，所以指向它的任何引用都不可能修改它的值，因此，也就不会影响到其他引用。
+
+操作符 + 可以用来连接 String
+
+```java
+public class Concatenation {
+    public static void main(String[] args) {
+        String mango = "mango";
+        String s = "abc" + mango + "def" + 47;
+        System.out.println(s);
+    }
+}
+
+```
+
+假设这段代码是这样工作的：String 可能有一个 append() 方法，它会生成一个新的 String 对象，以包含 “abc” 与 mango 连接后的字符串。该对象会再创建另一个新的 String 对象，然后与 “def” 相连，生成另一个新的对象，依此类推。
+
+为了拼接一个字符串，生成这么多对象很不明智。实际上该段代码的工作流程可以通过查看其字节码的内容来了解。
+
+```shell
+# Java 8 和 Java 11 的字节码
+# -------- Java 8的 字节码 --------
+# 编译器使用的 StringBuilder 来拼接的字符
+Stack=2, Locals=3, Args_size=1
+0: ldc #2; //String mango
+2: astore_1
+3: new #3; //class StringBuilder
+6: dup
+7: invokespecial #4; //StringBuilder."<init>":()
+10: ldc #5; //String abc
+12: invokevirtual #6; //StringBuilder.append:(String)
+15: aload_1
+16: invokevirtual #6; //StringBuilder.append:(String)
+19: ldc #7; //String def
+21: invokevirtual #6; //StringBuilder.append:(String)
+24: bipush 47
+26: invokevirtual #8; //StringBuilder.append:(I)
+29: invokevirtual #9; //StringBuilder.toString:()
+32: astore_2
+33: getstatic #10; //Field System.out:PrintStream;
+36: aload_2
+37: invokevirtual #11; //PrintStream.println:(String)
+40: return
+
+# -------- Java 17的 字节码 --------
+# 直接使用方法 makeConcatWithConstants 来拼接
+# makeConcatWithConstants 可以高效的拼接字符串。
+# makeConcatWithConstants 方法位于 StringConcatFactory 类中
+stack=2, locals=3, args_size=1
+0: ldc           #7                  // String mango
+2: astore_1
+3: aload_1
+4: invokedynamic #9,  0              // InvokeDynamic #0:makeConcatWithConstants:(Ljava/lang/String;)Ljava/lang/String;
+9: astore_2
+10: getstatic     #13                 // Field java/lang/System.out:Ljava/io/PrintStream;
+13: aload_2
+14: invokevirtual #19                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+17: return
+```
+
+不可变性会降低效率，但是编译器会为其做一定的优化。将对 String 的操作改为对 `StringBuilder` 类的操作。高版本 Java 将字符串的拼接优化为使用`makeConcatWithConstants` 方法进行优化。
 
 ```java
 public class WhitherStringBuilder {
@@ -10962,7 +11203,7 @@ public java.lang.String explicit(java.lang.String[]);
 47: areturn
 ```
 
-对循环题，建议还是自己建一个 `StringBuilder`，性能更高。如果字符串的操作比简单，可以信赖编译器直接用 String。
+对循环题，建议还是自己建一个 `StringBuilder`，性能更高。如果字符串的操作比简单，可以信赖编译器直接用 String。而高版本 Java 不用担心该类字符串拼接的优化问题。
 
 > 示例
 
@@ -11002,7 +11243,7 @@ public class UsingStringBuilder {
 
 append(a + ": " + c)，会为创建一个新的 `StringBuilder` 对象处理括号内的字符串操作。如果拿不准该用哪种方式，随时可以用 `javap` 来分析你的程序。
 
-### 意外递归
+### String中的意外递归
 
 编译器发现一个 `String` 对象后面跟着一个 “+”，而 “+” 后面的对象不是 `String`，编译器试着将 `this` 转换成一个 `String`。它怎么转换呢？正是通过调用 `this` 上 `toString()` 方法，于是就发生了递归调用。
 
@@ -11014,9 +11255,15 @@ public class InfiniteRecursion {
     public String toString() {
         return " InfiniteRecursion address: " + this + "\n";
     }
-
+	// 应该是
+	@Override
+    public String toString() {
+        return " InfiniteRecursion address: " + super.toString() + "\n";
+    }
     public static void main(String[] args) {
-        Stream.generate(InfiniteRecursion::new).limit(10).forEach(System.out::println);
+        Stream.generate(InfiniteRecursion::new)
+            .limit(10)
+            .forEach(System.out::println);
     }
 }
 ```
@@ -11030,8 +11277,10 @@ public class InfiniteRecursion {
 |   `regionMatches()`    |                起始偏移量&长度                |                  比较指定区域的内容是否相等                  |
 |      `matches()`       |                  正则表达式                   |                     是否与正则表达式匹配                     |
 | `join()（Java8 引入）` |            分隔符，待拼字符序列。             |          用分隔符拼接字符片段， 产生一个新的 String          |
-|       `intern()`       |                                               | 主动将串池中还没有的字符串对象放入串池中，如果已经有了，则放入失败；成功或失败都会返回串池中的对象 |
+|       `intern()`       |                                               | 主动将串池中还没有的字符串对象放入串池中，如果已经有了，则放入失败；<span style="color:green">成功或失败都会返回串池中的对象</span> |
 |       `format()`       | 要格式化的字符串，要替 换到格式化字符串的参数 |        要格式化的字符串，要替 换到格式化字符串的参数         |
+
+当需要改变字符串的内容时，String 类的方法都会返回一个 新的 String 对象。同时，如果内容不改变，String 方法只是返回原始对象的一个引用而已。这样可以节约存储空间，避免额外的开销。
 
 > intern() 测试
 
@@ -11080,6 +11329,7 @@ Hello,Golang // JDK 代码里有注释如何使用的。
 @Test
 public void format() {
     // Hello tomcat. I am XX
+    // %n 是换行的意思，和\n类似
     System.out.println(String.format("Hello %s. I am XX", "tomcat"));
 }
 
@@ -11090,6 +11340,97 @@ public static String format(String format, Object... args) {
 ```
 
 ### 正则表达式
+
+正则表达式是一种强大而灵活的文本处理工具。使用正则表达式，我们能够以编程的方式，构造复杂的文本模式，并对输入 String 进行搜索。一旦找到了匹配这些模式的部分，你就能随心所欲地对它们进行处理。
+
+```java
+public class IntegerMatch {
+    // 在正则表达式中，用括号将表达式进行分组，用竖线 | 表示或操作。
+    public static void main(String[] args) {
+        System.out.println("-1234".matches("-?\\d+"));
+        System.out.println("5678".matches("-?\\d+"));
+        System.out.println("+911".matches("-?\\d+"));
+        // \\+ 转义
+        System.out.println("+911".matches("(-|\\+)?\\d+"));
+    }
+}
+/*
+true
+true
+false
+true
+*/
+```
+
+split 方法 + 正则表达式
+
+```java
+import java.util.Arrays;
+
+public class Splitting {
+    public static String knights =
+            "Then, when you have found the shrubbery, " +
+                    "you must cut down the mightiest tree in the " +
+                    "forest...with... a herring!";
+    public static void split(String regex) {
+        System.out.println(
+                Arrays.toString(knights.split(regex)));
+    }
+    // \\W，它的意思是一个非单词字符（如果 W 小写，\\w，则表示一个单词字符）。
+    // +表示一个或多个
+    public static void main(String[] args) {
+        split(" "); // Doesn't have to contain regex chars
+        split("\\W+"); // 用非字母进行分割
+        split("n\\W+"); // '用n+非字母进行分割
+    }
+}
+/*
+Arrays.toString 方法，在拼接的时候是 .append(", "),会加一个空格
+[Then,, when, you, have, found, the, shrubbery,, you, must, cut, down, the, mightiest, tree, in, the, forest...with..., a, herring!]
+[Then, when, you, have, found, the, shrubbery, you, must, cut, down, the, mightiest, tree, in, the, forest, with, a, herring]
+[The, whe, you have found the shrubbery, you must cut dow, the mightiest tree i, the forest...with... a herring!]
+ */
+```
+
+```java
+public class Replacing {
+    static String s = Splitting.knights;
+    public static void main(String[] args) {
+        // f开头的单词替换为located
+        System.out.println(s.replaceFirst("f\\w+", "located"));
+        System.out.println(s.replaceAll("shrubbery|tree|herring","banana"));
+    }
+}
+/*
+Then, when you have located the shrubbery, you must cut down the mightiest tree in the forest...with... a herring!
+Then, when you have found the banana, you must cut down the mightiest banana in the forest...with... a banana!
+*/
+```
+
+#### 常见表达式
+
+<img src="img\image-20220221221751813.png">
+
+<img src="img\image-20220221221910140.png">
+
+边界匹配符
+
+<img src="img\image-20220221221954223.png">
+
+```java
+public class Rudolph {
+    public static void main(String[] args) {
+        for(String pattern : new String[]{
+                "Rudolph",
+                "[rR]udolph",
+                "[rR][aeiou][a-z]ol.*",
+                "R.*" })
+            System.out.println("Rudolph".matches(pattern));
+    }
+}
+```
+
+后面再慢慢补吧。
 
 > 正则表达式实现模板引擎
 
@@ -11129,9 +11470,11 @@ public class Template {
 }
 ```
 
-### 扫描输入
+### Scanner
 
 `Scanner` 的构造器可以接收任意类型的输入对象，包括 `File`、`InputStream`、`String` 或者像此例中的 `Readable` 实现类。`Readable` 是 `Java SE5` 中新加入的一个接口，表示 “具有 read() 方法的某种东西”。上一个例子中的 `BufferedReader` 也归于这一类。 有了 `Scanner`，所有的输入、分词、以及解析的操作都隐藏在不同类型的 `next` 方 法中。普通的 `next()` 方法返回下一个 `String`。所有的基本类型（除 `char` 之外）都有 对应的 `next` 方法，包括 `BigDecimal` 和 `BigInteger`。所有的 `next` 方法，只有在找到 一个完整的分词之后才会返回。`Scanner` 还有相应的 `hasNext` 方法，用以判断下一个输 入分词是否是所需的类型，如果是则返回 true。
+
+可以在对着书看看~
 
 ### StringTokenizer 类
 
@@ -11164,13 +11507,33 @@ class StringTokenizerDemo {
  Java 是如何在运行时识别对象和类信息的？
 
 - “传统的” RTTI：假定我们在编译时已经知道了所有的类型； 
-- <span style="color:green">“反射” 机制：允许我们在运行时发现和使用类的信息。</span>
+- <span style="color:green">“反射”机制：允许我们在运行时发现和使用类的信息。</span>
 
 `RTTI` 在 Java 中的形式
 
 - 传统的类型转换
 - 代表对象的类型的 Class 对象
 - 关键字 `instanceof`
+
+使用 RTTI，我们可以查询某个类型引用所指向对象的确切类型，然后选择或者剔除特例。
+
+### Class 对象
+
+要理解 RTTI 在 Java 中的工作原理，首先必须知道类型信息在运行时是如何表示 的。这项工作是由称为 Class 对象的特殊对象完成的，它包含了与类有关的信息。实 际上，Class 对象就是用来创建该类所有 “常规” 对象的。Java 使用 Class 对象来实现 RTTI，即便是类型转换这样的操作都是用 Class 对象实现的。不仅如此，Class 类还 提供了很多使用 RTTI 的其它方式。
+
+类是程序的一部分，每个类都有一个 Class 对象。换言之，每当我们编写并且编译 了一个新类，就会产生一个 Class 对象（更恰当的说，是被保存在一个同名的 .class 文件中）。为了生成这个类的对象，Java 虚拟机 (JVM) 先会调用 “类加载器” 子系统把 这个类加载到内存中。
+
+类加载器子系统可能包含一条类加载器链，但有且只有一个原生类加载器，它是 JVM 实现的一部分。原生类加载器加载的是” 可信类”（包括 Java API 类）。它们通常 是从本地盘加载的。在这条链中，通常不需要添加额外的类加载器，但是如果你有特殊 需求（例如以某种特殊的方式加载类，以支持 Web 服务器应用，或者通过网络下载类）， 也可以挂载额外的类加载器。
+
+所有的类都是第一次使用时动态加载到 JVM 中的，当程序创建第一个对类的静态 成员的引用时，就会加载这个类。
+
+其实构造器也是类的静态方法，虽然构造器前面并没有 static 关键字。所 以，使用 new 操作符创建类的新对象，这个操作也算作对类的静态成员引用。
+
+因此，Java 程序在它开始运行之前并没有被完全加载，很多部分是在需要时才会加 载。这一点与许多传统编程语言不同，动态加载使得 Java 具有一些静态加载语言（如 C++）很难或者根本不可能实现的特性。
+
+类加载器首先会检查这个类的 Class 对象是否已经加载，如果尚未加载，默认的类 加载器就会根据类名查找 .class 文件（如果有附加的类加载器，这时候可能就会在数 据库中或者通过其它方式获得字节码）。这个类的字节码被加载后，JVM 会对其进行验 证，确保它没有损坏，并且不包含不良的 Java 代码 (这是 Java 安全防范的一种措施)。
+
+一旦某个类的 Class 对象被载入内存，它就可以用来创建这个类的所有对象。下面的程序可以证明这点：
 
 ### 类加载器前置知识概述
 
@@ -11275,7 +11638,7 @@ public void fn1(){
 
 #### 反射概述
 
-​		Java的反射机制是指在运行时去获取一个类的变量和方法信息，然后通过获取到的信息来创建对象，从而调用方法的一种机制。由于这种动态性，可以极大的增强程序的灵活性，程序不用在编译期就完成确定，在运行期仍然可以扩展。
+Java的反射机制是指在运行时去获取一个类的变量和方法信息，然后通过获取到的信息来创建对象，从而调用方法的一种机制。由于这种动态性，可以极大的增强程序的灵活性，程序不用在编译期就完成确定，在运行期仍然可以扩展。
 
 `java.lang.reflect` 库中包含类 `Field`、`Method` 和 `Constructor`（每一个都实现了 Member 接口）。这些类型的对象由 `JVM` 在运行时创建， 以表示未知类中的对应成员。然后，可以使用 `Constructor` 创建新对象，`get()` 和 `set()` 方法读取和修改与 `Field` 对象关联的字段，`invoke()` 方法调用与 `Method` 对象关联的 方法。此外，还可以调用便利方法 `getFields()`、`getMethods()`、`getConstructors()` 等，以返回表示字段、方法和构造函数的对象数组。
 
@@ -13425,7 +13788,7 @@ public class TableCreator {
 
 - `ThreadLocal`===Java线程本地存储
 
-### 16.1 线程的运行
+### 线程的运行
 
 方式一：继承Thread类
 
@@ -13462,9 +13825,9 @@ class MyThread extends Thread{
   - 适合多个相同程序的代码去处理同一个资源。【Thread用静态定义资源也可以】，把线程和程序的代码，数据，进行了有效分类，较好体现了面向对象的设计思想！
     - 数据，代码分离体现在哪里？？？
 
-### 16.2 线程的控制
+### 线程的控制
 
-#### 16.2.1 join()
+#### join()
 
 ```java
 public static void fn1(){
@@ -13507,7 +13870,7 @@ class MyThread extends Thread {
 }
 ```
 
-#### 16.2.2 daemon()
+#### daemon()
 
 > 设置当前线程为守护线程！当只剩守护线程时，jvm会退出，不会等待守护线程执行完毕
 
@@ -13528,9 +13891,9 @@ public static void fn1() {
 }
 ```
 
-### 16.3 线程的同步
+### 线程的同步
 
-#### 16.3.1 使用synchronized
+#### 使用synchronized
 
 - synchronize（）中的应该就是充当信号量的。
 
@@ -13570,7 +13933,7 @@ public class SaleTicket implements Runnable {
 }
 ```
 
-#### 16.3.2 同步代码块与同步方法
+#### 同步代码块与同步方法
 
 ```java
 public synchronized void run() {} // 同步方法！ 看视频！
@@ -13580,9 +13943,7 @@ public synchronized void run() {} // 同步方法！ 看视频！
 同步代码块可以选择以什么来加锁，比同步方法要更细颗粒度，我们可以选择只同步会发生同步问题的部分代码而不是整个方法；
 同步方法使用关键字 synchronized修饰方法，而同步代码块主要是修饰需要进行同步的代码，用 synchronized（object）{代码内容}进行修饰；
 
-----
-
-### 16.4 Lock锁
+### Lock锁
 
 ```java
 public class SaleTicket implements Runnable {
@@ -13603,7 +13964,7 @@ public class SaleTicket implements Runnable {
 }
 ```
 
-### 16.5 生产者 消费者
+### 生产者 消费者
 
 > **生产者生产，消费者消费。有同步有互斥。**
 
