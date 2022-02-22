@@ -11521,19 +11521,58 @@ class StringTokenizerDemo {
 
 要理解 RTTI 在 Java 中的工作原理，首先必须知道类型信息在运行时是如何表示 的。这项工作是由称为 Class 对象的特殊对象完成的，它包含了与类有关的信息。实 际上，Class 对象就是用来创建该类所有 “常规” 对象的。Java 使用 Class 对象来实现 RTTI，即便是类型转换这样的操作都是用 Class 对象实现的。不仅如此，Class 类还 提供了很多使用 RTTI 的其它方式。
 
-类是程序的一部分，每个类都有一个 Class 对象。换言之，每当我们编写并且编译 了一个新类，就会产生一个 Class 对象（更恰当的说，是被保存在一个同名的 .class 文件中）。为了生成这个类的对象，Java 虚拟机 (JVM) 先会调用 “类加载器” 子系统把 这个类加载到内存中。
+类是程序的一部分，每个类都有一个 Class 对象。换言之，每当我们编写并且编译 了一个新类，就会产生一个 Class 对象（更恰当的说，是被保存在一个同名的 .class 文件中）。为了生成这个类的对象，Java 虚拟机 (JVM) 先会调用 “类加载器” 子系统把这个类加载到内存中。
 
-类加载器子系统可能包含一条类加载器链，但有且只有一个原生类加载器，它是 JVM 实现的一部分。原生类加载器加载的是” 可信类”（包括 Java API 类）。它们通常 是从本地盘加载的。在这条链中，通常不需要添加额外的类加载器，但是如果你有特殊 需求（例如以某种特殊的方式加载类，以支持 Web 服务器应用，或者通过网络下载类）， 也可以挂载额外的类加载器。
+类加载器子系统可能包含一条类加载器链，但有且只有一个原生类加载器，它是 JVM 实现的一部分。原生类加载器加载的是” 可信类”（包括 Java API 类）。它们通常是从本地盘加载的。在这条链中，通常不需要添加额外的类加载器，但是如果你有特殊需求（例如以某种特殊的方式加载类，以支持 Web 服务器应用，或者通过网络下载类）， 也可以挂载额外的类加载器。
 
-所有的类都是第一次使用时动态加载到 JVM 中的，当程序创建第一个对类的静态 成员的引用时，就会加载这个类。
+所有的类都是第一次使用时动态加载到 JVM 中的，当程序创建第一个对类的静态成员的引用时（或者是使用类中的静态变量时），就会加载这个类。
 
-其实构造器也是类的静态方法，虽然构造器前面并没有 static 关键字。所 以，使用 new 操作符创建类的新对象，这个操作也算作对类的静态成员引用。
+其实构造器也是类的静态方法，虽然构造器前面并没有 static 关键字。所以，使用 new 操作符创建类的新对象，这个操作也算作对类的静态成员引用。
 
-因此，Java 程序在它开始运行之前并没有被完全加载，很多部分是在需要时才会加 载。这一点与许多传统编程语言不同，动态加载使得 Java 具有一些静态加载语言（如 C++）很难或者根本不可能实现的特性。
+因此，Java 程序在它开始运行之前并没有被完全加载，很多部分是在需要时才会加载。这一点与许多传统编程语言不同，动态加载使得 Java 具有一些静态加载语言（如 C++）很难或者根本不可能实现的特性。
 
-类加载器首先会检查这个类的 Class 对象是否已经加载，如果尚未加载，默认的类 加载器就会根据类名查找 .class 文件（如果有附加的类加载器，这时候可能就会在数 据库中或者通过其它方式获得字节码）。这个类的字节码被加载后，JVM 会对其进行验 证，确保它没有损坏，并且不包含不良的 Java 代码 (这是 Java 安全防范的一种措施)。
+类加载器首先会检查这个类的 Class 对象是否已经加载，如果尚未加载，默认的类加载器就会根据类名查找 .class 文件（如果有附加的类加载器，这时候可能就会在数据库中或者通过其它方式获得字节码）。这个类的字节码被加载后，JVM 会对其进行验证，确保它没有损坏，并且不包含不良的 Java 代码 (这是 Java 安全防范的一种措施)。
 
 一旦某个类的 Class 对象被载入内存，它就可以用来创建这个类的所有对象。下面的程序可以证明这点：
+
+```java
+// 检查加载器的工作方式
+class Cookie {
+    static { System.out.println("Loading Cookie"); }
+}
+class Gum {
+    static { System.out.println("Loading Gum"); }
+}
+class Candy {
+    static { System.out.println("Loading Candy"); }
+}
+public class SweetShop {
+    public static void main(String[] args) {
+        System.out.println("inside main");
+        new Candy();
+        System.out.println("After creating Candy");
+        try {
+            Class.forName("tij.chapter19.Gum"); // 类全名
+        } catch(ClassNotFoundException e) {
+            System.out.println("Couldn't find Gum");
+        }
+        System.out.println("After Class.forName(\"Gum\")");
+        new Cookie();
+        System.out.println("After creating Cookie");
+    }
+}
+/*
+inside main
+Loading Candy
+After creating Candy
+Loading Gum
+After Class.forName("Gum")
+Loading Cookie
+After creating Cookie
+*/
+```
+
+
 
 ### 类加载器前置知识概述
 
