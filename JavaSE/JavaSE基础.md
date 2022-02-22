@@ -11550,6 +11550,7 @@ public class SweetShop {
     public static void main(String[] args) {
         System.out.println("inside main");
         new Candy();
+        // new Gum(); // 如果去除这行注释，那么 Class.forName 就不会执行类加载的，也不会调用 Gum 类中的静态代码块了。
         System.out.println("After creating Candy");
         try {
             Class.forName("tij.chapter19.Gum"); // 类全名
@@ -11571,6 +11572,382 @@ Loading Cookie
 After creating Cookie
 */
 ```
+
+上面的代码中，Candy、Gum 和 Cookie 这几个类都有一个 static{...} 静态初始化块，这些静态初始化块在类第一次被加载的时候就会执行。也就是说，静态初始化块会打印出相应的信息，告诉我们这些类分别是什么时候被加载了。而在主方法里边，创建对象的代码都放在了 print() 语句之间，以帮助我们判断类加载的时间点。 从输出中可以看到，Class 对象仅在需要的时候才会被加载，static 初始化是在类加载时进行的。
+
+#### Class类
+
+所有 Class 对象都属于 Class 类，而且它跟其他普通对象一样，我们可以通过 `Class.forName` 方法获得 Class 对象的引用 (这也是类加载器的工作)。forName() 是 Class 类的一个静态方法，我们可以使用 forName() 根据目标类的类全名（String）得到该类的 Class 对象。forName() 执行的作用是如果 Gum 类的字节码对象没有被加载就加载它的字节码对象，而在加载字节码对象的过程中，Gum 的 static 初始化块被执行了。如果 Class.forName() 找不到要加载的类，它就会抛出异常 ClassNotFoundException。
+
+如果存在一个实例对象了，可以通过实例对象`.getClass()` 来获得 Class 对象的引用。
+
+Class 类中包含了很多方法，部分方法的使用如下
+
+```java
+interface HasBatteries {}
+interface Waterproof {}
+interface Shoots {}
+
+class Toy {
+    // 注释下面的无参数构造器会引起 NoSuchMethodError 错误
+    Toy() {}
+    Toy(int i) {}
+}
+
+class FancyToy extends Toy implements HasBatteries, Waterproof, Shoots {
+    FancyToy() { super(1);}
+}
+
+public class ToyTest {
+    static void printInfo(Class cc) {
+        System.out.println("Class name: " + cc.getName() + " is interface? [" + cc.isInterface() + "]");
+        System.out.println("Simple name: " + cc.getSimpleName());
+        System.out.println("Canonical name : " + cc.getCanonicalName());
+    }
+
+    public static void main(String[] args) {
+        Class c = null;
+        try {
+            c = Class.forName("tij.chapter19.FancyToy");
+        } catch (ClassNotFoundException e) {
+            System.out.println("Can't find FancyToy");
+            System.exit(1);
+        }
+        printInfo(c);
+        for (Class face : c.getInterfaces())
+            printInfo(face);
+        Class up = c.getSuperclass();
+        Object obj = null;
+        try {
+            // Requires no-arg constructor:
+            obj = up.newInstance();
+        } catch (InstantiationException e) {
+            System.out.println("Cannot instantiate");
+            System.exit(1);
+        } catch (IllegalAccessException e) {
+            System.out.println("Cannot access");
+            System.exit(1);
+        }
+        printInfo(obj.getClass());
+    }
+}
+/*
+Class name: tij.chapter19.FancyToy is interface? [false]
+Simple name: FancyToy
+Canonical name : tij.chapter19.FancyToy
+Class name: tij.chapter19.HasBatteries is interface? [true]
+Simple name: HasBatteries
+Canonical name : tij.chapter19.HasBatteries
+Class name: tij.chapter19.Waterproof is interface? [true]
+Simple name: Waterproof
+Canonical name : tij.chapter19.Waterproof
+Class name: tij.chapter19.Shoots is interface? [true]
+Simple name: Shoots
+Canonical name : tij.chapter19.Shoots
+Class name: tij.chapter19.Toy is interface? [false]
+Simple name: Toy
+Canonical name : tij.chapter19.Toy
+*/
+```
+
+- getName() 来产生完整类名
+- getSimpleName() 产生不带包名的类名
+- getCanonicalName() 也是产生完整类名（除内部类和数组外，对大部分类产生的结果与 getName() 相同）
+- isInterface() 用于判断某个 Class 对象代表的是否为一个接口。
+- Class对象.getInterfaces() 方法返回该 Class对象实现的接口名称组成的数组
+-  newInstance() 来创建对象
+
+#### 类字面量
+
+Java 还提供了另一种方法来生成类对象的引用：类字面常量。
+
+类字面量的使用语法：XXx.class。这种凡是简单，安全，受编译时检查。并且它根除了对 forName() 方法的调用，所以效率更高。
+
+类字面常量不仅可以应用于普通类，也可以应用于接口、数组以及基本数据类型。 另外，对于基本数据类型的包装类，还有一个标准字段 TYPE。TYPE 字段是一个引用，指向对应的基本数据类型的 Class 对象，不过建议使用 .class 的形式，与普通类保持一致。如下所示
+
+```java
+boolean.class
+Boolean.TYPE
+char.class
+Character.TYPE
+byte.class
+Byte.TYPE
+short.class
+Short.TYPE
+int.class
+Integer.TYPE
+long.class
+Long.TYPE
+float.class
+Float.TYPE
+double.class
+Double.TYPE
+void.class
+Void.TYPE
+```
+
+当使用 .class 来创建对 Class 对象的引用时，不会自动地初始化该 Class 对象。
+
+```java
+class D {
+    static final int a = 10;
+    static {
+        System.out.println("INIT");
+    }
+}
+
+class TEST {
+    public static void main(String[] args) {
+        System.out.println(D.class);
+    }
+}
+// 不会执行 static 代码块
+```
+
+类的加载实际上会经历下面三个步骤
+
+1. 加载，这是由类加载器执行的。该步骤将查找字节码（通常在 classpath 所指定的 路径中查找，但这并非是必须的），并从这些字节码中创建一个 Class 对象。 
+2. 链接。在链接阶段将验证类中的字节码，为 static 字段分配存储空间，并且如果 需要的话，将解析这个类创建的对其他类的所有引用。 
+3. 初始化。如果该类具有超类，则先初始化超类，执行 static 初始化器和 static 初始化块。
+
+直到第一次引用一个 static 方法（构造器隐式地是 static）或者非常量的 static 字段（使用 staic final 修饰的常量不会触发类的初始化，注意是类的初始化，且要是常量！），才会进行类初始化。
+
+```java
+class D{
+    static final int a = 10;
+    static {
+        System.out.println("INIT");
+    }
+}
+class TEST{
+    public static void main(String[] args) {
+        System.out.println(D.a);
+    }
+}
+// 不会触发 static 的执行。（static 代码块会被组合成一个类方法 cinit<>）并未触发 D 的类加载
+/*
+添加虚拟机参数，查看 D 类是否加载了。-XX:+TraceClassLoading
+测试后发现，并未触发 D字节码对象的加载。
+因为常量在编译阶段会存入到调用这个常量的方法所在的类的常量池中，
+所以在上述例子中常量 a 在运行时存在 D 类的常量池中和 D 类没有任何关系，所以 D 并不会被初始化，理所当然也不会执行 D 类的静态代码块。
+*/
+```
+
+```java
+class Initable {
+    static final int STATIC_FINAL = 47;
+    static final int STATIC_FINAL2 = ClassInitialization.rand.nextInt(1000);
+    static { System.out.println("Initializing Initable"); }
+}
+
+class Initable2 {
+    static int staticNonFinal = 147;
+    static { System.out.println("Initializing Initable2"); }
+}
+
+class Initable3 {
+    static int staticNonFinal = 74;
+    static { System.out.println("Initializing Initable3"); }
+}
+
+public class ClassInitialization {
+    public static Random rand = new Random(47);
+
+    public static void main(String[] args) throws Exception {
+        Class initable = Initable.class; // 不会触发类的初始化
+        System.out.println("After creating Initable ref");
+        // Does not trigger initialization:
+        System.out.println(Initable.STATIC_FINAL);
+        // Does trigger initialization:
+        System.out.println(Initable.STATIC_FINAL2);
+        // Does trigger initialization:
+        System.out.println(Initable2.staticNonFinal);
+        Class initable3 = Class.forName("tij.chapter19.Initable3");
+        System.out.println("After creating Initable3 ref");
+        System.out.println(Initable3.staticNonFinal);
+    }
+}
+/*
+After creating Initable ref
+47
+Initializing Initable
+258
+Initializing Initable2
+147
+Initializing Initable3
+After creating Initable3 ref
+74
+*/
+```
+
+初始化有效地实现了尽可能的 “惰性”，从对 initable 引用的创建中可以看到，
+
+- 仅使用 .class 语法来获得对类对象的引用不会引发初始化
+- Class.forName() 来产生 Class 引用会立即就进行初始化
+- static final 值是 “编译期常量”（如 Initable.staticFinal），那么这个值不需要对 Initable 类进行初始化就可以被读取
+- 但是，如果只是将一个字段设置成为 static 和 final，还不足以确保这种行为。例如，对 Initable.staticFinal2 的访问将强制进行类的初始化，因为它不是一个编译期常量。
+- 如果一个 static 字段不是 final 的，那么在对它访问时，总是要求在它被读取之前，要先进行链接（为这个字段分配存储空间）和初始化（初始化该存储空间）
+
+#### 泛化的 Class 引用
+
+Class 引用总是指向某个 Class 对象，而 Class 对象可以用于产生类的实例，并且包含可作用于这些实例的所有方法代码。它还包含该类的 static 成员，因此 Class 引用表明了它所指向对象的确切类型，而该对象便是 Class 类的一个对象。
+
+Java 引入泛型语法 之后，我们可以使用泛型对 Class 引用所指向的 Class 对象的类型进行限定。在下面的实例中，两种语法都是正确的
+
+```java
+public class GenericClassReferences {
+    public static void main(String[] args) {
+        Class intClass = int.class;
+        Class<Integer> genericIntClass = int.class;
+        genericIntClass = Integer.class; // 同一个东西
+        intClass = double.class;
+//         genericIntClass = double.class; // 非法
+    }
+}
+// 通过泛型，我们可以明确限定类引用只能指向声明的类型。
+```
+
+再看下面这行代码
+
+```java
+Class<Number> geenericNumberClass = int.class; // 可以吗？不可以
+```
+
+看起来似乎是可以的，因为 Integer 继承自 Number。但事实却是不行，为什么？因为泛型不支持协变类型。如果希望他可以实现某种类似与多态的机制，需要使用泛型边界。
+
+为了在使用 Class 引用时放松限制，我们可以使用通配符，它是 Java 泛型中的一部分。通配符就是 ?，表示 “任何事物”。因此，我们可以在上例的普通 Class 引用中添加通配符
+
+```java
+public class WildcardClassReferences {
+    public static void main(String[] args) {
+        Class<?> intClass = int.class;
+        intClass = double.class;
+    }
+}
+```
+
+使用 Class 比单纯使用 Class 要好，虽然它们在效果上是等价的，并且单纯使用 Class 不会产生编译器警告信息。但是 Class\<?\> 的语义更清晰。它表明我们并非是碰巧或者由于疏忽才使用了一个非具体的类引用，而是特意为之。
+
+为了创建一个限定指向某种类型或其子类的 Class 引用，我们需要将通配符与 extends 关键字配合使用，创建一个范围限定。
+
+```java
+public class BoundedClassReferences {
+    public static void main(String[] args) {
+        List<? extends Number> a1 = new ArrayList<Integer>();
+        List<? extends Number> a2 = new ArrayList<Double>();
+        Class<? extends Number> bounded = int.class;
+        bounded = double.class;
+        bounded = Number.class;
+        // Or anything else derived from Number.
+    }
+}
+```
+
+向 Class 引用添加泛型语法的原因只是为了提供编译期类型检查，可以提前检查出错误。
+
+```java
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+class CountedInteger {
+    private static long counter;
+    private final long id = counter++;
+
+    @Override
+    public String toString() {
+        return Long.toString(id);
+    }
+}
+
+public class DynamicSupplier<T> implements Supplier<T> {
+    private Class<T> type;
+
+    public DynamicSupplier(Class<T> type) {
+        this.type = type;
+    }
+
+    public T get() {
+        try {
+            return type.newInstance();
+        } catch (InstantiationException |
+                IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void main(String[] args) {
+        Stream.generate(
+                        new DynamicSupplier<>(CountedInteger.class))
+                .skip(10)
+                .limit(5)
+                .forEach(System.out::println);
+    }
+}
+```
+
+当你将泛型语法用于 Class 对象时，newInstance() 将返回该对象的确切类型
+
+```java
+class FancyToy extends Toy implements HasBatteries, Waterproof, Shoots {
+    FancyToy() {
+        super(1);
+    }
+}
+public class GenericToyTest {
+    public static void main(String[] args) throws Exception {
+        Class<FancyToy> ftClass = FancyToy.class;
+        // Produces exact type:
+        FancyToy fancyToy = ftClass.newInstance();
+        Class<? super FancyToy> up = ftClass.getSuperclass();
+        // This won't compile: 很奇怪的语法
+        // Class<Toy> up2 = ftClass.getSuperclass();
+        // Only produces Object:
+        Object obj = up.newInstance();
+    }
+}
+```
+
+虽然 getSuperClass() 方法返回的是父类 Toy（不是接口），并且编译器在编译期就知道它是什么类型了（在本例中就是 Toy.class），但是指明确切类型却无法通过编译，返回值含糊不清。正是由于这种含糊性， up.newInstance 的返回值不是精确类型，而只是 Object。
+
+#### cast() 方法
+
+Java 中还有用于 Class 引用的转型语法，即 cast() 方法
+
+```java
+class Building {}
+class House extends Building {}
+
+public class ClassCasts {
+    public static void main(String[] args) {
+        Building b = new House();
+        Class<House> houseType = House.class;
+        House h = houseType.cast(b);
+        h = (House)b; // ... 或者这样做.
+    }
+}
+```
+
+cast() 方法接受参数对象，并将其类型转换为 Class 引用的类型。与直接括号强转相比，多了很多多余的工作，但是 cast() 在无法使用普通类型转换的情况下还是很有用的。如果我们保存了 Class 引用，并希望以后通过这个引用来执行转型，就需要用到 cast()。
+
+### 类型转换检测
+
+目前，我们知道，RTTI（运行时类型识别） 类型包括
+
+- 传统的类型转换，如 “(Shape)”，由 RTTI 确保转换的正确性，如果执行了一个 错误的类型转换，就会抛出一个 ClassCastException 异常。
+- 代表对象类型的 Class 对象. 通过查询 Class 对象可以获取运行时所需的信息.
+
+在 C++ 中，经典的类型转换 “(Shape)” 并不使用 RTTI。它只是简单地告诉编译器将这个对象作为新的类型对待. 而 Java 会进行类型检查，这种类型转换一般被称作 “类型安全的向下转型”。之所以称作 “向下转型”，是因为传统上类继承图是这么画的。 将 Circle 转换为 Shape 是一次向上转型, 将 Shape 转换为 Circle 是一次向下转型。 但是, 因为我们知道 Circle 肯定是一个 Shape，所以编译器允许我们自由地做向上转型的赋值操作，且不需要任何显式的转型操作。当你给编译器一个 Shape 的时候，编 译器并不知道它到底是什么类型的 Shape——它可能是 Shape，也可能是 Shape 的子类型，例如 Circle、Square、Triangle 或某种其他的类型。在编译期，编译器只能知道它是 Shape。因此，你需要使用显式地进行类型转换，以告知编译器你想转换的特定类型， 否则编译器就不允许你执行向下转型赋值。（编译器将会检查向下转型是否合理，因此它不允许向下转型到实际不是待转型类型的子类类型上）。
+
+RTTI 在 Java 中还有第三种形式，那就是关键字 instanceof。它返回一个布尔值， 告诉我们对象是不是某个特定类型的实例，可以用提问的方式使用它，就像这个样子：
+
+```java
+if(x instanceof Dog)
+	((Dog)x).bark();
+```
+
+在将 x 的类型转换为 Dog 之前，通过 instanceof 先检查 x 是否是 Dog 类型的对象再向下转型前，避免 ClassCastException 异常。instanceof 有一个严格的限制：只可以将它与命名类型进行比较，而不能与 Class 对象作比较。
+
+#### 使用类字面量
 
 
 
