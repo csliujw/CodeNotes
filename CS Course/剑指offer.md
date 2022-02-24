@@ -1104,6 +1104,78 @@ class Solution {
 }
 ```
 
+### 展平多级链表
+
+这题真的有难度。
+
+多级双向链表中，除了指向下一个节点和前一个节点指针之外，它还有一个子链表指针，可能指向单独的双向链表。这些子列表也可能会有一个或多个自己的子项，依此类推，生成多级数据结构，如下面的示例所示。
+
+给定位于列表第一级的头节点，请扁平化列表，即将这样的多级双向链表展平成普通的双向链表，使所有结点出现在单级双链表中
+
+> 解题思路
+
+<img src="https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/10/12/multilevellinkedlist.png">
+
+<img src="https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/10/12/multilevellinkedlistflattened.png">
+
+- 先搞清楚展平规则
+- node.next = child; child.pre = node; child.next = node.next; node.next.pre = child.
+- 搞清楚展平规则后就是想怎么做了。
+- 可以看出，这是一个递归的结构。展平 3 的子链表。如果 3 的子链表有子链表，那就先展平 3 子链表的子链表。
+
+<img src="https://assets.leetcode-cn.com/solution-static/jianzhi_II_028/1.png">
+
+```java
+/*
+// Definition for a Node.
+class Node {
+    public int val;
+    public Node prev;
+    public Node next;
+    public Node child;
+};
+*/
+
+class Solution {
+    public Node flatten(Node head) {
+        flattenGetTail(head);
+        return head;
+    }
+
+    // 返回 尾部指针，用户展平
+    private Node flattenGetTail(Node head){
+        // 展平链表
+        Node node = head;
+        Node tail = null;
+        while(node!=null){
+            Node next = node.next;
+            if(node.child!=null){ // 如果有子链表就展平
+                Node child = node.child;
+                Node childTail = flattenGetTail(child); // 递归展平子链表
+
+                node.child = null; // child 需要置空奥
+
+                node.next = child; // next 指向 child，child 的尾指针指向node 的next节点
+                child.prev = node; 
+
+                childTail.next = next; // 子链表的 next 指向 node 的 next。
+                if(next!=null){ // 达成双链表
+                    next.prev = childTail;
+                }
+                tail = childTail;
+            }else{
+                // 如果没有 child的话，尾部指针就是
+                tail = node;
+            }
+            node = next;
+        }
+        return tail;
+    }
+}
+```
+
+
+
 # 老版剑指offer
 
 ## **二维数组中的查找**
