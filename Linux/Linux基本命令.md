@@ -1,6 +1,16 @@
 # Linux基本命令
 
-## screen
+## 后台运行程序
+
+如果想让一个程序在后台运行，只要在执行命令的末尾加上一个&符号就可以了。但是这种方式不是很保险，有些程序当你登出终端后它就会停止。
+
+目前发现了三个命令可以在后台指向程序，关闭终端后程序也不会停止运行。
+
+- screen -- 可以用，但是有时候会挂掉。
+- nohub -- 可以用，开发中似乎常用这个命令。
+- tmux -- 可以用，我一般用它在后台训练深度学习模型。
+
+### screen
 
 创建：screen -S 名称
 
@@ -12,7 +22,7 @@
 
 删除 kill -9 194746  `There is a screen on"194746.name` 在 screen -wipe 就可以杀死进程了。
 
-## tmux
+### tmux
 
 - [x] 安装
 
@@ -56,40 +66,62 @@ $ tmux attach -t 0
 $ tmux attach -t <session-name>
 ```
 
-## nohup
+### nohup
 
-**ohup** 英文全称 no hang up（不挂起），用于在系统后台不挂断地运行命令，退出终端不会影响程序的运行。
+**nohup** 英文全称 no hang up（不挂起），用于在系统后台不挂断地运行命令，退出终端不会影响程序的运行。
 
-```shell
-nohup java demo # 在后台运行 demo 这个 Java 代码
+安装 nohup 命令： `sudo apt install coreutils`
+
+```java
+// 事先准备的 Java 代码
+import java.util.concurrent.TimeUnit;
+public class Demo{
+    public static void main(String[]args) throws Exception{
+        new Thread(()->{
+            while(true){
+                try{
+                    TimeUnit.SECONDS.sleep(1);
+                    System.out.println("````");
+                }catch(Exception e){
+                    // pass
+                }
+            }
+        }).start();
+    }
+}
 ```
 
+编译运行这段 Java 代码
+
+```shell
+javac Demo.java
+java Demo
+# 关闭终端，在打开另一个终端，jps 命令查看，发现 java 进程被终止了。
+```
+
+使用 nohup 命令，后台运行进程，关闭终端不中断进程。
+
+```bash
+nohup java Demo # 在后台运行 demo 这个 Java 代码  代码中的输出语句，默认会被重定向到 /home/用户名/nohup.out 文件中
+
+sudo nohup java Demo > ./out.txt # 修改重定向的位置。把输出的内容重定向到 当前目录的 out.txt 文件中。（文件不用我们自己创建，命令自己会创建文件）
+
+nohup java Demo & > ./out.txt # 加上 & 直接在后台运行，不在终端显示。
+```
+
+- jobs -l：列出当前在后台执行的命令
+- fg N：将命令进程号码为N的命令进程放到前台执行，同%N
+- bg N：将命令进程号码为N的命令进程放到后台执行，同%N，%N是通过jobs命令查到的后台正在执行的命令的序号，不是pid
+
 ## 文件和目录操作
+
+### 进入/查找
 
 - ls
 
 - cd
 
 - pwd
-
-- mkdir
-
-- rmdir
-
-- touch
-
-- cp：复制文件或目录
-
-    - cp 源文件 目标文件
-    - `cp   demo.txt   copy.txt` `把demo.txt 复制 到 copy.txt`
-
-- mv：移动文件或目录、文件或目录改名
-
-    - `mv a.txt copy/` `把 a.txt 移动到 copy/ 目录下`
-
-- rm：删除文件
-
-- ln
 
 - find：查找文件
 
@@ -129,7 +161,22 @@ nohup java demo # 在后台运行 demo 这个 Java 代码
     - `>>`是追加模式
     - 如：`echo hello world  > demo.txt` 把左边的输出放到右边的文件中去。
 
-## 查看文件
+### 创建/拷贝
+
+- mkdir
+- rmdir
+- touch
+- cp：复制文件或目录
+
+    - cp 源文件 目标文件
+    - `cp   demo.txt   copy.txt` `把demo.txt 复制 到 copy.txt`
+- mv：移动文件或目录、文件或目录改名
+
+    - `mv a.txt copy/` `把 a.txt 移动到 copy/ 目录下`
+- rm：删除文件
+- ln：创建软链接
+
+### 查看文件
 
 - cat	查看文本文件内容
 - more	可分页查看
@@ -157,7 +204,7 @@ nohup java demo # 在后台运行 demo 这个 Java 代码
 
 在 windows terminal 上直接执行命令，将 /root/Manipulator.cpp 文件拷贝到 D:// 目录下。
 
-```shell
+```bash
 scp root@114.132.43.225:/root/Manipulator.cpp D://
 ```
 
@@ -165,7 +212,7 @@ scp root@114.132.43.225:/root/Manipulator.cpp D://
 
 同上，只是命令不一样
 
-```shell
+```bash
 scp D:\test.bmp root@114.132.43.225:/root/
 ```
 
@@ -190,6 +237,85 @@ scp D:\test.bmp root@114.132.43.225:/root/
 `wget` : `wget   www.baidu.com`  帮我把百度的首页下载过来了。
 
 ## 进程管理
+
+### 查看进程&杀死
+
+#### 查看进程信息
+
+```bash
+# 查看进程
+ps # 查看进程的基本信息
+
+man ps # 查看 ps 的帮助文档
+EXAMPLES
+To see every process on the system using standard syntax: # 标准语法
+    ps -e
+    ps -ef
+    ps -eF
+    ps -ely
+
+To see every process on the system using BSD syntax: # BSD 语法。信息更多，可以看到 CPU 和 MEM 使用率
+    ps ax
+    ps axu
+
+To print a process tree:
+    ps -ejH
+    ps axjf
+
+To get info about threads:
+    ps -eLf
+    ps axms
+
+To get security info:
+    ps -eo euser,ruser,suser,fuser,f,comm,label
+    ps axZ
+    ps -eM
+
+To see every process running as root (real & effective ID) in user format:
+    ps -U root -u root u
+
+To see every process with a user-defined format:
+    ps -eo pid,tid,class,rtprio,ni,pri,psr,pcpu,stat,wchan:14,comm
+    ps axo stat,euid,ruid,tty,tpgid,sess,pgrp,ppid,pid,pcpu,comm
+    ps -Ao pid,tt,user,fname,tmout,f,wchan
+
+Print only the process IDs of syslogd:
+    ps -C syslogd -o pid=
+
+Print only the name of PID 42:
+    ps -q 42 -o comm=
+```
+
+#### 结合管道命令查看
+
+```bash
+man grep # 查看 grep 的帮助手册
+
+ps -ef | grep fzz # ps -ef 查询出信息，然后找出信息中包含 fzz 的进程。更多细致用法请查看帮助手册。
+```
+
+#### 杀死进程
+
+- kill：kill 命令杀死指定进程 PID 的进程
+
+```bash
+# 查找一个top进程，并杀死
+www@www:/$ ps -ef| grep top
+www+   277   186  0 16:16 pts/1    00:00:00 top
+www+   278   240  0 16:16 pts/2    00:00:00 top
+www+   279   257  0 16:16 pts/3    00:00:00 top
+www+   290   154  0 16:17 pts/0    00:00:00 grep --color=auto top
+www@www:/$ kill -9 277
+www@www:/$ ps -ef| grep top
+www+   278   240  0 16:16 pts/2    00:00:00 top
+www+   279   257  0 16:16 pts/3    00:00:00 top
+www+   292   154  0 16:17 pts/0    00:00:00 grep --color=auto top
+www@www:/$
+```
+
+- killall：killall 命令用于杀死指定名字的进程（kill processes by name）
+    - killall -9 top 杀死所有 top 进程。
+- pkill：pkill 和 killall 差不多，也是用于杀掉指定名称的进程
 
 - `ps：查找进程的信息`
     - `ps`
@@ -218,3 +344,18 @@ scp D:\test.bmp root@114.132.43.225:/root/
     - ntsysv
 
 ## 管理用户
+
+### 创建用户
+
+```bash
+sudo useradd -m qq # 创建用户 qq  加上参数 -m 会帮助我们自动创建用户的 home 目录
+sudo passwd qq # 设置用户 qq 的密码
+Enter new UNIX password:
+Retype new UNIX password:
+passwd: password updated successfully
+
+su qq # 且换到用户 qq
+
+sudo userdel qq # 删除用户 qq
+```
+
