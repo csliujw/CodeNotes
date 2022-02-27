@@ -2107,9 +2107,308 @@ create index idx_email on tb_user(email);
 
 ### SQL性能分析
 
+> SQL 执行频率
 
+MySQL 客户端连接成功后，通过 `show [session|global] status` 命令可以提供服务器状态信息。通过如下指令，可以查看当前数据库的 INSERT、UPDATE、DELETE、SELECT 的访问频次
+
+```mysql
+show global status like 'Com_______' # 七个下划线
+mysql> show global status like 'Com_______';
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| Com_binlog    | 0     |
+| Com_commit    | 4     |
+| Com_delete    | 0     |
+| Com_import    | 0     |
+| Com_insert    | 0     |
+| Com_repair    | 0     |
+| Com_revoke    | 0     |
+| Com_select    | 15    |
+| Com_signal    | 0     |
+| Com_update    | 2     |
+| Com_xa_end    | 0     |
++---------------+-------+
+11 rows in set (0.00 sec)
+```
+
+> 慢查询日志
+
+```mysql
+show variables like 'slow_query_log' # 查询是否开启慢日志
+```
+
+慢查询日志记录了所有执行时间超过指定参数（long_query_time，单位：秒，默认10秒）的所有SQL语句的日志。 MySQL的慢查询日志默认没有开启，需要在MySQL的配置文件（/etc/my.cnf）中配置如下信息：
+
+```shell
+# 开启 MySQL 慢日志查询开关
+slow_query_log=1
+# 设置慢日志的时间为 秒， 语句执行时间超过 秒，就会视为慢查询，记录慢查询日志
+long_query_time=2
+```
+
+配置完毕之后，通过以下指令重新启动MySQL服务器进行测试，查看慢日志文件中记录的信息 /var/lib/mysql/localhost-slow.log
+
+> profile 详情
+
+show profiles 能够在做SQL优化时帮助我们了解时间都耗费到哪里去了。通过have_profiling参数，能够看到当前MySQL是否支持
+
+profile 操作：`select @@have_profiling;`
+
+默认 profiling 是关闭的，可以通过 set 语句在 session/global 级别开启 profiling `set profiling=1`
+
+执行一系列的业务 SQL 操作，然后通过如下指令查看指令的执行耗时：
+
+```shell
+# 查看每一条 SQL 的耗时基本情况
+show profiles;
+# 查看指定 query_id 的 SQL 语句各个阶段的耗时情况
+show profile for query query_id;
+# 查看指定 query_id 的 SQL 语句 CPU 的使用情况
+show profile cpu for query query_id;
+```
+
+> explain 执行计划
+
+EXPLAIN 或者 DESC命令获取 MySQL 如何执行 SELECT 语句的信息，包括在 SELECT 语句执行过程中表如何连接和连接的顺序。
+
+```mysql
+explain select xxx from xxx; # 分析 SQL 语句的性能
+```
+
+EXPLAIN 执行计划各字段含义：
+
+➢Id：select查询的序列号，表示查询中执行select子句或者是操作表的顺序(id相同，执行顺序从上到下；id不同，值越大，越先执行)。 
+➢ select_type：表示 SELECT 的类型，常见的取值有 SIMPLE（简单表，即不使用表连接或者子查询）、PRIMARY（主查询，即外层的查询）、 UNION（UNION 中的第二个或者后面的查询语句）、SUBQUERY（SELECT/WHERE之后包含了子查询）等 
+➢ type：表示连接类型，性能由好到差的连接类型为NULL、system、const、eq_ref、ref、range、 index、all 。 
+➢ possible_key：显示可能应用在这张表上的索引，一个或多个。
+➢ Key：实际使用的索引，如果为NULL，则没有使用索引。 
+➢ Key_len：表示索引中使用的字节数， 该值为索引字段最大可能长度，并非实际使用长度，在不损失精确性的前提下， 长度越短越好 。 
+➢rows：MySQL认为必须要执行查询的行数，在innodb引擎的表中，是一个估计值，可能并不总是准确的。 
+➢ filtered：表示返回结果的行数占需读取行数的百分比， filtered 的值越大越好
+
+### 索引使用
+
+#### 验证索引效率
+
+在未建立索引之前，执行如下SQL语句，查看SQL的耗时。`select * from tb_sku where sn='100000003145001';`
+
+针对字段创建索引 `create index idx_sku_sn_on tb_sku(sn);`
+
+然后再次执行相同的 SQL 语句，再次查看 SQL 的耗时。`select * from tb_sku where sn='100000003145001'`
+
+#### 最左前缀法则
+
+如果索引了多列（联合索引），要遵守最左前缀法则。最左前缀法则指的是查询从索引的最左列开始，并且不跳过索引中的列。 如果跳跃某一列，索引将部分失效(后面的字段索引失效)。
+
+```mysql
+explain select * from tb_user where profession = '软件工程' and age = 31 and status = '0';
+
+explain select * from tb_user where profession = '软件工程' and age = 31;
+
+explain select * from tb_user profession = '软件工程'
+
+explain select * from tb_user where age = 31 and status = '0';
+
+explain select * from tb_user where status = '0';
+```
+
+#### 范围查询
+
+联合索引中，出现范围查询(>,<)，范围查询右侧的列索引失效
+
+#### 索引列运算
+
+不要在索引列上进行运算操作， 索引将失效
+
+#### 字符串不加引号
+
+字符串类型字段使用时，不加引号， 索引将失效。
+
+#### 模糊查询
+
+如果仅仅是尾部模糊匹配，索引不会失效。如果是头部模糊匹配，索引失效。
+
+#### or连接的条件
+
+用or分割开的条件， 如果or前的条件中的列有索引，而后面的列中没有索引，那么涉及的索引都不会被用到。
+
+
+
+由于age没有索引，所以即使id、phone有索引，索引也会失效。所以需要针对于age也要建立索引
+
+#### 数据分布影响
+
+如果MySQL评估使用索引比全表更慢，则不使用索引
+
+#### SQL提示
+
+SQL提示，是优化数据库的一个重要手段，简单来说，就是在SQL语句中加入一些人为的提示来达到优化操作的目的。
+
+#### 覆盖索引
+
+尽量使用覆盖索引（查询使用了索引，并且需要返回的列，在该索引中已经全部能够找到），减少 `select *` 。
+
+> **注意：**
+>
+> - using index condition ：查找使用了索引，但是需要回表查询数据 using where; 
+> - using index ：查找使用了索引，但是需要的数据都在索引列中能找到，所以不需要回表查询数据
+
+#### 思考
+
+一张表, 有四个字段(id, username, password, status),  由于数据量大, 需要对以下SQL语句进行优化, 该如何进 行才是最优方案 `select id,username,pasword from tb_user where username='itcast';`
+
+#### 前缀索引
+
+当字段类型为字符串（varchar，text等）时，有时候需要索引很长的字符串，这会让索引变得很大，查询时，浪费大量的磁盘IO， 影响查询效率。此时可以只将字符串的一部分前缀，建立索引，这样可以大大节约索引空间，从而提高索引效率。
+
+语法：`create index idx_xxx on table_name(column(n));`
+
+前缀长度：可以根据索引的选择性来决定，而选择性是指不重复的索引值（基数）和数据表的记录总数的比值，索引选择性越高则查询效率越高 ， 唯一索引的选择性是1，这是最好的索引选择性，性能也是最好的。
+`select count(distinct email)/count(*) from tb_user;` 
+`select count(distinct substring(email,1,5))/count(*) from tb_user;`
+
+> 前缀索引查询流程
+
+<img src="img\image-20220227214410971.png">
+
+#### 单列索引与联合索引
+
+单列索引：即一个索引只包含单个列。 
+
+联合索引：即一个索引包含了多个列。 
+
+在业务场景中，如果存在多个查询条件，考虑针对于查询字段建立索引时，建议建立联合索引，而非单列索引。 
+
+单列索引情况：`explain select id,phone,name from tb_user where phone='17799990010;'`
+
+多条件联合查询时， 优化器会评估哪个字段的索引效率更高，会选择该索引完成本次查询
+
+<img src="img\image-20220227214626402.png">
+
+### 索引设计原则
+
+- ①针对于数据量较大，且查询比较频繁的表建立索引。 
+- ②针对于常作为查询条件（where）、排序（order by）、分组（group by）操作的字段建立索引。 
+- ③尽量选择区分度高的列作为索引，尽量建立唯一索引，区分度越高，使用索引的效率越高。 
+- ④如果是字符串类型的字段，字段的长度较长，可以针对于字段的特点，建立前缀索引。 
+- ⑤尽量使用联合索引，减少单列索引，查询时，联合索引很多时候可以覆盖索引，节省存储空间，避免回表，提高查询效率。 
+- ⑥要控制索引的数量，索引并不是多多益善，索引越多，维护索引结构的代价也就越大，会影响增删改的效率。 
+- ⑦如果索引列不能存储NULL值，请在创建表时使用NOT NULL约束它。当优化器知道每列是否包含NULL值时，它可以更好地确定哪 个索引最有效地用于查询。
+
+### 总结
+
+- 概述：索引是高效获取数据的数据结构
 
 ## SQL优化
+
+- 插入数据：insert 批量插入、手动控制事务、主键顺序插入避免页分裂、大批量插入使用 load data local infile
+- 主键优化：主键长度尽量短、尽量顺序插入，推荐 auto_increment 而不是使用 UUID。
+- order by 优化：
+    - using index，直接通过索引返回数据，查询性能高
+    - using filesort，需要将返回的结果在排序缓冲区排序【为什么？】
+- group by 优化：索引，多字段分组满足最左前缀法则
+- limit 优化：覆盖索引+子查询【为什么用子查询？】
+- count 优化：性能 count(字段)<count(主键id)<count(1)≈count(\*)。count 字段会有一个检查是否为空的操作。
+- update 优化：尽量根据主键/索引字段进行数据更新
+
+### 插入数据
+
+> insert 优化
+
+一条一条执行，每次执行都需要与数据库进行网络传输。
+
+```mysql
+insert into tb_test values(1,'tom1');
+insert into tb_test values(2,'tom2');
+insert into tb_test values(3,'tom3');
+insert into tb_test values(4,'tom4');
+....
+```
+
+①建议批量插入。但是每次插入的数据不要超过 1000 条。一般一次插入 500\~1000 条是比较合适的。
+
+```mysql
+insert into tb_test values(1,'tom1'),(2,'tom1'),(3,'tom1');
+```
+
+②手动事务提交。MySQL 默认是自动提交事务。每执行一条 insert 都需要开启事务，提交事务，建议手动控制事务。
+
+```mysql
+start transaction;
+insert into tb_test values(10,'com1'),(11,'com1');
+insert into tb_test values(12,'com1'),(13,'com1');
+insert into tb_test values(14,'com1'),(15,'com1');
+commit;
+```
+
+③主键顺序插入。主键插入可以避免页分裂。
+
+```shell
+主键乱序插入：8 1 23 64 461 556 1616 00 25 56
+主键顺序插入：1 2 3 6 7 8 9 11 12 15 158
+```
+
+④大批量插入数据。如果一次性需要插入大批量数据，使用insert语句插入性能较低，此时可以使用MySQL数据库提供的load指令进行插入。操作如下：
+
+```mysql
+# 客户端连接服务器时，加上参数 --local-infile
+mysql --local-infile -u root -p
+# 设置全局参数 local_infile 为 1，开启从本地加载文件导入数据的开关
+set global local_infile = 1;
+# 执行 load 指令将准备好的数据，加载道表结构中
+load data local infile '/xx/xx/xx/sql.log' into tabke 'tb_user' fields terminated by ',' lines terminated by '\n';
+```
+
+### 主键优化
+
+主键顺序插入对比乱序插入，可以尽量避免页分裂。
+
+> 主键设计原则
+
+➢ 满足业务需求的情况下，尽量降低主键的长度。 主键较长的话，若二级索引过多（二级索引中存了主键）会导致索引占大量的磁盘，查询的时候会进行大量 I/O
+➢ 插入数据时，尽量选择顺序插入，选择使用AUTO_INCREMENT自增主键。乱序插入会导致页分裂。
+➢ 尽量不要使用UUID做主键或者是其他自然主键，如身份证号。 ID 长，I/O 也多，乱序插入也容易导致页分裂。
+➢ 业务操作时，避免对主键的修改。
+
+### order by 优化
+
+order by 优化主要是优化数据的排序方式。
+
+- ①Using filesort，通过表的索引或全表扫描，读取满足条件的数据行，然后在排序缓冲区中完成排序操作，所有不是通过索引直接返回排序结果的排序都 叫 filesort 排序
+- ②Using index，通过有序索引顺序扫描直接返回有序数据，这种情况即为 using index，不需要额外排序，操作效率高。
+
+> order by 语句优化示例
+
+```mysql
+# 未创建索引进行排序
+explain select id,age,phone from tb_user order by age,phone;
+# 创建索引
+create index idx_user_age_phone on tb_user(age,phone);
+# 创建索引后的排序，全表扫描，但是叶子节点的数据时有序的，无需进行额外的排序
+explain select id,age,phone from tb_user order by age,phone;
+# 创建索引后，降序排序，
+# 用上了索引，没有有额外的排序，但是使用了 Backward index scan，反向扫描索引。
+# age 升序排，phone 升序排；desc 的话，就要从后向前数。
+explain select id,age,phone from tb_user order by age desc,phone desc;
+# 违背索引的最左前缀法则。Using index; Using filesort
+explain select id,age,phone from tb_user order by phone,age;
+
+# 根据 age, phone 进行排序，一个升序一个降序
+# Using index; Using filesort
+explain select id,age,phone from tb_user order by age asc,phone desc;
+# 创建索引，优化查询
+create index idx_user_age_phone_ad on tb_user(age asc,phone desc);
+# use index
+explain select id,age,phone from tb_user order by age asc,phone desc;
+```
+
+<img src="img\image-20220228000551597.png">
+
+- ①根据排序字段建立合适的索引，多字段排序时，也遵循最左前缀法则。
+- ②尽量使用覆盖索引。
+- ③多字段排序 一个升序一个降序，此时需要注意联合索引在创建时的规则(ASC/DESC)。
+- ④如果不可避免的出现 filesort，大数据量排序时，可以适当增大排序缓冲区大小 sort_buffer_size 默认 。
 
 ## 视图/存储过程/触发器
 
