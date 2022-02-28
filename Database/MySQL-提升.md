@@ -1660,7 +1660,9 @@ set session transaction isolation level repeatable read ;
 
 # 进阶
 
-## MySQL8.0.26-Linux版安装
+## 安装
+
+MySQL8.0.26-Linux版安装
 
 WSL-Ubuntu 安装 [怎样在 Ubuntu Linux 上安装 MySQL - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/64080934)
 
@@ -2410,11 +2412,360 @@ explain select id,age,phone from tb_user order by age asc,phone desc;
 - ③多字段排序 一个升序一个降序，此时需要注意联合索引在创建时的规则(ASC/DESC)。
 - ④如果不可避免的出现 filesort，大数据量排序时，可以适当增大排序缓冲区大小 sort_buffer_size 默认 。
 
-## 视图/存储过程/触发器
+### group by 优化
+
+如何优化 group by 查询。
+
+```mysql
+# 删除掉目前的联合索引
+# 执行分组操作，根据 字段分组
+# 全表扫描，未使用任何索引，使用了临时表，效率比较低 Using temporary
+explain select profession,count(*) from tb_user group by profession;
+
+# 创建索引
+create index idx_user_pro_age_sta on tb_user(profession,age,status); 
+
+# 执行分组操作，根据 字段分组
+explain select profession,count(*) from tb_user group by profession;
+
+# 执行分组操作，根据 字段分组 Using index
+explain select profession,count(*) from tb_user group by profession,age;
+
+# 执行分组操作，使用到了索引 Using index，where 后面的满足最左前缀法则
+# 先匹配 profession，在按 group by 后面的字段进行分组。
+explain select age,count(*) from tb_user where profession='软件工程' group by age;
+```
+
+- 在分组操作时，可以通过索引来提高效率。
+- 分组操作时，索引的使用也是满足最左前缀法则的。
+
+### limit 优化
+
+一个常见又非常头疼的问题就是 limit 2000000,10，此时需要 MySQL 排序前 2000010 记录，仅仅返回 2000000 - 2000010 的记录，其他记录丢弃，查询排序的代价非常大。
+
+```mysql
+select * from tb_user limit 2400000,20; # 查询耗时 1.3s~1.4s
+```
+
+官方给的优化方案是，通过覆盖索引+子查询的方式进行优化。
+
+```mysql
+# 比直接 limit 快一点。
+explain select * from tb_user t,(select id from tb_user order by id limit 2000000,10) a where t.id = a.id;
+```
+
+不是很理解，后面再查查资料。
+
+### count 优化
+
+```mysql
+explain select count(*) from tb_user;
+```
+
+- MyISAM 引擎把一个表的总行数存在了磁盘上，因此执行 count(*) 的时候会直接返回这个数，效率很高;
+- InnoDB 引擎就麻烦了，它执行 count(*) 的时候，需要把数据一行一行地从引擎里面读出来，然后累积计数。
+
+优化思路：自己计数，再内存中维护计数器，计算有多少条数据。
+
+> count的几种用法
+
+- count() 是一个聚合函数，对于返回的结果集，一行行地判断，如果 count 函数的参数不是 NULL，累计值就加 1，否则不加，最后返回累计值。 
+- 用法：count（\*）、count（主键）、count（字段）、count（1）
+- <span style="color:blue">count（主键） InnoDB 引擎会遍历整张表，把每一行的主键 id 值都取出来，返回给服务层。服务层拿到主键后，直接按行进行累加 (主键不可能为 null)  。</span>
+- **count（字段） 没有not null 约束** : InnoDB 引擎会遍历整张表把每一行的字段值都取出来，返回给服务层，服务层判断是否为 null，不为 null，计数累加 。 **有not null 约束：**InnoDB 引擎会遍历整张表把每一行的字段值都取出来，返回给服务层，直接按行进行累加。 【要看字段的约束了】
+- count（1） InnoDB 引擎遍历整张表，但不取值。服务层对于返回的每一行，放一个数字“1”进去，直接按行进行累加。 
+- count（\*） InnoDB引擎并不会把全部字段取出来，而是专门做了优化，不取值，服务层直接按行进行累加。
+
+<span style="color:red">按照效率排序的话，count(字段) < count(主键 id) < count(1) ≈ count(\*)，所以尽量使用 count(\*)。</span>
+
+### update 优化
+
+用 update 进行更新数据的时候，会加锁。InnoDB 的行锁是针对索引加的锁，不是针对记录加的锁，并且该索引不能失效，否则会从行锁升级为表锁。
 
 ## 锁
 
+锁是计算机协调多个进程或线程并发访问某一资源的机制。在数据库中，除传统的计算资源（CPU、RAM、I/O）的争用以外，数据也是一种供许多用户共享的资源。如何保证数据并发访问的一致性、有效性是所有数据库必须解决的一个问题，锁冲突也是影响数据库并发访问性能的一个重要因素。从这个角度来说，锁对数据库而言显得尤其重要，也更加复杂。
+
+- 概述：在并发访问时，解决数据访问的一致性、有效性问题；可分为全局锁、表级锁、行级锁
+- 全局锁：对整个数据库实例加锁，加锁后整个实例就处于只读状态；性能较差，数据逻辑备份时使用
+- 表级锁：操作锁住整张表，锁定粒度大，发生锁冲突的概率高；表锁、元数据锁、意向锁
+- 行级锁：操作锁住对应的行数据，锁定粒度最小，发生锁冲突的概率最低；行锁、间隙锁、临键
+
+### 概述
+
+MySQL中的锁，按照锁的粒度分，分为以下三类： 
+
+- 全局锁：锁定数据库中的所有表。 
+- 表级锁：每次操作锁住整张表。 
+- 行级锁：每次操作锁住对应的行数据
+
+### 全局锁
+
+全局锁就是对整个数据库实例加锁，加锁后整个实例就处于只读状态，后续的 DML 的写语句，DDL 语句，已经更新操作的事务提交语句都将被阻塞。 其典型的使用场景是做全库的逻辑备份，对所有的表进行锁定，从而获取一致性视图，保证数据的完整性。
+
+<img src="img\image-20220228172657764.png">
+
+从备份开始到结束，其他了互动只能读数据。
+
+> 演示
+
+<img src="img\image-20220228172847492.png">
+
+> 特点
+
+数据库中加全局锁，是一个比较重的操作，存在以下问题： 
+
+- 如果在主库上备份，那么在备份期间都不能执行更新，业务基本上就得停摆。
+- 如果在从库上备份，那么在备份期间从库不能执行主库同步过来的二进制日志（binlog），会导致主从延迟。 
+
+在InnoDB引擎中，我们可以在备份时加上参数 --single-transaction 参数来完成不加锁的一致性数据备份。【这点如何做到的？通过快照读来实习的/】
+
+```shell
+mysqldump --single-transaction -uroot -p123456 demo>demo.sql
+```
+
+### 表级锁
+
+表级锁，每次操作锁住整张表。锁定粒度大，发生锁冲突的概率最高，并发度最低。应用在MyISAM、InnoDB、BDB等存储引擎中。
+
+#### 分类
+
+> 对于表级锁，主要分为以下三类：
+
+- 表锁：表共享读锁（read lock），表独占写锁（write lock）
+- 元数据锁（meta data lock，MDL）
+- 意向锁
+
+#### 表锁
+
+加锁：lock tables 表名... read/write。
+
+释放锁：unlock tables / 客户端断开连接。后面不用跟表名。
+
+<img src="img\image-20220228173534513.png">
+
+<span style="color:red">读锁不会阻塞其他客户端的读，但是会阻塞写。写锁既会阻塞其他客户端的读，又会阻塞其他客户端的写。</span>
+
+#### 元数据锁
+
+MDL 加锁过程是系统自动控制，无需显式使用，在访问一张表的时候会自动加上。MDL锁主要作用是维护表元数据的数据一致性，在表上有活动事务的时候（有事务未提交时，不允许更改表结构），不可以对元数据进行写入操作（**就是不允许修改表结构，不允许修改表字段，用来维护表结构的一致性**）。为了避免DML与DDL冲突，保证读写的正确性。
+
+在 MySQL5.5 中引入了 MDL，当对一张表进行增删改查的时候，加 MDL 读锁(共享)；当对表结构进行变更操作的时候，加 MDL 写锁(排他)。
+
+<img src="img\image-20220228175118144.png">
+
+#### 意向锁
+
+为了避免DML在执行时，加的行锁与表锁的冲突，在InnoDB中引入了意向锁，使得表锁不用检查每行数据是否加锁，使用意向锁来减 少表锁的检查，从而提高性能。
+
+- 意向共享锁（IS）：由语句 select ... lock in share mode添加。
+- 意向排他锁（IX）：由insert、update、delete、select ... for update 添加
+
+可以通过以下SQL，查看意向锁及行锁的加锁情况
+
+```mysql
+select object_schema,object_name,index_name,lock_type,lock_mode,lock_data from performance_schema.data_locks;
+```
+
+### 行级锁
+
+#### 介绍
+
+行级锁，每次操作锁住对应的行数据。锁定粒度最小，发生锁冲突的概率最低，并发度最高。应用在InnoDB存储引擎中。
+
+InnoDB的数据是基于索引组织的，行锁是通过对索引上的索引项加锁来实现的，而不是对记录加的锁。对于行级锁，主要分为以下三类： 
+
+- 行锁（Record Lock）：锁定单个行记录的锁，防止其他事务对此行进行update和delete。在RC、RR隔离级别下都支持，(RC：Read Commit，RR：Read Read Repate)。
+- 间隙锁（Gap Lock）：锁定索引记录间隙（不含该记录），确保索引记录间隙不变，防止其他事务在这个间隙进行insert，产生幻读。在RR隔离级别下都支持。 
+- 临键锁（Next-Key Lock）：行锁和间隙锁组合，同时锁住数据，并锁住数据前面的间隙Gap。在RR隔离级别下支持。可简单理解为**行锁+间隙锁**
+
+<img src="img\image-20220228182334581.png">
+
+#### 行锁
+
+InnoDB实现了以下两种类型的行锁： 
+
+- 共享锁（S）：允许一个事务去读一行，阻止其他事务获得相同数据集的排它锁。 
+- 排他锁（X）：允许获取排他锁的事务更新数据，阻止其他事务获得相同数据集的共享锁和排他锁。
+
+<img src="img\image-20220228183042891.png">
+
+<img src="img\image-20220228183126387.png">
+
+#### 行锁-演示
+
+默认情况下，InnoDB在 REPEATABLE READ事务隔离级别运行，InnoDB使用 next-key 锁进行搜索和索引扫描，以防止幻读。 
+
+- 针对唯一索引进行检索时，对已存在的记录进行等值匹配时，将会自动优化为行锁。 
+- InnoDB的行锁是针对于索引加的锁，不通过索引条件检索数据，那么InnoDB将对表中的所有记录加锁，此时 就会升级为表锁。
+
+可以通过以下SQL，查看意向锁及行锁的加锁情况：
+
+```mysql
+select object_schema,object_name,index_name,lock_type,lock_mode,lock_data from performance_schema.data_locks;
+```
+
+#### 间隙锁/临键锁-演示
+
+默认情况下，InnoDB在 REPEATABLE READ事务隔离级别运行，InnoDB使用 next-key 锁进行搜索和索引扫描，以防止幻读。 
+
+- 索引上的等值查询(唯一索引)，给不存在的记录加锁时, 优化为间隙锁 。
+- 索引上的等值查询(普通索引)，向右遍历时最后一个值不满足查询需求时，next-key lock 退化为间隙锁。 
+- 索引上的范围查询(唯一索引)--会访问到不满足条件的第一个值为止。
+
+<img src="img\image-20220228183635482.png">
+
+<span style="color:red">注意：间隙锁唯一目的是防止其他事务插入间隙。间隙锁可以共存，一个事务采用的间隙锁不会阻止另一个事务在同一间隙上采用间隙锁。</span>
+
 ## InnoDB引擎
+
+- 逻辑存储结构：表空间、段、区、页、行
+- 架构：内存结构、磁盘结构
+- 事务原理：原子性 - undo log；持久性 - redo log；一致性 - undo log + redo log；隔离性 - 锁 + MVCC
+- MVCC：记录隐藏字段、undo log版本链、readview；
+
+### 逻辑存储结构
+
+<img src="img\image-20220228203318131.png">
+
+<img src="img\image-20220228203414995.png">
+
+### 架构
+
+MySQL5.5 版本开始，默认使用InnoDB存储引擎，它擅长事务处理，具有崩溃恢复特性，在日常开发中使用非常广泛。下面是InnoDB架构图，左侧为内存结构，右 侧为磁盘结构。
+
+<img src="img\image-20220228203602095.png">
+
+#### 内存结构
+
+<img src="img\image-20220228203640696.png">
+
+<img src="img\image-20220228205314756.png">
+<img src="img\image-20220228205423818.png">
+<img src="img\image-20220228205520373.png">
+<img src="img\image-20220228205837606.png">
+
+#### 磁盘结构
+
+<img src="img\image-20220228205934183.png">
+<img src="img\image-20220228210036160.png">
+<img src="img\image-20220228210117804.png">
+<img src="img\image-20220228210552934.png">
+
+#### 后台线程
+
+Master Thread 核心后台线程，负责调度其他线程，还负责将缓冲池中的数据异步刷新到磁盘中, 保持数据的一致性， 还包括脏页的刷新、合并插入缓存、undo页的回收 。
+
+IO Thread 在InnoDB存储引擎中大量使用了AIO来处理IO请求, 这样可以极大地提高数据库的性能，而IO  Thread主要负责这些IO请求的回调。
+
+| 线程类型             | 默认个数 | 职责                         |
+| -------------------- | -------- | ---------------------------- |
+| Read thread          | 4        | 负责读操作                   |
+| Write thread         | 4        | 负责写操作                   |
+| Log thread           | 1        | 负责将日志缓冲区刷新到磁盘   |
+| Insert buffer thread | 1        | 负责将写缓冲区内容刷新到磁盘 |
+
+Purge Thread 主要用于回收事务已经提交了的undo log，在事务提交之后，undo log可能不用了，就用它来回收。 
+
+Page Cleaner Thread，协助 Master Thread 刷新脏页到磁盘的线程，它可以减轻 Master Thread 的工作压力，减少阻塞。
+
+<img src="img\image-20220228210738727.png">
+
+### 事务原理
+
+事务是一组操作的集合，它是一个不可分割的工作单位，事务会把所有的操作作为一个整体一起向系统提交或撤销操作请求，即这些操作要么同时成功，要么同时失败。
+
+事务的特点
+
+- 原子性（Atomicity）：事务是不可分割的最小操作单元，要么全部成功，要么全部失败。 
+- 一致性（Consistency）：事务完成时，必须使所有的数据都保持一致状态。
+- 隔离性（Isolation）：数据库系统提供的隔离机制，保证事务在不受外部并发操作影响的独立环境下运行。
+- 持久性（Durability）：事务一旦提交或回滚，它对数据库中的数据的改变就是永久的。
+
+#### 实现原理
+
+原子性，一致性和持久性通过 redo log 和 undo log 实现的。隔离性通过 锁和 MVCC 实现的。
+
+<img src="img\image-20220228211213496.png">
+
+#### redo log 实现持久性
+
+重做日志，记录的是事务提交时数据页的物理修改，是用来实现事务的持久性。
+
+该日志文件由两部分组成：重做日志缓冲（redo log buffer）以及重做日志文件（redo log file）,前者是在内存中，后者在磁盘中。当事务提交之后会把所有修改信息都存到该日志文件中, 用于在刷新脏页到磁盘,发生错误时, 进行数据恢复使用。
+
+<img src="img\image-20220228211850982.png">
+
+#### undo log 实现原子性
+
+回滚日志，用于记录数据被修改前的信息 , 作用包含两个 : 提供回滚 和 MVCC(多版本并发控制) 。 undo log和redo log记录物理日志不一样，它是逻辑日志。可以认为当delete一条记录时，undo log中会记录一条对应的insert记录，反之 亦然，当update一条记录时，它记录一条对应相反的update记录。当执行rollback时，就可以从undo log中的逻辑记录读取到相应的内容 并进行回滚。 
+
+Undo log销毁：undo log在事务执行时产生，事务提交时，并不会立即删除undo log，因为这些日志可能还用于MVCC。 Undo log存储：undo log采用段的方式进行管理和记录，存放在前面介绍的 rollback segment 回滚段中，内部包含1024个undo log  segment。
+
+### MVCC
+
+#### 基本概念
+
+- 当前读：读取的是记录的最新版本，读取时还要保证其他并发事务不能修改当前记录，会对读取的记录进行加锁。对于我们日常的操作，如： select ... lock in share mode(共享锁)，select ... for update、update、insert、delete(排他锁)都是一种当前读。
+- 快照读：简单的select（不加锁）就是快照读，快照读，读取的是记录数据的可见版本，有可能是历史数据，不加锁，是非阻塞读。
+    - Read Committed：每次select，都生成一个快照读。
+    - Repeatable Read：开启事务后第一个select语句才是快照读的地方。 
+    - Serializable：快照读会退化为当前读。
+- MVCC：全称 Multi-Version Concurrency Control，多版本并发控制。指维护一个数据的多个版本，使得读写操作没有冲突，快照读为MySQL实现 MVCC提供了一个非阻塞读功能。MVCC的具体实现，还需要依赖于数据库记录中的三个隐式字段、undo log日志、readView。
+
+#### 实现原理
+
+> 记录中的隐藏字段
+
+<img src="img\image-20220228212433507.png">
+
+| 隐藏字段    | 含义                                                         |
+| ----------- | ------------------------------------------------------------ |
+| DB_TRX_ID   | 最近修改事务ID，记录插入这条记录或最后一次修改该记录的事务ID。 |
+| DB_ROLL_PTR | 回滚指针，指向这条记录的上一个版本，用于配合undo log，指向上一个版本。 |
+| DB_ROW_ID   | 隐藏主键，如果表结构没有指定主键，将会生成该隐藏字段。       |
+
+> undo log
+
+回滚日志，在insert、update、delete的时候产生的便于数据回滚的日志。 当insert的时候，产生的undo log日志只在回滚时需要，在事务提交后，可被立即删除。 而update、delete的时候，产生的undo log日志不仅在回滚时需要，在快照读时也需要，不会立即被删除。
+
+> undo log 版本链
+
+<img src="img\image-20220228212827231.png">
+<img src="img\image-20220228212910928.png">
+<img src="img\image-20220228213010220.png">
+
+不同事务或相同事务对同一条记录进行修改，会导致该记录的undolog生成一条记录版本链表，链表的头部是最新的旧记录，链表尾部是最 早的旧记录。
+
+> readview
+
+ReadView（读视图）是 快照读 SQL执行时MVCC提取数据的依据，记录并维护系统当前活跃的事务（未提交的）id。 ReadView中包含了四个核心字段
+
+| 字段           | 含义                                                 |
+| -------------- | ---------------------------------------------------- |
+| m_ids          | 当前活跃的事务ID集合                                 |
+| min_trx_id     | 最小活跃事务ID                                       |
+| max_trx_id     | 预分配事务ID，当前最大事务ID+1（因为事务ID是自增的） |
+| creator_trx_id | ReadView创建者的事务ID                               |
+
+<img src="img\image-20220228213240595.png">
+
+<span style="color:red">不同的隔离级别，生成ReadView的时机不同：</span>
+
+- <span style="color:red">READ COMMITTED ：在事务中每一次执行快照读时生成ReadView。 </span>
+- <span style="color:red">REPEATABLE READ：仅在事务中第一次执行快照读时生成ReadView，后续复用该ReadView</span>
+
+RC隔离级别下，在事务中每一次执行快照读时生成ReadView。
+
+<img src="img\image-20220228213421031.png">
+
+<img src="img\image-20220228213526500.png">
+
+<img src="img\image-20220228213636400.png">
+
+> 汇总图
+
+<img src="img\image-20220228213708058.png">
 
 MySQL事务的隔离级别默认是可重复读。
 
@@ -2428,6 +2779,17 @@ update\delete 等操作先回到buffer pool里，然后把变化写入到redolog
 如果buffer pool写入.ibd 文件时出错了，可以通过redolog里的数据进行恢复。
 
 ## MySQL管理
+
+- 系统数据库
+- 常用工具
+
+### 常用工具
+
+- mysqladmin：MySQL 管理工具
+- mysqlbinlog：二进制日志查看工具
+- mysqlshow：查看数据库、表、字段的统计信息
+- mysqldump：数据库备份工具
+- mysqlimport/source：数据库导入工具
 
 # 实现分布式锁
 
