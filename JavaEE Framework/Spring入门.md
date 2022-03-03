@@ -118,7 +118,6 @@ public class Person {
 ```java
 package org.example;
 
-
 import org.example.pojo.Person;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 

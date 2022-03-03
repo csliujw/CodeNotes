@@ -198,7 +198,11 @@ nohup java Demo & > ./out.txt # 加上 & 直接在后台运行，不在终端显
 - `tar -czvf filename`  压缩文件
 - `tar -xzvf filename.tar.gz`  解压文件
 
-## SSH 上传下载
+## 上传下载
+
+### SZ&RZ
+
+[Linux rz/sz命令 在终端直接上传下载文件_随波一落叶-CSDN博客](https://blog.csdn.net/BobYuan888/article/details/86603749?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2~default~CTRLIST~Rate-1.pc_relevant_default&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~CTRLIST~Rate-1.pc_relevant_default&utm_relevant_index=2)
 
 ### SSH 下载文件
 
