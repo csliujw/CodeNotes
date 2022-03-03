@@ -133,11 +133,11 @@ public class HelloController {
 
 创建工程时，切换选择starter服务路径，然后手工输入阿里云地址即可，地址：http://start.aliyun.com 或 https://start.aliyun.com
 
-![image-20211122163605950](img\boot\image-20211122163605950.png)
+<img src="img\boot\image-20211122163605950.png">
 
 阿里为了便于自己公司开发使用，特此在依赖坐标中添加了一些阿里自主的技术，也是为了推广自己的技术吧，所以在依赖选择列表中，你有了更多的选择。此外，阿里提供的地址更符合国内开发者的使用习惯，里面有一些SpringBoot官网上没有给出的坐标。
 
-![image-20211122163937408](img\boot\image-20211122163937408.png)
+<img src="img\boot\image-20211122163937408.png">
 
 阿里云地址默认创建的SpringBoot工程版本是<font color="#ff0000"><b>2.4.1</b></font>，所以如果你想更换其他的版本，创建项目后在pom文件中手工修改即可，别忘了刷新一下，加载新版本信息。
 
@@ -169,9 +169,9 @@ public class CommunityApplication {
 }
 ```
 
-- 热部署(IDEA进行SpringBoot热部署失败的原因是，IDEA默认情况下不会自动编译，需要对IDEA进行自动编译的设置)
-  - Settings -->Compiler
-  - Ctrl + Shift + Alt + / -->选择Registry-->compiler.automake.allow.when.app.running ✔
+热部署(IDEA进行SpringBoot热部署失败的原因是，IDEA默认情况下不会自动编译，需要对IDEA进行自动编译的设置)
+- Settings -->Compiler
+- Ctrl + Shift + Alt + / -->选择Registry-->compiler.automake.allow.when.app.running ✔
 
 ```xml
 <dependency>
@@ -224,9 +224,9 @@ logging.level.root=debug
 
 统一了配置文件的格式
 
-​		我们现在配置了3个信息，但是又有新的问题了。这个配置是随便写的吗？什么都能配？有没有一个东西显示所有能配置的项呢？此外这个配置和什么东西有关呢？会不会因为我写了什么东西以后才可以写什么配置呢？比如我现在没有写数据库相关的东西，能否配置数据呢？一个一个来，先说第一个问题，都能配置什么。
+我们现在配置了3个信息，但是又有新的问题了。这个配置是随便写的吗？什么都能配？有没有一个东西显示所有能配置的项呢？此外这个配置和什么东西有关呢？会不会因为我写了什么东西以后才可以写什么配置呢？比如我现在没有写数据库相关的东西，能否配置数据呢？一个一个来，先说第一个问题，都能配置什么。
 
-​		打开SpringBoot的官网，找到SpringBoot官方文档，打开查看附录中的Application Properties就可以获取到对应的配置项了，网址奉上：https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#application-properties
+打开SpringBoot的官网，找到SpringBoot官方文档，打开查看附录中的Application Properties就可以获取到对应的配置项了，网址奉上：https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#application-properties
 
 能写什么的问题解决了，再来说第二个问题，这个配置项和什么有关。在pom中注释掉导入的spring-boot-starter-web，然后刷新工程，你会发现配置的提示消失了。闹了半天是设定使用了什么技术才能做什么配置。也合理，不然没有使用对应技术，配了也是白配。
 
@@ -481,11 +481,11 @@ map:
 
 **思考**
 
-​		现在我们已经知道了yaml具有严格的数据格式要求，并且已经可以正确的书写yaml文件了，那这些文件书写后其实是在定义一些数据。这些数据是给谁用的呢？大部分是SpringBoot框架内部使用，但是如果我们想配置一些数据自己使用，能不能用呢？答案是可以的，那如何读取yaml文件中的数据呢？咱们下一节再说。
+现在我们已经知道了yaml具有严格的数据格式要求，并且已经可以正确的书写yaml文件了，那这些文件书写后其实是在定义一些数据。这些数据是给谁用的呢？大部分是SpringBoot框架内部使用，但是如果我们想配置一些数据自己使用，能不能用呢？答案是可以的，那如何读取yaml文件中的数据呢？咱们下一节再说。
 
 ### yaml数据读取
 
-​		对于yaml文件中的数据，其实你就可以想象成这就是一个小型的数据库，里面保存有若干数据，每个数据都有一个独立的名字，如果你想读取里面的数据，肯定是支持的，下面就介绍3种读取数据的方式。
+对于yaml文件中的数据，其实你就可以想象成这就是一个小型的数据库，里面保存有若干数据，每个数据都有一个独立的名字，如果你想读取里面的数据，肯定是支持的，下面就介绍3种读取数据的方式。
 
 #### 读取单一数据
 
@@ -523,7 +523,7 @@ yaml中保存的单个数据，可以使用Spring中的注解@Value读取单个�
 
 这个@ConfigurationProperties必须告诉他加载的数据前缀是什么，这样指定前缀下的所有属性就封装到这个对象中。记得数据属性名要与对象的变量名一一对应啊，不然没法封装。其实以后如果你要定义一组数据自己使用，就可以先写一个对象，然后定义好属性，下面到配置中根据这个格式书写即可。
 
-​	<img src="img\boot\image-20211126181423432.png" alt="image-20211126181423432" style="zoom:80%;" />
+<img src="img\boot\image-20211126181423432.png"
 
 <font color="#f0f"><b>温馨提示</b></font>：细心的小伙伴会发现一个问题，自定义的这种数据在yaml文件中书写时没有弹出提示，咱们到原理篇再揭秘如何弹出提示。
 
@@ -544,7 +544,7 @@ center:
     msgDir: /usr/local/fire/msgDir
 ```
 
-​		或者
+或者
 
 ```YAML
 center:
@@ -554,7 +554,7 @@ center:
     msgDir: D:/usr/local/fire/msgDir
 ```
 
-​		这个时候你可以使用引用格式来定义数据，其实就是搞了个变量名，然后引用变量了，格式如下：
+这个时候你可以使用引用格式来定义数据，其实就是搞了个变量名，然后引用变量了，格式如下：
 
 ```YAML
 baseDir: /usr/local/fire
@@ -565,7 +565,7 @@ center:
     msgDir: ${baseDir}/msgDir
 ```
 
-​	还有一个注意事项，在书写字符串时，如果需要使用转义字符，需要将数据字符串使用双引号包裹起来
+还有一个注意事项，在书写字符串时，如果需要使用转义字符，需要将数据字符串使用双引号包裹起来
 
 ```YAML
 lesson: "Spring\tboot\nlesson"
@@ -830,7 +830,7 @@ protected AutoConfigurationEntry getAutoConfigurationEntry(AnnotationMetadata an
 }
 ```
 
-![image-20211003173551017](img\boot\AutoConfigurationImportSelector.png)
+<img src="img\boot\AutoConfigurationImportSelector.png">
 
 ```java
 protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes) {
@@ -1140,9 +1140,7 @@ public class HelloController {
 
 # Web 开发基础
 
-![yuque_diagram](img\boot\yuque_diagram.jpg)
-
-
+<img src="img\boot\yuque_diagram.jpg">
 
 ## Spring MVC 自动配置概览
 
@@ -1478,7 +1476,7 @@ public class WebMvcConfig {
     - 实现了父类的 doService
     - doService 调用 doDispatch 方法
 
-![image-20211023111242760](img\boot\image-20211023111242760.png)
+<img src="img\boot\image-20211023111242760.png">
 
 总结：Spring MVC 功能分析都从 org.springframework.web.servlet.DispatcherServlet ---> doDispatch() 开始
 
@@ -1555,9 +1553,9 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 
 getHandler 方法；RequestMappingHandlerMapping 中存储了所有@RequestMapping 和handler的映射规则。
 
-![image-20211023114049369](img\boot\image-20211023114049369.png)
+<img src="img\boot\image-20211023114049369.png">
 
-![image-20211023114945974](img\boot\image-20211023114945974.png)
+<img src="img\boot\image-20211023114945974.png">
 
 ```java
 @Nullable
@@ -1698,8 +1696,6 @@ public class ParameterTestController {
 }
 ```
 
-----
-
 ```java
 @Override
 // 配置矩阵参数
@@ -1825,8 +1821,6 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 }
 ```
 
-
-
 #### Servlet API
 
 #### 复杂参数
@@ -1845,7 +1839,7 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
         - supports 支持那些方法
         - handle 定义了如何处理的逻辑
 
-![image-20211024200517771](img\boot\image-20211024200517771-16350771187701.png)
+<img src="img\boot\image-20211024200517771-16350771187701.png">
 
 #### 执行目标方法
 
@@ -1892,7 +1886,7 @@ protected ModelAndView handleInternal(HttpServletRequest request,
 
 SpringMVC目标方法能写多少种参数类型。取决于参数解析器。
 
-![image-20211024201053219](img\boot\image-20211024201053219.png)
+<img src="img\boot\image-20211024201053219.png">
 
 参数解析器
 
@@ -1912,7 +1906,7 @@ public interface HandlerMethodArgumentResolver {
 
 #### 返回值处理器
 
-![image-20211024201539502](img\boot\image-20211024201539502.png)
+<img src="img\boot\image-20211024201539502.png">
 
 ### 确定目标方法每一个参数值
 
@@ -3182,11 +3176,11 @@ jdbc.password=root
 
 **步骤①**：创建模块
 
-![image-20211129092156020](img\boot\image-20211129092156020.png)
+<img src="img\boot\image-20211129092156020.png">
 
 **步骤②**：勾选要使用的技术，MyBatis，由于要操作数据库，还要勾选对应数据库
 
-![image-20211129092210993](img\boot\image-20211129092210993.png)
+<img src="img\boot\image-20211129092210993.png">
 
 或者手工导入对应技术的starter，和对应数据库的坐标
 
@@ -3372,11 +3366,11 @@ public interface BookDao extends BaseMapper<Book> {
 
 <img src="img\boot\image-20211129100313919.png" alt="image-20211129100313919" style="zoom:80%;" />
 
-​	下面就可以写一个测试类进行测试了，此处省略。
+下面就可以写一个测试类进行测试了，此处省略。
 
 <font color="#f0f"><b>温馨提示</b></font>
 
-​		目前数据库的表名定义规则是tbl_模块名称，为了能和实体类相对应，需要做一个配置，相关知识各位小伙伴可以到MyBatisPlus课程中去学习，此处仅给出解决方案。配置application.yml文件，添加如下配置即可，设置所有表名的通用前缀名
+目前数据库的表名定义规则是tbl_模块名称，为了能和实体类相对应，需要做一个配置，相关知识各位小伙伴可以到MyBatisPlus课程中去学习，此处仅给出解决方案。配置application.yml文件，添加如下配置即可，设置所有表名的通用前缀名
 
 ```yaml
 mybatis-plus:
@@ -3497,25 +3491,25 @@ spring:
 
 **主页面**
 
-![image-20211129113447844](img\boot\image-20211129113447844.png)
+<img src="img\boot\image-20211129113447844.png">
 
 **添加**
 
-![image-20211129113522459](img\boot\image-20211129113522459.png)
+<img src="img\boot\image-20211129113522459.png">
 
 **删除**
 
-![image-20211129113550829](img\boot\image-20211129113550829.png)
+<img src="img\boot\image-20211129113550829.png">
 
 **修改**
 
 **分页**
 
-![image-20211129113628969](img\boot\image-20211129113628969.png)
+<img src="img\boot\image-20211129113628969.png">
 
 **条件查询**
 
-![image-20211129113650369](img\boot\image-20211129113650369.png)
+<img src="img\boot\image-20211129113650369.png">
 
 ​	整体案例中需要采用的技术如下，先了解一下，做到哪一个说哪一个
 
@@ -3577,7 +3571,7 @@ server:
 
 ​		本案例对应的模块表结构如下：
 
-```tex
+```mysql
 -- ----------------------------
 -- Table structure for tbl_book
 -- ----------------------------
@@ -3607,7 +3601,7 @@ INSERT INTO `tbl_book` VALUES (11, '市场营销', '直播销讲实战一本通'
 INSERT INTO `tbl_book` VALUES (12, '市场营销', '直播带货：淘宝、天猫直播从新手到高手', '一本教你如何玩转直播的书，10堂课轻松实现带货月入3W+');
 ```
 
-​		根据上述表结构，制作对应的实体类
+根据上述表结构，制作对应的实体类
 
 **实体类**
 
@@ -3620,9 +3614,9 @@ public class Book {
 }
 ```
 
-​		实体类的开发可以自动通过工具手工生成get/set方法，然后覆盖toString()方法，方便调试，等等。不过这一套操作书写很繁琐，有对应的工具可以帮助我们简化开发，介绍一个小工具，lombok。
+实体类的开发可以自动通过工具手工生成get/set方法，然后覆盖toString()方法，方便调试，等等。不过这一套操作书写很繁琐，有对应的工具可以帮助我们简化开发，介绍一个小工具，lombok。
 
-​		Lombok，一个Java类库，提供了一组注解，简化POJO实体类开发，SpringBoot目前默认集成了lombok技术，并提供了对应的版本控制，所以只需要提供对应的坐标即可，在pom.xml中添加lombok的坐标。
+Lombok，一个Java类库，提供了一组注解，简化POJO实体类开发，SpringBoot目前默认集成了lombok技术，并提供了对应的版本控制，所以只需要提供对应的坐标即可，在pom.xml中添加lombok的坐标。
 
 ```XML
 <dependencies>
@@ -3634,7 +3628,7 @@ public class Book {
 </dependencies>
 ```
 
-​		使用lombok可以通过一个注解@Data完成一个实体类对应的getter，setter，toString，equals，hashCode等操作的快速添加
+使用lombok可以通过一个注解@Data完成一个实体类对应的getter，setter，toString，equals，hashCode等操作的快速添加
 
 ```JAVA
 import lombok.Data;
@@ -3647,7 +3641,7 @@ public class Book {
 }
 ```
 
-​		到这里实体类就做好了，是不是比不使用lombok简化好多，这种工具在Java开发中还有N多，后面遇到了能用的实用开发技术时，在不增加各位小伙伴大量的学习时间的情况下，尽量多给大家介绍一些。
+到这里实体类就做好了，是不是比不使用lombok简化好多，这种工具在Java开发中还有N多，后面遇到了能用的实用开发技术时，在不增加各位小伙伴大量的学习时间的情况下，尽量多给大家介绍一些。
 
 **总结**
 
@@ -3660,7 +3654,7 @@ public class Book {
 
 #### 2.数据层开发——基础CRUD
 
-​		数据层开发本次使用MyBatisPlus技术，数据源使用前面学习的Druid，学都学了都用上。
+数据层开发本次使用MyBatisPlus技术，数据源使用前面学习的Druid，学都学了都用上。
 
 **步骤①**：导入MyBatisPlus与Druid对应的starter，当然mysql的驱动不能少
 
@@ -3765,7 +3759,7 @@ public class BookDaoTestCase {
 
 <font color="#f0f"><b>温馨提示</b></font>
 
-​		MyBatisPlus技术默认的主键生成策略为雪花算法，生成的主键ID长度较大，和目前的数据库设定规则不相符，需要配置一下使MyBatisPlus使用数据库的主键生成策略，方式嘛还是老一套，做配置。在application.yml中添加对应配置即可，具体如下
+MyBatisPlus 技术默认的主键生成策略为雪花算法，生成的主键ID长度较大，和目前的数据库设定规则不相符，需要配置一下使MyBatisPlus使用数据库的主键生成策略，方式嘛还是老一套，做配置。在application.yml中添加对应配置即可，具体如下
 
 ```yaml
 server:
@@ -3788,9 +3782,9 @@ mybatis-plus:
 
 ##### 查看MyBatisPlus运行日志
 
-​		在进行数据层测试的时候，因为基础的CRUD操作均由MyBatisPlus给我们提供了，所以就出现了一个局面，开发者不需要书写SQL语句了，这样程序运行的时候总有一种感觉，一切的一切都是黑盒的，作为开发者我们啥也不知道就完了。如果程序正常运行还好，如果报错了，这个时候就很崩溃，你甚至都不知道从何下手，因为传递参数、封装SQL语句这些操作完全不是你开发出来的，所以查看执行期运行的SQL语句就成为当务之急。
+在进行数据层测试的时候，因为基础的 CRUD 操作均由 MyBatisPlus 给我们提供了，所以就出现了一个局面，开发者不需要书写 SQL 语句了，这样程序运行的时候总有一种感觉，一切的一切都是黑盒的，作为开发者我们啥也不知道就完了。如果程序正常运行还好，如果报错了，这个时候就很崩溃，你甚至都不知道从何下手，因为传递参数、封装 SQL 语句这些操作完全不是你开发出来的，所以查看执行期运行的SQL 语句就成为当务之急。
 
-​		SpringBoot整合MyBatisPlus的时候充分考虑到了这点，通过配置的形式就可以查阅执行期SQL语句，配置如下
+SpringBoot整合MyBatisPlus的时候充分考虑到了这点，通过配置的形式就可以查阅执行期SQL语句，配置如下
 
 ```YAML
 mybatis-plus:
@@ -3802,7 +3796,7 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 ```
 
-​		再来看运行结果，此时就显示了运行期执行SQL的情况。
+再来看运行结果，此时就显示了运行期执行SQL的情况。
 
 ```tex
 Creating a new SqlSession
@@ -3829,9 +3823,9 @@ JDBC Connection [com.mysql.cj.jdbc.ConnectionImpl@6ca30b8a] will not be managed 
 <==      Total: 15
 ```
 
-​		其中清晰的标注了当前执行的SQL语句是什么，携带了什么参数，对应的执行结果是什么，所有信息应有尽有。
+其中清晰的标注了当前执行的SQL语句是什么，携带了什么参数，对应的执行结果是什么，所有信息应有尽有。
 
-​		此处设置的是日志的显示形式，当前配置的是控制台输出，当然还可以由更多的选择，根据需求切换即可
+此处设置的是日志的显示形式，当前配置的是控制台输出，当然还可以由更多的选择，根据需求切换即可
 
 <img src="img\boot\image-20211129143207295.png" alt="image-20211129143207295" style="zoom:80%;" />
 
@@ -3853,9 +3847,9 @@ JDBC Connection [com.mysql.cj.jdbc.ConnectionImpl@6ca30b8a] will not be managed 
 
 #### 3.数据层开发——分页功能制作
 
-​		前面仅仅是使用了MyBatisPlus提供的基础CRUD功能，实际上MyBatisPlus给我们提供了几乎所有的基础操作，这一节说一下如何实现数据库端的分页操作。
+前面仅仅是使用了MyBatisPlus提供的基础CRUD功能，实际上MyBatisPlus给我们提供了几乎所有的基础操作，这一节说一下如何实现数据库端的分页操作。
 
-​		MyBatisPlus提供的分页操作API如下：
+MyBatisPlus提供的分页操作API如下：
 
 ```JAVA
 @Test
@@ -3870,25 +3864,25 @@ void testGetPage(){
 }
 ```
 
-​		其中selectPage方法需要传入一个封装分页数据的对象，可以通过new的形式创建这个对象，当然这个对象也是MyBatisPlus提供的，别选错包了。创建此对象时需要指定两个分页的基本数据
+其中selectPage方法需要传入一个封装分页数据的对象，可以通过new的形式创建这个对象，当然这个对象也是MyBatisPlus提供的，别选错包了。创建此对象时需要指定两个分页的基本数据
 
 - 当前显示第几页
 - 每页显示几条数据
 
 
-​		可以通过创建Page对象时利用构造方法初始化这两个数据。
+可以通过创建Page对象时利用构造方法初始化这两个数据。
 
 ```JAVA
 IPage page = new Page(2,5);
 ```
 
-​		将该对象传入到查询方法selectPage后，可以得到查询结果，但是我们会发现当前操作查询结果返回值仍然是一个IPage对象，这又是怎么回事？
+将该对象传入到查询方法selectPage后，可以得到查询结果，但是我们会发现当前操作查询结果返回值仍然是一个IPage对象，这又是怎么回事？
 
 ```JAVA
 IPage page = bookDao.selectPage(page, null);
 ```
 
-​		原来这个IPage对象中封装了若干个数据，而查询的结果作为IPage对象封装的一个数据存在的，可以理解为查询结果得到后，又塞到了这个IPage对象中，其实还是为了高度的封装，一个IPage描述了分页所有的信息。下面5个操作就是IPage对象中封装的所有信息了。
+原来这个IPage对象中封装了若干个数据，而查询的结果作为IPage对象封装的一个数据存在的，可以理解为查询结果得到后，又塞到了这个IPage对象中，其实还是为了高度的封装，一个IPage描述了分页所有的信息。下面5个操作就是IPage对象中封装的所有信息了。
 
 ```JAVA
 @Test
@@ -3903,11 +3897,11 @@ void testGetPage(){
 }
 ```
 
-​		到这里就知道这些数据如何获取了，但是当你去执行这个操作时，你会发现并不像我们分析的这样，实际上这个分页功能当前是无效的。为什么这样呢？这个要源于MyBatisPlus的内部机制。
+到这里就知道这些数据如何获取了，但是当你去执行这个操作时，你会发现并不像我们分析的这样，实际上这个分页功能当前是无效的。为什么这样呢？这个要源于MyBatisPlus的内部机制。
 
-​		对于MySQL的分页操作使用limit关键字进行，而并不是所有的数据库都使用limit关键字实现的，这个时候MyBatisPlus为了制作的兼容性强，将分页操作设置为基础查询操作的升级版，你可以理解为IPhone6与IPhone6S-PLUS的关系。
+对于MySQL的分页操作使用limit关键字进行，而并不是所有的数据库都使用limit关键字实现的，这个时候MyBatisPlus为了制作的兼容性强，将分页操作设置为基础查询操作的升级版，你可以理解为IPhone6与IPhone6S-PLUS的关系。
 
-​		基础操作中有查询全部的功能，而在这个基础上只需要升级一下（PLUS）就可以得到分页操作。所以MyBatisPlus将分页操作做成了一个开关，你用分页功能就把开关开启，不用就不需要开启这个开关。而我们现在没有开启这个开关，所以分页操作是没有的。这个开关是通过MyBatisPlus的拦截器的形式存在的，其中的原理这里不分析了，有兴趣的小伙伴可以学习MyBatisPlus这门课程进行详细解读。具体设置方式如下：
+基础操作中有查询全部的功能，而在这个基础上只需要升级一下（PLUS）就可以得到分页操作。所以MyBatisPlus将分页操作做成了一个开关，你用分页功能就把开关开启，不用就不需要开启这个开关。而我们现在没有开启这个开关，所以分页操作是没有的。这个开关是通过MyBatisPlus的拦截器的形式存在的，其中的原理这里不分析了，有兴趣的小伙伴可以学习MyBatisPlus这门课程进行详细解读。具体设置方式如下：
 
 **定义MyBatisPlus拦截器并将其设置为Spring管控的bean**
 
@@ -3923,7 +3917,7 @@ public class MPConfig {
 }
 ```
 
-​		上述代码第一行是创建MyBatisPlus的拦截器栈，这个时候拦截器栈中没有具体的拦截器，第二行是初始化了分页拦截器，并添加到拦截器栈中。如果后期开发其他功能，需要添加全新的拦截器，按照第二行的格式继续add进去新的拦截器就可以了。
+上述代码第一行是创建MyBatisPlus的拦截器栈，这个时候拦截器栈中没有具体的拦截器，第二行是初始化了分页拦截器，并添加到拦截器栈中。如果后期开发其他功能，需要添加全新的拦截器，按照第二行的格式继续add进去新的拦截器就可以了。
 
 **总结**
 
@@ -3931,13 +3925,11 @@ public class MPConfig {
 2. 分页操作依赖MyBatisPlus分页拦截器实现功能
 3. 借助MyBatisPlus日志查阅执行SQL语句
 
-
-
 #### 4.数据层开发——条件查询功能制作
 
-​		除了分页功能，MyBatisPlus还提供有强大的条件查询功能。以往我们写条件查询要自己动态拼写复杂的SQL语句，现在简单了，MyBatisPlus将这些操作都制作成API接口，调用一个又一个的方法就可以实现各种条件的拼装。这里给大家普及一下基本格式，详细的操作还是到MyBatisPlus的课程中查阅吧。
+除了分页功能，MyBatisPlus还提供有强大的条件查询功能。以往我们写条件查询要自己动态拼写复杂的SQL语句，现在简单了，MyBatisPlus将这些操作都制作成API接口，调用一个又一个的方法就可以实现各种条件的拼装。这里给大家普及一下基本格式，详细的操作还是到MyBatisPlus的课程中查阅吧。
 
-​		下面的操作就是执行一个模糊匹配对应的操作，由like条件书写变为了like方法的调用。
+下面的操作就是执行一个模糊匹配对应的操作，由like条件书写变为了like方法的调用。
 
 ```JAVA
 @Test
@@ -3948,11 +3940,11 @@ void testGetBy(){
 }
 ```
 
-​		其中第一句QueryWrapper对象是一个用于封装查询条件的对象，该对象可以动态使用API调用的方法添加条件，最终转化成对应的SQL语句。第二句就是一个条件了，需要什么条件，使用QueryWapper对象直接调用对应操作即可。比如做大于小于关系，就可以使用lt或gt方法，等于使用eq方法，等等，此处不做更多的解释了。
+其中第一句QueryWrapper对象是一个用于封装查询条件的对象，该对象可以动态使用API调用的方法添加条件，最终转化成对应的SQL语句。第二句就是一个条件了，需要什么条件，使用QueryWapper对象直接调用对应操作即可。比如做大于小于关系，就可以使用lt或gt方法，等于使用eq方法，等等，此处不做更多的解释了。
 
-​		这组API使用还是比较简单的，但是关于属性字段名的书写存在着安全隐患，比如查询字段name，当前是以字符串的形态书写的，万一写错，编译器还没有办法发现，只能将问题抛到运行器通过异常堆栈告诉开发者，不太友好。
+这组API使用还是比较简单的，但是关于属性字段名的书写存在着安全隐患，比如查询字段name，当前是以字符串的形态书写的，万一写错，编译器还没有办法发现，只能将问题抛到运行器通过异常堆栈告诉开发者，不太友好。
 
-​		MyBatisPlus针对字段检查进行了功能升级，全面支持Lambda表达式，就有了下面这组API。由QueryWrapper对象升级为LambdaQueryWrapper对象，这下就避免了上述问题的出现。
+MyBatisPlus针对字段检查进行了功能升级，全面支持Lambda表达式，就有了下面这组API。由QueryWrapper对象升级为LambdaQueryWrapper对象，这下就避免了上述问题的出现。
 
 ```JAVA
 @Test
@@ -3964,7 +3956,7 @@ void testGetBy2(){
 }
 ```
 
-​		为了便于开发者动态拼写SQL，防止将null数据作为条件使用，MyBatisPlus还提供了动态拼装SQL的快捷书写方式。
+为了便于开发者动态拼写SQL，防止将null数据作为条件使用，MyBatisPlus还提供了动态拼装SQL的快捷书写方式。
 
 ```JAVA
 @Test
@@ -3977,7 +3969,7 @@ void testGetBy2(){
 }
 ```
 
-​		其实就是个格式，没有区别。关于MyBatisPlus的基础操作就说到这里吧，如果这一块知识不太熟悉的小伙伴建议还是完整的学习一下MyBatisPlus的知识吧，这里只是蜻蜓点水的用了几个操作而已。
+其实就是个格式，没有区别。关于MyBatisPlus的基础操作就说到这里吧，如果这一块知识不太熟悉的小伙伴建议还是完整的学习一下MyBatisPlus的知识吧，这里只是蜻蜓点水的用了几个操作而已。
 
 **总结**
 
@@ -3993,21 +3985,21 @@ void testGetBy2(){
 
 #### 5.业务层开发
 
-​		数据层开发告一段落，下面进行业务层开发，其实标准业务层开发很多初学者认为就是调用数据层，怎么说呢？这个理解是没有大问题的，更精准的说法应该是<font color="#ff0000"><b>组织业务逻辑功能，并根据业务需求，对数据持久层发起调用</b></font>。有什么差别呢？目标是为了组织出符合需求的业务逻辑功能，至于调不调用数据层还真不好说，有需求就调用，没有需求就不调用。
+数据层开发告一段落，下面进行业务层开发，其实标准业务层开发很多初学者认为就是调用数据层，怎么说呢？这个理解是没有大问题的，更精准的说法应该是<font color="#ff0000"><b>组织业务逻辑功能，并根据业务需求，对数据持久层发起调用</b></font>。有什么差别呢？目标是为了组织出符合需求的业务逻辑功能，至于调不调用数据层还真不好说，有需求就调用，没有需求就不调用。
 
-​		一个常识性的知识普及一下，业务层的方法名定义一定要与业务有关，例如登录操作
+一个常识性的知识普及一下，业务层的方法名定义一定要与业务有关，例如登录操作
 
 ```JAVA
 login(String username,String password);
 ```
 
-​		而数据层的方法名定义一定与业务无关，是一定，不是可能，也不是有可能，例如根据用户名密码查询
+而数据层的方法名定义一定与业务无关，是一定，不是可能，也不是有可能，例如根据用户名密码查询
 
 ```JAVA
 selectByUserNameAndPassword(String username,String password);
 ```
 
-​		我们在开发的时候是可以根据完成的工作不同划分成不同职能的开发团队的。比如一个哥们制作数据层，他就可以不知道业务是什么样子，拿到的需求文档要求可能是这样的
+我们在开发的时候是可以根据完成的工作不同划分成不同职能的开发团队的。比如一个哥们制作数据层，他就可以不知道业务是什么样子，拿到的需求文档要求可能是这样的
 
 ```tex
 接口：传入用户名与密码字段，查询出对应结果，结果是单条数据
@@ -4015,15 +4007,11 @@ selectByUserNameAndPassword(String username,String password);
 接口：传入离职字段，查询出对应结果，结果是多条数据
 ```
 
-​		但是进行业务功能开发的哥们，拿到的需求文档要求差别就很大
+但是进行业务功能开发的哥们，拿到的需求文档要求差别就很大。接口：传入用户名与密码字段，对用户名字段做长度校验，4-15位，对密码字段做长度校验，8到24位，对密码字段做特殊字符校验，不允许存在空格，查询结果为对象。如果为null，返回BusinessException，封装消息码INFO_LOGON_USERNAME_PASSWORD_ERROR
 
-```tex
-接口：传入用户名与密码字段，对用户名字段做长度校验，4-15位，对密码字段做长度校验，8到24位，对密码字段做特殊字符校验，不允许存在空格，查询结果为对象。如果为null，返回BusinessException，封装消息码INFO_LOGON_USERNAME_PASSWORD_ERROR
-```
+你比较一下，能是一回事吗？差别太大了，所以说业务层方法定义与数据层方法定义差异化很大，只不过有些入门级的开发者手懒或者没有使用过公司相关的ISO标准化文档而已。
 
-​		你比较一下，能是一回事吗？差别太大了，所以说业务层方法定义与数据层方法定义差异化很大，只不过有些入门级的开发者手懒或者没有使用过公司相关的ISO标准化文档而已。
-
-​		多余的话不说了，咱们做案例就简单制作了，业务层接口定义如下：
+多余的话不说了，咱们做案例就简单制作了，业务层接口定义如下：
 
 ```JAVA
 public interface BookService {
@@ -4036,7 +4024,7 @@ public interface BookService {
 }
 ```
 
-​		业务层实现类如下，转调数据层即可：
+业务层实现类如下，转调数据层即可：
 
 ```JAVA
 @Service
@@ -4079,7 +4067,7 @@ public class BookServiceImpl implements BookService {
 }
 ```
 
-​		别忘了对业务层接口进行测试，测试类如下：
+别忘了对业务层接口进行测试，测试类如下：
 
 ```JAVA
 @SpringBootTest
@@ -4137,13 +4125,11 @@ public class BookServiceTest {
 1. Service接口名称定义成业务名称，并与Dao接口名称进行区分
 2. 制作测试类测试Service功能是否有效
 
-
-
 ##### 业务层快速开发
 
-​		其实MyBatisPlus技术不仅提供了数据层快速开发方案，业务层MyBatisPlus也给了一个通用接口，个人观点不推荐使用，凑合能用吧，其实就是一个封装+继承的思想，代码给出，实际开发慎用。
+其实MyBatisPlus技术不仅提供了数据层快速开发方案，业务层MyBatisPlus也给了一个通用接口，个人观点不推荐使用，凑合能用吧，其实就是一个封装+继承的思想，代码给出，实际开发慎用。
 
-​		业务层接口快速开发
+业务层接口快速开发
 
 ```JAVA
 public interface IBookService extends IService<Book> {
@@ -4151,7 +4137,7 @@ public interface IBookService extends IService<Book> {
 }
 ```
 
-​		业务层接口实现类快速开发，关注继承的类需要传入两个泛型，一个是数据层接口，另一个是实体类。
+业务层接口实现类快速开发，关注继承的类需要传入两个泛型，一个是数据层接口，另一个是实体类。
 
 ```JAVA
 @Service
@@ -4162,7 +4148,7 @@ public class BookServiceImpl extends ServiceImpl<BookDao, Book> implements IBook
 }
 ```
 
-​		如果感觉MyBatisPlus提供的功能不足以支撑你的使用需要（其实是一定不能支撑的，因为需求不可能是通用的），在原始接口基础上接着定义新的API接口就行了，此处不再说太多了，就是自定义自己的操作了，但是不要和已有的API接口名冲突即可。
+如果感觉 MyBatisPlus 提供的功能不足以支撑你的使用需要（其实是一定不能支撑的，因为需求不可能是通用的），在原始接口基础上接着定义新的API接口就行了，此处不再说太多了，就是自定义自己的操作了，但是不要和已有的API接口名冲突即可。
 
 **总结**
 
@@ -4171,13 +4157,11 @@ public class BookServiceImpl extends ServiceImpl<BookDao, Book> implements IBook
 3. 可以在通用接口基础上做功能重载或功能追加
 4. 注意重载时不要覆盖原始操作，避免原始提供的功能丢失
 
-
-
 #### 6.表现层开发
 
-​		终于做到表现层了，做了这么多都是基础工作。其实你现在回头看看，哪里还有什么SpringBoot的影子？前面1,2步就搞完了。继续完成表现层制作吧，咱们表现层的开发使用基于Restful的表现层接口开发，功能测试通过Postman工具进行。
+终于做到表现层了，做了这么多都是基础工作。其实你现在回头看看，哪里还有什么SpringBoot的影子？前面1,2步就搞完了。继续完成表现层制作吧，咱们表现层的开发使用基于Restful的表现层接口开发，功能测试通过Postman工具进行。
 
-​		表现层接口如下:
+表现层接口如下:
 
 ```JAVA
 @RestController
@@ -4219,19 +4203,19 @@ public class BookController2 {
 }
 ```
 
-​		在使用Postman测试时关注提交类型，对应上即可，不然就会报405的错误码了。
+在使用Postman测试时关注提交类型，对应上即可，不然就会报405的错误码了。
 
 **普通GET请求**
 
-![image-20211129152237371](img\boot\image-20211129152237371.png)
+<img src="img\boot\image-20211129152237371.png">
 
 **PUT请求传递json数据，后台实用@RequestBody接收数据**
 
-![image-20211129152300177](img\boot\image-20211129152300177.png)
+<img src="img\boot\image-20211129152300177.png">
 
 **GET请求传递路径变量，后台实用@PathVariable接收数据**
 
-![image-20211129152320073](C:\Users\itcast\AppData\Roaming\Typora\typora-user-images\image-20211129152320073.png)
+<img src="img\boot\image-20211129152320073.png">
 
 **总结**
 
@@ -4248,15 +4232,15 @@ public class BookController2 {
 
 #### 7.表现层消息一致性处理
 
-​		目前我们通过Postman测试后业务层接口功能是通的，但是这样的结果给到前端开发者会出现一个小问题。不同的操作结果所展示的数据格式差异化严重。
+目前我们通过Postman测试后业务层接口功能是通的，但是这样的结果给到前端开发者会出现一个小问题。不同的操作结果所展示的数据格式差异化严重。
 
-​	**增删改操作结果**
+**增删改操作结果**
 
 ```tex
 true
 ```
 
-​	**查询单个数据操作结果**
+**查询单个数据操作结果**
 
 ```json
 {
@@ -4267,7 +4251,7 @@ true
 }
 ```
 
-​	**查询全部数据操作结果**
+**查询全部数据操作结果**
 
 ```json
 [
@@ -4286,7 +4270,7 @@ true
 ]
 ```
 
-​		每种不同操作返回的数据格式都不一样，而且还不知道以后还会有什么格式，这样的结果让前端人员看了是很容易让人崩溃的，必须将所有操作的操作结果数据格式统一起来，需要设计表现层返回结果的模型类，用于后端与前端进行数据格式统一，也称为**前后端数据协议**
+每种不同操作返回的数据格式都不一样，而且还不知道以后还会有什么格式，这样的结果让前端人员看了是很容易让人崩溃的，必须将所有操作的操作结果数据格式统一起来，需要设计表现层返回结果的模型类，用于后端与前端进行数据格式统一，也称为**前后端数据协议**
 
 ```JAVA
 @Data
@@ -4296,7 +4280,7 @@ public class R {
 }
 ```
 
-​		其中flag用于标识操作是否成功，data用于封装操作数据，现在的数据格式就变了
+其中flag用于标识操作是否成功，data用于封装操作数据，现在的数据格式就变了
 
 ```JSON
 {
@@ -4310,7 +4294,7 @@ public class R {
 }
 ```
 
-​		表现层开发格式也需要转换一下
+表现层开发格式也需要转换一下
 
 <img src="img\boot\image-20211129153301262.png" alt="image-20211129153301262" style="zoom:80%;" />
 
@@ -4336,7 +4320,7 @@ public class R {
 
 ​		将前端人员开发的页面保存到lresources目录下的static目录中，建议执行maven的clean生命周期，避免缓存的问题出现。
 
-​	<img src="img\boot\image-20211129153831990.png" alt="image-20211129153831990"/>
+​	<img src="img\boot\image-20211129153831990.png"/>
 
 ​		在进行具体的功能开发之前，先做联通性的测试，通过页面发送异步提交（axios），这一步调试通过后再进行进一步的功能开发。
 
