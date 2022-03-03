@@ -1412,174 +1412,174 @@ IAccountDao的mapper文件
 
 ## MyBatis生成Mapper
 
-测试语句`select * from users where id=4`
+测试语句 `select * from users where id=4`
 
-方法代码`List<UserVO> findByCondition(UserVO vo);`
+方法代码 `List<UserVO> findByCondition(UserVO vo);`
 
-- MapperRegister类的getMapper方法
+MapperRegister 类的 getMapper 方法
 
-  ```java
-  public <T> T getMapper(Class<T> type, SqlSession sqlSession) {
-      // 从hashmap中看是否有此类型的，有就可以创建，无就抛出异常。
-      final MapperProxyFactory<T> mapperProxyFactory = (MapperProxyFactory<T>) knownMappers.get(type);
-      if (mapperProxyFactory == null) {
-          throw new BindingException("Type " + type + " is not known to the MapperRegistry.");
-      }
-      try {
-          // 通过sqlSession创建代理对象
-          return mapperProxyFactory.newInstance(sqlSession);
-      } catch (Exception e) {
-          throw new BindingException("Error getting mapper instance. Cause: " + e, e);
-      }
-  }
-  ```
-
-- 继续看`mapperProxyFactory.newInstance(sqlSession);` 位于MapperProxyFactory类中
-
-  ```java
-  public T newInstance(SqlSession sqlSession) {
-      final MapperProxy<T> mapperProxy = new MapperProxy<T>(sqlSession, mapperInterface, methodCache);
-      return newInstance(mapperProxy);
-  }
-  ```
-
-- 点进`new MapperProxy<T>(sqlSession, mapperInterface, methodCache)`一看
-
-  ```java
-  public class MapperProxy<T> implements InvocationHandler, Serializable {
-  
-    private static final long serialVersionUID = -6424540398559729838L;
-    private final SqlSession sqlSession;
-    private final Class<T> mapperInterface;
-    private final Map<Method, MapperMethod> methodCache;
-  
-    public MapperProxy(SqlSession sqlSession, Class<T> mapperInterface, Map<Method, MapperMethod> methodCache) {
-      this.sqlSession = sqlSession;
-      this.mapperInterface = mapperInterface;
-      this.methodCache = methodCache;
+```java
+public <T> T getMapper(Class<T> type, SqlSession sqlSession) {
+    // 从hashmap中看是否有此类型的，有就可以创建，无就抛出异常。
+    final MapperProxyFactory<T> mapperProxyFactory = (MapperProxyFactory<T>) knownMappers.get(type);
+    if (mapperProxyFactory == null) {
+        throw new BindingException("Type " + type + " is not known to the MapperRegistry.");
     }
-      // 当我们执行代理对象.method的时候会执行到这个方法
-      public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-          try {
-              if (Object.class.equals(method.getDeclaringClass())) {
-                  return method.invoke(this, args);
-              } else if (isDefaultMethod(method)) {
-                  return invokeDefaultMethod(proxy, method, args);
-              }
-          } catch (Throwable t) {
-              throw ExceptionUtil.unwrapThrowable(t);
-          }
-          // 查看缓存有没有，没有就添加，再从缓存中拿数据。
-          final MapperMethod mapperMethod = cachedMapperMethod(method);
-          // 这里 执行的sql语句。
-          return mapperMethod.execute(sqlSession, args);
-      }
-    // ...
+    try {
+        // 通过sqlSession创建代理对象
+        return mapperProxyFactory.newInstance(sqlSession);
+    } catch (Exception e) {
+        throw new BindingException("Error getting mapper instance. Cause: " + e, e);
+    }
+}
+```
+
+继续看`mapperProxyFactory.newInstance(sqlSession);` 位于MapperProxyFactory类中
+
+```java
+public T newInstance(SqlSession sqlSession) {
+    final MapperProxy<T> mapperProxy = new MapperProxy<T>(sqlSession, mapperInterface, methodCache);
+    return newInstance(mapperProxy);
+}
+```
+
+点进`new MapperProxy<T>(sqlSession, mapperInterface, methodCache)`一看
+
+```java
+public class MapperProxy<T> implements InvocationHandler, Serializable {
+
+  private static final long serialVersionUID = -6424540398559729838L;
+  private final SqlSession sqlSession;
+  private final Class<T> mapperInterface;
+  private final Map<Method, MapperMethod> methodCache;
+
+  public MapperProxy(SqlSession sqlSession, Class<T> mapperInterface, Map<Method, MapperMethod> methodCache) {
+    this.sqlSession = sqlSession;
+    this.mapperInterface = mapperInterface;
+    this.methodCache = methodCache;
   }
-  ```
+    // 当我们执行代理对象.method的时候会执行到这个方法
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        try {
+            if (Object.class.equals(method.getDeclaringClass())) {
+                return method.invoke(this, args);
+            } else if (isDefaultMethod(method)) {
+                return invokeDefaultMethod(proxy, method, args);
+            }
+        } catch (Throwable t) {
+            throw ExceptionUtil.unwrapThrowable(t);
+        }
+        // 查看缓存有没有，没有就添加，再从缓存中拿数据。
+        final MapperMethod mapperMethod = cachedMapperMethod(method);
+        // 这里 执行的sql语句。
+        return mapperMethod.execute(sqlSession, args);
+    }
+  // ...
+}
+```
 
-- 点击mapperMethod.excute方法一看。(MapperMethod方法中的)
+点击mapperMethod.excute方法一看。(MapperMethod方法中的)
 
-  ```java
-  public Object execute(SqlSession sqlSession, Object[] args) {
-      Object result;
-      switch (command.getType()) {
-          case INSERT: {
-              Object param = method.convertArgsToSqlCommandParam(args);
-              result = rowCountResult(sqlSession.insert(command.getName(), param));
-              break;
-          }
-          case UPDATE: {
-              Object param = method.convertArgsToSqlCommandParam(args);
-              result = rowCountResult(sqlSession.update(command.getName(), param));
-              break;
-          }
-          case DELETE: {
-              Object param = method.convertArgsToSqlCommandParam(args);
-              result = rowCountResult(sqlSession.delete(command.getName(), param));
-              break;
-          }
-          case SELECT:
-              // 方法返回值，结果集处理器。结果可能是单条记录或多条记录。
-              if (method.returnsVoid() && method.hasResultHandler()) {
-                  executeWithResultHandler(sqlSession, args);
-                  result = null;
-              // 判断多条记录是 根据返回值来的？当前sql之能查询到一条数据，
-              // returnsMany=True，应该是按返回值的类型来的。
-              } else if (method.returnsMany()) {
-                  // 执行此方法
-                  result = executeForMany(sqlSession, args);
-              } else if (method.returnsMap()) {
-                  result = executeForMap(sqlSession, args);
-              } else if (method.returnsCursor()) {
-                  result = executeForCursor(sqlSession, args);
-              } else {
-                  Object param = method.convertArgsToSqlCommandParam(args);
-                  result = sqlSession.selectOne(command.getName(), param);
-              }
-              break;
-          case FLUSH:
-              result = sqlSession.flushStatements();
-              break;
-          default:
-              throw new BindingException("Unknown execution method for: " + command.getName());
-      }
-      if (result == null && method.getReturnType().isPrimitive() && !method.returnsVoid()) {
-          throw new BindingException("Mapper method '" + command.getName() 
-                                     + " attempted to return null from a method with a primitive return type (" + method.getReturnType() + ").");
-      }
-      return result;
-  }
-  ```
+```java
+public Object execute(SqlSession sqlSession, Object[] args) {
+    Object result;
+    switch (command.getType()) {
+        case INSERT: {
+            Object param = method.convertArgsToSqlCommandParam(args);
+            result = rowCountResult(sqlSession.insert(command.getName(), param));
+            break;
+        }
+        case UPDATE: {
+            Object param = method.convertArgsToSqlCommandParam(args);
+            result = rowCountResult(sqlSession.update(command.getName(), param));
+            break;
+        }
+        case DELETE: {
+            Object param = method.convertArgsToSqlCommandParam(args);
+            result = rowCountResult(sqlSession.delete(command.getName(), param));
+            break;
+        }
+        case SELECT:
+            // 方法返回值，结果集处理器。结果可能是单条记录或多条记录。
+            if (method.returnsVoid() && method.hasResultHandler()) {
+                executeWithResultHandler(sqlSession, args);
+                result = null;
+            // 判断多条记录是 根据返回值来的？当前sql之能查询到一条数据，
+            // returnsMany=True，应该是按返回值的类型来的。
+            } else if (method.returnsMany()) {
+                // 执行此方法
+                result = executeForMany(sqlSession, args);
+            } else if (method.returnsMap()) {
+                result = executeForMap(sqlSession, args);
+            } else if (method.returnsCursor()) {
+                result = executeForCursor(sqlSession, args);
+            } else {
+                Object param = method.convertArgsToSqlCommandParam(args);
+                result = sqlSession.selectOne(command.getName(), param);
+            }
+            break;
+        case FLUSH:
+            result = sqlSession.flushStatements();
+            break;
+        default:
+            throw new BindingException("Unknown execution method for: " + command.getName());
+    }
+    if (result == null && method.getReturnType().isPrimitive() && !method.returnsVoid()) {
+        throw new BindingException("Mapper method '" + command.getName() 
+                                   + " attempted to return null from a method with a primitive return type (" + method.getReturnType() + ").");
+    }
+    return result;
+}
+```
 
-- 看`executeForMany方法`
+看`executeForMany方法`
 
-  ```java
-  private <E> Object executeForMany(SqlSession sqlSession, Object[] args) {
-      List<E> result;
-      Object param = method.convertArgsToSqlCommandParam(args);
-      if (method.hasRowBounds()) {
-          RowBounds rowBounds = method.extractRowBounds(args);
-          result = sqlSession.<E>selectList(command.getName(), param, rowBounds);
-      } else {
-          result = sqlSession.<E>selectList(command.getName(), param);
-      }
-      // issue #510 Collections & arrays support
-      if (!method.getReturnType().isAssignableFrom(result.getClass())) {
-          if (method.getReturnType().isArray()) {
-              return convertToArray(result);
-          } else {
-              return convertToDeclaredCollection(sqlSession.getConfiguration(), result);
-          }
-      }
-      return result;
-  }
-  ```
+```java
+private <E> Object executeForMany(SqlSession sqlSession, Object[] args) {
+    List<E> result;
+    Object param = method.convertArgsToSqlCommandParam(args);
+    if (method.hasRowBounds()) {
+        RowBounds rowBounds = method.extractRowBounds(args);
+        result = sqlSession.<E>selectList(command.getName(), param, rowBounds);
+    } else {
+        result = sqlSession.<E>selectList(command.getName(), param);
+    }
+    // issue #510 Collections & arrays support
+    if (!method.getReturnType().isAssignableFrom(result.getClass())) {
+        if (method.getReturnType().isArray()) {
+            return convertToArray(result);
+        } else {
+            return convertToDeclaredCollection(sqlSession.getConfiguration(), result);
+        }
+    }
+    return result;
+}
+```
 
-- 点进`selectList`方法
+点进`selectList`方法
 
-  ```java
-  public <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
-      try {
-          // 这段看不懂，没事
-          MappedStatement ms = configuration.getMappedStatement(statement);
-          // 这个是关键
-          return executor.query(ms, wrapCollection(parameter), rowBounds, Executor.NO_RESULT_HANDLER);
-      } catch (Exception e) {
-          throw ExceptionFactory.wrapException("Error querying database.  Cause: " + e, e);
-      } finally {
-          ErrorContext.instance().reset();
-      }
-  }
-  ```
+```java
+public <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
+    try {
+        // 这段看不懂，没事
+        MappedStatement ms = configuration.getMappedStatement(statement);
+        // 这个是关键
+        return executor.query(ms, wrapCollection(parameter), rowBounds, Executor.NO_RESULT_HANDLER);
+    } catch (Exception e) {
+        throw ExceptionFactory.wrapException("Error querying database.  Cause: " + e, e);
+    } finally {
+        ErrorContext.instance().reset();
+    }
+}
+```
 
-- 点进`query`方法
+点进`query`方法
 
-  ```java
-  public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
-      // 获得解析后的SQL语句
-      BoundSql boundSql = ms.getBoundSql(parameterObject);
-      CacheKey key = createCacheKey(ms, parameterObject, rowBounds, boundSql);
-      return query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
-  }
-  ```
+```java
+public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
+    // 获得解析后的SQL语句
+    BoundSql boundSql = ms.getBoundSql(parameterObject);
+    CacheKey key = createCacheKey(ms, parameterObject, rowBounds, boundSql);
+    return query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
+}
+```

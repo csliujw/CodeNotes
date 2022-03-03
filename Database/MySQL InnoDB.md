@@ -256,7 +256,5 @@ mysql> show variables like '%ap%hash_index';
 
 　　默认开启，建议关掉，意义不大。可以通过 set global innodb_adaptive_hash_index=off/on 关闭和打开该功能。
 
-# 锁
-
 
 

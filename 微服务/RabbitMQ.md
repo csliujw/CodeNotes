@@ -10,7 +10,7 @@
 
 异步通讯：就像发邮件，不需要马上回复。
 
-![image-20210717161939695](assets/image-20210717161939695.png)
+<img src="assets/image-20210717161939695.png">
 
 两种方式各有优劣，打电话可以立即得到响应，但是你却不能跟多个人同时通话。发送邮件可以同时与多个人收发邮件，但是往往响应会有延迟。
 
@@ -18,7 +18,7 @@
 
 我们之前学习的 Feign 调用就属于同步方式，虽然调用可以实时得到结果，但存在下面的问题：
 
-![image-20210717162004285](assets/image-20210717162004285.png)
+<img src="assets/image-20210717162004285.png">
 
 > 同步调用的优点：
 
@@ -37,7 +37,7 @@
 
 以购买商品为例，用户支付后需要调用订单服务完成订单状态修改，调用物流服务，从仓库分配响应的库存并准备发货。
 
-![image-20211029100941563](assets\image-20211029100941563.png)
+<img src="assets\image-20211029100941563.png">
 
 在事件驱动模型中用两种角色：<span style="color:red">一种是事件发布者，一种是事件订阅者。</span>
 
@@ -46,9 +46,7 @@
 
 为了解除事件发布者与订阅者之间的耦合，两者并不是直接通信，而是有一个中间人（Broker）。发布者发布事件到Broker，不关心谁来订阅事件。订阅者从Broker订阅事件，不关心谁发来的消息。
 
-![image-20210422095356088](assets/image-20210422095356088.png)
-
-
+<img src="assets/image-20210422095356088.png">
 
 Broker 是一个像数据总线一样的东西，所有的服务要接收数据和发送数据都发到这个总线上，这个总线就像协议一样，让服务间的通讯变得标准和可控。类似与一个有协议的队列，生产者向里面放数据，消费者从里面拿数据。
 
@@ -105,11 +103,11 @@ MQ，中文是消息队列（MessageQueue），字面来看就是存放消息的
 
 安装RabbitMQ，参考课前资料：
 
-![image-20210717162628635](assets/image-20210717162628635.png)
+<img src="assets/image-20210717162628635.png">
 
 MQ的基本结构：
 
-![image-20210717162752376](assets/image-20210717162752376.png)
+<img src="assets/image-20210717162752376.png">
 
 > RabbitMQ中的一些角色：
 
@@ -123,17 +121,17 @@ MQ的基本结构：
 
 RabbitMQ官方提供了5个不同的Demo示例，对应了不同的消息模型：
 
-![image-20210717163332646](assets/image-20210717163332646.png)
+<img src="assets/image-20210717163332646.png">
 
 ## 导入Demo工程
 
 课前资料提供了一个Demo工程，mq-demo:
 
-![image-20210717163253264](assets/image-20210717163253264.png)
+<img src="assets/image-20210717163253264.png">
 
 导入后可以看到结构如下：
 
-![image-20210717163604330](assets/image-20210717163604330.png)
+<img src="assets/image-20210717163604330.png">
 
 包括三部分：
 
@@ -145,7 +143,7 @@ RabbitMQ官方提供了5个不同的Demo示例，对应了不同的消息模型�
 
 简单队列模式的模型图：
 
- ![image-20210717163434647](assets/image-20210717163434647.png)
+ <img src="assets/image-20210717163434647.png">
 
 官方的HelloWorld是基于最基础的消息队列模型来实现的，只包括三个角色：
 
@@ -295,11 +293,9 @@ SpringAMQP是基于RabbitMQ封装的一套模板，并且还利用SpringBoot对�
 
 SpringAmqp的官方地址：https://spring.io/projects/spring-amqp
 
-![image-20210717164024967](assets/image-20210717164024967.png)
+<img src="assets/image-20210717164024967.png">
 
-![image-20210717164038678](assets/image-20210717164038678.png)
-
-
+<img src="assets/image-20210717164038678.png">
 
 SpringAMQP提供了三个功能：
 
@@ -404,7 +400,7 @@ public class SpringRabbitListener {
 
 Work queues，也被称为（Task queues），任务模型。简单来说就是**让多个消费者绑定到一个队列，共同消费队列中的消息**。
 
-![image-20210717164238910](assets/image-20210717164238910.png)
+<img src="assets/image-20210717164238910.png">
 
 当消息处理比较耗时的时候，可能生产消息的速度会远远大于消息的消费速度。长此以往，消息就会堆积越来越多，无法及时处理。
 
@@ -418,9 +414,9 @@ Work queues，也被称为（Task queues），任务模型。简单来说就是*
 
 ```java
 /**
-     * workQueue
-     * 向队列中不停发送消息，模拟消息堆积。
-     */
+* workQueue
+* 向队列中不停发送消息，模拟消息堆积。
+*/
 @Test
 public void testWorkQueue() throws InterruptedException {
     // 队列名称
@@ -486,7 +482,7 @@ Work模型的使用：
 
 发布订阅的模型如图：
 
-![image-20210717165309625](assets/image-20210717165309625.png)
+<img src="assets/image-20210717165309625.png">
 
 可以看到，在订阅模型中，多了一个exchange角色，而且过程略有变化：
 
@@ -505,7 +501,7 @@ Work模型的使用：
 
 Fanout，英文翻译是扇出，我觉得在MQ中叫广播更合适。
 
-![image-20210717165438225](assets/image-20210717165438225.png)
+<img src="assets/image-20210717165438225.png">
 
 在广播模式下，消息发送流程是这样的：
 
@@ -520,13 +516,13 @@ Fanout，英文翻译是扇出，我觉得在MQ中叫广播更合适。
 - 创建一个交换机 itcast.fanout，类型是Fanout
 - 创建两个队列fanout.queue1和fanout.queue2，绑定到交换机itcast.fanout
 
-![image-20210717165509466](assets/image-20210717165509466.png)
+<img src="assets/image-20210717165509466.png">
 
 ### 声明队列和交换机
 
 Spring提供了一个接口Exchange，来表示所有不同类型的交换机：
 
-![image-20210717165552676](assets/image-20210717165552676.png)
+<img src="assets/image-20210717165552676.png">
 
 在consumer中创建一个类，声明队列和交换机：
 
@@ -635,7 +631,7 @@ public void listenFanoutQueue2(String msg) {
 
 在Fanout模式中，一条消息，会被所有订阅的队列都消费。但是，在某些场景下，我们希望不同的消息被不同的队列消费。这时就要用到Direct类型的Exchange。
 
-![image-20210717170041447](assets/image-20210717170041447.png)
+<img src="assets/image-20210717170041447.png">
 
  在Direct模型下：
 
@@ -651,7 +647,7 @@ public void listenFanoutQueue2(String msg) {
 
 3. 在publisher中编写测试方法，向itcast. direct发送消息
 
-![image-20210717170223317](assets/image-20210717170223317.png)
+<img src="assets/image-20210717170223317.png">
 
 ### 基于注解声明队列和交换机
 
@@ -730,7 +726,7 @@ public void testSendDirectExchange() {
 
 图示：
 
-![](assets/image-20210717170705380.png)
+<img src="assets/image-20210717170705380.png">
 
 解释：
 
@@ -747,7 +743,7 @@ public void testSendDirectExchange() {
 
 3. 在publisher中编写测试方法，向itcast. topic发送消息
 
-![image-20210717170829229](assets/image-20210717170829229.png)
+<img src="assets/image-20210717170829229.png">
 
 ### 消息发送
 
@@ -805,7 +801,7 @@ public void listenTopicQueue2(String msg){
 
 之前说过，Spring会把你发送的消息序列化为字节发送给MQ，接收消息的时候，还会把字节反序列化为Java对象。
 
-![image-20200525170410401](assets/image-20200525170410401.png)
+<img src="assets/image-20200525170410401.png">
 
 只不过，默认情况下Spring采用的序列化方式是JDK序列化。众所周知，JDK序列化存在下列问题：
 
@@ -835,9 +831,7 @@ public void testSendMap() throws InterruptedException {
 
 发送消息后查看控制台：
 
-![image-20210422232835363](assets/image-20210422232835363.png)
-
-
+<img src="assets/image-20210422232835363.png">
 
 ### 配置JSON转换器
 
@@ -863,4 +857,3 @@ public MessageConverter jsonMessageConverter(){
     return new Jackson2JsonMessageConverter();
 }
 ```
-

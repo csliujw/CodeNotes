@@ -2656,7 +2656,7 @@ Vue.directive("focus", {
 </my-son>
 ```
 
-<img src="../pics/vue/heima/scope_slot.png" style="float:left">
+<img src="../pics/vue/heima/scope_slot.png">
 
 
 

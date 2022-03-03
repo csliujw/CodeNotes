@@ -14,7 +14,7 @@ Docker CE 支持 64 位版本 CentOS 7，并且要求内核版本不低于 3.10�
 
 如果之前安装过旧版本的Docker，可以使用下面命令卸载：
 
-```
+```bash
 yum remove docker \
                   docker-client \
                   docker-client-latest \
@@ -94,7 +94,7 @@ docker -v
 
 如图：
 
-![image-20210418154704436](assets/image-20210418154704436.png) 
+<img src="assets/image-20210418154704436.png"> 
 
 ## 配置镜像加速
 
@@ -115,7 +115,7 @@ curl -L https://github.com/docker/compose/releases/download/1.23.1/docker-compos
 
 如果下载速度较慢，或者下载失败，可以使用课前资料提供的docker-compose文件：
 
-![image-20210417133020614](assets/image-20210417133020614.png)
+<img src="assets/image-20210417133020614.png">
 
 上传到`/usr/local/bin/`目录也可以。
 

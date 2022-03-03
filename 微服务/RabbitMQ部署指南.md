@@ -16,7 +16,7 @@ docker pull rabbitmq:3-management
 
 在课前资料已经提供了镜像包：
 
-![image-20210423191210349](assets/image-20210423191210349.png) 
+<img src="assets/image-20210423191210349.png">
 
 上传到虚拟机中后，使用命令加载镜像即可：
 

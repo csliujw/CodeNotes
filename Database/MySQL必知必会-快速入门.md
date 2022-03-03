@@ -70,23 +70,13 @@
 
 ## 选择数据库
 
-> 查看数据库
-
-`show databases`
-
-> 选择数据库
-
-`use databaseName`
-
-> 查看表
-
-`show tables`
-
-> 显示表的列
-
-`show columns from tableName`
-
-`desc tableName` 也可
+> 查看数据库：`show databases`
+>
+> 选择数据库：`use databaseName`
+>
+> 查看表：`show tables`
+>
+> 显示表的列：`show columns from tableName` 或 `desc tableName`
 
 > show的作用
 
@@ -112,27 +102,18 @@
 
 `sql`不区分大小写。习惯上关键字大写，列名小写。
 
-> 查询单列
+> 查询单列 `select prod_name from products`
 
-`select prod_name from products`
+> 查询多列 `select prod_id, prod_name, prod_price from products;` 列与列用逗号分割。
 
-> 查询多列
+> 查询所有 `select * from products`   尽量别使用通配符查询所有字段，会拉低查询效率。
 
-`select prod_id, prod_name, prod_price from products;` 列与列用逗号分割。
-
-> 查询所有
-
-`select * from products`   尽量别使用通配符查询所有字段，会拉低查询效率。
-
->查询不同的行（去重）
-
-`select distinct vend_id from products`  使用关键字 distinct
+>查询不同的行（去重）`select distinct vend_id from products`  使用关键字 distinct
 
 > 限制结果 【限制查询的结果数目】
-
-`select prod_name from products limit 5`  返回不多于5行
-
-`select prod_name from products limit 5,5`  从行5开始，查5条数据。 会查到 5 6 7 8 9。
+>
+> - `select prod_name from products limit 5`  返回不多于5行
+> - `select prod_name from products limit 5,5`  从行5开始，查5条数据。 会查到 5 6 7 8 9。
 
 # 排序检索数据
 
@@ -183,15 +164,15 @@
 
 > where子句操作符
 
-| 操作符  | 说明               |
-| ------- | ------------------ |
-| =       | 等于               |
-| <>      | 不等于             |
-| !=      | 不等于             |
-| <       | 小于               |
-| <=      | 小于等于           |
-| >       | 大于               |
-| >=      | 大于等于           |
+| 操作符  |        说明        |
+| :-----: | :----------------: |
+|    =    |        等于        |
+|   <>    |       不等于       |
+|   !=    |       不等于       |
+|    <    |        小于        |
+|   <=    |      小于等于      |
+|    >    |        大于        |
+|   >=    |      大于等于      |
 | between | 在指定的两个值之间 |
 
 > 范围值检查 [between示例]
@@ -449,18 +430,18 @@ select * from customers where soundex(cust_contact) = soundex('Y Lie');
 
 这块的内容比较重要，要好好学学，用的挺频繁。
 
-| 函数          | 说明                                                         |
-| ------------- | ------------------------------------------------------------ |
-| AddDate()     | 增加一个日期（天 、周）AddDate(字段, INTERVAL 1 WEEK/YEAR/DAY) |
-| AddTime()     | 增加一个时间（时、分）类似上面                               |
-| CurDate()     | 返回当前日期【年月日】                                       |
-| CurTime()     | 返回当前时间【时分秒】select CurTime(); 查询当前时间         |
-| Date()        | 返回日期时间的日期部分 Date(xxx) xxx字段的日期部分           |
-| DateDiff()    | 计算两个日期之差                                             |
-| Date_Add()    | 高度灵活的日期运算函数<a href="https://www.w3school.com.cn/sql/func_date_add.asp">具体用法</a> |
+|     函数      |                             说明                             |
+| :-----------: | :----------------------------------------------------------: |
+|   AddDate()   | 增加一个日期（天 、周）AddDate(字段, INTERVAL 1 WEEK/YEAR/DAY) |
+|   AddTime()   |                增加一个时间（时、分）类似上面                |
+|   CurDate()   |                    返回当前日期【年月日】                    |
+|   CurTime()   |     返回当前时间【时分秒】select CurTime(); 查询当前时间     |
+|    Date()     |      返回日期时间的日期部分 Date(xxx) xxx字段的日期部分      |
+|  DateDiff()   |                       计算两个日期之差                       |
+|  Date_Add()   | 高度灵活的日期运算函数<a href="https://www.w3school.com.cn/sql/func_date_add.asp">具体用法</a> |
 | Date_Format() | 返回格式化的日期或串<a href="https://www.w3school.com.cn/sql/func_date_format.asp">具体用法</a> |
-| DayOfWeek()   | 返回日期对应的星期几 DayOfWeek(日期)                         |
-| Time()        | 返回时间部分。 时分秒。                                      |
+|  DayOfWeek()  |             返回日期对应的星期几 DayOfWeek(日期)             |
+|    Time()     |                   返回时间部分。 时分秒。                    |
 
 利用MySQL进行时间部分的匹配时，只匹配需要的那一部分字段。比如只要年月日就只比年月日。
 
@@ -478,13 +459,13 @@ select * from customers where soundex(cust_contact) = soundex('Y Lie');
 
 ## SQL聚集函数
 
-| 函数  | 说明                                             |
-| ----- | ------------------------------------------------ |
-| avg   | 忽略为null的行                                   |
+| 函数  |                       说明                       |
+| :---: | :----------------------------------------------: |
+|  avg  |                  忽略为null的行                  |
 | count | count(*) 空，非空都统计；count(column)不统计null |
-| max   | 忽略为null的行，可用于数值，非数值。如最大日期。 |
-| min   | 说明同max                                        |
-| sum   | 忽略为null的行                                   |
+|  max  | 忽略为null的行，可用于数值，非数值。如最大日期。 |
+|  min  |                    说明同max                     |
+|  sum  |                  忽略为null的行                  |
 
 如果不允许计算重复的值，则可以指定distinct参数
 
@@ -738,8 +719,6 @@ order by vend_id
 - `MyISAM`支持全文本搜索。
 
 - `InnoDB`不支持全文本搜索。
-
-
 
 
 
