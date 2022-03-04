@@ -85,7 +85,7 @@ public class HelloController {
 > 简化部署
 
 ```xml
-<!-- 这个插件，可以将应用打包成一个可执行的jar包；-->
+<!-- 这个插件，可以将应用打包成一个可执行的jar包 -->
 <build>
     <plugins>
         <plugin>
@@ -108,9 +108,9 @@ public class HelloController {
 
 > 官方骨架创建遇到的问题
 
-- 有时候 IDEA 创建项目总是出错，于是直接取官网选好依赖，下载过来，导入到IDEA中。
+- 有时候 IDEA 创建项目总是出错，于是直接取官网选好依赖，下载过来，导入到 IDEA 中。
 
-- 导入后用 maven 的 Reload All Maven Projects 导入所有的依赖，导入后发现下面这个配置文件报错
+- 导入后用 maven 的 Reload All Maven Projects 导入所有的依赖，导入后发现下面这个配置文件报错。
 
 ```xml
 <plugin>
@@ -135,13 +135,13 @@ public class HelloController {
 
 <img src="img\boot\image-20211122163605950.png">
 
-阿里为了便于自己公司开发使用，特此在依赖坐标中添加了一些阿里自主的技术，也是为了推广自己的技术吧，所以在依赖选择列表中，你有了更多的选择。此外，阿里提供的地址更符合国内开发者的使用习惯，里面有一些SpringBoot官网上没有给出的坐标。
+阿里为了便于自己公司开发使用，特此在依赖坐标中添加了一些阿里自主的技术，也是为了推广自己的技术吧，所以在依赖选择列表中，你有了更多的选择。此外，阿里提供的地址更符合国内开发者的使用习惯，里面有一些 SpringBoot 官网上没有给出的坐标。
 
 <img src="img\boot\image-20211122163937408.png">
 
-阿里云地址默认创建的SpringBoot工程版本是<font color="#ff0000"><b>2.4.1</b></font>，所以如果你想更换其他的版本，创建项目后在pom文件中手工修改即可，别忘了刷新一下，加载新版本信息。
+阿里云地址默认创建的 SpringBoot 工程版本是 <font color="#ff0000"><b>2.4.1</b></font>，所以如果你想更换其他的版本，创建项目后在 pom 文件中手工修改即可，别忘了刷新一下，加载新版本信息。
 
-<font color="#ff0000"><b>注意</b></font>：阿里云提供的工程创建地址初始化完毕后和使用SpringBoot官网创建出来的工程略有区别，主要是在配置文件的形式上有区别,这个信息在后面讲解SpringBoot程序的执行流程时给大家揭晓。
+<font color="#ff0000"><b>注意</b></font>：阿里云提供的工程创建地址初始化完毕后和使用 SpringBoot 官网创建出来的工程略有区别，主要是在配置文件的形式上有区别,这个信息在后面讲解 SpringBoot 程序的执行流程时给大家揭晓。
 
 ### 目录结构说明
 
@@ -149,10 +149,10 @@ public class HelloController {
 
 - resources文件夹中目录结构
     - static：保存静态资源；js css img
-    - templates：保存页面资源；springboot默认不支持jsp
-    - mybatis 的配置文件之类的需要放在resources文件夹下面。resources是资源的根路径。就把resources当成编译后的classes文件夹吧。
+    - templates：保存页面资源；SpringBoot 默认不支持jsp
+    - mybatis 的配置文件之类的需要放在 resources 文件夹下面。resources 是资源的根路径。就把 resources 当成编译后的 classes 文件夹吧。
 
-resources下的文件最终都会被部署到classpath文件下
+resources下的文件最终都会被部署到 classpath 文件下
 
 ### 启动类&热部署设置
 
@@ -169,9 +169,9 @@ public class CommunityApplication {
 }
 ```
 
-热部署(IDEA进行SpringBoot热部署失败的原因是，IDEA默认情况下不会自动编译，需要对IDEA进行自动编译的设置)
-- Settings -->Compiler
-- Ctrl + Shift + Alt + / -->选择Registry-->compiler.automake.allow.when.app.running ✔
+热部署( IDEA 进行 SpringBoot 热部署失败的原因是，IDEA 默认情况下不会自动编译，需要对 IDEA 进行自动编译的设置)
+- Settings --> Compiler
+- Ctrl + Shift + Alt + / -->选择 Registry--> compiler.automake.allow.when.app.running ✔
 
 ```xml
 <dependency>
@@ -186,11 +186,11 @@ public class CommunityApplication {
 
 ### 属性配置
 
-SpringBoot通过配置文件application.properties就可以修改默认的配置
+SpringBoot 通过配置文件 application.properties 就可以修改默认的配置
 
 <img src="img\boot\image-20211123165428245.png">
 
-将默认端口改为80端口。properties格式的文件书写规范是key=value  `如：name=itheima`
+将默认端口改为80端口。properties 格式的文件书写规范是 key=value  `如：name=itheima`
 
 <img src="img\boot\image-20211123165719091.png" />
 
@@ -198,7 +198,7 @@ SpringBoot通过配置文件application.properties就可以修改默认的配置
 server.port=80
 ```
 
-以前修改端口在 tomcat 服务器的配置文件中改，现在在 Spring Boot专用的配置文件中改，**简化开发者配置的书写位置，集中管理。**
+以前修改端口在 tomcat 服务器的配置文件中改，现在在 Spring Boot 专用的配置文件中改，**简化开发者配置的书写位置，集中管理。**
 
 1. SpringBoot 程序可以在 application.properties 文件中进行属性配置
 2. application.properties 文件中只要输入要配置的属性关键字就可以根据提示进行设置
@@ -226,13 +226,13 @@ logging.level.root=debug
 
 我们现在配置了3个信息，但是又有新的问题了。这个配置是随便写的吗？什么都能配？有没有一个东西显示所有能配置的项呢？此外这个配置和什么东西有关呢？会不会因为我写了什么东西以后才可以写什么配置呢？比如我现在没有写数据库相关的东西，能否配置数据呢？一个一个来，先说第一个问题，都能配置什么。
 
-打开SpringBoot的官网，找到SpringBoot官方文档，打开查看附录中的Application Properties就可以获取到对应的配置项了，网址奉上：https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#application-properties
+打开SpringBoot的官网，找到SpringBoot官方文档，打开查看附录中的 Application Properties 就可以获取到对应的配置项了，网址奉上：https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#application-properties
 
 能写什么的问题解决了，再来说第二个问题，这个配置项和什么有关。在pom中注释掉导入的spring-boot-starter-web，然后刷新工程，你会发现配置的提示消失了。闹了半天是设定使用了什么技术才能做什么配置。也合理，不然没有使用对应技术，配了也是白配。
 
 <font color="#f0f"><b>温馨提示</b></font>
 
-所有的starter中都会依赖下面这个starter，叫做spring-boot-starter。这个starter是所有的SpringBoot的starter的基础依赖，里面定义了SpringBoot相关的基础配置，关于这个starter我们到开发应用篇和原理篇中再深入讲解。
+所有的 starter 中都会依赖下面这个 starter，叫做 spring-boot-starter。这个 starter 是所有的 SpringBoot 的 starter 的基础依赖，里面定义了 SpringBoot 相关的基础配置，关于这个 starter 我们到开发应用篇和原理篇中再深入讲解。
 
 ```xml
 <dependency>
@@ -245,8 +245,8 @@ logging.level.root=debug
 
 **总结**
 
-1. SpringBoot中导入对应starter后，提供对应配置属性
-2. 书写SpringBoot配置采用关键字+提示形式书写
+1. SpringBoot 中导入对应 starter 后，提供对应配置属性
+2. 书写 SpringBoot 配置采用关键字+提示形式书写
 
 ### 配置文件分类
 
@@ -5632,3 +5632,486 @@ logging:
 
 **总结**：日志记录到文件、日志文件格式设置
 
+# 开发实用篇
+
+- 热部署
+- 配置高级
+- 测试
+- 数据层解决方案
+- 整合第三方技术
+- 监控
+
+## 热部署
+
+什么是热部署？简单说就是你程序改了，不用重启，服务器会自己悄悄的把更新后的程序给重新加载一遍，这就是热部署。
+
+热部署的功能是如何实现的呢？这就要分两种情况来说了，非 springboot 工程和springboot 工程的热部署实现方式完全不一样。先说一下原始的非 springboot 项目是如何实现热部署的。
+
+**非springboot项目热部署实现原理**
+
+开发非 springboot 项目时，我们要制作一个 web 工程并通过 tomcat 启动，通常需要先安装 tomcat 服务器到磁盘中，开发的程序配置发布到安装的 tomcat 服务器上。如果想实现热部署的效果，这种情况其实有两种做法，一种是在 tomcat 服务器的配置文件中进行配置，这种做法与你使用什么 IDE 工具无关，不管你使用 eclipse 还是 idea 都行。还有一种做法是通过 IDE 工具进行配置，比如在 idea 工具中进行设置，这种形式需要依赖 IDE 工具，每款 IDE 工具不同，对应的配置也不太一样。**但是核心思想是一样的，就是使用服务器去监控其中加载的应用，发现产生了变化就重新加载一次。**
+
+上面所说的非 springboot 项目实现热部署看上去是一个非常简单的过程，几乎每个小伙伴都能自己写出来。如果你不会写，我给你个最简单的思路，但是实际设计要比这复杂一些。例如启动一个定时任务，任务启动时记录每个文件的大小，以后每5秒比对一下每个文件的大小是否有改变，或者是否有新文件。如果没有改变，放行，如果有改变，刷新当前记录的文件信息，然后重新启动服务器，这就可以实现热部署了。当然，这个过程肯定不能这么做，比如我把一个打印输出的字符串 "abc" 改成 "cba"，比对大小是没有变化的，但是内容缺实变了，所以这么做肯定不行，只是给大家打个比方，而且重启服务器这就是冷启动了，不能算热部署，领会精神吧。
+
+看上去这个过程也没多复杂，在 springboot 项目中难道还有其他的弯弯绕吗？还真有。
+
+**springboot项目热部署实现原理**
+
+基于 springboot 开发的 web 工程其实有一个显著的特征，就是tomcat服务器内置了，还记得内嵌服务器吗？服务器是以一个对象的形式在 spring 容器中运行的。本来我们期望于 tomcat 服务器加载程序后由 tomcat 服务器盯着程序，你变化后我就重新启动重新加载，但是现在 tomcat 和我们的程序是平级的了，都是 spring 容器中的组件，这下就麻烦了，缺乏了一个直接的管理权，那该怎么做呢？简单，再搞一个程序X在 spring 容器中盯着你原始开发的程序A不就行了吗？确实，搞一个盯着程序A的程序X就行了，如果你自己开发的程序A变化了，那么程序X就命令 tomcat 容器重新加载程序A就OK了。并且这样做有一个好处，spring 容器中东西不用全部重新加载一遍，只需要重新加载你开发的程序那一部分就可以了，这下效率又高了，挺好。
+
+下面就说说，怎么搞出来这么一个程序X，肯定不是我们自己手写了，springboot 早就做好了，搞一个坐标导入进去就行了。
+
+### 手动启动热部署
+
+**步骤①**：导入开发者工具对应的坐标
+
+```XML
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-devtools</artifactId>
+    <optional>true</optional>
+</dependency>
+```
+
+**步骤②**：构建项目，可以使用快捷键激活此功能
+
+<img src="img\image-20220222121257218.png">
+
+对应的快捷键一定要记得 `<CTR>L+<F9>`，以上过程就实现了springboot工程的热部署。底层的工作过程如下。
+
+**重启与重载**
+
+一个springboot项目在运行时实际上是分两个过程进行的，根据加载的东西不同，划分成base类加载器与restart类加载器。
+
+- base类加载器：用来加载jar包中的类，jar包中的类和配置文件由于不会发生变化，因此不管加载多少次，加载的内容不会发生变化
+- restart类加载器：用来加载开发者自己开发的类、配置文件、页面等信息，这一类文件受开发者影响
+
+当springboot项目启动时，base类加载器执行，加载jar包中的信息后，restart类加载器执行，加载开发者制作的内容。当执行构建项目后，由于jar中的信息不会变化，因此base类加载器无需再次执行，所以仅仅运行restart类加载即可，也就是将开发者自己制作的内容重新加载就行了，这就完成了一次热部署的过程，也可以说热部署的过程实际上是重新加载restart类加载器中的信息。
+
+**总结**
+
+1. 使用开发者工具可以为当前项目开启热部署功能
+2. 使用构建项目操作对工程进行热部署
+
+**思考**
+
+上述过程每次进行热部署都需要开发者手工操作，不管是点击按钮还是快捷键都需要开发者手工执行。这种操作的应用场景主要是在开发调试期，并且调试的代码处于不同的文件中，比如服务器启动了，我需要改4个文件中的内容，然后重启，等4个文件都改完了再执行热部署，使用一个快捷键就OK了。但是如果现在开发者要修改的内容就只有一个文件中的少量代码，这个时候代码修改完毕如果能够让程序自己执行热部署功能，就可以减少开发者的操作，也就是自动进行热部署，能这么做吗？是可以的。咱们下一节再说。
+
+### 自动启动热部署
+
+自动热部署其实就是设计一个开关，打开这个开关后，IDE工具就可以自动热部署。因此这个操作和IDE工具有关，以下以idea为例设置idea中启动热部署
+
+**步骤①**：设置自动构建项目
+
+打开【File】，选择【settings...】,在面板左侧的菜单中找到【Compile】选项，然后勾选【Build project automatically】，意思是自动构建项目
+
+<img src="img\boot\image-20220222123543551.png">
+
+自动构建项目选项勾选后
+
+**步骤②**：允许在程序运行时进行自动构建
+
+使用快捷键【Ctrl】+【Alt】+【Shit】+【/】打开维护面板，选择第1项【Registry...】
+
+<img src="img\boot\image-20220222124006910.png">
+
+在选项中搜索comple，然后勾选对应项即可
+
+<img src="img\boot\image-20220222124240069.png"/>
+
+这样程序在运行的时候就可以进行自动构建了，实现了热部署的效果。
+
+<font color="#ff0000"><b>关注</b></font>：如果你每敲一个字母，服务器就重新构建一次，这未免有点太频繁了，所以idea设置当 idea 工具失去焦点 5 秒后进行热部署。其实就是你从 idea 工具中切换到其他工具时进行热部署，比如改完程序需要到浏览器上去调试，这个时候 idea 就自动进行热部署操作。
+
+**总结**
+
+1. 自动热部署要开启自动构建项目
+2. 自动热部署要开启在程序运行时自动构建项目
+
+**思考**
+
+现在已经实现了热部署了，但是到企业开发的时候你会发现，为了便于管理，在你的程序目录中除了有代码，还有可能有文档，如果你修改了一下文档，这个时候会进行热部署吗？不管是否进行热部署，这个过程我们需要自己控制才比较合理，那这个东西能控制吗？咱们下一节再说。
+
+### 参与热部署监控的文件范围配置
+
+通过修改项目中的文件，你可以发现其实并不是所有的文件修改都会激活热部署的，原因在于在开发者工具中有一组配置，当满足了配置中的条件后，才会启动热部署，配置中默认不参与热部署的目录信息如下
+
+- /META-INF/maven
+- /META-INF/resources
+- /resources
+- /static
+- /public
+- /templates
+
+以上目录中的文件如果发生变化，是不参与热部署的。如果想修改配置，可以通过application.yml文件进行设定哪些文件不参与热部署操作
+
+```yaml
+spring:
+  devtools:
+    restart:
+      # 设置不参与热部署的文件或文件夹
+      exclude: static/**,public/**,config/application.yml
+```
+
+**总结**
+
+1. 通过配置可以修改不参与热部署的文件或目录
+
+**思考**
+
+热部署功能是一个典型的开发阶段使用的功能，到了线上环境运行程序时，这个功能就没有意义了。能否关闭热部署功能呢？咱们下一节再说。
+
+### 关闭热部署
+
+线上环境运行时是不可能使用热部署功能的，所以需要强制关闭此功能，通过配置可以关闭此功能。
+
+```yaml
+spring:
+  devtools:
+    restart:
+      enabled: false
+```
+
+如果当心配置文件层级过多导致相符覆盖最终引起配置失效，可以提高配置的层级，在更高层级中配置关闭热部署。例如在启动容器前通过系统属性设置关闭热部署功能。
+
+```JAVA
+@SpringBootApplication
+public class SSMPApplication {
+    public static void main(String[] args) {
+        System.setProperty("spring.devtools.restart.enabled","false");
+        SpringApplication.run(SSMPApplication.class);
+    }
+}
+```
+
+其实上述担心略微有点多余，因为线上环境的维护是不可能出现修改代码的操作的，这么做唯一的作用是降低资源消耗，毕竟那双盯着你项目是不是产生变化的眼睛只要闭上了，就不具有热部署功能了，这个开关的作用就是禁用对应功能。
+
+**总结**
+
+1. 通过配置可以关闭热部署功能降低线上程序的资源消耗
+
+## 配置高级
+
+### @ConfigurationProperties
+
+在基础篇学习了 @ConfigurationProperties 注解，此注解的作用是用来为 bean 绑定属性的。开发者可以在 yml 配置文件中以对象的格式添加若干属性
+
+```YML
+servers:
+  ip-address: 192.168.0.1 
+  port: 2345
+  timeout: -1
+```
+
+然后再开发一个用来封装数据的实体类，注意要提供属性对应的 setter 方法
+
+```JAVA
+@Component
+@Data
+public class ServerConfig {
+    private String ipAddress;
+    private int port;
+    private long timeout;
+}
+```
+
+使用 @ConfigurationProperties 注解就可以将配置中的属性值关联到开发的模型类上
+
+```JAVA
+@Component
+@Data
+@ConfigurationProperties(prefix = "servers")
+public class ServerConfig {
+    private String ipAddress;
+    private int port;
+    private long timeout;
+}
+```
+
+这样加载对应bean的时候就可以直接加载配置属性值了。但是目前我们学的都是给自定义的bean使用这种形式加载属性值，如果是第三方的 bean 呢？能不能用这种形式加载属性值呢？为什么会提出这个疑问？原因就在于当前 @ConfigurationProperties 注解是写在类定义的上方，而第三方开发的 bean 源代码不是你自己书写的，你也不可能到源代码中去添加 @ConfigurationProperties 注解，这种问题该怎么解决呢？下面就来说说这个问题。
+
+**使用 @ConfigurationProperties 注解其实可以为第三方 bean 加载属性**，格式特殊一点而已。
+
+**步骤①**：使用 @Bean 注解定义第三方 bean
+
+```JAVA
+@Bean
+public DruidDataSource datasource(){
+    DruidDataSource ds = new DruidDataSource();
+    return ds;
+}
+```
+
+**步骤②**：在 yml 中定义要绑定的属性，注意 datasource 此时全小写
+
+```YAML
+datasource:
+  driverClassName: com.mysql.jdbc.Driver
+```
+
+**步骤③**：使用 @ConfigurationProperties 注解为第三方 bean 进行属性绑定，注意前缀是全小写的 datasource
+
+```JAVA
+@Bean
+@ConfigurationProperties(prefix = "datasource")
+public DruidDataSource datasource(){
+    DruidDataSource ds = new DruidDataSource();
+    return ds;
+}
+```
+
+操作方式完全一样，只不过 @ConfigurationProperties 注解不仅能添加到类上，还可以添加到方法上，**添加到类上是为 spring 容器管理的当前类的对象绑定属性，添加到方法上是为 spring 容器管理的当前方法的返回值对象绑定属性**，其实本质上都一样。
+
+做到这其实就出现了一个新的问题，目前我们定义 bean 不是通过类注解定义就是通过@Bean 定义，使用 @ConfigurationProperties 注解可以为 bean 进行属性绑定，那在一个业务系统中，哪些 bean 通过注解 @ConfigurationProperties 去绑定属性了呢？因为这个注解不仅可以写在类上，还可以写在方法上，所以找起来就比较麻烦了。为了解决这个问题，spring 给我们提供了一个全新的注解，专门标注使用@ConfigurationProperties 注解绑定属性的 bean 是哪些。这个注解叫做@EnableConfigurationProperties。具体如何使用呢？
+
+**步骤①**：在配置类上开启 @EnableConfigurationProperties 注解，并标注要使用@ConfigurationProperties 注解绑定属性的类
+
+```java
+@SpringBootApplication
+@EnableConfigurationProperties(ServerConfig.class)
+public class Springboot13ConfigurationApplication {
+}
+```
+
+**步骤②**：在对应的类上直接使用@ConfigurationProperties进行属性绑定
+
+```JAVA
+@Data
+@ConfigurationProperties(prefix = "servers")
+public class ServerConfig {
+    private String ipAddress;
+    private int port;
+    private long timeout;
+}
+```
+
+有人感觉这没区别啊？注意观察，现在绑定属性的 ServerConfig 类并没有声明@Component 注解。**当使用 @EnableConfigurationProperties 注解时，spring 会默认将其标注的类（注解中的参数）定义为 bean**，因此无需再次声明@Component注解了。
+
+最后再说一个小技巧，使用 @ConfigurationProperties 注解时，会出现一个提示信息
+
+<img src="img\boot\image-20220222145535749.png">
+
+出现这个提示后只需要添加一个坐标此提醒就消失了
+
+```XML
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-configuration-processor</artifactId>
+</dependency>
+```
+
+**总结**
+
+1. 使用 @ConfigurationProperties 可以为使用 @Bean 声明的第三方 bean 绑定属性
+2. 当使用 @EnableConfigurationProperties 声明进行属性绑定的bean后，无需使用@Component 注解再次进行bean声明
+
+### 宽松绑定/松散绑定
+
+在进行属性绑定时，可能会遇到如下情况，为了进行标准命名，开发者会将属性名严格按照驼峰命名法书写，在 yml 配置文件中将 datasource 修改为 dataSource，如下：
+
+```yaml
+dataSource:
+  driverClassName: com.mysql.jdbc.Driver
+```
+
+不修改 Java 代码中的前缀，此时程序可以正常运行；然后又将代码中的前缀 datasource 修改为 dataSource，如下：
+
+```java
+@Bean
+@ConfigurationProperties(prefix = "dataSource")
+public DruidDataSource datasource(){
+    DruidDataSource ds = new DruidDataSource();
+    return ds;
+}
+```
+
+此时就发生了编译错误，而且并不是 idea 工具导致的，运行后依然会出现问题，配置属性名 dataSource 是无效的。
+
+```CMD
+Configuration property name 'dataSource' is not valid:
+
+    Invalid characters: 'S'
+    Bean: datasource
+    Reason: Canonical names should be kebab-case ('-' separated), lowercase alpha-numeric characters and must start with a letter
+
+Action:
+Modify 'dataSource' so that it conforms to the canonical names requirements.
+```
+
+为什么会出现这种问题，这就要来说一说 springboot 进行属性绑定时的一个重要知识点了，有关属性名称的宽松绑定，也可以称为宽松绑定。
+
+什么是宽松绑定？实际上是 springboot 进行编程时人性化设计的一种体现，即配置文件中的命名格式与变量名的命名格式可以进行格式上的最大化兼容。兼容到什么程度呢？几乎主流的命名格式都支持，例如：
+
+在 ServerConfig 中的 ipAddress 属性名
+
+```JAVA
+@Component
+@Data
+@ConfigurationProperties(prefix = "servers")
+public class ServerConfig {
+    private String ipAddress;
+}
+```
+
+​		可以与下面的配置属性名规则全兼容
+
+```YML
+servers:
+  ipAddress: 192.168.0.2       # 驼峰模式
+  ip_address: 192.168.0.2      # 下划线模式
+  ip-address: 192.168.0.2      # 烤肉串模式
+  IP_ADDRESS: 192.168.0.2      # 常量模式
+```
+
+也可以说，以上4种模式最终都可以匹配到 ipAddress 这个属性名。因为在进行匹配时，配置中的名称要去掉中划线和下划线后，忽略大小写的情况下去与 java 代码中的属性名进行忽略大小写的等值匹配，以上4种命名去掉下划线中划线忽略大小写后都是一个词ipaddress，java代码中的属性名忽略大小写后也是ipaddress，这样就可以进行等值匹配了，这就是为什么这4种格式都能匹配成功的原因。不过springboot官方推荐使用烤肉串模式，也就是中划线模式。
+
+到这里我们掌握了一个知识点，就是命名的规范问题。再来看开始出现的编程错误信息
+
+```CMD
+Configuration property name 'dataSource' is not valid:
+
+    Invalid characters: 'S'
+    Bean: datasource
+    Reason: Canonical names should be kebab-case ('-' separated), lowercase alpha-numeric characters and must start with a letter
+
+Action:
+Modify 'dataSource' so that it conforms to the canonical names requirements.
+```
+
+其中 Reason 描述了报错的原因，规范的名称应该是烤肉串(kebab)模式(case)，即使用-分隔，使用小写字母数字作为标准字符，且必须以字母开头。然后再看我们写的名称dataSource，就不满足上述要求。闹了半天，**在书写前缀时，这个词不是随意支持的，必须使用上述标准**。
+
+最后说一句，以上规则仅针对 springboot 中 @ConfigurationProperties 注解进行属性绑定时有效，对 @Value 注解进行属性映射无效。有人就说，那我不用你不就行了？不用，你小看 springboot 的推广能力了，到原理篇我们看源码时，你会发现内部全是这玩意儿。
+
+**总结**
+
+1. @ConfigurationProperties绑定属性时支持属性名宽松绑定，这个宽松体现在属性名的命名规则上
+2. @Value注解不支持松散绑定规则
+3. 绑定前缀名推荐采用烤肉串命名规则，即使用中划线做分隔符
+
+### 常用计量单位绑定
+
+在前面的配置中，我们书写了如下配置值，其中第三项超时时间timeout描述了服务器操作超时时间，当前值是-1表示永不超时。
+
+```YML
+servers:
+  ip-address: 192.168.0.1 
+  port: 2345
+  timeout: -1
+```
+
+​		但是每个人都这个值的理解会产生不同，比如线上服务器完成一次主从备份，配置超时时间240，这个240如果单位是秒就是超时时间4分钟，如果单位是分钟就是超时时间4小时。面对一次线上服务器的主从备份，设置4分钟，简直是开玩笑，别说拷贝过程，备份之前的压缩过程4分钟也搞不定，这个时候问题就来了，怎么解决这个误会？
+
+​		除了加强约定之外，springboot充分利用了JDK8中提供的全新的用来表示计量单位的新数据类型，从根本上解决这个问题。以下模型类中添加了两个JDK8中新增的类，分别是Duration和DataSize
+
+```JAVA
+@Component
+@Data
+@ConfigurationProperties(prefix = "servers")
+public class ServerConfig {
+    @DurationUnit(ChronoUnit.HOURS)
+    private Duration serverTimeOut;
+    @DataSizeUnit(DataUnit.MEGABYTES)
+    private DataSize dataSize;
+}
+
+```
+
+**Duration**：表示时间间隔，可以通过@DurationUnit注解描述时间单位，例如上例中描述的单位为小时（ChronoUnit.HOURS）
+
+**DataSize**：表示存储空间，可以通过@DataSizeUnit注解描述存储空间单位，例如上例中描述的单位为MB（DataUnit.MEGABYTES）
+
+​		使用上述两个单位就可以有效避免因沟通不同步或文档不健全导致的信息不对称问题，从根本上解决了问题，避免产生误读。
+
+Druation 常用单位如下：
+
+<img src="img\boot\image-20220222173911102.png">
+
+DataSize 常用单位如下：
+
+<img src="img\boot\image-20220222174130102.png">
+
+### 校验
+
+目前我们在进行属性绑定时可以通过松散绑定规则在书写时放飞自我了，但是在书写时由于无法感知模型类中的数据类型，就会出现类型不匹配的问题，比如代码中需要int类型，配置中给了非法的数值，例如写一个“a"，这种数据肯定无法有效的绑定，还会引发错误。		
+
+SpringBoot给出了强大的数据校验功能，可以有效的避免此类问题的发生。在JAVAEE的JSR303规范中给出了具体的数据校验标准，开发者可以根据自己的需要选择对应的校验框架，此处使用 Hibernate 提供的校验框架来作为实现进行数据校验。书写应用格式非常固定，话不多说，直接上步骤
+
+**步骤①**：开启校验框架
+
+```xml
+<!--1.导入JSR303规范-->
+<dependency>
+    <groupId>javax.validation</groupId>
+    <artifactId>validation-api</artifactId>
+</dependency>
+<!--使用hibernate框架提供的校验器做实现-->
+<dependency>
+    <groupId>org.hibernate.validator</groupId>
+    <artifactId>hibernate-validator</artifactId>
+</dependency>
+```
+
+**步骤②**：在需要开启校验功能的类上使用注解@Validated开启校验功能
+
+```java
+@Component
+@Data
+@ConfigurationProperties(prefix = "servers")
+//开启对当前bean的属性注入校验
+@Validated
+public class ServerConfig {
+}
+```
+
+**步骤③**：对具体的字段设置校验规则
+
+```JAVA
+@Component
+@Data
+@ConfigurationProperties(prefix = "servers")
+//开启对当前bean的属性注入校验
+@Validated
+public class ServerConfig {
+    //设置具体的规则
+    @Max(value = 8888,message = "最大值不能超过8888")
+    @Min(value = 202,message = "最小值不能低于202")
+    private int port;
+}
+```
+
+通过设置数据格式校验，就可以有效避免非法数据加载，其实使用起来还是挺轻松的，基本上就是一个格式。
+
+**总结**
+
+1.开启Bean属性校验功能一共3步：导入JSR303与Hibernate校验框架坐标、使用@Validated注解启用校验功能、使用具体校验规则规范数据校验格式
+
+### 数据类型转换
+
+看下这个问题。连接数据库是，运行程序提示密码错误
+
+```shell
+java.sql.SQLException: Access denied for user 'root'@'localhost' (using password: YES)
+```
+
+其实看到这个报错，看的出这是用户名和密码不匹配，但是问题就在于密码并没有输入错误，这就比较讨厌了。给的报错信息无法帮助你有效的分析问题，甚至会给你带到沟里。来看看用户名密码的配置是如何写的：
+
+```yaml
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/ssm_db?serverTimezone=UTC
+    username: root
+    password: 0127
+```
+
+这名开发者的生日是1月27日，所以密码就使用了0127，其实问题就出在这里了。之前在基础篇讲属性注入时，提到过类型相关的知识，在整数相关知识中有这么一句话，**支持二进制，八进制，十六进制**
+
+<img src="img\boot\image-20220222225748370.png">
+
+这个问题就处在这里了，因为0127在开发者眼中是一个字符串“0127”，但是在springboot 看来，这就是一个数字，而且是一个八进制的数字。当后台使用 String 类型接收数据时，如果配置文件中配置了一个整数值，他是先按照整数进行处理，读取后再转换成字符串。巧了，0127 撞上了八进制的格式，所以最终以十进制数字 87 的结果存在了。
+
+这里提两个注意点，第一，字符串标准书写加上引号包裹，养成习惯，第二，遇到0开头的数据多注意吧。
+
+**总结**
+
+1. yaml文件中对于数字的定义支持进制书写格式，如需使用字符串请使用引号明确标注
