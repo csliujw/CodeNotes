@@ -1178,6 +1178,62 @@ class Solution {
 
 # 老版剑指offer
 
+## 找出数组中的重复数字
+
+数据特点是，数组长度为n，数字范围在 0~n-1，如果有数字不在 0~n-1 则返回 -1.
+
+- 先判断范围，有没有数据越界了。
+- 每次把当前遇到的数，放到对应的 index 里。如果在把数字 n 放到 index n 的时候发现，index n 处的数字就是 n，则重复了（注意数组可能是 0 1 2 4 3 3 ，需要排除 i==nums[i] 这种情况）。返回这个重复的数组。
+- 也可以用 hash 表判重。
+
+```java
+class Solution {
+    public int duplicateInArray(int[] nums) {
+        for(int n:nums){
+            if(n>=nums.length) return -1;
+        }
+        for(int i=0;i<nums.length;i++){
+            while(i!=nums[i] && nums[i]!=nums[nums[i]]){
+                int tmp = nums[nums[i]];
+                nums[nums[i]] = nums[i];
+                nums[i] = tmp;
+            }
+            // if 要放后面
+            if(i!=nums[i] && nums[i]==nums[nums[i]]) return nums[i];
+        }
+        return -1;
+    }   
+}
+```
+
+## 不修改数组找出重复的数字
+
+- hash 表判重
+- 二分。根据数的取值范围划分区间。
+    - 1~n的范围，划分区间就是 [1~n/2]，[n/2+1,n]. (遍历 所有数据，统计 1~n/2 范围内有多少个数字。)
+    - 一定会有一个区间出现，区间中数的总个数大于区间长度。
+    - 在这个大于的区间长度内继续进行二分。
+
+```java
+class Solution {
+    public int duplicateInArray(int[] nums) {
+        int left = 1, right=nums.length-1;
+        while(left<right){
+            int mid = left + right >>1;
+            int count = 0;
+            for(int x:nums){
+                if(x<=mid && x>=left) count++;
+            }
+            if(count>mid-left+1) right = mid;
+            else left = mid+1;
+        }
+        return right;
+    }
+}
+```
+
+
+
 ## **二维数组中的查找**
 
 - [x] 矩阵有序
