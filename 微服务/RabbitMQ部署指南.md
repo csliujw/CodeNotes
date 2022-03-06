@@ -36,9 +36,8 @@ docker run \
  --hostname mq1 \
  -p 15672:15672 \ # 管理信息页面
  -p 5672:5672 \  # 通信端口
- -d rabbitmq:3-management
- 
- docker run -e RABBITMQ_DEFAULT_USER=itcast -e RABBITMQ_DEFAULT_PASS=123321 --name mq --hostname mq1 -p 15672:15672 -p 5672:5672 -d rabbitmq:3-management
+ -d \
+ rabbitmq:3-management
 ```
 
 # 集群部署
