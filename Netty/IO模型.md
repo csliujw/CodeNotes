@@ -46,7 +46,7 @@
 
 <img src="img/io/640.webp">
 
-### Socket在内核中的表示
+### Socket 在内核中的表示
 
 基于 Linux 一切皆文件的理念，在内核中 Socket 也是以「文件」的形式存在的，也是有对应的文件描述符。
 
@@ -201,7 +201,7 @@ epoll 是解决 C10K 问题的利器，通过两个方面解决了 select/poll �
 
 而且，epoll 支持边缘触发和水平触发的方式，而 select/poll 只支持水平触发，一般而言，边缘触发的方式会比水平触发的效率高。
 
-# Reactor和Proactor
+# Reactor 和 Proactor
 
 Redis、Nginx、Netty 等都采用了Reactor这个方案。
 
