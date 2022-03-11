@@ -1688,7 +1688,7 @@ Web Browser 发送HTTP请求给Web Server  --> Web Server 服务把请求转发�
 
 > 核心架构：前端控制器（Front Controller）
 
-<img src="../pics/springboot/FCMainClass.gif">
+<img src="img/boot/FCMainClass.gif">
 
 - 资源：[Core J2EE Patterns](http://www.corej2eepatterns.com/FrontController.htm)
 - 实现：Spring Web MVC DispatcherServlet
