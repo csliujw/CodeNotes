@@ -1,14 +1,10 @@
 # `MyBatis`概述
 
-## 杂谈
-
 MyBatis3.4x版本，把他内部需要的三方jar都整合在一起了。
-
-所有有关MyBatis的笔记需要重新整理一下！包括代码！现在的笔记很杂乱，争取下礼拜整理好！
 
 ## 解决的问题
 
-`MyBatis` 减少了样板代码，简化了持久层的开发。
+MyBatis 减少了样板代码，简化了持久层的开发。
 
 ## 快捷键基础
 
@@ -59,7 +55,7 @@ Maven工程使用 `MyBatis` 的时候，配置文件需要放在 `resrouces` 目
 - mapper文件
 - 日志文件
 
-maven的 `pom` 文件
+maven的 pom 文件
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -169,7 +165,7 @@ mapper文件示例
 
 集成 Druid 只需要在前面的基础上修改一点东西即可。
 
-- 新建一个类，继承自 `UnpooledDataSourceFactory` 类（MyBatis官方文档的示例）
+- 新建一个类，继承自 UnpooledDataSourceFactory 类（MyBatis官方文档的示例）
 
 ```java
 public class DataSourceDruid extends UnpooledDataSourceFactory {
@@ -270,7 +266,7 @@ log4j.appender.stdout.layout.ConversionPattern=%5p [%t] - %m%n
 
 <a href="https://mybatis.org/mybatis-3/zh/configuration.html#mappers">官方链接</a>
 
-Mapper映射文件放在maven工程resource下com/daily/mapper也是resource的子目录
+Mapper 映射文件放在 maven 工程 resource 下 com/daily/mapper 也是 resource 的子目录
 
 > 1、用文件路径引入
 
@@ -318,15 +314,7 @@ maven项目下，所有的非 `*.java` 文件都要放在 resources 目录下。
 
 <img src="img/ibatis/maven.png">
 
-`mybatis` 多对多 是两个一对一组成的哦
-
-​	user 一对多role
-
-​	role 一对多user
-
-这样 user 和 role就是多对多关系了。 数据库的多对多需要一个中间表来描述两表的多对多关系。
-
-多对多`SQL`的写法？
+mybatis 多对多是由两个一对一组成的，如：user 一对多role，role 一对多user，这样 user 和 role 就是多对多关系了。 数据库的多对多需要一个中间表来描述两表的多对多关系。
 
 <a href="https://github.com/csliujw/MyBatis-Study">项目地址</a>
 
@@ -339,25 +327,18 @@ import com.bbxx.pojo.UserVO;
 import java.util.List;
 
 public interface IUserDao {
-
     // 查询所有
     List<UserVO> findAll();
-    
     // 条件查询
     List<UserVO> findCondition(UserVO vo);
-
     // 删除
     Integer delete(Integer id);
-
     // 修改
     Boolean update(UserVO vo);
-
     // 新增
     Boolean insert(UserVO vo);
-
     // 模糊查询
     List<UserVO> findByName(String username);
-
     // 聚合函数
     Long findTotal();
 }
@@ -388,9 +369,7 @@ public interface IUserDao {
     </select>
 
     <delete id="delete">
-        delete
-        from users
-        where id = #{value}
+        delete from users where id = #{value}
     </delete>
 
     <update id="update" parameterType="UserVO">
@@ -494,45 +473,27 @@ Employee getXX(@Param("id")Integer id, @Param("enmName")String empName);
 
 1）单个参数
 
-​	基本类型：
-
-​		取值：#{随便写}
-
-​	传入POJO
-
-​		取值：#{POJO字段名称}
+- 基本类型：取值用 #{随便写}
+- 传入POJO：取值用 #{POJO字段名称}，是使用 OGNL 表达式语言来实现的
 
 2）多个参数：
 
-​	public Employee getXXX(Integer id, String name)
+- public Employee getXXX(Integer id, String name)，取值：#{参数名}是无效了
+- 可以用：0，1（参数索引）或 param1,param2（第几个参数paramN）来取值，#{0},#{1} / #{param1},#{param2}
+- 原因：只要传入了多个参数；MyBatis 会自动的将这些参数封装在一个 map 中；封装时使用的 key 就是参数的索引和参数的第几个表示。
 
-​	取值：#{参数名}是无效了
+```java
+Map<String,Object> map = new HashMap<>()
+map.put("1","传入的值1");
+map.put("2","传入的值2");
+// #{1},就是取出 map 中 key=1 的 value
+```
 
-​	可用：0，1（参数索引）或param1,param2（第几个参数paramN）
+3）@Param,为参数指定key；命名参数；推荐这种做法。我们可以使用 @Param 注解告诉 MyBatis，封装参数 map 的时候别乱来，使用我们指定的 key。
 
-​	原因：只要传入了多个参数；MyBatis会自动的将这些参数封装在一个map中；封装时使用的key就是参数的索引和参数的第几个表示
+4）传入了Map：将多个要使用的参数封装起来，取值#{key}
 
-​	Map<String,Object> map = new HashMap<>()
-
-​	map.put("1","传入的值1");
-
-​	map.put("2","传入的值2");
-
-​	#{key}就是从这个map取值
-
-3）@Param,为参数指定key；命名参数；我们以后也推荐这么做
-
-​	我们可以告诉MyBatis，封装参数map的时候别乱来，使用我们指定的key
-
-4）传入了POJO（JavaBean）
-
-​	取值#{POJO}属性
-
-5）传入了Map：将多个要使用的参数封装起来
-
-​	取值#{key}
-
-6）扩展：多个参数；自动封装map。
+5）扩展：多个参数；自动封装map。
 
 ```java
 public XX method(@Param("id")Integer id, String empName,Employee employee);
@@ -543,29 +504,18 @@ Employee employee（取出它的email）==> #{param3.email}
 
 无论传入什么参数都要能正确的取出值；
 
-#{key/属性名}
+- #{key/属性名}
+- id=#{id, JdbcType=INT}
+    - javaType、jdbcType、mode、numericScale、resultMap、typeHandler
+    - 只有jdbcType才可能需要被指定；
+    - 默认不指定  jdbcType 的话：mysql 没问题；oracle 没问题；但是万一传入的数据是 null，mysql 插入 null 没问题；oracle 不知道 null 到底是什么类型！会出问题！
 
-​	id=#{id, JdbcType=INT}
+mybatis 的取值方式可分为两类：
 
-​	javaType、jdbcType、mode、numericScale、resultMap、typeHandler
-
-​	只有jdbcType才可能需要被指定；
-
-​		默认不指定jdbcType：mysql没问题；oracle没问题；
-
-​		万一传入的数据是null
-
-​		mysql插入null没问题；oracle不知道null到底是什么类型
-
-实际上mybatis中有两种取值方式
-
-#{属性名}：是参数预编译的方式，参数的位置都是用？替代，参数后来都是预编译设置进去的，安全，不会有sql注入问题。
-
-${属性名}：不是参数预编译，而是直接和sql语句进行拼串，不安全
-
-​	eg：id=1 or 1 = 1 and empname=
-
-​	传入一个1 or 1=1 or
+- #{属性名}：是参数预编译的方式，参数的位置都是用？替代，参数后来都是预编译设置进去的，安全，不会有sql注入问题。
+- ${属性名}：不是参数预编译，而是直接和sql语句进行拼串，不安全
+    - eg：id=1 or 1 = 1 and empname=
+    - 传入一个1 or 1=1 or
 
 ## MyBatis 取值源码分析
 
