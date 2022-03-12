@@ -6,14 +6,16 @@
 
 ## 运行流程
 
- * 1）客户端点击链接发送 xxx/ 请求
- * 2）来到tomcat服务器
- * 3）SpringMVC的前端控制器收到所有请求
- * 4）来看请求地址和@RequestMapping标注的那个匹配，来找到到底使用那个类的那个方法来处理请求。
- * 5）前端控制器找到了目标处理器类和目标方法，直接利用 返回执行目标方法
- * 6）方法执行完成后会有一个返回值，SpringMVC认为这个返回值就是要去的页面地址
- * 7）拿到方法返回值后；用视图解析器进行拼串得到完整的页面地址
- * 8）拿到页面地址值，前端控制器帮我们转发到页面。
+ * 客户端点击链接发送 xxx/ 请求。
+ * 来到tomcat服务器。
+ * SpringMVC的前端控制器收到所有请求。
+ * 来看请求地址和@RequestMapping标注的那个匹配，来找到到底使用那个类的那个方法来处理请求。
+ * 前端控制器找到了目标处理器类和目标方法，直接利用 返回执行目标方法。
+ * 方法执行完成后会有一个返回值，SpringMVC认为这个返回值就是要去的页面地址。
+ * 拿到方法返回值后；用视图解析器进行拼串得到完整的页面地址。
+ * 拿到页面地址值，前端控制器帮我们转发到页面。
+
+<img src="img/mvc/tomcat&mvc.png">
 
 ## RequestMapping基本概念
 
@@ -24,11 +26,11 @@
 
 ## 前端控制器的拦截规则
 
-### 2.3.1 tomcat的拦截规则
+### tomcat的拦截规则
 
-<img src="img/mvc/DispatcherServlet.png" style="float:left" width="100%">
+<img src="img/mvc/DispatcherServlet.png">
 
-在使用tomcat的基本api进行开发时，资源的拦截规则，默认用的是tomcat中web.xml中的配置。
+在使用 tomcat 的基本 api 进行开发时，资源的拦截规则，默认用的是 tomcat 中 web.xml 中的配置。
 
 ```xml
 <!-- The mapping for the default servlet -->
@@ -46,7 +48,7 @@
 </servlet-mapping>
 ```
 
-### 2.3.2 前端控制器的拦截规则
+### 前端控制器的拦截规则
 
 前端控制器的拦截规则相当于继承自tomcat的那个web.xml的配置，并重写了拦截方式。相关内容SpringMVC文档中有说明。
 
@@ -1972,33 +1974,31 @@ public class WebConfig implements WebMvcConfigurer {
 }
 ```
 
-# CRUD案例
+# CRUD案例说明
 
-修改数据需要注意的地方：
-
-1）可以在修改前 用@ModelAttribute标注的方法先把数据查出来。这个感觉可以不看，因为有MyBatis的动态SQL！！
+修改数据需要注意的地方：可以在修改前 用@ModelAttribute标注的方法先把数据查出来。这个感觉可以不看，因为有 MyBatis 的动态SQL。
 
 ## 概述
 
 做一个符合Rest风格的CRUD
 
-C：Create 创建
+- C：Create 创建
 
-R：Retrieve 查询
+- R：Retrieve 查询
 
-U：Update 更新
+- U：Update 更新
 
-D：Delete 删除
+- D：Delete 删除
 
 增删改查的URL地址； /资源名/资源标识
 
-/emp/1	GET	查询
+- /emp/1	GET	查询
 
-/emp/1	PUT	更新
+- /emp/1	PUT	更新
 
-/emp/1	DELETE	删除
+- /emp/1	DELETE	删除
 
-/emp		POST	新增
+- /emp		POST	新增
 
 ## 静态资源放行
 
@@ -2030,7 +2030,7 @@ public class WebConfig implements WebMvcConfigurer {
 
 Add this filter to your web.xml, and a POST with a hidden `method` parameter is converted into the corresponding HTTP method request.
 
-官网给的例子：用的Spring的表单。
+官网给的例子，用的Spring的表单。
 
 ```html
 <form:form method="delete">
@@ -2038,9 +2038,7 @@ Add this filter to your web.xml, and a POST with a hidden `method` parameter is 
 </form:form>
 ```
 
-如果是单纯的html怎么办？
-
-去看看这个过滤器的源码：
+如果是单纯的html怎么办？去看看这个过滤器的源码：
 
 ```java
 public class HiddenHttpMethodFilter extends OncePerRequestFilter {
@@ -2051,10 +2049,7 @@ public class HiddenHttpMethodFilter extends OncePerRequestFilter {
 
 	// 表单需要携带_method参数，_method的值是请求的
 	public static final String DEFAULT_METHOD_PARAM = "_method";
-
 	private String methodParam = DEFAULT_METHOD_PARAM;
-
-
 	/**
 	 * Set the parameter name to look for HTTP methods.
 	 * @see #DEFAULT_METHOD_PARAM
@@ -2067,7 +2062,6 @@ public class HiddenHttpMethodFilter extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
-
 		HttpServletRequest requestToUse = request;
 		// 要是POST方式提交 大小写有关系吗？ debug测一测
 		if ("POST".equals(request.getMethod()) && request.getAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE) == null) {
@@ -2079,11 +2073,8 @@ public class HiddenHttpMethodFilter extends OncePerRequestFilter {
 				}
 			}
 		}
-
 		filterChain.doFilter(requestToUse, response);
 	}
-
-
 	/**
 	 * Simple {@link HttpServletRequest} wrapper that returns the supplied method for
 	 * {@link HttpServletRequest#getMethod()}.
@@ -2091,16 +2082,13 @@ public class HiddenHttpMethodFilter extends OncePerRequestFilter {
 	private static class HttpMethodRequestWrapper extends HttpServletRequestWrapper {
 
 		private final String method;
-
 		public HttpMethodRequestWrapper(HttpServletRequest request, String method) {
 			super(request);
 			this.method = method;
 		}
 
 		@Override
-		public String getMethod() {
-			return this.method;
-		}
+		public String getMethod() { return this.method; }
 	}
 
 }
@@ -2211,11 +2199,7 @@ public class RestDemo {
 
 ## 概述
 
-SpringMVC封装自定义类型对象的时候
-
-1）页面提交的都是字符串。
-
-牵扯到以下操作：
+SpringMVC封装自定义类型对象的时候，页面提交的都是字符串，会牵扯到以下操作：
 
 1）数据绑定期间的数据类型转换。
 
@@ -2232,13 +2216,11 @@ SpringMVC封装自定义类型对象的时候
 - 前端校验：JS+正则表达式（防君子不防小人）
 - 后端校验：重要数据也是必须进行后端校验
 
----
+那么这些工作都是如何完成的？使用的是以下两个组件完成的：
 
-数据绑定器
+- 数据绑定器：WebDataBinder，负责数据绑定工作；
 
-WebDataBinder：数据绑定器负责数据绑定工作；
-
-ConversionService组件负责数据类型的转换以及格式化。
+- ConversionService 组件负责数据类型的转换以及格式化。
 
 ## 数据绑定流程
 
@@ -2256,20 +2238,18 @@ ConversionService接口
 - ConverterFactory：将相同系列多个“同质”Converter封装在一起。
 - GenericConverter：会根据源类对象及目标类对象所在的宿主类中的上下文信息进行类型转换。
 
----
-
 **步骤**
 
 ConversionService：是一个接口，它里面有Converter（转换器）进行工作
 
-1）实现Converter接口，写一个自定义的类型转换器
+1）实现 Converter 接口，写一个自定义的类型转换器
 
-2）Converter是ConversionService中的组件；
+2）Converter 是 ConversionService 中的组件；
 
-- 你的Converter得放进ConversionService中。
-- 将WebDataBinder中的ConversionService设置成我们这个加了自定义类型转换器的ConversionService
+- 你的 Converter 得放进 ConversionService 中。
+- 将 WebDataBinder 中的 ConversionService 设置成我们这个加了自定义类型转换器的 ConversionService
 
-3）配置出ConversionService；告诉SpringMVC别用默认的ConversionService，用我们自己定义的。
+3）配置出 ConversionService；告诉 SpringMVC 别用默认的 ConversionService，用我们自己定义的。
 
 ```java
 @Configuration
@@ -2295,9 +2275,9 @@ public class WebConfig implements WebMvcConfigurer {
 
 - 注解版本的 2 和 3 是一起的。
 
-3）告诉SpringMVC使用我们的ConversionService。
+3）告诉 SpringMVC 使用我们的 ConversionService。
 
-4）debug发现有很多String-->其他类型  的转换器，要那个？只有一个是从String到Person，所以用它。
+4）debug 发现有很多 String-->其他类型的转换器，要那个？只有一个是从 String 到 Person，所以用它。
 
 > **Java代码示例**
 
@@ -2319,8 +2299,6 @@ public class MyStringToPersonConverter implements Converter<String, Person> {
     }
 }
 ```
-
----
 
 ```java
 // 配置代码示例
@@ -2356,9 +2334,7 @@ public class WebConfig implements WebMvcConfigurer {
 
 ## EnableWebMvc解析
 
-use the `@EnableWebMvc` annotation to enable MVC configuration。
-
-使用EnableWebMvc注解开启mvc配置。相当于xml中的
+use the @EnableWebMvc annotation to enable MVC configuration。使用 EnableWebMvc 注解开启mvc配置。相当于xml中的
 
 ```xml
 <mvc:annotation-driven/>
@@ -2366,13 +2342,13 @@ use the `@EnableWebMvc` annotation to enable MVC configuration。
 
 点进EnableWebMvc的源码，最后发现注册了一堆东西。
 
-`<mvc:annotation-driven />` 会自动注册
+<mvc:annotation-driven /> 会自动注册
 
-- RequestMappingHandlerMapping 、
+- RequestMappingHandlerMapping
 - RequestMappingHandlerAdapter 
 - ExceptionHandlerExceptionResolver
 
-既然EnableWebMvc是注解版的`<mvc:annotation-driven />` ，那么作用应该一样吧。
+既然 EnableWebMvc 是注解版的 <mvc:annotation-driven />，那么作用应该一样吧。
 
 还将提供以下支持：
 
@@ -2383,8 +2359,6 @@ use the `@EnableWebMvc` annotation to enable MVC configuration。
 - 支持使用 @Valid 注解对 JavaBean 实例进行 JSR 303 验证  
 
 - 支持使用 @RequestBody 和 @ResponseBody 注解 
-
----
 
 **既没有配置 <mvc:default-servlet-handler/> 也没有配置 <mvc:annotation-driven/>**
 
@@ -2400,13 +2374,9 @@ use the `@EnableWebMvc` annotation to enable MVC configuration。
 
 ## 格式化
 
-1）日期格式化
+1）日期格式化：@DateFormat注解，可以用在字段上，方法形参上。
 
-@DateFormat注解，可以用在字段上，方法形参上。
-
-2）数字格式化
-
-@NumberFormat注解，可以用在字段上，方法形参上。
+2）数字格式化：@NumberFormat注解，可以用在字段上，方法形参上。
 
 ```java
 @RequestMapping("/date")
@@ -2432,13 +2402,13 @@ public String number(@NumberFormat(pattern = "#,###,###.##") Double number) {
 
 ### 准备
 
-SpringMVC：可以用JSR303来做数据校验
+SpringMVC：可以用 JSR303 来做数据校验
 
 JDBC：规范---实现（各个厂商的驱动包）
 
 JSR303：规范---Hibernate Validator（第三方校验框架）
 
-需要如下jar包（有几个带el的jar不导入：因为tomcat中有；如果tomcat的版本是7.0以下，则需要导入）
+需要如下 jar 包（有几个带 el 的 jar 不导入：因为 tomcat 中有；如果 tomcat 的版本是 7.0 以下，则需要导入）
 
 - hibernate-validator-5.0.0.CR2.jar
 - hibernate-validator-annotation-processor-5.0.0.CR2.jar
@@ -2458,14 +2428,14 @@ JSR303：规范---Hibernate Validator（第三方校验框架）
 
 ### 校验
 
-给JavaBean的属性添加上校验注解。
+给 JavaBean 的属性添加上校验注解。
 
-在SpringMVC封装对象的时候，告诉SpringMVC这个JavaBean需要校验。
+在 SpringMVC 封装对象的时候，告诉 SpringMVC 这个 JavaBean 需要校验。
 
 如何知道校验结果：
 
-- 给需要校验的JavaBean后面紧跟一个BindingResult。这个BindingResult就是封装前一个Bean的校验结果。
-- <form:error path="lastName"> 显示lastName自带的错误（提交数据的表单好像也的是SpringMVC带的标签库）
+- 给需要校验的 JavaBean 后面紧跟一个 BindingResult。这个 BindingResult 就是封装前一个 Bean 的校验结果。
+- <form:error path="lastName"> 显示 lastName 自带的错误（提交数据的表单好像也的是 SpringMVC 带的标签库）
 
 ```java
 @NotEmpty
@@ -2481,11 +2451,7 @@ public String add(@Valid Employee employee,BindingResut result){
 }
 ```
 
----
-
-用原生表单怎么办？
-
-result获取相关信息即可。
+用原生表单怎么办？使用 result 获取相关信息即可。
 
 ```java
 @Controller
@@ -2506,8 +2472,6 @@ public class Validation {
 }
 ```
 
-----
-
 自定义错误信息（国际化的好麻烦，也用不到，不记了）
 
 ```java
@@ -2516,19 +2480,11 @@ public class Validation {
 private String lastName
 ```
 
-# ajax/下载/上传
+# Ajax/下载/上传
 
-## ajax
+## Ajax
 
-返回数据是json就ok。
-
-导入对应的json包，SpringMVC默认用的jackson！我们导入这个就好啦！
-
-如果想要忽略某个字段的json输出，那么给这个字段加上注解`@JsonIgnore`即可。
-
-----
-
-@ResponseBody：将请求的数据放在响应体；也可以定制响应体！自行百度哦！
+返回数据是 JSON 就 ok。导入对应的 JSON 包，SpringMVC 默认用的 jackson，我们导入这个就好了。如果想要忽略某个字段的 JSON 输出，那么给这个字段加上注解 @JsonIgnore 即可。@ResponseBody 注解会将请求的数据放在响应体；也可以定制响应体！自行百度哦！
 
 ```java
 @ResponseBody // 可以把对象转为json数据，返回给浏览器。
@@ -2538,13 +2494,11 @@ public String body(Employee ee){
 } 
 ```
 
----
-
-@RequestBody：
+@RequestBody
 
 - 获取请求体
 
-- 接受json数据，封装为对象。
+- 接受 JSON 数据，封装为对象。
 
 ```java
 @ResponseBody
@@ -2562,7 +2516,7 @@ public String test2(@RequestBody Person person){
 
 HttpEntity：Http实体
 
-- 如果参数位置写HttpEtity<String> 比@RequestBody更强，可以拿到请求头
+- 如果参数位置写HttpEtity\<String\> 比 @RequestBody 更强，可以拿到请求头。
 
 ```java
 // some annotation
@@ -2599,7 +2553,7 @@ public class DownServlet extends HttpServlet {
 
 ### SpringMVC下载
 
-还不如原生api好用。
+不如原生 api 好用。
 
 [博客地址](https://www.cnblogs.com/wyq178/p/6921164.html)
 
@@ -2663,9 +2617,9 @@ public class UploadServlet extends HttpServlet {
 
 > 自定义拦截器流程
 
-1）实现HandlerInterceptor接口。
+1）实现 HandlerInterceptor 接口。
 
-2）配置到IOC容器中。(WebConfig中配置？)
+2）配置到 IOC 容器中。(WebConfig 中配置？)
 
 - 拦截什么请求？默认是拦截所有。
 
@@ -2691,31 +2645,23 @@ public class UploadServlet extends HttpServlet {
 
 <span style="color:green">**正常运行流程：**</span>拦截器的preHandle----目标方法----拦截器的postHandle---页面---拦截器的afterCompletion
 
-<span style="color:green">**多个拦截器：**</span>
+<span style="color:green">**多个拦截器：**</span>流程和 filter 的流程一样
 
-流程：和filter的流程一样
+- 拦截器的 preHandle：是按照<span style="color:red">顺序</span>执行的
+- 拦截器的 postHandle：是按照<span style="color:red">逆序</span>执行的
+- 拦截器的 afterCompletion：是按照<span style="color:red">逆序</span>执行的
 
-拦截器的preHandle：是按照<span style="color:red">顺序</span>执行的
-
-拦截器的postHandle：是按照<span style="color:red">逆序</span>执行的
-
-拦截器的afterCompletion：是按照<span style="color:red">逆序</span>执行的
-
-<span style="color:green">**出现异常：**</span>
-
-已经放行了的拦截器的afterCompletion总会执行（因为有报错页面），未放行的无法执行！postHandle，在方法报错时是不会执行的。
+<span style="color:green">**出现异常：**</span>已经放行了的拦截器的 afterCompletion 总会执行（因为有报错页面），未放行的无法执行！postHandle，在方法报错时是不会执行的。
 
 > 什么时候用过滤器什么时候用拦截器
 
-如果过滤请求非常复杂，需要用ioc容器中的对象，那么用拦截器。
-
-过滤器是javaweb的，要想从ioc容器中拿对象很麻烦。
+如果过滤请求非常复杂，需要用 IOC 容器中的对象，那么用拦截器。因为过滤器是 JavaWeb 的，要想从 IOC 容器中拿对象比较麻烦。
 
 ## 跨域
 
 ### 基本跨域配置
 
-如果只是局部的某些类或方法需要跨域配置，那么在对应的类或注解上加上注解`@CrossOrigin`即可。
+如果只是局部的某些类或方法需要跨域配置，那么在对应的类或注解上加上注解 **@CrossOrigin** 即可。
 
 官方示例
 
@@ -2791,7 +2737,6 @@ public class WebConfig implements WebMvcConfigurer {
             .allowedHeaders("header1", "header2", "header3")
             .exposedHeaders("header1", "header2")
             .allowCredentials(true).maxAge(3600);
-
         // Add more mappings...
     }
 }
@@ -2820,13 +2765,13 @@ public class CrossConfig implements WebMvcConfigurer {
 
  ‎若要从源中了解更多信息或进行高级自定义，请检查后面的代码：
 
-- `CorsConfiguration`
+- **CorsConfiguration**
 
-- `CorsProcessor`
+- **CorsProcessor**
 
-- `DefaultCorsProcessor`
+- **DefaultCorsProcessor**
 
-- `AbstractHandlerMapping`
+- **AbstractHandlerMapping**
 
 ## 跨域过滤器
 
@@ -2836,9 +2781,9 @@ public class CrossConfig implements WebMvcConfigurer {
 
 ## 概述
 
-Spring MVC通过<span style="color:red">HandlerExceptionResolver</span>处理程序的异常，包括Handler映射、数据绑定以及目标方法执行时发生的异常。
+Spring MVC 通过 <span style="color:red">HandlerExceptionResolver</span> 处理程序的异常，包括 Handler 映射、数据绑定以及目标方法执行时发生的异常。
 
-SpringMVC提供的 HandlerExceptionResolver的实现类
+SpringMVC 提供的 HandlerExceptionResolver 的实现类
 
 前端控制器中有九个成员变量（即SpringMVC的九大组件，其中异常处理解析器就是其中一个）
 
@@ -2848,7 +2793,7 @@ SpringMVC提供的 HandlerExceptionResolver的实现类
 private List<HandlerExceptionResolver> handlerExceptionResolvers;
 ```
 
-我们去看下DispatcherServlet如何初始化<span style="color:red">HandlerExceptionResolver</span>
+我们去看下 DispatcherServlet 如何初始化 <span style="color:red">HandlerExceptionResolver</span>
 
 HandlerExceptionResolver
 
@@ -2888,7 +2833,7 @@ private void initHandlerExceptionResolvers(ApplicationContext context) {
 }
 ```
 
-默认的配置属性，在spring-webmvc jar包中的 org.springframework.web.servlet中，对应的文件名是`DispatcherServlet.properties`，该文件中对应的内容是：
+默认的配置属性，在 spring-webmvc jar 包中的 org.springframework.web.servlet 中，对应的文件名是 DispatcherServlet.properties，该文件中对应的内容是：
 
 ```properties
 # 异常处理解析的默认配置
@@ -2897,19 +2842,15 @@ org.springframework.web.servlet.HandlerExceptionResolver=org.springframework.web
 	org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver
 ```
 
-页面渲染之前有异常会先处理异常。
-
-如果异常解析器都不能处理就直接抛出去。
+页面渲染之前有异常会先处理异常。如果异常解析器都不能处理就直接抛出去。
 
 **那么，默认的那三个异常处理解析器可以处理什么异常呢？有何使用环境？**
 
-ExceptionHandlerExceptionResolver：@ExceptionHandler
+- ExceptionHandlerExceptionResolver：@ExceptionHandler
 
-ResponseStatusExceptionResolver：@ResponseStatus
+- ResponseStatusExceptionResolver：@ResponseStatus
 
-DefaultHandlerExceptionResolver：判断是否SpringMVC自带的异常
-
-----
+- DefaultHandlerExceptionResolver：判断是否SpringMVC自带的异常
 
 ## 异常解析器
 
@@ -2924,7 +2865,7 @@ ExceptionHandlerMethodResolver 内部若找不到@ExceptionHandler 注解的话�
 ```java
 // some function
 /*
-* 告诉SpringMVC这个方法专门处理这个类发生的异常。
+* 告诉 SpringMVC 这个方法专门处理这个类发生的异常。
 * 	value = {NullPointerException.class}
 * 	专门处理空指针异常。
 * 	如果图省事，那么直接Exception即可
@@ -2946,7 +2887,7 @@ public ModelAndView handleException01(Exception e){
 
 **每个类都有异常，分散的写很鸡肋，不合理。我们可以把所有的异常都集中起来！**
 
-1、集中处理所有异常的类需要加入到IOC容器中才可被识别。
+集中处理所有异常的类需要加入到 IOC 容器中才可被识别。
 
 ```java
 @ControllerAdvice // 这是一个专门处理异常的
@@ -2954,7 +2895,6 @@ public class MyExceptionHandle{
     
     @ExceptionHandler(value = {NullPointerException.class})
     public ModelAndView handleException01(Exception e){
-
         ModelAndView view = new ModelAndView("myerror1");
         view.addObject("ex",exception);
         // 视图解析器拼串 来到我们自己定义的错误页面：myerror页面
@@ -2963,7 +2903,6 @@ public class MyExceptionHandle{
     
     @ExceptionHandler(value = {ArithmeticException.class})
     public ModelAndView handleException01(Exception e){
-
         ModelAndView view = new ModelAndView("myerror2");
         view.addObject("ex",exception);
         // 视图解析器拼串 来到我们自己定义的错误页面：myerror页面
@@ -3004,7 +2943,7 @@ public class XXController{
 
 <span style="color:red">**如何自定义404异常？有如下三种方式！**</span>
 
-> **方法一，根据SpringMVC的精确匹配优先的规则**
+> **方法一，根据 SpringMVC 的精确匹配优先的规则**
 
 ```java
 @Controller
@@ -3017,9 +2956,9 @@ public class NotFound {
 }
 ```
 
-> **方法二，重写前端控制器的noHandlerFound方法**
+> **方法二，重写前端控制器的 noHandlerFound 方法**
 
-404即前端控制器没找到可以处理改请求的方法，通过查看源码可知：
+404 即前端控制器没找到可以处理改请求的方法，通过查看源码可知：
 
 ```java
 protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -3032,7 +2971,6 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
     try {
         ModelAndView mv = null;
         Exception dispatchException = null;
-
         try {
             processedRequest = checkMultipart(request);
             multipartRequestParsed = (processedRequest != request);
@@ -3063,7 +3001,7 @@ protected void noHandlerFound(HttpServletRequest request, HttpServletResponse re
 }
 ```
 
-我们重写改方法，找不到时，直接重定向到404页面即可。那么到底如何重写呢？搜博客发现都是一些xml配置文件的写法，没什么JavaConfig的写法。下面给出JavaConfig的写法
+我们重写改方法，找不到时，直接重定向到404页面即可。那么到底如何重写呢？搜博客发现都是一些 xml 配置文件的写法，没什么 JavaConfig 的写法。下面给出 JavaConfig 的写法
 
 ```java
 @Configuration
@@ -3100,9 +3038,9 @@ public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherS
     // 我看源码发现 
     // AbstractAnnotationConfigDispatcherServletInitializer的父类
     // AbstractDispatcherServletInitializer的createDispatcherServlet
-    // 里创建的前端控制器，我们重写这个方法，把里面的new DispatcherServlet(...)
-    // 换成我们自己的new MyDispatcherServlet(...);
-    // 在自己的MyDispatcherServlet里，重写noHandlerFound方法
+    // 里创建的前端控制器，我们重写这个方法，把里面的 new DispatcherServlet(...)
+    // 换成我们自己的 new MyDispatcherServlet(...);
+    // 在自己的 MyDispatcherServlet 里，重写 noHandlerFound 方法
     @Override
     protected FrameworkServlet createDispatcherServlet(WebApplicationContext servletAppContext) {
         System.out.println("MyDispatcherServlet start222");
@@ -3240,13 +3178,176 @@ Spring MVC WEB 层容器可作为 “业务层” Spring 容器的子容器：�
 
 Spring容器是作为父容器的，SpringMVC容器是作为子容器的。子容器的Controller要用父容器的Service没问题。但是如果父容器要拿子容器的，就不行！！
 
-<img src="img/mvc/spring_with_mvc3.png" width="100%">
+<img src="img/mvc/spring_with_mvc3.png">
 
-# 乱码处理
 
-[参考博客](https://blog.csdn.net/c17315377559/article/details/101940087?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.control)  博客中用的xml方式进行处理的，我采用的JavaConfig方式处理的。
 
-##  请求乱码
+## SpringMVC的组件解析
+
+### SpringMVC的执行流程
+
+<img src="img\mvc\mvc_processor.png">
+
+
+
+①用户发送请求至前端控制器DispatcherServlet。
+
+②DispatcherServlet收到请求调用HandlerMapping处理器映射器。
+
+③处理器映射器找到具体的处理器(可以根据xml配置、注解进行查找)，生成处理器对象及处理器拦截器(如果有则生成)一并返回给DispatcherServlet。
+
+④DispatcherServlet调用HandlerAdapter处理器适配器。
+
+⑤HandlerAdapter经过适配调用具体的处理器(Controller，也叫后端控制器)。
+
+⑥Controller执行完成返回ModelAndView。
+
+⑦HandlerAdapter将controller执行结果ModelAndView返回给DispatcherServlet。
+
+⑧DispatcherServlet将ModelAndView传给ViewReslover视图解析器。
+
+⑨ViewReslover解析后返回具体View。
+
+⑩DispatcherServlet根据View进行渲染视图（即将模型数据填充至视图中）。DispatcherServlet响应用户。
+
+### SpringMVC组件解析
+
+1. **前端控制器：DispatcherServlet**
+
+​    用户请求到达前端控制器，它就相当于 MVC 模式中的 C，DispatcherServlet 是整个流程控制的中心，由
+
+它调用其它组件处理用户的请求，DispatcherServlet 的存在降低了组件之间的耦合性。
+
+2. **处理器映射器：HandlerMapping**
+
+​    HandlerMapping 负责根据用户请求找到 Handler 即处理器，SpringMVC 提供了不同的映射器实现不同的
+
+映射方式，例如：配置文件方式，实现接口方式，注解方式等。
+
+3. **处理器适配器：HandlerAdapter**
+
+​    通过 HandlerAdapter 对处理器进行执行，这是适配器模式的应用，通过扩展适配器可以对更多类型的处理
+
+器进行执行。
+
+4. **处理器：Handler**
+
+​    它就是我们开发中要编写的具体业务控制器。由 DispatcherServlet 把用户请求转发到 Handler。由
+
+Handler 对具体的用户请求进行处理。
+
+5. **视图解析器：View Resolver**
+
+​    View Resolver 负责将处理结果生成 View 视图，View Resolver 首先根据逻辑视图名解析成物理视图名，即具体的页面地址，再生成 View 视图对象，最后对 View 进行渲染将处理结果通过页面展示给用户。
+
+6. **视图：View**
+
+​    SpringMVC 框架提供了很多的 View 视图类型的支持，包括：jstlView、freemarkerView、pdfView等。最常用的视图就是 jsp。一般情况下需要通过页面标签或页面模版技术将模型数据通过页面展示给用户，需要由程序员根据业务需求开发具体的页面
+
+### SpringMVC注解解析
+
+@RequestMapping
+
+作用：用于建立请求 URL 和处理请求方法之间的对应关系
+
+位置：
+
+​      类上，请求URL 的第一级访问目录。此处不写的话，就相当于应用的根目录
+
+​      方法上，请求 URL 的第二级访问目录，与类上的使用@ReqquestMapping标注的一级目录一起组成访问虚拟路径
+
+属性：
+
+​      value：用于指定请求的URL。它和path属性的作用是一样的
+
+​      method：用于指定请求的方式
+
+​      params：用于指定限制请求参数的条件。它支持简单的表达式。要求请求参数的key和value必须和配置的一模一样
+
+例如：
+
+​      params = {"accountName"}，表示请求参数必须有accountName
+
+​      params = {"moeny!100"}，表示请求参数中money不能是100
+
+1.mvc命名空间引入
+
+```xml
+命名空间：xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:mvc="http://www.springframework.org/schema/mvc"
+约束地址：http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc 
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+```
+
+2.
+组件扫描
+
+SpringMVC基于Spring容器，所以在进行SpringMVC操作时，需要将Controller存储到Spring容器中，如果使用@Controller注解标注的话，就需要使用<context:component-scan base-package=“com.itheima.controller"/>进行组件扫描。
+
+### SpringMVC的XML配置解析
+
+SpringMVC有默认组件配置，默认组件都是DispatcherServlet.properties配置文件中配置的，该配置文件地址org/springframework/web/servlet/DispatcherServlet.properties，该文件中配置了默认的视图解析器，如下：
+
+```properties
+org.springframework.web.servlet.ViewResolver=org.springframework.web.servlet.view.InternalResourceViewResolver
+```
+
+翻看该解析器源码，可以看到该解析器的默认设置，如下：
+
+```properties
+REDIRECT_URL_PREFIX = "redirect:"  --重定向前缀
+FORWARD_URL_PREFIX = "forward:"    --转发前缀（默认值）
+prefix = "";     --视图名称前缀
+suffix = "";     --视图名称后缀
+```
+
+1. 视图解析器
+
+我们可以通过属性注入的方式修改视图的的前后缀
+
+```xml
+<!--配置内部资源视图解析器-->
+<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+  <property name="prefix" value="/WEB-INF/views/"></property>
+  <property name="suffix" value=".jsp"></property>
+</bean>
+```
+
+### 知识要点
+
+**SpringMVC的相关组件** 
+
+前端控制器：DispatcherServlet
+
+处理器映射器：HandlerMapping
+
+处理器适配器：HandlerAdapter
+
+处理器：Handler
+
+视图解析器：View Resolver
+
+视图：View
+
+**SpringMVC 的注解和配置** 
+
+请求映射注解：@RequestMapping
+
+视图解析器配置：
+
+REDIRECT_URL_PREFIX = "redirect:"  
+
+FORWARD_URL_PREFIX = "forward:"    
+
+prefix = "";     
+
+suffix = "";     
+
+## 乱码处理
+
+[参考博客](https://blog.csdn.net/c17315377559/article/details/101940087?utm_medium=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.control&depth_1-utm_source=distribute.pc_relevant.none-task-blog-BlogCommendFromMachineLearnPai2-1.control)  博客中用的xml方式进行处理的，我采用的 JavaConfig 方式处理的。
 
 ### post请求乱码
 
@@ -3327,7 +3428,7 @@ public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherS
 
 此种方式可以处理，Get与Post请求方式的乱码。配完之后，便不需要在考虑中文乱码的问题
 
-## 响应乱码
+### 响应乱码
 
 > 方式一，在@RequestMapping中加上，**produces="text/html;charset=utf-8"**
 
