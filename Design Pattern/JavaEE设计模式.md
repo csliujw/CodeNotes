@@ -154,7 +154,7 @@ public class DispatcherServlet extends HttpServlet {
 
 DispatcherServlet --> LoggerDispatcherServlet
 
-假设DispatcherServlet处理完通用请求后，转发到LoggerDispatcherServlet进行日志处理，最后才跳转到指定Controller。
+假设 DispatcherServlet 处理完通用请求后，转发到 LoggerDispatcherServlet 进行日志处理，最后才跳转到指定 Controller。
 
 > 实现一个装饰过滤器
 
@@ -289,4 +289,6 @@ Helper 充当 View 和 Model之间的中间，将输出处理成对方需要格�
 
 - 操作资源前，先取得资源上的锁。
 - 操作完成后，再释放锁。
+
+加锁操作尽可能的为其附上一个时间限制，超时则释放锁。
 
