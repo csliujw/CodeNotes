@@ -58,23 +58,21 @@ Java堆的内存可能是规整的，也可能不是规整的。规整的堆，�
 
 - 原理：从根结点“GC Roots”开始，根据引用关系向下搜索，搜索走过的路径称为“引用链”。如果从“GC Roots”到某一点不可达，则说明该对象不可能再被使用。
 
-- 没有说优点、缺点、差评！！！
+    下图的GC Roots无法到达 obj5、6、7 所以 5 6 7 是可以被回收的~
 
-  下图的GC Roots无法到达obj5、6、7 所以5 6 7是可以被回收的~
-
-  <img src="./jvm_image/jvm_gc.jpg" style="float:left">
+    <img src="./jvm_image/jvm_gc.jpg" style="float:left">
 
 想深入的话，可能需要去看看专门讲垃圾回收算法的书籍。
 
 ## 方法区的回收
 
-方法区的GC性价比低，一般是不能回收到多少东西的。且方法区的回收条件很严格。
+方法区的 GC 性价比低，一般是不能回收到多少东西的。且方法区的回收条件很严格。
 
 **类的卸载条件相当苛刻：**
 
-- 该类所有的实例都被回收了，即Java堆中不存在该类及其任何派生子类的实例~
-- 加载该类的类加载器已经被回收，这个条件除非是经过精心设计的可替换类加载器的场景，如OSGI、JSP的重加载，否则通常是很难达成的！！
-- 该类对应的java.lang.Class对象没有在任何地方被引用，无法在任何地方通过反射访问该类的方法。
+- 该类所有的实例都被回收了，即 Java 堆中不存在该类及其任何派生子类的实例~
+- 加载该类的类加载器已经被回收，这个条件除非是经过精心设计的可替换类加载器的场景，如 OSGI、JSP 的重加载，否则通常是很难达成的！！
+- 该类对应的 java.lang.Class 对象没有在任何地方被引用，无法在任何地方通过反射访问该类的方法。
 
 <span style="color:green">**查看类加载卸载的JVM参数**</span>
 
@@ -84,43 +82,40 @@ Java堆的内存可能是规整的，也可能不是规整的。规整的堆，�
 -XX:+TraceClassLoading 可以在Product版的虚拟机中使用~
 ```
 
-在大量使用反射、动态代理、CGLib等字节码框架，动态生成JSP以及OSGI这类频繁自定义类加载器的场景中，通常需要Java虚拟机具备类型卸载的能力，保证不会对方法区造成过大的内存压力。常量池从方法区移动到了堆减轻了方法区的压力.
+在大量使用反射、动态代理、CGLib 等字节码框架，动态生成 JSP 以及 OSGI 这类频繁自定义类加载器的场景中，通常需要 Java 虚拟机具备类型卸载的能力，保证不会对方法区造成过大的内存压力。**常量池从方法区移动到了堆减轻了方法区的压力。**
 
 ## 正菜：GC算法
 
-推荐阅读 Richard Jones的《垃圾回收算法手册》2~4章的内容
+推荐阅读 Richard Jones 的《垃圾回收算法手册》2~4章的内容
 
 ### 分代收集理论！
 
-分代收集理论也有缺陷，最新出现（或实验中）的几款垃圾收集器都展现出了面向全区域收集设计的思想，或可以支持全区域不分代的收集的工作模式~~
+分代收集理论也有缺陷，最新出现（或实验中）的几款垃圾收集器都展现出了面向全区域收集设计的思想，或可以支持全区域不分代的收集的工作模式（**G1 收集器**）~~
 
 #### 分代假说
 
 - 弱分代假说：绝大多数对象都是朝生夕灭~
 - 强分代假说：熬过越多次垃圾收集过程的对象越难消亡~
 - 跨代引用假说：跨代引用相对于同代引用来说仅占极少数~ 所以如果老生代用了新生代的对象，我们是不考虑的，跨代引用是及少数，不必为了这么一点去浪费时间。
-- JVM中的好像就是这样的~
+    - 跨代引用是通过一种特殊的数据结构来存储的（卡片集）
+
 
 #### 收集的定义
 
 - 新生代收集：Minor GC / Young GC  只是新生代的垃圾收集
 - 老年代收集：Major GC / Old GC  只是老年代的垃圾收集
 - 混合收集：Mixed GC 收集整个新生代以及部分老年代的垃圾收集
-- 整堆收集：Full GC，收集整个Java堆和方法区的垃圾收集
+- 整堆收集：Full GC，收集整个 Java 堆和方法区的垃圾收集
 
 ### 算法开始啦
 
 #### 标记-清除算法
 
-算法分为标记和清除两部分。
-
-先标记出要回收的对象，标记完成后统一回收掉被标记的对象。
-
-这里面好多细节没有提到，还是去看下zzm推荐的那本书吧~
+算法分为标记和清除两部分。先标记出要回收的对象，标记完成后统一回收掉被标记的对象。
 
 - 缺点：
   - 执行效率不稳定
-  - 内存空间碎片化（学学OS，内存整理，或者内存分区域，活着的对象移动到一遍，另一边内存直接清零）
+  - 内存空间碎片化（可以进行内存整理）
 
 #### 标记-复制算法
 
@@ -129,7 +124,7 @@ Java堆的内存可能是规整的，也可能不是规整的。规整的堆，�
 - 优点：不用考虑内存碎片化的问题，实现简单、高效
 - 缺点：浪费空间~（实际上不用对半开，因为多数对象都是会被回收的）
 
-多数商用JVM回收新生代都采用的这种方式。有个量化的诠释：新生代中的对象有98%熬不过第一轮收集。
+多数商用 JVM 回收新生代都采用的这种方式。有个量化的诠释：新生代中的对象有 98% 熬不过第一轮收集。
 
 新生代的划分：
 
@@ -143,25 +138,21 @@ Survivor to 10%
 
 #### 标记-整理算法
 
-标记复制算法不适用于老年代，因为老年代中的对象，多数都会一直存货下去~
+标记复制算法不适用于老年代，因为老年代中的对象，多数都会一直存活下去~
 
 **标记整理算法的原理：**标记过程仍然与“标记-清除”算法一样，但后续步骤不是直接对可回收对象进行清理，而是让所有存活的对象都向内存空间一端移动，然后直接清理掉边界以外的内存。
 
-<span style="color:green">标记-清除算法与标记-整理算法的本质差异在于前者是一种非移动式的回收算法，而后者是移动式的。boxi是否移动回收后的存活对象是一项优缺点并存的风险决策：</span>
+<span style="color:green">标记-清除算法与标记-整理算法的本质差异在于前者是一种非移动式的回收算法，而后者是移动式的。是否移动回收后的存活对象是一项优缺点并存的风险决策：</span>
 
-- 在老年代 移动存活对象，并更新所有引用这些对象的地方将会是一种极为负重的操作。而这种移动操作必须全程暂停用户应用程序才能进行【新生代不要更新引用吗，真的是！等一下！新生代只有极少数存活下来了！更新的量很小！！！】
+- 在老年代移动存活对象，并更新所有引用这些对象的地方将会是一种极为负重的操作。而这种移动操作必须全程暂停用户应用程序才能进行【新生代只有极少数存活下来了，更新的量很小！！！】
 - 不移动又容易碎片化
-- 折中！先标记清除，碎片化到忍不了了在整理！（<span style="color:green">OS内存管理？？</span>）
+- 折中，先标记清除，碎片化到忍不了了在整理！
 
 #### other
 
-`Parallel Scavenge收集器`：关注吞吐量，基于标记-整理
+`Parallel Scavenge 收集器`：关注吞吐量，基于标记-整理
 
-`CMS收集器`：关注延迟，基于标记清除-算法
-
-### HotSpot算法细节实现
-
-自己看书，好难，我概况不了。
+`CMS 收集器`：关注延迟，基于标记清除-算法
 
 ## 经典垃圾收集器
 
@@ -185,15 +176,15 @@ Survivor to 10%
 
 - **连接** ：确定类与类之间的关系  ； student.setAddress( address ); 
 
-  - 验证：`*.class` 正确性校验，回忆下类加载器
+  - 验证：*.class 正确性校验，回忆下类加载器
 
   - 准备
 
-    static静态变量分配内存，并赋初始化默认值【这是准备阶段做的事】
+    static 静态变量分配内存，并赋初始化默认值【这是准备阶段做的事】
 
-    static int num =  10 ;  在准备阶段，会把num=0，之后（初始化阶段）再将0修改为10
+    static int num =  10 ;  在准备阶段，会把 num=0，之后（初始化阶段）再将 0 修改为 10
 
-    在准备阶段，JVM中只有类，没有对象。
+    在准备阶段，JVM 中只有类，没有对象。
 
     初始化顺序： static ->非static ->构造方法
 
@@ -207,17 +198,17 @@ Survivor to 10%
     
   - 解析：把类中符号引用，转为直接引用
   
-  前期阶段，还不知道类的具体内存地址，只能使用“com.yanqun.pojo.Student ”来替代Student类，“com.yanqun.pojo.Student ”就称为符号引用；
+  前期阶段，还不知道类的具体内存地址，只能使用 “com.yanqun.pojo.Student”来替代 Student 类，**“com.yanqun.pojo.Student” 就称为符号引用；**
   
-  在解析阶段，JVM就可以将 “com.yanqun.pojo.Student ”映射成实际的内存地址，会后就用 内存地址来代替Student，这种使用 内存地址来使用 类的方法 称为直接引用。
+  在解析阶段，JVM就可以将 “com.yanqun.pojo.Student ”映射成实际的内存地址，会后就用内存地址来代替 Student，这种使用内存地址来使用类的方法称为直接引用。
   
- - **初始化**：给static变量 赋予正确的值
+ - **初始化**：给 static 变量赋予正确的值
 
-    - static int num =  10 ;  在连接的准备阶段，会把num=0，之后（初始化阶段）再将0修改为10
+    - static int num =  10 ;  在连接的准备阶段，会把 num=0，之后（初始化阶段）再将 0 修改为 10
 
  - **使用：** 对象的初始化、对象的垃圾回收、对象的销毁
 
- - **卸载：**class的卸载条件非常严格！
+ - **卸载：**class 的卸载条件非常严格！
 
 <span style="color:green">**JVM结束生命周期的时机：**</span>
 
@@ -278,13 +269,13 @@ public class MyClassLoader {
 初始化：给static变量 赋予正确的值
 ```
 
-总结：在类中 给静态变量的初始化值问题，一定要注意顺序问题（静态变量 和构造方法的顺序问题）
+总结：在类中给静态变量的初始化值问题，一定要注意顺序问题（静态变量和构造方法的顺序问题）
 
-双亲委派： JVM自带的加载器（在JVM的内部所包含，C++）、用户自定义的加载器（独立于JVM之外的加载器,Java）
+双亲委派：JVM自带的加载器（在 JVM 的内部所包含，C++）、用户自定义的加载器（独立于 JVM 之外的加载器）
 
 -  JVM自带的加载器
 
-   - 根加载器,Bootstrap   : 加载 jre\lib\rt.jar （包含了平时编写代码时 大部分jdk api）；指定加载某一个jar（ -Xbootclasspath=a.jar）
+   - 根加载器 Bootstrap   : 加载 jre\lib\rt.jar （包含了平时编写代码时 大部分jdk api）；指定加载某一个jar（ -Xbootclasspath=a.jar）
    - 扩展类加载器，Extension：C:\Java\jdk1.8.0_101\jre\lib\ext\\\*.jar ;指定加载某一个jar(-Djava.ext.dirs= ....)
    - AppClassLoader/SystemClassLoader，系统加载器（应用加载器）：加载classpath；指定加载（-Djava.class.path= 类/jar）
 
@@ -295,25 +286,21 @@ public class MyClassLoader {
 
 <img src="./jvm_image/1571541215432.png">
 
-双亲委派：当一个加载器要加载类的时候，自己先不加载，而是逐层向上交由双亲去加载；当双亲中的某一个加载器 加载成功后，再向下返回成功。如果所有的双亲和自己都无法加载，则报异常。
+双亲委派：当一个加载器要加载类的时候，自己先不加载，而是逐层向上交由双亲去加载；当双亲中的某一个加载器加载成功后，再向下返回成功。**如果所有的双亲和自己都无法加载，则报异常。**
 
 ```java
 package com.yanqun.parents;
 //classpath: .; ..lib，其中“.”代表当前（自己写的类）
-class MyClass2{
-}
+class MyClass2{}
 
 public class TestParentsClassLoader {
 
-
     public static void main(String[] args) throws Exception {
-       Class myClass1 =  Class.forName("java.lang.Math") ;
+        Class myClass1 =  Class.forName("java.lang.Math") ;
         ClassLoader classLoader1 = myClass1.getClassLoader();
         System.out.println(classLoader1);
-        /* JDK中的官方说明：
-            Some implementations may use null to represent the bootstrap class loader
-         */
-       Class myClass2 =  Class.forName("com.yanqun.parents.MyClass2") ;
+        // JDK中的官方说明：Some implementations may use null to represent the bootstrap class loader
+        Class myClass2 =  Class.forName("com.yanqun.parents.MyClass2") ;
         ClassLoader classLoader2 = myClass2.getClassLoader();
         System.out.println(classLoader2);
     }
@@ -325,11 +312,9 @@ public class TestParentsClassLoader {
 * /
 ```
 
-小结：如果类是 rt.jar中的，则该类是被 bootstrap（根加载器）加载；如果是classpath中的类（自己编写的类），则该类是被AppClassLoader加载。
+小结：如果类是 rt.jar 中的，则该类是被 bootstrap（根加载器）加载；如果是 classpath 中的类（自己编写的类），则该类是被 AppClassLoader 加载。
 
-定义类加载：最终实际加载类的 加载器  
-
-初始化类加载类：直接面对加载任务的类
+定义类加载：最终实际加载类的加载器；初始化类加载类：直接面对加载任务的类。
 
 ```java
 package com.yanqun.parents;
@@ -337,8 +322,7 @@ package com.yanqun.parents;
 import java.net.URL;
 import java.util.Enumeration;
 
-class MyCL{
-}
+class MyCL{}
 public class JVMParentsCL {
     public static void main(String[] args) throws Exception {
         Class<?> myCL = Class.forName("com.yanqun.parents.MyCL");
@@ -376,12 +360,12 @@ public class JVMParentsCL {
 
 值得考究的API：
 
-- `getResource(String name) return URL`
-- `getResourceAsStream(String...) return InputStream`
+- getResource(String name) return URL
+- getResourceAsStream(String...) return InputStream
 
 ### 自定义类的加载器
 
-二进制名binary names:
+二进制名 binary names:
 
 ```java
 "java.lang.String"
@@ -392,23 +376,17 @@ public class JVMParentsCL {
 
 $代表内部类：
 
-$数字：第几个匿名内部类
+$数字：第几个匿名内部类，The class loader for an array class, as returned by {@link* Class#getClassLoader()} is the same as the class loader for its element* type; if the element type is a primitive type, then the array class has no* class loader.
 
-```
-The class loader for an array class, as returned by {@link* Class#getClassLoader()} is the same as the class loader for its element* type; if the element type is a primitive type, then the array class has no* class loader.
-```
+- 数组的加载器类型和数组元素的加载器类型是相同
 
-- 数组的加载器类型  和数组元素的加载器类型 是相同
+- 原声类型的数组是没有类加载器的  
 
-- 原声类型的数组 是没有类加载器的  
+如果加载的结果是 null：  可能是此类没有加载器(int[]) ， 也可能是加载类型是“根加载器”
 
-如果加载的结果是null：  可能是此类没有加载器(int[]) ， 也可能是 加载类型是“根加载器”
-
-```
 <p> However, some classes may not originate from a file; they may originate* from other sources, such as the network, or they could be constructed by an* application.  The method {@link #defineClass(String, byte[], int, int)* <tt>defineClass</tt>} converts an array of bytes into an instance of class* <tt>Class</tt>. Instances of this newly defined class can be created using* {@link Class#newInstance <tt>Class.newInstance</tt>}.
-```
 
-xxx.class文件可能是在本地存在，也可能是来自于网络 或者在运行时动态产生(jsp)
+xxx.class 文件可能是在本地存在，也可能是来自于网络或者在运行时动态产生 (JSP)
 
 ```java
 <p> The network class loader subclass must define the methods {@link
@@ -434,11 +412,9 @@ xxx.class文件可能是在本地存在，也可能是来自于网络 或者在�
  *     }
 ```
 
-如果class文件来自原Network，则加载器中必须重写findClas()和loadClassData().
+如果 class 文件来自原 Network，则加载器中必须重写 findClas() 和 loadClassData().
 
-自定义类加载器的实现
-
-重写findClas()和loadClassData()
+自定义类加载器的实现，重写 findClas() 和 loadClassData()
 
 ```java
 package com.yanqun.parents;
@@ -462,21 +438,21 @@ public class MyClassLoaderImpl  extends ClassLoader{
         //com.yq.xx.class
         public Class findClass(String name) {
             System.out.println(name);
-              byte[] b = loadClassData(name);
-              return defineClass(name, b, 0, b.length);
-          }
+            byte[] b = loadClassData(name);
+            return defineClass(name, b, 0, b.length);
+         }
 
-          //“com/yq/xxx.class” ->  byte[]  把字符串变成字节数组就行了
-          private byte[] loadClassData(String name)  {
+        //“com/yq/xxx.class” ->  byte[]  把字符串变成字节数组就行了
+        private byte[] loadClassData(String name)  {
 
-              name =  dotToSplit("out.production.MyJVM."+name)+".class" ;
-              byte[] result = null ;
-              FileInputStream inputStream = null ;
-              ByteArrayOutputStream output = null ;
-              try {
-                 inputStream = new FileInputStream( new File(  name)  );
+            name =  dotToSplit("out.production.MyJVM."+name)+".class" ;
+            byte[] result = null ;
+            FileInputStream inputStream = null ;
+            ByteArrayOutputStream output = null ;
+            try {
+                inputStream = new FileInputStream(new File(name));
                 //inputStream -> byte[]
-                 output = new ByteArrayOutputStream();
+                output = new ByteArrayOutputStream();
 
                 byte[] buf = new byte[2];
                 int len = -1;
@@ -485,17 +461,17 @@ public class MyClassLoaderImpl  extends ClassLoader{
                 }
                 result = output.toByteArray();
             }catch (Exception e){
-                    e.printStackTrace(); ;
+                e.printStackTrace(); ;
             }finally {
-                  try {
-                      if(inputStream != null )inputStream.close();
-                      if(output != null ) output.close();
-                  }catch (Exception e){
-                      e.printStackTrace();
-                  }
+                try {
+                    if(inputStream != null )inputStream.close();
+                    if(output != null ) output.close();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }
             return result ;
-          }
+        }
 
     public static void main(String[] args) throws Exception{
         //自定义加载器的对象
@@ -506,7 +482,7 @@ public class MyClassLoaderImpl  extends ClassLoader{
         Class<?> aClass = null;
         aClass  = myClassLoader.loadClass("com.yanqun.parents.MyDefineCL");
         System.out.println(aClass.getClassLoader());
-        MyDefineCL myDefineCL =  (MyDefineCL)(aClass.newInstance() );
+        MyDefineCL myDefineCL =  (MyDefineCL)(aClass.newInstance());
         myDefineCL.say();
     }
 
@@ -526,19 +502,19 @@ class MyDefineCL{
 
 - public class MyClassLoaderImpl  extends ClassLoader
 
-- findClass(String name){...} ：直接复制文档中的NetworkClassLoader中的即可
+- findClass(String name){...} ：直接复制文档中的 NetworkClassLoader 中的即可
 
-- loadClassData(String name){...} ：name所代表的文件内容->byte[] 
+- loadClassData(String name){...} ：name 所代表的文件内容 ->byte[] 
 
 **细节：**
 
-- loadClassData(String name)： 是文件形式的字符串a/b/c.class，并且开头out.production..
+- loadClassData(String name)：是文件形式的字符串 a/b/c.class，并且开头 out.production..
 
-- findClass(String name):是全类名的形式  a.b.c.class，并且开头 是： 包名.类名.class
+- findClass(String name)：是全类名的形式  a.b.c.class，并且开头是：包名.类名.class
 
 **操作思路：**
 
-要先将 .class文件从classpath中删除，之后才可能用到 自定义类加载器；否在classpath中的.class会被 APPClassLoader加载
+要先将 .class文件从 classpath 中删除，之后才可能用到自定义类加载器；否在 classpath 中的 .class 会被 APPClassLoader 加载
 
 ```java
 package com.yanqun.parents;
@@ -551,57 +527,57 @@ import java.io.FileNotFoundException;
 //public class MyException extends Exception{...}
 public class MyClassLoaderImpl  extends ClassLoader{
     private String path ; //null
-        //优先使用的类加载器是：getSystemClassLoader()
-        public MyClassLoaderImpl(){
-            super();
+    //优先使用的类加载器是：getSystemClassLoader()
+    public MyClassLoaderImpl(){
+        super();
+    }
+
+    public MyClassLoaderImpl(ClassLoader parent){//扩展类加载器
+        super(parent);
+    }
+    //com.yq.xx.class
+    public Class findClass(String name) {
+        System.out.println("findClass...");
+        byte[] b = loadClassData(name);
+        return defineClass(name, b, 0, b.length);
+    }
+
+    //“com/yq/xxx.class” ->  byte[]
+    private byte[] loadClassData(String name)  {
+        System.out.println("加载loadClassData...");
+        if(path != null){//name: com.yanqun.parents.MyDefineCL
+            name = path+ name.substring(name.lastIndexOf(".")+1)+".class" ;
+        }else{
+            //classpath ->APPClassLoader
+            name =  dotToSplit("out.production.MyJVM."+name)+".class" ;
         }
 
-        public MyClassLoaderImpl(ClassLoader parent){//扩展类加载器
-            super(parent);
-        }
-        //com.yq.xx.class
-        public Class findClass(String name) {
-            System.out.println("findClass...");
-              byte[] b = loadClassData(name);
-              return defineClass(name, b, 0, b.length);
-          }
+        byte[] result = null ;
+        FileInputStream inputStream = null ;
+        ByteArrayOutputStream output = null ;
+        try {
+            inputStream = new FileInputStream(new File(name));
+            //inputStream -> byte[]
+            output = new ByteArrayOutputStream();
 
-          //“com/yq/xxx.class” ->  byte[]
-          private byte[] loadClassData(String name)  {
-              System.out.println("加载loadClassData...");
-              if(path != null){//name: com.yanqun.parents.MyDefineCL
-                  name = path+ name.substring(name.lastIndexOf(".")+1)+".class" ;
-              }else{
-                  //classpath ->APPClassLoader
-                  name =  dotToSplit("out.production.MyJVM."+name)+".class" ;
-              }
-
-              byte[] result = null ;
-              FileInputStream inputStream = null ;
-              ByteArrayOutputStream output = null ;
-              try {
-                inputStream = new FileInputStream(new File(name));
-                //inputStream -> byte[]
-                output = new ByteArrayOutputStream();
-
-                byte[] buf = new byte[2];
-                int len = -1;
-                while ((len = inputStream.read(buf)) != -1) {
-                    output.write(buf, 0, len);
-                }
-                result = output.toByteArray();
-            }catch (Exception e){
-                    e.printStackTrace(); ;
-            }finally {
-                  try {
-                      if(inputStream != null )inputStream.close();
-                      if(output != null ) output.close();
-                  }catch (Exception e){
-                      e.printStackTrace();
-                  }
+            byte[] buf = new byte[2];
+            int len = -1;
+            while ((len = inputStream.read(buf)) != -1) {
+                output.write(buf, 0, len);
             }
-            return result ;
-          }
+            result = output.toByteArray();
+        }catch (Exception e){
+            e.printStackTrace(); ;
+        }finally {
+            try {
+                if(inputStream != null )inputStream.close();
+                if(output != null ) output.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        return result ;
+    }
 
     public static void main(String[] args) throws Exception {
         System.out.println("main...");
@@ -623,7 +599,6 @@ public class MyClassLoaderImpl  extends ClassLoader{
     }
 }
 
-
 class MyDefineCL{
     public void say(){
         System.out.println("Say...");
@@ -631,23 +606,19 @@ class MyDefineCL{
 }
 ```
 
-代码流程：
+代码流程：loadClass()->findClass()->loadClassData()
 
-```
-loadClass() ->findClass()->loadClassData()
-```
-
-一般而言，启动类加载loadClass()；
+一般而言，启动类加载 loadClass()；
 
 **实现自定义加载器，只需要：**
 
-- **继承ClassLoader**
+- **继承 ClassLoader**
 
 - **重写的 findClass()**
 
-情况一：用APPClassLoader
+情况一：用 APPClassLoader
 
-classpath中的MyDefineCL.class文件：
+classpath 中的 MyDefineCL.class 文件：
 
 1163157884
 1163157884
@@ -656,13 +627,13 @@ d盘中的MyDefineCL.class文件：
 
 356573597
 
-说明，类加载器 只会把同一个类 加载一次； 同一个class文件  加载后的位置
+说明，类加载器只会把同一个类加载一次； 同一个class文件加载后的位置
 
 结论：
 
 自定义加载器 加载.class文件的流程：
 
-先委托APPClassLoader加载，APPClassLoader会在classpath中寻找是否存在，如果存在 则直接加载；如果不存在，才有可能交给 自定义加载器加载。
+先委托 APPClassLoader 加载，APPClassLoader 会在 classpath 中寻找是否存在，如果存在则直接加载；如果不存在，才有可能交给自定义加载器加载。
 
 ```java
 package com.yanqun.parents;
@@ -675,55 +646,55 @@ import java.io.FileNotFoundException;
 //public class MyException extends Exception{...}
 public class MyClassLoaderImpl  extends ClassLoader{
     private String path ; //null
-        //优先使用的类加载器是：getSystemClassLoader()
-        public MyClassLoaderImpl(){
-            super();
+    //优先使用的类加载器是：getSystemClassLoader()
+    public MyClassLoaderImpl(){
+        super();
+    }
+
+    public MyClassLoaderImpl(ClassLoader parent){//扩展类加载器
+        super(parent);
+    }
+    //com.yq.xx.class
+    public Class findClass(String name) {
+        //            System.out.println("findClass...");
+        byte[] b = loadClassData(name);
+        return defineClass(name, b, 0, b.length);
+    }
+
+    //“com/yq/xxx.class” ->  byte[]
+    private byte[] loadClassData(String name)  {
+        // System.out.println("加载loadClassData...");
+        if(path != null){//name: com.yanqun.parents.MyDefineCL
+            // System.out.println("去D盘加载;;");
+            name = path+ name.substring(name.lastIndexOf(".")+1)+".class";
         }
 
-        public MyClassLoaderImpl(ClassLoader parent){//扩展类加载器
-            super(parent);
-        }
-        //com.yq.xx.class
-        public Class findClass(String name) {
-//            System.out.println("findClass...");
-              byte[] b = loadClassData(name);
-              return defineClass(name, b, 0, b.length);
-          }
+        byte[] result = null ;
+        FileInputStream inputStream = null ;
+        ByteArrayOutputStream output = null ;
+        try {
+            inputStream = new FileInputStream( new File(  name)  );
+            //inputStream -> byte[]
+            output = new ByteArrayOutputStream();
 
-          //“com/yq/xxx.class” ->  byte[]
-          private byte[] loadClassData(String name)  {
-			// System.out.println("加载loadClassData...");
-              if(path != null){//name: com.yanqun.parents.MyDefineCL
-				// System.out.println("去D盘加载;;");
-                  name = path+ name.substring(name.lastIndexOf(".")+1)+".class";
-              }
-
-              byte[] result = null ;
-              FileInputStream inputStream = null ;
-              ByteArrayOutputStream output = null ;
-              try {
-                 inputStream = new FileInputStream( new File(  name)  );
-                //inputStream -> byte[]
-                 output = new ByteArrayOutputStream();
-
-                byte[] buf = new byte[2];
-                int len = -1;
-                while ((len = inputStream.read(buf)) != -1) {
-                    output.write(buf, 0, len);
-                }
-                result = output.toByteArray();
-            }catch (Exception e){
-                    e.printStackTrace(); ;
-            }finally {
-                  try {
-                      if(inputStream != null )inputStream.close();
-                      if(output != null ) output.close();
-                  }catch (Exception e){
-                      e.printStackTrace();
-                  }
+            byte[] buf = new byte[2];
+            int len = -1;
+            while ((len = inputStream.read(buf)) != -1) {
+                output.write(buf, 0, len);
             }
-            return result ;
-          }
+            result = output.toByteArray();
+        }catch (Exception e){
+            e.printStackTrace(); ;
+        }finally {
+            try {
+                if(inputStream != null )inputStream.close();
+                if(output != null ) output.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        return result ;
+    }
 
     public static void main(String[] args) throws Exception {
         // System.out.println("main...");
@@ -754,11 +725,10 @@ class MyDefineCL{
 }
 ```
 
-通过以下源码可知，在双亲委派体系中，“下面”的加载器 是通过parent引用 “上面”的加载器。即在双亲委派体系中，各个加载器之间不是继承关系。
+通过以下源码可知，在双亲委派体系中，“下面”的加载器是通过parent引用 “上面”的加载器。即在双亲委派体系中，各个加载器之间不是继承关系。
 
 ```java
 public abstract class ClassLoader {
-
     private static native void registerNatives();
     static {
         registerNatives();
@@ -768,54 +738,53 @@ public abstract class ClassLoader {
     // Note: VM hardcoded the offset of this field, thus all new fields
     // must be added *after* it.
     private final ClassLoader parent;
+}
 ```
 
 ClassLoader源码解读
 
 ```java
-    protected Class<?> loadClass(String name, boolean resolve)
-        throws ClassNotFoundException{
-        synchronized (getClassLoadingLock(name)) {
-            // First, check if the class has already been loaded
-            Class<?> c = findLoadedClass(name);
+protected Class<?> loadClass(String name, boolean resolve)
+    throws ClassNotFoundException{
+    synchronized (getClassLoadingLock(name)) {
+        // First, check if the class has already been loaded
+        Class<?> c = findLoadedClass(name);
+        if (c == null) {
+            long t0 = System.nanoTime();
+            try {
+                //如果“父类”不为空，则委托“父类”加载
+                if (parent != null) {
+                    c = parent.loadClass(name, false);
+                } else {
+                    //如果“父类”为空，说明是双亲委派的顶层了，就调用顶层的加载器（BootstrapClassLoader）
+                    c = findBootstrapClassOrNull(name);
+                }
+            } catch (ClassNotFoundException e) {
+                // ClassNotFoundException thrown if class not found
+                // from the non-null parent class loader
+            }
+            //如果“父类”加载失败，则只能自己加载（自定义加载器中的findClass()方法）
             if (c == null) {
-                long t0 = System.nanoTime();
-                try {
-                   //如果“父类”不为空，则委托“父类”加载
-                    if (parent != null) {
-                        c = parent.loadClass(name, false);
-                    } else {
-                        //如果“父类”为空，说明是双亲委派的顶层了，就调用顶层的加载器（BootstrapClassLoader）
-                        c = findBootstrapClassOrNull(name);
-                    }
-                } catch (ClassNotFoundException e) {
-                    // ClassNotFoundException thrown if class not found
-                    // from the non-null parent class loader
-                }
-				//如果“父类”加载失败，则只能自己加载（自定义加载器中的findClass()方法）
-                if (c == null) {
-                    // If still not found, then invoke findClass in order
-                    // to find the class.
-                    long t1 = System.nanoTime();
-                    c = findClass(name);
+                // If still not found, then invoke findClass in order
+                // to find the class.
+                long t1 = System.nanoTime();
+                c = findClass(name);
 
-                    // this is the defining class loader; record the stats
-                    sun.misc.PerfCounter.getParentDelegationTime().addTime(t1 - t0);
-                    sun.misc.PerfCounter.getFindClassTime().addElapsedTimeFrom(t1);
-                    sun.misc.PerfCounter.getFindClasses().increment();
-                }
+                // this is the defining class loader; record the stats
+                sun.misc.PerfCounter.getParentDelegationTime().addTime(t1 - t0);
+                sun.misc.PerfCounter.getFindClassTime().addElapsedTimeFrom(t1);
+                sun.misc.PerfCounter.getFindClasses().increment();
             }
-            if (resolve) {
-                resolveClass(c);
-            }
-            return c;
         }
+        if (resolve) {
+            resolveClass(c);
+        }
+        return c;
     }
+}
 ```
 
-**双亲委派机制优势：** 可以防止用户自定义的类 和 rt.jar中的类重名，而造成的混乱
-
-自定义一个java.lang.Math(和jdk中rt.jar中的类重名)
+**双亲委派机制优势：** 可以防止用户自定义的类和 rt.jar 中的类重名，而造成的混乱。自定义一个 java.lang.Math (和 jdk 中 rt.jar 中的类重名)
 
 ```java
 package java.lang;
@@ -825,23 +794,22 @@ public class Math {
         System.out.println("hello Math...");
     }
 }
-
 ```
 
 **运行结果：**
 
 <img src="./jvm_image/1571816579201.png">
 
-**原因：**根据双亲委派， 越上层的加载器越优先执行。最顶层的加载器是 根加载器，根加载器就会加载rt.jar中的类。因此rt.jar中的Math会被优先加载。 即程序最终加载的是不是我们自己写的Math，而是jdk/rt.jar中 内置的Math;而内置的Math根本没有提供main()方法，因此报 无法找到main()。
+**原因：**根据双亲委派， 越上层的加载器越优先执行。最顶层的加载器是根加载器，根加载器就会加载 rt.jar 中的类。因此 rt.jar 中的 Math 会被优先加载。 即程序最终加载的是不是我们自己写的 Math，而是 jdk/rt.jar 中内置的 Math; 而内置的 Math 根本没有提供 main() 方法，因此报无法找到 main()。
 
-实验：将相关联的类A.class和B.class分别用 不同的类加载器加载
+实验：将相关联的类 A.class 和 B.class 分别用不同的类加载器加载
 
 **A和B是继承关系**
 
 ```java
 public class B{
     public B(){
-        System.out.println("B被加载了，加载器是:"+                  this.getClass().getClassLoader());
+        System.out.println("B被加载了，加载器是:"+ this.getClass().getClassLoader());
         //对象使用之前，必然先把此对象对应的类加载
     }
 }
@@ -849,8 +817,7 @@ public class B{
 public class A extends  B{
     public A(){
         super();
-        System.out.println("A被加载了，加载器是："+
-                           this.getClass().getClassLoader());
+        System.out.println("A被加载了，加载器是："+ this.getClass().getClassLoader());
         //对象使用之前，必然先把此对象对应的类加载
     }
 }
@@ -979,9 +946,9 @@ OSGi：
 
 - 网状结构的加载结构
 
-- 屏蔽掉硬件的异构性。例如，可以将项目部署在网络上，可以在A节点上 远程操作B节点。在操作上，可以对硬件无感。也可以在A节点上 对B节点上的项目进行运维、部署，并且立项情况下  在维护的期间，不需要暂时、重启。【热部署？】
+- 屏蔽掉硬件的异构性。例如，可以将项目部署在网络上，可以在A节点上远程操作B节点。在操作上，可以对硬件无感。也可以在A节点上对B节点上的项目进行运维、部署，并且立项情况下在维护的期间，不需要暂时、重启。【热部署？】
 
-Java可以实现热部署，单不是很方便，（不是Java擅长的。）但是用OSGI模型的话，它天然支持。
+Java 可以实现热部署，但不是很方便，（不是Java擅长的。）但是用 OSGI 模型的话，它天然支持。
 
 > **RPC远程调用**
 
@@ -989,7 +956,7 @@ Java可以实现热部署，单不是很方便，（不是Java擅长的。）但
 
 - 系统自带（系统加载器、扩展加载器、根加载器）：这些加载器加载的类  是不会被卸载。
 
-- 用户自定义的加载器，会被GC卸载GC
+- 用户自定义的加载器，会被 GC 卸载 GC
 
 # 高效并发
 
@@ -1944,11 +1911,7 @@ jvisualvm:  监视 - 堆Dump -查找最大对象，从中可以发现 当前进�
 
 ## GC调优
 
-Java开发者为什么不把所有的参数调到最优？非得让我们手工去调？【这话说的】
-
-取舍。
-
-调优实际是是一种取舍，以xx换xx的策略。因此在调优之前，必须明确方向：低延迟？高吞吐量呢？
+Java开发者为什么不把所有的参数调到最优？非得让我们手工去调？调优实际是是一种取舍，以 xx 换 oo 的策略。因此在调优之前，必须明确方向：低延迟？高吞吐量呢？
 
 有两种情况需要考虑：
 
