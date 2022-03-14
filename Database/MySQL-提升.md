@@ -2521,7 +2521,7 @@ explain select count(*) from tb_user;
 
 <span style="color:red">按照效率排序的话，count(字段) < count(主键 id) < count(1) ≈ count(\*)，所以尽量使用 count(\*)。</span>
 
-### update 优化A
+### update 优化
 
 用 update 进行更新数据的时候，会加锁。InnoDB 的行锁是针对索引加的锁，不是针对记录加的锁，并且该索引不能失效，否则会从行锁升级为表锁。
 
