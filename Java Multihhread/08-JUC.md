@@ -1,5 +1,7 @@
 # 基本使用快速入门
 
+[JUC整理笔记四之梳理VarHandle(上)_Java_JFound_InfoQ写作平台](https://xie.infoq.cn/article/18c57e1a23f347a922547177b)
+
 ## ReentrantLock
 
 可重入锁，与 `synchroized` 类似，但是可以用 `Condition` 精准唤醒某个线程。
