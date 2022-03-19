@@ -380,7 +380,7 @@ compact
 
 ### 2.3 ByteBuffer 常见方法
 
-JDK自带的 ByteBuffer 申请的 Buffer 大小是固定的。
+JDK 自带的 ByteBuffer 申请的 Buffer 大小是固定的。
 
 #### 分配空间
 
@@ -442,7 +442,6 @@ public void read() {
     debugAll(allocate);
     allocate.rewind();
     debugAll(allocate);
-
 }
 ```
 
