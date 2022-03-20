@@ -1,13 +1,13 @@
 # Docker
 
-## 什么是Docker
+## 概述
 
 微服务虽然具备各种各样的优势，但服务的拆分通用给部署带来了很大的麻烦。
 
 - 分布式系统中，依赖的组件非常多，不同组件之间部署时往往会产生一些冲突。
 - 在数百上千台服务中重复部署，环境不一定一致，会遇到各种问题
 
-### 应用部署的环境问题
+### 问题
 
 大型项目组件较多，运行环境也较为复杂，部署时会碰到一些问题：
 
@@ -16,15 +16,15 @@
 
 <img src="assets/image-20210731141907366.png" width="60%">
 
-例如一个项目中，部署时需要依赖于node.js、Redis、RabbitMQ、MySQL等，这些服务部署时所需要的函数库、依赖项各不相同，甚至会有冲突。给部署带来了极大的困难。
+例如一个项目中，部署时需要依赖于 node.js、Redis、RabbitMQ、MySQL 等，这些服务部署时所需要的函数库、依赖项各不相同，甚至会有冲突。给部署带来了极大的困难。
 
-### Docker解决依赖兼容问题
+### 依赖兼容
 
-而Docker确巧妙的解决了这些问题，Docker是如何实现的呢？
+而 Docker 确巧妙的解决了这些问题，Docker 是如何实现的呢？
 
-Docker为了解决依赖的兼容问题的，采用了两个手段：
+Docker 为了解决依赖的兼容问题的，采用了两个手段：
 
-- 将应用的Libs（函数库）、Deps（依赖）、配置与应用一起打包
+- 将应用的 Libs（函数库）、Deps（依赖）、配置与应用一起打包
 - 将每个应用放到一个隔离**容器**去运行，避免互相干扰
 
 <img src="assets/image-20210731142219735.png" width="60%">
@@ -33,16 +33,16 @@ Docker为了解决依赖的兼容问题的，采用了两个手段：
 
 虽然解决了不同应用的兼容问题，但是开发、测试等环境会存在差异，操作系统版本也会有差异，怎么解决这些问题呢？
 
-### Docker解决操作系统环境差异
+### 操作系统环境差异
 
-要解决不同操作系统环境差异问题，必须先了解操作系统结构。以一个Ubuntu操作系统为例，结构如下：
+要解决不同操作系统环境差异问题，必须先了解操作系统结构。以一个 Ubuntu 操作系统为例，结构如下：
 
 <img src="assets/image-20210731143401460.png" width="60%">
 
 结构包括：
 
-- 计算机硬件：例如CPU、内存、磁盘等
-- 系统内核：所有Linux发行版的内核都是Linux，例如CentOS、Ubuntu、Fedora等。内核可以与计算机硬件交互，对外提供**内核指令**，用于操作计算机硬件。
+- 计算机硬件：例如 CPU、内存、磁盘等
+- 系统内核：所有 Linux 发行版的内核都是 Linux，例如 CentOS、Ubuntu、Fedora 等。内核可以与计算机硬件交互，对外提供**内核指令**，用于操作计算机硬件。
 - 系统应用：操作系统本身提供的应用、函数库。这些函数库是对内核指令的封装，使用更加方便。
 
 应用于计算机交互的流程如下：
@@ -53,18 +53,18 @@ Docker为了解决依赖的兼容问题的，采用了两个手段：
 
 3）内核指令操作计算机硬件
 
-Ubuntu和CentOSpringBoot都是基于Linux内核，无非是系统应用不同，提供的函数库有差异：
+Ubuntu 和 CentOS 都是基于 Linux 内核，无非是系统应用不同，提供的函数库有差异：
 
 <img src="assets/image-20210731144304990.png" width="60%">
 
-此时，如果将一个Ubuntu版本的MySQL应用安装到CentOS系统，MySQL在调用Ubuntu函数库时，会发现找不到或者不匹配，就会报错了：
+此时，如果将一个 Ubuntu 版本的 MySQL 应用安装到 CentOS 系统，MySQL 在调用 Ubuntu 函数库时，会发现找不到或者不匹配，就会报错了：
 
 <img src="assets/image-20210731144458680.png" width="60%">
 
-Docker如何解决不同系统环境的问题？
+Docker 如何解决不同系统环境的问题？
 
-- Docker将用户程序与所需要调用的系统(比如Ubuntu)函数库一起打包
-- Docker运行到不同操作系统时，直接基于打包的函数库，借助于操作系统的Linux内核来运行
+- Docker 将用户程序与所需要调用的系统(比如 Ubuntu )函数库一起打包。
+- Docker 运行到不同操作系统时，直接基于打包的函数库，借助于操作系统的 Linux 内核来运行。
 
 如图：
 
@@ -72,14 +72,14 @@ Docker如何解决不同系统环境的问题？
 
 ### 小结
 
-Docker如何解决大型项目依赖关系复杂，不同组件依赖的兼容性问题？
+Docker 如何解决大型项目依赖关系复杂，不同组件依赖的兼容性问题？
 
-- Docker允许开发中将应用、依赖、函数库、配置一起**打包**，形成可移植镜像
-- Docker应用运行在容器中，使用沙箱机制，相互**隔离**
+- Docker 允许开发中将应用、依赖、函数库、配置一起**打包**，形成可移植镜像
+- Docker 应用运行在容器中，使用沙箱机制，相互**隔离**
 
-Docker如何解决开发、测试、生产环境有差异的问题？
+Docker 如何解决开发、测试、生产环境有差异的问题？
 
-- Docker镜像中包含完整运行环境，包括系统函数库，仅依赖系统的Linux内核，因此可以在任意Linux操作系统上运行
+- Docker 镜像中包含完整运行环境，包括系统函数库，仅依赖系统的 Linux 内核，因此可以在任意 Linux 操作系统上运行
 
 Docker是一个快速交付应用、运行应用的技术，具备下列优势：
 
@@ -87,35 +87,29 @@ Docker是一个快速交付应用、运行应用的技术，具备下列优势�
 - 运行时利用沙箱机制形成隔离容器，各个应用互不干扰
 - 启动、移除都可以通过一行命令完成，方便快捷
 
-## Docker和虚拟机的区别
+## Docker&虚拟机
 
-Docker可以让一个应用在任何操作系统中非常方便的运行。而以前我们接触的虚拟机，也能在一个操作系统中，运行另外一个操作系统，保护系统中的任何应用。
+Docker 可以让一个应用在任何操作系统中非常方便的运行。而以前我们接触的虚拟机，也能在一个操作系统中，运行另外一个操作系统，保护系统中的任何应用。
 
-两者有什么差异呢？
-
-**虚拟机**（virtual machine）是在操作系统中**模拟**硬件设备，然后运行另一个操作系统，比如在 Windows 系统里面运行 Ubuntu 系统，这样就可以运行任意的Ubuntu应用了。
-
-**Docker**仅仅是封装函数库，并没有模拟完整的操作系统，如图：
+两者的差异在于：**虚拟机**（virtual machine）是在操作系统中**模拟**硬件设备，然后运行另一个操作系统，比如在 Windows 系统里面运行 Ubuntu 系统，这样就可以运行任意的 Ubuntu 应用了。而 **Docker** 仅仅是封装函数库，并没有模拟完整的操作系统，如图：
 
 <img src="assets/image-20210731145914960.png" width="60%">
 
 对比来看：
 
-<img src="assets/image-20210731152243765.png" width="60%">
+<img src="assets/image-20210731152243765.png">
 
 小结：
 
-Docker和虚拟机的差异：
+Docker 和虚拟机的差异：
 
-- docker 是一个系统进程；直接与操作系统做交互；虚拟机是在操作系统中的操作系统
+- docker 是一个系统进程；直接与操作系统做交互；虚拟机是在操作系统中的操作系统。
 
-- docker 体积小、启动速度快、性能好；虚拟机体积大、启动速度慢、性能一般
+- docker 体积小、启动速度快、性能好；虚拟机体积大、启动速度慢、性能一般。
 
 ## Docker架构
 
 ### 镜像和容器
-
-Docker中有几个重要的概念：
 
 **镜像（Image）**：<span style="color:red">Docker 将应用程序及其所需的依赖、函数库、环境、配置等文件打包在一起，称为镜像。</span>
 
@@ -125,11 +119,11 @@ Docker中有几个重要的概念：
 
 而**镜像**，就是把一个应用在硬盘上的文件、及其运行环境、部分系统函数库文件一起打包形成的文件包。**这个文件包是只读的。**
 
-**容器**呢，就是将这些文件中编写的程序、函数加载到内存中允许，形成进程，只不过要隔离起来。因此一个镜像可以启动多次，形成多个容器进程。
+**容器**呢，就是将这些文件中编写的程序、函数加载到内存中运行，形成进程，只不过要隔离起来。因此一个镜像可以启动多次，形成多个容器进程。
 
 <img src="assets/image-20210731153059464.png" width="60%">
 
-例如你下载了一个QQ，如果我们将QQ在磁盘上的运行**文件**及其运行的操作系统依赖打包，形成QQ镜像。然后你可以启动多次，双开、甚至三开QQ，跟多个妹子聊天。
+例如你下载了一个 QQ，如果我们将 QQ 在磁盘上的运行**文件**及其运行的操作系统依赖打包，形成 QQ 镜像。然后你可以启动多次，双开、甚至三开 QQ。
 
 ### DockerHub
 
@@ -149,13 +143,13 @@ Docker中有几个重要的概念：
 
 Docker 是一个 CS 架构的程序，由两部分组成：
 
-- 服务端(server)：Docker 守护进程，负责处理 Docker 指令，管理镜像、容器等
+- 服务端 (server)：Docker 守护进程，负责处理 Docker 指令，管理镜像、容器等。
 
 - 客户端(client)：通过命令或 RestAPI 向 Docker 服务端发送指令。可以在本地或远程向服务端发送指令。
 
 如图：
 
-![image-20210731154257653](assets/image-20210731154257653.png)
+<img src="assets/image-20210731154257653.png">
 
 ### 小结
 
@@ -169,17 +163,25 @@ Docker 结构：
 
 - 客户端：发送命令或者请求到 Docker 服务端
 
-DockerHub：一个镜像托管的服务器，类似的还有阿里云镜像服务，统称为 DockerRegistry
+DockerHub：一个镜像托管的服务器，类似的还有阿里云镜像服务，统称为 DockerRegistry。
 
 ## 安装Docker
 
-企业部署一般都是采用 Linux 操作系统，而其中又数 CentOS 发行版占比最多，因此我们在 CentOS 下安装 Docker。参考课前资料中的文档：
+企业部署一般都是采用 Linux 操作系统，而 CentOS 发行版占比最多，因此我们在 CentOS 下安装 Docker。参考课前资料中的文档：
 
-![image-20210731155002425](assets/image-20210731155002425.png)
+<img src="assets/image-20210731155002425.png">
 
-# Docker 的基本操作
+# Docker基本操作
 
 ## 镜像操作
+
+- 拉取镜像 docker pull 镜像名称:版本
+    - 拉取 redis，docker pull redis:6.0.16-bullseye
+    - 拉取 mq，docker pull rabbitmq:3.9.13
+- 查看拉取到的镜像，docker images
+- 导出镜像到磁盘，docker save --help，查看具体怎么做
+- 加载本地的镜像，docker load -i nginx.tar
+- 删除镜像，docker rmi rabbitmq:3.9.13
 
 ### 镜像名称
 
@@ -190,7 +192,7 @@ DockerHub：一个镜像托管的服务器，类似的还有阿里云镜像服�
 
 如图：
 
-![image-20210731155141362](assets/image-20210731155141362.png)
+<img src="assets/image-20210731155141362.png">
 
 这里的 MySQL 就是 repository，5.7 就是 tag，合一起就是镜像名称，代表 5.7 版本的 MySQL 镜像。
 
@@ -198,25 +200,25 @@ DockerHub：一个镜像托管的服务器，类似的还有阿里云镜像服�
 
 常见的镜像操作命令如图：
 
-![image-20210731155649535](assets/image-20210731155649535.png)
+<img src="assets/image-20210731155649535.png">
 
-### 案例1-拉取、查看镜像
+### 拉取&查看
 
 需求：从 DockerHub 中拉取一个 nginx 镜像并查看
 
 1）首先去镜像仓库搜索 nginx 镜像，比如 [DockerHub](https://hub.docker.com/):
 
-![image-20210731155844368](assets/image-20210731155844368.png)
+<img src="assets/image-20210731155844368.png">
 
 2）根据查看到的镜像名称，拉取自己需要的镜像，通过命令：docker pull nginx
 
-![image-20210731155856199](assets/image-20210731155856199.png)
+<img src="assets/image-20210731155856199.png">
 
 3）通过命令：docker images 查看拉取到的镜像
 
-![image-20210731155903037](assets/image-20210731155903037.png)
+<img src="assets/image-20210731155903037.png">
 
-### 案例2-保存、导入镜像
+### 保存&导入
 
 需求：利用 docker save 将 nginx 镜像导出磁盘，然后再通过 load 加载回来
 
@@ -230,7 +232,7 @@ docker save --help
 
 结果：
 
-![image-20210731161104732](assets/image-20210731161104732.png)
+<img src="assets/image-20210731161104732.png">
 
 命令格式：
 
@@ -248,7 +250,7 @@ docker save -o nginx.tar nginx:latest
 
 结果如图：
 
-![image-20210731161354344](assets/image-20210731161354344.png)
+<img src="assets/image-20210731161354344.png">
 
 3）使用 docker load 加载镜像
 
@@ -266,7 +268,7 @@ docker load -i nginx.tar
 
 结果：
 
-![image-20210731161746245](assets/image-20210731161746245.png)
+<img src="assets/image-20210731161746245.png">
 
 ### 练习
 
@@ -288,11 +290,19 @@ docker load -i nginx.tar
 
 ## 容器操作
 
+- docker run：创建并运行一个容器，处于运行状态
+- docker pause：让一个运行的容器暂停
+- docker unpause：让一个容器从暂停状态恢复运行
+- docker stop：停止一个运行的容器
+- docker start：让一个停止的容器再次运行
+- docker rm：删除一个容器（释放 CPU、内存、文件系统）
+- docker logs imageID：查看容器日志
+
 ### 容器相关命令
 
 容器操作的命令如图：
 
-![image-20210731161950495](assets/image-20210731161950495.png)
+<img src="assets/image-20210731161950495.png">
 
 容器保护三个状态：
 
@@ -324,17 +334,17 @@ docker run --name containerName -p 80:80 -d nginx
 - --name : 给容器起一个名字，比如叫做mn
 - -p ：将宿主机端口与容器端口映射，冒号左侧是宿主机端口，右侧是容器端口
 - -d：后台运行容器
-- nginx：镜像名称，例如nginx
+- nginx：镜像名称，例如 nginx
 
-这里的`-p`参数，是将容器端口映射到宿主机端口。
+这里的 -p 参数，是将容器端口映射到宿主机端口。
 
-默认情况下，容器是隔离环境，我们直接访问宿主机的80端口，肯定访问不到容器中的 nginx。
+默认情况下，容器是隔离环境，我们直接访问宿主机的 80 端口，肯定访问不到容器中的 nginx。
 
-现在，将容器的 80 与宿主机的 80 关联起来，当我们访问宿主机的 80 端口时，就会被映射到容器的 80，这样就能访问到nginx了：
+现在，将容器的 80 与宿主机的 80 关联起来，当我们访问宿主机的 80 端口时，就会被映射到容器的 80，这样就能访问到 nginx 了：
 
-![image-20210731163255863](assets/image-20210731163255863.png)
+<img src="assets/image-20210731163255863.png">
 
-### 案例-进入容器，修改文件
+### 进入容器，修改文件
 
 **需求**：进入 Nginx 容器，修改 HTML 文件内容，添加“传智教育欢迎您”
 
@@ -362,7 +372,7 @@ docker exec -it mn bash
 
 容器内部会模拟一个独立的 Linux 文件系统，看起来如同一个 Linux 服务器一样：
 
-![image-20210731164159811](assets/image-20210731164159811.png)
+<img src="assets/image-20210731164159811.png">
 
 nginx 的环境、配置、运行文件全部都在这个文件系统中，包括我们要修改的 html 文件。
 
@@ -376,7 +386,7 @@ cd /usr/share/nginx/html
 
  查看目录下文件：
 
-![image-20210731164455818](assets/image-20210731164455818.png)
+<img src="assets/image-20210731164455818.png">
 
 3）修改 index.html 的内容
 
@@ -388,7 +398,7 @@ sed -i -e 's#Welcome to nginx#传智教育欢迎您#g' -e 's#<head>#<head><meta 
 
 在浏览器访问自己的虚拟机地址，例如我的是：http://192.168.150.101，即可看到结果：
 
-![image-20210731164717604](assets/image-20210731164717604.png)
+<img src="assets/image-20210731164717604.png">
 
 ### 案例-运行 redis
 
@@ -396,13 +406,13 @@ sed -i -e 's#Welcome to nginx#传智教育欢迎您#g' -e 's#<head>#<head><meta 
 
 1）拉取镜像
 
-```shell
+```bash
 docker pull redis:latest
 ```
 
 2）运行容器
 
-```shell
+```bash
 docker run -d -p 6379:6379 --name docker-redis redis
 ```
 
@@ -410,8 +420,8 @@ docker run -d -p 6379:6379 --name docker-redis redis
 
 3）查看日志输出
 
-```shell
-docker logs docker-redis
+```bash
+docker logs docker-redis # 镜像 id
 ```
 
 4）在容器中运行 Redis CLI
@@ -429,7 +439,7 @@ docker exec -it mr redis-cli
 执行完上面的命令后运行 redis-cli
 
 ```bash
-root@07bf18105e35:/data# redis-cli
+root@07bf18105e35:/data # redis-cli
 ```
 
 5）然后就可以在容器中进行一些操作了。
@@ -459,13 +469,22 @@ docker run 命令的常见参数有哪些？
 - docker ps
 - docker ps -a 查看所有容器，包括已经停止的
 
-## 数据卷（容器数据管理）
+## 数据卷
+
+- docker volume create：创建数据卷
+- docker volume ls：查看所有数据卷
+- docker volume inspect：查看数据卷详细信息，包括关联的宿主机目录位置
+- docker volume rm：删除指定数据卷
+- docker volume prune：删除所有未使用的数据卷
+- docker run --name mn -v html:/usr/share/nginx/html -p 80:80 -d nginx：将本机的 html 目录与 nginx 内部的  /usr/share/nginx/html 关联起来
+
+数据卷------>容器数据管理
 
 在之前的 nginx 案例中，修改 nginx 的 html 页面时，需要进入 nginx 内部。并且因为没有编辑器，修改文件也很麻烦。
 
 这就是因为容器与数据（容器内文件）耦合带来的后果。
 
-![image-20210731172440275](assets/image-20210731172440275.png)
+<img src="assets/image-20210731172440275.png">
 
 要解决这个问题，必须将数据与容器解耦，这就要用到数据卷了。
 
@@ -473,17 +492,15 @@ docker run 命令的常见参数有哪些？
 
 **数据卷（volume）**是一个虚拟目录，指向宿主机文件系统中的某个目录。
 
-![image-20210731173541846](assets/image-20210731173541846.png)
+<img src="assets/image-20210731173541846.png">
 
-一旦完成数据卷挂载，对容器的一切操作都会作用在数据卷对应的宿主机目录了。
-
-这样，我们操作宿主机的 /var/lib/docker/volumes/html 目录，就等于操作容器内的 /usr/share/nginx/html 目录了
+一旦完成数据卷挂载，对容器的一切操作都会作用在数据卷对应的宿主机目录了。这样，我们操作宿主机的 `/var/lib/docker/volumes/html` 目录，就等于操作容器内的 `/usr/share/nginx/html` 目录了。
 
 ### 数据集操作命令
 
 数据卷操作的基本语法如下：
 
-```sh
+```bash
 docker volume [COMMAND]
 ```
 
@@ -513,7 +530,7 @@ docker volume ls
 
 结果：
 
-![image-20210731173746910](assets/image-20210731173746910.png)
+<img src="assets/image-20210731173746910.png">
 
 ③ 查看数据卷详细信息卷
 
@@ -523,7 +540,7 @@ docker volume inspect html
 
 结果：
 
-![image-20210731173809877](assets/image-20210731173809877.png)
+<img src="assets/image-20210731173809877.png">
 
 可以看到，我们创建的html这个数据卷关联的宿主机目录为`/var/lib/docker/volumes/html/_data`目录。
 
@@ -553,21 +570,21 @@ docker run \
   nginx \
 ```
 
-这里的-v就是挂载数据卷的命令：
+这里的 -v 就是挂载数据卷的命令：
 
-- `-v html:/root/htm` ：把html数据卷挂载到容器内的/root/html这个目录中
+- `-v html:/root/htm` ：把 html 数据卷挂载到容器内的 /root/html 这个目录中。
 
-### 案例-给nginx挂载数据卷
+### nginx挂载数据卷
 
-**需求**：创建一个nginx容器，修改容器内的html目录内的index.html内容
+**需求**：创建一个 nginx 容器，修改容器内的 html目录内的 index.html 内容
 
-**分析**：上个案例中，我们进入nginx容器内部，已经知道nginx的html目录所在位置/usr/share/nginx/html ，我们需要把这个目录挂载到html这个数据卷上，方便操作其中的内容。
+**分析**：上个案例中，我们进入 nginx 容器内部，已经知道 nginx 的 html 目录所在位置 /usr/share/nginx/html ，我们需要把这个目录挂载到 html 这个数据卷上，方便操作其中的内容。
 
 **提示**：运行容器时使用 -v 参数挂载数据卷
 
 步骤：
 
-① 创建容器并挂载数据卷到容器内的HTML目录
+① 创建容器并挂载数据卷到容器内的 HTML 目录
 
 ```sh
 # /usr/share/nginx/html 这个是 dockerhub 官网查到的
@@ -585,9 +602,9 @@ cd /var/lib/docker/volumes/html/_data
 vi index.html
 ```
 
-> <span style="color:red">**PS：如果数据卷不存在，则会自动创建！**</span>
+<span style="color:red">**PS：如果数据卷不存在，则会自动创建！**</span>
 
-### 案例-给MySQL挂载本地目录
+### MySQL挂载本地目录
 
 容器不仅仅可以挂载数据卷，也可以直接挂载到宿主机目录上。关联关系如下：
 
@@ -596,7 +613,7 @@ vi index.html
 
 如图：
 
-![image-20210731175155453](assets/image-20210731175155453.png)
+<img src="assets/image-20210731175155453.png">
 
 **语法**：
 
@@ -632,8 +649,6 @@ docker run --name mysql
 -d mysql:tag \
 ```
 
-
-
 ### 小结
 
 docker run 的命令中通过 -v 参数挂载文件或目录到容器中：
@@ -647,9 +662,9 @@ docker run 的命令中通过 -v 参数挂载文件或目录到容器中：
 - 数据卷挂载耦合度低，由 docker 来管理目录，但是目录较深，不好找
 - 目录挂载耦合度高，需要我们自己管理目录，不过目录容易寻找查看
 
-# Dockerfile 自定义镜像
+# Dockerfile自定义镜像
 
-常见的镜像在DockerHub就能找到，但是我们自己写的项目就必须自己构建镜像了。而要自定义镜像，就必须先了解镜像的结构才行。
+常见的镜像在 DockerHub 就能找到，但是我们自己写的项目就必须自己构建镜像了。而要自定义镜像，就必须先了解镜像的结构才行。
 
 ## 镜像结构
 
@@ -657,23 +672,19 @@ docker run 的命令中通过 -v 参数挂载文件或目录到容器中：
 
 我们以 MySQL 为例，来看看镜像的组成结构：
 
-![image-20210731175806273](assets/image-20210731175806273.png)
+<img src="assets/image-20210731175806273.png">
 
-简单来说，镜像就是在系统函数库、运行环境基础上，添加应用程序文件、配置文件、依赖文件等组合，然后编写好启动脚本打包在一起形成的文件。
+简单来说，**镜像就是在系统函数库、运行环境基础上，添加应用程序文件、配置文件、依赖文件等组合，然后编写好启动脚本打包在一起形成的文件**。我们要构建镜像，其实就是实现上述打包的过程。
 
-我们要构建镜像，其实就是实现上述打包的过程。
-
-## Dockerfile 语法
+## Dockerfile语法
 
 构建自定义的镜像时，并不需要一个个文件去拷贝，打包。
 
-我们只需要告诉 Docker，我们的镜像的组成，需要哪些 BaseImage、需要拷贝什么文件、需要安装什么依赖、启动脚本是什么，将来 Docker 会帮助我们构建镜像。
-
-而描述上述信息的文件就是 Dockerfile 文件。
+我们只需要告诉 Docker，我们的镜像的组成，需要哪些 Base Image、需要拷贝什么文件、需要安装什么依赖、启动脚本是什么，将来 Docker 会帮助我们构建镜像。而描述上述信息的文件就是 Dockerfile 文件。
 
 **Dockerfile **就是一个文本文件，其中包含一个个的**指令(Instruction)**，用指令来说明要执行什么操作来构建镜像。每一个指令都会形成一层 Layer。
 
-![image-20210731180321133](assets/image-20210731180321133.png)
+<img src="assets/image-20210731180321133.png">
 
 更新详细语法说明，请参考官网文档： https://docs.docker.com/engine/reference/builder
 
@@ -681,23 +692,23 @@ docker run 的命令中通过 -v 参数挂载文件或目录到容器中：
 
 ### 基于Ubuntu构建Java项目
 
-需求：基于Ubuntu镜像构建一个新镜像，运行一个java项目
+需求：基于 Ubuntu 镜像构建一个新镜像，运行一个 Java 项目
 
-- 步骤1：新建一个空文件夹docker-demo
+- ① 新建一个空文件夹 docker-demo
 
-  ![image-20210801101207444](assets/image-20210801101207444.png)
+  <img src="assets/image-20210801101207444.png">
 
-- 步骤2：拷贝课前资料中的docker-demo.jar文件到docker-demo这个目录
+- ② 拷贝 docker-demo.jar 文件到 docker-demo 这个目录
 
-  ![image-20210801101314816](assets/image-20210801101314816.png)
+  <img src="assets/image-20210801101314816.png">
 
-- 步骤3：拷贝课前资料中的jdk8.tar.gz文件到docker-demo这个目录
+- ③ 拷贝 jdk8.tar.gz 文件到 docker-demo 这个目录
 
-  ![image-20210801101410200](assets/image-20210801101410200.png)
+  <img src="assets/image-20210801101410200.png">
 
-- 步骤4：拷贝课前资料提供的Dockerfile到docker-demo这个目录
+- ④ 拷贝 Dockerfile 到 docker-demo 这个目录
 
-  ![image-20210801101455590](assets/image-20210801101455590.png)
+  <img src="assets/image-20210801101455590.png">
 
   其中的内容如下：
 
@@ -726,20 +737,20 @@ docker run 的命令中通过 -v 参数挂载文件或目录到容器中：
   ENTRYPOINT java -jar /tmp/app.jar
   ```
 
-- 步骤5：进入docker-demo
+- ⑤ 进入 docker-demo
 
-  将准备好的 docker-demo 上传到虚拟机任意目录，然后进入docker-demo目录下
+  将准备好的 docker-demo 上传到虚拟机任意目录，然后进入 docker-demo 目录下
 
-- 步骤6：运行命令：. 代表 dockerfile 所在的目录
+- ⑥ 运行命令：. 代表 dockerfile 所在的目录
 
   ```sh
   docker build -t javaweb:1.0 .
   ```
 
 
-最后访问 http://192.168.150.101:8090/hello/count，其中的ip改成你的虚拟机ip
+最后访问 http://192.168.150.101:8090/hello/count，其中的 ip 改成你的虚拟机 ip
 
-### 基于 Java8 构建 Java 项目
+### 基于Java8构建Java项目
 
 虽然我们可以基于 Ubuntu 基础镜像，添加任意自己需要的安装包，构建镜像，但是却比较麻烦。所以大多数情况下，我们都可以在一些安装了部分软件的基础镜像上做改造。
 
@@ -790,7 +801,7 @@ docker run 的命令中通过 -v 参数挂载文件或目录到容器中：
 
 Docker Compose 可以基于 Compose 文件帮我们快速的部署分布式应用，而无需手动一个个创建和运行容器！ 
 
-![image-20210731180921742](assets/image-20210731180921742.png)
+<img src="assets/image-20210731180921742.png">
 
 ## 初识
 
@@ -802,7 +813,7 @@ version: "3.8"
   mysql:
     image: mysql:5.7.25
     environment:
-     MYSQL_ROOT_PASSWORD: 123 
+    MYSQL_ROOT_PASSWORD: 123 
     volumes:
      - "/tmp/mysql/data:/var/lib/mysql"
      - "/tmp/mysql/conf/hmy.cnf:/etc/mysql/conf.d/hmy.cnf"
@@ -843,9 +854,9 @@ DockerCompose 的详细语法参考官网：https://docs.docker.com/compose/comp
 
 ### compose 文件
 
-查看课前资料提供的cloud-demo文件夹，里面已经编写好了 docker-compose 文件，而且每个微服务都准备了一个独立的目录：
+查看课前资料提供的 cloud-demo 文件夹，里面已经编写好了 docker-compose 文件，而且每个微服务都准备了一个独立的目录：
 
-![image-20210731181341330](assets/image-20210731181341330.png)
+<img src="assets/image-20210731181341330.png">
 
 内容如下：
 
@@ -892,11 +903,11 @@ services:
 
 查看mysql目录，可以看到其中已经准备好了cloud_order、cloud_user表：
 
-![image-20210801095205034](assets/image-20210801095205034.png)
+<img src="assets/image-20210801095205034.png">
 
 查看微服务目录，可以看到都包含Dockerfile文件：
 
-![image-20210801095320586](assets/image-20210801095320586.png)
+<img src="assets/image-20210801095320586.png">
 
 内容如下：
 
@@ -947,7 +958,7 @@ spring:
 
 打包后：
 
-![image-20210801095951030](assets/image-20210801095951030.png)
+<img src="assets/image-20210801095951030.png">
 
 ### 拷贝jar包到部署目录
 
@@ -955,15 +966,15 @@ spring:
 
 user-service：
 
-![image-20210801100201253](assets/image-20210801100201253.png)
+<img src="assets/image-20210801100201253.png">
 
 order-service：
 
-![image-20210801100231495](assets/image-20210801100231495.png)
+<img src="assets/image-20210801100231495.png">
 
 gateway：
 
-![image-20210801100308102](assets/image-20210801100308102.png)
+<img src="assets/image-20210801100308102.png">
 
 ### 部署
 
@@ -971,7 +982,7 @@ gateway：
 
 上传到任意目录：
 
-![image-20210801100955653](assets/image-20210801100955653.png)
+<img src="assets/image-20210801100955653.png">
 
 部署：
 
@@ -989,9 +1000,9 @@ docker-compose up -d
 
 ## 推送、拉取镜像
 
-推送镜像到私有镜像服务必须先tag，步骤如下：
+推送镜像到私有镜像服务必须先 tag，步骤如下：
 
-① 重新tag本地镜像，名称前缀为私有仓库的地址：192.168.150.101:8080/
+① 重新 tag 本地镜像，名称前缀为私有仓库的地址：192.168.150.101:8080/
 
  ```sh
 docker tag nginx:latest 192.168.150.101:8080/nginx:1.0 

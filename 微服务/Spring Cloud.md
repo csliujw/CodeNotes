@@ -1,4 +1,4 @@
-# Spring Cloud 基础篇
+# 基础篇概述
 
 - 认识微服务
 - 分布式服务架构案例
@@ -910,7 +910,7 @@ Nacos 和 Eureka 整体结构类似，服务注册、服务拉取、心跳等待
   - Nacos 支持服务列表变更的消息推送模式，服务列表更新更及时。（eureka 是 pull 而 nacos 是 pull+push）
   - Nacos 集群默认采用 AP（强调数据的可用性，服务的可用性）方式，当集群中存在非临时实例时，采用 CP（强调数据的可靠性和一致性）模式；Eureka 采用 AP 方式。
 
-# Spring Cloud 实用篇
+# 实用篇概述
 
 - Nacos 配置管理
 - Feign 远程调用

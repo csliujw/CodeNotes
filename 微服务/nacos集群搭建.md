@@ -2,21 +2,21 @@
 
 # 集群结构图
 
-官方给出的Nacos集群图：
+官方给出的 Nacos 集群图：
 
 
 
-![image-20210409210621117](assets/image-20210409210621117.png)
+<img src="assets/image-20210409210621117.png">
 
 其中包含3个nacos节点，然后一个负载均衡器代理3个Nacos。这里负载均衡器可以使用nginx。
 
 我们计划的集群结构：
 
-![image-20210409211355037](assets/image-20210409211355037.png)
+<img src="assets/image-20210409211355037.png">
 
 
 
-三个nacos节点的地址：
+三个 nacos 节点的地址：
 
 | 节点   | ip            | port |
 | ------ | ------------- | ---- |
@@ -29,20 +29,16 @@
 搭建集群的基本步骤：
 
 - 搭建数据库，初始化数据库表结构
-- 下载nacos安装包
-- 配置nacos
-- 启动nacos集群
-- nginx反向代理
+- 下载 nacos 安装包
+- 配置 nacos
+- 启动 nacos 集群
+- nginx 反向代理
 
 ## 初始化数据库
 
-Nacos默认数据存储在内嵌数据库Derby中，不属于生产可用的数据库。
+Nacos 默认数据存储在内嵌数据库 Derby 中，不属于生产可用的数据库。官方推荐的最佳实践是使用带有主从的高可用数据库集群。这里我们以单点的数据库为例来讲解。
 
-官方推荐的最佳实践是使用带有主从的高可用数据库集群，主从模式的高可用数据库可以参考**传智教育**的后续高手课程。
-
-这里我们以单点的数据库为例来讲解。
-
-首先新建一个数据库，命名为nacos，而后导入下面的SQL：
+首先新建一个数据库，命名为 nacos，而后导入下面的 SQL：
 
 ```sql
 CREATE TABLE `config_info` (
@@ -247,34 +243,26 @@ INSERT INTO roles (username, role) VALUES ('nacos', 'ROLE_ADMIN');
 
 ## 下载nacos
 
-nacos在GitHub上有下载地址：https://github.com/alibaba/nacos/tags，可以选择任意版本下载。
+nacos 在 GitHub 上有下载地址：https://github.com/alibaba/nacos/tags，可以选择任意版本下载。
 
 本例中才用1.4.1版本：
 
-![image-20210409212119411](assets/image-20210409212119411.png)
-
-
-
-
-
-
-
-
+<img src="assets/image-20210409212119411.png">
 
 ## 配置Nacos
 
 将这个包解压到任意非中文目录下，如图：
 
-![image-20210402161843337](assets/image-20210402161843337.png)
+<img src="assets/image-20210402161843337.png">
 
 目录说明：
 
 - bin：启动脚本
 - conf：配置文件
 
-进入nacos的conf目录，修改配置文件cluster.conf.example，重命名为cluster.conf：
+进入 nacos 的 conf 目录，修改配置文件 cluster.conf.example，重命名为 cluster.conf：
 
-![image-20210409212459292](assets/image-20210409212459292.png)
+<img src="assets/image-20210409212459292.png">
 
 然后添加内容：
 
@@ -300,7 +288,7 @@ db.password.0=123
 
 将nacos文件夹复制三份，分别命名为：nacos1、nacos2、nacos3
 
-![image-20210409213335538](assets/image-20210409213335538.png) 
+<img src="assets/image-20210409213335538.png">
 
 然后分别修改三个文件夹中的application.properties，
 
@@ -332,13 +320,13 @@ startup.cmd
 
 找到课前资料提供的nginx安装包： 
 
-![image-20210410103253355](assets/image-20210410103253355.png) 
+<img src="assets/image-20210410103253355.png">
 
 解压到任意非中文目录下：
 
-![image-20210410103322874](assets/image-20210410103322874.png) 
+<img src="assets/image-20210410103322874.png">
 
-修改conf/nginx.conf文件，配置如下：
+修改 conf/nginx.conf 文件，配置如下：
 
 ```nginx
 upstream nacos-cluster {
@@ -350,7 +338,6 @@ upstream nacos-cluster {
 server {
     listen       80;
     server_name  localhost;
-
     location /nacos {
         proxy_pass http://nacos-cluster;
     }
@@ -359,7 +346,7 @@ server {
 
 而后在浏览器访问：http://localhost/nacos即可。
 
-代码中application.yml文件配置如下：
+代码中 application.yml 文件配置如下：
 
 ```yaml
 spring:
@@ -370,7 +357,7 @@ spring:
 
 ## 优化
 
-- 实际部署时，需要给做反向代理的nginx服务器设置一个域名，这样后续如果有服务器迁移nacos的客户端也无需更改配置.
+- 实际部署时，需要给做反向代理的 nginx 服务器设置一个域名，这样后续如果有服务器迁移 nacos 的客户端也无需更改配置.
 
-- Nacos的各个节点应该部署到多个不同服务器，做好容灾和隔离
+- Nacos 的各个节点应该部署到多个不同服务器，做好容灾和隔离
 
