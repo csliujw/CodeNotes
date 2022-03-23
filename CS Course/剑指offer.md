@@ -1459,6 +1459,8 @@ public ListNode FindKthToTail(ListNode head,int k) {
 ## 反转链表
 
 - [x] 头插法
+    - [ ] 头插法主要是要拿到 next 节点，然后把这个 next 节点从链表中移除。
+
 ```java
 public ListNode ReverseList(ListNode head) {
 	ListNode node = new ListNode(-1);
@@ -1473,6 +1475,34 @@ public ListNode ReverseList(ListNode head) {
 	return node.next;
 }
 ```
+
+- [x] 不用 dummy 节点，直接两两交换
+    - [ ] 需要注意，在两两交换前需要将 pre 的 next 指针置空，避免循环指针（将头节点的置 null 即可，后面的节点，next 指针在反转过程中不会出现循环链表）
+
+```mermaid
+graph LR
+1-->2-->3-->4-->5
+a-->指向1
+b-->指向2
+```
+
+```java
+public ListNode reverseList(ListNode head) {
+    if(head==null || head.next == null) return head;
+    ListNode pre = head;
+    ListNode next = head.next;
+    pre.next = null;
+    while(next!=null){
+        ListNode tmp = next.next;
+        next.next = pre;
+        pre = next;
+        next = tmp;
+    }
+    return pre;
+}
+```
+
+
 
 ## 合并两个排序的链表
 
@@ -1712,6 +1742,37 @@ public double myPow(double x, int n) {
     double half = myPow(x, n >> 1);
     double mod = myPow(x, n % 2);
     return half * half * mod;
+}
+```
+
+# CodeTop
+
+## 无重复字符的最长子串
+
+```shell
+输入: s = "abcabcbb"
+输出: 3 
+解释: 因为无重复字符的最长子串是 "abc"，所以其长度为 3。
+```
+
+- [x] 思路很简单，就是双指针移动 + hash 判断当前字符是不是重复了。
+- 如果 hash 判断当前字符是重复的，则 pre 指针向前移动，知道改字符不再重复。
+- 如果不重复，则 next 指针继续后移，hash 表继续统计字符出现的次数
+
+```java
+class Solution {
+    public int lengthOfLongestSubstring(String s) {
+        int[]map = new int[128];
+        int ans = 0;
+        for(int pre=0,next=0;next<s.length();next++){
+            map[s.charAt(next)]++;
+            while(map[s.charAt(next)]>1){
+                map[s.charAt(pre++)]--;
+            }
+            ans = ans>(next-pre+1)?ans:(next-pre+1);
+        }
+        return ans;
+    }
 }
 ```
 

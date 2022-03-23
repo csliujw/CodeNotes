@@ -133,7 +133,7 @@ java -jar 命令为何可以执行 FAT JAR文件？
 ## 组件自动装配
 
 - 激活：@EnableAutoConfiguration
-- 配置：/META-INF/spring.factories（这个目录是相对于Classpath而言，META元，INF信息，META-INF元信息；spring.factories工厂模式，key-value键值对的配置信息）
+- 配置：/META-INF/spring.factories（这个目录是相对于 Classpath 而言，META-INF 元信息；spring.factories 工厂模式，key-value 键值对的配置信息）
 - 实现：XXXAutoConfiguration
 
 ### quick start
@@ -1771,17 +1771,17 @@ public class Hello{
 </plugin>
 ```
 
-==`小提示：`==SpringBoot spring-boot-starter-parent 中的 spring-boot-dependencies 有定义各个包需要的版本！
+**小提示**：SpringBoot spring-boot-starter-parent 中的 spring-boot-dependencies 有定义各个包需要的版本！
 
 `maven命令 [打包]：mvn -Dmaven.test.skpi -u clean package`
 
 ### 重新认识
 
-Spring Framework时代的重新认识。[]
+Spring Framework时代的重新认识。
 
-- Web MVC核心组件
-- Web MVC注解驱动
-- Web MVC自动装配
+- Web MVC 核心组件
+- Web MVC 注解驱动
+- Web MVC 自动装配
 
 #### Web MVC核心组件
 
