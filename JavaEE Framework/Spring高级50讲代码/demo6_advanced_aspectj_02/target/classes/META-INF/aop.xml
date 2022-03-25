@@ -1,0 +1,9 @@
+<aspectj>
+    <aspects>
+        <aspect name="com.itheima.aop.MyAspect"/>
+        <weaver options="-verbose -showWeaveInfo">
+            <include within="com.itheima.service.MyService"/>
+            <include within="com.itheima.aop.MyAspect"/>
+        </weaver>
+    </aspects>
+</aspectj>

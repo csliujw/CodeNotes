@@ -1,0 +1,3 @@
+com\itheima\A10Application.class
+com\itheima\aop\MyAspect.class
+com\itheima\service\MyService.class

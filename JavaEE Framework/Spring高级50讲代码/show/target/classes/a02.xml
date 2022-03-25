@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- 控制反转, 让 bean1 被 Spring 容器管理 -->
+    <bean id="bean1" class="com.itheima.a02.A02.Bean1"/>
+
+    <!-- 控制反转, 让 bean2 被 Spring 容器管理 -->
+    <bean id="bean2" class="com.itheima.a02.A02.Bean2">
+        <!-- 依赖注入, 建立与 bean1 的依赖关系 -->
+        <property name="bean1" ref="bean1"/>
+    </bean>
+</beans>

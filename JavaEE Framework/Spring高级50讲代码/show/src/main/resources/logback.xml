@@ -1,0 +1,106 @@
+<configuration>
+
+    <appender name="boldRed" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%highlight([%level]) %d{HH:mm:ss.SSS} %boldRed([%thread]) - %msg %n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="boldBlue" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%highlight([%level]) %d{HH:mm:ss.SSS} %boldBlue([%thread]) - %msg %n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="boldGreen" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%highlight([%level]) %d{HH:mm:ss.SSS} %boldGreen([%thread]) - %msg %n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="boldYellow" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%highlight([%level]) %d{HH:mm:ss.SSS} %boldYellow([%thread]) - %msg %n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="boldMagenta" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%highlight([%level]) %d{HH:mm:ss.SSS} %boldMagenta([%thread]) - %msg %n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="boldCyan" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%highlight([%level]) %d{HH:mm:ss.SSS} %boldCyan([%thread]) - %msg %n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="boldWhite" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%highlight([%level]) %d{HH:mm:ss.SSS} %boldWhite([%thread]) - %msg %n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="STDOUT" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <discriminator>
+            <key>color</key>
+            <defaultValue>cyan</defaultValue>
+        </discriminator>
+        <sift>
+            <appender name="thread-${thread}" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder>
+                    <pattern>%highlight([%-5level]) %d{HH:mm:ss.SSS} %boldWhite([%thread]) %-35logger{35} - %${color}(%msg) %n</pattern>
+                </encoder>
+            </appender>
+        </sift>
+    </appender>
+
+    <logger name="A" level="DEBUG" additivity="false">
+        <appender-ref ref="boldRed"/>
+    </logger>
+
+    <logger name="B" level="DEBUG" additivity="false">
+        <appender-ref ref="boldBlue"/>
+    </logger>
+
+    <logger name="C" level="DEBUG" additivity="false">
+        <appender-ref ref="boldGreen"/>
+    </logger>
+
+    <logger name="D" level="DEBUG" additivity="false">
+        <appender-ref ref="boldYellow"/>
+    </logger>
+
+    <logger name="E" level="DEBUG" additivity="false">
+        <appender-ref ref="boldMagenta"/>
+    </logger>
+
+    <logger name="F" level="DEBUG" additivity="false">
+        <appender-ref ref="boldCyan"/>
+    </logger>
+
+    <logger name="G" level="DEBUG" additivity="false">
+        <appender-ref ref="boldWhite"/>
+    </logger>
+
+    <logger name="com.itheima" level="debug" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <logger name="org.springframework.web.servlet.resource" level="trace" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <logger name="org.springframework.web.servlet.DispatcherServlet" level="trace" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <logger name="org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator" level="trace" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+</configuration>
