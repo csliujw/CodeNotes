@@ -1,3 +1,7 @@
+## 提示
+
+可以结合 Spring 官方的测试用例一起理解。
+
 ## 容器与 bean
 
 ### 1) 容器接口
@@ -105,6 +109,10 @@ hi=你好
 
 ### 2) 容器实现
 
+- [x] BeanFactory 实现的特点
+- [x] ApplicationContext 的常见实现和用法
+- [x] 内嵌容器、注册 DispatcherServlet
+
 Spring 的发展历史较为悠久，因此很多资料还在讲解它较旧的实现，这里出于怀旧的原因，把它们都列出来，供大家参考
 
 * DefaultListableBeanFactory，是 BeanFactory 最重要的实现，像**控制反转**和**依赖注入**功能，都是它来实现
@@ -117,8 +125,6 @@ Spring 的发展历史较为悠久，因此很多资料还在讲解它较旧的�
 * AnnotationConfigReactiveWebServerApplicationContext，Spring boot 中 reactive web 环境容器（新）
 
 另外要注意的是，后面这些带有 ApplicationContext 的类都是 ApplicationContext 接口的实现，但它们是**组合**了 DefaultListableBeanFactory 的功能，并非继承而来
-
-
 
 #### 演示1 - DefaultListableBeanFactory
 
@@ -134,12 +140,12 @@ Spring 的发展历史较为悠久，因此很多资料还在讲解它较旧的�
 * beanFactory 需要手动调用 beanFactory 后处理器对它做增强
   * 例如通过解析 @Bean、@ComponentScan 等注解，来补充一些 bean definition
 * beanFactory 需要手动添加 bean 后处理器，以便对后续 bean 的创建过程提供增强
-  * 例如 @Autowired，@Resource 等注解的解析都是 bean 后处理器完成的
+  * 例如 @Autowired，@Resource 等注解的解析都是 bean 后处理器完成的（Autowired 根据类型匹配，同类型有多个，则根据名字匹配，用成员变量的名称进行名字匹配）
   * bean 后处理的添加顺序会对解析结果有影响，见视频中同时加 @Autowired，@Resource 的例子
+  * bean 后处理器针对 bean 的生命周期，如 bean 的创建，依赖注入，初始化，提供一些扩展功能。而后处理器的顺序决定了谁先执行谁后执行
 * beanFactory 需要手动调用方法来初始化单例
 * beanFactory 需要额外设置才能解析 ${} 与 #{}
-
-
+* Spring 的原始功能并不丰富，很多功能都是后处理器提供的
 
 #### 演示2 - 常见 ApplicationContext 实现
 
@@ -150,11 +156,16 @@ Spring 的发展历史较为悠久，因此很多资料还在讲解它较旧的�
 #### 收获💡
 
 1. 常见的 ApplicationContext 容器实现
+    1. 加载、解析，得到 BeanDefinition 信息
+    2. 将 BeanDefinition 放入 BeanFactory
+    3. BeanFactory 后置处理器
+    4. Bean 后置处理器
 2. 内嵌容器、DispatcherServlet 的创建方法、作用
 
-
-
 ### 3) Bean 的生命周期
+
+- [x] Spring Bean 生命周期各个阶段
+- [x] 模板设计模式
 
 一个受 Spring 管理的 bean，生命周期主要阶段有
 
@@ -165,8 +176,6 @@ Spring 的发展历史较为悠久，因此很多资料还在讲解它较旧的�
    * prototype 对象也能够销毁，不过需要容器这边主动调用
 
 一些资料会提到，生命周期中还有一类 bean 后处理器：BeanPostProcessor，会在 bean 的初始化的前后，提供一些扩展逻辑。但这种说法是不完整的，见下面的演示1
-
-
 
 #### 演示1 - bean 生命周期
 
@@ -183,19 +192,19 @@ graph LR
 可用 --> 销毁
 ```
 
-创建前后的增强
+**创建前后的增强**
 
 * postProcessBeforeInstantiation
   * 这里返回的对象若不为 null 会替换掉原本的 bean，并且仅会走 postProcessAfterInitialization 流程
 * postProcessAfterInstantiation
   * 这里如果返回 false 会跳过依赖注入阶段
 
-依赖注入前的增强
+**依赖注入前的增强**
 
 * postProcessProperties
   * 如 @Autowired、@Value、@Resource 
 
-初始化前后的增强
+**初始化前后的增强**
 
 * postProcessBeforeInitialization
   * 这里返回的对象会替换掉原本的 bean
@@ -204,7 +213,7 @@ graph LR
   * 这里返回的对象会替换掉原本的 bean
   * 如代理增强
 
-销毁之前的增强
+**销毁之前的增强**
 
 * postProcessBeforeDestruction
   * 如 @PreDestroy 
@@ -213,8 +222,6 @@ graph LR
 
 1. Spring bean 生命周期各个阶段
 2. 模板设计模式, 指大流程已经固定好了, 通过接口回调（bean 后处理器）在一些关键点前后提供扩展
-
-
 
 #### 演示2 - 模板方法设计模式
 
@@ -230,7 +237,7 @@ public class TestMethodTemplate {
         beanFactory.getBean();
     }
 
-    // 模板方法  Template Method Pattern
+    // 模板方法  Template Method Pattern。不管怎么加扩展功能，getBean 这个方法都不需要更改
     static class MyBeanFactory {
         public Object getBean() {
             Object bean = new Object();
@@ -249,14 +256,12 @@ public class TestMethodTemplate {
             processors.add(processor);
         }
     }
-    
+    // 变化的抽象为接口
     static interface BeanPostProcessor {
         public void inject(Object bean); // 对依赖注入阶段的扩展
     }
 }
 ```
-
-
 
 #### 演示3 - bean 后处理器排序
 
@@ -274,6 +279,9 @@ public class TestMethodTemplate {
 
 ### 4) Bean 后处理器
 
+- [x] Bean 后处理器的作用：为 Bean 生命周期各个阶段提供扩展
+- [x] 常见的后处理器
+
 #### 演示1 - 后处理器作用
 
 ##### 代码参考 
@@ -288,6 +296,7 @@ public class TestMethodTemplate {
    * CommonAnnotationBeanPostProcessor 解析 @Resource、@PostConstruct、@PreDestroy
    * ConfigurationPropertiesBindingPostProcessor 解析 @ConfigurationProperties
 3. 另外 ContextAnnotationAutowireCandidateResolver 负责获取 @Value 的值，解析 @Qualifier、泛型、@Lazy 等
+4. 解析的顺序是 @Resource @Autowired @Value @PostConstruct @PreDestory
 
 
 
@@ -307,6 +316,9 @@ public class TestMethodTemplate {
 
 
 ### 5) BeanFactory 后处理器
+
+- [x] BeanFactory 后处理器的作用：为 BeanFactory `+提供扩展
+- [x] 常见的 BeanFactory 后处理器
 
 #### 演示1 - BeanFactory 后处理器的作用
 
@@ -370,6 +382,11 @@ public class TestMethodTemplate {
 
 
 ### 6) Aware 接口
+
+- [x] Aware 接口提供了一种【内置】的注入手段，可以注入 BeanFactory，ApplicationContext
+- [x] InitializingBean 接口提供了一种【内置】的初始化手段
+- [x] 内置的注入和初始化不受扩展功能的影响，总会被执行，因此 Spring 框架内部的类常用它们
+- [x] 实战：@Autowired 失效分析
 
 #### 演示 - Aware 接口及 InitializingBean 接口
 
