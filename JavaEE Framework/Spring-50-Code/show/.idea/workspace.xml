@@ -4,14 +4,25 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
+<<<<<<< HEAD
     <list default="true" id="84925f2f-6023-4c29-8169-ee12802cdd15" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
     </list>
+=======
+    <list default="true" id="84925f2f-6023-4c29-8169-ee12802cdd15" name="Changes" comment="" />
+>>>>>>> dd9a366a20493ca1020f71ae0ef980c542e810b4
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../.." />
@@ -53,9 +64,10 @@
     <property name="RequestMappingsPanelWidth1" value="75" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../../../Code/algorithm" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -65,7 +77,18 @@
     <property name="settings.editor.selected.configurable" value="MavenSettings" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
-  <component name="RunManager" selected="Application.A05">
+  <component name="RunManager" selected="Application.Main">
+    <configuration default="true" type="ArquillianJUnit" factoryName="" nameIsGenerated="true">
+      <option name="arquillianRunConfiguration">
+        <value>
+          <option name="containerStateName" value="" />
+        </value>
+      </option>
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="A04" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.itheima.a04.A04" />
       <module name="show" />
@@ -105,12 +128,12 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="TestMethodTemplate" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="com.itheima.a03.TestMethodTemplate" />
+    <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.itheima.a01.Main" />
       <module name="show" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="com.itheima.a03.*" />
+          <option name="PATTERN" value="com.itheima.a01.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -118,7 +141,12 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+<<<<<<< HEAD
     <configuration name="A03" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
+=======
+    <configuration name="TestMethodTemplate" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.itheima.a03.TestMethodTemplate" />
+>>>>>>> dd9a366a20493ca1020f71ae0ef980c542e810b4
       <module name="show" />
       <extension name="coverage">
         <pattern>
@@ -126,18 +154,17 @@
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <option name="SPRING_BOOT_MAIN_CLASS" value="com.itheima.a03.A03" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.Main" />
         <item itemvalue="Application.A05" />
         <item itemvalue="Application.DigInAutowired" />
         <item itemvalue="Application.A04" />
         <item itemvalue="Application.TestMethodTemplate" />
-        <item itemvalue="Spring Boot.A03" />
       </list>
     </recent_temporary>
   </component>
@@ -151,8 +178,14 @@
       <updated>1648222938063</updated>
       <workItem from="1648222939595" duration="247000" />
       <workItem from="1648223208384" duration="2595000" />
+<<<<<<< HEAD
       <workItem from="1648283183921" duration="12177000" />
       <workItem from="1648359487571" duration="112000" />
+=======
+      <workItem from="1648283183921" duration="12093000" />
+      <workItem from="1648303693081" duration="57000" />
+      <workItem from="1648303783901" duration="3666000" />
+>>>>>>> dd9a366a20493ca1020f71ae0ef980c542e810b4
     </task>
     <servers />
   </component>

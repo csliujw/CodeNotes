@@ -14,6 +14,8 @@ import org.springframework.context.support.FileSystemXmlApplicationContext;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.mvc.Controller;
 
+import java.util.Scanner;
+
 /*
     常见 ApplicationContext 实现
  */
