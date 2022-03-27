@@ -308,10 +308,8 @@ public class TestVolatile {
 }
 
 class ResourceClass {
-
     // 加了volatile保证了可见性。
     volatile int number = 0;
-
     public void addToSix() {
         number = 60;
     }
@@ -438,7 +436,7 @@ public class ThreadApplication {
     public static volatile int flag2 = 0;
     public static volatile int flag3 = 0;
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws Exception {
         // 3个线程，3个操作。
         Thread th1 = new Thread(() -> {
             try {
@@ -550,7 +548,7 @@ public class CreateByRunnable {
 
 ### Runnable 和 Thread 的关系
 
-分析 Thread 的源码，理清它与 Runnable 的关系 
+分析 Thread 的源码，理清它与 Runnable 的关系。
 
 ```java
 @Override
@@ -562,11 +560,21 @@ public void run() {
 }
 ```
 
-**start 与 run：**start 是开启线程，启动线程后，JVM 会回调 run 方法
+**start 与 run：**start 是开启线程，启动线程后，JVM 会回调 Thread 类的 run 方法。而 run 方法的代码如下：
+
+```java
+public void run() {
+    if (target != null) {
+					// 如果 target 不为空，则调用 target 的 run 方法。
+        // 这个 target 就是 Runnable 接口的实现类
+        target.run();
+    }
+}
+```
 
 > 小结 
 
-- 方法1 是把线程和任务合并在了一起，方法2 是把线程和任务分开了 
+- 方法1是把线程和任务合并在了一起，方法2是把线程和任务分开了 
 - 用 Runnable 更容易与线程池等高级 API 配合 
 - 用 Runnable 让任务类脱离了 Thread 继承体系，更灵活
 
@@ -577,7 +585,7 @@ FutureTask 能够接收 Callable 类型的参数，用来处理有返回结果�
 ```java
 @Slf4j(topic = "c.CreateByFutureTask")
 public class CreateByFutureTask {
-    public static void main(String[] args) throws ExecutionException, InterruptedException {
+    public static void main(String[] args) throws Exception {
         FutureTask<String> task = new FutureTask<String>(() -> {
             TimeUnit.SECONDS.sleep(2);
             return "Hello";
@@ -591,8 +599,6 @@ public class CreateByFutureTask {
     }
 }
 ```
-
-----
 
 因为多数代码都比较简单，所以只写用的少的那部分。
 
