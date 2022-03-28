@@ -13,7 +13,7 @@
     - `@throws` 抛出的异常
     - `@description` 表示方法废弃。已经被 `@Deprecated` 注解替代了
 
-# 位运算补充
+# 位运算
 
 ## 计算方式 
 
@@ -77,7 +77,7 @@ public class OpBin {
 - n & 1判断奇偶 n & 1 == 1 为奇数；n & 1 == 0 为偶数。
 - n1 \^ n2 \^ n1 = n2
 
-# 第二部分 基础
+# Java基础
 
 ## 第一章 面向对象概述
 
@@ -10772,87 +10772,144 @@ public void copyFile(File src, File dest) {
 #### 对象序列化
 
 - 用于将不常用的又不能销毁的对象存入文本，要用时在从文本读取。可以节约内存？
-- 类想要被序列化需要实现**`Serializable`**接口
+- 类想要被序列化需要实现 **`Serializable`** 接口
 - 类的个别字段不想被序列化的话使用 **transient** 关键字
 - 若因为类进行了更改导致反序列化失败，如何解决？
-  - 定义一个`private static final long serialVersionUID = -6849794470754660L;`进行是否是同一个类的判断
-  - 无责任猜测：应该是计算了类的信息指纹，用信息指纹的比较来判断是否是同一个类。【密码学】
+  - 定义一个 `private static final long serialVersionUID = -6849794470754660L;` 进行是否是同一个类的判断
+  - 无责任猜测：应该是计算了类的信息指纹，用信息指纹的比较来判断是否是同一个类。
 
 ```java
-@Test
-public void fn1() throws IOException, ClassNotFoundException {
-    // 测试序列化流的基本方法
-    ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("objectDemo.txt"));
-    oos.writeObject(new Student("hello1",52));
-    oos.writeObject(new Student("hello2",52));
-    oos.writeObject(new Student("hello3",52));
-    oos.flush();
-    oos.close();
+public class Test2 {
+    @Test
+    public void fn1() throws Exception {
+        // 测试序列化流的基本方法
+        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("objectDemo.txt"));
+        oos.writeObject(new Student("hello1", 52));
+        oos.writeObject(new Student("hello2", 52));
+        oos.writeObject(new Student("hello3", 52));
+        oos.flush();
+        oos.close();
 
-    // 读取序列化对象
-    ObjectInputStream ois = new ObjectInputStream(new FileInputStream("objectDemo.txt"));
-    Student o = (Student) ois.readObject();
-    System.out.println(o.toString());
-    ois.close();
+        // 读取序列化对象
+        ObjectInputStream ois = new ObjectInputStream(new FileInputStream("objectDemo.txt"));
+        Student o = (Student) ois.readObject();
+        System.out.println(o.toString());
+        ois.close();
+    }
+
+    // 如果对象被更改了，能否再次正确读出？ 无法正确读出.
+    // 怎么办？ 使用 private static final long serialVersionUID = -6849794470754660L; 标识是否是同一个对象
+    @Test
+    public void fn2() throws Exception {
+        ObjectInputStream ois = new ObjectInputStream(new FileInputStream("objectDemo.txt"));
+        // 如何判断是否写到了结尾呢？
+        // 1.每次写完，写一个 null 进去，用于判断结束了。
+        // 2.捕获 EOFE 异常
+        Student student = (Student) ois.readObject();
+        student.say();
+        System.out.println(student.toString());
+        ois.close();
+    }
+
+    static class Student implements java.io.Serializable {
+        private static final long serialVersionUID = -6849794470754660L;
+        // 不想被序列化的字段用transient
+        transient String name;
+        int age;
+
+
+        public Student(String name, int age) {
+            this.name = name;
+            this.age = age;
+        }
+
+        public void say() {
+            System.out.println("我是多余的方法！");
+        }
+
+        @Override
+        public String toString() {
+            return "Student{" + "name='" + name + '\'' + ", age=" + age + '}';
+        }
+    }
 }
+```
 
-// 如果对象被更改了，能否再次正确读出？ 无法正确读出！！
-// 怎么办？ 使用private static final long serialVersionUID = -6849794470754660L; 标识是否是同一个对象
-// 不仅识别了，多余的方法还可以调用
-@Test
-public void fn2() throws IOException, ClassNotFoundException {
-    ObjectInputStream ois = new ObjectInputStream(new FileInputStream("objectDemo.txt"));
-    Student o = (Student) ois.readObject();
-    Object o1 = ois.readObject();
-    Object o2 = ois.readObject();java
-        // 应该报错吧
-        Object o3 = ois.readObject();
-    o.say();
-    System.out.println(o.toString());
-    ois.close();
+#### 对象序列化与单例
+
+在进行对象序列化和反序列化时，如果对象是唯一的（单例模式）需要小心得到不一样的对象。
+
+```java
+public class Single {
+    static class Orientation implements Serializable {
+        private int value = 1;
+
+        private Orientation(int value) { this.value = value; }
+        public static final Orientation HOR1 = new Orientation(1);
+        public static final Orientation HOR2 = new Orientation(2);
+    }
+
+    @Test
+    public void serial() throws Exception {
+        ObjectOutputStream writeObject = new ObjectOutputStream(new FileOutputStream("single.dat"));
+        writeObject.writeObject(Orientation.HOR1);
+        writeObject.close();
+        ObjectInputStream readObject = new ObjectInputStream(new FileInputStream("single.dat"));
+        Object o = readObject.readObject();
+        System.out.println(o == Orientation.HOR1); // false, 不是同一个对象
+    }
 }
+```
 
-class Student implements java.io.Serializable {
-    private static final long serialVersionUID = -6849794470754660L;
-    // 不想被序列化的字段用transient
-    private transient String name;
-    private int age;
-    private int weight = 10;
-    public String getName() {
-        return name;
+为类添加 readResolve 方法，可以保证是同一个对象
+
+```java
+public class Single {
+    static class Orientation implements Serializable {
+        private int value = 1;
+
+        private Orientation(int value) {
+            this.value = value;
+        }
+
+        public static final Orientation HOR1 = new Orientation(1);
+        public static final Orientation HOR2 = new Orientation(2);
+
+        private Object readResolve() {
+            return Orientation.HOR1;
+        }
     }
 
-    public void setName(String name) {
-        this.name = name;
+    @Test
+    public void serial() throws Exception {
+        ObjectOutputStream writeObject = new ObjectOutputStream(new FileOutputStream("single.dat"));
+        writeObject.writeObject(Orientation.HOR1);
+        writeObject.close();
+        ObjectInputStream readObject = new ObjectInputStream(new FileInputStream("single.dat"));
+        Object o = readObject.readObject();
+        System.out.println(o == Orientation.HOR1); // true, 是同一个对象
+    }
+}
+```
+
+枚举单例模式可以避免反序列化不是同一个对象
+
+```java
+public class EnumTest {
+    enum Demo {
+        A() {
+            public void say() { System.out.println("say"); }
+            public void walk() { System.out.println("walk"); }
+        }
     }
 
-    public int getAge() {
-        return age;
-    }
-
-    public void setAge(int age) {
-        this.age = age;
-    }
-
-    public Student(){
-
-    }
-
-    public Student(String name, int age) {
-        this.name = name;
-        this.age = age;
-    }
-
-    public void say(){
-        System.out.println("我是多余的方法！");
-    }
-
-    @Override
-    public String toString() {
-        return "Student{" +
-                "name='" + name + '\'' +
-                ", age=" + age +
-                '}';
+    public static void main(String[] args) throws Exception {
+        ObjectOutputStream writeObject = new ObjectOutputStream(new FileOutputStream("single.dat"));
+        writeObject.writeObject(Demo.A);
+        writeObject.close();
+        ObjectInputStream readObject = new ObjectInputStream(new FileInputStream("single.dat"));
+        Object o = readObject.readObject();
+        System.out.println(o == Demo.A); // true, 是同一个对象
     }
 }
 ```
@@ -14212,7 +14269,7 @@ public class TableCreator {
   - 因为run方法是用来封装被线程执行的代码
 - run方法和start方法的区别
   - run封装线程执行的代码，直接调用，相当于普通方法调用
-  - start，启动线程，然后由`jvm`调用此线程的run方法
+  - start，启动线程，然后由 `jvm` 调用此线程的run方法
 
 ```java
 public class ThreadDemo {
@@ -14234,16 +14291,28 @@ class MyThread extends Thread{
 }
 ```
 
-方式二：实现Runnable接口
+方式二：实现 Runnable 接口
 
-- 相比于继承Thread，实现Runnable接口的优势
-  - 避免了Java单继承的局限性【多继承可以用内部类实现】
-  - 适合多个相同程序的代码去处理同一个资源。【Thread用静态定义资源也可以】，把线程和程序的代码，数据，进行了有效分类，较好体现了面向对象的设计思想！
-    - 数据，代码分离体现在哪里？？？
+- 相比于继承 Thread，实现 Runnable 接口的优势
+  - 避免了 Java 单继承的局限性【多继承可以用内部类实现】
+  - 适合多个相同程序的代码去处理同一个资源。【Thread 用静态定义资源也可以】，把线程和程序的代码、数据进行了有效分类，较好体现了面向对象的设计思想！
+    - 资源类定义对资源的操作，唤醒，等待。
+    - 线程类只需要调用资源类的方法即可。
+    - 线程和资源分离
+
+方式三：Callable + FutureTask
+
+- 相比于 Runnable，Callable + FutureTask 的组合可以返回线程的处理结果。
+
+方式四：线程池
+
+- 可以避免频繁的开启、关闭线程。
 
 ### 线程的控制
 
 #### join()
+
+AThread.join()，先让 AThread 线程运行完，再执行其他操作。
 
 ```java
 public static void fn1(){
@@ -14307,11 +14376,180 @@ public static void fn1() {
 }
 ```
 
+### 优先级
+
+JDK 线程的优先级与多数 OS 都不能很好的配合，虽然你设置的线程优先级高，但是 OS 不一定会让他优先执行。
+
+### 线程组
+
+最好把线程组看成一次不成功的尝试，忽略它即可。
+
+
+
+### 捕获异常
+
+由于线程的本质特性，我们不能捕获线程中逃逸的异常。下面这个例子展示了线程出错但是我们无法捕获到出错的线程。
+
+```java
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class ExceptionThread implements Runnable{
+    @Override
+    public void run() {
+        throw new RuntimeException("Error");
+    }
+
+    public static void main(String[] args) {
+        ExceptionThread thread = new ExceptionThread();
+        ExecutorService pools = Executors.newFixedThreadPool(1);
+        pools.execute(thread);
+    }
+}
+/*
+Exception in thread "pool-1-thread-1" java.lang.RuntimeException: Error
+	at tij.concurrent.ExceptionThread.run(ExceptionThread.java:9)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+	at java.base/java.lang.Thread.run(Thread.java:834)
+*/
+```
+
+我们可以为 Thread 重新设置一个未捕获到异常时的异常处理器，来捕获到是那个线程出现了问题。
+
+```java
+public class ExceptionThread implements Runnable {
+    @Override
+    public void run() {
+        throw new RuntimeException("Error");
+    }
+
+    static class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
+        @Override
+        public void uncaughtException(Thread t, Throwable e) {
+            System.out.println("I catch:" + t.getName() + ">>>>>" + e);
+        }
+    }
+
+    public static void main(String[] args) {
+        Thread.setDefaultUncaughtExceptionHandler(new MyUncaughtExceptionHandler());
+        ExceptionThread thread = new ExceptionThread();
+        ExecutorService pools = Executors.newFixedThreadPool(2);
+        pools.execute(()->{
+            while (true);
+        });
+        pools.execute(thread);
+    }
+}
+// I catch:pool-1-thread-2>>>>>java.lang.RuntimeException: Error
+```
+
 ### 线程的同步
+
+#### 线程不安全问题
+
+分析下面这段代码，说出程序的执行结果。
+
+```java
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+public class ConcurrentQuestion {
+    static int count = 0;
+    public static void main(String[] args) throws InterruptedException {
+        ExecutorService pools = Executors.newFixedThreadPool(3);
+        pools.submit(()->{
+            for (int i = 0; i <10000 ; i++) {
+                count++;
+            }
+        });
+        pools.submit(()->{
+            for (int i = 0; i <10000 ; i++) {
+                count++;
+            }
+        });
+        pools.submit(()->{
+            for (int i = 0; i <10000 ; i++) {
+                count++;
+            }
+        });
+        pools.shutdown(); // 关闭线程池，不再接收新的任务，原有任务会继续进行。包括阻塞队列中的任务。
+        TimeUnit.SECONDS.sleep(3); // 确保前面的线程执行完毕
+        System.out.println(count);
+    }
+}
+```
+
+结果不是 30000 而是 小于 30000 的数。因为，在 Java 中递增不是原子性操作。
+
+```mermaid
+sequenceDiagram
+participant A as ThreadA
+participant B as ThreadB
+participant M as Memory
+M->>M:count=0
+A->>M:从内存中拿到了count的值0
+B->>M:我也从内存中拿到了count的值0
+A->>A:count++变成1，准备写回内存中
+B->>B:count++变成1，准备写回内存中
+A->>M:把1写回内存
+B->>M:把1写回内存
+```
+
+我们可以使用 synchronized 保证线程拿到变量和写回变量的过程中不会有其他线程操作改变量。即，对 count++ 加了 sync 后会变成
+
+```mermaid
+sequenceDiagram
+participant A as ThreadA
+participant B as ThreadB
+participant M as Memory
+M->>M:count=0
+A->>M:从内存中拿到了count的值0
+A->>A:count++变成1，准备写回内存中
+A->>M:把1写回内存
+M->>M:count=1
+B->>M:从内存中拿到了count的值1
+B->>B:count++变成2，准备写回内存中
+B->>M:把2写回内存
+```
+
+```java
+public class ConcurrentQuestion {
+    static int count = 0;
+    public static void main(String[] args) throws InterruptedException {
+        ExecutorService pools = Executors.newFixedThreadPool(3);
+        pools.submit(()->{
+            for (int i = 0; i <10000 ; i++) {
+                synchronized (ConcurrentQuestion.class){
+                    count++;
+                }
+            }
+        });
+        pools.submit(()->{
+            for (int i = 0; i <10000 ; i++) {
+                synchronized (ConcurrentQuestion.class){
+                    count++;
+                }
+            }
+        });
+        pools.submit(()->{
+            for (int i = 0; i <10000 ; i++) {
+                synchronized (ConcurrentQuestion.class){
+                    count++;
+                }
+            }
+        });
+        pools.shutdown();
+        TimeUnit.SECONDS.sleep(2);
+        System.out.println(count);
+    }
+}
+```
 
 #### 使用synchronized
 
-- synchronize（）中的应该就是充当信号量的。
+- synchronize() 中的应该就是充当信号量的。
 
 ```java
 public static void main(String[] args) {
@@ -14387,8 +14625,8 @@ public class SaleTicket implements Runnable {
 - empty 告诉生产者还可以放多少
 - full 告诉消费者还可以拿多少
 - 同时只能一个拿或一个放
-- 不能拿/放则等待 用wait()
-- 有东西了，可以拿了就notify() == 【应该是随机唤醒一个等待的线程，可以指定唤醒某个吗？】
+- 不能拿/放则等待 用 wait()
+- 有东西了，可以拿了就notify()【应该是随机唤醒一个等待的线程，无法做到精准唤醒】
 
 ## 第二十五章 设计模式
 
@@ -15124,4 +15362,10 @@ class DataSourceUtils {
     }
 }
 ```
+
+# 新特性
+
+## Java平台模块系统
+
+- requires 不具备传递性，A 声明了需要 B，B 声明了需要 C 和 D，但是 A 不能使用 C 和 D。
 
