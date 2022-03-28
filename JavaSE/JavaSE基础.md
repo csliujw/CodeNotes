@@ -85,26 +85,26 @@ public class OpBin {
 
 面向对象编程有三大特点：
 
-- 封装：合理暴露类中的内容；合理封装类中的内容（即限定使用条件）
-- 继承：利用现成的数据进行“克隆”，再根据情况进行添加和修改。
-- 多态：把一个对象看成是它所属的基类，而不是把它当成具体类；从而做到一种形式多种表现。
+- **①封装**：合理暴露类中的内容；合理封装类中的内容（即限定使用条件）
+- **②继承**：利用现成的数据进行“克隆”，再根据情况进行添加和修改。
+- **③多态**：把一个对象看成是它所属的基类，而不是把它当成具体类；从而做到一种形式多种表现。
 
 ### 抽象
 
 所有编程语言都提供抽象机制；汇编语言是对底层机器的轻微抽象。接着出现的 “命令式” 语言（如 FORTRAN，BASIC 和 C）是对汇编语言的抽象。而面向对象程序设计是对现实世界事物的抽象。
 
-- **万物皆对象**。你可以将对象想象成一种特殊的变量。它用属性、有行为，可以在你对其 “发出请求” 时执行本身的操作。
+- **万物皆对象**。你可以将对象想象成一种特殊的变量。它用属性、有行为，可以在你对其“发出请求”时执行本身的操作。
 - 每个对象都有自己的存储空间，可容纳其他对象。
 - 每个对象都有一种类型。
 - 同一类所有对象都能接收相同的消息。
 
 ### 接口
 
-在 “问题空间”（问题实际存在的地方）的元素与 “方案空间”（对实际问题进行建模的地方，如计算机）的元素之间建立理想的 “一对一” 的映射关系；即定义规则。具体的规则实现由子类（接口的实现类）负责。 
+在 “问题空间”（问题实际存在的地方）的元素与“方案空间”（对实际问题进行建模的地方，如计算机）的元素之间建立理想的“一对一”的映射关系；即定义规则。具体的规则实现由子类（接口的实现类）负责。 
 
-- 一个对象检查所有排版布局的目 录；
+- 一个对象检查所有排版布局的目录；
 - 一个或一组可以识别不同打印机型号的对象展示通用的打印界面；
-- 第三个对象组合 上述两个服务来完成任务。
+- 第三个对象组合上述两个服务来完成任务。
 
 每个对象都提供了一组紧密的服务。在良好的面向对象设计中，每个对象功能单一且高效。这样的程序设计可以提高我们代码的复用性，方便别人阅读和理解我们的代码，也方便使用。
 
@@ -120,11 +120,11 @@ Java 有三个显式关键字来设置类中的访问权限：public（公开）
 - public（公开）表示任何人都可以访问和使用该元素； 
 - private（私有）除了类本身和类内部的方法，外界无法直接访问该元素。private 是类和调用者之间的屏障。任何试图访问私有成员的行为都会报编译时错误； 
 - protected（受保护）类似于 private，区别是子类可以访问 protected 的成员，但不能访问 private 成员；
-- default（默认）如果你不使用前面的三者，默认就是 default 访问权限。default 被称为包访问，因为该权限下的资源可以被同一包（库组件）中其他类的成员访问。
+- default（默认）如果你不使用前面的三者，默认就是 default 访问权限。default 被称为包访问，因为该权限下的资源可以被同一包中的其他类成员访问。不同包下的子类也无法访问 default 修饰的内容。
 
 ### 复用
 
-组合大于继承。
+继承可以复用代码，组合也可以复用代码。但是组合大于继承。优先推荐使用组合而非继承。
 
 ### 继承
 
@@ -132,7 +132,7 @@ Java 有三个显式关键字来设置类中的访问权限：public（公开）
 
 ### 多态
 
-<span style="color:blue">把一个对象看成是它所属的基类，而不是把它当成具体类。</span>通过这种方式，我们可以编写出不局限于特定类型的代码。在上个 “形状” 的例子中，“方法”（method）操纵的是通用 “形状”，而不关心它们是 “圆”、“正方形”、 “三角形” 还是某种尚未定义的形状。所有的形状都可以被绘制、擦除和移动，因此 “方 法” 向其中的任何代表 “形状” 的对象发送消息都不必担心对象如何处理信息。
+<span style="color:blue">把一个对象看成是它所属的父类，而不是把它当成具体类。</span>通过这种方式，我们可以编写出不局限于特定类型的代码。
 
 这样的代码不会受添加的新类型影响，这种能力改善了我们的设计，且减少了软件的维护代价。
 
@@ -140,11 +140,11 @@ Java 有三个显式关键字来设置类中的访问权限：public（公开）
 
 通常，我们并不知道解决某个具体问题需要的对象数量和持续时间（使用多久），以及对象的存储方式。那么我们如何知悉程序在运行时需要分配的内存空间呢？
 
-“集合” 这种类型的对象可以存储任意类型、数量的其他对象。它能根据需要自动 扩容。
+“集合” 这种类型的对象可以存储任意类型、数量的相同类型的对象，并且可以根据需要自动扩容。
 
 ### 异常处理
 
-“异常”（Exception） 是一个从出错点 “抛出”（thrown）后能被特定类型的异常处理程序捕获 (catch) 的一个对象。它不会干扰程序的正常运行，仅当程序出错的时候才被执行。这让我们的编码更简单：不用再反复检查错误了。另外，异常不像方法返回的错误值和方法设置用来表示发生错误的标志位那样可以被忽略。异常的发生是不会被忽略的，它终究会在某一时刻被处理。
+“异常”（Exception） 是一个从出错点“抛出”（throw）后能被特定类型的异常处理程序捕获 (catch) 的一个对象。它不会干扰程序的正常运行，仅当程序出错的时候才被执行。这让我们的编码更简单：不用再反复检查错误了。另外，异常不像方法返回的错误值和方法设置用来表示发生错误的标志位那样可以被忽略。异常的发生是不会被忽略的，它终究会在某一时刻被处理。
 
 “异常机制” 提供了一种可靠地从错误状况中恢复的方法，使得我们可以编写出更健壮的程序。有时我们只要处理好抛出的异常情况并恢复程序的运行即可，无需退出。
 
@@ -226,17 +226,16 @@ static 修饰，属于类本身，随类的加载而加载，因为只有一份�
 
 ### 类和对象
 
-- 类：是一组相关 <u>*属性和行为的集合*</u> 。可以看成是一类事物的模板，使用事物的属性特征和行为特征来描述该类事物。现实中，描述一类事物：
+- 类：是一组相关属性和行为的集合 。可以看成是一类事物的模板，使用事物的属性特征和行为特征来描述该类事物。现实中，描述一类事物：
   - 属性：就是该事物的状态信息。 
   - 行为：就是该事物能够做什么。
   - 举例：小猫。
   - 属性：名字、体重、年龄、颜色。  
   - 行为：走、跑、叫。
-- **什么是对象** 
-  - 对象：是一类事物的具体体现。对象是类的一个实例，必然具备该类事物的属性 和行为。
+- 对象：是一类事物的具体体现。对象是类的一个实例，必然具备该类事物的属性 和行为 
   - 现实中，一类事物的一个实例：一只小猫。
   - 属性：tom、5kg、2 years、yellow。   
-  - 行为：溜墙根走、蹦跶的跑、喵喵叫。 
+  - 行为：走、跑、跳。 
 
 > 类与对象的关系 ：类是对一类事物的描述，是抽象的。 对象是一类事物的实例，是具体的。 类是对象的模板，对象是类的实体。
 
@@ -248,7 +247,7 @@ static 修饰，属于类本身，随类的加载而加载，因为只有一份�
         - jdk 1.8 及 1.8 以后用元空间实现
     - 1.8及其以后，方法区中的常量池和静态变量都移动到了 JVM 堆中。具体看 openJDK 的描述 [JEP 122: Remove the Permanent Generation (java.net)](http://openjdk.java.net/jeps/122)
 - 堆中拿到成员方法的地址，通过地址对方法进行调用【回忆组成原理】。
-- 堆将方法区中的成员变量拿到堆中（相当于copy一份），对其进行初始化值得操作。【不同对象的成员变量是独立的（非静态成员变量）】
+- 堆将方法区中的成员变量拿到堆中（相当于 copy 一份），对其进行初始化值得操作。【不同对象的成员变量是独立的（非静态成员变量）】
 - main 方法中的变量指向堆中的对象，并对对象进行赋值操作。
 - stack--栈，FIFO
 
@@ -291,7 +290,6 @@ public class Demo01VariableDifference {
         System.out.println(num); // 错误写法！
         System.out.println(name);
     }
-
 }
 ```
 
@@ -308,7 +306,7 @@ public Class Counter{
 }
 ```
 
-## 第二章 万物皆对象
+## 第二章 补充内容
 
 这个，不好说。
 
@@ -422,14 +420,14 @@ public class StaticImport {
 
 ### API 的使用
 
-`API(Application Programming Interface)`，应用程序编程接口。
+`API (Application Programming Interface)`，应用程序编程接口。
 
-> `API`使用步骤 
+> `API` 使用步骤 
 
 - 打开帮助文档。
 - 点击显示，找到索引，看到输入框。
 - 你要找谁？在输入框里输入，然后回车。
-- 看包。java.lang下的类不需要导包，其他需要。
+- 看包。java.lang 下的类不需要导包，其他需要。
 - 看类的解释和说明。
 - 学习构造方法。
 
@@ -439,7 +437,7 @@ public class StaticImport {
 
 Java 通过构造器完成对象的初始化过程。如果一个类有构造器，那么 Java 会在用户使用对象之前（即对象刚创建完成）自动调用对象的构造器方法，从而保证初始化。
 
-问题在于编译器必须知道构造器方法名称，从而调用，且要避免和类中已有元素命名冲突。Java 的采用的做法是让构造器名称和类名保持一致，且构造方法没有返回值。
+问题在于编译器必须知道构造器方法名称进行调用？并且构造器需要避免和类中已有元素命名冲突。Java 的采用的做法是让构造器名称和类名保持一致，且构造方法没有返回值。
 
 ```java
 class Demo{
@@ -449,7 +447,7 @@ class Demo{
 }
 ```
 
-在 Java 中，对象的创建与初始化是统一的概念，二者不可分割。
+在 Java 中，对象的创建与初始化是统一的概念，二者不可分割。而在其他语言中，对象的创建和初始化是分开的，如 Python。
 
 ### 方法重载
 
@@ -474,17 +472,18 @@ public void sum(int a,int b,int c){
 
 #### 重载与基本类型
 
-- 基本类型可以自动从较小的类型转型为较大的类型。
-    - 常量传入 f(char) f(short) f(int) 最后打印 f(int) f(int) f(int)
-    - char 传入 f(char) f(long) f(float) 最后打印 f(char) f(long) f(float) 
-    - byte 传入 f(short) f(int) f(long)最后打印 f(short) f(int) f(long)
-    - 常量会默认找 int，非常量如 char，short变量会默认找匹配的，没有匹配的就向上找一级，如 byte 找 byte，没找到 byte 有 short 就用 short。
-    - byte -128~127
-    - short -32768~32767 
-    - int -2^31^~2^31^-1 4字节
-    - long 8字节
-    - char 0~127
-- 如果传入的参数类型大于方法期望接收的参数类型，你必须首先**做向下转型**，否则编译器会报错。
+①基本类型可以自动从较小的类型转型为较大的类型。
+- 常量传入 f(char) f(short) f(int) 最后打印 f(int) f(int) f(int)
+- char 传入 f(char) f(long) f(float) 最后打印 f(char) f(long) f(float) 
+- byte 传入 f(short) f(int) f(long)最后打印 f(short) f(int) f(long)
+- 常量会默认找 int，非常量如 char，short 变量会默认找匹配的，没有匹配的就向上找一级，如 byte 找 byte，没找到 byte 有 short 就用 short。
+- byte -128~127
+- short -32768~32767 
+- int -2^31^~2^31^-1 4字节
+- long 8字节
+- char 0~127
+
+②如果传入的参数类型大于方法期望接收的参数类型，你必须首先**做向下转型**，否则编译器会报错。
 
 ```java
 public class Overloading {
@@ -511,11 +510,11 @@ public class Overloading {
 ```java
 void f(){} // 直觉上，我们很容易就可以区分出这两个方法
 int f() {return 1;}
-// 编译器也可以通过
-int x = f() // 来分辨到底使用那个
+// 编译器也可以通过接收函数的返回值来判断到底使用那个
+int x = f();
 ```
 
-<span style="color:blue">有时候我们可以调用一个方法且忽略返回值。因为我们不在乎返回值，只是想利用方法做些事。所以，如果直接调用 f()，Java 编译器就不知道你想调用哪个方法，到底是调用有返回值的还是无返回值的呢？读者也不明所以。因为我们不能根据返回值类型区分重载的方法。</span>
+<span style="color:blue">但是，有时候我们调用一个方法并不在意返回值，只是想执行这个方法，完成一些功能做些事。如果根据返回值区分重载，那么上面这种情况，编译器就无法区分到底用那个 f() 了。阅读代码的人也不知道到底调用的那个方法。所以我们不能根据返回值类型区分重载的方法。</span>
 
 ### 无参构造器
 
@@ -550,17 +549,22 @@ public class NoSynthesis {
 
 ### this 关键字
 
-- [x] 通过谁调用的方法谁就是 this。（this其实是隐式传递过去的参数）
-- [x] this 参数的传递是隐式传递的。在字节码中有所体现。
+通过谁调用的方法谁就是 this。（this其实是隐式传递过去的参数）
 
-- this 只能在方法内部使用，且不能在静态方法中使用。为什么？看JVM。
-    - 静态随类的加载而加载，所以静态先出现，而对象后出现（对象要等类加载完毕了，才可以 new 出来）。
-    - 我出现了，但是你没出现，我就不能使用你（使用未出现的）
-- 类加载机制！静态的使用不必对类进行实例化。this 指的是当前对象的引用。
+this 参数的传递是隐式传递的。在字节码中有所体现。
+
+this 只能在方法内部使用，且不能在静态方法中使用。为什么？看JVM。
+
+- 静态随类的加载而加载，所以静态先出现，而对象后出现（对象要等类加载完毕了，才可以 new 出来）。
+- 我出现了，但是你没出现，我就不能使用你（使用未出现的）
+
+- 类加载机制。静态的使用不必对类进行实例化。this 指的是当前对象的引用。
 
 #### this关键字的一些作用
 
-- 在构造器中调用构造器
+在构造器中调用构造器。
+
+PS：this 只能调用一个构造器；this 调用的构造器要放在最前面  
 
 ```java
 public class Flower{
@@ -571,15 +575,14 @@ public class Flower{
 	}
 	public Flower(String name){
 		this(12);
-        this.name = name;
+		this.name = name;
 	}
 }  
 ```
 
-> PS：this 只能调用一个构造器；this 调用的构造器要放在最前面  
+向其他方法传递当前对象
 
-- 向其他方法传递当前对象
-- this.成员变量 表明指的是成员变量，避免参数列表中的参数和要赋值的变量重复
+this.var 指的是成员变量，可以避免参数列表中的参数和要赋值的变量命名重复
 
 ```java
 public class ThisDemo {
@@ -602,8 +605,8 @@ public class ThisDemo {
 #### static 的含义
 
 - static 方法中不会存在 this。你不能在静态方法中调用非静态方法（反之可以， 静态不能直接访问非静态。）
-    - 因为内存中是【先】有静态内容，【后】有非静态内容
-    - 因为 this 代表当前对象，通过谁调用的方法就是当前对象。但是静态与对象无关。静态是【类名称.静态方法】
+    - 内存中是【先】有静态内容，【后】有非静态内容
+    - this 代表当前对象，通过谁调用的方法就是当前对象。但是静态与对象无关。静态是【类名称.静态方法】
     - `new Object().staticMethod();  // 最终会翻译成ClassName.staticMethod();`
 
 - 静态方法是为类而创建的，不需要任何对象。这也是静态方法的主要目的（static 修饰的成员方法是静态方法，静态方法不属于对象，而是属于类。）
@@ -612,14 +615,14 @@ public class ThisDemo {
 
 #### static 的作用
 
-- **可实现数据共享。static修饰的内容不再属于对象自己，而是属于类的，所以凡是本类的对象，都共享同一份。**
-- 什么时候用 static：只想为某特定域分配单一存储空间，而不去考虑究竟要创建多少对象，甚至更本不用创建对象；不希望某个方法、成员变量与类的任何对象关联起来。
+**①可实现数据共享。static修饰的内容不再属于对象自己，而是属于类的，所以凡是本类的对象，都共享同一份。**
+
+**②什么时候用 static**。只想为某特定域分配单一存储空间，而不去考虑究竟要创建多少对象，甚至更本不用创建对象；不希望某个方法、成员变量与类的任何对象关联起来。
 
 #### 静态代码块
 
-> 格式
-
 ```java
+// 语法格式
 public class ClassName{
 	static{
 		静态代码块执行。
@@ -636,7 +639,7 @@ public class ClassName{
 
 #### 静态的加载时机
 
-静态随类的加载而加载（静态内部类是类，加载遵从类的加载机制，所以静态内部类不会随外部类的加载而加载，而是在使用的时候才会加载 [ 惰性加载 ]）。
+静态随类的加载而加载（静态内部类是类，它的加载遵从类的加载机制，所以静态内部类不会随外部类的加载而加载，而是在使用的时候才会加载 [ 惰性加载 ]）。
 
 > 类加载概述
 
@@ -644,22 +647,24 @@ public class ClassName{
 
 虚拟机把描述类的数据从 Class 文件加载到内存，并对数据进行校验、转换解析和初始化，最终形成可以被虚拟机直接使用的 Java 类型，这就是虚拟机的类加载机制。
 
-类从被加载到虚拟机内存中开始，到卸载出内存为止，它的整个生命周期包括：加载（Loading）、验证（Verification）、准备（Preparation）、解析（Resolution）、初始化（Initialization）、使用（Using）和卸载（Unloading）7个阶段。其中验证、准备、解析3个部分统称为连接（Linking），这7个阶段的发生顺序如图所示：
+类从被加载到虚拟机内存中开始，到卸载出内存为止，它的整个生命周期包括：加载（Loading）、验证（Verification）、准备（Preparation）、解析（Resolution）、初始化（Initialization）、使用（Using）和卸载（Unloading）7个阶段。
 
-- 遇到 new、getstatic、putstatic 或 invokestatic 这4条字节码指令时，如果类没有进行过初始化，则需要先触发其初始化。生成这4条指令的最常见的 Java 代码场景是：
-    - 使用 new 关键字实例化对象的时候、
-    - 读取或设置一个类的静态字段（被 final 修饰、已在编译期把结果放入常量池的静态字段除外）的时候，
-    - 以及调用一个类的静态方法的时候。
+其中验证、准备、解析3个部分统称为连接（Linking）
+
+遇到 new、getstatic、putstatic 或 invokestatic 这4条字节码指令时，如果类没有进行过初始化，则需要先触发其初始化。生成这4条指令的最常见的 Java 代码场景是：
+- 使用 new 关键字实例化对象的时候、
+- 读取或设置一个类的静态字段（被 final 修饰、已在编译期把结果放入常量池的静态字段除外）的时候，
+- 以及调用一个类的静态方法的时候。
 
 > 初始化
 
-类的初始化阶段是类加载过程的最后一个步骤。进行准备阶段时，变量已经赋过一次系统要求的初始零值，而在初始化阶段则会按照所写的代码去初始化类变量和其他资源；即执行类构造器`<clinit>` 方法。
+类的初始化阶段是类加载过程的最后一个步骤。进行准备阶段时，变量已经赋过一次系统要求的初始零值，而在初始化阶段则会按照所写的代码去初始化类变量和其他资源；即执行类构造器 `<clinit>` 方法。
 
-`clinit` 方法是 Java 编译器自动生成的；收集类中所有类变量的赋值动作和静态语句块（`static{}` 块）中的语句，将这些语句合并成一个`clinit`方法，编译器收集的顺序是按语句在源文件中出现的顺序收集的。
+`clinit` 方法是 Java 编译器自动生成的；收集类中所有类变量的赋值动作和静态语句块（`static{}` 块）中的语句，将这些语句合并成一个 `clinit` 方法，编译器收集的顺序是按语句在源文件中出现的顺序收集的。
 
 #### 静态工具类Arrays
 
-> 常用方法如下：
+常用方法如下：
 
 ```java
 @Test
@@ -695,13 +700,13 @@ public void test1(){
 Java 中有垃圾回收器回收无用对象占用的内存。但 Java 中，对象并非总是被垃圾回收
 
 - 对象可能不被垃圾回收
-- 垃圾回收不等同于C++中的析构
+- 垃圾回收不等同于 C++ 中的析构
 
-<span style="color:blue">不必要时，不进行GC。</span>只要程序没有濒临内存用完的那一刻，对象占用的空间就总也得不到释放。如果程序执行结束，而垃圾回收器一直没有释放你创建的任何对象的内存，则当程序退出时，那些资源会全部交还给操作系统。因为垃圾回收本身也有开销，这种策略可以减少不必要的 GC 开支。
+<span style="color:blue">不必要时，不进行GC。</span>只要程序没有濒临内存用完的那一刻，对象占用的空间就得不到释放。如果程序执行结束，而垃圾回收器一直没有释放对象的内存，则当程序退出时，那些资源会全部交还给操作系统。<span style="color:blue">因为垃圾回收本身也有开销，这种策略可以减少不必要的 GC 开支。</span>
 
 #### 垃圾回收器工作
 
-在堆上分配对象的代价十分高昂，你可能自然会觉得 Java 中所有对象（基本类型除外）在堆上分配的方式也十分高昂。然而，垃圾回收器能很明显地提高对象的创建速度。这听起来很奇怪——存储空间的释放影响了存储空间的分配，但这确实是某些 Java 虚拟机的工作方式。这也意味着，Java 从堆空间分配的速度可以和其他语言在栈上分配空间的速度相媲美。
+在堆上分配对象的代价十分高昂，你可能自然会觉得 Java 中所有对象（基本类型除外）在堆上分配的方式也十分高昂。然而，垃圾回收器能很明显地提高对象的创建速度。这听起来很奇怪——存储空间的释放影响了存储空间的分配，但这确实是某些 Java 虚拟机的工作方式。如果 Java 的垃圾收集器带有内存整理的功能，那么为对象分配内存的时候，只需要移动指针就可以给对象划出一块内存供对象使用了。这也意味着，Java 从堆空间分配的速度可以和其他语言在栈上分配空间的速度相媲美（都是移动指针，划定内存空间）。
 
 ### 成员初始化
 
@@ -718,7 +723,7 @@ public class MemberVar {
 
 ### 构造器初始化
 
-我们可以使用构造器初始化成员变量。但是，自动初始化仍会进行，且会在构造器被调用之前发生。
+我们可以使用构造器初始化**成员变量**。但是，自动初始化仍会进行，且会在构造器被调用之前发生。
 
 ```java
 public class Counter {
@@ -870,7 +875,7 @@ public class StaticInitialization {
 - 5、执行所有出现在字段定义出的初始化动作
 - 6、执行构造器
 
-#### 显示的静态初始化
+#### 显式的静态初始化
 
 ```java
 public class Spoon {
@@ -888,7 +893,7 @@ public class Spoon {
 
 #### 非静态实例初始化
 
-- 也是按代码的顺序进行初始化的。且均在构造方法之后。<span style="color:red">构造方法最后初始化</span>
+也是按代码的顺序进行初始化的。且构造代码块先于构造方法执行。<span style="color:red">构造方法最后初始化</span>
 
 ```java
 public class UnStaticInit {
@@ -1071,17 +1076,6 @@ FLAMING:4
 */
 ```
 
-### 访问控制符
-
-把变动的事物与保持不变的事物区分开来。
-
-Java 有四种访问权限：`public` `protected` `包访问权限` `private`
-
-- `public` 公有的，任何类都可以访问
-- `protected` 受保护的，子类和同一包下的都可以访问
-- `包访问权限 default` 只能同一个类，或同一个包下的进行访问。不同包的，即便是子类也不能访问！
-- `private` 私有的，仅在自己类内部可以访问
-
 ## 第四章 封装
 
 写了一段代码，过段时间再看这些代码，可能会发现更好的实现方式，这时可以考虑重构这些代码，使之更加可读、易懂，更易维护。将数据和方法包装进类中并把具体实现隐藏起来称为封装。
@@ -1090,11 +1084,14 @@ Java 有四种访问权限：`public` `protected` `包访问权限` `private`
 
 包含一组类，代码的命名空间；包本质上其实就是一个文件夹，用来防止文件重名的。如果需要使用一些额外的包，那么需要设置 CLASSPATH 属性。如果两个包包含相同的名字，会发生冲突，此时只能通过写类全名解决。`java.util.Vertor v = new java.util.Vertor()`
 
-- [x] 使用包的注意事项
-    - [x] 当创建一个包时，包名就隐含了目录结构。这个包必须位于包名指定的目录中，该目录必须在以 CLASSPATH 开始的目录中可以查询到。
-    - [x] 如果查找不到，运行时会报错，找不到特定的类。
+使用包的注意事项
+
+- 当创建一个包时，包名就隐含了目录结构。这个包必须位于包名指定的目录中，该目录必须在以 CLASSPATH 开始的目录中可以查询到。
+- 如果查找不到，运行时会报错，找不到特定的类。
 
 ### 访问权限修饰符
+
+把变动的事物与保持不变的事物区分开来。
 
 Java 有四种访问权限：`public` `protected` `包访问权限(不提供访问权限修饰符则默认为包访问权限)` `private`；可用于修饰类，成员变量，方法。
 
@@ -1115,7 +1112,7 @@ class PublicConstructor{
 }
 ```
 
-无法从 a.b 以外的目录访问到 public 构造器，因为类是 default 权限的，无法在包以外的权限或非子类中使用它
+无法从 a.b 以外的目录访问到 public 构造器，因为类是 default 权限的，无法在包以外的权限中使用它（其他包下的类也无法继承 PublicConstructor 类）
 
 ### 接口和实现
 
@@ -14218,34 +14215,33 @@ public class TableCreator {
 
 ## 第二十四章 并发编程
 
-> **进程与线程的概念，看操作系统课本！看以前做的笔记，画的思维导图。**
+**进程与线程的概念，看下操作系统课本。**
 
 - 多线程的实现方式
 
-  - 继承Thread类
-  - 实现Runnable接口
+  - 继承 Thread 类
+  - 实现 Runnable 接口
 
 - 线程调度模型
 
-  - 分时调度模型：所有线程轮流使用CPU使用权，平均分配每个线程占用CPU的时间（RR）
-  - 抢占式调度模型：优先让优先级高的线程使用CPU，优先级相同则随机选取一个。优先级高的线程获取CPU的时间更多。
+  - 分时调度模型：所有线程轮流使用 CPU 使用权，平均分配每个线程占用 CPU 的时间（RR）
+  - 抢占式调度模型：优先让优先级高的线程使用 CPU，优先级相同则随机选取一个。优先级高的线程获取 CPU 的时间更多。
   - 我记得操作系统里有一个调度模型：**找书看一下 “多级反馈队列”** **汤子瀛 P94**
 
 - 线程优先级的设置
 
-  - `getPriority()`获得此线程的优先级
-  - `setPriority()`更改此线程的优先级
-  - 优先级高，仅仅代表获取`cpu`的几率高！回忆OS防止进程饥饿！
+  - `getPriority()` 获得此线程的优先级
+  - `setPriority()` 更改此线程的优先级
+  - 优先级高，仅仅代表获取 `CPU` 的几率高。
 
 - 线程控制
 
   - `sleep(long millis)`：使当前正在执行的线程暂停`millis`毫秒
-  - join()：等待这个线程死亡。`A.join(),`只有A这个线程执行完毕后，后面的代码/线程才会执行
-  - **`setDaemon(boolean on)`：将线程标记为守护线程，当运行的线程为守护线程是，Java虚拟机将退出【其他线程执行完毕后，如果剩下的都是守护线程，则`jvm`不会等待守护线程执行完，会直接退出！】**
+  - join()：等待这个线程死亡。`A.join(),`只有 A 这个线程执行完毕后，后面的代码/线程才会执行
+  - **`setDaemon(boolean on)`：将线程标记为守护线程，当运行的线程为守护线程是，Java虚拟机将退出【其他线程执行完毕后，如果剩下的都是守护线程，则 `jvm`不会等待守护线程执行完，会直接退出！】**
 
 - 线程同步
 
-  - 回忆OS的`pv`操作！
   - 线程同步案例
   - 线程同步的关键字synchronized锁，volatile保证数据可见但是不保证数据的准确性【回忆os磁盘的延迟写，cache的写回法什么的】
 
@@ -14261,7 +14257,9 @@ public class TableCreator {
 
 - `ThreadLocal`===Java线程本地存储
 
-### 线程的运行
+### 基本的线程机制
+
+#### 线程的运行
 
 方式一：继承Thread类
 
@@ -14308,11 +14306,9 @@ class MyThread extends Thread{
 
 - 可以避免频繁的开启、关闭线程。
 
-### 线程的控制
+#### 线程的控制
 
-#### join()
-
-AThread.join()，先让 AThread 线程运行完，再执行其他操作。
+join() 方法：AThread.join()，先让 AThread 线程运行完，再执行其他操作。
 
 ```java
 public static void fn1(){
@@ -14355,9 +14351,7 @@ class MyThread extends Thread {
 }
 ```
 
-#### daemon()
-
-> 设置当前线程为守护线程！当只剩守护线程时，jvm会退出，不会等待守护线程执行完毕
+daemon() 方法：设置当前线程为守护线程！当只剩守护线程时，JVM 会退出，不会等待守护线程执行完毕。
 
 ```java
 // 非守护线程全部执行后 守护线程不一定能执行完毕，可能会被jvm直接终止
@@ -14376,17 +14370,15 @@ public static void fn1() {
 }
 ```
 
-### 优先级
+#### 优先级
 
 JDK 线程的优先级与多数 OS 都不能很好的配合，虽然你设置的线程优先级高，但是 OS 不一定会让他优先执行。
 
-### 线程组
+#### 线程组
 
 最好把线程组看成一次不成功的尝试，忽略它即可。
 
-
-
-### 捕获异常
+#### 捕获异常
 
 由于线程的本质特性，我们不能捕获线程中逃逸的异常。下面这个例子展示了线程出错但是我们无法捕获到出错的线程。
 
@@ -14444,11 +14436,11 @@ public class ExceptionThread implements Runnable {
 // I catch:pool-1-thread-2>>>>>java.lang.RuntimeException: Error
 ```
 
-### 线程的同步
+### 共享资源
 
-#### 线程不安全问题
+#### 线程的同步
 
-分析下面这段代码，说出程序的执行结果。
+线程不安全问题：分析下面这段代码，说出程序的执行结果。
 
 ```java
 import java.util.concurrent.ExecutorService;
@@ -14497,7 +14489,11 @@ A->>M:把1写回内存
 B->>M:把1写回内存
 ```
 
-我们可以使用 synchronized 保证线程拿到变量和写回变量的过程中不会有其他线程操作改变量。即，对 count++ 加了 sync 后会变成
+#### 使用synchronized
+
+怎么可以保证上述操作正确的执行呢？Java 提供了关键字 synchronized 来解决资源冲突。当要执行的任务被 synchronized 保护时，它将检查锁是否可用，然后获取锁，执行代码，释放锁。如果锁不可用，它将会阻塞自己。
+
+我们可以使用 synchronized 解决上述线程不安全问题。如果我们用 synchronized 保证对自增操作的原子性的话，即我们可以使用 synchronized 保证线程拿到变量和写回变量的过程中不会有其他线程操作改变量。对 count++ 加了 sync 后会变成
 
 ```mermaid
 sequenceDiagram
@@ -14547,9 +14543,13 @@ public class ConcurrentQuestion {
 }
 ```
 
-#### 使用synchronized
+所有的对象都含有一把锁（也称为监视器）。当多个线程同时调用对象上任意的 synchronized 方法时，此对象会上锁，对象上的其他 sync 方法只有等到前一个线程上锁的代码块调用完毕并释放锁后才能被调用。
 
-- synchronize() 中的应该就是充当信号量的。
+注意：在并发时，将共享的域设置为 private 非常重要，否则 sync 关键字就不能防止其他任务直接访问域，会产生冲突。
+
+一个任务可以多次获得对象的锁。例如 Thread-A 执行了 method1，method1 内部执行了 method2（所有方法都加锁了）是可以正常执行的。JVM 会跟踪对象被加锁的次数。如果一个对象被解锁（锁被完全释放）计数变为 0。
+
+用 synchronize 解决经典的多线程卖票问题
 
 ```java
 public static void main(String[] args) {
@@ -14587,17 +14587,25 @@ public class SaleTicket implements Runnable {
 }
 ```
 
-#### 同步代码块与同步方法
+> **什么时候需要同步？**
+>
+> 如果你正在写一个变量，它可能接下来被另一个线程读取，或者正在读取一个上一次已经被另一个线程写过的变量，那么你必须使用同步，并且读写线程必须使用相同的监视器锁。（多线程环境下对同样的变量进行读写，那么需要考虑加锁了。）
+>
+> **锁对象，锁字节码**
+>
+> public synchronized void method(){} 锁的当前对象（this）
+>
+> public static synchronized void method(){} 锁的字节码对象（ XX.class）
+>
+> **同步方法与同步代码块**
+>
+> 同步方法默认用 this 或者当前类 class 对象作为锁；
+> 同步代码块可以选择以什么来加锁，比同步方法要更细颗粒度，我们可以选择只同步会发生同步问题的部分代码而不是整个方法；
+> 同步方法使用关键字 synchronized 修饰方法，而同步代码块主要是修饰需要进行同步的代码，用 synchronized（object）{代码内容}进行修饰；
 
-```java
-public synchronized void run() {} // 同步方法！ 看视频！
-```
+#### 显示的Lock锁
 
-同步方法默认用this或者当前类class对象作为锁；
-同步代码块可以选择以什么来加锁，比同步方法要更细颗粒度，我们可以选择只同步会发生同步问题的部分代码而不是整个方法；
-同步方法使用关键字 synchronized修饰方法，而同步代码块主要是修饰需要进行同步的代码，用 synchronized（object）{代码内容}进行修饰；
-
-### Lock锁
+除了 synchronized 外，java.util.concurrent 类库中包含了许多其他的锁。下面的代码展示了显示 Lock 锁的基本使用
 
 ```java
 public class SaleTicket implements Runnable {
@@ -14606,27 +14614,459 @@ public class SaleTicket implements Runnable {
 
     @Override
     public void run() {
-        // PV 细想-
-        lock.lock();
-        while (ticket > 0) {
-            lock.lock();
-            System.out.println("出售了一张，还有" + (--ticket) + "张");
-
+        try{
+            lock.lock(); // 加锁
+            while (ticket > 0) {
+                lock.lock();
+                System.out.println("出售了一张，还有" + (--ticket) + "张");
+            } 
+        }finally{
+           lock.unlock(); // 解锁 
         }
-        lock.unlock();
     }
 }
 ```
 
-### 生产者 消费者
+显示 Lock 锁的代码比起 sync 来有些不优雅。但是显示 Lock 锁对比 sync 有很多其他的优点。
 
-> **生产者生产，消费者消费。有同步有互斥。**
+- 显示 Lock 锁可以尝试获取锁，获取失败则直接放弃，不会阻塞线程。
+- 显示 Lock 锁可以在指定时间内获取锁，避免死锁。
+- 显示 Lock 锁可以实现精准唤醒（Condition）。
 
-- empty 告诉生产者还可以放多少
-- full 告诉消费者还可以拿多少
-- 同时只能一个拿或一个放
-- 不能拿/放则等待 用 wait()
-- 有东西了，可以拿了就notify()【应该是随机唤醒一个等待的线程，无法做到精准唤醒】
+#### 原子性与易变性
+
+<span style="color:red">一个不正确的认识：原子性操作不需要同步。</span>除非是并发专家，否则，最好不要用原子性替代同步。
+
+Java 中，原子性可以应用于除 long 和 double 之外的所有基本类型上的"简单操作"。对于读取和写入非 long、double 类型之外的基本变量，可以保证它们会被当做原子性操作。但是 JVM 将 64 位的读取和写入当作 2 个 32 位操作来执行。即，long、double 类型的变量的读取和写入操作不是原子性的。如果用 volatile 修饰的话，可以保证它们的读取和写入是原子性的。关于 volatile 的更详细的操作请看[笔记](../Java Multithreading/04-内存模型.md)。
+
+#### 原子类
+
+J.U.C 中有诸如 AtomicInteger、AtomicLong、AtomicReference 等原子性变量类，它们都提供了下面这种形式的原子性条件更新操作。`boolean compareAndSet(expectedValue,updateValue)` 简称为 CAS。
+
+普通的并发编程中不会用到 Atomic 类，但是在涉及性能调优时，可以考虑用 Atomic 类进行优化。例如，下面的代码使用 AtomicInteger 消除卖票代码中的 sync 锁。
+
+```java
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class SaleTicket2 {
+    private static AtomicInteger ticket = new AtomicInteger(100000);
+
+    public void sale() {
+        int old = -1;
+        while ((old = ticket.get()) > 0) {
+            if (!ticket.compareAndSet(old, old - 1)) ;
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        SaleTicket2 sale = new SaleTicket2();
+        Thread th1 = new Thread(() -> {
+            sale.sale();
+        });
+        Thread th2 = new Thread(() -> {
+            sale.sale();
+        });
+        Thread th3 = new Thread(() -> {
+            sale.sale();
+        });
+        th1.start();
+        th2.start();
+        th3.start();
+
+        TimeUnit.SECONDS.sleep(3);
+        System.out.println(ticket.get());
+    }
+}
+```
+
+#### 临界区
+
+锁住的那段代码块就叫临界区。
+
+#### 线程本地存储
+
+防止任务在共享资源上产生冲突的第二种方式是根除对变量的共享【使用 ThreadLocal】。每个线程都有自己的区域，不共享数据。例如下面的代码，每个线程都有 100 张票，各卖各的。
+
+```java
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+public class Sale3 {
+
+    private static void sleep(int time) {
+        try {
+            TimeUnit.SECONDS.sleep(time);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        ThreadLocal<Integer> threadVar = new ThreadLocal<>();
+        ExecutorService executor = Executors.newFixedThreadPool(3);
+        for (int i = 0; i < 3; i++) {
+            executor.submit(() -> {
+                threadVar.set(100);
+                sleep(1);
+            });
+        }
+        sleep(2); //
+        for (int i = 0; i < 3; i++) {
+            executor.submit(() -> {
+                while (threadVar.get() > 0) {
+                    threadVar.set(threadVar.get() - 1);
+                }
+            });
+        }
+        sleep(2);
+        for (int i = 0; i < 3; i++) {
+            executor.submit(() -> {
+                System.out.println(threadVar.get());
+            });
+        }
+        executor.shutdown();
+    }
+}
+```
+
+#### 中断
+
+> 终止线程的方式如下：
+>
+> - Thread.stop() 方法在结束线程时，会直接终止线程，并立即释放这个线程所持有的锁，而这些锁恰恰是用来维持对象一致性的。stop()方法过于暴力，强行把执行到一半的线程终止，可能会引起一些数据不一致的问题。
+>     - 如数组新增元素，添加了元素，但是 size 还没++，就 stop 了，数据就有问题了！
+> - interrupt 中断线程【只是设置一个中断的标记，非立即中断】
+>     - <span style="color:green">在一个线程中调用另一个线程的 interrupt() 方法，即会向那个线程发出信号——线程中断状态已被设置。我们可以通过判断这个标记确定线程需不需要被中断，至于何时中断就由我们自己写代码决定了！</span>优于stop。
+
+interrupt 方法详解
+
+- **打断 sleep、wait、join  的线程会清空打断状态，打断状态会为 false**【你打断了，打断状态本该为 true，清空后就为 false 了】
+- **打断正常运行的线程，打断状态为 true**
+- **两阶段终止模式**
+    - **在线程 T1 中优雅的终止线程 T2.**
+- park
+    - park 作用类似 sleep，打断 park 线程，不会清空打断状态（true）
+    - 如果打断标记已经是 true, 则 park 会失效，
+    - 可以使用 `Thread.interrupted()` 清除打断状态
+
+这几个方法都会让线程进入阻塞状态，打断 sleep、wait、join 的线程, 会清空打断状态，以 sleep 为例
+
+```java
+@Slf4j(topic = "c.InterruptSleep")
+public class InterruptSleep {
+    public static void main(String[] args) throws InterruptedException {
+        Thread th1 = new Thread(() -> {
+            try {
+                log.debug("sleep");
+                TimeUnit.SECONDS.sleep(40);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        th1.start();
+        // 确保 th1 线程开始运行
+        TimeUnit.SECONDS.sleep(1);
+        log.debug("interrupt");
+        th1.interrupt(); 
+        log.debug("打断标记:{}", th1.isInterrupted()); // false  打断标记被置为了 false
+    }
+}
+```
+
+打断正常运行的线程：不会清空打断状态（true）
+
+```java
+@Slf4j(topic = "c.InterruptNormal")
+public class InterruptNormal {
+    static Object lock = new Object();
+
+    public static void main(String[] args) throws InterruptedException {
+        // 线程被打断后就不在运行
+        Thread th1 = new Thread(() -> {
+            while (!Thread.currentThread().isInterrupted()) ;
+        });
+
+        th1.start();
+        TimeUnit.SECONDS.sleep(5);
+        th1.interrupt();
+        log.debug(String.valueOf(th1.isInterrupted())); // true
+    }
+
+}
+```
+
+打断 park 线程, 不会清空打断状态；如果打断标记已经是 true, 则 park 会失效
+
+```java
+// park 失效案例
+public class InterruptPark {
+    public static void main(String[] args) throws InterruptedException {
+        Thread thread = new Thread(() -> {
+            System.out.println("park 前");
+            Thread.currentThread().interrupt();
+            System.out.println(Thread.currentThread().isInterrupted());
+            LockSupport.park(); // park 阻塞失效，
+            System.out.println("park 后");
+        });
+        thread.start();
+        TimeUnit.SECONDS.sleep(20);
+        System.out.println("unpark");
+        LockSupport.unpark(thread);
+    }
+}
+```
+
+### 线程协作
+
+当多个线程可以一起工作去解决某个问题时，如果某些部分必须在其它部分之前完成，那么就需要对线程进行协调。
+
+#### wait() notify() notifyAll()
+
+调用 wait() 使得线程等待某个条件满足，线程在等待时会被挂起，当其他线程的运行使得这个条件满足时，其它线程会调用 notify() 或者 notifyAll() 来唤醒挂起的线程。它们都属于 Object 的一部分，而不属于 Thread。
+
+只能用在同步方法或者同步控制块中使用，否则会在运行时抛出 IllegalMonitorStateException。
+
+使用 wait() 挂起期间，线程会释放锁。这是因为，如果没有释放锁，那么其它线程就无法进入对象的同步方法或者同步控制块中，那么就无法执行 notify() 或者 notifyAll() 来唤醒挂起的线程，造成死锁。
+
+```java
+public class WaitNotifyExample {
+
+    public synchronized void before() {
+        System.out.println("before");
+        notifyAll();
+    }
+
+    public synchronized void after() {
+        try {
+            wait();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("after");
+    }
+}
+public static void main(String[] args) {
+    ExecutorService executorService = Executors.newCachedThreadPool();
+    WaitNotifyExample example = new WaitNotifyExample();
+    executorService.execute(() -> example.after());
+    executorService.execute(() -> example.before());
+}
+before
+after
+```
+
+**wait() 和 sleep() 的区别**
+
+- wait() 是 Object 的方法，而 sleep() 是 Thread 的静态方法；
+- wait() 会释放锁，sleep() 不会。
+
+#### await() signal() signalAll()
+
+java.util.concurrent 类库中提供了 Condition 类来实现线程之间的协调，可以在 Condition 上调用 await() 方法使线程等待，其它线程调用 signal() 或 signalAll() 方法唤醒等待的线程。
+
+相比于 wait() 这种等待方式，await() 可以指定等待的条件，因此更加灵活。
+
+使用 Lock 来获取一个 Condition 对象。
+
+```java
+public class AwaitSignalExample {
+
+    private Lock lock = new ReentrantLock();
+    private Condition condition = lock.newCondition();
+
+    public void before() {
+        lock.lock();
+        try {
+            System.out.println("before");
+            condition.signalAll();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void after() {
+        lock.lock();
+        try {
+            condition.await();
+            System.out.println("after");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+public static void main(String[] args) {
+    ExecutorService executorService = Executors.newCachedThreadPool();
+    AwaitSignalExample example = new AwaitSignalExample();
+    executorService.execute(() -> example.after());
+    executorService.execute(() -> example.before());
+}
+before
+after
+```
+
+### J.U.C
+
+#### ReentrantLock
+
+#### CountDownLatch
+
+用来控制一个或者多个线程等待多个线程。
+
+维护了一个计数器 cnt，每次调用 countDown() 方法会让计数器的值减 1，减到 0 的时候，那些因为调用 await() 方法而在等待的线程就会被唤醒。
+
+<img src="img\image-20220328210213308.png">
+
+#### CyclicBarrier
+
+用来控制多个线程互相等待，只有当多个线程都到达时，这些线程才会继续执行。
+
+与 CountdownLatch 相似，都是通过维护计数器来实现的。线程执行 await() 方法之后计数器会减 1，并进行等待，直到计数器为 0，所有调用 await() 方法而在等待的线程才能继续执行。
+
+CyclicBarrier 和 CountdownLatch 的一个区别是，CyclicBarrier 的计数器通过调用 reset() 方法可以循环使用，所以它才叫做循环屏障。
+
+CyclicBarrier 有两个构造函数，其中 parties 指示计数器的初始值，barrierAction 在所有线程都到达屏障的时候会执行一次。
+
+```java
+public CyclicBarrier(int parties, Runnable barrierAction) {
+    if (parties <= 0) throw new IllegalArgumentException();
+    this.parties = parties;
+    this.count = parties;
+    this.barrierCommand = barrierAction;
+}
+
+public CyclicBarrier(int parties) {
+    this(parties, null);
+}
+```
+
+<img src="img\image-20220328210350889.png">
+
+```java
+public class CyclicBarrierExample {
+
+    public static void main(String[] args) {
+        final int totalThread = 10;
+        CyclicBarrier cyclicBarrier = new CyclicBarrier(totalThread);
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        for (int i = 0; i < totalThread; i++) {
+            executorService.execute(() -> {
+                System.out.print("before..");
+                try {
+                    cyclicBarrier.await();
+                } catch (InterruptedException | BrokenBarrierException e) {
+                    e.printStackTrace();
+                }
+                System.out.print("after..");
+            });
+        }
+        executorService.shutdown();
+    }
+}
+```
+
+#### DelayQueue
+
+无界的 BlockingQueue。用于放实现了 Delayed 接口的对象，队列中的对象只有到期了才可以取走。队列是有序的，队首的元素是到期时间最长的。如果没有可以拿的对象，poll 方法会返回 null。
+
+#### PriorityBlockingQueue
+
+优先阻塞队列，阻塞队列的优先队列版本。
+
+#### Semaphor
+
+Semaphore 类似于操作系统中的信号量，可以控制对互斥资源的访问线程数。
+
+以下代码模拟了对某个服务的并发请求，每次只能有 3 个客户端同时访问，请求总数为 10。
+
+```java
+public class SemaphoreExample {
+
+    public static void main(String[] args) {
+        final int clientCount = 3;
+        final int totalRequestCount = 10;
+        Semaphore semaphore = new Semaphore(clientCount);
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        for (int i = 0; i < totalRequestCount; i++) {
+            executorService.execute(()->{
+                try {
+                    semaphore.acquire();
+                    System.out.print(semaphore.availablePermits() + " ");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } finally {
+                    semaphore.release();
+                }
+            });
+        }
+        executorService.shutdown();
+    }
+}
+```
+
+#### Exchanger
+
+可用于交换两个任务之间的数据。比如 CF 换枪。
+
+```java
+public class ExchangerDemo {
+
+    private static void sleep(int time) {
+        try {
+            TimeUnit.SECONDS.sleep(time);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        ExecutorService executor = Executors.newCachedThreadPool();
+        final Exchanger exchanger = new Exchanger();
+        executor.execute(() -> {
+            try {
+                String data1 = "AK47";
+                sleep(5);
+                System.out.println(Thread.currentThread().getName() + "扔了" + data1);
+                data1 = exchanger.exchange(data1).toString();
+                System.out.println(Thread.currentThread().getName() + "捡到了" + data1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        executor.execute(() -> {
+            try {
+                String data1 = "AWM";
+                System.out.println(Thread.currentThread().getName() + "扔了" + data1);
+                data1 = exchanger.exchange(data1).toString();
+                System.out.println(Thread.currentThread().getName() + "捡到了" + data1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+        executor.shutdown();
+    }
+}
+/*
+pool-1-thread-2扔了AWM
+pool-1-thread-1扔了AK47
+pool-1-thread-1捡到了AWM
+pool-1-thread-2捡到了AK47
+*/
+```
+
+### 最佳实践
+
+- 给线程起个有意义的名字，这样可以方便找 Bug。
+- 缩小/扩大同步范围，从而减少锁争用。
+- 多用同步工具少用 wait() 和 notify()。首先，CountDownLatch, CyclicBarrier, Semaphore 和 Exchanger 这些同步类简化了编码操作，而用 wait() 和 notify() 很难实现复杂控制流；其次，这些同步类是由最好的企业编写和维护，在后续的 JDK 中还会不断优化和完善。
+- 使用 BlockingQueue 实现生产者消费者问题。
+- 多用并发集合少用同步集合，例如应该使用 ConcurrentHashMap 而不是 Hashtable。
+- 使用本地变量和不可变类来保证线程安全。
+- 使用线程池而不是直接创建线程，这是因为创建线程代价很高，线程池可以有效地利用有限的线程来启动任务。
 
 ## 第二十五章 设计模式
 
@@ -14697,22 +15137,22 @@ public class Singleton {
 
 ### IP地址
 
-`IP地址分为 IPv4和IPv6`
+`IP 地址分为 IPv4 和 IPv6`
 
-- IPv4 地址4字节 4*8=32位
-- IPv6 地址128位地址长度，每16字节一组，分成8组十六进制数
+- IPv4 地址 4 字节 4*8=32 位
+- IPv6 地址 128 位地址长度，每 16 字节一组，分成 8 组十六进制数
 
 `常见命令【windows】`
 
 - ipconfig
-- ping IP地址
+- ping IP 地址
 
 #### InetAddress
 
-> **IP地址的获取和操作，InetAddress表示Internet协议（IP）地址**
+**IP 地址的获取和操作，InetAddress 表示 Internet 协议（IP）地址**
 
 - getHostName() 获得主机名称
-- getHostAddress() 返回文本显示中的IP地址字符串
+- getHostAddress() 返回文本显示中的 IP 地址字符串
 
 ```java
 @Test
@@ -14731,31 +15171,32 @@ public void fn1() throws UnknownHostException {
 ### 端口
 
 - 端口：设备上应用程序的唯一标识
-- 端口号：用两个字节表示的整数。范围是0到65535.其中0到1023被用于一些知名的网络服务和应用。普通程序建议使用1024以上的端口号，防止端口被占用启动失败！
+- 端口号：用两个字节表示的整数。范围是 0 到 65535. 其中 0 到 1023 被用于一些知名的网络服务和应用。普通程序建议使用 1024 以上的端口号，防止端口被占用启动失败！
 
-### 协议（UDP）
+### UDP协议
 
-> **协议：计算机网络中，连接和通信的规则称之为网络通信协议**
+**协议：计算机网络中，连接和通信的规则称之为网络通信协议**
 
-####  `UDP`协议
+####  `UDP` 协议
 
 - 用户数据报协议（User Datagram Protocol）
-- `UDP`是无连接通信协议。数据传输时发送端和接收端不建立逻辑。回忆计组和计网的相关内容。发送和接受都不确认对面有没有人。`UDP`协议资源消耗小，通信效率高，常用于音频，视频和普通数据的传输！
-- `UDP`是无连接性，不保证数据的完整性。传输重要数据不建议使用`UDP`.
+- `UDP` 是无连接通信协议。数据传输时发送端和接收端不建立逻辑。回忆计组和计网的相关内容。发送和接受都不确认对面有没有人。`UDP` 协议资源消耗小，通信效率高，常用于音频，视频和普通数据的传输。
+- `UDP` 是无连接性，不保证数据的完整性。传输重要数据不建议使用`UDP`
+- UDP 没有拥塞控制
 
 #### UDP通信原理
 
-UDP协议是一种不可靠的网络协议，它在通信的两端各建立一个Socket对象，但是这两个Socket只是发送，接收数据的对象因此对于基于UDP协议的通信双方而已，没有所谓的客户端，服务器的概念。
+UDP 协议是一种不可靠的网络协议，它在通信的两端各建立一个 Socket 对象，但是这两个 Socket 只是发送，接收数据的对象只是对于基于 UDP 协议的通信双方而已，没有所谓的客户端，服务器的概念。
 
 #### UDP发送，接收数据的步骤
 
-> **先有接收端，再有发送端！**
+**注意：先有接收端，再有发送端！**
 
 **发送数据的步骤**
 
 - 创建发送端的套接字对象（DatagramSocket）
 - 创建数据，并把数据打包
-- 调用DatagramSocket对象的发送方法
+- 调用 DatagramSocket 对象的发送方法
 - 关闭发送端
 
 ```java
@@ -14775,7 +15216,7 @@ public void fn1() throws IOException {
 
 - 创建接收端的Socket对象（DatagramSocke）
 - 创建一个数据包，用于接收数据
-- 调用DatagramSocke的方法接收数据
+- 调用 DatagramSocke 的方法接收数据
 - 解析数据包，把数据在控制台显示
 
 ```java
@@ -14790,19 +15231,19 @@ public static void main(String[] args) throws Exception {
 }
 ```
 
-PS : 不记得具体的xx，就点进源码去看构造方法上面的注释！！
+PS : 不记得具体的xx，就点进源码去看构造方法上面的注释。
 
-### 协议（TCP）
+### TCP协议
 
 #### TCP通信原理
 
 TCP协议是一种可靠的网络协议，它在通信的两端各建立一个Socket对象，从而在通信的两端形成网络虚拟链路，一旦建立了虚拟的网络链路，两端的程序就可以通过虚拟链路进行通信！
 
-> **Java对基于TCP协议的网络提供了良好的封装，使用Socket对象来代表两端的通信端口，并通过Socket产生IO流进行网络通信**
+**Java对基于TCP协议的网络提供了良好的封装，使用 Socket 对象来代表两端的通信端口，并通过 Socket 产生 IO 流进行网络通信**
 
 #### TCP发送数据
 
-- 创建客户端的Socket对象（Socket）
+- 创建客户端的 Socket 对象（Socket）
 
   - ```java
     Socket socket = new Socket("192.168.1.106",8888);
@@ -14823,16 +15264,12 @@ TCP协议是一种可靠的网络协议，它在通信的两端各建立一个So
 
 #### TCP接收数据
 
-- 创建服务器端的Socket对象**（ServerSocket）**
-  - `ServerSocket(int port)`  指定端口即可
-- 监听客户端连接，返回一个Socket对象
-  - `Socket.accept();`
-- 获取输入流，读数据，把数据显示在控制台
-  - `InputStream getInputStream()`
-- 释放资源
-  - `void close()`
-- TCP读数据的方法是阻塞式的
-- 解决办法：自定义结束标记；使用`shutdownOutput（）`方法【推荐】
+- 创建服务器端的 Socket 对象**（ServerSocket）** `ServerSocket(int port)` 指定端口即可
+- 监听客户端连接，返回一个 Socket 对象 `Socket.accept();`
+- 获取输入流，读数据，把数据显示在控制台 `InputStream getInputStream()`
+- 释放资源 `void close()`
+- TCP 读数据的方法是阻塞式的
+- 解决办法：自定义结束标记；使用 `shutdownOutput()` 方法【推荐】
 
 **第一版代码**
 
@@ -14844,7 +15281,7 @@ public class ClientDemo {
         OutputStream os = socket.getOutputStream();
         os.write("TCP我来了".getBytes());
         socket.close();
-        // 有用有三次握手的确认，所以需要客户端 服务器端都开启才行
+        // 有用三次握手的确认，所以需要客户端 服务器端都开启才行
     }
 }
 
@@ -14852,7 +15289,7 @@ public class ServerDemo {
     public static void main(String[] args) throws IOException {
         ServerSocket s = new ServerSocket(8888);
         Socket accept = s.accept();
-        // 可以用xx流一次读一行！
+        // 可以用xx流一次读一行
         InputStream is = accept.getInputStream();
         byte[] bytes = new byte[4096];
         int read = is.read(bytes, 0, bytes.length);
@@ -14873,7 +15310,7 @@ public class ClientDemo {
         OutputStream os = socket.getOutputStream();
         os.write("TCP我来了".getBytes());
         socket.close();
-        // 有用有三次握手的确认，所以需要客户端 服务器端都开启才行
+        // 有用三次握手的确认，所以需要客户端 服务器端都开启才行
     }
 }
 
@@ -14897,7 +15334,7 @@ public class ServerDemo {
 
 - 客户端，读取文件，并逐一发送数据
 - 服务器端，接收数据
-- 由于网络传输，服务器端是一直在等待客户端的数据的，所以会一直等。当客户端数据传输完毕后，给出停止标记！
+- 由于网络传输，服务器端是一直在等待客户端的数据的，所以会一直等。当客户端数据传输完毕后，给出停止标记。
 
 ```java
 // 客户端代码
@@ -14965,9 +15402,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-/**
- * 请求相应html文件
- */
 public class BSDemo3 {
     // 定义类路径
     private static String WEB_ROOT;
@@ -15003,13 +15437,8 @@ public class BSDemo3 {
         FileResponse(accept.getOutputStream());
     }
 
-
-    /**
-     * 获得请求的URL;
-     * 请求路径在这里 GET /4654 HTTP/1.1
-     * @param socket
-     * @return
-     */
+    // 获得请求的URL;
+    // 请求路径在这里 GET /4654 HTTP/1.1
     public static String getURL(Socket socket) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         String str = null;
@@ -15022,10 +15451,6 @@ public class BSDemo3 {
         return str;
     }
 
-    /**
-     * @param outputStream
-     * @param code         状态码
-     */
     public static void publicResponse(OutputStream outputStream, int code) {
         String codeStr = null;
         if (code == 200) codeStr = code + " OK";
@@ -15041,10 +15466,7 @@ public class BSDemo3 {
         }
     }
 
-    /**
-     * 将文件传输到浏览器
-     * @param outputStream
-     */
+    // 将文件传输到浏览器
     public static void FileResponse(OutputStream outputStream) {
         try (BufferedReader bf = new BufferedReader
                 (new InputStreamReader
@@ -15059,11 +15481,7 @@ public class BSDemo3 {
         }
     }
 
-    /**
-     * 根据URL设置相应码
-     * @param url
-     * @return
-     */
+    // 根据URL设置相应码
     public static void setCodeForStatic(String url) {
         try {
             Map<String, String> map = getURLMapStatic();
@@ -15075,11 +15493,7 @@ public class BSDemo3 {
         }
     }
 
-    /**
-     * 获得所有的静态URL， key是文件名称，value是绝对路径
-     *
-     * @return
-     */
+    // 获得所有的静态URL， key是文件名称，value是绝对路径
     public static Map<String, String> getURLMapStatic() throws IOException {
         HashMap<String, String> URLMap = new HashMap<>();
 
@@ -15093,22 +15507,13 @@ public class BSDemo3 {
         return URLMap;
     }
 
-    /**
-     * 获得所有动态URL(Java代码),key是名称，value是包全名
-     */
+    // 获得所有动态URL(Java代码),key是名称，value是包全名
     public static Map<String, String> getURLMapDymical() {
         HashMap<String, String> URLMap = new HashMap<>();
         return URLMap;
     }
 
-
-    /**
-     * 加载配置文件中的动态web文件信息 key是名称，value是类全名
-     *
-     * @param in
-     * @return
-     * @throws IOException
-     */
+    // 加载配置文件中的动态web文件信息 key是名称，value是类全名
     public static Properties getProperties(InputStream in) throws IOException {
         Properties properties = new Properties();
         properties.load(in);
@@ -15194,9 +15599,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.Properties;
 
-/**
- *
- */
 public class DruidDemo {
 
     public static void main(String[] args) throws Exception {
@@ -15264,24 +15666,18 @@ public class SprintJDBCTemplate {
     }
 
     @Test
-    /**
-     * 只能是单个数据。封装为map集合。key为字段名，value为字段值
-     */
+    // 只能是单个数据。封装为map集合。key为字段名，value为字段值
     public void querySingleForMap() {
         Map<String, Object> map = jdbcTemplate.queryForMap("select * from student where id=?", 4);
         System.out.println(map.keySet().size());
     }
 
     @Test
-    /**
-     * 多条结果集
-     * 每天结果都封装为map
-     */
+    // 多条结果集,每条结果都封装为map
     public void queryListMap() {
         List<Map<String, Object>> maps = jdbcTemplate.queryForList("select * from student");
         maps.stream().forEach(System.out::println);
     }
-
 
     @Test
     public void queryList() {
@@ -15296,9 +15692,8 @@ public class SprintJDBCTemplate {
                 return student;
             }
         });
-        /**
-         * 函数式编程
-         */
+        
+        //函数式编程
         List<Student> query1 = jdbcTemplate.query("select * from student", (resultSet,i)->{
             Student student = new Student();
             student.setId(resultSet.getInt("id"));
