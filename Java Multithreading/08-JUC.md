@@ -82,11 +82,11 @@ public class MainDemo {
 
 ## CountDownLatch
 
-CountDownLatch主要有两个方法，当一个或多个线程调用await方法时，这些线程会阻塞。
+CountDownLatch 主要有两个方法，当一个或多个线程调用 await 方法时，这些线程会阻塞。
 
-其它线程调用countDown方法会将计数器减1(调用countDown方法的线程不会阻塞)，
+其它线程调用 countDown 方法会将计数器减 1 (调用 countDown 方法的线程不会阻塞)，
 
-当计数器的值变为0时，因await方法阻塞的线程会被唤醒，继续执行。
+当计数器的值变为 0 时，因 await 方法阻塞的线程会被唤醒，继续执行。
 
 ```java
 /**
@@ -122,7 +122,7 @@ public class CountDownLatchDemo {
 
 满足条件就运行
 
-CyclicBarrier的字面意思是可循环（Cyclic）使用的屏障（Barrier）。它要做的事情是，**让一组线程到达一个屏障（也可以叫同步点）时被阻塞，直到最后一个线程到达屏障时，屏障才会开门**，所有被屏障拦截的线程才会继续干活。线程进入屏障通过CyclicBarrier的await()方法。
+CyclicBarrier 的字面意思是可循环（Cyclic）使用的屏障（Barrier）。它要做的事情是，**让一组线程到达一个屏障（也可以叫同步点）时被阻塞，直到最后一个线程到达屏障时，屏障才会开门**，所有被屏障拦截的线程才会继续干活。线程进入屏障通过 CyclicBarrier 的 await() 方法。
 
 ```java
 /**
@@ -156,12 +156,10 @@ public class CyclicBarrierDemo{
 
 ## Semaphore
 
-信号量，可用来限流。
+信号量，可用来限流。在信号量上我们定义两种操作：
 
-在信号量上我们定义两种操作：
-
-- acquire（获取） 当一个线程调用acquire操作时，它要么通过成功获取信号量（信号量减1），要么一直等下去，直到有线程释放信号量，或超时
-- release（释放）实际上会将信号量的值加1，然后唤醒等待的线程。
+- acquire（获取） 当一个线程调用 acquire 操作时，它要么通过成功获取信号量（信号量减 1），要么一直等下去，直到有线程释放信号量，或超时
+- release（释放）实际上会将信号量的值加 1，然后唤醒等待的线程。
 - 信号量主要用于两个目的，一个是用于多个共享资源的互斥使用，另一个用于并发线程数的控制。
 
 ```java
@@ -241,13 +239,11 @@ public class Exchange {
 
 ```
 
-
-
 ## ReentrantReadWriterLock
 
-- 读-读 可以共存
-- 读-写 不能共存
-- 写-写 不能共存
+- 读-读--可以共存
+- 读-写--不能共存
+- 写-写--不能共存
 
 ```java
 package com.bbxx.callable;
@@ -353,7 +349,7 @@ class MyCache {
 
 全称是 AbstractQueuedSynchronizer，是阻塞式锁和相关的同步器工具的框架。UML 图如下：
 
-<img src="juc\image-20211104115533825.png">
+<img src="juc/image-20211104115533825.png">
 
 - 由图中 AQS 的内部类 Node 可以看出， AQS 是一个 FIFO 的双向队列。
 - Node 类中：
@@ -462,7 +458,7 @@ private Node enq(final Node node) {
 }
 ```
 
-<img src="juc\image-20211104122707478.png">
+<img src="juc/image-20211104122707478.png">
 
 ### 条件变量
 
