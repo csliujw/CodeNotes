@@ -1174,6 +1174,145 @@ class Solution {
 }
 ```
 
+## 二叉树
+
+### 序列化二叉树
+
+
+
+> 题解
+
+用层序遍历保存节点进行序列化，然后遍历保存的节点，重建树，进行反序列化。重建树的时候需要仔细想下如何重建。
+
+- 假设序列化的结果是 `1,2,3,#,#,4,5,#,#`
+- 把需要关联左右子树的节点加入队列。
+- 元素出队，根据数组中的值判断是否有左右子树，不论是否有左右子树，数组索引都 ++。（不理解就手动模拟一下）
+
+```java
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+public class Codec {
+    public String serialize(TreeNode root) {
+        if (root == null) return "";
+        StringBuffer treeStr = new StringBuffer(root.val+"");
+        LinkedList<TreeNode> queue = new LinkedList<>();
+        queue.addLast(root);
+        while (!queue.isEmpty()) {
+            TreeNode treeNode = queue.removeFirst();
+            if (treeNode.left != null) {
+                queue.addLast(treeNode.left);  
+            } 
+            treeStr.append(",").append(treeNode.left!=null?treeNode.left.val:"#");
+            if (treeNode.right != null) {
+                queue.addLast(treeNode.right);
+            } 
+            treeStr.append(",").append(treeNode.right!=null?treeNode.right.val:"#");
+        }
+        return treeStr.toString();
+    }
+
+    // Decodes your encoded data to tree.
+    public TreeNode deserialize(String data) {
+        if("".equals(data)) return null; 
+        String[] split = data.split(",");
+        int index = 0;
+        TreeNode root = new TreeNode(Integer.parseInt(split[index++]));
+        LinkedList<TreeNode> queue = new LinkedList<>();
+        queue.addLast(root);
+        while (index < split.length && !queue.isEmpty()) {
+            TreeNode cur = queue.removeFirst();
+            if (!"#".equals(split[index])) {
+                cur.left = new TreeNode(Integer.parseInt(split[index]));
+                queue.addLast(cur.left);
+            }
+            index++;
+            if (!"#".equals(split[index])) {
+                cur.right = new TreeNode(Integer.parseInt(split[index]));
+                queue.addLast(cur.right);
+            }
+            index++;
+        }
+        return root;
+    }
+}
+```
+
+
+
+## 栈的应用
+
+### 后缀表达式
+
+根据 逆波兰表示法，求该后缀表达式的计算结果。
+
+有效的算符包括 +、-、*、/ 。每个运算对象可以是整数，也可以是另一个逆波兰表达式。
+
+说明：
+
+整数除法只保留整数部分。
+给定逆波兰表达式总是有效的。换句话说，表达式总会得出有效数值且不存在除数为 0 的情况。
+
+
+示例 1：
+
+输入：tokens = ["2","1","+","3","*"]
+输出：9
+解释：该算式转化为常见的中缀算术表达式为：((2 + 1) * 3) = 9
+示例 2：
+
+输入：tokens = ["4","13","5","/","+"]
+输出：6
+解释：该算式转化为常见的中缀算术表达式为：(4 + (13 / 5)) = 6
+
+> 思路
+
+只要碰到的不是 `+ - * /` 就入栈，只要碰到的是  `+ - * /` 就出栈两个元素进行计算。当所有元素都入栈过一次了，stack 中保存的就是最终的答案。
+
+```java
+class Solution {
+    // 后缀表达式
+    public int evalRPN(String[] tokens) {
+        Stack<String> stack = new Stack<>();
+        for (String token : tokens) {
+            switch (token) {
+                case "+":
+                case "-":
+                case "*":
+                case "/":
+                    int n2 = Integer.parseInt(stack.pop());
+                    int n1 = Integer.parseInt(stack.pop());
+                    stack.push(String.valueOf(calculation(token, n1, n2)));
+                    break;
+                default:
+                    stack.push(token);
+            }
+        }
+        return Integer.parseInt(stack.pop());
+    }
+
+    private int calculation(String op, int n1, int n2) {
+        switch (op) {
+            case "+":
+                return n1 + n2;
+            case "-":
+                return n1 - n2;
+            case "*":
+                return n1 * n2;
+            case "/":
+                return n1 / n2;
+        }
+        return 0;
+    }
+}
+```
+
 
 
 # 老版剑指offer
