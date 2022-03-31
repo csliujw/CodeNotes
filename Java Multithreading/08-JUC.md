@@ -59,22 +59,18 @@ public class MainDemo {
     public static void main(String[] args) {
         Resource resource = new Resource();
         new Thread(() -> {
-            for (int i = 0; i < 66; i++)
-                resource.increment();
+            for (int i = 0; i < 66; i++) resource.increment();
         }, "A").start();
 
         new Thread(() -> {
-            for (int i = 0; i < 66; i++)
-                resource.increment();
+            for (int i = 0; i < 66; i++) resource.increment();
         }, "AA").start();
 
         new Thread(() -> {
-            for (int i = 0; i < 66; i++)
-                resource.decrement();
+            for (int i = 0; i < 66; i++) resource.decrement();
         }, "B").start();
         new Thread(() -> {
-            for (int i = 0; i < 66; i++)
-                resource.decrement();
+            for (int i = 0; i < 66; i++) resource.decrement();
         }, "BB").start();
     }
 }
@@ -91,8 +87,8 @@ CountDownLatch 主要有两个方法，当一个或多个线程调用 await 方�
 ```java
 /**
  * 
- * @Description: *让一些线程阻塞直到另一些线程完成一系列操作后才被唤醒。
- * 
+ * @Description: 
+ *				 让一些线程阻塞直到另一些线程完成一系列操作后才被唤醒。
  *               CountDownLatch主要有两个方法，当一个或多个线程调用await方法时，这些线程会阻塞。
  *               其它线程调用countDown方法会将计数器减1(调用countDown方法的线程不会阻塞)，
  *               当计数器的值变为0时，因await方法阻塞的线程会被唤醒，继续执行。
