@@ -21,11 +21,11 @@ Redis设计与实现
 
 SDS又称为简单动态字符串（Simple Dynamic String），SDS的定义如下图所示
 
-<img src="img\image-20220202112259425.png">
+<img src="img/image-20220202112259425.png">
 
 如果将一个值为“Redis”的字符串放入SDS中，它的存储状态如下
 
-<img src="img\image-20220202112353642.png">
+<img src="img/image-20220202112353642.png">
 
 - buf 是一个char类型的数组。
 - len 记录了buf的长度（保存空字符 `['\0']` 的1字节空间不计算在len属性里，C以 '\0' 判断字符串是不是结束了）
@@ -91,13 +91,13 @@ SDS也提供了相应的API，让我们可以在有需要时，真正地释放SD
 
 Redis中的**链表节点**定义如下
 
-<img src="img\image-20220202120231171.png">
+<img src="img/image-20220202120231171.png">
 
-<img src="img\image-20220227131316.png" style="width:70%">
+<img src="img/image-20220227131316.png">
 
 Redis中将节点放在了list中
 
-<img src="img\image-20220202120625283.png">
+<img src="img/image-20220202120625283.png">
 
 list结构为链表提供了表头指针head、表尾指针tail，以及链表长度计数器len
 
@@ -109,7 +109,7 @@ dup、free和match成员则是用于实现多态链表所需的类型特定函�
 
 一个list结构和三个listNode结构组成的链表：
 
-<img src="img\image-20220202120838139.png">
+<img src="img/image-20220202120838139.png">
 
 ### Redis中链表的特性
 
@@ -157,13 +157,13 @@ typedef struct dictht {
 
 一个空的哈希表。
 
-<img src="img\image-20220202140738598.png">
+<img src="img/image-20220202140738598.png">
 
 #### 哈希节点
 
 Redis中哈希节点的实现如下，最新的redis在union里多了一个double d.
 
-<img src="img\image-20220202140937104.png">
+<img src="img/image-20220202140937104.png">
 
 类似于Java中HashMap的Node
 
@@ -181,7 +181,7 @@ static class Node<K,V> implements Map.Entry<K,V> {
 - value保存了键值对中值的值，其中值可以为指针类型，uint64_tu64、int64_t64
 - next 用于解决哈希冲突，使用拉链法
 
-<img src="img\image-20220202141206247.png">
+<img src="img/image-20220202141206247.png">
 
 #### 字典
 
@@ -232,7 +232,7 @@ typedef struct dictType {
 
 **一个普通状态下（未进行rehash）的字典**
 
-<img src="img\image-20220202141803755.png">
+<img src="img/image-20220202141803755.png">
 
 ### 字典中的算法
 
@@ -248,7 +248,7 @@ typedef struct dictType {
 
 **Redis计算哈希值和索引值的方法如下**：
 
-<img src="img\image-20220202141933171.png">
+<img src="img/image-20220202141933171.png">
 
 - 将key通过hashFunction方法计算出对应的hash值
 - 再结合sizemask(值为size-1)，获得该key对应的索引值
@@ -334,11 +334,11 @@ Redis的哈希表使用**拉链法**（separate chaining）来解决键冲突，
 
 **冲突前**
 
-<img src="img\image-20220202143004775.png">
+<img src="img/image-20220202143004775.png">
 
 **冲突后**
 
-<img src="img\image-20220202143058696.png">
+<img src="img/image-20220202143058696.png">
 
 #### rehash
 
@@ -364,7 +364,7 @@ Redis的哈希表使用**拉链法**（separate chaining）来解决键冲突，
 
 假设程序要对下图所示字典的ht[0]进行**扩展操作**，那么程序将执行以下步骤：
 
-<img src="img\image-20220202170234745.png">
+<img src="img/image-20220202170234745.png">
 
 - ht[0].used当前的值为4，4*2=8，所以程序会将ht[1]哈希表的大小设置为8。下图展示了ht[1]在分配空间之后，字典的样子
 
@@ -372,7 +372,7 @@ Redis的哈希表使用**拉链法**（separate chaining）来解决键冲突，
 
 - 将ht[0]包含的四个键值对都**rehash**到ht[1]
 
-<img src="img\image-20220202170626787.png">
+<img src="img/image-20220202170626787.png">
 
 - 释放ht[0]，并将ht[1]设置为ht[0]，然后为ht[1]分配一个空白哈希表，如下图所示。至此，对哈希表的扩展操作执行完毕，程序成功将哈希表的大小从原来的4改为了现在的8
 
@@ -673,7 +673,7 @@ typedef struct zskiplist {
 
 整数集合（intset）是Redis用于保存整数值的集合抽象数据结构，它可以保存类型为int16_t、int32_t或者int64_t的整数值，并且**保证集合中不会出现重复元素且按照从小到大的顺序排列**
 
-<img src="img\image-20220202180207563.png">
+<img src="img/image-20220202180207563.png">
 
 - length：记录了整数集合包含的元素数量，也即是contents数组的长度。
 
@@ -685,7 +685,7 @@ typedef struct zskiplist {
 
 **图解示例**
 
-<img src="img\image-20220202180400328.png">
+<img src="img/image-20220202180400328.png">
 
 - 该整数解中有5个元素，contents的类型为int16_t
 
@@ -712,36 +712,36 @@ typedef struct zskiplist {
 
 - 假设现在有一个INTSET_ENC_INT16编码的整数集合，**集合中包含三个int16_t类型的元素**
 
-<img src="img\image-20220202180503966.png">
+<img src="img/image-20220202180503966.png">
 
     - 因为contents中的元素都是16位的，3个数组共占用空间48位，如下
 
 
-<img src="img\image-20220202180621098.png">
+<img src="img/image-20220202180621098.png">
 
 - 这时，需要将65535添加到整数集合里面，因为int16_t能够表示的范围为(-32768~32767)，无法容纳该数字，所以**需要升级**。升级过程如下
 
     - 扩展content的分配的内存空间，由3x16 扩展为 3x32
 
 
-<img src="img\image-20220202180705372.png">
+<img src="img/image-20220202180705372.png">
 
 - 将数组中的元素**类型改为int32_t**，并放入扩展后的contents中。最后添加新插入的元素。
 
-<img src="img\image-20220202180758892.png">
+<img src="img/image-20220202180758892.png">
 
-<img src="img\image-20220202180848739.png">
+<img src="img/image-20220202180848739.png">
 
-<img src="img\image-20220202180936602.png">
+<img src="img/image-20220202180936602.png">
 
-<img src="img\image-20220202181031326.png">
+<img src="img/image-20220202181031326.png">
 
 - 改变intset中，encoding和length的值
     - encoding由INTSET_ENC_INT16改为INTSET_ENC_INT32
     - lentg由3改为4
 - 插入完成后，intset的结构如下
 
-<img src="img\image-20220202181110708.png">
+<img src="img/image-20220202181110708.png">
 
 #### 升级的好处
 
@@ -754,11 +754,11 @@ typedef struct zskiplist {
 
 即使我们将集合里唯一一个真正需要使用int64_t类型来保存的元素4294967295删除了，整数集合的编码仍然会维持INTSET_ENC_INT64，底层数组也仍然会是int64_t类型的。
 
-<img src="img\image-20220202181302198.png">
+<img src="img/image-20220202181302198.png">
 
 删除 4294967295 后
 
-<img src="img\image-20220202181324217.png">
+<img src="img/image-20220202181324217.png">
 
 ## 六、压缩列表
 

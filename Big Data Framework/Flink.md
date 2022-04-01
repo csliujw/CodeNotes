@@ -569,13 +569,13 @@ Flink中的工作进程。通常在Flink中会有多个TaskManager运行，每�
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200524212126844.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwMTgwMjI5,size_16,color_FFFFFF,t_70)
 
-*ps：上图中7.指TaskManager为JobManager提供slots，8.表示JobManager提交要在slots中执行的任务给TaskManager。*
+*ps：上图中7.指TaskManager为JobManager提供slots，8.表示 JobManager 提交要在slots中执行的任务给 TaskManager。*
 
 上图是从一个较为高层级的视角来看应用中各组件的交互协作。
 
-如果部署的集群环境不同（例如YARN，Mesos，Kubernetes，standalone等），其中一些步骤可以被省略，或是有些组件会运行在同一个JVM进程中。
+如果部署的集群环境不同（例如 YARN，Mesos，Kubernetes，standalone 等），其中一些步骤可以被省略，或是有些组件会运行在同一个JVM进程中。
 
-具体地，如果我们将Flink集群部署到YARN上，那么就会有如下的提交流程：
+具体地，如果我们将 Flink 集群部署到 YARN 上，那么就会有如下的提交流程：
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20200524212247873.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwMTgwMjI5,size_16,color_FFFFFF,t_70)
 

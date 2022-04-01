@@ -2,11 +2,11 @@
 
 ## MyBatis 执行体系
 
-> JDBC执行过程
+> JDBC 执行过程
 
-获得连接 \==> 预编译SQL \==> 设置参数 \==> 执行SQL
+获得连接 \==> 预编译 SQL \==> 设置参数 \==> 执行 SQL
 
-> MyBatis执行流程
+> MyBatis 执行流程
 
 - 动态代理 MapperProxy
 - SQL 会话 SqlSession

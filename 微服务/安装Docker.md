@@ -61,13 +61,13 @@ docker-ce为社区免费版本。稍等片刻，docker即可安装成功。
 
 ## 启动docker
 
-Docker应用需要用到各种端口，逐一去修改防火墙设置。非常麻烦，因此建议大家直接关闭防火墙！
+Docker 应用需要用到各种端口，逐一去修改防火墙设置。非常麻烦，因此建议大家直接关闭防火墙！
 
-启动docker前，一定要关闭防火墙后！！
+启动 docker 前，一定要关闭防火墙后！！
 
-启动docker前，一定要关闭防火墙后！！
+启动 docker 前，一定要关闭防火墙后！！
 
-启动docker前，一定要关闭防火墙后！！
+启动 docker 前，一定要关闭防火墙后！！
 
 ```sh
 # 关闭
@@ -76,7 +76,7 @@ systemctl stop firewalld
 systemctl disable firewalld
 ```
 
-通过命令启动docker：
+通过命令启动 docker：
 
 ```sh
 systemctl start docker  # 启动docker服务
@@ -86,7 +86,7 @@ systemctl stop docker  # 停止docker服务
 systemctl restart docker  # 重启docker服务
 ```
 
-然后输入命令，可以查看docker版本：
+然后输入命令，可以查看 docker 版本：
 
 ```
 docker -v
@@ -98,7 +98,7 @@ docker -v
 
 ## 配置镜像加速
 
-docker官方镜像仓库网速较差，我们需要设置国内镜像服务：
+docker 官方镜像仓库网速较差，我们需要设置国内镜像服务：
 
 参考阿里云的镜像加速文档：https://cr.console.aliyun.com/cn-hangzhou/instances/mirrors
 
@@ -106,18 +106,18 @@ docker官方镜像仓库网速较差，我们需要设置国内镜像服务：
 
 ## 下载
 
-Linux下需要通过命令下载：
+Linux 下需要通过命令下载：
 
 ```sh
 # 安装
 curl -L https://github.com/docker/compose/releases/download/1.23.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
 ```
 
-如果下载速度较慢，或者下载失败，可以使用课前资料提供的docker-compose文件：
+如果下载速度较慢，或者下载失败，可以使用课前资料提供的 docker-compose 文件：
 
 <img src="assets/image-20210417133020614.png">
 
-上传到`/usr/local/bin/`目录也可以。
+上传到 `/usr/local/bin/` 目录也可以。
 
 ## 修改文件权限
 
@@ -135,7 +135,7 @@ chmod +x /usr/local/bin/docker-compose
 curl -L https://raw.githubusercontent.com/docker/compose/1.29.1/contrib/completion/bash/docker-compose > /etc/bash_completion.d/docker-compose
 ```
 
-如果这里出现错误，需要修改自己的hosts文件：
+如果这里出现错误，需要修改自己的 hosts 文件：
 
 ```sh
 echo "199.232.68.133 raw.githubusercontent.com" >> /etc/hosts
@@ -143,13 +143,13 @@ echo "199.232.68.133 raw.githubusercontent.com" >> /etc/hosts
 
 # Docker镜像仓库
 
-搭建镜像仓库可以基于Docker官方提供的DockerRegistry来实现。
+搭建镜像仓库可以基于 Docker 官方提供的 DockerRegistry 来实现。
 
 官网地址：https://hub.docker.com/_/registry
 
 ## 简化版镜像仓库
 
-Docker官方的Docker Registry是一个基础版本的Docker镜像仓库，具备仓库管理的完整功能，但是没有图形化界面。
+Docker 官方的 Docker Registry 是一个基础版本的 Docker 镜像仓库，具备仓库管理的完整功能，但是没有图形化界面。
 
 搭建方式比较简单，命令如下：
 
@@ -162,13 +162,13 @@ docker run -d \
     registry
 ```
 
-命令中挂载了一个数据卷registry-data到容器内的/var/lib/registry 目录，这是私有镜像库存放数据的目录。
+命令中挂载了一个数据卷 registry-data 到容器内的 /var/lib/registry 目录，这是私有镜像库存放数据的目录。
 
-访问http://YourIp:5000/v2/_catalog 可以查看当前私有镜像服务中包含的镜像
+访问 http://YourIp:5000/v2/_catalog 可以查看当前私有镜像服务中包含的镜像
 
 ## 带有图形化界面版本
 
-使用DockerCompose部署带有图象界面的DockerRegistry，命令如下：
+使用 DockerCompose 部署带有图象界面的 DockerRegistry，命令如下：
 
 ```yaml
 version: '3.0'
@@ -190,7 +190,7 @@ services:
 
 ## 配置Docker信任地址
 
-我们的私服采用的是http协议，默认不被Docker信任，所以需要做一个配置：
+我们的私服采用的是 http 协议，默认不被 Docker 信任，所以需要做一个配置：
 
 ```sh
 # 打开要修改的文件

@@ -1,40 +1,40 @@
 # 概述
 
-不太适合入门用~我看到雷丰阳的SpringMVC视频，17年的。但是我用的是JavaConfig风格的配置。没用视频中的xml配置。
+不太适合入门用~我看到雷丰阳的 SpringMVC 视频，17 年的。但是我用的是 JavaConfig 风格的配置。没用视频中的 xml 配置。
 
 # 基本原理
 
 ## 运行流程
 
  * 客户端点击链接发送 xxx/ 请求。
- * 来到tomcat服务器。
- * SpringMVC的前端控制器收到所有请求。
- * 来看请求地址和@RequestMapping标注的那个匹配，来找到到底使用那个类的那个方法来处理请求。
+ * 来到 Tomcat 服务器。
+ * SpringMVC 的前端控制器收到所有请求。
+ * 来看请求地址和 @RequestMapping 标注的那个匹配，来找到到底使用那个类的那个方法来处理请求。
  * 前端控制器找到了目标处理器类和目标方法，直接利用 返回执行目标方法。
- * 方法执行完成后会有一个返回值，SpringMVC认为这个返回值就是要去的页面地址。
+ * 方法执行完成后会有一个返回值，SpringMVC 认为这个返回值就是要去的页面地址。
  * 拿到方法返回值后；用视图解析器进行拼串得到完整的页面地址。
  * 拿到页面地址值，前端控制器帮我们转发到页面。
 
-<img src="img/mvc/tomcat&mvc.png">
+<img src="img/mvc/Tomcat&mvc.png">
 
 ## RequestMapping基本概念
 
-- @RequestMapping注解：
+- @RequestMapping 注解：
      - 告诉 spring mvc 这个方法用来处理什么请求。。
      - 这个/是可以省略的，即使省略了，也是默认从当前项目开始。
      - 加上/比较好
 
 ## 前端控制器的拦截规则
 
-### tomcat的拦截规则
+### Tomcat的拦截规则
 
 <img src="img/mvc/DispatcherServlet.png">
 
-在使用 tomcat 的基本 api 进行开发时，资源的拦截规则，默认用的是 tomcat 中 web.xml 中的配置。
+在使用 Tomcat 的基本 api 进行开发时，资源的拦截规则，默认用的是 Tomcat 中 web.xml 中的配置。
 
 ```xml
 <!-- The mapping for the default servlet -->
-<!-- 这里是静态资源的拦截。tomcat的DefaultServlet拦截发现是静态资源后，就回去找对应的静态资源并返回 -->
+<!-- 这里是静态资源的拦截。Tomcat的DefaultServlet拦截发现是静态资源后，就回去找对应的静态资源并返回 -->
 <servlet-mapping>
     <servlet-name>default</servlet-name>
     <url-pattern>/</url-pattern>
@@ -50,23 +50,23 @@
 
 ### 前端控制器的拦截规则
 
-前端控制器的拦截规则相当于继承自tomcat的那个web.xml的配置，并重写了拦截方式。相关内容SpringMVC文档中有说明。
+前端控制器的拦截规则相当于继承自 Tomcat 的那个 web.xml 的配置，并重写了拦截方式。相关内容 Spring MVC 文档中有说明。
 
 [官方文档的说明](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc)
 
- *  <span style="color:green">**DefaultServlet是tomcat处理静态资源的**</span>
-     *  除jsp和servlet，其他的都是静态资源；index.html也是静态资源；如果静态资源让tomcat来处理的话，tomcat就会在服务器下找到这个资源并返回。
-     *  所以DefaultServlet有效的情况下，index.html才有用
- *  <span style="color:green">**tomcat有配置拦截规则，前端控制器也有，前端控制器相当于子类，重写了拦截规则！**</span>
-     *  相当于前端控制器的 / 把tomcat的DefaultServlet禁用掉了。请求的资源被前端控制器拦截了！
-     *  请求来到前端控制器，前端控制器看那个方法的RequestMapping的路径是这个。最后发现没有那个方法的RequestMapping路径是index.html；没有！所有无法访问！找资源的方式都错了！！静态资源访问就无效了！！
- *  <span style="color:green">**为什么jsp又能访问？**</span>
-     *  因为我们没有覆盖tomcat服务器中的JspServlet的配置，即Jsp的请求不由前端控制器处理，由tomcat自己处理。
-     *  如果我们把拦截方式改成 `/*`那么*.Jsp的请求也会经过前端控制器，也有从RequestMapping中找对应的方法，
+ *  <span style="color:green">**DefaultServlet是Tomcat处理静态资源的**</span>
+     *  除 JSP 和 Servlet，其他的都是静态资源；index.html 也是静态资源；如果静态资源让 Tomcat 来处理的话，Tomcat 就会在服务器下找到这个资源并返回。
+     *  所以 DefaultServlet 有效的情况下，index.html 才有用
+ *  <span style="color:green">**Tomcat有配置拦截规则，前端控制器也有，前端控制器相当于子类，重写了拦截规则！**</span>
+     *  相当于前端控制器的 / 把 Tomcat 的 DefaultServlet 禁用掉了。请求的资源被前端控制器拦截了！
+     *  请求来到前端控制器，前端控制器看那个方法的 RequestMapping 的路径是这个。最后发现没有那个方法的RequestMapping 路径是 index.html；没有！所有无法访问！找资源的方式都错了！！静态资源访问就无效了！！
+ *  <span style="color:green">**为什么 JSP 又能访问？**</span>
+     *  因为我们没有覆盖 Tomcat 服务器中的 JspServlet的配置，即Jsp的请求不由前端控制器处理，由 Tomcat 自己处理。
+     *  如果我们把拦截方式改成 `/* `那么 *.jsp 的请求也会经过前端控制器，也有从 RequestMapping 中找对应的方法，
  *  <span style="color:green">**配置说明**</span>
-     *  / 相当于把tomcat中的大web.xml的DefaultServlet重写了（静态资源拦截那个）
-     *  /* 直接是拦截所有请求。所以我们写  / ,写 / 也是为了迎合rest风格的url地址
-     *  springmvc是先经过前端控制器的，看有没有配对的，没有就报错。
+     *  / 相当于把 Tomcat 中的大 web.xml 的 DefaultServlet 重写了（静态资源拦截那个）
+     *  /* 直接是拦截所有请求。所以我们写  / ,写 / 也是为了迎合 rest 风格的 url 地址
+     *  Spring MVC 是先经过前端控制器的，看有没有配对的，没有就报错。
 
 # 常用注解
 
@@ -82,16 +82,16 @@
 
 > <span style="color:green">**@RequestMapping的使用**</span>
 
-Spring MVC使用@RequestMapping注解为控制器指定可以处理那些url请求。
+Spring MVC 使用 @RequestMapping 注解为控制器指定可以处理那些 url 请求。
 
  * 在控制器的类定义及方法定义处都可标注
-    * 类定义处：提供初步的请求映射信息。相对于WEB应用的根目录
-    * 方法处：提供进一步的细分映射信息。相当于类定义处的URL。
-    * 举例 WEB根路径为 localhost:8080/SpringMVC/
+    * 类定义处：提供初步的请求映射信息。相对于 WEB 应用的根目录
+    * 方法处：提供进一步的细分映射信息。相当于类定义处的 URL。
+    * 举例 WEB 根路径为 localhost:8080/SpringMVC/
        * 类定义处路径为 /user
        * 方法定义处路径为  /add
        * 则该方法的访问路径为  localhost:8080/SpringMVC/user/add
-    * DispatcherServlet 截断请求后，就通过控制器上@RequestMapping提供的映射信息确定请求所对应的处理方法。
+    * DispatcherServlet 截断请求后，就通过控制器上 @RequestMapping 提供的映射信息确定请求所对应的处理方法。
  * 映射
     * 请求参数
     * 请求方法
@@ -145,12 +145,12 @@ public class RequestMappingController {
 
 **用于设置请求要带什么参数过来、不能带什么参数过来、参数的值可以是什么、参数的值不能是什么。**
 
-- params={"username"} 参数中必须要有username！！
-- params={"!username"} 参数中不能有username！！
-- params={"username!=123"} 参数的值不能为123！！
-- params={"username=va"} 参数的值必须为va！！
-- params={"user","pwd"} 要有user和pwd两个参数！！
-- **<span style="color:red">不能用</span>{"age>19"}这种比较大小的写法！！！！**
+- params={"username"} 参数中必须要有 username！！
+- params={"!username"} 参数中不能有 username！！
+- params={"username!=123"} 参数的值不能为 123！！
+- params={"username=va"} 参数的值必须为 va！！
+- params={"user","pwd"} 要有 user 和 pwd 两个参数！！
+- **<span style="color:red">不能用</span> {"age>19"} 这种比较大小的写法！**
 
 示例代码
 
@@ -219,10 +219,10 @@ public class RequestMappingHeaderController {
 
 ----
 
-> <span style="color:green">**@RequestMapping 中的 consumes和produces**</span>
+> <span style="color:green">**@RequestMapping 中的 consumes 和 produces**</span>
 
-- consumes：只接受内容类型是哪种的请求，规定请求头中的Content-Type
-- produces：告诉浏览器返回的内容类型是说明，给响应头中加上Content-Type
+- consumes：只接受内容类型是哪种的请求，规定请求头中的 Content-Type
+- produces：告诉浏览器返回的内容类型是说明，给响应头中加上 Content-Type
     - text/html;charset=utf-8
 
 ----
@@ -337,8 +337,8 @@ Rest--->Representational State Transfer。（资源）表现层状态转化。�
 - 资源（Resource）：网络上的一个实体，或者说是网络上的一个具体信息。
     - URI：统一资源标识符
     - URL：统一资源定位符
-- 表现层（Representation）：把资源具体呈现出来的形式，叫做它的表现层。如文本可用txt格式表现，也可用html格式、xml格式、json格式表现。。
-- 状态转化（State Transfer）：HTTP协议是无状态的，所有状态都保存在服务器端。所谓的表现层状态转化就是HTTP协议里面，四个表示操作方式的动词：GET、POST、PUT、DELETE。
+- 表现层（Representation）：把资源具体呈现出来的形式，叫做它的表现层。如文本可用 txt 格式表现，也可用 html 格式、xml格式、JSON 格式表现。。
+- 状态转化（State Transfer）：HTTP 协议是无状态的，所有状态都保存在服务器端。所谓的表现层状态转化就是 HTTP 协议里面，四个表示操作方式的动词：GET、POST、PUT、DELETE。
     - GET：获取资源
     - POST：新建资源
     - PUT：更新资源
@@ -346,24 +346,24 @@ Rest--->Representational State Transfer。（资源）表现层状态转化。�
 
 ### 简单举例
 
-- /book/1 	：GET请求 表示查询1号图书
-- /book        ：POST请求 表示添加1号图书
-- /book/1     ：PUT请求 表示更新1号图书
-- /book/1     ：DELETE 表示删除1号图书
+- /book/1 	：GET请求 表示查询 1 号图书
+- /book        ：POST请求 表示添加 1 号图书
+- /book/1     ：PUT请求 表示更新 1号图书
+- /book/1     ：DELETE 表示删除 1 号图书
 
-Rest推荐：<span style="color:green">**url地址这么起名； /资源名/资源标识符**</span>
+Rest 推荐：<span style="color:green">**url 地址这么起名； /资源名/资源标识符**</span>
 
 <span style="color:red">问题：从页面上只能发起两种请求：GET、POST，其他请求没法使用。</span>
 
-别慌，Spring提供了对Rest风格的支持。
+别慌，Spring 提供了对 Rest 风格的支持。
 
-**1）**SpringMVC中有一个Filter，他可以把普通的请求，转化为规定形式的请求。配置Filter。这个Filter叫做，`HiddenHttpMethodFilter`,它的url-pattern写`/*`
+**1）**Spring MVC 中有一个 Filter，他可以把普通的请求，转化为规定形式的请求。配置 Filter。这个 Filter 叫做，`HiddenHttpMethodFilter`,它的 url-pattern 写`/*`
 
 **2）**如何发起其他形式的请求？
 
 - 按照以下要求：
-- 创建post类型的表单;
-- 表单项中携带一个`_method`的参数，`_method`的值就是所要的请求形式。
+- 创建 POST 类型的表单;
+- 表单项中携带一个 `_method  `的参数，`_method`  的值就是所要的请求形式。
 
 ```html
 <form action="book/1" method="post">
@@ -372,7 +372,7 @@ Rest推荐：<span style="color:green">**url地址这么起名； /资源名/资
 </form>
 ```
 
-为什么那个Filter可以实现这个功能？？请看源码！
+为什么那个  Filter 可以实现这个功能？？请看源码！
 
 ```java
 private String methodParam = DEFAULT_METHOD_PARAM;
@@ -397,9 +397,9 @@ protected void doFilterInternal(HttpServletRequest request, HttpServletResponse 
 }
 ```
 
-### 高版本 tomcat
+### 高版本 Tomcat
 
-高版本 tomcat 只支持 get，pos，header请求，不支持其他的，执行其他的会报错。如何解决？
+高版本 Tomcat 只支持 get，pos，header请求，不支持其他的，执行其他的会报错。如何解决？
 
 ```jsp
 <%@ page contentType="text/html;charset=UTF-8" language="java" isErrorPage="true" %>
@@ -417,14 +417,14 @@ protected void doFilterInternal(HttpServletRequest request, HttpServletResponse 
 
 ## 概述
 
-SpringMVC获取请求带来的各种信息
+Spring MVC 获取请求带来的各种信息
 
 - 入参名称与请求参数名称一致，自动赋值
 - @RequestParam
 - @RequestHeader
-- @CookieValue：获取某个cookie的值
-- POJO自动赋值。字段名一致即可。
-- 使用Servlet原生API。（session推荐使用原生API）
+- @CookieValue：获取某个 cookie 的值
+- POJO 自动赋值。字段名一致即可。
+- 使用 Servlet 原生 API。（session 推荐使用原生 API）
 
 ## 注解获取请求参数
 
@@ -439,16 +439,16 @@ String username  = request.getPamrameter("user")
 // 浏览器传过来一个名为user的形式参数，把user的值存入username的变量中。
 ```
 
-RequestParam注解的几个重要的值：
+RequestParam 注解的几个重要的值：
 
-* value：指定要获取的参数的key（value和name互为别名。）
+* value：指定要获取的参数的 key（value 和 name 互为别名。）
 * required：这个参数是否必须的
 * defaultValue：参数默认值
 
 <span style="color:red">**PS：注意区分RequestParam与PathVarible。**</span>
 
-- RequestParam是获取浏览器传过来的参数，是拿❓后面的值！！
-- PathVarible是取的地址中的值！！
+- RequestParam 是获取浏览器传过来的参数，是拿❓后面的值！！
+- PathVarible 是取的地址中的值！！
 
 ### RequestHeader 
 
@@ -469,9 +469,9 @@ RequestHeader注解的几个重要的值
 
 ### CookieValue
 
-**@CookieValue：获取某个cookie的值**
+**@CookieValue：获取某个 cookie 的值**
 
-以前获取某个cookie
+以前获取某个 cookie
 
 ```java
 Cookie[] cookies = request.getCookies();
@@ -482,7 +482,7 @@ for (Cookie c: cookies){
 }
 ```
 
-现在获取某个cookie
+现在获取某个 cookie
 
 ```java
 public String index(@CookieValue("JSESSIONID") String jid){
@@ -490,7 +490,7 @@ public String index(@CookieValue("JSESSIONID") String jid){
 }
 ```
 
-CookieValue注解几个重要的值
+CookieValue 注解几个重要的值
 
 * value
 * required
@@ -498,25 +498,23 @@ CookieValue注解几个重要的值
 
 ### SessionAttribute
 
-以前获取Session
+以前获取 Session
 
 ```java
 request.getSession.getAttribute("user");
 ```
 
-现在获取Session
+现在获取 Session
 
 ```java
-public String getSession(@SessionAttribute("user") String user) {
-      // pass
-}
+public String getSession(@SessionAttribute("user") String user) {}
 ```
 
-**Session还是用原生API获取的好。**
+**Session  还是用原生 API 获取的好。**
 
 ## POJO自动赋值
 
-<span style="color:red">**注意**</span>：返回对象类型的POJO要引入json库，我用的jackson。
+<span style="color:red">**注意**</span>：返回对象类型的 POJO 要引入 JSON 库，我用的 jackson。
 
 ```xml
 <dependencies>
@@ -561,13 +559,13 @@ public User pojo(User user) {
 
 ### 请求乱码
 
-**GET请求乱码：**改server.xml 在8080端口处 URIEncoding="UTF-8"
+**GET 请求乱码：**改 server.xml 在 8080 端口处 URIEncoding="UTF-8"
 
 **POST 请求乱码：**
 
 - 在第一次获取请求参数之前设置，`request.setCharacterEncoding("UTF-8")`
 
-- 可以自己写一个filter进行过滤：springmvc有这个filter `CharacterEncodingFilter` <span style="color:red">解决请求乱码</span>  
+- 可以自己写一个 filter 进行过滤：Spring MVC 有这个 filter `CharacterEncodingFilter` <span style="color:red">解决请求乱码</span>  
 
     ```java
     class CharacterEncodingFilter extends OncePerRequestFilter{
@@ -575,17 +573,17 @@ public User pojo(User user) {
     }
     ```
 
-- **注意！！字符编码Filter要在其他Filter之前！！！为什么！！因为我们要先设置，让设置生效，之后的操作才有效！！**
+- <b>注意！！字符编码 Filter 要在其他 Filter 之前！！！为什么！！因为我们要先设置，让设置生效，之后的操作才有效！！</b>
 
 ### 响应乱码
 
 response.setContentType("text/html;charset=utf-8")
 
-在SpringMVC中解决响应乱码的话，可以这样
+在 Spring MVC 中解决响应乱码的话，可以这样
 
-- 方式一，在@RequestMapping中加上，**produces="text/html;charset=utf-8"**
+- 方式一，在 @RequestMapping 中加上，**produces="text/html;charset=utf-8"**
 
-- 方式二，配置HttpMessageConverter，配置代码如下：
+- 方式二，配置 HttpMessageConverter，配置代码如下：
 
     ```java
     // 防止响应乱码。响应数据的编码格式这里默认是IOS-8859
@@ -597,12 +595,12 @@ response.setContentType("text/html;charset=utf-8")
 
 ### 总结
 
-* 使用SpringMVC前端控制器 写完就直接写字符编码过滤器
-* Tomcat一装上，上手就是server.xml的8080处添加URIEncoding=”UTF-8“
+* 使用 SpringMVC 前端控制器 写完就直接写字符编码过滤器
+* Tomcat 一装上，上手就是 server.xml 的 8080 处添加 URIEncoding=”UTF-8“
 
 ### 实例配置
 
-**Spring IOC那块的配置**
+<b>Spring IOC 那块的配置</b>
 
 ```java
 @Configuration
@@ -613,7 +611,7 @@ public class RootConfig {
 }
 ```
 
-**SpringMVC IOC的配置**
+<b>Spring MVC IOC 的配置</b>
 
 ```java
 @EnableWebMvc // 开启mvc的高级配置
@@ -631,7 +629,7 @@ public class WebConfig implements WebMvcConfigurer {
 }
 ```
 
-**容器相关配置**
+<b>容器相关配置</b>
 
 ```java
 public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
@@ -649,7 +647,7 @@ public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherS
      * 拦截规则
      * / 拦截所有请求 不拦截jsp页面
      * /* 拦截所有请求 会拦截jsp页面
-     * 处理*.jsp请求时tomcat处理的
+     * 处理*.jsp请求时Tomcat处理的
      *
      * @return
      */
@@ -677,9 +675,9 @@ public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherS
 
 ## Map、Model、ModelMap
 
-1）可以在方法处传入Map、或Model或者ModelMap
+1）可以在方法处传入 Map、或 Model  或者 ModelMap
 
-- 这些参数都会存放在域中。可以在页面获取。（request域）
+- 这些参数都会存放在域中。可以在页面获取。（request 域）
 
 2）经过验证
 
@@ -687,17 +685,15 @@ public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherS
 - Model
 - ModelMap
 
-Map、Model都是接口，ModelMap是具体的实现类
+Map、Model  都是接口，ModelMap 是具体的实现类
 
 ModelMap extends java.util.LinkedHashMap
 
-获得Map、Model、ModelMap形参的getClass()发现他是org.springframework.validation.support.BindingAwareModelMap类型。
+获得 Map、Model、ModelMap 形参的 getClass() 发现他是 org.springframework.validation.support.BindingAwareModelMap 类型。
 
-**类之间的简化后的UML关系如图**
+<b>类之间的简化后的 UML 关系如图</b>
 
 <img  src="img/mvc/BindingAwareModelMapUML.png">
-
-----
 
 ```java
 @Controller
@@ -734,7 +730,7 @@ public class CarryController {
 
 ## ModelAndView
 
-1）方法的返回值可以变为ModelAndView类型
+1）方法的返回值可以变为 ModelAndView 类型
 
 即包含视图信息（页面地址）也包含模型数据（给页面），而且数据是放在请求域中。
 
@@ -757,15 +753,15 @@ public ModelAndView handle(){
 
 @SessionAttributes(value="msg")：
 
-- 给BindingAwareModelMap中保存的数据,同时给session中放一份。
-- value指定保存数据时要给session中存放的数据的key。
+- 给 BindingAwareModelMap 中保存的数据,同时给 session 中放一份。
+- value 指定保存数据时要给 session 中存放的数据的 key。
 
 @SessionAttributes(value={"msg"},types={String.class}})
 
-- value={“msg”} 只要保存的是这种key的数据，给Session中放一份。
-- types={String.class} 只要保存的是这种类型的数据，给Session中也放一份。
-- 所以会存两大份！！用value指定的比较多，因为可以精确指定。
-- **但是我们不推荐用@SessionAttributes，还是用原生API吧。注解的话可能会引发异常，且移除session麻烦。**
+- value={“msg”} 只要保存的是这种 key 的数据，给 Session 中放一份。
+- types={String.class} 只要保存的是这种类型的数据，给 Session 中也放一份。
+- 所以会存两大份！！用 value 指定的比较多，因为可以精确指定。
+- <b>但是我们不推荐用 @SessionAttributes，还是用原生 API 吧。注解的话可能会引发异常，且移除 session 麻烦。</b>
 
 ## ModelAttribute方法
 
@@ -779,7 +775,7 @@ ModelAttribute 方法入参标注该注解后，入参的对象就会放到数�
 
 ​	将这个图书信息保存起来（方便下一个方法还能使用）
 
-​	参数Map就是BindAwareMap
+​	参数 Map 就是 BindAwareMap
 
 ```java
 /**
@@ -802,19 +798,19 @@ public void ModelAttribute(Model model) {
 }
 ```
 
-**ModelAttribute图解**
+<b>ModelAttribute 图解</b>
 
-<img src="img/mvc/ModelAttribute.png" style="float:left">
+<img src="img/mvc/ModelAttribute.png">
 
 # 前端控制器源码
 
 ## 如何看SpringMVC源码
 
-**SpringMVC源码如何看？**
+<b>Spring MVC 源码如何看？</b>
 
-- SpringMVC所有的请求都会被前端控制器拦截到，所以看SpringMVC怎么处理请求的，就看前端控制器的处理流程，如何处理请求的。
-- 只要是finally块的，一般就是清东西。
-- try起来的一般是重要的代码。 
+- Spring  MVC  所有的请求都会被前端控制器拦截到，所以看 Spring MVC 怎么处理请求的，就看前端控制器的处理流程，如何处理请求的。
+- 只要是 finally 块的，一般就是清东西。
+- try 起来的一般是重要的代码。 
 
 ## 梳理流程
 
@@ -822,13 +818,13 @@ public void ModelAttribute(Model model) {
 
 **文字描述：**
 
-请求一进来，应该是来到HttpServlet的doPost或doGet方法。
+请求一进来，应该是来到 HttpServlet 的 doPost 或 doGet 方法。
 
-我们根据官网的描述知道，前端控制器DispatcherServlet是负责请求转发的，所以我们从它开始入手。
+我们根据官网的描述知道，前端控制器 DispatcherServlet 是负责请求转发的，所以我们从它开始入手。
 
-**1）我们发现DispatcherServlet的继承关系如图所示：**
+<b>1）我们发现 DispatcherServlet 的继承关系如图所示：</b>
 
-<img src="img/mvc/DispatcherServlet_UML.png" style="float:left">
+<img src="img/mvc/DispatcherServlet_UML.png">
 
 **2）我们知道Servlet的方法是从Service方法开始的，于是我们去找这些类重写的Service方法**
 
@@ -1087,14 +1083,14 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 
 1）读了doDispatch（）方法，大致猜了每个方法的作用。现在来细看getHandler（）方法的细节。
 
-**getHandler是如何找到那个类可以处理请求的。**
+<b>getHandler  是如何找到那个类可以处理请求的。</b>
 
 ```java
 // mappedHandler的类型是HandlerExecutionChain
 mappedHandler = getHandler(processedRequest);
 ```
 
-getHandler源码
+getHandler 源码
 
 ```java
 protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
@@ -1111,7 +1107,7 @@ protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Ex
 }
 ```
 
-debug发现，有三种类别的handlerMappings（Spring 5.x），使用的是RequestMappingHandlerMapping@6585（因为我们是打的RequestMapping这个注解！）
+debug 发现，有三种类别的 handlerMappings（Spring 5.x），使用的是 RequestMappingHandlerMapping@6585（因为我们是打的 RequestMapping 这个注解）
 
 <img src="img/mvc/getHandler_01.png" style="float:left">
 
@@ -2408,7 +2404,7 @@ JDBC：规范---实现（各个厂商的驱动包）
 
 JSR303：规范---Hibernate Validator（第三方校验框架）
 
-需要如下 jar 包（有几个带 el 的 jar 不导入：因为 tomcat 中有；如果 tomcat 的版本是 7.0 以下，则需要导入）
+需要如下 jar 包（有几个带 el 的 jar 不导入：因为 Tomcat 中有；如果 Tomcat 的版本是 7.0 以下，则需要导入）
 
 - hibernate-validator-5.0.0.CR2.jar
 - hibernate-validator-annotation-processor-5.0.0.CR2.jar
@@ -3412,7 +3408,7 @@ public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherS
 
 > **解决Get和Post请求乱码一劳永逸的办法**
 
-在**~\apache-tomcat-7.0.90\conf\server.xml中处理**
+在**~\apache-Tomcat-7.0.90\conf\server.xml中处理**
 
 打开server.xml，大约在65行左右的位置
 

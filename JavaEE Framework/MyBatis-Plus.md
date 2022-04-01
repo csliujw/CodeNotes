@@ -7,7 +7,7 @@
 
 ## 概述
 
-MyBatis-Plus（简称 MP）是一个 MyBatis 的增强工具，在 MyBatis 的基础上只做增强不做改变，为简化开发、提高 效率而生。
+MyBatis-Plus（简称 MP）是一个 MyBatis 的增强工具，在 MyBatis 的基础上只做增强不做改变，为简化开发、提高效率而生。
 
 官网：https://mp.baomidou.com/
 
@@ -44,6 +44,7 @@ CREATE TABLE `tb_user` (
 `email` varchar(50) DEFAULT NULL COMMENT '邮箱',
 PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
 -- 插入测试数据
 INSERT INTO `tb_user` (`id`, `user_name`, `password`, `name`, `age`, `email`) VALUES
 ('1', 'zhangsan', '123456', '张三', '18', 'test1@itcast.cn');
@@ -150,9 +151,7 @@ mybatis-plus:
 
 ```java
 @Mapper
-public interface UserMapper extends BaseMapper<User> {
-}
-
+public interface UserMapper extends BaseMapper<User> {}
 
 @SpringBootTest
 public class ApplicationTest {
@@ -170,15 +169,15 @@ public class ApplicationTest {
 
 ## 通用 CRUD
 
-通过继承BaseMapper就可以获取到各种各样的单表操作，接下来详细讲解这些操作。
+通过继承 BaseMapper 就可以获取到各种各样的单表操作，接下来详细讲解这些操作。
 
-![image-20211105220903263](img\ibatis\plus\image-20211105220903263.png)
+<img src="img\ibatis\plus\image-20211105220903263.png">
 
 没啥好记的，现查现用。只记录一个分页查询
 
 ### selectPage
 
-需要注册一个分页插件到IOC容器中
+需要注册一个分页插件到 IOC 容器中
 
 ```java
 @SpringBootApplication
@@ -214,7 +213,7 @@ MP 在启动后会将 BaseMapper 中的一系列的方法注册到 meppedStateme
 
 在 MP 中，ISqlInjector 负责 SQL 的注入工作，它是一个接口，AbstractSqlInjector 是它的实现类，实现关系如下：
 
-![image-20211105224958774](img\ibatis\plus\image-20211105224958774.png)
+<img src="img\ibatis\plus\image-20211105224958774.png">
 
 在 AbstractSqlInjector 中，主要是由 inspectInject() 方法进行注入的，如下：
 
@@ -248,9 +247,9 @@ public void inject(MapperBuilderAssistant builderAssistant, Class<?> mapperClass
 }
 ```
 
-在实现方法中，`methodList.forEach(m -> m.inject(builderAssistant, mapperClass, modelClass, tableInfo));` 是关键，循环遍历方法，进行注入。 最终调用抽象方法 injectMappedStatement进行真正的注入；该抽象方法的实现如下：
+在实现方法中，`methodList.forEach(m -> m.inject(builderAssistant, mapperClass, modelClass, tableInfo));` 是关键，循环遍历方法，进行注入。 最终调用抽象方法 injectMappedStatement 进行真正的注入；该抽象方法的实现如下：
 
-![image-20211105225432807](img\ibatis\plus\image-20211105225432807.png)
+<img src="img\ibatis\plus\image-20211105225432807.png">
 
 以 DeleteById 为例
 
@@ -278,7 +277,7 @@ public class DeleteById extends AbstractMethod {
 }
 ```
 
-![image-20211105225944851](img\ibatis\plus\image-20211105225944851.png)
+<img src="img\ibatis\plus\image-20211105225944851.png">
 
 ## 配置
 
@@ -291,7 +290,7 @@ MP 中有大量配置，相当一部分是 MyBatis 的原生配置，另一部�
 - 类型：`String`
 - 默认值：`null`
 
-MyBatis 配置文件位置，如果您有单独的 MyBatis 配置，请将其路径配置到configLocation 中。 MyBatis Configuration 的具体内容请参考MyBatis 官方文档
+MyBatis 配置文件位置，如果您有单独的 MyBatis 配置，请将其路径配置到 configLocation 中。 MyBatis Configuration 的具体内容请参考 MyBatis 官方文档
 
 ```properties
 mybatis-plus.config-location = classpath:mybatis-config.xml
@@ -299,7 +298,7 @@ mybatis-plus.config-location = classpath:mybatis-config.xml
 
 #### mapperLocations
 
-MyBatis Mapper 所对应的 XML 文件位置，如果您在 Mapper 中有自定义方法（XML 中有自定义实现），需要进行 该配置，告诉 Mapper 所对应的 XML 文件位置。
+MyBatis Mapper 所对应的 XML 文件位置，如果您在 Mapper 中有自定义方法（XML 中有自定义实现），需要进行该配置，告诉 Mapper 所对应的 XML 文件位置。
 
 ```properties
 mybatis-plus.mapper-locations = classpath*:mybatis/*.xml
@@ -317,14 +316,14 @@ mybatis-plus.type-aliases-package = cn.itcast.mp.pojo
 
 ### 进阶配置
 
-本部分（Configuration）的配置大都为 MyBatis 原生支持的配置，这意味着您可以通过 MyBatis XML 配置文件的形 式进行配置。
+本部分（Configuration）的配置大都为 MyBatis 原生支持的配置，这意味着您可以通过 MyBatis XML 配置文件的形式进行配置。
 
 #### mapUnderscoreToCamelCase
 
 - 类型： boolean 
 - 默认值： true
 
-是否开启自动驼峰命名规则（camel case）映射，即从经典数据库列名 A_COLUMN（下划线命名） 到经典 Java 属 性名 aColumn（驼峰命名） 的类似映射。
+是否开启自动驼峰命名规则（camel case）映射，即从经典数据库列名 A_COLUMN（下划线命名） 到经典 Java 属性名 aColumn（驼峰命名） 的类似映射。
 
 >此属性在 MyBatis 中原默认值为 false，在 MyBatis-Plus 中，此属性也将用于生成最终的 SQL 的 select body 如果您的数据库命名符合规则无需使用 @TableField 注解指定数据库字段名
 
@@ -351,14 +350,14 @@ mybatis-plus.configuration.cache-enabled=false
 - 类型： com.baomidou.mybatisplus.annotation.IdType 
 - 默认值： ID_WORKER
 
-全局默认主键类型，设置后，即可省略实体对象中的@TableId(type = IdType.AUTO)配置。
+全局默认主键类型，设置后，即可省略实体对象中的 @TableId(type = IdType.AUTO) 配置。
 
 #### tablePrefix
 
 - 类型： String 
 - 默认值： null
 
-表名前缀，全局配置后可省略@TableName()配置。
+表名前缀，全局配置后可省略 @TableName() 配置。
 
 ## 条件构造器
 

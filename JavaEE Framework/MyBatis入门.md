@@ -1,6 +1,6 @@
 # `MyBatis`概述
 
-MyBatis3.4x版本，把他内部需要的三方jar都整合在一起了。
+MyBatis 3.4x 版本，把他内部需要的三方 jar 都整合在一起了。
 
 ## 解决的问题
 
@@ -8,7 +8,7 @@ MyBatis 减少了样板代码，简化了持久层的开发。
 
 ## 快捷键基础
 
-> win10快捷键
+> win10 快捷键
 
 - Alt + Tab 选择活动窗口
 
@@ -29,33 +29,33 @@ MyBatis 减少了样板代码，简化了持久层的开发。
 
 读配置文件 ①用类加载器，读类路径下的
 
-​		  			②用`Servlet Context`对象的`getRealPath`
+​		  			②用 `Servlet Context `对象的 `getRealPath`
 
-创建工程`MyBatis`用了构建者模式。告诉需求，根据需求创建我们想要的。
+创建工程 `MyBatis `用了构建者模式。告诉需求，根据需求创建我们想要的。
 
 ```java
 build.build(in) // in形式下创建的工厂，多了几个类，操作看起来麻烦了，但是组合更加灵活的。
 ```
 
-生成`SqlSession`用了工厂模式
+生成 `SqlSession` 用了工厂模式
 
-创建`Dao`接口实现类用了代理模式
+创建 `Dao` 接口实现类用了代理模式
 
-在看`MyBatis`源码的时候，通过一些类的名称大概知道了`MyBatis`用到了什么技术。`MyBatis`解析的时候应该用到了词法分析，分析字符串。在动态生成代理类的时候用到了字节码增强技术。
+在看 `MyBatis` 源码的时候，通过一些类的名称大概知道了 `MyBatis` 用到了什么技术。`MyBatis` 解析的时候应该用到了词法分析，分析字符串。在动态生成代理类的时候用到了字节码增强技术。
 
 # `MyBatis`基础篇
 
 ## 基本环境搭建
 
-Maven工程使用 `MyBatis` 的时候，配置文件需要放在 `resrouces` 目录下，否则无法找到。
+Maven 工程使用 `MyBatis` 的时候，配置文件需要放在 `resrouces` 目录下，否则无法找到。
 
 整合 Druid 的时候，需要的是数据源，需要我们手动 new 出 Druid 的数据源。
 
 - 基本配置文件
-- mapper文件
+- mapper 文件
 - 日志文件
 
-maven的 pom 文件
+maven 的 pom 文件
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -146,7 +146,7 @@ maven的 pom 文件
 </configuration>
 ```
 
-mapper文件示例
+mapper 文件示例
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -165,7 +165,7 @@ mapper文件示例
 
 集成 Druid 只需要在前面的基础上修改一点东西即可。
 
-- 新建一个类，继承自 UnpooledDataSourceFactory 类（MyBatis官方文档的示例）
+- 新建一个类，继承自 UnpooledDataSourceFactory 类（MyBatis 官方文档的示例）
 
 ```java
 public class DataSourceDruid extends UnpooledDataSourceFactory {
@@ -183,7 +183,7 @@ public class DataSourceDruid extends UnpooledDataSourceFactory {
 }
 ```
 
-- SqlConfig文件进行一小部分修改
+- SqlConfig 文件进行一小部分修改
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -216,7 +216,7 @@ public class DataSourceDruid extends UnpooledDataSourceFactory {
 </configuration>
 ```
 
-- pom文件中添加
+- pom 文件中添加
 
 ```xml
 <dependency>
@@ -228,7 +228,7 @@ public class DataSourceDruid extends UnpooledDataSourceFactory {
 
 ## 日志相关
 
-**`log4j`日志配置**
+<b>`log4j`日志配置</b>
 
 ```properties
 #log4j基本配置
@@ -249,7 +249,7 @@ log4j.appender.file.layout=org.apache.log4j.PatternLayout     #布局器
 log4j.appender.file.layout.ConversionPattern=%c-%m%n   #布局器格式
 ```
 
-**`log4j`仅打印`SQL`语句**
+<b>`log4j`仅打印`SQL`语句</b>
 
 ```properties
 # 全局日志配置
@@ -280,7 +280,7 @@ Mapper 映射文件放在 maven 工程 resource 下 com/daily/mapper 也是 reso
 
 > 2、用包名引入★
 
-这种引入方式相当于批量引入一个包下的所有映射器。此种方式要求xml和接口名称一致？
+这种引入方式相当于批量引入一个包下的所有映射器。此种方式要求 xml 和接口名称一致？
 
 ```xml
 <mappers>
@@ -308,9 +308,9 @@ Mapper 映射文件放在 maven 工程 resource 下 com/daily/mapper 也是 reso
 
 一般我喜欢使用 `包名引入`。
 
-maven项目下，所有的非 `*.java` 文件都要放在 resources 目录下。resources 是项目的`资源根目录！`
+maven 项目下，所有的非 `*.java` 文件都要放在 resources 目录下。resources 是项目的`资源根目录！`
 
-如：src/main/java 目录下的包和类都是以 classes 为根目录进行发布。resources 下的资源也是以classes 为根目录。
+如：src/main/java 目录下的包和类都是以 classes 为根目录进行发布。resources 下的资源也是以 classes 为根目录。
 
 <img src="img/ibatis/maven.png">
 
@@ -444,9 +444,9 @@ public Employee getXX(Integer id, String name);
 
 > 总结
 
-- 要么写#{0} #{1} 要么写#{param1} #{param2} 
-- 只有一个形参的话写什么都行#{asf} #{haha}都行
-- 原因：只要传入了多个参数；MyBatis会自动的将这些参数封装在一个 map 中；封装的时候使用的 key 就是参数的索引和参数的第几个表示
+- 要么写#{0} #{1} 要么写 #{param1} #{param2} 
+- 只有一个形参的话写什么都行 #{asf} #{haha} 都行
+- 原因：只要传入了多个参数；MyBatis 会自动的将这些参数封装在一个 map 中；封装的时候使用的 key 就是参数的索引和参数的第几个表示
 
 ```java
 Map<String,Object> map = new HashMap<>();
@@ -454,7 +454,7 @@ map.put("1","传入的值1");
 map.put("2","传入的值2");
 ```
 
-> 如果我们不想这样做，想指定 key，那么我们如何指定封装时使用的key？
+> 如果我们不想这样做，想指定 key，那么我们如何指定封装时使用的 key？
 
 - 使用注解 `@Param` 指定 map 的 key 的值！具体看看源码。
 
@@ -474,13 +474,13 @@ Employee getXX(@Param("id")Integer id, @Param("enmName")String empName);
 1）单个参数
 
 - 基本类型：取值用 #{随便写}
-- 传入POJO：取值用 #{POJO字段名称}，是使用 OGNL 表达式语言来实现的
+- 传入 POJO：取值用 #{POJO字段名称}，是使用 OGNL 表达式语言来实现的
 
 2）多个参数：
 
 - public Employee getXXX(Integer id, String name)，取值：#{参数名}是无效了
 - 可以用：0，1（参数索引）或 param1,param2（第几个参数paramN）来取值，#{0},#{1} / #{param1},#{param2}
-- 原因：只要传入了多个参数；MyBatis 会自动的将这些参数封装在一个 map 中；封装时使用的 key 就是参数的索引和参数的第几个表示。
+- 原因：只要传入了多个参数；MyBatis 会自动的将这些参数封装在一个 map 中；封装时使用的 key 就是参数的索引和参数的第几个表示
 
 ```java
 Map<String,Object> map = new HashMap<>()
@@ -489,11 +489,11 @@ map.put("2","传入的值2");
 // #{1},就是取出 map 中 key=1 的 value
 ```
 
-3）@Param,为参数指定key；命名参数；推荐这种做法。我们可以使用 @Param 注解告诉 MyBatis，封装参数 map 的时候别乱来，使用我们指定的 key。
+3）@Param,为参数指定 key；命名参数；推荐这种做法。我们可以使用 @Param 注解告诉 MyBatis，封装参数 map 的时候别乱来，使用我们指定的 key
 
-4）传入了Map：将多个要使用的参数封装起来，取值#{key}
+4）传入了Map：将多个要使用的参数封装起来，取值 #{key}
 
-5）扩展：多个参数；自动封装map。
+5）扩展：多个参数；自动封装 map
 
 ```java
 public XX method(@Param("id")Integer id, String empName,Employee employee);
@@ -519,7 +519,7 @@ mybatis 的取值方式可分为两类：
 
 ## MyBatis 取值源码分析
 
-MapperMethod类
+MapperMethod 类
 
 ```java
 public Object execute(SqlSession sqlSession, Object[] args) {
@@ -571,7 +571,7 @@ public Object execute(SqlSession sqlSession, Object[] args) {
 }
 ```
 
-继续看method.convertArgsToSqlCommandParam(args);【MapperMethod类中】
+继续看 method.convertArgsToSqlCommandParam(args);【MapperMethod 类中】
 
 ```java
 public Object convertArgsToSqlCommandParam(Object[] args) {
@@ -579,7 +579,7 @@ public Object convertArgsToSqlCommandParam(Object[] args) {
 }
 ```
 
-点进去，进入了ParamNameResolver类
+点进去，进入了 ParamNameResolver 类
 
 ```java
 public Object getNamedParams(Object[] args) {
@@ -633,7 +633,7 @@ id	name	email
 </select>
 ```
 
-> POJO情况
+> POJO 情况
 
 ```java
 // key	 就是这个记录的主键
@@ -652,7 +652,7 @@ public Map<String, Employee> getAllEmp();
 
 ## 自定义结果集
 
-type：指定为哪个javaBean自定义封装规则；全类名。
+type：指定为哪个 JavaBean 自定义封装规则；全类名。
 
 id：唯一标识符，让别名在后面引用
 
@@ -740,11 +740,11 @@ ofType：指定集合里面元素的类型
 
 ## 动态SQL
 
-> where标签
+> where 标签
 
-where标签可以帮我们去除掉前面的and
+where 标签可以帮我们去除掉前面的 and
 
-> trim标签
+> trim 标签
 
 ```xml
 <!--
@@ -773,7 +773,7 @@ where标签可以帮我们去除掉前面的and
 
 `foreach` 元素的功能非常强大，它允许你指定一个集合，声明可以在元素体内使用的集合项（`item`）和索引（`index`）变量。它也允许你指定开头与结尾的字符串以及集合项迭代之间的分隔符。这个元素也不会错误地添加多余的分隔符，看它多智能！
 
-**提示** 你可以将任何可迭代对象（如 `List`、`Set` 等）、`Map` 对象或者数组对象作为集合参数传递给 `*foreach*`。当使用可迭代对象或者数组时，`index` 是当前迭代的序号，item 的值是本次迭代获取到的元素。当使用 `Map` 对象（或者 `Map.Entry` 对象的集合）时，`index` 是键，`item` 是值。
+**提示** 你可以将任何可迭代对象（如 `List`、`Set` 等）、`Map` 对象或者数组对象作为集合参数传递给 `foreach`。当使用可迭代对象或者数组时，`index` 是当前迭代的序号，item 的值是本次迭代获取到的元素。当使用 `Map` 对象（或者 `Map.Entry` 对象的集合）时，`index` 是键，`item` 是值。
 
 ```xml
 select xxxxx where id in
@@ -794,11 +794,11 @@ select xxxxx where id in
 </foreach>
 ```
 
-> choose选择
+> choose 选择
 
 用到的时候查文档吧，感觉很少会用到。
 
-> 抽取sql片段
+> 抽取 sql 片段
 
 ```xml
 <sql id="selectSql">
@@ -814,11 +814,11 @@ select xxxxx where id in
 
 暂时存储一些数据；加快系统的查询速度
 
-MyBatis缓存机制：Map；能保存查询出的一些数据；
+MyBatis 缓存机制：Map；能保存查询出的一些数据；
 
-一级缓存：线程级别的缓存；本地缓存；SqlSession级别的缓存
+一级缓存：线程级别的缓存；本地缓存；SqlSession 级别的缓存
 
-二级缓存：全局范围的缓存；除过当前线程；SqlSession能用外其他也可以用
+二级缓存：全局范围的缓存；除过当前线程；SqlSession 能用外其他也可以用
 
 - 一级缓存
   - 一级缓存是 `SqlSession` 范围的缓存，当调用 `SqlSession` 的修改，添加，删除，`commit()，close()`等方法时，就会清空一级缓存。
@@ -840,25 +840,25 @@ select * from user where id = #{uid}
 
 请自行编码验证！
 
-看下MyBatis缓存部分的源码就知道，这个缓存机制真的很弱鸡。
+看下 MyBatis 缓存部分的源码就知道，这个缓存机制真的很弱鸡。
 
-一级缓存是SqlSession级别的缓存
+一级缓存是 SqlSession 级别的缓存
 
-1）不同的sqlSession，使用不同的一级缓存
+1）不同的 sqlSession，使用不同的一级缓存
 
-​	只有在同一个sqlSession期间查询到的数据会保存在这个sqlSession的缓存中。
+​	只有在同一个 sqlSession 期间查询到的数据会保存在这个 sqlSession 的缓存中。
 
-​	下次使用这个sqlSession查询会从缓存中拿
+​	下次使用这个 sqlSession 查询会从缓存中拿
 
-2）同一个方法，不同的参数，由于可能之前没查询过，所以还有发新的sql；
+2）同一个方法，不同的参数，由于可能之前没查询过，所以还有发新的 sql；
 
-3）在这个sqlSession期间执行任何一次增删改操作，增删改都会把缓存清空。（不管你改的是不是我的数据，我都清空）
+3）在这个 sqlSession 期间执行任何一次增删改操作，增删改都会把缓存清空。（不管你改的是不是我的数据，我都清空）
 
 4）手动清空缓存 openSession.clearCache()
 
-MyBatis缓存是在
+MyBatis 缓存是在
 
-Cache类 - org.apache.ibatis.cache
+Cache 类 - org.apache.ibatis.cache
 
 	- PerpetualCache变量中
 
@@ -883,22 +883,22 @@ public class PerpetualCache implements Cache {
 
 二级缓存默认不开启，需要手动配置
 
-MyBatis提供二级缓存的接口及其实现，缓存实现要求POJO实现Serializable接口
+MyBatis 提供二级缓存的接口及其实现，缓存实现要求 POJO 实现 Serializable 接口
 
-这些 用不到，不想记，要用再说。
+这些用不到，不想记，要用再说。
 
 ## #和$
 
 `#{}`表示一个占位符号
 
-通过`#{}`可以实现 `preparedStatement` 向占位符中设置值，自动进行 `java` 类型和 `jdbc` 类型转换，
+通过 `#{}` 可以实现 `preparedStatement` 向占位符中设置值，自动进行 `Java` 类型和 `jdbc` 类型转换，
 
 `#{}`可以有效防止 `sql` 注入。 `#{}`可以接收简单类型值或 `pojo` 属性值。 如果 `parameterType` 传输单个简单类
 型值，`#{}`括号中可以是 value 或其它名称。
 
 `${}`表示拼接 `sql` 串
 
-通过`${}`可以将 `parameterType` 传入的内容拼接在 `sql` 中且不进行 `jdbc` 类型转换， `${}`可以接收简
+通过 `${}` 可以将 `parameterType` 传入的内容拼接在 `sql` 中且不进行 `jdbc` 类型转换， `${}`可以接收简
 单类型值或 `pojo` 属性值，如果 `parameterType` 传输单个简单类型值，`${}`括号中只能是 value。
 
 > 源码级别解析
@@ -925,17 +925,17 @@ class A{
 
 ## 深入理解
 
-- `MyBatis`可自己写`Dao`实现类也可不写实现类。推荐不写实现类。
-- 不写实现类采用的是基于代理的CRUD操作。
-- `MyBatis`用到了`OGNL`表达式
+- `MyBatis` 可自己写 `Dao` 实现类也可不写实现类。推荐不写实现类。
+- 不写实现类采用的是基于代理的 CRUD 操作。
+- `MyBatis` 用到了 `OGNL` 表达式
   - `Object Graphic Navigation Language`
     	对象	图	导航	   语言
-  - 它是通过对象的取值方法来获取数据。在写法上把get给省略了。
+  - 它是通过对象的取值方法来获取数据。在写法上把 get 给省略了。
     比如：我们获取用户的名称
     	类中的写法：`user.getUsername();`
-    	`OGNL`表达式写法：`user.username`
-    `mybatis`中为什么能直接写`username`,而不用user.呢：
-    	因为在`parameterType`中已经提供了属性所属的类，所以此时不需要写对象名
+    	`OGNL` 表达式写法：`user.username`
+    `mybatis `中为什么能直接写 `username` ,而不用 user. 呢：
+    	因为在 `parameterType` 中已经提供了属性所属的类，所以此时不需要写对象名
 
 ## 简单实现`MyBatis`
 
@@ -955,25 +955,27 @@ class A{
 
 **提供三种方式**
 
-- 配置的位置，主配置文件（我命名为`SqlConfig.xml`）中的`dataSource`标签，type表示采用何种连接。
-- type取值
-  - POOLED： 采用传统的`javax.sql.DataSource`规范中的连接池，`mybatis`中有针对规范的实现。我们可以用其他连接池替代，如`Druid`，`type="我们的druid"`，因为`druid`是遵循规范的，所以把类全名加上就行了。
-  - `UNPOOLED`：采用传统的获取连接的方式，虽然也实现`Javax.sql.DataSource`接口，但是并没有使用池的思想。
-  - `JNDI`：采用服务器提供的`JNDI`技术实现，来获取`DataSource`对象，不同的服务器所能拿到`DataSource`是不一样。
-    		   注意：如果不是web或者`maven`的`war`工程，是不能使用的。
-          		  使用`tomcat`服务器的话，采用连接池就是`dbcp`连接池。
+- 配置的位置，主配置文件（我命名为`SqlConfig.xml`）中的 `dataSource` 标签，type 表示采用何种连接。
+- type 取值
+  - POOLED： 采用传统的 `javax.sql.DataSource` 规范中的连接池，`mybatis` 中有针对规范的实现。我们可以用其他连接池替代，如 `Druid`，`type="我们的druid"`，因为 `druid` 是遵循规范的，所以把类全名加上就行了。
+  - `UNPOOLED`：采用传统的获取连接的方式，虽然也实现 `Javax.sql.DataSource`接口，但是并没有使用池的思想。
+  - `JNDI`：采用服务器提供的 `JNDI` 技术实现，来获取 `DataSource` 对象，不同的服务器所能拿到 `DataSource` 是不一样。
+    		   注意：如果不是 web 或者 `maven` 的 `war` 工程，是不能使用的。
+          		  使用 `tomcat` 服务器的话，采用连接池就是 `dbcp` 连接池。
 
 ### `MyBatis`中的事务
 
-事务的四大特性ACID
-	不考虑隔离性会产生的3个问题
-	解决办法：四种隔离级别
+事务的四大特性 ACID
 
-它是通过`sqlsession`对象的commit方法和rollback方法实现事务的提交和回滚
+不考虑隔离性会产生的3个问题
+
+解决办法：四种隔离级别
+
+它是通过 `sqlsession` 对象的 commit 方法和 rollback 方法实现事务的提交和回滚
 
 ### 动态`SQL`全部代码
 
-#### `java`代码
+#### `Java`代码
 
 ```java
 public interface IUserDao {
@@ -1188,7 +1190,7 @@ public class Demo {
 
 ## 多表操作
 
-如果POJO字段的名称和数据库的名称不对应则采用
+如果 POJO 字段的名称和数据库的名称不对应则采用
 
 ```xml
 <resultMap type="类型 如xx类" id="标识符">
@@ -1225,7 +1227,7 @@ public class Demo {
 
 ## `javaType`和`ofType`
 
-`JavaType`和`ofType`都是用来指定对象类型的，但是`JavaType`是用来指定`pojo`中属性的类型，而`ofType`指定的是映射到list集合属性中`pojo`的类型。
+`JavaType `和 `ofType` 都是用来指定对象类型的，但是 `JavaType` 是用来指定 `pojo` 中属性的类型，而 `ofType` 指定的是映射到 list 集合属性中 `pojo` 的类型。
 
 
 ## 延迟加载
@@ -1238,10 +1240,10 @@ public class Demo {
 
 我们对用户信息进行懒加载。
 
-- `proerty`是`java`字段的名称
-- `javaType`是查询出来的数据类型
-- select是要调用的查询方法，通过这个查询方法把懒数据查询出来
-- column是查询的条件，即where xx = column的值。这个column取自`resultMap`。
+- `proerty `是 `Java `字段的名称
+- `javaType` 是查询出来的数据类型
+- select 是要调用的查询方法，通过这个查询方法把懒数据查询出来
+- column 是查询的条件，即 where xx = column 的值。这个 column 取自 `resultMap`。
 
 ```xml
 <association property="user" javaType="User" select="com.bbxx.dao.lazy.IUserDao.findOne" column="uid">
@@ -1297,14 +1299,14 @@ public interface IUserDao {
 
 #### 概要
 
-用户和账户是一对多查询。我们对“多”进行懒加载，要用时在查询。
+用户和账户是一对多查询。我们对“多”进行懒加载，要用时在查询
 
 对多的查询采用
 
-- `proerty`是数据对应的`java`字段的名称
-- `ofType`是查询出来集合中存储的数据类型
-- `select`是要调用的查询方法，通过这个查询方法把懒数据查询出来
-- `column`是查询的条件，即`where xx = column`的值。这个`column`取自`resultMap`。
+- `proerty` 是数据对应的 `Java` 字段的名称
+- `ofType` 是查询出来集合中存储的数据类型
+- `select` 是要调用的查询方法，通过这个查询方法把懒数据查询出来
+- `column` 是查询的条件，即 `where xx = column` 的值。这个 `column` 取自`resultMap`
 
 ```xml
 <collection property="accounts" ofType="Account" select="com.bbxx.dao.lazy.IAccountDao.findById" column="id">
@@ -1324,8 +1326,9 @@ public interface IAccountDao {
 }
 ```
 
-```xml
 IUserDao的mapper文件
+
+```xml
 <mapper namespace="com.bbxx.dao.lazy.IUserDao">
     <resultMap id="userMap" type="User">
         <id column="id" property="id"/>
@@ -1384,7 +1387,7 @@ public <T> T getMapper(Class<T> type, SqlSession sqlSession) {
 }
 ```
 
-继续看`mapperProxyFactory.newInstance(sqlSession);` 位于MapperProxyFactory类中
+继续看 `mapperProxyFactory.newInstance(sqlSession);` 位于 MapperProxyFactory 类中
 
 ```java
 public T newInstance(SqlSession sqlSession) {
@@ -1393,7 +1396,7 @@ public T newInstance(SqlSession sqlSession) {
 }
 ```
 
-点进`new MapperProxy<T>(sqlSession, mapperInterface, methodCache)`一看
+点进 `new MapperProxy<T>(sqlSession, mapperInterface, methodCache)` 一看
 
 ```java
 public class MapperProxy<T> implements InvocationHandler, Serializable {
@@ -1428,7 +1431,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
 }
 ```
 
-点击mapperMethod.excute方法一看。(MapperMethod方法中的)
+点击 mapperMethod.excute 方法一看。(MapperMethod 方法中的)
 
 ```java
 public Object execute(SqlSession sqlSession, Object[] args) {
@@ -1482,7 +1485,7 @@ public Object execute(SqlSession sqlSession, Object[] args) {
 }
 ```
 
-看`executeForMany方法`
+看 `executeForMany 方法`
 
 ```java
 private <E> Object executeForMany(SqlSession sqlSession, Object[] args) {
@@ -1506,7 +1509,7 @@ private <E> Object executeForMany(SqlSession sqlSession, Object[] args) {
 }
 ```
 
-点进`selectList`方法
+点进 `selectList` 方法
 
 ```java
 public <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
@@ -1523,7 +1526,7 @@ public <E> List<E> selectList(String statement, Object parameter, RowBounds rowB
 }
 ```
 
-点进`query`方法
+点进 `query` 方法
 
 ```java
 public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {

@@ -72,7 +72,7 @@ Redis 的命令可以在<a href="https://redis.io/commands">官网</a>查询到�
 
 通过 help [command] 可以查看一个命令的具体用法，例如：
 
-<img src="img\image-20220321162710086.png">
+<img src="img/image-20220321162710086.png">
 
 ### String类型
 
@@ -108,7 +108,7 @@ Hash 类型，也叫散列，其 value 是一个无序字典，类似于 Java �
 
 String 结构是将对象序列化为 JSON 字符串后存储，当需要修改对象某个字段时很不方便，而 Hash 结构可以将对象中的每个字段独立存储，可以针对单个字段做 CRUD。
 
-<img src="img\image-20220321163814619.png">
+<img src="img/image-20220321163814619.png">
 
 Hash 的常见命令有：
 
@@ -144,7 +144,7 @@ List的常见命令有：
 - LRANGE key star end：返回一段角标范围内的所有元素
 - <span style="color:green">BLPOP 和 BRPOP：与 LPOP 和 RPOP 类似，只不过在没有元素时会等待指定的时间，而不是直接返回 nil，有点类似于阻塞队列。Timeout 时间是以秒为单位</span>
 
-<img src="img\image-20220321164231779.png">
+<img src="img/image-20220321164231779.png">
 
 可以用 List 结构模拟 stack、queue 和 blockingkqueue。
 
@@ -168,7 +168,7 @@ String 的常见命令有：
 - lSDIFF key1 key2 ... ：求key1与key2的差集，S1，S2的差（A）
 - lSUNION key1 key2 ..：求key1和key2的并集，S1，S2的并（A、B、C、D）
 
-<img src="img\image-20220321164621649.png">
+<img src="img/image-20220321164621649.png">
 
 > 练习
 
@@ -258,7 +258,7 @@ Redis 没有类似 MySQL 中的 Table 的概念，我们该如何区分不同类
 
 在 Redis 官网中提供了各种语言的客户端，地址：https://redis.io/clients
 
-<img src="img\image-20220321165204979.png">
+<img src="img/image-20220321165204979.png">
 
 ### Jedis
 
@@ -501,7 +501,7 @@ public class RedisTemplateTest {
 
 RedisTemplate 可以接收任意 Object 作为值写入 Redis，只不过写入前会把 Object 序列化为字节形式，默认是采用 JDK 序列化，得到的结果是这样的
 
-<img src="img\image-20220321221236720.png">
+<img src="img/image-20220321221236720.png">
 
 Spring 默认提供了一个 StringRedisTemplate 类，它的 key 和 value 的序列化方式默认就是 String 方式。省去了我们自定义 RedisTemplate 的过程，我们不用自己定义序列化反序列化的配置参数了。
 
