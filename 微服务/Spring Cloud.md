@@ -900,7 +900,7 @@ Nacos 和 Eureka 整体结构类似，服务注册、服务拉取、心跳等待
 
 <img src="assets/image-20210714001728017.png">
 
-- Nacos与eureka的共同点
+- Nacos 与 eureka 的共同点
   - 都支持服务注册和服务拉取
   - 都支持服务提供者心跳方式做健康检测
 
@@ -918,7 +918,7 @@ Nacos 和 Eureka 整体结构类似，服务注册、服务拉取、心跳等待
 
 # Nacos配置管理
 
-Nacos除了可以做注册中心，同样可以做配置管理来使用。
+Nacos 除了可以做注册中心，同样可以做配置管理来使用。
 
 > 主要内容
 
@@ -937,11 +937,11 @@ Nacos除了可以做注册中心，同样可以做配置管理来使用。
 
 
 
-Nacos一方面可以将配置集中管理，另一方可以在配置变更时，及时通知微服务，实现配置的热更新。
+Nacos 一方面可以将配置集中管理，另一方可以在配置变更时，及时通知微服务，实现配置的热更新。
 
 ### 在nacos中添加配置文件
 
-如何在nacos中管理配置呢？
+如何在 nacos 中管理配置呢？
 
 <img src="assets/image-20210714164742924.png">
 
@@ -951,7 +951,7 @@ Nacos一方面可以将配置集中管理，另一方可以在配置变更时，
 
 <img src="assets/image-20210714164856664.png">
 
-> 注意：项目的核心配置，需要热更新的配置才有放到nacos管理的必要。基本不会变更的一些配置还是保存在微服务本地比较好。
+> 注意：项目的核心配置，需要热更新的配置才有放到 nacos 管理的必要。基本不会变更的一些配置还是保存在微服务本地比较好。
 
 ### 从微服务拉取配置
 
@@ -994,15 +994,15 @@ spring:
 
 这里会根据 spring.cloud.nacos.server-addr 获取 nacos 地址，再根据
 
-`${spring.application.name}-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}`作为文件id，来读取配置。
+`${spring.application.name}-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension} `作为文件 id，来读取配置。
 
 本例中，就是去读取`userservice-dev.yaml`：
 
 <img src="assets/image-20210714170845901.png">
 
-3）读取nacos配置
+3）读取 nacos 配置
 
-在user-service中的UserController中添加业务逻辑，读取pattern.dateformat配置：
+在 user-service 中的 UserController 中添加业务逻辑，读取 pattern.dateformat 配置：
 
 <img src="assets/image-20210714170337448.png">
 
@@ -1046,7 +1046,7 @@ public class UserController {
 
 ## 配置热更新
 
-我们最终的目的，是修改nacos中的配置后，微服务中无需重启即可让配置生效，也就是**配置热更新**。
+我们最终的目的，是修改 nacos 中的配置后，微服务中无需重启即可让配置生效，也就是**配置热更新**。
 
 Nacos 中的配置文件变更后，微服务无需重启就可以感知，不过需要通过下面两种配置实现：
 
@@ -1058,9 +1058,9 @@ Nacos 中的配置文件变更后，微服务无需重启就可以感知，不�
 
 ### 方式二
 
-使用@ConfigurationProperties注解代替@Value注解。
+使用 @ConfigurationProperties 注解代替 @Value 注解。
 
-在user-service服务中，添加一个类，读取patterrn.dateformat属性：
+在 user-service 服务中，添加一个类，读取 patterrn.dateformat 属性：
 
 ```java
 package cn.itcast.user.config;
@@ -1121,19 +1121,19 @@ public class UserController {
 
 ## 配置共享
 
-其实微服务启动时，会去nacos读取多个配置文件，例如：
+其实微服务启动时，会去 nacos 读取多个配置文件，例如：
 
 - `[spring.application.name]-[spring.profiles.active].yaml`，例如：userservice-dev.yaml
 
 - `[spring.application.name].yaml`，例如：userservice.yaml
 
-而`[spring.application.name].yaml`不包含环境，因此可以被多个环境共享。
+而 `[spring.application.name].yaml` 不包含环境，因此可以被多个环境共享。
 
 下面我们通过案例来测试配置共享
 
 ### 添加一个环境共享配置
 
-我们在nacos中添加一个userservice.yaml文件：
+我们在 nacos 中添加一个 userservice.yaml 文件：
 
 <img src="assets/image-20210714173233650.png">
 
@@ -1141,7 +1141,7 @@ public class UserController {
 
 ### 在user-service中读取共享配置
 
-在user-service服务中，修改PatternProperties类，读取新添加的属性：
+在 user-service 服务中，修改 PatternProperties 类，读取新添加的属性：
 
 <img src="assets/image-20210714173324231.png">
 
@@ -1151,35 +1151,35 @@ public class UserController {
 
 ### 运行两个UserApplication，使用不同的profile
 
-修改UserApplication2这个启动项，改变其profile值：
+修改 UserApplication2 这个启动项，改变其 profile 值：
 
 <img src="assets/image-20210714173538538.png">
 
 <img src="assets/image-20210714173519963.png">
 
-这样，UserApplication(8081)使用的profile是dev，UserApplication2(8082)使用的profile是test。
+这样，UserApplication(8081) 使用的 profile 是 dev，UserApplication2(8082) 使用的 profile 是 test。
 
-启动UserApplication和UserApplication2
+启动 UserApplication和UserApplication2
 
-访问http://localhost:8081/user/prop，结果：
+访问 http://localhost:8081/user/prop，结果：
 
 <img src="assets/image-20210714174313344.png">
 
-访问http://localhost:8082/user/prop，结果：
+访问 http://localhost:8082/user/prop，结果：
 
 <img src="assets/image-20210714174424818.png">
 
-可以看出来，不管是dev，还是test环境，都读取到了envSharedValue这个属性的值。
+可以看出来，不管是 dev，还是 test 环境，都读取到了 envSharedValue 这个属性的值。
 
 ### 配置共享的优先级
 
-当nacos、服务本地同时出现相同属性时，优先级有高低之分：
+当 nacos、服务本地同时出现相同属性时，优先级有高低之分：
 
 <img src="assets/image-20210714174623557.png">
 
 ## 搭建Nacos集群
 
-Nacos生产环境下一定要部署为集群状态，部署方式参考课前资料中的文档：
+Nacos 生产环境下一定要部署为集群状态，部署方式参考课前资料中的文档：
 
 <img src="assets/image-20210714174728042.png">
 
@@ -1192,19 +1192,19 @@ Nacos生产环境下一定要部署为集群状态，部署方式参考课前资
 > 存在下面的问题：
 
 - 代码可读性差，编程体验不统一
-- 参数复杂URL难以维护
+- 参数复杂 URL 难以维护
 
-Feign是一个声明式的http客户端，官方地址：https://github.com/OpenFeign/feign；其作用就是帮助我们优雅的实现 http 请求的发送，解决上面提到的问题。
+Feign 是一个声明式的 http 客户端，官方地址：https://github.com/OpenFeign/feign；其作用就是帮助我们优雅的实现 http 请求的发送，解决上面提到的问题。
 
 <img src="assets/image-20210714174918088.png">
 
 ## Feign替代RestTemplate
 
-Fegin的使用步骤如下：
+Fegin 的使用步骤如下：
 
 ### 引入依赖
 
-我们在order-service服务的pom文件中引入feign的依赖：
+我们在 order-service 服务的 pom 文件中引入 feign 的依赖：
 
 ```xml
 <dependency>
@@ -1215,13 +1215,13 @@ Fegin的使用步骤如下：
 
 ### 添加注解
 
-在order-service的启动类添加注解开启 Feign 的功能：
+在 order-service 的启动类添加注解开启 Feign 的功能：
 
 <img src="assets/image-20210714175102524.png">
 
 ### 编写Feign的客户端
 
-在order-service中新建一个接口，内容如下：
+在 order-service 中新建一个接口，内容如下：
 
 ```java
 package cn.itcast.order.client;
@@ -1238,7 +1238,7 @@ public interface UserClient {
 }
 ```
 
-这个客户端主要是基于SpringMVC的注解来声明远程调用的信息，比如：
+这个客户端主要是基于 Spring MVC 的注解来声明远程调用的信息，比如：
 
 - 服务名称：userservice
 - 请求方式：GET
@@ -1256,7 +1256,7 @@ public interface UserClient {
 
 ### 总结
 
-使用Feign的步骤：
+使用 Feign 的步骤：
 
 ① 引入依赖
 
@@ -1278,13 +1278,13 @@ Feign可以支持很多的自定义配置，如下表所示：
 | feign.Contract         | 支持的注解格式   | 默认是 Spring MVC 的注解                                   |
 | feign.Retryer          | 失败重试机制     | 请求失败的重试机制，默认是没有，不过会使用 Ribbon 的重试   |
 
-一般情况下，默认值就能满足我们使用，如果要自定义时，只需要创建自定义的@Bean覆盖默认Bean即可。
+一般情况下，默认值就能满足我们使用，如果要自定义时，只需要创建自定义的 @Bean 覆盖默认 Bean 即可。
 
 下面以日志为例来演示如何自定义配置。
 
 ### 配置文件方式
 
-基于配置文件修改feign的日志级别可以针对单个服务：（我们在 Order 里调用了 User，那么 Feign 的配置就写在 Order 的配置文件中）
+基于配置文件修改 feign 的日志级别可以针对单个服务：（我们在 Order 里调用了 User，那么 Feign 的配置就写在 Order 的配置文件中）
 
 ```yaml
 feign:  
@@ -1307,13 +1307,13 @@ feign:
 而日志的级别分为四种：
 
 - NONE：不记录任何日志信息，这是默认值。<span style="color:red">（记录日志用 NONE 或 BASIC）</span>
-- BASIC：仅记录请求的方法，URL以及响应状态码和执行时间。
-- HEADERS：在BASIC的基础上，额外记录了请求和响应的头信息。
+- BASIC：仅记录请求的方法，URL 以及响应状态码和执行时间。
+- HEADERS：在 BASIC 的基础上，额外记录了请求和响应的头信息。
 - FULL：记录所有请求和响应的明细，包括头信息、请求体、元数据。<span style="color:red">（调试错误的时候用 Full）</span>
 
 ### Java代码方式
 
-也可以基于Java代码来修改日志级别，先声明一个类，然后声明一个Logger.Level的对象：
+也可以基于 Java 代码来修改日志级别，先声明一个类，然后声明一个 Logger.Level 的对象：
 
 ```java
 public class DefaultFeignConfiguration  {
@@ -1324,13 +1324,13 @@ public class DefaultFeignConfiguration  {
 }
 ```
 
-如果要**全局生效**，将其放到启动类的@EnableFeignClients这个注解中：
+如果要**全局生效**，将其放到启动类的 @EnableFeignClients 这个注解中：
 
 ```java
 @EnableFeignClients(defaultConfiguration = DefaultFeignConfiguration.class) 
 ```
 
-如果是**局部生效**，则把它放到对应的@FeignClient这个注解中：（uservice 只对 uservice 这个服务有效）
+如果是**局部生效**，则把它放到对应的 @FeignClient 这个注解中：（uservice 只对 uservice 这个服务有效）
 
 ```java
 @FeignClient(value = "userservice", configuration = DefaultFeignConfiguration.class) 
@@ -1338,19 +1338,19 @@ public class DefaultFeignConfiguration  {
 
 ## Feign使用优化
 
-Feign底层发起http请求，依赖于其它的框架。其底层客户端实现包括：
+Feign 底层发起 http 请求，依赖于其它的框架。其底层客户端实现包括：
 
 - URLConnection：默认实现，不支持连接池
 - Apache HttpClient ：支持连接池
 - OKHttp：支持连接池
 
-因此提高Feign的性能主要手段就是使用**连接池**代替默认的 URLConnection。
+因此提高 Feign 的性能主要手段就是使用**连接池**代替默认的 URLConnection。
 
 这里我们用 Apache 的 HttpClient 来演示。
 
 > 1）引入依赖
 
-在order-service的pom文件中引入Apache的HttpClient依赖：
+在 order-service 的 pom 文件中引入 Apache 的 HttpClient 依赖：
 
 ```xml
 <!--httpClient的依赖 -->
@@ -1362,7 +1362,7 @@ Feign底层发起http请求，依赖于其它的框架。其底层客户端实�
 
 > 2）配置连接池
 
-在order-service的application.yml中添加配置：
+在 order-service 的 application.yml 中添加配置：
 
 ```yaml
 feign:
@@ -1380,25 +1380,25 @@ feign:
 
 <img src="assets/image-20210714185925910.png">
 
-Debug方式启动order-service服务，可以看到这里的client，底层就是Apache HttpClient：
+Debug 方式启动 order-service 服务，可以看到这里的 client，底层就是 Apache HttpClient：
 
 <img src="assets/image-20210714190041542.png">
 
-> 总结，Feign的优化：
+> 总结，Feign 的优化：
 
 1.日志级别尽量用 basic
 
-2.使用HttpClient或OKHttp代替URLConnection
+2.使用 HttpClient 或 OKHttp 代替 URLConnection
 
-①  引入feign-httpClient依赖
+①  引入 feign-httpClient 依赖
 
-②  配置文件开启httpClient功能，设置连接池参数
+②  配置文件开启 httpClient 功能，设置连接池参数
 
 ## 最佳实践
 
 所谓最近实践，就是使用过程中总结的经验，最好的一种使用方式。观察可以发现，Feign 的客户端与服务提供者的 Controller 代码非常相似：
 
-feign客户端：
+feign 客户端：
 
 <img src="assets/image-20210714190542730.png">
 
@@ -1417,9 +1417,9 @@ UserController：
 
 一样的代码可以通过继承来共享：
 
-1）定义一个API接口，利用定义方法，并基于SpringMVC注解做声明。
+1）定义一个 API 接口，利用定义方法，并基于 Spring MVC 注解做声明。
 
-2）Feign客户端和Controller都集成改接口
+2）Feign 客户端和 Controller 都集成改接口
 
 <img src="assets/image-20210714190640857.png">
 
@@ -1436,9 +1436,9 @@ UserController：
 
 ### 抽取方式
 
-将Feign的Client抽取为独立模块，并且把接口有关的POJO、默认的Feign配置都放到这个模块中，提供给所有消费者使用。
+将 Feign 的 Client 抽取为独立模块，并且把接口有关的 POJO、默认的 Feign 配置都放到这个模块中，提供给所有消费者使用。
 
-例如，将UserClient、User、Feign的默认配置都抽取到一个feign-api包中，所有微服务引用该依赖包，即可直接使用。
+例如，将 UserClient、User、Feign 的默认配置都抽取到一个 feign-api 包中，所有微服务引用该依赖包，即可直接使用。
 
 <img src="assets/image-20210714214041796.png">
 
@@ -1446,7 +1446,7 @@ UserController：
 
 #### 抽取
 
-首先创建一个module，命名为feign-api：
+首先创建一个 module，命名为 feign-api：
 
 <img src="assets/image-20210714204557771.png">
 
@@ -1454,7 +1454,7 @@ UserController：
 
 <img src="assets/image-20210714204656214.png">
 
-在feign-api中然后引入feign的starter依赖
+在 feign-api 中然后引入 feign 的 starter 依赖
 
 ```xml
 <dependency>
@@ -1463,7 +1463,7 @@ UserController：
 </dependency>
 ```
 
-然后，order-service中编写的UserClient、User、DefaultFeignConfiguration都复制到feign-api项目中
+然后，order-service 中编写的 UserClient、User、DefaultFeignConfiguration 都复制到 feign-api 项目中
 
 <img src="assets/image-20210714205221970.png">
 
@@ -1491,7 +1491,7 @@ UserController：
 
 这是因为 UserClient 现在在 cn.itcast.feign.+clients 包下，
 
-而 order-service 的 @EnableFeignClients 注解是在cn.itcast.order包下，不在同一个包，无法扫描到 UserClient。
+而 order-service 的 @EnableFeignClients 注解是在 cn.itcast.order 包下，不在同一个包，无法扫描到 UserClient。
 
 #### 解决扫描包问题
 
@@ -1505,7 +1505,7 @@ UserController：
 
 方式二：
 
-指定需要加载的Client接口：
+指定需要加载的 Client 接口：
 
 ```java
 @EnableFeignClients(clients = {UserClient.class})
@@ -1530,22 +1530,22 @@ Gateway 网关是我们服务的守门神，所有微服务的统一入口。
 
 **权限控制**：网关作为微服务入口，需要校验用户是是否有请求资格，如果没有则进行拦截。
 
-**路由和负载均衡**：一切请求都必须先经过gateway，但网关不处理业务，而是根据某种规则，把请求转发到某个微服务，这个过程叫做路由。当然路由的目标服务有多个时，还需要做负载均衡。
+**路由和负载均衡**：一切请求都必须先经过 gateway，但网关不处理业务，而是根据某种规则，把请求转发到某个微服务，这个过程叫做路由。当然路由的目标服务有多个时，还需要做负载均衡。
 
 **限流**：当请求流量过高时，在网关中按照下流的微服务能够接受的速度来放行请求，避免服务压力过大。
 
-在SpringCloud中网关的实现包括两种：
+在 Spring Cloud 中网关的实现包括两种：
 
 - gateway
 - zuul
 
-Zuul是基于Servlet的实现，属于阻塞式编程。而 SpringCloudGateway 则是基于 Spring5 中提供的 WebFlux，属于响应式编程的实现，具备更好的性能。
+Zuul 是基于 Servlet 的实现，属于阻塞式编程。而 Spring Cloud Gateway 则是基于 Spring5 中提供的 WebFlux，属于响应式编程的实现，具备更好的性能。
 
 ## gateway快速入门
 
 下面，我们就演示下网关的基本路由功能。基本步骤如下：
 
-1. 创建SpringBoot工程gateway，引入网关依赖
+1. 创建 Spring Boot 工程 gateway，引入网关依赖
 2. 编写启动类
 3. 编写基础配置和路由规则
 4. 启动网关服务进行测试
@@ -1590,7 +1590,7 @@ public class GatewayApplication {
 
 ### 编写基础配置和路由规则
 
-创建application.yml文件，内容如下：
+创建 application.yml 文件，内容如下：
 
 ```yaml
 server:
@@ -1610,13 +1610,13 @@ spring:
             - Path=/user/** # 这个是按照路径匹配，只要以/user/开头就符合要求
 ```
 
-我们将符合`Path` 规则的一切请求，都代理到 `uri`参数指定的地址。
+我们将符合 `Path` 规则的一切请求，都代理到 `uri` 参数指定的地址。
 
-本例中，我们将 `/user/**`开头的请求，代理到`lb://userservice`，lb是负载均衡，根据服务名拉取服务列表，实现负载均衡。
+本例中，我们将 `/user/**` 开头的请求，代理到 `lb://userservice`，lb 是负载均衡，根据服务名拉取服务列表，实现负载均衡。
 
 ### 重启测试
 
-重启网关，访问http://localhost:10010/user/1时，符合`/user/**`规则，请求转发到uri：http://userservice/user/1，得到了结果：
+重启网关，访问 http://localhost:10010/user/1时，符合 `/user/**` 规则，请求转发到 uri：http://userservice/user/1，得到了结果：
 
 <img src="assets/image-20210714211908341.png">
 
@@ -1630,15 +1630,15 @@ spring:
 
 网关搭建步骤：
 
-1. 创建项目，引入nacos服务发现和gateway依赖
+1. 创建项目，引入 nacos 服务发现和 gateway 依赖
 
-2. 配置application.yml，包括服务基本信息、nacos地址、路由
+2. 配置 application.yml，包括服务基本信息、nacos 地址、路由
 
 路由配置包括：
 
-1. 路由id：路由的唯一标示
+1. 路由 id：路由的唯一标示
 
-2. 路由目标（uri）：路由的目标地址，http代表固定地址，lb代表根据服务名负载均衡
+2. 路由目标（uri）：路由的目标地址，http 代表固定地址，lb代表根据服务名负载均衡
 
 3. 路由断言（predicates）：判断路由的规则，
 
@@ -1648,41 +1648,39 @@ spring:
 
 ## 断言工厂
 
-我们在配置文件中写的断言规则只是字符串，这些字符串会被Predicate Factory读取并处理，转变为路由判断的条件
+我们在配置文件中写的断言规则只是字符串，这些字符串会被 Predicate Factory 读取并处理，转变为路由判断的条件
 
-例如Path=/user/**是按照路径匹配，这个规则是由
+例如 `Path=/user/**` 是按照路径匹配，这个规则是由
 
-`org.springframework.cloud.gateway.handler.predicate.PathRoutePredicateFactory`类来
+`org.springframework.cloud.gateway.handler.predicate.PathRoutePredicateFactory` 类来
 
-处理的，像这样的断言工厂在SpringCloudGateway还有十几个:
+处理的，像这样的断言工厂在 Spring Cloud Gateway 还有十几个:
 
-| **名称**   | **说明**                       | **示例**                                                     |
-| ---------- | ------------------------------ | ------------------------------------------------------------ |
-| After      | 是某个时间点后的请求           | -  After=2037-01-20T17:42:47.789-07:00[America/Denver]       |
-| Before     | 是某个时间点之前的请求         | -  Before=2031-04-13T15:14:47.433+08:00[Asia/Shanghai]       |
-| Between    | 是某两个时间点之前的请求       | -  Between=2037-01-20T17:42:47.789-07:00[America/Denver],  2037-01-21T17:42:47.789-07:00[America/Denver] |
-| Cookie     | 请求必须包含某些cookie         | - Cookie=chocolate, ch.p                                     |
-| Header     | 请求必须包含某些header         | - Header=X-Request-Id, \d+                                   |
-| Host       | 请求必须是访问某个host（域名） | -  Host=**.somehost.org,**.anotherhost.org                   |
-| Method     | 请求方式必须是指定方式         | - Method=GET,POST                                            |
-| Path       | 请求路径必须符合指定规则       | - Path=/red/{segment},/blue/**                               |
-| Query      | 请求参数必须包含指定参数       | - Query=name, Jack或者-  Query=name                          |
-| RemoteAddr | 请求者的ip必须是指定范围       | - RemoteAddr=192.168.1.1/24                                  |
-| Weight     | 权重处理                       |                                                              |
+| **名称**   | **说明**                        | **示例**                                                     |
+| ---------- | ------------------------------- | ------------------------------------------------------------ |
+| After      | 是某个时间点后的请求            | -  After=2037-01-20T17:42:47.789-07:00[America/Denver]       |
+| Before     | 是某个时间点之前的请求          | -  Before=2031-04-13T15:14:47.433+08:00[Asia/Shanghai]       |
+| Between    | 是某两个时间点之前的请求        | -  Between=2037-01-20T17:42:47.789-07:00[America/Denver],  2037-01-21T17:42:47.789-07:00[America/Denver] |
+| Cookie     | 请求必须包含某些 cookie         | - Cookie=chocolate, ch.p                                     |
+| Header     | 请求必须包含某些 header         | - Header=X-Request-Id, \d+                                   |
+| Host       | 请求必须是访问某个 host（域名） | -  Host=**.somehost.org,**.anotherhost.org                   |
+| Method     | 请求方式必须是指定方式          | - Method=GET,POST                                            |
+| Path       | 请求路径必须符合指定规则        | - Path=/red/{segment},/blue/**                               |
+| Query      | 请求参数必须包含指定参数        | - Query=name, Jack 或者-  Query=name                         |
+| RemoteAddr | 请求者的ip必须是指定范围        | - RemoteAddr=192.168.1.1/24                                  |
+| Weight     | 权重处理                        |                                                              |
 
-
-
-我们只需要掌握Path这种路由工程就可以了。
+我们只需要掌握 Path 这种路由工程就可以了。
 
 ## 过滤器工厂
 
-GatewayFilter是网关中提供的一种过滤器，可以对进入网关的请求和微服务返回的响应做处理：
+Gateway Filter 是网关中提供的一种过滤器，可以对进入网关的请求和微服务返回的响应做处理：
 
 <img src="assets/image-20210714212312871.png">
 
 ### 路由过滤器的种类
 
-Spring提供了31种不同的路由过滤器工厂。例如：
+Spring 提供了 31 种不同的路由过滤器工厂。例如：
 
 | **名称**             | **说明**                     |
 | -------------------- | ---------------------------- |
@@ -1694,11 +1692,11 @@ Spring提供了31种不同的路由过滤器工厂。例如：
 
 ### 请头过滤器
 
-下面我们以AddRequestHeader 为例来讲解。
+下面我们以 AddRequestHeader 为例来讲解。
 
-> **需求**：给所有进入userservice的请求添加一个请求头：Truth=itcast is freaking awesome!
+> **需求**：给所有进入 userservice 的请求添加一个请求头：Truth=itcast is freaking awesome!
 
-只需要修改gateway服务的application.yml文件，添加路由过滤即可：
+只需要修改 gateway 服务的 application.yml 文件，添加路由过滤即可：
 
 ```yaml
 spring:
@@ -1713,7 +1711,7 @@ spring:
         - AddRequestHeader=Truth, Itcast is freaking awesome! # 添加请求头
 ```
 
-当前过滤器写在userservice路由下，因此仅仅对访问userservice的请求有效。
+当前过滤器写在 userservice 路由下，因此仅仅对访问 userservice 的请求有效。
 
 ### 默认过滤器
 
@@ -1750,9 +1748,9 @@ defaultFilters 的作用是什么？
 
 ### 全局过滤器作用
 
-全局过滤器的作用也是处理一切进入网关的请求和微服务响应，与 GatewayFilter 的作用一样。区别在于 GatewayFilter 通过配置定义，处理逻辑是固定的；**而 GlobalFilter 的逻辑需要自己写代码实现。**
+全局过滤器的作用也是处理一切进入网关的请求和微服务响应，与 Gateway Filter 的作用一样。区别在于 Gateway Filter 通过配置定义，处理逻辑是固定的；**而 Global Filter 的逻辑需要自己写代码实现。**
 
-定义方式是实现 GlobalFilter 接口。
+定义方式是实现 Global Filter 接口。
 
 ```java
 public interface GlobalFilter {
@@ -1777,15 +1775,15 @@ public interface GlobalFilter {
 
 需求：定义全局过滤器，拦截请求，判断请求的参数是否满足下面条件：
 
-- 参数中是否有authorization，
+- 参数中是否有 authorization，
 
-- authorization参数值是否为admin
+- authorization 参数值是否为 admin
 
 如果同时满足则放行，否则拦截
 
 实现：
 
-在gateway中定义一个过滤器：
+在 gateway 中定义一个过滤器：
 
 ```java
 package cn.itcast.gateway.filters;
@@ -1825,22 +1823,22 @@ public class AuthorizeFilter implements GlobalFilter {
 
 请求进入网关会碰到三类过滤器：当前路由的过滤器、DefaultFilter、GlobalFilter
 
-**请求路由后**，会将当前路由过滤器和DefaultFilter、GlobalFilter，合并到一个过滤器链（集合）中，排序后依次执行每个过滤器：
+**请求路由后**，会将当前路由过滤器和 DefaultFilter、GlobalFilter，合并到一个过滤器链（集合）中，排序后依次执行每个过滤器：
 
 <img src="assets/image-20210714214228409.png">
 
 排序的规则是什么呢？
 
-- 每一个过滤器都必须指定一个int类型的order值，**order值越小，优先级越高，执行顺序越靠前**。
-- GlobalFilter通过实现Ordered接口，或者添加@Order注解来指定order值，由我们自己指定
-- 路由过滤器和defaultFilter的order由Spring指定，默认是按照声明顺序从1递增。
-- 当过滤器的order值一样时，会按照 defaultFilter > 路由过滤器 > GlobalFilter的顺序执行。
+- 每一个过滤器都必须指定一个 int 类型的 order 值，**order 值越小，优先级越高，执行顺序越靠前**。
+- GlobalFilter 通过实现 Ordered 接口，或者添加 @Order 注解来指定 order 值，由我们自己指定
+- 路由过滤器和 defaultFilter 的order由Spring指定，默认是按照声明顺序从 1 递增。
+- 当过滤器的 order 值一样时，会按照 defaultFilter > 路由过滤器 > GlobalFilter 的顺序执行。
 
 详细内容，可以查看源码：
 
-`org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator#getFilters()`方法是先加载defaultFilters，然后再加载某个route的filters，然后合并。
+`org.springframework.cloud.gateway.route.RouteDefinitionRouteLocator#getFilters()` 方法是先加载 defaultFilters，然后再加载某个 route 的 filters，然后合并。
 
-`org.springframework.cloud.gateway.handler.FilteringWebHandler#handle()`方法会加载全局过滤器，与前面的过滤器合并后根据order排序，组织过滤器链
+`org.springframework.cloud.gateway.handler.FilteringWebHandler#handle()` 方法会加载全局过滤器，与前面的过滤器合并后根据 order 排序，组织过滤器链
 
 ## 跨域问题
 
@@ -1850,11 +1848,11 @@ public class AuthorizeFilter implements GlobalFilter {
 
 - 域名不同： www.taobao.com 和 www.taobao.org 和 www.jd.com 和 miaosha.jd.com
 
-- 域名相同，端口不同：localhost:8080和localhost8081
+- 域名相同，端口不同：localhost:8080 和 localhost8081
 
-跨域问题：**浏览器禁止**请求的发起者与服务端发生**跨域ajax请求**，请求被浏览器拦截的问题
+跨域问题：**浏览器禁止**请求的发起者与服务端发生**跨域 Ajax 请求**，请求被浏览器拦截的问题
 
-解决方案：CORS，这个以前应该学习过，这里不再赘述了。不知道的小伙伴可以查看 https://www.ruanyifeng.com/blog/2016/04/cors.html
+解决方案：CORS，可查看 https://www.ruanyifeng.com/blog/2016/04/cors.html
 
 ### 模拟跨域问题
 
@@ -1862,17 +1860,17 @@ public class AuthorizeFilter implements GlobalFilter {
 
 <img src="assets/image-20210714215713563.png">
 
-放入tomcat或者nginx这样的web服务器中，启动并访问。
+放入 tomcat 或者 nginx 这样的 web 服务器中，启动并访问。
 
 可以在浏览器控制台看到下面的错误：
 
 <img src="assets/image-20210714215832675.png">
 
-从localhost:8090访问localhost:10010，端口不同，显然是跨域的请求。
+从 localhost:8090 访问 localhost:10010，端口不同，显然是跨域的请求。
 
 ### 解决跨域问题
 
-在gateway服务的application.yml文件中，添加下面的配置：
+在 gateway 服务的 application.yml 文件中，添加下面的配置：
 
 ```yaml
 spring:

@@ -76,7 +76,7 @@ MapReduce模型可以用多种实现方式，这里描述的是一个适用于Go
 
 通过将Map调用的输入数据自动分割为M个数据片段的集合，Map调用被分布到多台机器上执行。输入的数据片段能够在不同的机器上并行处理。使用分区函数将Map调用产生的中间key值分成R个不同分区（例如，hash(key) mod R），Reduce调用也被分布到多台机器上执行。分区数量（R）和分区函数由用户来指定
 
-![img](https://mr-dai.github.io/img/mapreduce_summary/mapreduce_architecture.png)
+<img src="https://mr-dai.github.io/img/mapreduce_summary/mapreduce_architecture.png">
 
 当用户调用MapReduce函数时，将发生下面的一系列动作（下面的序号和图1中的序号一一对应）：
 

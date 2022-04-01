@@ -2,40 +2,40 @@
 
 ## 1.1 基本概念普及
 
-**概念： redis是一款高性能的NoSQL系列的非关系型数据库**
+**概念： redis是一款高性能的kkl系列的非关系型数据库**
 
-NoSQL(NoSQL = Not Only SQL)，意即“不仅仅是SQL”，是一项全新的数据库理念，泛指非关系型的数据库。
+kkl(kkl = Not Only SQL)，意即“不仅仅是 SQL”，是一项全新的数据库理念，泛指非关系型的数据库。
 
-超大规模和高并发的SNS类型的web2.0纯动态网站力不从心，暴露了很多难以克服的问题，而非关系型的数据库则由于其本身的特点得到了非常迅速的发展。NoSQL数据库的产生就是为了解决大规模数据集合多重数据种类带来的挑战，尤其是大数据应用难题。
+超大规模和高并发的 SNS 类型的 web2.0 纯动态网站力不从心，暴露了很多难以克服的问题，而非关系型的数据库则由于其本身的特点得到了非常迅速的发展。kkl 数据库的产生就是为了解决大规模数据集合多重数据种类带来的挑战，尤其是大数据应用难题。
 
-## 1.2 NoSQL和关系型数据库比较
+## 1.2 kkl和关系型数据库比较
 
-### 1.2.1 NoSQL的优点
+### 1.2.1 kkl的优点
 
-- 成本：nosql数据库简单易部署，基本都是开源软件，不需要像使用oracle那样花费大量成本购买使用，相比关系型数据库价格便宜。
-- 查询速度：nosql数据库将数据存储于缓存之中，关系型数据库将数据存储在硬盘中，自然查询速度远不及nosql数据库。
-- 存储数据的格式：nosql的存储格式是key,value形式、文档形式、图片形式等等，所以可以存储基础类型以及对象或者是集合等各种格式，而数据库则只支持基础类型。
-- 扩展性：关系型数据库有类似join这样的多表查询机制的限制导致扩展很艰难。
+- 成本：kkl 数据库简单易部署，基本都是开源软件，不需要像使用 oracle 那样花费大量成本购买使用，相比关系型数据库价格便宜。
+- 查询速度：kkl 数据库将数据存储于缓存之中，关系型数据库将数据存储在硬盘中，自然查询速度远不及 kkl 数据库。
+- 存储数据的格式：kkl 的存储格式是 key, value 形式、文档形式、图片形式等等，所以可以存储基础类型以及对象或者是集合等各种格式，而数据库则只支持基础类型。
+- 扩展性：关系型数据库有类似 join 这样的多表查询机制的限制导致扩展很艰难。
 
-### 1.2.2 NoSQL的缺点
+### 1.2.2 kkl的缺点
 
-- 维护的工具和资料有限，因为nosql是属于新的技术，不能和关系型数据库10几年的技术同日而语。
-- 不提供对sql的支持，如果不支持sql这样的工业标准，将产生一定用户的学习和使用成本。
+- 维护的工具和资料有限，因为kkl是属于新的技术，不能和关系型数据库十几年的技术同日而语。
+- 不提供对 sql 的支持，如果不支持 sql 这样的工业标准，将产生一定用户的学习和使用成本。
 - 不提供关系型数据库对事务的处理。
 
 ### 1.2.3 非关系型数据库的优势
 
-- **性能NOSQL是基于键值对的，可以想象成表中的主键和值的对应关系，而且不需要经过SQL层的解析，所以性能非常高。**
+- **性能 kkl 是基于键值对的，可以想象成表中的主键和值的对应关系，而且不需要经过 SQL 层的解析，所以性能非常高。**
 - 可扩展性同样也是因为基于键值对，数据之间没有耦合性，所以非常容易水平扩展。
 
 ### 1.2.4 关系型数据库的优势
-- 复杂查询可以用SQL语句方便的在一个表以及多个表之间做非常复杂的数据查询。
+- 复杂查询可以用 SQL 语句方便的在一个表以及多个表之间做非常复杂的数据查询。
 - 事务支持使得对于安全性能很高的数据访问要求得以实现。对于这两类数据库，对方的优势就是自己的弱势，反之亦然。
 
 ### 1.2.5 总结
-<u>关系型数据库与NoSQL数据库并非对立而是互补的关系</u>，即通常情况下使用关系型数据库，在适合使用NoSQL的时候使用NoSQL数据库，让NoSQL数据库对关系型数据库的不足进行弥补。一般会将数据存储在关系型数据库中，在nosql数据库中备份存储关系型数据库的数据
+<u>关系型数据库与 kkl 数据库并非对立而是互补的关系</u>，即通常情况下使用关系型数据库，在适合使用 kkl 的时候使用 kkl 数据库，让 kkl 数据库对关系型数据库的不足进行弥补。一般会将数据存储在关系型数据库中，在 kkl 数据库中备份存储关系型数据库的数据
 
-## 1.3 主流的NOSQL产品
+## 1.3 主流的kkl产品
 
 ### 1.3.1 键值(Key-Value)存储数据库
 - 相关产品： Tokyo Cabinet/Tyrant、Redis、Voldemort、Berkeley DB
@@ -53,7 +53,7 @@ NoSQL(NoSQL = Not Only SQL)，意即“不仅仅是SQL”，是一项全新的�
 
 ### 1.3.3 文档型数据库
 - 相关产品：CouchDB、MongoDB
-- 典型应用：Web应用（与Key-Value类似，Value是结构化的）
+- 典型应用：Web 应用（与 Key-Value 类似，Value 是结构化的）
 - 数据模型： 一系列键值对
 - <span style="color:red">优势：数据结构要求不严格</span>
 - <span style="color:red">劣势： 查询性能不高，而且缺乏统一的查询语法</span>
@@ -69,7 +69,7 @@ NoSQL(NoSQL = Not Only SQL)，意即“不仅仅是SQL”，是一项全新的�
 
 ### 1.4.1 简介
 
-Redis是用C语言开发的一个开源的高性能键值对（key-value）数据库，官方提供测试数据，50个并发执行100000个请求,读的速度是110000次/s,写的速度是81000次/s ，且Redis通过提供多种键值数据类型来适应不同场景下的存储需求，目前为止Redis支持的键值数据类型如下：
+Redis是用C语言开发的一个开源的高性能键值对（key-value）数据库，官方提供测试数据，50 个并发执行 100000 个请求,读的速度是 110000次/s, 写的速度是 81000次/s ，且 Redis 通过提供多种键值数据类型来适应不同场景下的存储需求，目前为止 Redis 支持的键值数据类型如下：
 
 - 1) 字符串类型 string：
 - 2) 哈希类型 hash：渐进式哈希
@@ -80,11 +80,11 @@ Redis是用C语言开发的一个开源的高性能键值对（key-value）数�
 ### 1.4.2 redis的应用场景
 - 缓存（数据查询、短连接、新闻内容、商品内容等等）
 - 聊天室的在线好友列表
-- 任务队列。（秒杀、抢购、12306等等）
+- 任务队列。（秒杀、抢购、12306 等等）
 - 应用排行榜
 - 网站访问统计
 - 数据过期处理（可以精确到毫秒）
-- 分布式集群架构中的session分离
+- 分布式集群架构中的 session 分离
 
 ## 1.5 小结
 
@@ -98,8 +98,8 @@ Redis 是键值对存取的，它的数据保存在内存中。如果仅仅是�
 2. 中文网：http://www.redis.net.cn/
 3. 解压直接可以使用：
 	  redis.windows.conf：配置文件
-	redis-cli.exe：redis的客户端
-	redis-server.exe：redis服务器端
+	redis-cli.exe：redis 的客户端
+	redis-server.exe：redis 服务器端
 
 ## Docker 安装
 
@@ -330,14 +330,14 @@ rpop key： 删除列表最右边的元素，并将元素返回
 (integer) 0
 ```
 
-获取：smembers key:获取set集合中所有元素
+获取：smembers key =\=\> 获取 set 集合中所有元素
 
 ```mysql
 127.0.0.1:6379> smembers myset
 1) "a"
 ```
 
-srem key value:删除set集合中的某个元素	
+srem key value =\=\> 删除 set 集合中的某个元素	
 
 ```mysql
 127.0.0.1:6379> srem myset a
@@ -346,9 +346,9 @@ srem key value:删除set集合中的某个元素
 
 > **有序集合类型 sortedset：**
 
-不允许重复元素，且元素有顺序.每个元素都会关联一个double类型的分数。redis正是通过分数来为集合中的成员进行从小到大的排序。
+不允许重复元素，且元素有顺序.每个元素都会关联一个 double 类型的分数。redis 正是通过分数来为集合中的成员进行从小到大的排序。
 
-存储：zadd key score value  把value加入到键值为key的集合中，并规定分数score，根据score进行排序【从小到大】
+存储：zadd key score value  把 value 加入到键值为 key 的集合中，并规定分数 score，根据 score 进行排序【从小到大】
 
 ```mysql
 127.0.0.1:6379> zadd mysort 60 zhangsan
@@ -399,9 +399,9 @@ redis 是一个内存数据库，当 redis 服务器重启，获取电脑重启�
 
 > **有RDB和AOF两种方式。持久化策略有四种！**
 
-RDB：默认方式，不需要进行配置，默认就使用这种机制。在一定的间隔时间中，检测key的变化情况，然后持久化数据
+RDB：默认方式，不需要进行配置，默认就使用这种机制。在一定的间隔时间中，检测 key 的变化情况，然后持久化数据
 
-- 编辑redis.windwos.conf文件
+- 编辑 redis.windwos.conf 文件
 
   ```shell
   after 900 sec (15 min) if at least 1 key changed
@@ -417,39 +417,36 @@ RDB：默认方式，不需要进行配置，默认就使用这种机制。在�
   save 60 10000
   ```
 
-- 重新启动redis服务器，并指定配置文件名称
+- 重新启动 redis 服务器，并指定配置文件名称
 
   ```shell
   D:\JavaWeb2018\day23_redis\资料\redis\windows-64\redis-2.8.9>redis-server.exe redis.windows.conf	
   ```
 
 AOF：日志记录的方式，可以记录每一条命令的操作。可以每一次命令操作后，持久化数据
-- 编辑redis.windwos.conf文件
+- 编辑 redis.windwos.conf 文件
 
   ```shell
   appendonly no（关闭aof） --> appendonly yes （开启aof）
-  
   appendfsync always ： 每一次操作都进行持久化
-  
   appendfsync everysec ： 每隔一秒进行一次持久化
-  
   appendfsync no	 ： 不进行持久化
   ```
 
 # 五、Java与Jedis
 
-> **Jedis: 一款java操作redis数据库的工具。**
+<b>Jedis: 一款java操作redis数据库的工具。</b>
 
 ## 5.1 基本开发步骤
 
-- 下载jedis的jar包
--  获取连接`Jedis jedis = new Jedis("localhost",6379);`
-- 操作`jedis.set("username","zhangsan");`
-- 关闭连接`jedis.close();`
+- 下载 jedis 的 jar 包
+-  获取连接 `Jedis jedis = new Jedis("localhost",6379);`
+- 操作 `jedis.set("username","zhangsan");`
+- 关闭连接 `jedis.close();`
 
 ## 5.2 Jedis操作redis
 
-> **基本上见名知意**
+基本上见名知意
 
 ```java
 package com.bbxx.demo;
@@ -489,9 +486,9 @@ public class JedisDemo {
      * 存储String
      */
     public void saveString() throws JsonProcessingException {
-        Person p1 = new Person("刘家伟1", "18", "nan", 88, "1997-11-11");
-        Person p2 = new Person("刘家伟2", "18", "nan", 88, "1997-11-11");
-        Person p3 = new Person("刘家伟3", "18", "nan", 88, "1997-11-11");
+        Person p1 = new Person("kkl1", "18", "nan", 88, "1997-11-11");
+        Person p2 = new Person("kkl2", "18", "nan", 88, "1997-11-11");
+        Person p3 = new Person("kkl3", "18", "nan", 88, "1997-11-11");
         ArrayList<Person> list = new ArrayList<>();
         list.add(p1);
         list.add(p2);
@@ -536,14 +533,14 @@ public class JedisDemo {
 
 ## 5.3 jedis连接池
 
->  jedis连接池： JedisPool，Redis自带的
+jedis 连接池： JedisPool，Redis 自带的
 
-- 创建JedisPool连接池对象
-- 调用方法 getResource()方法获取Jedis连接
+- 创建 JedisPool 连接池对象
+- 调用方法 getResource() 方法获取 Jedis 连接
   - JedisPoolConfig config = new JedisPoolConfig();
   - config.setMaxTotal(50);
   - config.setMaxIdle(10);
-- 创建Jedis连接池对象，JedisPool jedisPool = new JedisPool(config,"localhost",6379);
+- 创建 Jedis 连接池对象，JedisPool jedisPool = new JedisPool(config,"localhost",6379);
 - 获取连接，Jedis jedis = jedisPool.getResource();
 - 使用
 - 关闭连接

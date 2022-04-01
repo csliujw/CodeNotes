@@ -164,14 +164,14 @@ Zookeeper 树型目录服务：
 第二步：把 zookeeper 的压缩包（zookeeper-3.4.6.tar.gz）上传到 linux 系统
 第三步：解压缩压缩包，使用命令 tar -zxvf zookeeper-3.4.6.tar.gz 解压
 第四步：进入 zookeeper-3.4.6 目录，创建 data 目录 mkdir data
-第五步：进入conf目录 ，把zoo_sample.cfg 改名为zoo.cfg
+第五步：进入conf目录 ，把 zoo_sample.cfg 改名为 zoo.cfg
 ​	cd conf
 ​	mv zoo_sample.cfg zoo.cfg
 第六步：打开 zoo.cfg 文件,  修改 data 属性：dataDir=/root/zookeeper-3.4.6/data
 
 ### 启动、停止Zookeeper
 
-进入Zookeeper的bin目录，启动服务命令 **./zkServer.sh start**
+进入 Zookeeper 的 bin 目录，启动服务命令 **./zkServer.sh start**
 
 停止服务命令 **./zkServer.sh stop**
 
