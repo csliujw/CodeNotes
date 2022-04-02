@@ -37,8 +37,27 @@ MySQL 快速入门
 - [数据库基本用法](Database/数据库基本用法.md)
 - [MySQL必知必会读书笔记](Database/MySQL必知必会.md)
 
-[](事务控制/)
+MySQL 提升
 
-[](事务控制/)
+[SQL优化](事务控制/SQL优化的正确姿势.md)
 
-[](事务控制/)
+[MySQL提升](事务控制/MySQL-提升.md)
+
+[MySQL InnoDB 存储引擎读书笔记](事务控制/MySQL InnoDB.md)
+
+[MySQL实战45讲笔记](事务控制/MySQL实战45讲.md)
+
+设计模式
+
+[GoF设计模式](Design Pattern/设计模式.md)
+
+[JavaEE设计模式](Design Pattern/JavaEE设计模式.md)
+
+分布式
+
+[Dubbo](Distribution/Dubbo.md)
+
+[MapReduce](Distribution/MapReduce.md)
+
+并发编程
+
