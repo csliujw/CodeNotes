@@ -10,10 +10,6 @@
 - Python Docstring Generator 文档生成。
 - Better Comments 不同代码注释颜色不一样。
 
-## Java必备插件
-
-
-
 # VSCode&Java
 
 按照官网下载插件

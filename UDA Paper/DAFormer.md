@@ -48,25 +48,25 @@ UDA 中常用的方法有两种，一种的是基于对抗学习的，一种是�
 
 $g_θ$ 表示仅通过 source domain 训练得到的网络。在源域上用 CE 训练网络 $g_θ$。
 
-<img src="img\image-20220324143713999.png">
+<img src="img/image-20220324143713999.png">
 
 由于 domain shift 在 target domain 上得不到好的效果。为了提高 target 上的性能，本文采用自训练的方式（AD 不稳定，且效果略差于自训练）。为了进行更好的知识迁移，本文使用 teacher 网络生成 pseudo label。
 
-<img src="img\image-20220324144615702.png">
+<img src="img/image-20220324144615702.png">
 
 `[]  Iverson bracket` 满足条件为1，不满足为0。教师网络不会有 backpropagated。
 
-<img src="img\image-20220324144831246.png">
+<img src="img/image-20220324144831246.png">
 
  Here, we use the ratio of pixels exceeding a threshold *τ* of the maximum softmax probability
 
-<img src="img\image-20220324150008834.png">
+<img src="img/image-20220324150008834.png">
 
 q ，小于指定阈值的时候为0，大于指定阈值的时候为1，即不计算那些低置信度的伪标签损失。P 是伪标签。log gθ 是预测结果。
 
 在训练过程中，将 hφ 的权值设为每个训练步骤 t 后 gθ 的权值的指数移动平均。
 
-<img src="img\image-20220324150928513.png">
+<img src="img/image-20220324150928513.png">
 
 数据增强的方式采用了 颜色抖动，高斯模糊和 ClassMix [文献56]。
 
@@ -78,12 +78,12 @@ q ，小于指定阈值的时候为0，大于指定阈值的时候为1，即不�
 
 在解码器上，采用的[深度可分离卷积](https://zhuanlan.zhihu.com/p/166736637)(有效避免过拟合)
 
-<img src="img\image-20220324160311926.png">
+<img src="img/image-20220324160311926.png">
 
 ## Training Strategies for UDA
 
 为 UDA 训练一个更有能力的架构的一个挑战是对源域的过度拟合。为了解决这个问题，文章引入了三种策略来稳定和正则化 UDA 训练: **稀有类抽样**、**Thing-Class ImageNet 特征距离**和**学习率预热**。总体 UDA 框架如图2 (a)所示。
 
-<img src="img\image-20220324160510103.png">
+<img src="img/image-20220324160510103.png">
 
 **Rare Class Sampling（RCS）：**通过实验发现，那些 Rare Class 在训练过程中出现的越晚，训练结束时的表现就越差。可能的原因是，网络在不断的学习后偏向 common class 很用很少的样本去学习那些 rare class。通过使用教师网络的自训练，进一步的证实了这种观点。为了解决这个问题，文章提出了罕见类抽样 (RCS)。它更经常地从源域中采样带有稀有类的图像，以便在训练期间(早期)学习它们。根据c类像素的个数，可以计算出源数据集中每个 c 类像素的频率 fc。

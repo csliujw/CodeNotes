@@ -6,6 +6,9 @@
 
 - [Linux基本命令](Linux/Linux基本命令.md)
 - [Anaconda的基本使用](tools/Anaconda.md)
+- [git](tools/git.md)
+- [Docker](tools/Docker.md)
+- [maven](tools/maven使用入门.md)
 
 ## 计算机基础
 
@@ -52,7 +55,7 @@
 - [Java编程思想读书笔记](JavaSE/JavaSE基础.md)
 - [JavaSE加强](JavaSE/JavaSE加强.md)
 
-## JavaWeb
+## Java Web
 
 - [JavaWeb开发基础](JavaWeb/JavaWeb开发基础.md)
 - [深入分析JavaWeb技术内幕读书笔记](JavaWeb/深入分析JavaWeb技术内幕.md)
@@ -102,3 +105,12 @@
 - [RabbitMQ基本使用](微服务/RabbitMQ.md)
 - [SpringCloud](微服务/SpringCloud.md)
 - [nacos安装](微服务/nacos安装.md)
+
+## 文档
+
+- [Spring全家桶文档索引](Spring全家桶文档索引.md)
+- [杂记](一些笔记链接.md)
+
+## 闲书
+
+- [淘宝技术这十年](Book/淘宝技术这10年.md)
