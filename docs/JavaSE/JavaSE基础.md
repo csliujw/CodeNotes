@@ -12492,6 +12492,17 @@ public class TwoTuple<A, B> {
 }
 ```
 
+> 泛型命名规则
+
+- `E：Element` (used extensively by the Java Collections Framework)
+- `K：Key`
+- `N：Number`
+- `T：Type`
+- `V：Value`
+- `S，U，V：etc. -2nd, 3rd, 4th types`
+- `R：Result`
+- `A：Accumulator`
+
 ### 泛型接口&方法
 
 泛型接口的用法和泛型类的用法是一致的，不再赘述。
