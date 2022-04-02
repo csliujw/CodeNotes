@@ -1,46 +1,450 @@
-# git配置&简单命令
+# Git分布式版本控制工具
 
-## 安装及配置
+<img src="img/011500266295799.webp">
+
+## 概述
+
+- [x] 了解Git基本概念
+- [x] 了解Git工作流程
+- [x] 熟悉Git常用命令
+- [x] 熟悉IDEA中Git的使用
+
+> Git的作用
+
+- [x] 代码备份：代码备份到GitHub上。
+- [x] 代码还原：Git上记录了代码的提交内容，可以还原任一时间点的代码。
+- [x] 协同开发：多人协作开发项目，通过Git协同开发，记录，分享所写代码。
+- [x] 追溯代码问题，编写人和编写时间
+
+> 版本控制方式
+
+- 集中式版本控制工具 集中式版本控制工具
+
+    - 版本库是集中存放在中央服务器的，team 里每个人 work 时从中央服务器下载代码，是必须联网才能工作，局域网或互联网。个人修改后然后提交到中央版本库。
+    -  举例：SVN 和 CVS b
+
+- 分布式版本控制工具 
+
+    - 分布式版本控制系统没有“中央服务器”，每个人的电脑上都是一个完整的版本库，这样工作的时候，无 需要联网了，因为版本库就在你自己的电脑上。多人协作只需要各自的修改推送给对方，就能互相看到对方的修改了。
+    -  举例：Git
+
+> Git
+
+Git 是分布式的, Git 不需要有中心服务器，我们每台电脑拥有的东西都是一样的。我们使用 Git 并且有个中心服务器，仅仅是为了方便交换大家的修改，但是这个服务器的地位和我们每个人的 PC 是一样的。我们可以把它当做一个开发者的 PC 就可以了，中心服务器就是为了方便大家交换代码。没有它大家一样可以工作，只不过“交换”修改不方便而已。 
+
+Git 是一个开源的分布式版本控制系统，可以有效、高速地处理从很小到非常大的项目版本管理。Git 是 Linus Torvalds 为了帮助管理 Linux 内核开发而开发的一个开放源码的版本控制软件。 同生活中的许多伟大事物一样，Git 诞生于一个极富纷争大举创新的年代。Linux 内核开源项目有着为数众多的参与者。 绝大多数的 Linux 内核维护工作都花在了提交补丁和保存归档的繁琐事务上（1991－2002 年间）。 到 2002 年，整个项目组开始启用一个专有的分布式版本控制系统 BitKeeper 来管理和维护代 码。 
+
+到了 2005 年，开发 BitKeeper 的商业公司同 Linux 内核开源社区的合作关系结束，他们收回了 Linux 内核社区免费使用 BitKeeper 的权力。 这就迫使 Linux 开源社区（特别是 Linux 的缔造者 Linus Torvalds）基于使用 BitKeeper 时的经验教训，开发出自己的版本系统。 他们对新的系统制订 了若干目标： 
+
+- 速度
+- 简单的设计
+- 对非线性开发模式的强力支持（允许成千上万个并行开发的分支） 
+- 完全分布式
+- 有能力高效管理类似 Linux 内核一样的超大规模项目（速度和数量）
+
+<img src="img/image-20211217200528119.png">
+
+## 工作流程图
+
+<img src="img/image-20211217200735238.png">
+
+> 命令如下：
+
+- clone（克隆）：从远程仓库中克隆代码到本地仓库 
+- checkout （检出）:从本地仓库中检出一个仓库分支然后进行修订 
+- add（添加）: 在提交前先将代码提交到暂存区 
+- commit（提交）: 提交到本地仓库。本地仓库中保存修改的各个历史版本 
+- fetch (抓取) ： 从远程库，抓取到本地仓库，不进行任何的合并动作，一般操作比较少。
+- pull (拉取) ： 从远程库拉到本地库，自动进行合并(merge)，然后放到到工作区，相当于 fetch+merge 
+- push（推送） : 修改完成后，需要和团队成员共享代码时，将代码推送到远程仓库
+
+## 安装
+
+### 常见Linux命令
+
+- ls/ll 查看当前目录 
+- cat 查看文件内容 
+- touch 创建文件 
+- vi vi 编辑器（使用vi编辑器是为了方便展示效果，学员可以记事本、editPlus、notPad++等其它编 辑器）
 
 ### 安装
 
-安装时：Use git from git bash only...其他默认下一步。
+下载地址： https://git-scm.com/download
 
-安装好后将git的bin配置到系统环境变量中。是系统环境变量。
-配置github
+<img src="img/image-20211217201447099.png">
 
-- 点击右键 选择Git bash
+安装时：Use git from git bash only... 其他默认下一步。安装成功后鼠标点击右键可以看到。
+
+<img src="img/image-20211217201824831.png">
+
+备注：
+
+Git GUI：Git 提供的图像界面工具
+
+Git Bash：Git 提供的命令行工具，提供了一些常见的 Linux 命令，如 curl。
+
+当安装 Git 后首先要做的事情是设置用户名称和 email 地址。每次 Git 提交都会使用该用户信息
+
+### 基本配置
+
+- 点击右键 选择 Git bash
 - 配置全局变量
 - git config -- global user.name "username" 如：git config -- global user.name "csxx"
 - git config --global user.email "邮箱" 如：git config --global user.email "12312331@qq.com"
+- 查看配置信息
+    - git config --global user.name
+    - git config --global user.email
+
+
+### 为常用指令配置别名
+
+有些常用的指令参数非常多，每次都要输入好多参数，我们可以使用别名。
+
+- 打开用户目录，创建 .bashrc 文件 
+
+- 部分 windows 系统不允许用户创建点号开头的文件，可以打开 gitBash, 执行 `touch ~/.bashrc`
+
+- 在 .bashrc 文件中输入如下内容
+
+    ```shell
+    #用于输出git提交日志
+    alias git-log='git log --pretty=oneline --all --graph --abbrev-commit'
+    #用于输出当前目录所有文件及基本信息
+    alias ll='ls -al'
+    ```
+
+### Git乱码
+
+打开 GitBash 执行下面命令
+
+```shell
+git config --global core.quotepath false 
+```
+
+在 `${git_home}/etc/bash.bashrc$`  文件后面加入下面两行
+
+```shell
+export LANG="zh_CN.UTF-8"
+export LC_ALL="zh_CN.UTF-8"
+```
 
 ### 配置免密登录
 
-配置ssh：先在本地配置，发送给远程
+配置 ssh：先在本地配置，发送给远程
 
-输入以下命令
-ssh-keygen -t rsa -C 邮箱 如：ssh-keygen -t rsa -C 324234234@qq.com
-然后一直回车
+输入以下命令 ssh-keygen -t rsa -C 邮箱 如：ssh-keygen -t rsa -C 695466632@qq.com 然后一直回车
 
-打开github网站 找到setting --> new ssh - title任意/key输入本地生成的pubkey（公钥）,pubkey的存放地址请仔细看git控制台的输出。
+打开 github 网站 找到 setting --> new ssh - title任意/key 输入本地生成的 pubkey（公钥）, pubkey 的存放地址请仔细看 Git 控制台的输出。
 
-测试连通性
+<img src="img/image-20220402210210816.png">
 
-ssh -T git@github.com[写死]
+测试连通性 ssh -T git@github.com[写死的]
 
-本地和远程成功通信 则可以izai/.ssh中发现known_hosts文件
-出错就多试几次 可能是网路问题。不行就检测建立ssh时输入的pub key
+本地和远程成功通信则可以在 .ssh 中发现 known_hosts 文件，出错就多试几次可能是网络问题。不行就检测建立 ssh 时输入的 pub key。
 
-## 基本使用命令
+## Git常用命令
 
-```powershell
-git add: # 将本地文件 增加到暂存区
-git commit # 将暂存区的内容 提交到 本地仓库
-git push # 将本地仓库的内容 推送到 远程仓库
-git pull # 将远程仓库的内容 拉取到 本地仓库
+### 获取本地仓库
+
+- 在电脑的任意位置创建一个空目录（例如 test）作为我们的本地 Git 仓库
+- 进入这个目录中，点击右键打开 Git bash 窗口                                           
+- 执行命令 git init 
+- 如果创建成功后可在文件夹下看到隐藏的 .git 目录。
+
+<img src="img/image-20220402210715524.png">
+
+### 基础操作指令
+
+Git 工作目录下对于文件的<b>修改</b>(增加、删除、更新)会存在几个状态，这些<b>修改</b>的状态会随着我们执行 Git 的命令而发生变化。
+
+<img src="img\image-20220118144908667.png">
+
+本章节主要讲解如何使用命令来控制这些状态之间的转换：
+
+- ① git add (工作区 —> 暂存区)
+- ② git commit (暂存区 —> 本地仓库)
+
+#### status查看修改状态
+
+- 作用：查看修改的状态（暂存区、工作区）
+- 命令形式：
+
+```shell
+git status
 ```
 
-## Git练习
+#### add添加工作到暂存区
+
+- 作用：添加工作区一个或多个文件的修改到暂存区
+- 命令形式：git add 单个文件名|通配符
+
+```shell
+git add file.txt # 添加单个文件
+git add . # 将所有新建的文件 和 修改的文件加入暂存区
+```
+
+<img src="img/image-20220402212133694.png">
+
+Changes to be committed 即将被提交，进入了暂存区。
+
+#### commit提交暂存区到本地仓库
+
+- 作用：提交暂存区内容到本地仓库的当前分支
+- 命令形式：git commit -m ‘注释内容’
+
+```shell
+git commit -m "add test.md"
+```
+
+<img src="img/image-20220402212416934.png">
+
+commit 后，再次查看状态，暂存区中已经没有东西了。
+
+#### log查看提交日志
+
+- 配置的别名 git-log 就包含了这些参数，所以后续可以直接使用指令 git-log
+- 作用：查看提交记录
+- 命令形式：git log [option] 或者 git-log
+    - all 显示所有分支
+    - pretty=oneline 将提交信息显示为一行
+    - abbrev-commit 使得输出的commitId更简短
+    - graph 以图的形式显示
+
+
+<img src="img/image-20220402212637414.png">
+
+git log 查看日志信息，可以看到提交记录，谁？什么时间段提交的内容。
+
+<img src="img/image-20220402212913095.png">
+
+#### 版本回退
+
+- 作用：版本切换
+- 命令形式
+
+```shell
+git reset --hard commitID # commitID 可以使用 git-log 或 git log 指令查看
+```
+
+<img src="img/image-20220402213338655.png">
+
+能不能再回到回退前的版本呢？可以的，只要记得 commit id 就行。
+
+<img src="img/image-20220402213859424.png">
+
+可以发现 git log 查不出来 obb6 这个 id 了。如果之前我们没有记住这个 id，是不是就不能恢复了？不是的。可以用 git reflog 来查看。
+
+git reflog，把所有的操作记录下来了，可以看到已经删除的提交记录。
+
+<img src="img/image-20220402214424143.png">
+
+#### 添加文件至忽略列表
+
+一般我们总会有些文件无需纳入 Git 的管理，也不希望它们总出现在未跟踪文件列表。 通常都是些自动生成的文件，比如日志文件，或者编译过程中创建的临时文件等。 在这种情况下，我们可以在工作目录中创建一个名为 .gitignore 的文件（文件名称固定），列出要忽略的文件模式。
+
+```shell
+*.a # 以 a 结尾的文件不让 git 管理
+```
+
+#### 练习：基础操作
+
+```shell
+#####################仓库初始化###################### 
+# 创建目录（git_test01）并在目录下打开gitbash 
+# 初始化git仓库 
+git init 
+#####################创建文件并提交##################### 
+# 目录下创建文件 file01.txt 
+# 将修改加入暂存区 
+git add . 
+# 将修改提交到本地仓库，提交记录内容为：commit 001 
+git commit -m 'commit 001' 
+# 查看日志 
+git log 
+####################修改文件并提交###################### 
+# 修改file01的内容为：count=1 
+# 将修改加入暂存区 
+git add . 
+# # 将修改提交到本地仓库，提交记录内容为：update file01 
+git commit --m 'update file01' 
+# 查看日志 
+git log 
+# 以精简的方式显示提交记录 git-log 是配置的别名
+git-log 
+####################将最后一次修改还原################## 
+# 查看提交记录 
+git-log 
+# 找到倒数第2次提交的commitID 
+# 版本回退 
+git reset commitID --hard
+```
+
+### 分支
+
+几乎所有的版本控制系统都以某种形式支持分支。 使用分支意味着你可以把你的工作从开发主线上分离开来进行重大的 Bug 修改、开发新的功能，以免影响开发主线。
+
+#### 查看本地分支
+
+- 命令：git branch
+
+#### 创建本地分支
+
+- 命令：git branch 分支名
+
+#### 切换分支
+
+- 命令：git checkout 分支名
+
+我们还可以直接切换到一个不存在的分支（创建并切换）
+
+- 命令：git checkout -b 分支名
+
+#### 合并分支
+
+一个分支上的提交可以合并到另一个分支。比如 master 分支中有 demo.md 文件，dev 分支有 publish.md 文件，最终这两个文件需要合并到一个分支中去，这时候可以用 git merge 进行分支合并。
+
+命令：git merge 分支名称
+
+<img src="img/image-20220402220155943.png">
+
+#### 删除分支
+
+不能删除当前分支，只能删除其他分支
+
+git branch -d b1 删除分支时，需要做各种检查
+
+git branch -D b1 不做任何检查，强制删除
+
+#### 解决冲突
+
+当两个分支上对文件的修改可能会存在冲突，例如同时修改了同一个文件的同一行，这时就需要手动解决冲突，解决冲突步骤如下：
+
+①处理文件中冲突的地方
+
+②将解决完冲突的文件加入暂存区(add)
+
+③提交到仓库(commit)
+
+冲突部分的内容处理如下所示：
+
+dev 分支中 test.md 的内容是 dev，master 分支中的 test.md 的内容是 master。合并的时候会发生冲突。 
+
+<img src="img/image-20220402221020611.png">
+
+冲突的内容可以再 test.md 中看到
+
+```text
+<<<<<<< HEAD
+master
+=======
+dev
+>>>>>>> dev
+```
+
+删除掉一些内容即可，然后 git add .
+
+```text
+master
+```
+
+<img src="img/image-20220402221545513.png">
+
+#### 开发中分支使用原则与流程
+
+几乎所有的版本控制系统都以某种形式支持分支。 使用分支意味着你可以把你的工作从开发主线上分离开来进行重大的 Bug 修改、开发新的功能，以免影响开发主线。
+
+在开发中，一般有如下分支使用原则与流程：
+
+- master （生产） 分支：线上分支，主分支，中小规模项目作为线上运行的应用对应的分支；
+- develop（开发）分支：是从 master 创建的分支，一般作为开发部门的主要开发分支，如果没有其他并行开发不同期上线要求，都可以在此版本进行开发，阶段开发完成后，需要是合并到 master 分支,准备上线。
+- feature/xxxx 分支：从 develop 创建的分支，一般是同期并行开发，但不同期上线时创建的分支，分支上的研发任务完成后合并到 develop 分支。
+- hotfifix/xxxx分支：从 master 派生的分支，一般作为线上 bug 修复使用，修复完成后需要合并到 master、test、develop 分支。
+- 还有一些其他分支，在此不再详述，例如 test 分支（用于代码测试）、pre 分支（预上线分支）等等。
+
+<img src="img/image-20220118170619389.png">
+
+#### 练习:分支操作
+
+```shell
+###########################创建并切换到dev01分支，在dev01分支提交 
+# [master]创建分支dev01
+git branch dev01 
+# [master]切换到dev01
+git checkout dev01 
+# [dev01]创建文件file02.txt 
+# [dev01]将修改加入暂存区并提交到仓库,提交记录内容为：add file02 on dev 
+git add . git commit -m 'add file02 on dev' 
+# [dev01]以精简的方式显示提交记录 git-log ###########################切换到master分支，将dev01合并到master分支 
+# [dev01]切换到master分支 
+git checkout master 
+# [master]合并dev01到master分支 
+git merge dev01 
+# [master]以精简的方式显示提交记录 
+git-log 
+# [master]查看文件变化(目录下也出现了file02.txt) ##########################删除dev01分支 
+# [master]删除dev01分支 
+git branch -d dev01 
+# [master]以精简的方式显示提交记录 
+git-log
+```
+
+## Git远程仓库
+
+### 常用的托管服务
+
+前面我们已经知道了 Git 中存在两种类型的仓库，即本地仓库和远程仓库。那么我们如何搭建 Git 远程仓库呢？我们可以借助互联网上提供的一些代码托管服务来实现，其中比较常用的有 GitHub、码云、GitLab 等。
+
+GitHub（ 地址：https://github.com/ ）是一个面向开源及私有软件项目的托管平台，因为只支持 Git 作为唯一的版本库格式进行托管，故名 GitHub
+
+码云（地址： https://gitee.com/ ）是国内的一个代码托管平台，由于服务器在国内，所以相比于  GitHub，码云速度会更快
+
+GitLab （地址： https://about.gitlab.com/ ）是一个用于仓库管理系统的开源项目，使用 Git 作为代码管理工具，并在此基础上搭建起来的 web 服务，一般用于在企业、学校等内部网络搭建 git 私服。
+
+### 操作远程仓库
+
+#### 添加远程仓库
+
+此操作是先初始化本地库，然后与已创建的远程库进行对接。
+
+- 命令：
+    - 远端名称：默认是origin，取决于远端服务器设置
+    - 仓库地址：从远端服务器获取此url
+
+```shell
+git remote add <远端名称> <仓库地址>
+```
+
+例如
+
+```shell
+git remote add origin git@gitee.com:csliujw/git_test.git
+```
+
+#### 查看远程仓库
+
+命令
+
+```shell
+git remote
+```
+
+推送到远程仓库
+
+```shell
+git push [-f] [--set-upstream] [远端名称] [本地分支名][:远端分支名]
+```
+
+#### 从远程仓库克隆
+
+如果已经有一个远端仓库，我们可以直接 clone 到本地。
+
+```shell
+git clone <仓库地址> [本地目录]
+```
+
+本地目录可以省略，会自动生成一个目录
+
+### 练习
 
 > 基本命令介绍
 
@@ -95,90 +499,9 @@ git pull
 git pull origin master
 ```
 
-# Git创建分支
-
-## 完整流程
-
-初始化git
-
-```powershell
-git init
-```
-
-上传修改的文件：(*可替换成具体要上传的文件名，*表示提交所有有变化的文件)
-
-```powershell
-git add *
-```
-
-添加上传文件的描述
-
-```powershell
-git commit -m "test" 
-```
-
- 创建分支：（”test“为分支名）
-
-```powershell
-git branch test
-```
-
-切换分支
-
-```powershell
-git checkout test
-```
-
-与远程分支相关联：（”BowlingScore“ 为工程名）
-
-```powershell
-git remote add origin https://github.com/yangxiaoyan20/BowlingScore.git
-```
-
- 将分支上传
-
-```powershell
-git push origin test
-```
-
-## git错误
-
-```shell
-ssh -T git@github.com
-
-ssh: connect to host github.com port 22: Connection timed out
-```
-
-错误原因，端口不行（换个端口）。
-
-```shell
-Host github.com
-User git
-Hostname ssh.github.com
-PreferredAuthentications publickey
-IdentityFile ~/.ssh/id_rsa
-Port 443
-
-Host gitlab.com
-Hostname altssh.gitlab.com
-User git
-Port 443
-PreferredAuthentications publickey
-IdentityFile ~/.ssh/id_rsa
-```
-
-# Git版本控制
-
-## 版本回退
-
-```shell
-git log # 查看提交记录
-git reset --hard 版本id
-```
-
 # 常用Git命令汇总
 
-**日常积累**
+## 日常积累
 
 ```shell
 git log # 查看提交记录
@@ -196,9 +519,9 @@ git push origin -d BranchName
 git push origin --delete BranchName
 ```
 
-# Git命令大全
+## Git命令大全
 
-## git config
+### git config
 
 配置 Git 的相关参数。
 
@@ -253,7 +576,7 @@ $ git config --global credential.helper 'cache --timeout=<缓存时间>'
 $ git config --global credential.helper store
 ```
 
-## git clone
+### git clone
 
 从远程仓库克隆一个版本库到本地。
 
@@ -268,7 +591,7 @@ $ git clone <远程仓库的网址> <本地目录>
 $ git clone <远程仓库的网址> -b <分支名称> <本地目录>
 ```
 
-## git init
+### git init
 
 初始化项目所在目录，初始化后会在当前目录下出现一个名为 .git 的目录。
 
@@ -277,7 +600,7 @@ $ git clone <远程仓库的网址> -b <分支名称> <本地目录>
 $ git init
 ```
 
-## git status
+### git status
 
 查看本地仓库的状态。
 
@@ -291,7 +614,7 @@ $ git status
 $ git status -s
 ```
 
-## git remote
+### git remote
 
 操作远程库。
 
@@ -316,7 +639,7 @@ $ git remote remove <远程仓库的别名>
 $ git remote set-url <远程仓库的别名> <新的远程仓库URL地址>
 ```
 
-## git branch
+### git branch
 
 操作 Git 的分支命令。
 
@@ -349,7 +672,7 @@ git push origin -d BranchName
 git push origin --delete BranchName
 ```
 
-## git checkout
+### git checkout
 
 检出命令，用于创建、切换分支等。
 
@@ -368,7 +691,7 @@ $ git checkout --orphan <分支名称>
 $ git checkout <文件路径>
 ```
 
-## git cherry-pick
+### git cherry-pick
 
 把已经提交的记录合并到当前分支。
 
@@ -377,7 +700,7 @@ $ git checkout <文件路径>
 $ git cherry-pick <commit ID>
 ```
 
-## git add
+### git add
 
 把要提交的文件的信息添加到暂存区中。当使用 git commit 时，将依据暂存区中的内容来进行文件的提交。
 
@@ -398,7 +721,7 @@ $ git add -i [<文件路径>]
 $ git add --interactive [<文件路径>]
 ```
 
-## git commit
+### git commit
 
 将暂存区中的文件提交到本地仓库中。
 
@@ -417,7 +740,7 @@ $ git commit -a -m "<提交的描述信息>"
 $ git commit --amend
 ```
 
-## git fetch
+### git fetch
 
 从远程仓库获取最新的版本到本地的 tmp 分支上。
 
@@ -429,7 +752,7 @@ $ git fetch <远程仓库的别名>
 $ git fetch <远程主机名> <分支名>
 ```
 
-## git merge
+### git merge
 
 合并分支。
 
@@ -438,7 +761,7 @@ $ git fetch <远程主机名> <分支名>
 $ git merge <分支名称>
 ```
 
-## git diff
+### git diff
 
 比较版本之间的差异。
 
@@ -463,7 +786,7 @@ $ git diff <分支名称> <分支名称>
 $ git diff <分支名称>...<分支名称>
 ```
 
-## git pull
+### git pull
 
 从远程仓库获取最新版本并合并到本地。
 首先会执行 `git fetch`，然后执行 `git merge`，把获取的分支的 HEAD 合并到当前分支。
@@ -473,7 +796,7 @@ $ git diff <分支名称>...<分支名称>
 $ git pull
 ```
 
-## git push
+### git push
 
 把本地仓库的提交推送到远程仓库。
 
@@ -486,7 +809,7 @@ $ git push <远程仓库的别名> :<远程分支名>
 $ git push <远程仓库的别名> --delete <远程分支名>
 ```
 
-## git log
+### git log
 
 显示提交的记录。
 
@@ -501,7 +824,7 @@ $ git log <commit ID>
 $ git log -<指定的数量>
 ```
 
-## git reset
+### git reset
 
 还原提交记录。
 
@@ -524,7 +847,7 @@ $ git reset --soft <commit ID>
 $ git reset --hard <commit ID>
 ```
 
-## git revert
+### git revert
 
 生成一个新的提交来撤销某次提交，此次提交之前的所有提交都会被保留。
 
@@ -533,7 +856,7 @@ $ git reset --hard <commit ID>
 $ git revert <commit ID>
 ```
 
-## git tag
+### git tag
 
 操作标签的命令。
 
@@ -563,7 +886,7 @@ $ git push <远程仓库的别名> <标签名称>
 $ git push <远程仓库的别名> –tags
 ```
 
-## git mv
+### git mv
 
 重命名文件或者文件夹。
 
@@ -572,7 +895,7 @@ $ git push <远程仓库的别名> –tags
 $ git mv <源文件/文件夹> <目标文件/文件夹>
 ```
 
-## git rm
+### git rm
 
 删除文件或者文件夹。
 
@@ -587,9 +910,9 @@ $ git rm -r <文件夹路径>
 $ git rm --cached
 ```
 
-## Git操作场景示例
+### Git操作场景示例
 
-### 1. 删除掉本地不存在的远程分支
+#### 1. 删除掉本地不存在的远程分支
 
 多人合作开发时，如果远程的分支被其他开发删除掉，在本地执行 `git branch --all` 依然会显示该远程分支，可使用下列的命令进行删除：
 
@@ -602,7 +925,9 @@ $ git fetch -p
 $ git fetch --prune origin
 ```
 
-# Git 收藏
+## Git收藏
+
+原文地址：http://rogerdudler.github.io/git-guide/index.zh.html
 
 > 说 git 简单的人，要么只会那几行命令，要么只是纸上谈兵。
 >
@@ -610,7 +935,7 @@ $ git fetch --prune origin
 >
 > 这是在 github 一篇非常不错的 git 指南，未来可能会无法访问，所以转载收藏。
 
-## 安装
+### 安装
 
 [下载 git OSX 版](http://git-scm.com/download/mac)
 
@@ -618,11 +943,11 @@ $ git fetch --prune origin
 
 [下载 git Linux 版](http://book.git-scm.com/2_installing_git.html)
 
-## 操作命令表
+### 操作命令表
 
-[![img](https://cdn.xn2001.com/011500266295799.jpg)](https://cdn.xn2001.com/011500266295799.jpg)
+<img src="img/011500266295799.webp">
 
-## 创建新仓库
+### 创建新仓库
 
 创建新文件夹，打开，然后执行
 
@@ -632,7 +957,7 @@ git init
 
 以创建新的 git 仓库。
 
-## 检出仓库
+### 检出仓库
 
 执行如下命令以创建一个本地仓库的克隆版本：
 
@@ -652,13 +977,13 @@ git clone username@host:/path/to/repository
 git clone -b 分支名称 地址
 ```
 
-## 工作流
+### 工作流
 
 你的本地仓库由 git 维护的三棵“树”组成。第一个是你的 `工作目录`，它持有实际文件；第二个是 `暂存区（Index）`，它像个缓存区域，临时保存你的改动；最后是 `HEAD`，它指向你最后一次提交的结果。
 
 [![img](https://cdn.jsdelivr.net/gh/lexinhu/Image/img/2021/20210124195758.png)](https://cdn.jsdelivr.net/gh/lexinhu/Image/img/2021/20210124195758.png)
 
-## 添加和提交
+### 添加和提交
 
 你可以提出更改（把它们添加到暂存区），使用如下命令：
 
@@ -675,7 +1000,7 @@ git commit -m "代码提交信息"
 
 现在，你的改动已经提交到了 **HEAD**，但是还没到你的远端仓库。
 
-## 推送改动
+### 推送改动
 
 你的改动现在已经在本地仓库的 **HEAD** 中了。执行如下命令以将这些改动提交到远端仓库：
 
@@ -693,7 +1018,7 @@ git remote add origin <server>
 
 如此你就能够将你的改动推送到所添加的服务器上去了。
 
-## 分支
+### 分支
 
 分支是用来将特性开发绝缘开来的。在你创建仓库的时候，*master* 是“默认的”分支。在其他分支上进行开发，完成后再将它们合并到主分支上。
 
@@ -720,7 +1045,7 @@ git checkout master
 git push origin <branch>
 ```
 
-## 更新与合并
+### 更新与合并
 
 要更新你的本地仓库至最新改动，执行：
 
@@ -748,7 +1073,7 @@ git add <filename>
 git diff <source_branch> <target_branch>
 ```
 
-## 标签
+### 标签
 
 为软件发布创建标签是推荐的。这个概念早已存在，在 SVN 中也有。你可以执行如下命令创建一个叫做 *1.0.0* 的标签：
 
@@ -764,7 +1089,7 @@ git log
 
 你也可以使用少一点的提交 ID 前几位，只要它的指向具有唯一性。
 
-## log
+### log
 
 如果你想了解本地仓库的历史记录，最简单的命令就是使用：
 
@@ -796,7 +1121,7 @@ git log --name-status
 git log --help
 ```
 
-## 替换本地改动
+### 替换本地改动
 
 假如你操作失误（当然，这最好永远不要发生），你可以使用如下命令替换掉本地改动：
 
@@ -813,14 +1138,10 @@ git fetch origin
 git reset --hard origin/master
 ```
 
-## 图形化客户端
+### 图形化客户端
 
 - [GitX (L) (OSX, 开源软件)](http://gitx.laullon.com/)
 - [Tower (OSX)](http://www.git-tower.com/)
 - [Source Tree (OSX, 免费)](http://www.sourcetreeapp.com/)
 - [GitHub for Mac (OSX, 免费)](http://mac.github.com/)
 - [GitBox (OSX, App Store)](https://itunes.apple.com/gb/app/gitbox/id403388357?mt=12)
-
-------
-
-原文地址：http://rogerdudler.github.io/git-guide/index.zh.html

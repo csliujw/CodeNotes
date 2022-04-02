@@ -1,6 +1,6 @@
 # IDEA相关快捷键
 
-> **与eclipse类似。我改成了eclipse键位了。**
+> 与 eclipse 类似。由于习惯了 eclipse 我改成了 eclipse 键位。
 
 1）F4：查看继承的层级关系。
 

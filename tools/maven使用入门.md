@@ -1,30 +1,26 @@
-要重新学下maven搭建工程了
-
 # Maven的安装与配置
 
 ## 前置条件
 - JDK
 - IDE
 - Maven安装包
-```
-安装包自行前往https://maven.apache.org/download.cgi下载最新版的Maven程序。
-```
+- 安装包自行前往 https://maven.apache.org/download.cgi 下载最新版的 Maven 程序。
 ## 1.开始安装
 - 将文件解压
-- 新建MAVEN_HOME,环境变量，赋值为mavenbin所在的父级目录
-- 注意maven需要依赖于JAVA_HOME这个环境变量，环境变量的key是固定的。
-  - 如maven的目录是 D:\Program Files\Apache\maven;
-  - MAVEN_HOME赋值为 D:\Program Files\Apache\maven;
-  - 在系统环境变量path中追加 %MAVEN_HOME%\bin\;
+- 新建 MAVEN_HOME,环境变量，赋值为mavenbin所在的父级目录
+- 注意 maven 需要依赖于 JAVA_HOME 这个环境变量，环境变量的 key 是固定的。
+  - 如 maven 的目录是 D:\Program Files\Apache\maven;
+  - MAVEN_HOME 赋值为 D:\Program Files\Apache\maven;
+  - 在系统环境变量 path 中追加 %MAVEN_HOME%\bin\;
 ## 2.检查安装结果
 
-- mvn -v 查看Maven信息
+- mvn -v 查看 Maven 信息
 
-  如果显示的jdk是你按照的本地jdk的目录，则完美成功！
+  如果显示的 jdk 是你按照的本地 jdk 的目录，则完美成功！
 
 ## 3.配置Maven本地仓库
-- 在任意目录新建maven-repository文件夹【名称随意】
-- 打开maven/conf/settings.xml文件修改仓库默认位置
+- 在任意目录新建 maven-repository 文件夹【名称随意】
+- 打开 maven/conf/settings.xml 文件修改仓库默认位置
 ```xml
 <!--1.查找下面这行代码：-->
 <localRepository>/path/to/local/repo</localRepository>
@@ -38,7 +34,7 @@ D:\Program Files\Apache\maven-repository。
 
 ## 4.Maven的常用命令
 
-> **maven的命令，一般高级别的命令包含低级别的命令，maven运行tomcat项目使用的是 ==mvn tomcat:run==**
+> **maven 的命令，一般高级别的命令包含低级别的命令，maven运行tomcat项目使用的是 ==mvn tomcat:run==**
 
 以下命令都需要进入对于项目的根目录进行。如spring为xx项目的根目录【其内部包含main】。
 
