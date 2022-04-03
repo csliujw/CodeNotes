@@ -2,22 +2,22 @@
 
 ## 1.1 基本概念普及
 
-**概念： redis是一款高性能的kkl系列的非关系型数据库**
+概念： redis 是一款高性能的 NoSQL 系列的非关系型数据库
 
-kkl(kkl = Not Only SQL)，意即“不仅仅是 SQL”，是一项全新的数据库理念，泛指非关系型的数据库。
+NoSQL (NoSQL= Not Only SQL)，意即“不仅仅是 SQL”，是一项全新的数据库理念，泛指非关系型的数据库。
 
-超大规模和高并发的 SNS 类型的 web2.0 纯动态网站力不从心，暴露了很多难以克服的问题，而非关系型的数据库则由于其本身的特点得到了非常迅速的发展。kkl 数据库的产生就是为了解决大规模数据集合多重数据种类带来的挑战，尤其是大数据应用难题。
+超大规模和高并发的 SNS 类型的 web2.0 纯动态网站力不从心，暴露了很多难以克服的问题，而非关系型的数据库则由于其本身的特点得到了非常迅速的发展。NoSQL数据库的产生就是为了解决大规模数据集合多重数据种类带来的挑战，尤其是大数据应用难题。
 
-## 1.2 kkl和关系型数据库比较
+## 1.2 NoSQL和关系型数据库比较
 
-### 1.2.1 kkl的优点
+### 1.2.1 NoSQL的优点
 
-- 成本：kkl 数据库简单易部署，基本都是开源软件，不需要像使用 oracle 那样花费大量成本购买使用，相比关系型数据库价格便宜。
-- 查询速度：kkl 数据库将数据存储于缓存之中，关系型数据库将数据存储在硬盘中，自然查询速度远不及 kkl 数据库。
-- 存储数据的格式：kkl 的存储格式是 key, value 形式、文档形式、图片形式等等，所以可以存储基础类型以及对象或者是集合等各种格式，而数据库则只支持基础类型。
+- 成本：NoSQL 数据库简单易部署，基本都是开源软件，不需要像使用 oracle 那样花费大量成本购买使用，相比关系型数据库价格便宜。
+- 查询速度：NoSQL 数据库将数据存储于缓存之中，关系型数据库将数据存储在硬盘中，自然查询速度远不及 NoSQL 数据库。
+- 存储数据的格式：NoSQL 的存储格式是 key, value 形式、文档形式、图片形式等等，所以可以存储基础类型以及对象或者是集合等各种格式，而数据库则只支持基础类型。
 - 扩展性：关系型数据库有类似 join 这样的多表查询机制的限制导致扩展很艰难。
 
-### 1.2.2 kkl的缺点
+### 1.2.2 NoSQL的缺点
 
 - 维护的工具和资料有限，因为kkl是属于新的技术，不能和关系型数据库十几年的技术同日而语。
 - 不提供对 sql 的支持，如果不支持 sql 这样的工业标准，将产生一定用户的学习和使用成本。
@@ -25,7 +25,7 @@ kkl(kkl = Not Only SQL)，意即“不仅仅是 SQL”，是一项全新的数�
 
 ### 1.2.3 非关系型数据库的优势
 
-- **性能 kkl 是基于键值对的，可以想象成表中的主键和值的对应关系，而且不需要经过 SQL 层的解析，所以性能非常高。**
+- 性能 NoSQL 是基于键值对的，可以想象成表中的主键和值的对应关系，而且不需要经过 SQL 层的解析，所以性能非常高。
 - 可扩展性同样也是因为基于键值对，数据之间没有耦合性，所以非常容易水平扩展。
 
 ### 1.2.4 关系型数据库的优势
@@ -33,7 +33,7 @@ kkl(kkl = Not Only SQL)，意即“不仅仅是 SQL”，是一项全新的数�
 - 事务支持使得对于安全性能很高的数据访问要求得以实现。对于这两类数据库，对方的优势就是自己的弱势，反之亦然。
 
 ### 1.2.5 总结
-<u>关系型数据库与 kkl 数据库并非对立而是互补的关系</u>，即通常情况下使用关系型数据库，在适合使用 kkl 的时候使用 kkl 数据库，让 kkl 数据库对关系型数据库的不足进行弥补。一般会将数据存储在关系型数据库中，在 kkl 数据库中备份存储关系型数据库的数据
+<u>关系型数据库与 NoSQL 数据库并非对立而是互补的关系</u>，即通常情况下使用关系型数据库，在适合使用 NoSQL 的时候使用 NoSQL 数据库，让 NoSQL 数据库对关系型数据库的不足进行弥补。一般会将数据存储在关系型数据库中，在 NoSQL 数据库中备份存储关系型数据库的数据
 
 ## 1.3 主流的kkl产品
 
@@ -69,7 +69,7 @@ kkl(kkl = Not Only SQL)，意即“不仅仅是 SQL”，是一项全新的数�
 
 ### 1.4.1 简介
 
-Redis是用C语言开发的一个开源的高性能键值对（key-value）数据库，官方提供测试数据，50 个并发执行 100000 个请求,读的速度是 110000次/s, 写的速度是 81000次/s ，且 Redis 通过提供多种键值数据类型来适应不同场景下的存储需求，目前为止 Redis 支持的键值数据类型如下：
+Redis 是用 C 语言开发的一个开源的高性能键值对（key-value）数据库，官方提供测试数据，50 个并发执行 100000 个请求,读的速度是 110000次/s, 写的速度是 81000次/s ，且 Redis 通过提供多种键值数据类型来适应不同场景下的存储需求，目前为止 Redis 支持的键值数据类型如下：
 
 - 1) 字符串类型 string：
 - 2) 哈希类型 hash：渐进式哈希
@@ -126,7 +126,7 @@ redis-cli
 
 >  redis 存储的是：key, value 格式的数据，其中 key 都是字符串，value 有 5 种不同的数据结构
 
-**value的数据结构：**
+<b>value 的数据结构：</b>
 
 - 字符串类型 string
 -  哈希类型 hash ： map格式
@@ -287,7 +287,7 @@ hdel key field
 (integer) 1
 ```
 
-> **列表类型 list**：可以添加一个元素到列表的头部（左边）或者尾部（右边）
+> 列表类型 list：可以添加一个元素到列表的头部（左边）或者尾部（右边）
 
 添加
 
@@ -319,7 +319,7 @@ lpop key： 删除列表最左边的元素，并将元素返回
 rpop key： 删除列表最右边的元素，并将元素返回
 ```
 
-> **集合类型 set** 
+> 集合类型 set
 
 存储：sadd key value
 
@@ -344,7 +344,7 @@ srem key value =\=\> 删除 set 集合中的某个元素
 (integer) 
 ```
 
-> **有序集合类型 sortedset：**
+> 有序集合类型 sortedset
 
 不允许重复元素，且元素有顺序.每个元素都会关联一个 double 类型的分数。redis 正是通过分数来为集合中的成员进行从小到大的排序。
 
@@ -401,37 +401,38 @@ redis 是一个内存数据库，当 redis 服务器重启，获取电脑重启�
 
 RDB：默认方式，不需要进行配置，默认就使用这种机制。在一定的间隔时间中，检测 key 的变化情况，然后持久化数据
 
-- 编辑 redis.windwos.conf 文件
+编辑 redis.windwos.conf 文件
 
-  ```shell
-  after 900 sec (15 min) if at least 1 key changed
-  
-  save 900 1
-  
-  after 300 sec (5 min) if at least 10 keys changed
-  
-  save 300 10
-  
-  after 60 sec if at least 10000 keys changed
-  
-  save 60 10000
-  ```
+```shell
+after 900 sec (15 min) if at least 1 key changed
 
-- 重新启动 redis 服务器，并指定配置文件名称
+save 900 1
 
-  ```shell
-  D:\JavaWeb2018\day23_redis\资料\redis\windows-64\redis-2.8.9>redis-server.exe redis.windows.conf	
-  ```
+after 300 sec (5 min) if at least 10 keys changed
+
+save 300 10
+
+after 60 sec if at least 10000 keys changed
+
+save 60 10000
+```
+
+重新启动 redis 服务器，并指定配置文件名称
+
+```shell
+D:\JavaWeb2018\day23_redis\资料\redis\windows-64\redis-2.8.9>redis-server.exe redis.windows.conf	
+```
 
 AOF：日志记录的方式，可以记录每一条命令的操作。可以每一次命令操作后，持久化数据
-- 编辑 redis.windwos.conf 文件
 
-  ```shell
-  appendonly no（关闭aof） --> appendonly yes （开启aof）
-  appendfsync always ： 每一次操作都进行持久化
-  appendfsync everysec ： 每隔一秒进行一次持久化
-  appendfsync no	 ： 不进行持久化
-  ```
+编辑 redis.windwos.conf 文件
+
+```shell
+appendonly no（关闭aof） --> appendonly yes （开启aof）
+appendfsync always ： 每一次操作都进行持久化
+appendfsync everysec ： 每隔一秒进行一次持久化
+appendfsync no	 ： 不进行持久化
+```
 
 # 五、Java与Jedis
 
