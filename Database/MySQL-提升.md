@@ -87,10 +87,10 @@
 
 > 版本
 
-MySQL官方提供了两种不同的版本: 
+MySQL 官方提供了两种不同的版本: 
 
-- 社区版（MySQL Community Server） 免费，MySQL不提供任何技术支持
-- 商业版（MySQL Enterprise Edition） 收费，可以试用30天，官方提供技术支持
+- 社区版（MySQL Community Server） 免费，MySQL 不提供任何技术支持
+- 商业版（MySQL Enterprise Edition） 收费，可以试用 30 天，官方提供技术支持
 
 > 安装
 
@@ -114,15 +114,15 @@ net stop mysql80
 
 ### SQL通用语法
 
-1. SQL语句可以单行或多行书写，以分号结尾。 
+1. SQL 语句可以单行或多行书写，以分号结尾。 
 
-2. SQL语句可以使用空格/缩进来增强语句的可读性。 
+2. SQL 语句可以使用空格/缩进来增强语句的可读性。 
 
-3. MySQL数据库的SQL语句不区分大小写，关键字建议使用大写。 
+3. MySQL 数据库的 SQL 语句不区分大小写，关键字建议使用大写。 
 
 4. 注释： •
 
-    单行注释：-- 注释内容 或 # 注释内容(MySQL特有) 
+    单行注释：-- 注释内容 或 # 注释内容(MySQL 特有) 
 
     多行注释： /* 注释内容 */
 
@@ -189,7 +189,7 @@ use demo;
 
 查询指定表的建表语句 `show create table 表名`
 
-<img src="img\image-20220131155715763.png">
+<img src="img/image-20220131155715763.png">
 
 #### 表操作-创建
 
@@ -209,7 +209,7 @@ create table tb_user(
 
 #### 数据类型
 
-MySQL中的数据类型有很多，主要分为三类：数值类型、字符串类型、日期时间类型。
+MySQL 中的数据类型有很多，主要分为三类：数值类型、字符串类型、日期时间类型。
 
 <div style="text-align:center;"><h3>数值类型</h3></div>
 
@@ -239,7 +239,7 @@ MySQL中的数据类型有很多，主要分为三类：数值类型、字符串
 | LONGBLOB   | 0-4 294 967 295 bytes | 二进制形式的极大文本数据     | 二进制形式的极大文本数据     |
 | LONGTEXT   | 0-4 294 967 295 bytes | 极大文本数据                 | 极大文本数据                 |
 
-char性能较好，varchar性能较差；varchar需要数一下字符串多长，但是相比char更节省空间，varchar是字符串是多大就用多大的空间，char是不管字符串多长，都用设定好的大小去存储一个字符串。 
+char 性能较好，varchar 性能较差；varchar 需要数一下字符串多长，但是相比 char 更节省空间，varchar 是字符串是多大就用多大的空间，char 是不管字符串多长，都用设定好的大小去存储一个字符串。 
 
 <div style="text-align:center;"><h3>时间类型</h3></div>
 
@@ -256,11 +256,11 @@ char性能较好，varchar性能较差；varchar需要数一下字符串多长�
 根据需求创建表(设计合理的数据类型、长度) 设计一张员工信息表，要求如下： 
 
 1. 编号（纯数字） 
-2. 员工工号 (字符串类型，长度不超过10位) 
-3. 员工姓名（字符串类型，长度不超过10位） 
+2. 员工工号 (字符串类型，长度不超过 10 位) 
+3. 员工姓名（字符串类型，长度不超过 10 位） 
 4. 性别（男/女，存储一个汉字） 
 5. 年龄（正常人年龄，不可能存储负数） 
-6. 身份证号（二代身份证号均为18位，身份证中有X这样的字符） 
+6. 身份证号（二代身份证号均为 18 位，身份证中有 X 这样的字符） 
 7. 入职时间（取值年月日即可）
 
 ```sql
@@ -280,17 +280,17 @@ create table tb_emp(
 添加字段：`alter table 表名 add 字段名 类型(长度) [comment 注释] [约束];`
 `alter table tb_emp add nickname varchar(20) comment '昵称';` 
 
-<img src="img\image-20220131162848796.png">
+<img src="img/image-20220131162848796.png">
 
 修改数据类型：`alter table 表名 modify 字段名 新数据类型(长度);`
 `alter table tb_emp modify nickname int;`
 
-<img src="img\image-20220131163101591.png">
+<img src="img/image-20220131163101591.png">
 
 修改字段名和字段类型：`alter table 表名 change 旧字段名 新字段名 类型(长度) [comment 注释] [约束]`
 `alter table tb_emp change nickname username varchar(30) comment '用户名' not null;`
 
-<img src="img\image-20220131163452393.png">
+<img src="img/image-20220131163452393.png">
 
 删除字段：`alter table 表名 drop 字段名`;
 `alter table tb_emp drop username;`
@@ -312,7 +312,7 @@ create table tb_emp(
 
 ### DML
 
-Data Manipulation Language(数据操作语言)，用来对数据库中表的数据记录进行增删改操作。
+Data Manipulation Language (数据操作语言)，用来对数据库中表的数据记录进行增删改操作。
 
 - 添加数据：`insert into 表名 (字段名1, 字段名2) values(值1, 值2), (值1, 值2), (值1,值2);`
 - 修改数据：`update 表名 set 字段名1=值1, 字段名2=值2,.... [where 条件];`
@@ -323,14 +323,14 @@ Data Manipulation Language(数据操作语言)，用来对数据库中表的数�
 > 添加数据
 
 给指定字段添加数据
-insert into table_name (字段1, 字段2, ...) values(值1, 值2);
+insert into table_name (字段 1, 字段 2, ...) values (值 1, 值 2);
 
 给全部字段添加数据
-insert to 表名 values(值1,值2,...)
+insert to 表名 values(值 1,值 2,...)
 
 批量添加
-insert into 表名 (字段名1, 字段名2) values(值1, 值2), (值1, 值2), (值1,值2);
-insert into 表名 (字段名1, 字段名2,...) values(值1, 值2,...), (值1, 值2,...), (值1,值2,...);
+insert into 表名 (字段名 1, 字段名 2) values(值 1, 值 2), (值 1, 值 2), (值 1,值 2);
+insert into 表名 (字段名 1, 字段名 2,...) values(值 1, 值 2,...), (值 1, 值 2,...), (值 1,值 2,...);
 
 <span style="color:red">**注意：**</span>插入数据时，指定的字段顺序需要与值的顺序是一一对应的。字符串和日期型数据应该包含在引号中。插入的数据大小，应该在字段的规定范围内
 
@@ -344,11 +344,11 @@ insert into 表名 (字段名1, 字段名2,...) values(值1, 值2,...), (值1, �
 
 `delete from 表名 [where 条件]`
 
-<span style="color:red">**注意：**</span>DELETE 语句的条件可以有，也可以没有，如果没有条件，则会删除整张表的所有数据。 DELETE 语句不能删除某一个字段的值(可以使用UPDATE)。
+<span style="color:red">**注意：**</span>DELETE 语句的条件可以有，也可以没有，如果没有条件，则会删除整张表的所有数据。 DELETE 语句不能删除某一个字段的值(可以使用 UPDATE)。
 
 ### DQL
 
-Data Query Language(数据查询语言)，数据查询语言，用来查询数据库中表的记录。
+Data Query Language (数据查询语言)，数据查询语言，用来查询数据库中表的记录。
 
 查询的基本语法如下：
 
@@ -391,9 +391,9 @@ select 字段列表 from 表名 where 条件列表;
 
 <div style="text-align:center;"><h3>条件</h3></div>
 
-<img src="img\image-20220131170613284.png">
+<img src="img/image-20220131170613284.png">
 
-![image-20220131170637473](img\image-20220131170637473.png)
+![image-20220131170637473](img/image-20220131170637473.png)
 
 > 示例
 
@@ -551,7 +551,7 @@ select * from emp where sex='男' and age between 20 and 40 order by age asc,ent
 
 #### 执行顺序
 
-<img src="img\image-20220201004522563.png">
+<img src="img/image-20220201004522563.png">
 
 ### DCL
 
@@ -978,7 +978,7 @@ gender char(1) COMMENT ''
 
 外键用来让两张表的数据之间建立连接，从而保证数据的一致性和完整性。
 
-<img src="img\image-20220201153732702.png">
+<img src="img/image-20220201153732702.png">
 
 注意：目前上述的两张表，在数据库层面，并未建立外键关联，所以是无法保证数据的一致性和完整性的。
 
@@ -996,7 +996,7 @@ alter table 表名 add constraint 外键名称 foreign key(外键字段名) refe
 alter table 表名 drop foreign key 外键名称;
 ```
 
-<img src="img\image-20220201154122979.png">
+<img src="img/image-20220201154122979.png">
 
 ```sql
 alter table 表名 add constraint 外键名称 foreign key(外键字段名) references 主表(主表字段名)
@@ -1155,7 +1155,7 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 ➢ 案例: 部门与员工的关系 
 ➢ 关系: 一个部门对应多个员工，一个员工对应一个部门 
 ➢ 实现: 在多的一方建立外键，指向一的一方的主键
-<img src="img\image-20220201162055837.png">
+<img src="img/image-20220201162055837.png">
 
 > 多对多
 
@@ -1163,14 +1163,14 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 ➢ 关系: 一个学生可以选修多门课程，一门课程也可以供多个学生选择 
 ➢ 实现: 建立第三张中间表，中间表至少包含两个外键，分别关联两方主键
 
-<img src="img\image-20220201162206455.png">
+<img src="img/image-20220201162206455.png">
 
 > 一对一
 
 ➢ 案例: 用户与用户详情的关系 
 ➢ 关系: 一对一关系，多用于单表拆分，将一张表的基础字段放在一张表中，其他详情字段放在另一张表中，以提升操作效率 
 ➢ 实现: 在任意一方加入外键，关联另外一方的主键，并且设置外键为唯一的(UNIQUE)
-<img src="img\image-20220201162313709.png">
+<img src="img/image-20220201162313709.png">
 
 ### 多表查询概述
 
@@ -1178,7 +1178,7 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 
 笛卡尔积: 笛卡尔乘积是指在数学中，两个集合A集合和B集合的所有组合情况。(在多表查询时，需要消除无效的笛卡尔积)
 
-<img src="img\image-20220201162441949.png">
+<img src="img/image-20220201162441949.png">
 
 ### 内连接 
 
@@ -1478,7 +1478,7 @@ select count(*) from emp where dept_id = 1;
 
 <span style="color:red">**事务**</span> 是一组操作的集合，它是一个不可分割的工作单位，事务会把所有的操作作为一个整体一起向系统提交或撤销操作 请求，即这些操作<span style="color:red">**要么同时成功，要么同时失败。**</span>
 
-<img src="img\image-20220201163223983.png">
+<img src="img/image-20220201163223983.png">
 
 <span style="color:red">**默认MySQL的事务是自动提交的，也就是说，当执行一条DML语句，MySQL会立即隐式的提交事务。**</span>
 
@@ -1551,11 +1551,11 @@ insert into account(id,name,momeny) value(null,'张三',2000),(null,'李四',200
 | 不可重复读 | 一个事务先后读取同一条记录，但两次读取的数据不同，称之为不可重复读。<br>事务 A 多次读取同一数据，事务B在事务A多次读取的过程中，对数据作了**更新并提交事务**，**导致事务A多次读取同一数据时，结果不一致。**MySQL默认采用的是可重复读，通过快照实现的可重复读。 |
 | 幻读       | 一个事务按照条件查询数据时，没有对应的数据行，但是在插入数据时，又发现这行数据已经存在，好像出现了幻影 。 |
 
-<img src="img\image-20220201164120794.png">
+<img src="img/image-20220201164120794.png">
 
-<img src="img\image-20220201164153913.png">
+<img src="img/image-20220201164153913.png">
 
-<img src="img\image-20220201164216281.png">
+<img src="img/image-20220201164216281.png">
 
 **总结**：不可重复读的和幻读很容易混淆，**不可重复读侧重于修改，幻读侧重于新增或删除**
 
@@ -1796,7 +1796,7 @@ mysql -u root -p
 
 ### MySQL体系结构
 
-<img src="img\image-20220122173547178.png">
+<img src="img/image-20220122173547178.png">
 
 **连接层**：最上层是一些客户端和链接服务，主要完成一些类似于连接处理、授权认证、及相关的安全方案。服务器也会为安全接入的每个客户 端验证它所具有的操作权限。
 
@@ -1854,7 +1854,7 @@ show ENGINES;
     - 支持 FOREIGN KEY约束，保证数据的完整性和正确性；
 - 文件：xxx.ibd：xxx代表的是表名，innoDB引擎的每张表都会对应这样一个表空间文件，存储该表的表结构（frm、sdi）、数据和索引。 参数：innodb_file_per_table
 
-<img src="img\image-20220122175230096.png">
+<img src="img/image-20220122175230096.png">
 
 > MyISAM
 
@@ -1872,7 +1872,7 @@ show ENGINES;
 
 文件 xxx.sdi中存储表结构信息
 
-<img src="img\image-20220122175842514.png">
+<img src="img/image-20220122175842514.png">
 
 InnoDB 与 MyISAM 直接的区别：InnoDB支持事务、锁机制为行级锁、支持外键。
 
@@ -1955,7 +1955,7 @@ InnoDB 与 MyISAM 直接的区别：InnoDB支持事务、锁机制为行级锁�
 
 > 剖析各种平衡树结构做索引的优缺点：
 
-<img src="img\image-20220202102720134.png">
+<img src="img/image-20220202102720134.png">
 
 二叉树缺点：顺序插入时，会形成一个链表，查询性能大大降低。 大数据量情况下，层级较深，检索速度慢。 
 
@@ -1963,13 +1963,13 @@ InnoDB 与 MyISAM 直接的区别：InnoDB支持事务、锁机制为行级锁�
 
 - B-Tree/B杠树（多路平衡查找树）：以一颗最大度数（max-degree）为5(5阶)的b-tree为例(每个节点最多存储4个key，5个指针)：
 
-<img src="img\image-20220202102904364.png">
+<img src="img/image-20220202102904364.png">
 
 B-Tree，相对于二叉树（二叉排序树，平衡二叉树，红黑树等），通过增加内部的节点数据个数来减少磁盘的 IO 操作。具体动态变化的过程可以参考网站: https://www.cs.usfca.edu/~galles/visualization/BTree.html
 
 - B+Tree：以一颗最大度数（max-degree）为4（4阶）的b+tree为例：
 
-<img src="img\image-20220202103024493.png">
+<img src="img/image-20220202103024493.png">
 
 B-Tree 和 B+Tree 的区别：
 
@@ -1981,13 +1981,13 @@ B+Tree 索引如果不是按照索引最左列开始查找，则无法使用索�
 
 MySQL索引数据结构对经典的B+Tree进行了优化。在原 B+Tree 的基础上，增加一个指向相邻叶子节点的链表指针，就形成了带有顺序指针的 B+Tree，提高区间访问的性能。
 
-<img src="img\image-20220202103738086.png">
+<img src="img/image-20220202103738086.png">
 
 - 哈希索引
 
 哈希索引，哈希索引就是采用一定的 hash 算法，将键值换算成新的 hash 值，映射到对应的槽位上，然后存储在 hash 表中。 如果两个(或多个)键值，映射到一个相同的槽位上，他们就产生了 hash 冲突（也称为 hash 碰撞），可以通过链表来解决。
 
-<img src="img\image-20220202103833246.png">
+<img src="img/image-20220202103833246.png">
 
 哈希索引只有精确匹配索引所有列的查询才有效。对于每一行数据，存储引擎都会对所有的索引列计算一个哈希码，哈希码是一个较小的值，且不同键值的行计算出的哈希码也不一样。哈希索引将所有的哈希码存储再索引中，同时在哈希表中保存指向每个数据行的指针。MySQL 中只有 Memory 引擎支持哈希索引。
 
@@ -2022,7 +2022,7 @@ MySQL 先计算 Peter 的哈希值，并使用该值查找对应的记录指针�
 
 假设我们要查找 [15,36] 直接的数据，那么需要访问 7 个磁盘块
 
-<img src="img\image-20220225172939761.png">
+<img src="img/image-20220225172939761.png">
 
 ### 索引分类
 
@@ -2050,7 +2050,7 @@ MySQL 先计算 Peter 的哈希值，并使用该值查找对应的记录指针�
 
 ➢ 如果表没有主键，或没有合适的唯一索引，则InnoDB会自动生成一个rowid作为隐藏的聚集索引。
 
-<img src="img\image-20220202104706091.png">
+<img src="img/image-20220202104706091.png">
 
 二级索引可能会存在一个回表查询。二级索引中存储的是二级索引和主键（此处是name和id），如果需要查询的数据不止name和id，则会触发一次回表查询，根据主键id，再查询一次数据，拿到需要的字段值。
 
@@ -2315,7 +2315,7 @@ SQL提示，是优化数据库的一个重要手段，简单来说，就是在SQ
 
 > 前缀索引查询流程
 
-<img src="img\image-20220227214410971.png">
+<img src="img/image-20220227214410971.png">
 
 #### 单列索引与联合索引
 
@@ -2329,7 +2329,7 @@ SQL提示，是优化数据库的一个重要手段，简单来说，就是在SQ
 
 多条件联合查询时， 优化器会评估哪个字段的索引效率更高，会选择该索引完成本次查询
 
-<img src="img\image-20220227214626402.png">
+<img src="img/image-20220227214626402.png">
 
 ### 索引设计原则
 
@@ -2448,7 +2448,7 @@ create index idx_user_age_phone_ad on tb_user(age asc,phone desc);
 explain select id,age,phone from tb_user order by age asc,phone desc;
 ```
 
-<img src="img\image-20220228000551597.png">
+<img src="img/image-20220228000551597.png">
 
 - ①根据排序字段建立合适的索引，多字段排序时，也遵循最左前缀法则。
 - ②尽量使用覆盖索引。
@@ -2546,13 +2546,13 @@ MySQL中的锁，按照锁的粒度分，分为以下三类：
 
 全局锁就是对整个数据库实例加锁，加锁后整个实例就处于只读状态，后续的 DML 的写语句，DDL 语句，已经更新操作的事务提交语句都将被阻塞。 其典型的使用场景是做全库的逻辑备份，对所有的表进行锁定，从而获取一致性视图，保证数据的完整性。
 
-<img src="img\image-20220228172657764.png">
+<img src="img/image-20220228172657764.png">
 
 从备份开始到结束，其他了互动只能读数据。
 
 > 演示
 
-<img src="img\image-20220228172847492.png">
+<img src="img/image-20220228172847492.png">
 
 > 特点
 
@@ -2585,7 +2585,7 @@ mysqldump --single-transaction -uroot -p123456 demo>demo.sql
 
 释放锁：unlock tables / 客户端断开连接。后面不用跟表名。
 
-<img src="img\image-20220228173534513.png">
+<img src="img/image-20220228173534513.png">
 
 <span style="color:red">读锁不会阻塞其他客户端的读，但是会阻塞写。写锁既会阻塞其他客户端的读，又会阻塞其他客户端的写。</span>
 
@@ -2595,7 +2595,7 @@ MDL 加锁过程是系统自动控制，无需显式使用，在访问一张表�
 
 在 MySQL5.5 中引入了 MDL，当对一张表进行增删改查的时候，加 MDL 读锁(共享)；当对表结构进行变更操作的时候，加 MDL 写锁(排他)。
 
-<img src="img\image-20220228175118144.png">
+<img src="img/image-20220228175118144.png">
 
 #### 意向锁
 
@@ -2622,7 +2622,7 @@ InnoDB的数据是基于索引组织的，行锁是通过对索引上的索引�
 - 间隙锁（Gap Lock）：锁定索引记录间隙（不含该记录），确保索引记录间隙不变，防止其他事务在这个间隙进行 insert，产生幻读。在 RR 隔离级别下都支持。 
 - 临键锁（Next-Key Lock）：行锁和间隙锁组合，同时锁住数据，并锁住数据前面的间隙 Gap。在RR隔离级别下支持。可简单理解为**行锁+间隙锁**
 
-<img src="img\image-20220228182334581.png">
+<img src="img/image-20220228182334581.png">
 
 #### 行锁
 
@@ -2631,9 +2631,9 @@ InnoDB实现了以下两种类型的行锁：
 - 共享锁（S）：允许一个事务去读一行，阻止其他事务获得相同数据集的排它锁。 
 - 排他锁（X）：允许获取排他锁的事务更新数据，阻止其他事务获得相同数据集的共享锁和排他锁。
 
-<img src="img\image-20220228183042891.png">
+<img src="img/image-20220228183042891.png">
 
-<img src="img\image-20220228183126387.png">
+<img src="img/image-20220228183126387.png">
 
 #### 行锁-演示
 
@@ -2656,7 +2656,7 @@ select object_schema,object_name,index_name,lock_type,lock_mode,lock_data from p
 - 索引上的等值查询(普通索引)，向右遍历时最后一个值不满足查询需求时，next-key lock 退化为间隙锁。 
 - 索引上的范围查询(唯一索引)--会访问到不满足条件的第一个值为止。
 
-<img src="img\image-20220228183635482.png">
+<img src="img/image-20220228183635482.png">
 
 <span style="color:red">注意：间隙锁唯一目的是防止其他事务插入间隙。间隙锁可以共存，一个事务采用的间隙锁不会阻止另一个事务在同一间隙上采用间隙锁。</span>
 
@@ -2669,36 +2669,36 @@ select object_schema,object_name,index_name,lock_type,lock_mode,lock_data from p
 
 ### 逻辑存储结构
 
-<img src="img\image-20220228203318131.png">
+<img src="img/image-20220228203318131.png">
 
-<img src="img\image-20220228203414995.png">
+<img src="img/image-20220228203414995.png">
 
 ### 架构
 
 MySQL5.5 版本开始，默认使用InnoDB存储引擎，它擅长事务处理，具有崩溃恢复特性，在日常开发中使用非常广泛。下面是InnoDB架构图，左侧为内存结构，右侧为磁盘结构。
 
-<img src="img\image-20220228203602095.png">
+<img src="img/image-20220228203602095.png">
 
 #### 内存结构
 
-<img src="img\image-20220228203640696.png">
+<img src="img/image-20220228203640696.png">
 
-<img src="img\image-20220228205314756.png">
+<img src="img/image-20220228205314756.png">
 
 对于主键索引和唯一索引，是不会操作 change buffer 的。感觉 change buffer 和 buffer pool 差不多，只是 change buffer 里会对数据按索引进行排序，然后再把排序后的数据刷新到 buffer pool 里，等待数据刷回磁盘。
 
-<img src="img\image-20220228205423818.png">
-<img src="img\image-20220228205520373.png">
+<img src="img/image-20220228205423818.png">
+<img src="img/image-20220228205520373.png">
 
-<img src="img\image-20220228205837606.png">
+<img src="img/image-20220228205837606.png">
 
 #### 磁盘结构
 
-<img src="img\image-20220228205934183.png">
-<img src="img\image-20220228210036160.png">
-<img src="img\image-20220228210117804.png">
+<img src="img/image-20220228205934183.png">
+<img src="img/image-20220228210036160.png">
+<img src="img/image-20220228210117804.png">
 
-<img src="img\image-20220228210552934.png">
+<img src="img/image-20220228210552934.png">
 
 #### 后台线程
 
@@ -2717,7 +2717,7 @@ Purge Thread 主要用于回收事务已经提交了的undo log，在事务提�
 
 Page Cleaner Thread，协助 Master Thread 刷新脏页到磁盘的线程，它可以减轻 Master Thread 的工作压力，减少阻塞。
 
-<img src="img\image-20220228210738727.png">
+<img src="img/image-20220228210738727.png">
 
 ### 事务原理
 
@@ -2734,7 +2734,7 @@ Page Cleaner Thread，协助 Master Thread 刷新脏页到磁盘的线程，它�
 
 原子性，一致性和持久性通过 redo log 和 undo log 实现的。隔离性通过 锁和 MVCC 实现的。
 
-<img src="img\image-20220228211213496.png">
+<img src="img/image-20220228211213496.png">
 
 #### redo log 实现持久性
 
@@ -2742,7 +2742,7 @@ Page Cleaner Thread，协助 Master Thread 刷新脏页到磁盘的线程，它�
 
 该日志文件由两部分组成：重做日志缓冲（redo log buffer）以及重做日志文件（redo log file）,前者是在内存中，后者在磁盘中。当事务提交之后会把所有修改信息都存到该日志文件中, 用于在刷新脏页到磁盘,发生错误时, 进行数据恢复使用。
 
-<img src="img\image-20220228211850982.png">
+<img src="img/image-20220228211850982.png">
 
 #### undo log 实现原子性
 
@@ -2765,7 +2765,7 @@ Undo log销毁：undo log在事务执行时产生，事务提交时，并不会�
 
 > 记录中的隐藏字段
 
-<img src="img\image-20220228212433507.png">
+<img src="img/image-20220228212433507.png">
 
 | 隐藏字段    | 含义                                                         |
 | ----------- | ------------------------------------------------------------ |
@@ -2779,9 +2779,9 @@ Undo log销毁：undo log在事务执行时产生，事务提交时，并不会�
 
 > undo log 版本链
 
-<img src="img\image-20220228212827231.png">
-<img src="img\image-20220228212910928.png">
-<img src="img\image-20220228213010220.png">
+<img src="img/image-20220228212827231.png">
+<img src="img/image-20220228212910928.png">
+<img src="img/image-20220228213010220.png">
 
 不同事务或相同事务对同一条记录进行修改，会导致该记录的undolog生成一条记录版本链表，链表的头部是最新的旧记录，链表尾部是最 早的旧记录。
 
@@ -2796,7 +2796,7 @@ ReadView（读视图）是 快照读 SQL执行时MVCC提取数据的依据，记
 | max_trx_id     | 预分配事务ID，当前最大事务ID+1（因为事务ID是自增的） |
 | creator_trx_id | ReadView创建者的事务ID                               |
 
-<img src="img\image-20220228213240595.png">
+<img src="img/image-20220228213240595.png">
 
 <span style="color:red">不同的隔离级别，生成ReadView的时机不同：</span>
 
@@ -2805,15 +2805,15 @@ ReadView（读视图）是 快照读 SQL执行时MVCC提取数据的依据，记
 
 RC隔离级别下，在事务中每一次执行快照读时生成ReadView。
 
-<img src="img\image-20220228213421031.png">
+<img src="img/image-20220228213421031.png">
 
-<img src="img\image-20220228213526500.png">
+<img src="img/image-20220228213526500.png">
 
-<img src="img\image-20220228213636400.png">
+<img src="img/image-20220228213636400.png">
 
 > 汇总图
 
-<img src="img\image-20220228213708058.png">
+<img src="img/image-20220228213708058.png">
 
 MySQL事务的隔离级别默认是可重复读。
 
