@@ -1178,8 +1178,6 @@ class Solution {
 
 ### 序列化二叉树
 
-
-
 > 题解
 
 用层序遍历保存节点进行序列化，然后遍历保存的节点，重建树，进行反序列化。重建树的时候需要仔细想下如何重建。
@@ -1243,8 +1241,6 @@ public class Codec {
     }
 }
 ```
-
-
 
 ## 栈的应用
 
@@ -1313,7 +1309,331 @@ class Solution {
 }
 ```
 
+## 二分查找
 
+### 二分查找模板
+
+如果数组符合二分的性质，符合某种规律（如递增，递减）那么可以采用二分查找进行优化。
+
+```java
+public class BinarySearch {
+    public int binarySearch(int target, int... nums) {
+        int left = 0, right = nums.length - 1;
+        while (left <= right) {
+            // 注意，别爆 int
+							 int mid = left+(right-left)/2;
+            if (nums[mid] == target) return mid;
+            if (nums[mid] > target) {
+                right = mid - 1;
+            } else {
+                left = mid + 1;
+            }
+        }
+        return -1;
+    }
+
+    public static void main(String[] args) {
+        BinarySearch binarySearch = new BinarySearch();
+        int i = binarySearch.binarySearch(9, 1, 2, 3, 4, 5, 6);
+        System.out.println(i);
+    }
+}
+
+```
+
+### 查找插入位置
+
+给定一个排序的整数数组 nums 和一个整数目标值 target ，请在数组中找到 target ，并返回其下标。如果目标值不存在于数组中，返回它将会被按顺序插入的位置。
+
+请必须使用时间复杂度为 O(log n) 的算法。
+
+示例 1:
+输入: nums = [1,3,5,6], target = 5
+输出: 2
+
+示例 2:
+输入: nums = [1,3,5,6], target = 2
+输出: 1
+
+> 题解
+
+典型的二分查找题，如果找到了数据就返回 index，如果不存在呢？如果不存在，最后一定是 left>right，left 的位置就是被插入元素的位置。
+
+```java
+public int searchInsert(int[] nums, int target) {
+    int left = 0, right = nums.length - 1;
+    while (left <= right) {
+					int mid = left+(right-left)/2;
+        if(nums[mid]==target) return mid;
+        if(nums[mid]>target){
+            right = mid-1;
+        }else{
+            left = mid+1;
+        }
+    }
+    return left;
+}
+```
+
+### 山峰数组的顶部
+
+前面的数据是递增的，后面的数据是递减的。
+
+示例 1：
+输入：arr = [0,1,0]
+输出：1
+
+示例 2：
+输入：arr = [1,3,5,4,2]
+输出：2
+
+示例 3：
+输入：arr = [0,10,5,2]
+输出：1
+
+> 题解
+
+二分查找变种题。mid 位置的数据一定是这两种情况之一。
+
+- mid 比它左右两边的数都大
+- mid 左右两边有且只有一个数大于 mid \=\=> 继续二分。
+
+继续二分的条件是，如果 mid 的数字的左边和右边有比它大的，就继续二分。
+
+- left = 1，right = nums.length - 2，可以避免越界问题
+- mid = (left + right) / 2
+- mid-1 < mid < mid + 1 ，mid 就是我们要找的数字
+- arr[mid] > arr[mid - 1，left = mid + 1. 
+- arr[mid] < arr[mid - 1，right = mid - 1
+
+```java
+public int peakIndexInMountainArray(int[] arr) {
+    int left = 1, right = arr.length - 2;
+    while (left <= right) {
+					int mid = left+(right-left)/2;
+        if ((arr[mid] > arr[mid - 1] && arr[mid] > arr[mid + 1]))
+            return mid;
+        if (arr[mid] > arr[mid - 1]) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
+        }
+    }
+    return -1;
+}
+```
+
+### 数组中只出现一次的数字
+
+给定一个只包含整数的有序数组 nums ，每个元素都会出现两次，唯有一个数只会出现一次，请找出这个唯一的数字。
+
+示例 1:
+输入: nums = [1,1,2,3,3,4,4,8,8]
+输出: 2
+
+示例 2:
+输入: nums =  [3,3,7,7,10,11,11]
+输出: 10
+
+> 题解
+
+两个数字分为一组，因为每个数字都出现了两次，只有一个数字是只出现了一次，所以在那个只出现一次的数字出现前，每组的数字都是相同的，即只出现一次的数字会破坏分组的规律。如：
+
+(1,1) (2,3) (3,4) (4,8) (8)  3 的出现破坏了分组的规律【组内的元素相同】。可以用二分查找来查找第一个组内元素不同的分组，该组元素的第一个元素就是我们要查找的数字。
+
+- 将数据分为 nums.length / 2 组。
+- left = 0，right = nums.length / 2
+- mid  = （left + right) / 2
+- 如果 mid 该组的元素值不同，
+    - 如果 mid = 0，即为第一组，那么这组的第一个元素就是我们要查找的元素。返回数据。
+    - 如果 mid !=0，但是 mid 前一组的数据相同，则 mid 这组的第一个元素就是我们要查找的数据。返回数据。
+    - right = mid -1
+- 如果 mid 该组的元素值相同，则不是我们要查找的范围
+    - left = mid + 1
+- 如果二分没找到，则数组的最后一个元素就是我们要查找的。
+
+```java
+class Solution {
+    // 二分查找
+    public int singleNonDuplicate(int... nums) {
+        int left = 0, right = nums.length / 2;
+        while (left <= right) {
+            int mid = (left + right) / 2;
+            int i = mid * 2;
+            if (i < nums.length - 1 && nums[i] != nums[i + 1]) {
+                right = mid - 1;
+                if (mid == 0 || nums[i - 1] == nums[i - 2]) return nums[i];
+            } else {
+                left = mid + 1;
+            }
+            // 找到二分的条件
+        }
+        return nums[nums.length - 1];
+    }
+}
+```
+
+### 按权重生成随机数
+
+这个题目看着费劲，先鸽了
+
+### 求平方根
+
+给定一个非负整数 x ，计算并返回 x 的平方根，即实现 int sqrt(int x) 函数。
+
+正数的平方根有两个，只输出其中的正数平方根。
+
+如果平方根不是整数，输出只保留整数的部分，小数部分将被舍去。
+
+示例 1:
+输入: x = 4
+输出: 2
+
+示例 2:
+输入: x = 8
+输出: 2
+解释: 8 的平方根是 2.82842...，由于小数部分将被舍去，所以返回 2
+
+> 题解
+
+典型的二分查找，从 1~ x 进行二分查找，查找合适的数据。
+
+```java
+public int mySqrt(int x) {
+    int left = 1;
+    int right = x ;
+    while (left <= right) {
+					int mid = left+(right-left)/2;
+        if (mid <= x/mid && (mid + 1) > x/(mid+1)) return mid;
+        if (mid > x/mid) right = mid - 1;
+        else left = mid + 1;
+    }
+    return 0;
+}
+```
+
+```java
+// 剑指 offer 里的代码
+public int mySqrt(int n){
+    int left = 1;
+    int right = n;
+    while(left<=right){
+        int mid = left+(right-left)/2; // 写法更佳
+        if(mid<=n / mid){
+            if((mid+1)>n / (mid+1)){
+                return mid;
+            }
+            left = mid + 1;
+        }else{
+            right = mid - 1;
+        }
+    }
+}
+```
+
+### 狒狒吃香蕉
+
+狒狒喜欢吃香蕉。这里有 N 堆香蕉，第 i 堆中有 piles[i] 根香蕉。警卫已经离开了，将在 H 小时后回来。
+
+狒狒可以决定她吃香蕉的速度 K （单位：根/小时）。每个小时，她将会选择一堆香蕉，从中吃掉 K 根。如果这堆香蕉少于 K 根，她将吃掉这堆的所有香蕉，然后这一小时内不会再吃更多的香蕉，下一个小时才会开始吃另一堆的香蕉。  
+
+狒狒喜欢慢慢吃，但仍然想在警卫回来前吃掉所有的香蕉。
+
+返回她可以在 H 小时内吃掉所有香蕉的最小速度 K（K 为整数）。
+
+示例 1：
+输入: piles = [3,6,7,11], H = 8
+输出: 4
+
+示例 2：
+输入: piles = [30,11,23,4,20], H = 5
+输出: 30
+
+示例 3：
+输入: piles = [30,11,23,4,20], H = 6
+输出: 23
+
+> 题解
+
+求吃香蕉的最小速度 K。虽然我们不知道狒狒一小时要吃几根香蕉才行，但是我们知道它吃香蕉的速度的范。数组的 1~max。我们在这个范围内进行二分，每找到一个 mid 就判断下，用这个速度吃完要花几个小时。
+
+- 如果时间 > H (规定时间)，则继续在 mid+1 ~ max 直接查找
+- 如果时间 < H，则判断下这个是不是最慢速度。
+    - 如果 mid-1 的速度不能吃完，则 mid 就是最慢速度。
+    - 如果可以吃完，就继续在 1~mid-1 进行二分。
+
+```java
+public int minEatingSpeed(int[] piles, int h) {
+    int left = 1;
+    int right = -1;
+    for (int pile : piles) {
+        right = Math.max(right, pile);
+    }
+    while (left <= right) {
+        int mid = left + ((right - left) >> 1);
+        if (getHours(piles, mid) <=h) {
+            // 看下是不是符合要求
+            if (mid==1 || getHours(piles, mid - 1) > h) return mid;
+            right = mid - 1;
+        } else {
+            left = mid + 1;
+        }
+    }
+    return -1;
+}
+
+// 计算吃的速度
+private int getHours(int[] piles, int speed) {
+    int hours = 0;
+    for (int pile : piles) {
+        hours += pile / speed;
+        hours += pile % speed > 0 ? 1 : 0;
+    }
+    return hours;
+}
+```
+
+```java
+// 优秀题解
+class Solution {
+
+    private int[] piles;
+    public int minEatingSpeed(int[] piles, int h) {
+        this.piles = piles;
+        // 获取最大速度, 由于一次最多只能吃一堆香蕉, 所以最大速度为最大一堆香蕉的数量
+        int maxSpeed = Integer.MIN_VALUE;
+        for(int pile : piles){
+            maxSpeed = Math.max(maxSpeed, pile);
+        }
+        // 左指针是最小速度, 右指针是最大速度
+        int left = 1, right = maxSpeed;
+        while (left < right){
+            int mid = left + (right - left) / 2;
+            if(getEattingHour(mid) > h){
+                // 当以 mid 速度吃完香蕉的时间 > h , 则提速要提升, left 指针右移
+                left = mid + 1;
+            }else{
+                // 当以 mid 速度吃完香蕉的时间 <= h , 则最低吃香蕉速度可能为 mid, 或者 比 mid 小 ,
+                // 所以, right = mid , 而不是 mid - 1
+                right = mid;
+            }
+        }
+        // 最终 left == right, 指向就是最小速度
+        return left;
+    }
+
+    // 计算以 speed 的速度吃完香蕉的时间
+    private int getEattingHour(int speed){
+        int hour = 0;
+        // 由于,每次最多吃一堆, 所以吃完香蕉的总时间需要 计算每堆香蕉吃完的时间
+        for(int pile : piles){
+            // 每堆香蕉吃完的时间 = 这一堆香蕉数/吃的速度, 结果向上取整
+            hour += (pile + speed - 1) / speed;
+        }
+        return hour;
+    }
+}
+```
 
 # 老版剑指offer
 
