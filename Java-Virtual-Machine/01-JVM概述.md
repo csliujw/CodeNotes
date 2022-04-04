@@ -16,13 +16,13 @@ JVM：[JEP 122: Remove the Permanent Generation (java.net)](http://openjdk.java.
 
 > 定义
 
-Java Virtual Machine，JAVA程序的**运行环境**（JAVA二进制字节码的运行环境）
+Java Virtual Machine，JAVA 程序的运行环境（JAVA 二进制字节码的运行环境）
 
 > 好处
 
 - 一次编写，到处运行
 - 自动内存管理，垃圾回收机制
-- 数组下标越界检查，C语言是没有数组下表越界检查的（越界的话可能会覆盖程序的其他部分，这种错误可能会导致非常严重的后果）。
+- 数组下标越界检查，C 语言是没有数组下表越界检查的（越界的话可能会覆盖程序的其他部分，这种错误可能会导致非常严重的后果）。
 - 多态。使用虚方法调用的机制实现了多态。
 
 > 用处
@@ -34,7 +34,7 @@ Java Virtual Machine，JAVA程序的**运行环境**（JAVA二进制字节码的
 
 <img src="jvm_image/JVM_Version.png">
 
-> **比较：JVM JRE JDK的区别**
+> 比较：JVM JRE JDK 的区别
 
 <img src="jvm_image/JVM_JRE_JDK.png" style="width:70%">
 
