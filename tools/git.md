@@ -453,7 +453,7 @@ git clone <仓库地址> [本地目录]
 git init
 
 # 关联git仓库
-git remote add origin 项目的免密地址
+git remote add origin '项目的免密地址'
 # 例如
 git remote add origin git@github.com:csliujw/JavaEE.git
 
@@ -461,7 +461,7 @@ git remote add origin git@github.com:csliujw/JavaEE.git
 git add .
 
 # 提交
-git commit .  或者 git commit -m"提交的内容说明"
+git commit .  # 或者 git commit -m"提交的内容说明"
 
 # 存入仓库
 git push origin master
@@ -498,6 +498,26 @@ git pull
 # 从远程仓库中把代码拉过来！
 git pull origin master
 ```
+
+## IDEA中使用Git
+
+### 配置Git
+
+安装好 IntelliJ IDEA 后，如果 Git 安装在默认路径下，那么 IDEA 会自动找到 Git 的位置，如果更改了 Git 的安装位置则需要手动配置下 Git 的路径。选择 File→Settings 打开设置窗口，找到 Version Control 下的 Git 选项
+
+<img src="img/image-20220407200027402.png">
+
+### 使用Git
+
+IDEA 中使用 Git 比较简单，主要记录下自己目前不太常用的几个功能。
+
+#### 创建分支
+
+<img src="img\image-20220407200910491.png">
+
+<img src="img/image-20220407200940428.png">
+
+<img src="img\image-20220407202215521.png">
 
 # 常用Git命令汇总
 
