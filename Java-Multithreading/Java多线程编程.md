@@ -2360,9 +2360,9 @@ public static void m3(){
 
 CAS 底层对应的也是以 lock 打头的指令，也会影响一定的性能。
 
-<img src="..\pics\JavaStrengthen\juc\light_lock.png">
+<img src="juc\light_lock.png">
 
-<img src="..\pics\JavaStrengthen\juc\weight_lock.png">
+<img src="juc/weight_lock.png">
 
 #### 偏向状态
 
@@ -5124,7 +5124,7 @@ ThreadLocal可以保证数据安全的操作，但是不同线程的ThreadLocal�
 
 技术解释：`AQS`是用来构建锁或者其它同步器组件的重量级基础框架及整个<span style="color:red">`JUC`体系的基石</span>，通过内置的FIFO队列来完成资源获取线程的排队工作，<span style="color:red">并通过一个int型变量表示持有锁的状态。</span>
 
-<img src="../pics/JavaStrengthen/juc/AQS01.png" styyle="float:left">
+<img src="juc/AQS01.png">
 
 <span style="color:green">`AQS`是`JUC`内容中最重要的基石</span>
 
@@ -5166,11 +5166,11 @@ ThreadLocal可以保证数据安全的操作，但是不同线程的ThreadLocal�
 
 如果共享资源被占用，<span style="color:red">就需要一定的阻塞等待唤醒机制来保证锁分配</span>。这个机制主要用的是CLH队列的变体实现的，将暂时获取不到锁的线程加入到队列中，这个队列就是**AQS**的抽象表现。它将请求共享资源的线程封装成队列的结点(Node) ，**通过CAS、自旋以及LockSuport.park()的方式，维护state变量的状态，使并发达到同步的效果**。                 
 
-<img src="../pics/JavaStrengthen/juc/AQS01.png" styyle="float:left">
+<img src="juc/AQS01.png" styyle="float:left">
 
 ### AQS体系
 
-<img src="../pics/JavaStrengthen/juc/AQS02.png" styyle="float:left">
+<img src="juc/AQS02.png" styyle="float:left">
 
 **AQS自身**
 

@@ -4,18 +4,13 @@
 
 ## ReentrantLock
 
-可重入锁，与 `synchroized` 类似，但是可以用 `Condition` 精准唤醒某个线程。
+可重入锁，与 `synchroized` 类似，但是可以用 `Condition` 精准唤醒某个线程。并且 J.U.C 下的锁都支持公平锁和非公平锁，而 synchronized 只支持非公平锁。ReentrantLock 还支持限时获取锁，超过时间还没拿到锁就会返回 false。
 
-> 多生产者，多消费者
-
-库存容量为 10
+以多生产者，多消费者为例，演示 ReentrantLock 的使用，假定库存容量为 10。
 
 ```java
-/**
- * 最多持有10个资源
- */
 public class Resource {
-    private int count = 0;
+    private int count = 0; // 最多持有10个资源
     private Lock lock = new ReentrantLock();
     private Condition condition = lock.newCondition();
 
@@ -78,24 +73,19 @@ public class MainDemo {
 
 ## CountDownLatch
 
-CountDownLatch 主要有两个方法，当一个或多个线程调用 await 方法时，这些线程会阻塞。
+CountDownLatch 用来控制线程之间的等待。
 
-其它线程调用 countDown 方法会将计数器减 1 (调用 countDown 方法的线程不会阻塞)，
+CountDownLatch 维护了一个计数器 cnt，每次调用 countDown() 方法会让计数器的值减 1且调用 countDown 方法的线程不会阻塞。
 
 当计数器的值变为 0 时，因 await 方法阻塞的线程会被唤醒，继续执行。
 
+- 通过 countDown() 方法让计数器减 1（CountDownLatch#Sync#tryReleaseShared 方法中进行的减操作）。
+- 通过 await() 方法让线程等待。
+
 ```java
 /**
- * 
- * @Description: 
- *				 让一些线程阻塞直到另一些线程完成一系列操作后才被唤醒。
- *               CountDownLatch主要有两个方法，当一个或多个线程调用await方法时，这些线程会阻塞。
- *               其它线程调用countDown方法会将计数器减1(调用countDown方法的线程不会阻塞)，
- *               当计数器的值变为0时，因await方法阻塞的线程会被唤醒，继续执行。
- * 
- *               解释：6个同学陆续离开教室后值班同学才可以关门。
- * 
- *               main主线程必须要等前面6个线程完成全部工作后，自己才能开干
+ * 解释：6个同学陆续离开教室后值班同学才可以关门 
+ * main主线程必须要等前面6个线程完成全部工作后，自己才能开干
  */
 public class CountDownLatchDemo {
     public static void main(String[] args) throws InterruptedException {
@@ -116,134 +106,488 @@ public class CountDownLatchDemo {
 
 ## CyclicBarrier
 
-满足条件就运行
+用来控制多个线程互相等待，只有当多个线程都到达/满足条件时，这些线程才会继续执行。
 
-CyclicBarrier 的字面意思是可循环（Cyclic）使用的屏障（Barrier）。它要做的事情是，**让一组线程到达一个屏障（也可以叫同步点）时被阻塞，直到最后一个线程到达屏障时，屏障才会开门**，所有被屏障拦截的线程才会继续干活。线程进入屏障通过 CyclicBarrier 的 await() 方法。
+CyclicBarrier 的字面意思是可循环（Cyclic）使用的屏障（Barrier）。它要做的事情是，<b>让一组线程到达一个屏障（也可以叫同步点）时被阻塞，直到最后一个线程到达屏障时，屏障才会开门</b>，屏障开门后，被屏障拦截的线程才能继续允许。
+
+- 通过 CyclicBarrier 的 await() 方法设置屏障。
+- 通过 CyclicBarrier 的 reset() 方法重置状态，继续使用屏障
 
 ```java
-/**
- * CyclicBarrier
- * 的字面意思是可循环（Cyclic）使用的屏障（Barrier）。它要做的事情是，
- * 让一组线程到达一个屏障（也可以叫同步点）时被阻塞，
- * 直到最后一个线程到达屏障时，屏障才会开门，所有
- * 被屏障拦截的线程才会继续干活。
- * 线程进入屏障通过CyclicBarrier的await()方法。
- * 
- * 集齐7颗龙珠就可以召唤神龙
- */
-public class CyclicBarrierDemo{
-  private static final int NUMBER = 7;
+public class UseCyclicBarrier {
+    // 集齐七颗龙珠召唤神龙
 
-  public static void main(String[] args) {
-    // CyclicBarrier(int parties, Runnable barrierAction)
-    CyclicBarrier cyclicBarrier = new CyclicBarrier(NUMBER, () -> System.out.println("召唤神龙"));
-    for (int i = 1; i <= 7; i++)
-      new Thread(() -> {
-        try {
-          System.out.println(Thread.currentThread().getName() + "\t 星龙珠被收集 ");
-          cyclicBarrier.await();
-        } catch (InterruptedException | BrokenBarrierException e) {
-          e.printStackTrace();
+    static class Resource {
+        private CyclicBarrier cyclicBarrier;
+
+        public Resource(CyclicBarrier cyclicBarrier) {
+            this.cyclicBarrier = cyclicBarrier;
         }
-      }, String.valueOf(i)).start();
-  }
+
+        public void consumer() {
+            try {
+                System.out.println("wait~~");
+                TimeUnit.SECONDS.sleep(2);
+                cyclicBarrier.await();
+            } catch (InterruptedException | BrokenBarrierException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public static void executor() {
+            System.out.println("召唤神龙！");
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        // 执行 7 次 await 之后，回调参数中的第二个方法
+        CyclicBarrier cyclicBarrier = new CyclicBarrier(7, Resource::executor);
+        Resource resource = new Resource(cyclicBarrier);
+
+        ExecutorService threadPools = Executors.newFixedThreadPool(7);
+        for (int i = 0; i < 7; i++) {
+            threadPools.submit(resource::consumer);
+        }
+
+        TimeUnit.SECONDS.sleep(5);
+
+        cyclicBarrier.reset(); // 重置，循环计数
+        for (int i = 0; i < 7; i++) {
+            threadPools.submit(resource::consumer);
+        }
+
+        threadPools.shutdown();
+    }
 }
 ```
 
 ## Semaphore
 
-信号量，可用来限流。在信号量上我们定义两种操作：
+Semaphore 类似于操作系统中的信号量，可以控制对互斥资源的访问线程数。可用来限流。在信号量上定义了两种操作：
 
-- acquire（获取） 当一个线程调用 acquire 操作时，它要么通过成功获取信号量（信号量减 1），要么一直等下去，直到有线程释放信号量，或超时
-- release（释放）实际上会将信号量的值加 1，然后唤醒等待的线程。
+- <b>acquire（获取） </b>当一个线程调用 acquire 操作时，它要么通过成功获取信号量（信号量减 1），要么一直等下去，直到有线程释放信号量，或超时
+- <b>release（释放）</b>实际上会将信号量的值加 1，然后唤醒等待的线程。
 - 信号量主要用于两个目的，一个是用于多个共享资源的互斥使用，另一个用于并发线程数的控制。
 
 ```java
-package com.atguigu.thread;
-import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
 /**
- * 
- * @Description: TODO(这里用一句话描述这个类的作用)  
- * 
- * 在信号量上我们定义两种操作：
- * acquire（获取） 当一个线程调用acquire操作时，它要么通过成功获取信号量（信号量减1），
- *             要么一直等下去，直到有线程释放信号量，或超时。
- * release（释放）实际上会将信号量的值加1，然后唤醒等待的线程。
- * 
- * 信号量主要用于两个目的，一个是用于多个共享资源的互斥使用，另一个用于并发线程数的控制。
+ * 信号量，控制可以访问的线程数目，可以用来做单机的限流。
+ * 示例：10 辆车抢 3 个停车位
  */
-public class SemaphoreDemo
-{
-  public static void main(String[] args)
-  {
-     Semaphore semaphore = new Semaphore(3);//模拟3个停车位
-     for (int i = 1; i 
-     {
-       new Thread(() -> {
-          try 
-          {
-            semaphore.acquire();
-            System.out.println(Thread.currentThread().getName()+"\t 抢到了车位");
-            TimeUnit.SECONDS.sleep(new Random().nextInt(5));
-            System.out.println(Thread.currentThread().getName()+"\t------- 离开");
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }finally {
-            semaphore.release();
-          }
-       }, String.valueOf(i)).start();
-     }
-  }
+public class UseSemaphore {
+    static class Resource {
+        private Semaphore semaphore;
+
+        public Resource(Semaphore semaphore) {
+            this.semaphore = semaphore;
+        }
+
+        public void parkCar() {
+            try {
+                semaphore.acquire();
+                System.out.format("%s 抢到了一个停车位\n", Thread.currentThread().getName());
+                TimeUnit.SECONDS.sleep(1);
+                semaphore.release();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        ExecutorService threadPools = Executors.newFixedThreadPool(10);
+        Resource resource = new Resource(new Semaphore(3));
+        for (int i = 0; i < 10; i++) {
+            threadPools.execute(resource::parkCar);
+        }
+        threadPools.shutdown();
+    }
 }
 ```
 
 ## Exchanger
 
-两个线程交换数据
+线程之间，两两交换数据，比如可用于交换两个任务之间的数据。
 
 ```java
 // 不同线程进行交换数据【两个线程之间的数据交换】
-public class Exchange {
-    static Exchanger<String> exchanger = new Exchanger<>();
+public class UseExchanger {
+    static class Resource<T> {
+        private Exchanger<T> exchanger;
 
-    public static void main(String[] args) {
-        new Thread(()->{
-            String s = "T1";
+        public Resource(Exchanger<T> exchanger) {
+            this.exchanger = exchanger;
+        }
+
+        public void swap(T message) {
+            String threadName = Thread.currentThread().getName();
             try {
-                s = exchanger.exchange(s);
+                System.out.format("线程 %s 持有数据 %s\n", threadName, message);
+                T exchange = exchanger.exchange(message);
+                System.out.format("线程 %s 持有数据 %s\n", threadName, exchange);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            System.out.println(Thread.currentThread().getName() + " " + s);
+        }
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        ExecutorService threadPools = Executors.newFixedThreadPool(2);
+        Resource<String> resource = new Resource<>(new Exchanger<String>());
+        threadPools.execute(() -> {
+            resource.swap("AK47");
+        });
+        TimeUnit.SECONDS.sleep(5);
+        threadPools.execute(() -> {
+            resource.swap("AWM");
+        });
+        threadPools.shutdown();
+    }
+}
+```
+
+## Phaser
+
+> 分阶段执行：这个挺难的。
+
+```java
+public class T08_TestPhaser {
+    static Random r = new Random();
+    static MarriagePhaser phaser = new MarriagePhaser();
+
+    static void milliSleep(int milli) {
+        try {
+            TimeUnit.MILLISECONDS.sleep(milli);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+
+        phaser.bulkRegister(5);
+
+        for(int i=0; i<5; i++) {
+            final int nameIndex = i;
+            new Thread(()->{
+
+                Person p = new Person("person " + nameIndex);
+                p.arrive();
+                phaser.arriveAndAwaitAdvance();
+
+                p.eat();
+                phaser.arriveAndAwaitAdvance();
+
+                p.leave();
+                phaser.arriveAndAwaitAdvance();
+            }).start();
+        }
+    }
+
+    static class MarriagePhaser extends Phaser {
+        @Override
+        protected boolean onAdvance(int phase, int registeredParties) {
+
+            switch (phase) {
+                case 0:
+                    System.out.println("所有人到齐了！");
+                    return false;
+                case 1:
+                    System.out.println("所有人吃完了！");
+                    return false;
+                case 2:
+                    System.out.println("所有人离开了！");
+                    System.out.println("婚礼结束！");
+                    return true;
+                default:
+                    return true;
+            }
+        }
+    }
+
+    static class Person {
+        String name;
+
+        public Person(String name) {
+            this.name = name;
+        }
+
+        public void arrive() {
+            milliSleep(r.nextInt(1000));
+            System.out.printf("%s 到达现场！\n", name);
+        }
+
+        public void eat() {
+            milliSleep(r.nextInt(1000));
+            System.out.printf("%s 吃完!\n", name);
+        }
+
+        public void leave() {
+            milliSleep(r.nextInt(1000));
+            System.out.printf("%s 离开！\n", name);
+        }
+
+    }
+}
+```
+
+## LockSupport
+
+线程阻塞工具类，可以阻塞当前线程以及唤醒指定被阻塞的线程。与 Thread.suspend() 方法相比，它弥补了由于 resume() 方法发生导致线程无法继续执行的清空。和 Object.wait() 方法相比，它不需要先获得某个对象的锁，也不会抛出 InterruptedException 异常。
+
+- `void park`：<span style="color:green">申请拿许可证，拿不到就阻塞。（阻塞线程）</span>
+- `void unpark`：如果参数 thread 线程没有持有 thread 与`LockSupport` 类关联的许可证，则让 thread 线程持有。如果 thread 之前因调用 park 而被挂起，则调用 `unpark` 后会被唤醒。<span style="color:green">简单说就是给你许可证；（解除阻塞线程）</span>
+- `LockSupport` 类使用许可这种概念来做到阻塞和唤醒线程的功能，<span style="color:green">许可（Permit）只有两个值 1 和 0，默认是 0</span>
+
+`LockSupport` 的通知可以在阻塞之前，因为他是按许可证的数量来决定阻塞还是不阻塞的。故可以先唤醒后等待。且 `Park` 无需锁化。归根结底，`LockSupport` 调用的是 `Unsafe` 的 `native` 方法
+
+`ReentrantLock` 和基本的 wait，notify 则不是这样。他们只能先有等待的线程，然后唤醒等待的线程。
+
+<span style="color:red">这种 part 拿许可证用的是轮询的方式看是否可以拿到锁吗？</span>
+
+## Spinlock
+
+自旋锁：spinlock，是指尝试获取锁的线程不会立即阻塞，而是采用循环的方式去尝试获取锁，这样的好处是减少线程上下文切换的消耗，缺点是循环会消耗 CPU
+
+原来提到的比较并交换，底层使用的就是自旋，自旋就是多次尝试，多次访问，不会阻塞的状态就是自旋。
+
+<b>优点</b>：循环比较获取直到成功为止，没有类似于 wait 的阻塞
+
+<b>缺点</b>：当不断自旋的线程越来越多的时候，会因为执行 while 循环不断的消耗 CPU 资源
+
+## 自旋锁
+
+通过 CAS 操作完成自旋锁，A 线程先进来调用 myLock 方法自己持有锁 5 秒，B 随后进来发现当前有线程持有锁，不是 null，所以只能通过自旋等待，直到 A 释放锁后 B 随后抢到
+
+```java
+/**
+ * 循环比较获取直到成功为止，没有类似于wait的阻塞
+ *
+ * 通过CAS操作完成自旋锁，A线程先进来调用myLock方法自己持有锁5秒，B随后进来发现当前有线程持有锁，不是null，所以只能通过自旋等待，直到A释放锁后B随后抢到
+ */
+public class SpinLockDemo {
+
+    // 现在的泛型装的是Thread，原子引用线程
+    AtomicReference<Thread>  atomicReference = new AtomicReference<>();
+
+    public void myLock() {
+        // 获取当前进来的线程
+        Thread thread = Thread.currentThread();
+        System.out.println(Thread.currentThread().getName() + "\t come in ");
+
+        // 开始自旋，期望值是null，更新值是当前线程，如果是null，则更新为当前线程，否者自旋
+        while(!atomicReference.compareAndSet(null, thread)) {
+        }
+    }
+
+    /**
+     * 解锁
+     */
+    public void myUnLock() {
+
+        // 获取当前进来的线程
+        Thread thread = Thread.currentThread();
+
+        // 自己用完了后，把atomicReference变成null
+        atomicReference.compareAndSet(thread, null);
+
+        System.out.println(Thread.currentThread().getName() + "\t invoked myUnlock()");
+    }
+
+    public static void main(String[] args) {
+
+        SpinLockDemo spinLockDemo = new SpinLockDemo();
+
+        // 启动t1线程，开始操作
+        new Thread(() -> {
+
+            // 开始占有锁
+            spinLockDemo.myLock();
+
+
+            try {
+                TimeUnit.SECONDS.sleep(5);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            // 开始释放锁
+            spinLockDemo.myUnLock();
+
         }, "t1").start();
 
 
-        new Thread(()->{
-            String s = "T2";
-            try {
-                s = exchanger.exchange(s);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            System.out.println(Thread.currentThread().getName() + " " + s);
+        // 让main线程暂停1秒，使得t1线程，先执行
+        try {
+            TimeUnit.SECONDS.sleep(1);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // 1秒后，启动t2线程，开始占用这个锁
+        new Thread(() -> {
+
+            // 开始占有锁
+            spinLockDemo.myLock();
+            // 开始释放锁
+            spinLockDemo.myUnLock();
 
         }, "t2").start();
+
     }
 }
-
 ```
 
+最后输出结果
+
+```
+t1 come in
+.....一秒后.....
+t2 come in
+.....五秒后.....
+t1 invoked myUnlock()
+t2 invoked myUnlock()
+```
+
+首先输出的是 t1 come in
+
+然后 1 秒后，t2 线程启动，发现锁被 t1 占有，所有不断的执行 compareAndSet 方法，来进行比较，直到 t1 释放锁后，也就是 5 秒后，t2 成功获取到锁，然后释放。
+
+## Guava和RateLimiter
+
+Guava 是 Google 的一个核心库，提供了一大批设计精良、使用方便的工具类。许多 Java 项目都使用 Guava 作为其基础工具库来提升开发效率，可以认为 Guava 是 JDK 标准库的重要补充。
+
+任何应用和模块组件都有一定的访问速率上限，如果请求速率突破了这个上限，既无法处理多余的请求，甚至会使系统崩溃，导致所有的请求都无法处理。这时候可以使用限流工具对系统的访问进行限流。
+
+J.U.C 下的 Semaphore 可以实现简单粗暴的限流，而 Guava 下的 RateLimiter 可以实现更为优雅的限流。
+
+### 简单粗暴的限流
+
+<span style="color:orange">一种简单的限流算法就是给出一个单位时间，然后使用一个计数器 counter 统计单位时间内收到的请求数量，当请求数量超过门限时，余下的请求丢弃或者等待。</span>但这种简单的算法有一个严重的问题，就是很难控制边界时间上的请求。假设时间单位是 1 秒，每秒请求不超过 500 个。如果在这一秒的前半秒没有请求，而后半秒有 500 个请求，下一秒的前半秒又有 500 个请求，那么在这中间的一秒内，就需要合理处理 1000 个请求，而这明显违反了限流的基本需求。
+
+相对于简单粗暴的限流，还有两种更优秀的限流方式：漏桶算法和令牌桶算法。
+
+### 漏桶算法
+
+漏桶算法的基本思想是：利用一个缓存区，当有请求进入系统时，无论请求的速率如何，都先在缓存区内保存，然后以固定的流速流出缓存区进行处理。
+
+漏桶算法的特点是无论外部请求压力如何，漏桶算法总是以固定的流速处理数据。漏桶的容积和流出速率是该算法的两个重要参数。
+
+### 令牌桶算法
+
+令牌桶算法是一种反向的漏桶算法。在令牌桶算法中，桶中存放的不再是请求，而是令牌。处理程序只有拿到令牌后，才能对请求进行处理。如果没有令牌，那么处理程序要么丢弃请求，要么等待可用的令牌。为了限制流速，该算法在每个单位时间产生一定量的令牌存入桶中。比如，要限定应用每秒只能处理 1 个请求，那么令牌桶就会每秒产生 1 个令牌。通常，桶的容量是有限的，比如，当令牌没有被消耗掉时，只能累计有限单位时间内的令牌数量。RateLimiter 采用的就是令牌桶算法。
+
+### RateLimiter
+
+RateLimiter 的基本方法
+
+- acquire() ，当使用 acquire() 方法时，过剩的流量调用会等待，直到有机会执行
+- tryAcquire()， 当使用 acquire() 方法时，过剩的流量调用会直接丢弃，避免可能的崩溃。举例：每秒产生 10 个令牌，会匀速产生，即每隔 100 ms 产生一个令牌，拿到这个令牌的 tryAcquire 的返回值为 true，没拿到的返回值为 false。
+
+<span style="color:orange">使用 RateLimiter#acquire 进行限流，不丢弃请求。</span>
+
+```java
+import com.google.common.util.concurrent.RateLimiter;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
+/**
+ * 使用 Guava 的 RateLimiter 进行限流
+ */
+public class UserRateLimiterLimiter {
+    // 每秒 5 个许可证
+    static RateLimiter limiter = RateLimiter.create(5);
+    static AtomicInteger count = new AtomicInteger(0);
+
+    public static void access() {
+        for (int i = 0; i < 10; i++) {
+            limiter.acquire();
+            long curTime = System.currentTimeMillis();
+            System.out.format("%d访问%d次\n", curTime, count.incrementAndGet());
+        }
+    }
+
+    public static void main(String[] args) {
+        ExecutorService threadPool = Executors.newFixedThreadPool(2);
+        for (int i = 0; i < 2; i++) {
+            threadPool.execute(UserRateLimiterLimiter::access);
+        }
+        threadPool.shutdown();
+    }
+}
+/*
+1649490270018访问1次
+1649490270234访问2次
+1649490270417访问3次
+1649490270627访问4次
+1649490270818访问5次
+1649490271019访问6次
+1649490271218访问7次
+1649490271416访问8次
+1649490271621访问9次
+1649490271817访问10次
+*/
+```
+
+<span style="color:orange">使用 RateLimiter#tryAcquire 进行限流，丢弃请求。</span>
+
+```java
+/**
+ * 使用 Guava 的 RateLimiter 进行限流
+ */
+public class UserRateLimiterLimiter {
+    // 每秒 5 个许可证
+    static RateLimiter limiter = RateLimiter.create(5);
+    static AtomicInteger count = new AtomicInteger(0);
+    public static void tryAccess() {
+        for (int i = 0; i < 10; i++) {
+            if(limiter.tryAcquire()){
+                long curTime = System.currentTimeMillis();
+                System.out.format("%d访问%d次\n", curTime, count.incrementAndGet());
+            }else{
+                System.out.println("丢弃请求");
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        ExecutorService threadPool = Executors.newFixedThreadPool(1);
+        threadPool.execute(UserRateLimiterLimiter::tryAccess);
+        threadPool.shutdown();
+    }
+}
+/*
+1649490482342访问1次
+丢弃请求
+丢弃请求
+丢弃请求
+丢弃请求
+丢弃请求
+丢弃请求
+丢弃请求
+丢弃请求
+丢弃请求
+*/
+```
+
+当请求成功时，tryAcquire() 方法返回 true，否则返回 false，该方法不会阻塞。在本段代码中，如果访问数据量超过限制，那么超出部分则直接丢弃，不再进行处理。此处的流量设置中，<b>limiter 仅支持 1 秒五次调用。也就是每 200 毫秒可以产生一个令牌，由于 for 循环本身的效率很高，完全可以在 200 毫秒内发出 10 次请求，因此本段代码最终只产生一个输出，其余请求全部被丢弃。</b>
+
 ## ReentrantReadWriterLock
+
+独占锁（写锁） 一次只能被一个线程占有 ，共享锁（读锁）多个线程可以同时占有 ReadWriteLock
 
 - 读-读--可以共存
 - 读-写--不能共存
 - 写-写--不能共存
 
 ```java
-package com.bbxx.callable;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
@@ -251,13 +595,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-/**
- * 独占锁（写锁） 一次只能被一个线程占有 
-   共享锁（读锁） 多个线程可以同时占有 ReadWriteLock 
-     读-读 可以共存！ 
-     读-写 不能共存！ 
-     写-写 不能共存！
- */
 public class ReadWriteLockDemo {
   public static void main(String[] args) {
     MyCache myCache = new MyCache();
@@ -337,38 +674,88 @@ class MyCache {
 }
 ```
 
+## AQS概述
+
+
+
 # 深入理解
 
-## `AQS` 原理
+## AQS 原理
 
-### 概述
+AQS 全称是 AbstractQueuedSynchronizer，是阻塞式锁和相关的同步器工具的框架。AQS 是用来构建锁或者其它同步器组件的重量级基础框架及整个<span style="color:red"> JUC 体系的基石</span>，通过内置的 FIFO 队列来完成资源获取线程的排队工作，<span style="color:red">并通过一个 int 型变量 state 表示持有锁的状态。</span>
 
-全称是 AbstractQueuedSynchronizer，是阻塞式锁和相关的同步器工具的框架。UML 图如下：
+<span style="color:green">AQS = state + CHL ，AQS 是 JUC 内容中最重要的基石</span>
+
+CHL（三个大牛的名字组成），是一个双向队列。
+
+前面简单介绍了下 JUC 中几个锁的用法，而<span style="color:green">锁和同步器的关系</span>如下：
+
+- 锁，面向锁的<span style="color:red">使用者</span>，用户层面的 API
+- 同步器，面向锁的<span style="color:red">实现者</span>，比如 Doug Lee，提出统一规范并简化了锁的实现，屏蔽了同步状态管理、阻塞线程排队和通知、唤醒机制等。
+
+### 前置知识
+
+- 公平锁非公平锁
+- 可重入锁
+- `LockSupport`
+- 自旋锁
+- 数据结构链表
+- 模板设计模式
+
+### 基本原理
+
+AQS 是通过内置的 FIFO 队列来完成资源获取线程的排队工作，<span style="color:red">并通过一个 int 型变量 state 表示持有锁的状态。
+
+J.U.C 中的不少类都与 AQS 有关的，如 ReentrantLock、CountDownLatch、ReentraantReadWriteLock、Semaphore、CyclicBarrier ...
+
+```java
+// 这几个里面都有一个内部类Sync 继承了AQS
+abstract static class Sync extends AbstractQueuedSynchronizer {}
+```
+
+加锁会导致阻塞，有阻塞就需要排队，实现排队必然需要有某种形式的队列来进行管理。
+
+如果共享资源被占用，<span style="color:red">就需要一定的阻塞等待唤醒机制来保证锁分配</span>。这个机制主要用的是 CLH 队列的变体实现的，将暂时获取不到锁的线程加入到队列中，这个队列就是 AQS 的抽象表现。它将请求共享资源的线程封装成队列的结点 (Node) ，通过 CAS、自旋以及 LockSuport.park() 的方式，维护 state 变量的状态，使并发达到同步的效果。  
+
+<img src="juc/AQS01.png">
+
+那么 AQS 是怎么排队的呢？AQS 是用 LockSupport.park() 来进行排队的，当线程无法持有锁需要阻塞排队时，便用 LockSupport.park() 方法阻塞线程。
+
+<img src="juc/AQS03.png">
+
+### 变量一览
+
+AQS 类图
+
+<img src="juc/AQS02.png" styyle="float:left">
+
+AQS 的 UML 图如下：
 
 <img src="juc/image-20211104115533825.png">
 
-- 由图中 AQS 的内部类 Node 可以看出， AQS 是一个 FIFO 的双向队列。
-- Node 类中：
-    - SHARED：标记该线程是获取共享资源时被阻塞挂起后放入 AQS 队列的
-    - EXCLUSIVE： 标记线程是获取独占资源时被挂起后放入AQS队列的
-    - waitStatus：记录当前线程等待状态
-        - CANCELLED： 线程被取消了
-        - SIGNAL： 线程需要被唤醒
-        - CONDITION：  线程在条件队列里面等待
-        - PROPAGAE：释放共享资源时需要通知其他节点
-- AQS 类中
-    - state：维持了一个单一的状态信息；不同类 state 代表的含义不同。
-    - ConditionObject：用来结合锁实现线程同步
+由图中 AQS 的内部类 Node 可以看出， AQS 是一个 FIFO 的双向队列。
 
-> 特点总结
+> Node 类中
 
-- 用 state 属性来表示资源的状态（分独占模式和共享模式，比如0代表xx，1代表oo，这都是由子类自己维护的），子类需要定义如何维护这个状态，控制如何获取锁和释放锁 
-    - `getState` - 获取 state 状态 
-    - `setState` - 设置 state 状态 
-    - `compareAndSetState - cas` 机制设置 state 状态。**保证 state 赋值时的原子性。**
-    - 独占模式是只有一个线程能够访问资源，而共享模式可以允许多个线程访问资源 
+- SHARED：标记该线程是获取共享资源时被阻塞挂起后放入 AQS 队列的
+- EXCLUSIVE： 标记线程是获取独占资源时被挂起后放入AQS队列的
+- waitStatus：记录当前线程等待状态
+    - CANCELLED： 线程被取消了
+    - SIGNAL： 线程需要被唤醒
+    - CONDITION：  线程在条件队列里面等待
+    - PROPAGAE：释放共享资源时需要通知其他节点
+
+> AQS 类中
+
+state 维持了一个单一的状态信息；不同的类 state 代表的含义不同。而 ConditionObject 是用来结合锁实现线程同步的。
+
+AQS 中使用用 state 属性来表示资源的状态【分独占模式和共享模式，比如 0 代表 xx，1 代表 oo，这都是由子类自己维护的】，子类需要定义如何维护这个状态，控制如何获取锁和释放锁 
+- `getState` - 获取 state 状态 
+- `setState` - 设置 state 状态 
+- `compareAndSetState - cas` 机制设置 state 状态。<b>保证 state 赋值时的原子性。</b>
+- 独占模式是只有一个线程能够访问资源，而共享模式可以允许多个线程访问资源 
 - 提供了基于 FIFO 的等待队列，类似于 Monitor 的 `EntryList` 
-- 条件变量来实现等待、唤醒机制，支持多个条件变量（ConditionObject），类似于 Monitor 的 `WaitSet`
+- 条件变量来实现等待、唤醒机制，支持多个条件变量（ConditionObject），类似于 Monitor 的 WaitSet
 
 > 子类主要实现这样一些方法（默认抛出 `UnsupportedOperationException`）
 
@@ -378,7 +765,7 @@ class MyCache {
 - `tryReleaseShared` 
 - `isHeldExclusively`
 
-<span style="color:red">**获取锁**</span>
+<span style="color:red">获取锁</span>
 
 ```java
 // 如果获取锁失败
@@ -387,7 +774,7 @@ if (!tryAcquire(arg)) {
 }
 ```
 
-<span style="color:red">**释放锁**</span>
+<span style="color:red">释放锁</span>
 
 ```java
 // 如果释放锁成功
@@ -396,9 +783,7 @@ if (tryRelease(arg)) {
 }
 ```
 
-### AQS - state
-
-#### 回顾
+### state详解
 
 用 state 属性来表示资源的状态，具体的含义需要 AQS 的子类自行定义。state 可以通过 getState、setState、compareAndSetState 函数修改其值。
 
@@ -406,26 +791,29 @@ if (tryRelease(arg)) {
 
 > 对于 ReentrantLock 的实现来说
 
-state 表示当前线程获取锁的可重入次数；当一个线程获取了 ReentrantLock 的锁后，在 AQS 内部会首先使用 CAS 操作把 state 状态值从0变为1，然后设置当前锁的持有者为当前线程，当该线程再次获取锁时发现它就是锁的持有者，则会把状态值从1变为2，也就是设置可重入次数，而当另外一个线程获取锁时发现自己并不是该锁的持有者就会被放入 AQS 阻塞队列后挂起。
+state 表示当前线程获取锁的可重入次数；
+
+当一个线程获取了 ReentrantLock 的锁后，在 AQS 内部会首先使用 CAS 操作把 state 状态值从 0 变为 1，然后设置当前锁的持有者为当前线程，当该线程再次获取锁时发现它就是锁的持有者，则会把状态值从 1 变为 2，也就是设置可重入次数，而当另外一个线程获取锁时发现自己并不是该锁的持有者就会被放入 AQS 阻塞队列后挂起。
 
 > 对于读写锁 ReentrantReadWriteLock 来说
 
-- state 的高16位表示读状态，也就是**获取该读锁的次数**，
-- 低16位表示获取到写锁的线程的**可重入次数**；
+state 的高16位表示读状态，也就是获取该读锁的次数，低16位表示获取到写锁的线程的可重入次数；
 
-> 对于 semaphore 来说
+> 对于 Semaphore 来说
 
-state 用来表示**当前可用信号的个数**；每 acquire 一次，state 值就减一
+state 用来表示当前可用信号的个数；每 acquire 一次，state 值就减一
 
 > 对于 CountDownlatch 来说
 
-state 用来表示**计数器当前的值**；每 countDown 一次，state 值就加一
+state 用来表示计数器当前的值；每 countDown 一次，state 值就加一（确定不是减一？）
 
 ### 阻塞队列
 
-对于竞争锁失败的线程，AQS 会将线程放入阻塞队列。<span style="color:red">而线程的阻塞与唤醒是通过 LockSupport 这个工具类来实现的。</span>
+对于竞争锁失败的线程，AQS 会将线程放入阻塞队列。<span style="color:red">而线程的阻塞与唤醒是通过 LockSupport 这个工具类来实现的。</span>               
 
-对于 **独占/共享** 方式获取锁的线程，获取失败会将失败的线程封装为类型为 **Node.EXCLUSIVE/Node.SHARED** 的 Node 节点插入 AQS 队列的尾部。
+<img src="juc/AQS01.png">
+
+对于<b>独占/共享</b>方式获取锁的线程，获取失败会将失败的线程封装为类型为 <b> Node.EXCLUSIVE/Node.SHARED </b>的 Node 节点插入 AQS 队列的尾部。
 
 > AQS 入队操作
 
@@ -460,7 +848,7 @@ private Node enq(final Node node) {
 
 synchronized 同时只能与一个共享变量的 notify 或 wait 方法实现同步，而 AQS 的一个锁可以对应多个条件变量 ConditionObject。
 
-每个 ConditionObject 对象都有 await()、signal() 方法和属于自己的条件队列。因条件不满足而阻塞的会存放在条件队列中。等满足条件了（调用了 signal）会就从条件队列移除，放入到 AQS 阻塞队列中，然后激活（`LockSupport.unpark`）这个线程。
+每个 ConditionObject 对象都有 await()、signal() 方法和属于自己的条件队列。因条件不满足而阻塞的会存放在条件队列中。等满足条件了（调用了 signal）会就从条件队列移除，放入到 AQS 阻塞队列中，然后激活（LockSupport.unpark）这个线程。
 
 ### 实现不可重入锁 
 
@@ -507,7 +895,7 @@ class MyLock implements Lock {
 
     // 同步器类
     class MySync extends AbstractQueuedSynchronizer {
-		// some code
+				// some code
     }
 
     private MySync sync = new MySync();
@@ -631,22 +1019,22 @@ while(state 状态不允许获取) {
 当前线程出队
 ```
 
-## `ReentrantLock` 
+## ReentrantLock
 
 ### 用法
 
-> lock与synchronized一一对应的关系
+lock 与 synchronized 一一对应的关系
 
 - `lock.newCondition();`
-- `newCondition.await(); 替代wait`
-- `newCondition.signal(); 替代notify`
-- 每个Condition内部都维护了一个阻塞队列。即，一个lokc，它只建立了一个Condition则只有一个阻塞队列；建立了5个Condition，就一共有5个阻塞队列。
+- `newCondition.await(); 替代 wait`
+- `newCondition.signal(); 替代 notify`
+- 每个 Condition 内部都维护了一个阻塞队列。即，一个 lokc，它只建立了一个 Condition 则只有一个阻塞队列；建立了 5 个 Condition，就一共有 5 个阻塞队列。
 
-lock替代了synchronized完成加锁解锁的操作
+lock 替代了 synchronized 完成加锁解锁的操作
 
-lock的`newCondition()`对象替代放弃锁权限，唤醒所有进程的操作
+lock 的 `newCondition()` 对象替代放弃锁权限，唤醒所有进程的操作
 
-`JUC` 实现多生产者，消费者。【生产容量为10】
+`JUC` 实现多生产者，消费者。【生产容量为 10】
 
 ```java
 /**
@@ -764,7 +1152,7 @@ public final void acquire(int arg) {
 Thread-1 执行了
 
 - CAS 尝试调用 lock 方法，将 state 由 0 改为 1，结果失败，运行 else 语句块 `acquire(1);`
-- 运行方法 `acquire(1);` 执行里面的 if 判断 进入`tryAcquire`逻辑，这时 state 已经是 1，结果仍然失败
+- 运行方法 `acquire(1);` 执行里面的 if 判断 进入 `tryAcquire` 逻辑，这时 state 已经是 1，结果仍然失败
 - 接下来进入 addwaiter 逻辑，构造 Node 队列（首次创建的时候会创建一个哑元）
     - 图中黄色三角表示该 Node 的 waitStatus 状态，其中 0 为默认正常状态
     - Node 的创建时懒惰的
@@ -1341,7 +1729,7 @@ public class ConditionObject implements Condition, java.io.Serializable {
 }
 ```
 
-## `ReentrantReadWriteLock`
+## ReentrantReadWriteLock
 
 读写锁。当读操作远远高于写操作时，这时候使用 读写锁 让 读-读 可以并发，提高性能。 类似于数据库中的 select ... from ... lock in share mode 
 
@@ -1456,15 +1844,37 @@ class CachedData {
 
 更新时，先是清除缓存还是先更新数据库。
 
-<span style="color:red">**先清除缓存的话：可能会查询到过时数据！！！造成数据库和缓存数据的不一致！！！**</span>
+<span style="color:red">先清除缓存的话：可能会查询到过时数据！！！造成数据库和缓存数据的不一致！！！且持续时间可能比较长</span>
 
-<img src="juc/clear_cache.png">
+```mermaid
+sequenceDiagram
+participant B
+participant A
+participant cache as 缓存
+participant db as 数据库
+B->>cache:1)清空缓存
+A->>db:2)查询数据库（x=1）
+A->>cache:3)将查询结果放入缓存（x=1）
+B->>db:4)将新数据存入库（x=2）
+A->>cache:5)后续查询将一直都是旧值（x=1）！！！
+```
 
-<span style="color:red">**先更新数据库的话：也可能造成数据库和缓存数据的不一致！！！但是持续的时间比较短，可以纠正过来。所以最后采取先更新库，再清空缓存**</span>
+<span style="color:red">先更新数据库的话：也可能造成数据库和缓存数据的不一致！！！但是持续的时间比较短，可以纠正过来。所以最后采取先更新库，再清空缓存</span>
 
-<img src="juc/update_database.png">
+```mermaid
+sequenceDiagram
+participant B
+participant A
+participant cache as 缓存
+participant db as 数据库
+B->>db:1)将新数据存入库（x=2）
+A->>cache:2)查询缓存（x=1）！！！
+B->>cache:3)清空缓存
+A->>db:4)查询数据库（x=2）
+A->>cache:5)后续查询可以得到新值（x=1）！！！
+```
 
-<span style="color:red">**最后！加锁，保证安全！**</span>
+<span style="color:red"><b>最后！加锁，保证安全！</b></span>
 
 ### 读写锁原理
 
@@ -1940,7 +2350,7 @@ static final class NonfairSync extends Sync {
 }
 ```
 
-## `StampedLock`
+## StampedLock
 
 <span style="color:red">**注意 **</span>
 
@@ -2077,9 +2487,7 @@ public static void main(String[] args) {
 15:57:03.719 c.DataContainerStamped [t1] - read unlock 513 
 ```
 
-
-
-## `Semaphore`
+## Semaphore
 
 ### 用法
 
@@ -2265,7 +2673,7 @@ Semaphore 有点像一个停车场，permits 就好像停车位数量，当线�
 
 <img src="juc/image-20210814231316346.png">
 
-## `CountDownLatch`
+## CountDownLatch
 
 用来进行线程同步协作，等待所有线程完成倒计时。 
 
@@ -2273,17 +2681,15 @@ Semaphore 有点像一个停车场，permits 就好像停车位数量，当线�
 
 ### 用法
 
-- 计数。初始化数值为多少。然后根据条件进行countDown()
-- 调用await方法，只要计数不是0，await这个栓就会锁着。直到计数为0，这个拴才会解锁。
-- 等待多少线程结束，线程结束后做await后面的代码。
+- 计数。初始化数值为多少。然后根据条件进行 countDown()
+- 调用 await 方法，只要计数不 是0，await 这个栓就会锁着。直到计数为 0，这个拴才会解锁。
+- 等待多少线程结束，线程结束后做 await 后面的代码。
 
----
+ CountDownLatch 主要有两个方法，当一个或多个线程调用 await 方法时，这些线程会阻塞。
 
- CountDownLatch主要有两个方法，当一个或多个线程调用await方法时，这些线程会阻塞。
+其它线程调用 countDown 方法会将计数器减 1 (调用 countDown 方法的线程不会阻塞)，
 
-其它线程调用countDown方法会将计数器减1(调用countDown方法的线程不会阻塞)，
-
-当计数器的值变为0时，因await方法阻塞的线程会被唤醒，继续执行。
+当计数器的值变为 0 时，因 await 方法阻塞的线程会被唤醒，继续执行。
 
 ```java
 package utils;
@@ -2341,7 +2747,7 @@ main	 班长关门走人，main线程是班长
 
 CountDownLatch 使用 AQS 的方式与 Semaphore 很相似：在同步状态中保存的是当前的计数值。countDown 方法调用 release，从而导致计数值递减，并且当计数值为0时，解除所有线程的阻塞。awaite 调用 acquire，当计数器为0时，acquire 将立即返回，否则将阻塞。
 
-## `CyclicBarrier`
+## CyclicBarrier
 
 循环栅栏，用来进行线程写作，等待线程满足某个计数。构造时设置**计数个数**，每个线程执行到某个需要“同步”的时刻调用 await() 方法进行等待，当等待的线程数满足 **计数个数** 时，继续执行。
 
@@ -2383,7 +2789,7 @@ public static void CountDownLatch() throws InterruptedException {
 }
 ```
 
-`CyclicBarrier` 实现3次等人发车。
+`CyclicBarrier` 实现 3 次等人发车。
 
 ```java
 public static void CyclicBarrier() throws InterruptedException {
@@ -2422,7 +2828,7 @@ public static void CyclicBarrier() throws InterruptedException {
 }
 ```
 
-`CountDownLatch`对象需要创建三次；而`CyclicBarrier` 对象只需要创建一次，可以重用。
+`CountDownLatch` 对象需要创建三次；而 `CyclicBarrier` 对象只需要创建一次，可以重用。
 
 ### 原理
 
@@ -2432,7 +2838,16 @@ await 是对 count（记录栅栏数的） 变量进行减一。
 
 ## 线程安全集合类概述
 
-<img src="juc/thread_safe_jihe.png">
+```mermaid
+graph 
+遗留的安全集合-->Hashtable
+遗留的安全集合-->Vector
+修饰的安全集合-->|使用Collections的方法修饰|SynchronizedMap
+修饰的安全集合-->|使用Collections的方法修饰|SynchronizedList
+J.U.C安全集合-->Blocking类
+J.U.C安全集合-->CopyOnWrite类
+J.U.C安全集合-->Concurrent类
+```
 
 线程安全集合类可以分为三大类： 
 
@@ -2461,34 +2876,34 @@ await 是对 count（记录栅栏数的） 变量进行减一。
 
 **遍历时如果发生了修改，对于非安全容器来讲，使用 fail-fast 机制也就是让遍历立刻失败，抛出 `ConcurrentModificationException`，不再继续遍历**
 
-## `ConcurrentHashMap`
+## ConcurrentHashMap
 
 ### 概述
 
-- 并发编程中 `HashMap` 可能出现死循环（JDK7中有，因为JDK7用的头插法插入数据），JDK8已经修复了死循环，不过依旧有线程不安全
+并发编程中 `HashMap` 可能出现死循环（JDK7中有，因为JDK7用的头插法插入数据），JDK8已经修复了死循环，不过依旧有线程不安全
 
-    ```java
-    public static void testDeadLoop() throws InterruptedException {
-        HashMap<String, String> map = new HashMap<>(2);
-        Thread ftf = new Thread(() -> {
-            for (int i = 0; i < 10000; i++) {
-                new Thread(() -> {
-                    map.put(UUID.randomUUID().toString(), "");
-                }, "ftf" + i).start();
-            }
-        }, "ftf");
-        ftf.start();
-        ftf.join();
-    }
-    ```
+```java
+public static void testDeadLoop() throws InterruptedException {
+    HashMap<String, String> map = new HashMap<>(2);
+    Thread ftf = new Thread(() -> {
+        for (int i = 0; i < 10000; i++) {
+            new Thread(() -> {
+                map.put(UUID.randomUUID().toString(), "");
+            }, "ftf" + i).start();
+        }
+    }, "ftf");
+    ftf.start();
+    ftf.join();
+}
+```
 
-    `HashMap` 在并发执行 put 操作时会引起死循环，因为多线程会导致 HashMap 的 Entry 链表形成环型结构，一旦成环，Entry 的 next 就永远不为空。
+`HashMap` 在并发执行 put 操作时会引起死循环，因为多线程会导致 HashMap 的 Entry 链表形成环型结构，一旦成环，Entry 的 next 就永远不为空。
 
-- `HashTable` 线程安全但是效率低下
+`HashTable` 线程安全但是效率低下
 
-- `ConcurrentHashMap` 锁分段技术可以提升并发访问效率。
+`ConcurrentHashMap` 锁分段技术可以提升并发访问效率。
 
-    - `HashTable` 效率低是，所有访问它的线程竞争的是同一把锁。而 `ConcurrentHashMap`  将数据分为一段一段，每一段数据分配一把锁，当线程占用其中一个段数据是，其他段也能被其他线程访问。
+`HashTable` 效率低是，所有访问它的线程竞争的是同一把锁。而 `ConcurrentHashMap`  将数据分为一段一段，每一段数据分配一把锁，当线程占用其中一个段数据是，其他段也能被其他线程访问。
 
 ### 用法示例
 
@@ -3487,7 +3902,7 @@ void transfer(Entry[] newTable, boolean rehash) {
 - 究其原因，是因为在多线程环境下使用了非线程安全的 map 集合
 - JDK 8 虽然将扩容算法做了调整，不再将元素加入链表头（而是保持与扩容前一样的顺序），但仍不意味着能够在多线程环境下能够安全扩容，还会出现其它问题（如扩容丢数据）
 
-## `LinkedBlockingQueue`
+## LinkedBlockingQueue
 
 ### 基本的入队出队
 
@@ -3655,7 +4070,7 @@ public E take() throws InterruptedException {
 - Linked 每次入队会生成新 Node，而 Array 的 Node 是提前创建好的
 - Linked 两把锁，Array一把锁
 
-## `ConcurrentLinkedQueue`
+## ConcurrentLinkedQueue
 
 ### 用法
 
@@ -3669,11 +4084,26 @@ ConcurrentLinkedQueue 的设计与 LinkedBlockingQueue 非常像，也是
 
 例如之前讲的 Tomcat 的 Connector 结构时，Acceptor 作为生产者向 Poller 消费者传递事件信息时，正是采用了 ConcurrentLinkedQueue 将 SocketChannel 给 Poller 使用
 
-<img src="juc/image-20210815165433376.png">
+```mermaid
+graph LR
+subgraph Connector["Connector(NIO EndPoint)"]
+LimitLatch-->Accpetor
+Accpetor-->s1[SocketChannel 1]
+Accpetor-->s2[SocketChannel 2]
+s1-->|有读|Poller
+s2-->|无读|Poller
+end
+subgraph Executor
+worker1
+worker2
+end
+Poller-->|socketProcessor|worker1
+Poller-->|socketProcessor|worker2
+```
 
 ### 原理
 
-##  `CopyOnWriteArrayList`
+##  CopyOnWriteArrayList
 
 有弱一致性问题
 
@@ -3755,7 +4185,7 @@ public static void main(String[] args) {
 }
 ```
 
-<span style="color:red">**不要觉得弱一致性就不好**</span>
+<span style="color:red">不要觉得弱一致性就不好</span>
 
 - 数据库的 MVCC 都是弱一致性的表现 
 - 并发高和一致性是矛盾的，需要权衡

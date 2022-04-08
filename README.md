@@ -9,6 +9,7 @@
 - [git](tools/git.md)
 - [Docker](tools/Docker.md)
 - [maven](tools/maven使用入门.md)
+- [Flowchart (mermaid-js.github.io)](https://mermaid-js.github.io/mermaid/#/flowchart)
 
 ## 计算机基础
 

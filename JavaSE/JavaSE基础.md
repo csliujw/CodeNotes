@@ -13134,15 +13134,13 @@ public class WithColorCoord{
 多态允许父类持有子类类型的引用。在泛型中呢？
 
 ```java
-class Fruit {
-}
+class Fruit {}
 
-class Apple extends Fruit {
-}
+class Apple extends Fruit {}
 
 public class NoCovariantGenerics {
     // 报错，不能把一个涉及 Apple 的泛型 赋值给涉及 Fruit 的泛型
-    // 我们讨论的时集合类型，而不是集合持有对象的类型！泛型没有内建的协变类型
+    // 我们讨论的时集合类型，而不是集合持有对象的类型，泛型没有内建的协变类型
     List<Fruit> flist = new ArrayList<Apple>();
 }
 ```
@@ -14856,8 +14854,8 @@ public static void main(String[] args) {
     executorService.execute(() -> example.after());
     executorService.execute(() -> example.before());
 }
-before
-after
+// before
+// after
 ```
 
 **wait() 和 sleep() 的区别**
@@ -14907,8 +14905,8 @@ public static void main(String[] args) {
     executorService.execute(() -> example.after());
     executorService.execute(() -> example.before());
 }
-before
-after
+// before
+// after
 ```
 
 ### J.U.C
