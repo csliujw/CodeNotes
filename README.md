@@ -35,10 +35,10 @@
 
 ### MySQL 提升
 
-- [SQL优化](事务控制/SQL优化的正确姿势.md)
-- [MySQL提升](事务控制/MySQL-提升.md)
-- [MySQL-InnoDB 存储引擎读书笔记](事务控制/MySQL-InnoDB.md)
-- [MySQL实战45讲笔记](事务控制/MySQL实战45讲.md)
+- [SQL优化](Database/SQL优化的正确姿势.md)
+- [MySQL提升](Database/MySQL-提升.md)
+- [MySQL-InnoDB 存储引擎读书笔记](Database/MySQL-InnoDB.md)
+- [MySQL实战45讲笔记](Database/MySQL实战45讲.md)
 
 ## 设计模式
 
@@ -69,7 +69,7 @@
 - [管程](Java-Multithreading/03-管程.md)
 - [内存模型](Java-Multithreading/04-内存模型.md)
 - [无锁并发](Java-Multithreading/05-无锁并发.md)
-- [不可变](Java-Multithreading/不可变.md)
+- [不可变](Java-Multithreading/06-不可变.md)
 - [高级工具](Java-Multithreading/07-高级工具.md)
 - [J.U.C](Java-Multithreading/08-JUC.md)
 - [多线程设计模式](Java-Multithreading/09-多线程设计模式.md)

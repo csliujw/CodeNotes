@@ -62,9 +62,9 @@
 
 ### 数据库相关概念
 
-- [x] 数据库：存储数据的仓库
+数据库：存储数据的仓库
 
-- [x] 数据库管理系统：Database Management System，操纵和管理数据库的大型软件，简称 DBMS。
+数据库管理系统：Database Management System，操纵和管理数据库的大型软件，简称 DBMS。
 
 - 关系型数据库（RDBMS）
 
@@ -81,7 +81,8 @@
     - 概念：Not-Only SQL，泛指非关系型数据库，是对关系型数据库的补充。 
     - 特点： 1. 数据结构灵活；2. 伸缩性强
 
-- [x] SQL：操作关系型数据库的编程语言，是一套标准。
+
+SQL：操作关系型数据库的编程语言，是一套标准。
 
 ### MySQL数据库
 
@@ -120,7 +121,7 @@ net stop mysql80
 
 3. MySQL 数据库的 SQL 语句不区分大小写，关键字建议使用大写。 
 
-4. 注释： •
+4. 注释：
 
     单行注释：-- 注释内容 或 # 注释内容(MySQL 特有) 
 
@@ -137,19 +138,20 @@ net stop mysql80
 
 ### DDL
 
-- 数据库操作
-    - show databases;
-    - create database 数据库名
-    - use 数据库名;
-    - select databases();
-    - drop databases 数据库名
-- 表操作
-    - show tables;
-    - create table 表名(字段 字段类型, 字段 字段类型);
-    - desc 表名;
-    - show create table 表名;
-    - alter table 表名 add/modify/drop/rename;
-    - drop table 表名;
+数据库操作
+- show databases;
+- create database 数据库名
+- use 数据库名;
+- select databases();
+- drop databases 数据库名
+
+表操作
+- show tables;
+- create table 表名(字段 字段类型, 字段 字段类型);
+- desc 表名;
+- show create table 表名;
+- alter table 表名 add/modify/drop/rename;
+- drop table 表名;
 
 #### 数据库操作
 

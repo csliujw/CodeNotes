@@ -1076,7 +1076,7 @@ class Solution {
 
 ### 回文链表
 
-给定一个链表的 **头节点** `head` **，**请判断其是否为回文链表。
+给定一个链表的<b>头节点</b>`head` **，**请判断其是否为回文链表。
 
 如果一个链表是回文，那么链表节点序列从前往后看和从后往前看是相同的。
 
@@ -1174,17 +1174,1070 @@ class Solution {
 }
 ```
 
-## 二叉树
+### 排序的循环链表
+
+[剑指 Offer II 029. 排序的循环链表 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/4ueAj6/)
+
+给定循环单调非递减列表中的一个点，写一个函数向这个列表中插入一个新元素 insertVal ，使这个列表仍然是循环升序的。
+
+给定的可以是这个列表中任意一个顶点的指针，并不一定是这个列表中最小元素的指针。
+
+如果有多个满足条件的插入位置，可以选择任意一个位置插入新的值，插入后整个列表仍然保持有序。
+
+如果列表为空（给定的节点是 null），需要创建一个循环有序列表并返回这个节点。否则。请返回原先给定的节点。
+
+#### 解题思路
+
+先看特殊情况。链表为 null 和 链表中只有一个节点。
+
+- 为 null，则创建一个循环链表
+- 只有一个节点，即 cur == cur.next 则插入位置随意，然后返回给你的 head 节点，即 cur。
+
+再看常规情况。
+
+常规情况下，需要分三种情况进行考虑
+
+- ①当 min <= inertVal <= max 时，满足 cur <= insertVal <= cur.next 即可插入
+- ②当 inertVal > max 时，插入到 max 的后面即可
+- ③当 insertVal < min 时，插入到 max 的后面即可
+
+注意，我们需要找到 biggest，并且在查找情况①的时候需要一个合适的条件跳出循环，这个条件就是情况① + next!=head
+
+#### 代码
+
+```java
+class Solution {
+    public Node insert(Node head, int insertVal) {
+        if(head == null){
+            Node cur = new Node(insertVal);
+            cur.next = cur;
+            return cur;
+        }
+        if(head == head.next){
+            head.next = new Node(insertVal,head);
+            return head;
+        }
+        Node biggest = head;
+        Node cur = head;
+        Node next = cur.next;
+        while( !(cur.val<=insertVal && next.val>=insertVal) && next!=head){
+            cur = next;
+            next = next.next;
+            biggest = cur.val>=biggest.val?cur:biggest;
+        }
+        if(cur.val<=insertVal && next.val>=insertVal){
+            cur.next = new Node(insertVal,next);
+        }else{
+           biggest.next = new Node(insertVal,biggest.next);
+        }
+        return head;
+    }
+}
+```
+
+## 哈希表
+
+### 插入、删除和随机访问都是O(1)的容器
+
+[剑指 Offer II 030. 插入、删除和随机访问都是 O(1) 的容器 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/FortPu/)
+
+设计一个支持在平均时间复杂度 O(1) 下，执行以下操作的数据结构：
+
+insert(val)：当元素 val 不存在时返回 true ，并向集合中插入该项，否则返回 false 。
+remove(val)：当元素 val 存在时返回 true ，并从集合中移除该项，否则返回 false 。
+getRandom：随机返回现有集合中的一项。每个元素应该有相同的概率 被返回。
+
+#### 解题思路
+
+平均时间复杂度 O(1) 的存取，很自然的想到用 HashMap 来做。但是 getRandom 又该怎么做呢？
+
+它要求随机返回集合中的一项，那么可以使用随机数来获取 index，然后拿到对应 index 的数据。此处使用 ArrayList 存储数据，来随机获取集合中的一项。至于 O(1) 的 remove，可以将末尾的元素直接覆盖掉需要被异常的元素。
+
+- 用 ArrayList 实现随机返回集合中的一项
+- 用 HashMap 实现快速判断元素是否存在。key\=\=>待插入的元素，val\=\=>插入的索引位置
+- 注意，remove 的时候，需要更新元素的索引。且顺序有讲究，不能乱。
+
+#### 代码
+
+```java
+class RandomizedSet {
+    public static void main(String[] args) {
+        RandomizedSet randomizedSet = new RandomizedSet();
+        randomizedSet.getRandom();
+    }
+
+    ArrayList<Integer> save;
+    HashMap<Integer, Integer> numToIndex;
+    Random random;
+
+    /**
+    * Initialize your data structure here.
+    */
+    public RandomizedSet() {
+        save = new ArrayList<>();
+        numToIndex = new HashMap<>();
+        random = new Random();
+    }
+
+    /**
+    * Inserts a value to the set. Returns true if the set did not already contain the specified element.
+    */
+    public boolean insert(int val) {
+        if (numToIndex.containsKey(val)) {
+            // 如果包含该元素
+            return false;
+        }
+        numToIndex.put(val, save.size());
+        save.add(val);
+        return true;
+    }
+
+    /**
+    * Removes a value from the set. Returns true if the set contained the specified element.
+    * 边界条件
+    */
+    public boolean remove(int val) {
+        // 如果包含
+        if (numToIndex.containsKey(val)) {
+            int index = numToIndex.remove(val);
+            numToIndex.put(save.get(save.size() - 1), index);
+            numToIndex.remove(val);
+            save.set(index, save.get(save.size() - 1));
+            save.remove(save.size() - 1);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+    * Get a random element from the set.
+    */
+    public int getRandom() {
+        int i = random.nextInt(save.size());
+        return save.get(i);
+    }
+}
+```
+
+### 最近最少使用缓存
+
+[剑指 Offer II 031. 最近最少使用缓存 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/OrIXps/)
+
+运用所掌握的数据结构，设计和实现一个  LRU (Least Recently Used，最近最少使用) 缓存机制 。
+
+实现 LRUCache 类：
+
+LRUCache(int capacity) 以正整数作为容量 capacity 初始化 LRU 缓存
+int get(int key) 如果关键字 key 存在于缓存中，则返回关键字的值，否则返回 -1 。
+void put(int key, int value) 如果关键字已经存在，则变更其数据值；如果关键字不存在，则插入该组「关键字-值」。当缓存容量达到上限时，它应该在写入新数据之前删除最久未使用的数据值，从而为新的数据值留出空间。
+
+#### 解题思路
+
+#### 代码
+
+### 有效的变位词
+
+[剑指 Offer II 032. 有效的变位词 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/dKk3P7/)
+
+给定两个字符串 s 和 t ，编写一个函数来判断它们是不是一组变位词（字母异位词）。
+
+注意：若 s 和 t 中每个字符出现的次数都相同且字符顺序不完全相同，则称 s 和 t 互为变位词（字母异位词）。
+
+#### 解题思路
+
+哈希表统计两个字符串中每个字符出现的次数，然后比较。如果所有字符的频次都相同则为变位词。需要注意一个边界条件，顺序相同的不是变位词。
+
+#### 代码
+
+```java
+public class Offer032IsAnagram {
+    public boolean isAnagram(String s, String t) {
+        if (s.length() != t.length() || s.equals(t)) return false;
+        int[] map1 = new int[26];
+        int[] map2 = new int[26];
+        for (int i = 0; i < s.length(); i++) {
+            map1[s.charAt(i) - 'a']++;
+            map2[t.charAt(i) - 'a']++;
+        }
+        for (int i = 0; i < map1.length; i++) {
+            if (map1[i] != map2[i]) return false;
+        }
+        return true;
+    }
+}
+```
+
+### 有效的变位词组
+
+[剑指 Offer II 033. 变位词组 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/sfvd7V/submissions/)
+
+给定一个字符串数组 `strs` ，将<b>变位词</b>组合在一起。 可以按任意顺序返回结果列表。
+
+<b>注意：</b>若两个字符串中每个字符出现的次数都相同，则称它们互为变位词。
+
+#### 解题思路
+
+变位词组和变位词有些不一样。变位词组只要字符出现次数都相同就行，“a”与“a”也是一对变位词组。
+
+可以像上一题那样，逐个判断是否是变位词。这里我采用的方法是，HashMap+排序。
+
+字符串排序后的结果作为 key；LinkedList 作为 value。
+
+- 当前字符串排序后，key 存在于 map 中，则将原始字符串加入 key 对应的 LinkedList 中
+- 当前字符串排序后，key 不在 map 中，则先添加 key，value，然后将原始字符串加入 key 对应的 LinkedList 中。
+
+#### 代码
+
+```java
+public class Offer033GroupAnagrams {
+
+    // 一对变位词组
+    public List<List<String>> groupAnagrams(String[] strs) {
+        HashMap<String, LinkedList<String>> map = new HashMap<>();
+        for (String str : strs) {
+            char[] cur = str.toCharArray();
+            Arrays.sort(cur);
+            // 如果不存在该 key，则把 value LinkedList 放进去。存在该 key 的话，就不放
+            LinkedList<String> list = map.putIfAbsent(String.valueOf(cur), new LinkedList<>());
+            list.add(str);
+        }
+        return new LinkedList<>(map.values());
+    }
+}
+```
+
+### 外星语言是否排序
+
+[剑指 Offer II 034. 外星语言是否排序 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/lwyVBB/)
+
+某种外星语也使用英文小写字母，但可能顺序 order 不同。字母表的顺序（order）是一些小写字母的排列。
+
+给定一组用外星语书写的单词 words，以及其字母表的顺序 order，只有当给定的单词在这种外星语中按字典序排列时，返回 true；否则，返回 false。
+
+ #### 解题思路
+
+比较数组中，单词之间的顺序是否符合指定字典序即可。
+
+考虑到快速得到字典序，可以采用哈希表进行快速查找。然后再借用哈希表比较每个单词对应字符的大小即可。
+
+#### 代码
+
+```java
+class Solution {
+    public boolean isAlienSorted(String[] words, String order) {
+        int[] map = new int[26];
+        for (int i = 0; i < order.length(); i++) {
+            map[order.charAt(i) - 'a'] = i;
+        }
+        // 判断是排序，前一个比后一个小就行
+        for (int i = 0; i < words.length - 1; i++) {
+            if (!preSmallNext(words[i], words[i + 1], map)) return false;
+        }
+        return true;
+    }
+
+    public boolean preSmallNext(String pre, String next, int[] map) {
+        int length = Math.min(pre.length(), next.length());
+        // 比较两个单词的大小。如果相等则继续比较，如果不相等则返回比较结果
+        for (int i = 0; i < length; i++) {
+            int preChar = map[pre.charAt(i) - 'a'];
+            int nextChar = map[next.charAt(i) - 'a'];
+            if (preChar < nextChar) return true;
+            if (preChar > nextChar) return false;
+        }
+        // 前缀全部相同，则len短的小
+        if (pre.length() <= next.length()) return true;
+        return false;
+    }
+}
+```
+
+### 最小时间差
+
+[剑指 Offer II 035. 最小时间差 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/569nqc/)
+
+给定一个 24 小时制（小时:分钟 "HH:MM"）的时间列表，找出列表中任意两个时间的最小时间差并以分钟数表示。
+
+示例 1：
+输入：timePoints = ["23:59","00:00"]
+输出：1
+
+示例 2：
+输入：timePoints = ["00:00","23:59","00:00"]
+输出：0
+
+#### 解题思路
+
+<b>法一，排序</b>：把字符串的时间转成数字，然后对数字进行排序，计算相邻两个数的值，找出 min。最后为了防止出现 ["00:00","12:22","23:30"] 这种情况，首位再进行一次减法+60*24，才能找出 min。
+
+<b>法二，鸽巢原理</b>：一天最多有 1440 分钟。把每个时间映射到对应的位置，那么就需要 1440 个位置。如果有重复的，那么设置对应的位置为 true。映射结束后，扫描哈希表，如果发现有位置的值为 true，则说明最小值为 0。
+
+#### 代码
+
+排序做法
+
+```java
+public class Offer035FindMinDifference {
+    public int findMinDifference(List<String> timePoints) {
+        int[] nums = new int[timePoints.size()];
+        for (int i = 0; i < timePoints.size(); i++) {
+            String[] cur = timePoints.get(i).split(":");
+            nums[i] = Integer.parseInt(cur[0]) * 60 + Integer.parseInt(cur[1]);
+        }
+        Arrays.sort(nums);
+        int min = 0xfffff;
+        for (int i = 0; i < nums.length - 1; i++) {
+            min = Math.min(Math.abs(nums[i] - nums[i + 1]), min);
+        }
+        // 首位时间差
+        min = Math.min(min, nums[0] - nums[nums.length - 1] + 60 * 24);
+        return min;
+    }
+
+    public static void main(String[] args) {
+        Offer035FindMinDifference solution = new Offer035FindMinDifference();
+        int minDifference = solution.findMinDifference(Arrays.asList("00:00", "23:59"));
+        System.out.println(minDifference);
+    }
+}
+```
+
+哈希表/鸽巢原理做法
+
+```java
+package com.payphone.offer2;
+
+import java.util.Arrays;
+import java.util.List;
+
+public class Offer035FindMinDifference {
+    
+    public int findMinDifference(List<String> timePoints) {
+        if (timePoints.size() > 1440) return 0;
+        boolean[] map = new boolean[1440];
+        for (int i = 0; i < timePoints.size(); i++) {
+            String[] split = timePoints.get(i).split(":");
+            int indexOf = Integer.parseInt(split[0]) * 60 + Integer.parseInt(split[1]);
+            if (map[indexOf]) return 0;
+            map[indexOf] = true;
+        }
+        return helper(map);
+    }
+
+    private int helper(boolean[] flag) {
+        int minDiff = flag.length;
+        int pre = -1; // 上一次时间出现的位置
+        int first = minDiff; // 第一个时间出现的位置
+        int last = -1; // 最后一个时间出现的位置
+        for (int i = 0; i < flag.length; i++) {
+            if (flag[i]) {
+                if (pre >= 0) minDiff = Math.min(i - pre, minDiff);
+                pre = i; // 更新 pre
+                first = Math.min(i, first);
+                last = Math.max(i, last);
+            }
+        }
+        minDiff = Math.min(first + flag.length - last, minDiff);
+        return minDiff;
+    }
+
+    public static void main(String[] args) {
+        Offer035FindMinDifference solution = new Offer035FindMinDifference();
+        int minDifference = solution.findMinDifference(Arrays.asList("01:01", "02:01"));
+        System.out.println(minDifference);
+    }
+}
+```
+
+## 栈的应用
+
+### 后缀表达式
+
+[剑指 Offer II 036. 后缀表达式 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/8Zf90G/)
+
+根据[ 逆波兰表示法](https://baike.baidu.com/item/逆波兰式/128437)，求该后缀表达式的计算结果。
+
+有效的算符包括 `+`、`-`、`*`、`/` 。每个运算对象可以是整数，也可以是另一个逆波兰表达式。
+
+#### 解题思路
+
+根据后缀表达式的计算规则简单模拟栈就行。eg：
+
+tokens = ["2","1","+","3","*"]
+
+- 遇到数字就一直入栈
+- 遇到符号的话，就弹出栈中的两个元素进行对应的运算，再将运算结果压栈。
+
+这个代码可以写的很丑，也可以写的比较漂亮。
+
+#### 代码
+
+```java
+package com.payphone.offer2;
+
+import java.util.Stack;
+
+/**
+ * 后缀表达式
+ */
+public class Offer036EvalRPN {
+    public int evalRPN(String[] tokens) {
+        Stack<Integer> stack = new Stack<>();
+        for (int i = 0; i < tokens.length; i++) {
+            switch (tokens[i]) {
+                case "+":
+                case "-":
+                case "*":
+                case "/":
+                    Integer ele1 = stack.pop();
+                    Integer ele2 = stack.pop();
+                    int result = calculate(ele1, ele2, tokens[i]);
+                    stack.push(result);
+                    break;
+                default:
+                    stack.push(Integer.parseInt(tokens[i]));
+            }
+        }
+        return stack.pop();
+    }
+
+    private int calculate(Integer ele1, Integer ele2, String express) {
+        switch (express) {
+            case "+":
+                return ele1 + ele2;
+            case "-":
+                return ele2 + ele1;
+            case "*":
+                return ele2 * ele1;
+            case "/":
+                return ele2 / ele1;
+        }
+        return -1;
+    }
+}
+```
+
+### 小行星碰撞
+
+[剑指 Offer II 037. 小行星碰撞 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/XagZNi/)
+
+给定一个整数数组 asteroids，表示在同一行的小行星。
+
+对于数组中的每一个元素，其绝对值表示小行星的大小，正负表示小行星的移动方向（正表示向右移动，负表示向左移动）。每一颗小行星以相同的速度移动。
+
+找出碰撞后剩下的所有小行星。碰撞规则：两个行星相互碰撞，较小的行星会爆炸。如果两颗行星大小相同，则两颗行星都会爆炸。两颗移动方向相同的行星，永远不会发生碰撞
+
+#### 解题思路
+
+也是一个典型的 stack 的题。
+
+题目中规定的是正向右移动，负向左移动。前面一个向左的后面一个向右的就会发生碰撞。即 pre = 正 ，next = 负，就会发生碰撞。其他情况不会发生碰撞。
+
+- stack 为空，元素 push stack
+- stack 不为空，看 cur 和 stack.peek 是否满足碰撞的条件，满足则碰撞，不满足则 push stack。
+- 碰撞条件比较绕，具体看代码。
+
+#### 代码
+
+```java
+class Solution {
+    public int[] asteroidCollision(int... asteroids) {
+        Stack<Integer> stack = new Stack<>();
+        for (int as : asteroids) {
+            // 栈顶元素是否需要弹出
+            while (!stack.isEmpty() && stack.peek() > 0 && stack.peek() < -as) {
+                stack.pop();
+            }
+            // as 元素是否需要消除，as < 0 这个条件是为了避免误判
+            if (!stack.isEmpty() && stack.peek() == -as && as < 0) {
+                stack.pop();
+            } else if (as > 0 || stack.isEmpty() || stack.peek() < 0) {
+                // as 不用消除，需要添加到 stack 的情况 && 正常添加元素的情况。
+                // as > 0 属于普通情况，需要入 stack
+                // stack.isEmpty 属于第一次加元素和as让栈中的所有元素都出栈
+                // stack.peek 属于普通情况，需要入栈，即 as 和 peek 同号，不会发生碰撞的情况
+                stack.push(as);
+            }
+        }
+        int[]ans = new int[stack.size()];
+        for (int i = 0; i <ans.length ; i++) {
+            ans[i] = stack.get(i);
+        }
+        return ans;
+    }
+}
+```
+
+### 每日温度
+
+[剑指 Offer II 038. 每日温度 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/iIQa4I/)
+
+请根据每日气温列表 temperatures ，重新生成一个列表，要求其对应位置的输出为：要想观测到更高的气温，至少需要等待的天数。如果气温在这之后都不会升高，请在该位置用 0 来代替。
+
+示例 1:
+输入: temperatures = [73,74,75,71,69,72,76,73]
+输出: [1,1,4,2,1,1,0,0]
+
+示例 2:
+输入: temperatures = [30,40,50,60]
+输出: [1,1,1,0]
+
+#### 解题思路
+
+null
+
+#### 代码
+
+null
+
+## 队列的应用
+
+### 滑动窗口的平均值
+
+[剑指 Offer II 041. 滑动窗口的平均值 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/qIsx9U/)
+
+给定一个整数数据流和一个窗口大小，根据该滑动窗口的大小，计算滑动窗口里所有数字的平均值。
+
+实现 MovingAverage 类：
+
+- MovingAverage(int size) 用窗口大小 size 初始化对象。
+- double next(int val) 成员函数 next 每次调用的时候都会往滑动窗口增加一个整数，请计算并返回数据流中最后 size 个值的移动平均值，即滑动窗口里所有数字的平均值。
+
+```java
+输入：
+inputs = ["MovingAverage", "next", "next", "next", "next"]
+inputs = [[3], [1], [10], [3], [5]]
+输出：
+[null, 1.0, 5.5, 4.66667, 6.0]
+
+解释：
+MovingAverage movingAverage = new MovingAverage(3);
+movingAverage.next(1); // 返回 1.0 = 1 / 1
+movingAverage.next(10); // 返回 5.5 = (1 + 10) / 2
+movingAverage.next(3); // 返回 4.66667 = (1 + 10 + 3) / 3
+movingAverage.next(5); // 返回 6.0 = (10 + 3 + 5) / 3
+```
+
+#### 解题思路
+
+指定滑动窗口的大小，计算窗口内数字的均值。可以用队列来做
+
+- 队列元素没满，则持续入队。
+- 队列元素满了，则出队一个元素再入队。
+- 为什么要队列？为了方便拿到队首的元素。也可以不用队列来做，用变量记录队首的元素也可。
+
+#### 代码
+
+```java
+class MovingAverage {
+    LinkedList<Integer> queue;
+    int size;
+    double ans = 0;
+    public MovingAverage(int size) {
+        queue = new LinkedList<>();
+        this.size = size;
+    }
+
+    public double next(int val) {
+        if (queue.size() < size) {
+            queue.add(val);
+            ans += val;
+        } else {
+            ans -= queue.remove();
+            queue.add(val);
+            ans += val;
+        }
+        return ans / queue.size();
+    }
+}
+```
+
+### 最近请求次数
+
+[剑指 Offer II 042. 最近请求次数 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/H8086Q/)
+
+写一个 RecentCounter 类来计算特定时间范围内最近的请求。
+
+请实现 RecentCounter 类：
+
+- RecentCounter() 初始化计数器，请求数为 0 。
+- int ping(int t) 在时间 t 添加一个新请求，其中 t 表示以毫秒为单位的某个时间，并返回过去 3000 毫秒内发生的所有请求数（包括新请求）。确切地说，返回在 [t-3000, t] 内发生的请求数。保证每次对 ping 的调用都使用比之前更大的 t 值
+
+#### 解题思路
+
+用队列来做，队列记录每次请求的时间。
+
+- 当有新请求来时，将队首中，与新请求的差值大于 3000ms 的请求移除队列。
+
+#### 代码
+
+```java
+import java.util.LinkedList;
+
+public class Offer042RecentCounter {
+    static class RecentCounter {
+        private LinkedList<Integer> queue;
+
+        public RecentCounter() {
+            queue = new LinkedList<>();
+        }
+
+        // 在 t 时刻发送了一个请求。并返回最近 3000ms 内的请求总数。
+        public int ping(int t) {
+            while (!queue.isEmpty() && t - queue.getFirst() > 3000) {
+                queue.pop();
+            }
+            queue.addLast(t);
+            return queue.size();
+        }
+    }
+
+    public static void main(String[] args) {
+        RecentCounter soultion = new RecentCounter();
+        soultion.ping(1);
+        soultion.ping(100);
+        soultion.ping(3001);
+        soultion.ping(3002);
+    }
+}
+```
+
+### 二叉树的广度优先搜索
+
+[102. 二叉树的层序遍历 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/binary-tree-level-order-traversal/)
+
+给你二叉树的根节点 `root` ，返回其节点值的<b>层序遍历</b> 。 （即逐层地，从左到右访问所有节点）。
+
+<img src="https://assets.leetcode.com/uploads/2021/02/19/tree1.jpg">
+
+二叉树的广度优先搜索即二叉树的层序遍历。可利用队列完成。
+
+输入：root = [3,9,20,null,null,15,7]
+输出：[[3],[9,20],[15,7]]
+
+#### 解题思路
+
+可以用一个队列完成简单的层序遍历。也可用两个队列完成。
+
+#### 代码
+
+一个队列完成层序遍历
+
+```java
+public class Leetcode102LevelOrder {
+
+    // 二叉树的层序遍历
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        List<List<Integer>> ans = new LinkedList<>();
+        if (root == null) return ans;
+
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.add(root);
+
+        while (!queue.isEmpty()) {
+            // 得到当前层元素的个数，进行遍历
+            int size = queue.size();
+            List<Integer> curLevel = new LinkedList<>();
+            for (int i = 0; i < size; i++) {
+                TreeNode poll = queue.poll();
+                curLevel.add(poll.val);
+                if (poll.left != null) queue.add(poll.left);
+                if (poll.right != null) queue.add(poll.right);
+            }
+
+            ans.add(curLevel);
+        }
+        return ans;
+    }
+}
+```
+
+### 往完全二叉树添加节点
+
+[Loading Question... - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/NaqhDT/)
+
+完全二叉树是每一层（除最后一层外）都是完全填充（即，节点数达到最大，第 n 层有 2n-1 个节点）的，并且所有的节点都尽可能地集中在左侧。
+
+设计一个用完全二叉树初始化的数据结构 CBTInserter，它支持以下几种操作：
+
+- CBTInserter(TreeNode root) 使用根节点为 root 的给定树初始化该数据结构；
+- CBTInserter.insert(int v)  向树中插入一个新节点，节点类型为 TreeNode，值为 v 。使树保持完全二叉树的状态，并返回插入的新节点的父节点的值；
+- CBTInserter.get_root() 将返回树的根节点。
+
+示例 1：
+输入：inputs = ["CBTInserter","insert","get_root"], inputs = [[[1]],[2],[]]
+输出：[null,1,[1,2]]
+
+示例 2：
+输入：inputs = ["CBTInserter","insert","insert","get_root"], inputs = [[[1,2,3,4,5,6]],[7],[8],[]]
+输出：[null,3,4,[1,2,3,4,5,6,7,8]]
+
+#### 解题思路
+
+就是一个用层序遍历。构造函数中会传递一个树的根节点，利用层序遍历将该二叉树中左右孩子节点为 null，存入队列。
+
+后期添加元素的时候，一旦结点的左右子树都不为空了就出队。
+
+#### 代码
+
+```java
+class CBTInserter {
+
+    private TreeNode root;
+    private Queue<TreeNode> queue;
+
+    // root 是一棵树
+    public CBTInserter(TreeNode root) {
+        this.root = root;
+        queue = new LinkedList<>();
+        // 把 root 中左右子树不全的加入队列
+        Queue<TreeNode> tmp = new LinkedList<>();
+        tmp.add(root);
+        while (!tmp.isEmpty()) {
+            TreeNode poll = tmp.poll();
+            if (poll.left != null) tmp.add(poll.left);
+            if (poll.right != null) tmp.add(poll.right);
+            if (poll.left == null || poll.right == null) queue.add(poll);
+        }
+    }
+
+    public int insert(int v) {
+        TreeNode curNode = new TreeNode(v);
+        TreeNode peek = queue.peek();
+        if (peek.left == null) {
+            peek.left = curNode;
+        } else if (peek.right == null) {
+            peek.right = curNode;
+            queue.remove();
+        }
+        queue.add(curNode);
+        return peek.val;
+    }
+
+    public TreeNode get_root() {
+        return this.root;
+    }
+}
+```
+
+### 二叉树每层的最大值
+
+[剑指 Offer II 044. 二叉树每层的最大值 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/hPov7L/)
+
+给定一棵二叉树的根节点 `root` ，请找出该二叉树中每一层的最大值。
+
+```shell
+输入: root = [1,3,2,5,3,null,9]
+输出: [1,3,9]
+解释:
+          1
+         / \
+        3   2
+       / \   \  
+      5   3   9 
+```
+
+#### 解题思路
+
+层序遍历，找出每层的最大值即可。
+
+#### 代码
+
+一个队列的层序遍历找出每层的 Max
+
+```java
+public class Offer044LargestValues {
+
+    public List<Integer> largestValues(TreeNode root) {
+        List<Integer> ans = new LinkedList<>();
+        if (root == null) return ans;
+
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.add(root);
+        while (!queue.isEmpty()) {
+            int curLevelSize = queue.size();
+            int curLevelMax = Integer.MIN_VALUE;
+            for (int i = 0; i < curLevelSize; i++) {
+                TreeNode curNode = queue.remove();
+                curLevelMax = Math.max(curLevelMax, curNode.val);
+                if (curNode.left != null) queue.add(curNode.left);
+                if (curNode.right != null) queue.add(curNode.right);
+            }
+            ans.add(curLevelMax);
+        }
+        return ans;
+    }
+}
+```
+
+### 二叉树最底层最左边的值
+
+[剑指 Offer II 045. 二叉树最底层最左边的值 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/LwUNpT/)
+
+给定一个二叉树的 **根节点** `root`，请找出该二叉树的 **最底层 最左边** 节点的值。
+
+假设二叉树中至少有一个节点。
+
+ <img src="https://assets.leetcode.com/uploads/2020/12/14/tree2.jpg">
+
+```shell
+输入: [1,2,3,4,null,5,6,null,null,7]
+输出: 7
+```
+
+#### 解题思路
+
+<b>层序遍历</b>：要找最底层，最左边的结点。就是找最后一层最左边的结点。一个层序遍历就行。用一个变量，存储每层最左边的结点即可。最后该变量存储的一定是最后一层最左边的点。最右边的点也是同理。
+
+#### 代码
+
+```java
+public class Offer045FindBottomLeftValue {
+    public int findBottomLeftValue(TreeNode root) {
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.add(root);
+        int curLevelLeftValue = -1;
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                TreeNode curNode = queue.remove();
+                if (i == 0) curLevelLeftValue = curNode.val;
+                if (curNode.left != null) queue.add(curNode.left);
+                if (curNode.right != null) queue.add(curNode.right);
+            }
+        }
+        return curLevelLeftValue;
+    }
+}
+```
+
+### 二叉树的右侧视图
+
+[剑指 Offer II 046. 二叉树的右侧视图 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/WNC0Lk/)
+
+给定一个二叉树的<b>根节点</b> `root`，想象自己站在它的右侧，按照从顶部到底部的顺序，返回从右侧所能看到的节点值。
+
+<img src="https://assets.leetcode.com/uploads/2021/02/14/tree.jpg">
+
+```shell
+输入: [1,2,3,null,5,null,4]
+输出: [1,3,4]
+```
+
+#### 解题思路
+
+层序遍历，将每层最后一个结点保存起来就行。
+
+#### 代码
+
+```java
+public class Offer046RightSideView {
+
+    public List<Integer> rightSideView(TreeNode root) {
+        List<Integer> ans = new LinkedList<>();
+        if (root == null) return ans;
+        Queue<TreeNode> queue = new LinkedList<>();
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                TreeNode curNode = queue.remove();
+                System.out.println(curNode.val);
+                if (i == size - 1) {
+                    ans.add(curNode.val);
+                    System.out.println(curNode.val);
+                }
+                if (curNode.left != null) queue.add(curNode.left);
+                if (curNode.right != null) queue.add(curNode.right);
+            }
+        }
+        return ans;
+    }
+}
+```
+
+## 树
+
+### 树的基础知识
+
+#### 中序遍历模板
+
+递归代码
+
+```java
+// 二叉树的中序遍历
+public List<Integer> inorderTraversal(TreeNode root) {
+    List<Integer> nodes = new LinkedList<>();
+    dfs(root, nodes);
+    return nodes;
+}
+
+private void dfs(TreeNode root, List<Integer> nodes) {
+    if (root != null) {
+        dfs(root.left, nodes); // 访问结点
+        nodes.add(root.val);
+        dfs(root.right, nodes);
+    }
+}
+```
+
+非递归
+
+把递归代码改成迭代的代码通常需要用到栈，改写中序遍历的代码也是一样的。二叉树的遍历总是从根节点开始的，但当第 1 次到达根节点时，并不是马上遍历根节点，而是顺着指向左子节点的指针向下直到叶节点，也就是找到第 1 个真正被遍历的节点。
+
+```java
+public List<Integer> inorderTraversalUn(TreeNode root) {
+    List<Integer> nodes = new LinkedList<>();
+    Stack<TreeNode> stack = new Stack<>();
+    TreeNode cur = root;
+    while (cur != null || !stack.isEmpty()) {
+        while (cur != null) {
+            stack.push(cur);
+            cur = cur.left;
+        }
+        cur = stack.pop();
+        nodes.add(cur.val);
+        cur = cur.right;
+    }
+    return nodes;
+}
+```
+
+#### 前序遍历模板
+
+递归，简单易懂
+
+```java
+public List<Integer> preorderTraversal(TreeNode root) {
+    List<Integer> nodes = new LinkedList<>();
+    dfs(root, nodes);
+    return nodes;
+}
+
+private void dfs(TreeNode root, List<Integer> nodes) {
+    if (root != null) {
+        nodes.add(root.val); // 访问结点
+        dfs(root.left, nodes);
+        dfs(root.right, nodes);
+    }
+}
+```
+
+非递归
+
+前序遍历的迭代代码和中序遍历的迭代代码也很类似。它们之间唯一的区别是在顺着指向左子节点的指针向下移动时，前序遍历将遍历遇到的每个节点并将它添加在栈中。这是由前序遍历的顺序决定的，前序遍历是先遍历根节点再遍历它的左子节点。二叉树前序遍历的迭代代码如下所示：
+
+这代码属实是漂亮。
+
+```java
+public List<Integer> preorderTraversal(TreeNode root) {
+    List<Integer> nodes = new LinkedList<>();
+    Stack<TreeNode> stack = new Stack<>();
+    TreeNode cur = root;
+    while (cur != null || !stack.isEmpty()) {
+        while (cur != null) {
+            nodes.add(cur.val);
+            stack.push(cur);
+            cur = cur.left;
+        }
+        cur = stack.pop();
+        cur = cur.right;
+    }
+    return nodes;
+}
+```
+
+#### 后序遍历模板
+
+递归版本，最后访问 root。
+
+```java
+public List<Integer> preorderTraversal(TreeNode root) {
+    List<Integer> nodes = new LinkedList<>();
+    dfs(root, nodes);
+    return nodes;
+}
+
+private void dfs(TreeNode root, List<Integer> nodes) {
+    if (root != null) {
+        dfs(root.left, nodes);
+        dfs(root.right, nodes);
+        nodes.add(root.val); // 访问结点
+    }
+}
+```
+
+非递归版本
+
+```java
+// 双 stack 后续遍历，漂亮
+public void posOrder(Node head) {
+    if (head != null) {
+        Stack<Node> stack1 = new Stack<Node>();
+        Stack<Node> stack2 = new Stack<Node>();
+        stack1.push(head);
+        while (!s1.isEmpty()) {
+            Node cur = stack1.pop();
+            stack2.push(cur);
+            if (cur.left != null) stack1.push(cur.left);
+            if (cur.right != null) stack1.push(cur.right);
+        }
+        while (!stack2.isEmpty()) {
+            System.out.println(stack2.pop().value + " ");
+        }
+    }
+}
+```
+
+### 二叉树剪枝
+
+给定一个二叉树 根节点 root ，树的每个节点的值要么是 0，要么是 1。请剪除该二叉树中所有节点的值为 0 的子树。
+
+节点 node 的子树为 node 本身，以及所有 node 的后代。
+
+输入: [1,1,0,1,1,0,1,0]
+输出: [1,1,0,1,1,null,1]
+解释: 
+
+<img src="https://s3-lc-upload.s3.amazonaws.com/uploads/2018/04/05/1028.png">
+
+#### 解题思路
+
+如果子树的所有结点都是 0，则剪去这个子树。有什么遍历可以做到呢？后续遍历可以先遍历左右子树再遍历 root，可以做到。
+
+递归的思考问题。从最低层开始考虑。如果当前结点的左右子树为空且当前结点的值为 0 则让当前结点的父节点指向 null。
+
+#### 代码
+
+```java
+public class Offer047PruneTree {
+    public TreeNode pruneTree(TreeNode root) {
+        return dfs(root);
+    }
+
+    private TreeNode dfs(TreeNode root) {
+        if (root == null) return root;
+        root.left = pruneTree(root.left); // 左子树重新赋值
+        root.right = pruneTree(root.right); // 右子树重新赋值
+        // 如果符合条件就把该树的父节点对应的子树值为 null
+        if (root.left == null && root.right == null && root.val == 0) {
+            return null;
+        }
+        return root;
+    }
+}
+```
 
 ### 序列化二叉树
 
-> 题解
+#### 解题思路
 
 用层序遍历保存节点进行序列化，然后遍历保存的节点，重建树，进行反序列化。重建树的时候需要仔细想下如何重建。
 
 - 假设序列化的结果是 `1,2,3,#,#,4,5,#,#`
 - 把需要关联左右子树的节点加入队列。
 - 元素出队，根据数组中的值判断是否有左右子树，不论是否有左右子树，数组索引都 ++。（不理解就手动模拟一下）
+
+#### 代码
 
 ```java
 /**
@@ -1242,72 +2295,53 @@ public class Codec {
 }
 ```
 
-## 栈的应用
+### 从根结点到叶结点的路径数字之和
 
-### 后缀表达式
+给定一个二叉树的根节点 root ，树中每个节点都存放有一个 0 到 9 之间的数字。
 
-根据 逆波兰表示法，求该后缀表达式的计算结果。
+每条从根节点到叶节点的路径都代表一个数字：
 
-有效的算符包括 +、-、*、/ 。每个运算对象可以是整数，也可以是另一个逆波兰表达式。
+- 例如，从根节点到叶节点的路径 1 -> 2 -> 3 表示数字 123 。计算从根节点到叶节点生成的 所有数字之和 。
 
-说明：
+叶节点是指没有子节点的节点
 
-整数除法只保留整数部分。
-给定逆波兰表达式总是有效的。换句话说，表达式总会得出有效数值且不存在除数为 0 的情况。
+<img src="https://assets.leetcode.com/uploads/2021/02/19/num2tree.jpg">
 
 
-示例 1：
 
-输入：tokens = ["2","1","+","3","*"]
-输出：9
-解释：该算式转化为常见的中缀算术表达式为：((2 + 1) * 3) = 9
-示例 2：
+输入：root = [4,9,0,5,1]
+输出：1026
+解释：
+从根到叶子节点路径 4->9->5 代表数字 495
+从根到叶子节点路径 4->9->1 代表数字 491
+从根到叶子节点路径 4->0 代表数字 40
+因此，数字总和 = 495 + 491 + 40 = 1026
 
-输入：tokens = ["4","13","5","/","+"]
-输出：6
-解释：该算式转化为常见的中缀算术表达式为：(4 + (13 / 5)) = 6
+#### 解题思路
 
-> 思路
+可以从题目中看出规律，我们需要先拿到根结点的值，然后依次拿到它字节的值，从而构成一个完整的数字。可以采用前序遍历。
 
-只要碰到的不是 `+ - * /` 就入栈，只要碰到的是  `+ - * /` 就出栈两个元素进行计算。当所有元素都入栈过一次了，stack 中保存的就是最终的答案。
+#### 代码
 
 ```java
-class Solution {
-    // 后缀表达式
-    public int evalRPN(String[] tokens) {
-        Stack<String> stack = new Stack<>();
-        for (String token : tokens) {
-            switch (token) {
-                case "+":
-                case "-":
-                case "*":
-                case "/":
-                    int n2 = Integer.parseInt(stack.pop());
-                    int n1 = Integer.parseInt(stack.pop());
-                    stack.push(String.valueOf(calculation(token, n1, n2)));
-                    break;
-                default:
-                    stack.push(token);
-            }
-        }
-        return Integer.parseInt(stack.pop());
+public class Offer049SumNumbers {
+
+    public int sumNumbers(TreeNode root) {
+        return dfs(root, 0);
     }
 
-    private int calculation(String op, int n1, int n2) {
-        switch (op) {
-            case "+":
-                return n1 + n2;
-            case "-":
-                return n1 - n2;
-            case "*":
-                return n1 * n2;
-            case "/":
-                return n1 / n2;
-        }
-        return 0;
+    private int dfs(TreeNode root, int path) {
+        if (root == null) return 0;
+        path = path * 10 + root.val;
+        // 这是一个叶子结点，那么所有的值就计算完毕了，返回
+        if (root.left == null && root.right == null) return path;
+        // 否则递归计算
+        return dfs(root.left, path) + dfs(root.right, path);
     }
 }
 ```
+
+
 
 ## 二分查找
 
