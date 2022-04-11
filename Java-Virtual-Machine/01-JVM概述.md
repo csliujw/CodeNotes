@@ -30,7 +30,7 @@ Java Virtual Machine，JAVA 程序的运行环境（JAVA 二进制字节码的�
 - 理解底层的实现原理
 - 必备技能
 
-> **常见的JVM**
+> 常见的 JVM
 
 <img src="jvm_image/JVM_Version.png">
 
