@@ -2341,6 +2341,12 @@ public class Offer049SumNumbers {
 }
 ```
 
+## 堆
+
+
+
+## 前缀树
+
 
 
 ## 二分查找
@@ -3268,4 +3274,360 @@ class Solution {
     }
 }
 ```
+
+# 每日一题
+
+## 旋转字符串
+
+[796. 旋转字符串 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/rotate-string/)
+
+给定两个字符串, s 和 goal。如果在若干次旋转操作之后，s 能变成 goal ，那么返回 true 。
+
+s 的旋转操作就是将 s 最左边的字符移动到最右边。 
+
+- 例如, 若 s = 'abcde'，在旋转一次之后结果就是 'bcdea' 。
+
+### 解题思路
+
+abcde+abcde 然后查找 bcdea 是否存在于 abcde+abcde 中
+
+### 代码
+
+```java
+public class _796_RotateString {
+    public boolean rotateString(String s, String goal) {
+        String str = s + s;
+        return s.length() == goal.length() && str.contains(goal);
+    }
+}
+```
+
+## N叉树的层序遍历
+
+[429. N 叉树的层序遍历 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/n-ary-tree-level-order-traversal/)
+
+给定一个 N 叉树，返回其节点值的*层序遍历*。（即从左到右，逐层遍历）。树的序列化输入是用层序遍历，每组子节点都由 null 值分隔（参见示例）。
+
+<img src="https://assets.leetcode.com/uploads/2018/10/12/narytreeexample.png">
+
+```
+输入：root = [1,null,3,2,4,null,5,6]
+输出：[[1],[3,2,4],[5,6]]
+```
+
+### 解题思路
+
+使用队列完成树的层序遍历模板题。
+
+### 代码
+
+```java
+public List<List<Integer>> levelOrder(Node root) {
+    List<List<Integer>> ans = new LinkedList<>();
+    if(root == null) return ans;
+
+    Queue<Node> queue = new LinkedList<>();
+    queue.add(root);
+    while (!queue.isEmpty()) {
+        int curLevelCount = queue.size();
+        List<Integer> level = new LinkedList<>();
+        for (int i = 0; i < curLevelCount; i++) {
+            Node cur = queue.poll();
+            level.add(cur.val);
+            for (int j = 0; j < cur.children.size(); j++) {
+                queue.add(cur.children.get(j));
+            }
+        }
+        ans.add(level);
+    }
+    return ans;
+}
+```
+
+## 唯一摩尔斯密码词
+
+[804. 唯一摩尔斯密码词 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/unique-morse-code-words/)
+
+国际摩尔斯密码定义一种标准编码方式，将每个字母对应于一个由一系列点和短线组成的字符串， 比如:
+
+- 'a' 对应 ".-" ，
+- 'b' 对应 "-..." ，
+- 'c' 对应 "-.-." ，以此类推。
+
+为了方便，所有 26 个英文字母的摩尔斯密码表如下：
+
+[".-","-...","-.-.","-..",".","..-.","--.","....","..",".---","-.-",".-..","--","-.","---",".--.","--.-",".-.","...","-","..-","...-",".--","-..-","-.--","--.."]
+给你一个字符串数组 words ，每个单词可以写成每个字母对应摩尔斯密码的组合。
+
+- 例如，"cab" 可以写成 "-.-..--..." ，(即 "-.-." + ".-" + "-..." 字符串的结合)。我们将这样一个连接过程称作 单词翻译 。
+
+对 words 中所有单词进行单词翻译，返回不同 单词翻译 的数量。
+
+### 解题思路
+
+一个简单的模拟题。将单词转换成摩尔斯密码，然后用哈希表判重计数。
+
+- 遍历所有单词，将单词逐一转为摩尔斯密码，然后查询哈希表中是否存在该摩尔斯密码
+- 不存在则计数++
+- 存在则不进行计数
+
+### 代码
+
+```java
+public class _804_UniqueMorseRepresentations {
+    public int uniqueMorseRepresentations(String... words) {
+        String[] password = {".-", "-...", "-.-.", "-..", ".", "..-.", "--.", "....", "..", ".---", "-.-", ".-..", "--", "-.", "---", ".--.", "--.-", ".-.", "...", "-", "..-", "...-", ".--", "-..-", "-.--", "--.."};
+        HashMap<String, Boolean> map = new HashMap<>();
+        int count = 0;
+        for (int i = 0; i < words.length; i++) {
+            // 存在的话会返回 value，不存在会返回 null，不存在，计数器++
+            if (map.putIfAbsent(toPassword(words[i], password), true) == null) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private String toPassword(String str, String[] password) {
+        StringBuilder retVal = new StringBuilder();
+        for (int i = 0; i < str.length(); i++) {
+            retVal.append(password[str.charAt(i) - 'a']);
+        }
+        return retVal.toString();
+    }
+}
+```
+
+
+
+## 统计各位数字都不同的数字的个数
+
+[357. 统计各位数字都不同的数字个数 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/count-numbers-with-unique-digits/)
+
+给你一个整数 `n` ，统计并返回各位数字都不同的数字 `x` 的个数，其中 `0 <= x < 10n` 。
+
+```
+输入：n = 2
+输出：91
+解释：答案应为除去 11、22、33、44、55、66、77、88、99 外，在 0 ≤ x < 100 范围内的所有数字。 
+```
+
+### 解题思路
+
+要求的是各个数字都不同的数字的个数。一个典型排列组合题。
+
+考虑首位不为0，第一位能选 1~9，9个，第二位能选 0~9 中处了第一位以外的 9 个，第三位 8 个。。以此类推
+
+考虑首位为 0，相当于 n-1 的情况，在前面已经计算过了
+
+所以最终结果就是两者相加
+
+n = 0 ：1
+n = 1 ：9 + 1（前面的加上当前的）
+n = 2 ：9\*9 + 10
+n = 3 ：9\*9\*8 + 91
+...
+
+### 代码
+
+```java
+class Solution {
+    public int countNumbersWithUniqueDigits(int n) {
+        int ans = 1;
+        int product = 9;
+        for (int i = 1; i <= n; i++) {
+            ans += product;
+            product *= (10-i);
+        }
+        return ans;
+    }
+}
+```
+
+DFS 也可以做
+
+```java
+public class _357_CountNumbersWithUniqueDigits {
+    static int[] map = new int[10];
+    static int count = 0;
+
+    public int countNumbersWithUniqueDigits(int n) {
+        if (n == 0) return 1;
+        dfs(n, 0);
+        return ++count;
+    }
+
+    /**
+     * 能不能 dfs 来做
+     * n = 0 return 1
+     * n = 1,只有一位。return 10
+     * n = 2,两位的数字。第一位可以放 1~9，第二位可以放 0~9
+     * 最后 return count 的时候要 ++，因为漏掉了 0 这个数字
+     */
+    private void dfs(int n, int curIndex) {
+        if (curIndex >= n) return;
+        int i = 0;
+        if (curIndex == 0) i = 1;
+        // 最高位只能为 1~9
+        for (; i <= 9; i++) {
+            if (map[i] == 0) {
+                count++;
+                map[i] = 1;
+                dfs(n, curIndex + 1);
+                map[i] = 0;
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        _357_CountNumbersWithUniqueDigits ans = new _357_CountNumbersWithUniqueDigits();
+        System.out.println(ans.countNumbersWithUniqueDigits(3));
+    }
+}
+```
+
+
+
+## 写字符串需要的行数
+
+[806. 写字符串需要的行数 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/number-of-lines-to-write-string/)
+
+我们要把给定的字符串 S 从左到右写到每一行上，每一行的最大宽度为 100个单位，如果我们在写某个字母的时候会使这行超过了 100 个单位，那么我们应该把这个字母写到下一行。我们给定了一个数组 widths ，这个数组 widths[0] 代表 'a' 需要的单位， widths[1] 代表 'b' 需要的单位，...， widths[25] 代表 'z' 需要的单位。
+
+现在回答两个问题：至少多少行能放下 S，以及最后一行使用的宽度是多少个单位？将你的答案作为长度为 2 的整数列表返回。
+
+### 解题思路
+
+如果当前行写的数字>100，则需要的行数加加，且最后一行的长度更新为使当前行写的宽度超过 100 的那个字母的长度。
+
+### 代码
+
+```java
+public class _806_NumberOfLines {
+
+    public int[] numberOfLines(int[] widths, String s) {
+        int[] ans = new int[2];
+        // 写上这个字母，不超过 100 行就写，超过了就下一行。
+        for (int i = 0; i < s.length(); i++) {
+            ans[1] += widths[s.charAt(i) - 'a'];
+            // 长度超过 100，就换行。且 currentWidth 重置为 currentWidth+num > 100 的那个 num
+            if (ans[1] > 100) {
+                ans[0]++;
+                ans[1] = widths[s.charAt(i) - 'a'];
+            }
+        }
+        if (ans[1] != 0) ans[0]++;
+        return ans;
+    }
+}
+```
+
+# 心血来潮
+
+## 寻找两个正序数组的中位数
+
+[4. 寻找两个正序数组的中位数 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/median-of-two-sorted-arrays/)
+
+给定两个大小分别为 m 和 n 的正序（从小到大）数组 nums1 和 nums2。请你找出并返回这两个正序数组的中位数 。
+
+算法的时间复杂度应该为 O(log (m+n)) 。
+
+```
+输入：nums1 = [1,3], nums2 = [2]
+输出：2.00000
+解释：合并数组 = [1,2,3] ，中位数 2
+```
+
+### 解题思路
+
+笑死，根本不知道怎么达到 $O(long(m+n))$。暴力归并排序。
+
+### 代码
+
+```java
+public double findMedianSortedArrays(int[] nums1, int[] nums2) {
+    int len = nums1.length + nums2.length;
+    // 空间也可以优化下
+    int[] arr = new int[len];
+    int index1 = 0, index2 = 0;
+    int arrIndex = 0;
+    // 可以优化下，找到 mid 就不找了
+    while (index1 < nums1.length || index2 < nums2.length) {
+        if (index1 < nums1.length && index2 < nums2.length) {
+            int cur = nums1[index1] < nums2[index2] ? nums1[index1++] : nums2[index2++];
+            arr[arrIndex++] = cur;
+        } else if (index1 < nums1.length) {
+            arr[arrIndex++] = nums1[index1++];
+        } else {
+            arr[arrIndex++] = nums2[index2++];
+        }
+    }
+    if (len % 2 == 0) {
+        return (arr[len / 2] + arr[len / 2 - 1]) * 1.0 / 2;
+    } else {
+        return arr[len / 2];
+    }
+}
+```
+
+优化后的代码
+
+```java
+public double findMedianSortedArrays(int[] nums1, int[] nums2) {
+    int len = nums1.length + nums2.length;
+    int[] arr = new int[len / 2 + 2];
+    int index1 = 0, index2 = 0;
+    int arrIndex = 0;
+    while (index1 < nums1.length || index2 < nums2.length) {
+        if (index1 < nums1.length && index2 < nums2.length) {
+            int cur = nums1[index1] < nums2[index2] ? nums1[index1++] : nums2[index2++];
+            arr[arrIndex++] = cur;
+        } else if (index1 < nums1.length) {
+            arr[arrIndex++] = nums1[index1++];
+        } else {
+            arr[arrIndex++] = nums2[index2++];
+        }
+        if (arrIndex > len / 2) {
+            if (len % 2 == 0) {
+                return (arr[len / 2] + arr[len / 2 - 1]) * 1.0 / 2;
+            } else {
+                return arr[len / 2];
+            }
+        }
+    }
+    return 0;
+}
+
+```
+
+## Z字形变换
+
+[6. Z 字形变换 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/zigzag-conversion/)
+
+将一个给定字符串 s 根据给定的行数 numRows ，以从上往下、从左到右进行 Z 字形排列。
+
+比如输入字符串为 "PAYPALISHIRING" 行数为 3 时，排列如下：
+
+P   A   H   N
+A P L S I I G
+Y   I   R
+之后，你的输出需要从左往右逐行读取，产生出一个新的字符串，比如："PAHNAPLSIIGYIR"。
+
+请你实现这个将字符串进行指定行数变换的函数：
+
+string convert(string s, int numRows);
+
+### 解题思路
+
+一道模拟题，找出规律即可。如果 numRows = 2，那么 P 后面跟的字母是 arr[numRows*2+1],...依次类推。
+
+- P 后面补充字符的规则为 arr[numRows*2+1]，如果超出了索引，则继续补充紧挨着 P 后面的字符 
+
+### 代码
+
+```java
+
+```
+
+
 
