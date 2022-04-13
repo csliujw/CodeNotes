@@ -678,7 +678,9 @@ class MyCache {
 
 ### AQS概述
 
-AQS 全称是 AbstractQueuedSynchronizer，是阻塞式锁和相关的同步器工具的框架。AQS 是用来构建锁或者其它同步器组件的重量级基础框架及整个<span style="color:red"> JUC 体系的基石</span>，通过内置的 FIFO 队列来完成资源获取线程的排队工作，<span style="color:red">并通过一个 int 型变量 state 表示持有锁的状态。</span>
+AQS 全称是 AbstractQueuedSynchronizer，是阻塞式锁和相关的同步器工具的框架。
+
+AQS 是用来构建锁或者其它同步器组件的重量级基础框架及整个<span style="color:red"> JUC 体系的基石</span>，通过内置的 FIFO 队列来完成资源获取线程的排队工作，<span style="color:red">并通过一个 int 型变量 state 表示持有锁的状态。</span>
 
 <span style="color:green">AQS = state + CHL ，AQS 是 JUC 内容中最重要的基石</span>
 
@@ -743,6 +745,8 @@ abstract static class Sync extends AbstractQueuedSynchronizer {}
 <img src="juc/AQS03.png">
 
 # 深入理解
+
+## AQS
 
 ### 前置知识
 
@@ -1002,6 +1006,12 @@ protected final boolean tryRelease(int releases) {
 }
 ```
 
+### 条件变量
+
+synchronized 同时只能与一个共享变量的 notify 或 wait 方法实现同步，而 AQS 的一个锁可以对应多个条件变量 ConditionObject。
+
+每个 ConditionObject 对象都有 await()、signal() 方法和属于自己的条件队列。因条件不满足而阻塞的会存放在条件队列中。等满足条件了（调用了 signal）会就从条件队列移除，放入到 AQS 阻塞队列中，然后激活（LockSupport.unpark）这个线程。
+
 > AQS#await 方法
 
 ```java
@@ -1009,7 +1019,7 @@ public final void await() throws InterruptedException {
     if (Thread.interrupted())
         throw new InterruptedException();
     Node node = addConditionWaiter(); // Condition 队列中，把当前线程封装为一个结点
-    int savedState = fullyRelease(node); // state-- 一次，如果 state = 0，则 unparkSuccessor 唤醒阻塞队列中的下一个线程
+    int savedState = fullyRelease(node); // 释放锁，即 state-1，如果 state = 0，则 unparkSuccessor 唤醒阻塞队列中的下一个线程
     // fullyRelease --> release(1) -->tryRelease(1)-->
     int interruptMode = 0;
     while (!isOnSyncQueue(node)) {
@@ -1017,14 +1027,45 @@ public final void await() throws InterruptedException {
         if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
             break;
     }
-    if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
+    if (acquireQueued(node, savedState) && interruptMode != THROW_IE) // 重新拿锁
         interruptMode = REINTERRUPT;
     if (node.nextWaiter != null) // clean up if cancelled
         unlinkCancelledWaiters();
     if (interruptMode != 0)
-        reportInterruptAfterWait(interruptMode);
+        reportInterruptAfterWait(interruptMode); // 被中断唤醒，向外抛出中断异常
 }
 ```
+
+再来看下 addConditionWaiter 这个方法。因为在调用该方法前已经拿到了锁，所以 addConditionWaiter 对双向链表进行操作时不需要 CAS 操作。
+
+```java
+private Node addConditionWaiter() {
+    if (!isHeldExclusively())
+        throw new IllegalMonitorStateException();
+    Node t = lastWaiter;
+    // If lastWaiter is cancelled, clean out.
+    if (t != null && t.waitStatus != Node.CONDITION) {
+        unlinkCancelledWaiters();
+        t = lastWaiter;
+    }
+
+    Node node = new Node(Node.CONDITION);
+
+    if (t == null)
+        firstWaiter = node;
+    else
+        t.nextWaiter = node;
+    lastWaiter = node;
+    return node;
+}
+```
+
+<b>注意：</b>
+
+- 在线程执行 wait 操作之前，必须先释放锁。即 fullyRelease(node)，否则会发生死锁。这个和 wait/notify 与 synchronized 的配合机制一样。
+- 线程从 wait 中被唤醒后，必须用 acquireQueued(node, savedState) 函数重新拿锁。acquireQueued 内部会
+- checkInterruptWhileWaiting(node) 代码在 park(this) 代码之后，是为了检测在 park 期间是否收到过中断信号。当线程从 park 中醒来时，有两种可能：一种是其他线程调用了 unpark，另一种是收到中断信号。这里的 await() 函数是可以响应中断的，所以当发现自己是被中断唤醒的，而不是被 unpark 唤醒的时，会直接退出 while 循环，await() 函数也会返回
+- isOnSyncQueue(node) 用于判断该 Node 是否在 AQS 的同步队列里面。初始的时候，Node 只在 Condition 的队列里，而不在 AQS 的队列里。但执行 notity 操作的时候，会放进 AQS 的同步队列。
 
 > AQS#signalAll 方法唤醒所有线程
 
@@ -1120,24 +1161,26 @@ transferForSignal
 
 ```java
 final boolean transferForSignal(Node node) {
-
-    if (!node.compareAndSetWaitStatus(Node.CONDITION, 0))
+			// 修改失败，说明结点的状态被设置成了取消。（await 已经通过 thread.interrupt() 唤醒？）
+    if (!node.compareAndSetWaitStatus(Node.CONDITION, 0)) // 尾部结点的 status 要是 0，所以要 CAS 设置 node 的 status 为 0
         return false;
 
-    Node p = enq(node); // 返回原先的
+    Node p = enq(node); // 把 node 加入等待队列尾部，并返回 node 的前驱（即旧的尾部结点）。
     int ws = p.waitStatus;
-    // 如果线程被取消了（这块不是很明白）
-    if (ws > 0 || !p.compareAndSetWaitStatus(ws, Node.SIGNAL)) 
+    // 如果上一个结点的状态被取消了，或者尝试设置上一个结点的状态
+    // 为 SIGNAL 失败了
+    // 因为 p 已经不是尾部结点了，所以需要重置这个尾部的 status 值为 -1.
+    if (
+        // 上一个节点被取消
+        ws > 0 ||
+        // 上一个节点不能设置状态为 Node.SIGNAL
+        !compareAndSetWaitStatus(p, ws, Node.SIGNAL) // 说明该节点无效了？所以可以直接唤醒 node 这个被阻塞的线程。
         LockSupport.unpark(node.thread);
     return true;
 }
+
+
 ```
-
-### 条件变量
-
-synchronized 同时只能与一个共享变量的 notify 或 wait 方法实现同步，而 AQS 的一个锁可以对应多个条件变量 ConditionObject。
-
-每个 ConditionObject 对象都有 await()、signal() 方法和属于自己的条件队列。因条件不满足而阻塞的会存放在条件队列中。等满足条件了（调用了 signal）会就从条件队列移除，放入到 AQS 阻塞队列中，然后激活（LockSupport.unpark）这个线程。
 
 ### 实现不可重入锁 
 
@@ -1315,8 +1358,8 @@ while(state 状态不允许获取) {
 lock 与 synchronized 一一对应的关系
 
 - `lock.newCondition();`
-- `newCondition.await(); 替代 wait`
-- `newCondition.signal(); 替代 notify`
+- `newCondition.await(); 替代 wait`，线程中调用了 await 的话，会将当前线程加入 Condition 的阻塞队列。
+- `newCondition.signal(); 替代 notify`，调用了 signal 的话，会将 Condition 阻塞队列中的一个线程释放并加入到 sync 的阻塞队列中。
 - 每个 Condition 内部都维护了一个阻塞队列。即，一个 lokc，它只建立了一个 Condition 则只有一个阻塞队列；建立了 5 个 Condition，就一共有 5 个阻塞队列。
 
 lock 替代了 synchronized 完成加锁解锁的操作
@@ -1326,9 +1369,7 @@ lock 的 `newCondition()` 对象替代放弃锁权限，唤醒所有进程的操
 `JUC` 实现多生产者，消费者。【生产容量为 10】
 
 ```java
-/**
- * 最多持有10个资源
- */
+// 最多持有10个资源
 public class Resource {
     private int count = 0;
     private Lock lock = new ReentrantLock();
@@ -1345,7 +1386,8 @@ public class Resource {
                 e.printStackTrace();
             }
         }
-        System.out.printf("当前线程的名字%s，当前count=%d\n", Thread.currentThread().getName(),++count);
+        String curName = Thread.currentThread().getName();
+        System.out.printf("当前线程:%s，当前count=%d\n",curName ,++count);
         // 唤醒所有进程
         condition.signalAll();
         lock.unlock();
@@ -1362,7 +1404,8 @@ public class Resource {
                 e.printStackTrace();
             }
         }
-        System.out.printf("当前线程的名字%s，当前count=%d\n", Thread.currentThread().getName(),--count);
+        String curName = Thread.currentThread().getName();
+        System.out.printf("当前线程:%s，当前count=%d\n",curName ,--count);
         // 唤醒所有进程
         condition.signalAll();
         lock.unlock();
@@ -1397,6 +1440,20 @@ public class MainDemo {
 ### 原理
 
 <img src="juc/reentrantLock.png">
+
+ReentrantLock 的内部类 Sync 继承自 AbstractQueuedSynchronizer，并且 ReentrantLock 的内部类 NonfairSync 和 FairSync 都继承自 Sync。分别实现了非公平锁和公平锁。
+
+> 公平锁和非公平锁
+
+<b>公平锁</b>：拿锁的顺序按阻塞队列中的顺序来，先来先得。
+
+<b>非公平锁</b>：拿锁的顺序，如果有线程来抢就先把锁给来抢锁的线程，避免挂起线程的开销，没有线程来抢锁才从队列中，按顺序唤醒线程。
+
+> 方法
+
+acquire(..) 是 AQS 的一个模板方法，先尝试获取锁 tryAcquire(..)，获取不到就调用 addWaiter(..) 方法把当前线程封装成一个 Node，然后调用 acquireQueued(..) 方法将 Node 加入阻塞队列，在 acquireQueued(..) 方法中会调用 park 方法阻塞当前线程/自己。
+
+release() 也是 AQS 的一个模板方法，先调用 tryRelease(..) 更改 state 的值，如果更改后 state 的值为 0 了，则调用 unparkSuccessor(..) 函数，唤醒队列中的后继者。
 
 #### 加锁解锁流程 1.8
 
@@ -1445,7 +1502,7 @@ Thread-1 执行了
 - 运行方法 `acquire(1);` 执行里面的 if 判断 进入 `tryAcquire` 逻辑，这时 state 已经是 1，结果仍然失败
 - 接下来进入 addwaiter 逻辑，构造 Node 队列（首次创建的时候会创建一个哑元）
     - 图中黄色三角表示该 Node 的 waitStatus 状态，其中 0 为默认正常状态
-    - Node 的创建时懒惰的
+    - Node 的创建是懒惰的
     - 其中第一个 Node 称为 Dummy（哑元）或哨兵，用来占位，并不关联线程
 
 <img src="juc/reentrant-lock-cas-1.png">
@@ -1478,7 +1535,7 @@ final boolean acquireQueued(final Node node, int arg) {
 
 - acquireQueued 会在一个死循环中不断尝试获得锁，失败后进入 park 阻塞 
 - 如果自己是紧邻着 head（排第二位），那么再次 tryAcquire 尝试获取锁，当然这时 state 仍为 1，失败
-- 进入 shouldParkAfterFailedAcquire 逻辑，将前驱 node，即 head 的 waitStatus 改为 -1，这次返回 false。（-1表示有责任唤醒它的后继节点。你这个 Thread 尝试好几遍都没获取到锁，应该阻塞了，你要阻塞，那得有个节点唤醒你，那就是自己的前驱节点）
+- 进入 shouldParkAfterFailedAcquire 逻辑，将前驱 node，即 head 的 waitStatus 改为 -1，这次返回 false。（-1 表示有责任唤醒它的后继节点。你这个 Thread 尝试好几遍都没获取到锁，应该阻塞了，你要阻塞，那得有个节点唤醒你，那就是自己的前驱节点）
 
 <img src="juc/reentrant-lock-cas-2.png">
 
@@ -1545,9 +1602,9 @@ protected final boolean tryRelease(int releases) {
 - Thread-4 被设置为 exclusiveOwnerThread，state = 1 
 - Thread-1 再次进入 acquireQueued 流程，获取锁失败，重新进入 park 阻塞
 
-#### 可重入 1.8
+#### 可重入原理
 
-可重入原理，基于JDK 1.8 源码
+可重入原理，基于 JDK 1.8 源码
 
 ```java
 static final class NonfairSync extends Sync {
@@ -1677,7 +1734,7 @@ static final class NonfairSync extends Sync {
 
 #### 公平锁
 
-公平锁的实现主要在于 tryAcquire 方法的实现。先检查队列中有没有节点，有就先用队列中的，而不是过来竞争的Thread。
+公平锁的实现主要在于 tryAcquire 方法的实现。先检查队列中有没有节点，有就先用队列中的，而不是过来竞争的 Thread。
 
 ```java
 static final class FairSync extends Sync {
@@ -1689,10 +1746,7 @@ static final class FairSync extends Sync {
 
     // AQS 继承过来的方法, 方便阅读, 放在此处
     public final void acquire(int arg) {
-        if (
-                !tryAcquire(arg) &&
-                        acquireQueued(addWaiter(Node.EXCLUSIVE), arg)
-        ) {
+        if (!tryAcquire(arg) && acquireQueued(addWaiter(Node.EXCLUSIVE), arg)) {
             selfInterrupt();
         }
     }
@@ -1703,8 +1757,7 @@ static final class FairSync extends Sync {
         int c = getState();
         if (c == 0) {
             // 先检查 AQS 队列中是否有前驱节点, 没有才去竞争
-            if (!hasQueuedPredecessors() &&
-                    compareAndSetState(0, acquires)) {
+            if (!hasQueuedPredecessors() && compareAndSetState(0, acquires)) {
                 setExclusiveOwnerThread(current);
                 return true;
             }
@@ -1725,11 +1778,9 @@ static final class FairSync extends Sync {
         Node s;
         // h != t 时表示队列中有 Node
         return h != t &&
-                (
-                        // (s = h.next) == null 表示队列中还有没有老二
-                        (s = h.next) == null || // 或者队列中老二线程不是此线程
-                                s.thread != Thread.currentThread()
-                );
+               (// (s = h.next) == null 表示队列中还有没有老二
+            		(s = h.next) == null || // 或者队列中老二线程不是此线程
+            		s.thread != Thread.currentThread());
     }
 }
 
@@ -1737,7 +1788,7 @@ static final class FairSync extends Sync {
 
 #### 条件变量
 
-每个条件变量其实就对应着一个等待队列，其实现类是 ConditionObject
+每个条件变量其实就对应着一个等待队列，其实现类是 ConditionObject。
 
 > await 流程 
 
@@ -1787,8 +1838,7 @@ public class ConditionObject implements Condition, java.io.Serializable {
     // 最后一个等待节点
     private transient Node lastWaiter;
 
-    public ConditionObject() {
-    }
+    public ConditionObject() {}
 
     // ㈠ 添加一个 Node 至等待队列
     private Node addConditionWaiter() {
@@ -1818,6 +1868,7 @@ public class ConditionObject implements Condition, java.io.Serializable {
             first.nextWaiter = null;
         } while (
             // 将等待队列中的 Node 转移至 AQS 队列, 不成功且还有节点则继续循环 ㈢
+            // 可能会因为超时导致等待失败
                 !transferForSignal(first) &&
                         // 队列还有节点
                         (first = firstWaiter) != null
@@ -1827,17 +1878,18 @@ public class ConditionObject implements Condition, java.io.Serializable {
     // 外部类方法, 方便阅读, 放在此处
     // ㈢ 如果节点状态是取消, 返回 false 表示转移失败, 否则转移成功
     final boolean transferForSignal(Node node) {
+        // 将 node 的 waitStatus 设置为 0，因为它要成为尾结点了。
         // 如果状态已经不是 Node.CONDITION, 说明被取消了
         if (!compareAndSetWaitStatus(node, Node.CONDITION, 0))
             return false;
-        // 加入 AQS 队列尾部
+        // 加入 AQS 队列尾部，并返回旧的尾部结点。
         Node p = enq(node);
         int ws = p.waitStatus;
         if (
             // 上一个节点被取消
                 ws > 0 ||
                         // 上一个节点不能设置状态为 Node.SIGNAL
-                        !compareAndSetWaitStatus(p, ws, Node.SIGNAL)
+                        !compareAndSetWaitStatus(p, ws, Node.SIGNAL) // 说明该节点无效了？所以可以直接唤醒 node 这个被阻塞的线程。
         ) {
             // unpark 取消阻塞, 让线程重新同步状态
             LockSupport.unpark(node.thread);
@@ -1867,7 +1919,7 @@ public class ConditionObject implements Condition, java.io.Serializable {
             throw new IllegalMonitorStateException();
         Node first = firstWaiter;
         if (first != null)
-            doSignal(first);
+            doSignal(first); // 将结点加入 AQS 阻塞队列
     }
 
     // 全部唤醒 - 必须持有锁才能唤醒, 因此 doSignalAll 内无需考虑加锁
@@ -2021,11 +2073,13 @@ public class ConditionObject implements Condition, java.io.Serializable {
 
 ## ReentrantReadWriteLock
 
-读写锁。当读操作远远高于写操作时，这时候使用 读写锁 让 读-读 可以并发，提高性能。 类似于数据库中的 select ... from ... lock in share mode 
+读写锁。当读操作远远高于写操作时，这时候使用【读写锁】让【读-读】可以并发，提高性能。 类似于数据库中的 select ... from ... lock in share mode 
 
-提供一个 数据容器类，内部分别使用读锁保护数据的 read() 方法，写锁保护数据的 write() 方法
+提供一个数据容器类，内部分别使用读锁保护数据的 read() 方法，写锁保护数据的 write() 方法
 
-### 基本用法
+### 基本
+
+读写锁的基本用法示例：
 
 ```java
 package utils;
@@ -2164,15 +2218,42 @@ A->>db:4)查询数据库（x=2）
 A->>cache:5)后续查询可以得到新值（x=1）！！！
 ```
 
-<span style="color:red"><b>最后！加锁，保证安全！</b></span>
+<b style="color:red">最后！加锁，保证安全！</b>
 
 ### 读写锁原理
+
+readerLock 和 writerLock 共用同一个 sync 对象。sync 对象同互斥锁一样，分为非公平和公平两种策略，并继承自 AQS。
+
+readerLock 和 writerLock 都是用 state 变量来表示锁的状态。将 state 变量拆成两半，低 16 位是写锁，高 16 位是读锁。
+
+```java
+static final int SHARED_SHIFT   = 16;
+static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
+static final int MAX_COUNT      = (1 << SHARED_SHIFT) - 1;
+static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
+
+// 读锁的重入次数 >>> 无符号左移，高 16 位表示读锁
+static int sharedCount(int c)    { return c >>> SHARED_SHIFT; }
+// 写锁的重入次数，c & ..1111111,同为 1 则为 1，求出写锁的个数。低 16 位。
+static int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
+```
+
+为什么只用一个【变量】表示两种状态？可能是
+
+- ①AQS 中只定义了一个 state。
+- ②CAS 无法同时操作两个 int 变量【★】。
+
+> 判断锁状态
+
+- state=0 时，说明既没有线程持有读锁，也没有线程持有写锁；
+- state !=0 时，要么有线程持有读锁，要么有线程持有写锁，两者不能同时成立，因为读和写互斥；
+- 通过 sharedCount(state) 和 exclusiveCount(state) 判断到底是读线程还是写线程持有了该锁；
 
 #### 图解流程
 
 读写锁用的是同一个 Sycn 同步器，因此等待队列、state 等也是同一个
 
-> **`t1 w.lock，t2 r.lock`**
+> <b>`t1 w.lock，t2 r.lock`</b>
 
 1）t1 成功上锁，流程与 ReentrantLock 加锁相比没有特殊之处，不同是写锁状态占了 state 的低 16 位，而读锁 使用的是 state 的高 16 位。结合写锁的加锁代码看看
 
@@ -2227,7 +2308,7 @@ protected final boolean tryAcquire(int acquires) {
 
 <img src="juc/read_write-01.png">
 
-2）t2 执行 r.lock，这时进入读锁的 sync.acquireShared(1) 流程，首先会进入 tryAcquireShared 流程。如果有写 锁占据，那么 tryAcquireShared 返回 -1 表示失败，结合读锁的加锁代码 lock 看看。
+2）t2 执行 r.lock，这时进入读锁的 sync.acquireShared(1) 流程，首先会进入 tryAcquireShared 流程。如果有写锁占据，那么 tryAcquireShared 返回 -1 表示失败，结合读锁的加锁代码 lock 看看。
 
 ```java
 public void lock() {
@@ -2256,19 +2337,19 @@ tryAcquireShared 返回值表示
 
 <img src="juc/image-20210814212057267.png">
 
-> **`t3 r.lock，t4 w.lock`**
+> <b>`t3 r.lock，t4 w.lock`</b>
 
  这种状态下，假设又有 t3 加读锁和 t4 加写锁，这期间 t1 仍然持有锁，就变成了下面的样子：
 
-t2、t3加的读锁，所以状态是共享的，t4是写锁（Ex 独占）。-1代表它有职责唤醒后继节点。
+t2、t3 加的读锁，所以状态是共享的，t4 是写锁（Ex 独占）。-1代表它有职责唤醒后继节点。
 
 <img src="juc/image-20210814211839290.png">
 
-> **`t1 w.unlock`**
+> <b>`t1 w.unlock`</b>
 
-<span style="color:red">**写锁解锁的时候，会唤醒所有的读锁线程！！！**</span>
+<span style="color:red">写锁解锁的时候，会唤醒所有的读锁线程！！！</span>
 
-这时会走到写锁的 `sync.release(1)` 流程，调用 `sync.tryRelease(1)`成功，变成下面的样子。
+这时会走到写锁的 `sync.release(1)` 流程，调用 `sync.tryRelease(1)` 成功，变成下面的样子。
 
 <img src="juc/image-20210814212238151.png">
 
@@ -2298,7 +2379,7 @@ t2、t3加的读锁，所以状态是共享的，t4是写锁（Ex 独占）。-1
 
 > t2 r.unlock，t3 r.unlock
 
-<span style="color:red">**读锁释放需要用 cas 控制 state 的减少，不然 state的操作 会有并发安全问题**</span>
+<span style="color:red">读锁释放需要用 cas 控制 state 的减少，不然 state 的操作 会有并发安全问题</span>
 
 t2 进入 sync.releaseShared(1) 中，调用 tryReleaseShared(1) 让计数减一，但由于计数还不为零
 
@@ -2642,7 +2723,7 @@ static final class NonfairSync extends Sync {
 
 ## StampedLock
 
-<span style="color:red">**注意 **</span>
+<span style="color:red">注意 </span>
 
 - StampedLock 不支持条件变量 
 - StampedLock 不支持可重入
@@ -2679,7 +2760,7 @@ public long tryOptimisticRead() {
 }
 ```
 
-提供一个 数据容器类 内部分别使用读锁保护数据的 read() 方法，写锁保护数据的 write() 方法
+提供一个【数据容器类】内部分别使用读锁保护数据的 read() 方法，写锁保护数据的 write() 方法
 
 ```java
 class DataContainerStamped {
@@ -2726,7 +2807,7 @@ class DataContainerStamped {
 }
 ```
 
-测试 读-读 可以优化
+测试【读-读】可以优化
 
 ```java
 public static void main(String[] args) {
@@ -2750,7 +2831,7 @@ public static void main(String[] args) {
 15:58:51.220 c.DataContainerStamped [t1] - read finish...256, data:1 
 ```
 
-测试 读-写 时优化读补加读锁
+测试【读-写】时优化读补加读锁
 
 ```java
 public static void main(String[] args) {
@@ -2791,23 +2872,19 @@ AQS  AbstractQueueSynchronizer
 
 > 在信号量上我们定义两种操作：
 
-- acquire（获取） 当一个线程调用acquire操作时，它要么通过成功获取信号量（信号量减1），要么一直等下去，直到有线程释放信号量，或超时。
+- acquire（获取） 当一个线程调用 acquire 操作时，它要么通过成功获取信号量（信号量减 1），要么一直等下去，直到有线程释放信号量，或超时。
 
-- release（释放）实际上会将信号量的值加1，然后唤醒等待的线程。
+- release（释放）实际上会将信号量的值加 1，然后唤醒等待的线程。
 
 > 代码示例：
 
-我们模拟一个抢车位的场景，假设一共有6个车，3个停车位
+我们模拟一个抢车位的场景，假设一共有 6 个车，3 个停车位
 
 ```java
-package com.atguigu.thread;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 /**
- * 
- * @Description: TODO(这里用一句话描述这个类的作用)  
- * 
  * 在信号量上我们定义两种操作：
  * acquire（获取） 当一个线程调用acquire操作时，它要么通过成功获取信号量（信号量减1），
  *             要么一直等下去，直到有线程释放信号量，或超时。
@@ -2819,9 +2896,7 @@ public class SemaphoreDemo {
 
     public static void main(String[] args) {
 
-        /**
-         * 初始化一个信号量为3，默认是false 非公平锁， 模拟3个停车位
-         */
+        // 初始化一个信号量为3，默认是false 非公平锁， 模拟3个停车位
         Semaphore semaphore = new Semaphore(3, false);
 
         // 模拟6部车
@@ -2871,14 +2946,14 @@ public class SemaphoreDemo {
 5     离开车位
 ```
 
-看运行结果能够发现，0 2 1 车辆首先抢占到了停车位，然后等待3秒后，离开，然后后面 3 4 5 又抢到了车位
+看运行结果能够发现，0 2 1 车辆首先抢占到了停车位，然后等待 3 秒后，离开，然后后面 3 4 5 又抢到了车位
 
 ### 应用
 
-semaphore 实现，限制对共享资源的使用。（资源数和线程数一致的时候，用semaphore 比较合适）
+Semaphore 实现，限制对共享资源的使用。（资源数和线程数一致的时候，用 Semaphore 比较合适）
 
-- 使用 Semaphore 限流，在访问高峰期时，让请求线程阻塞，高峰期过去再释放许可，当然它只适合限制单机 线程数量，并且仅是限制线程数，而不是限制资源数（例如连接数，请对比 Tomcat LimitLatch 的实现） 
-- 用 Semaphore 实现简单连接池，对比『享元模式』下的实现（用wait notify），性能和可读性显然更好， 注意下面的实现中线程数和数据库连接数是相等的
+- 使用 Semaphore 限流，在访问高峰期时，让请求线程阻塞，高峰期过去再释放许可，当然它只适合限制单机线程数量，并且仅是限制线程数，而不是限制资源数（例如连接数，请对比 Tomcat LimitLatch 的实现） 
+- 用 Semaphore 实现简单连接池，对比『享元模式』下的实现（用 wait notify），性能和可读性显然更好， 注意下面的实现中线程数和数据库连接数是相等的
 
 ```java
 // 用 Semaphore 代码可读性提高了很多。
@@ -2972,7 +3047,7 @@ Semaphore 有点像一个停车场，permits 就好像停车位数量，当线�
 ### 用法
 
 - 计数。初始化数值为多少。然后根据条件进行 countDown()
-- 调用 await 方法，只要计数不 是0，await 这个栓就会锁着。直到计数为 0，这个拴才会解锁。
+- 调用 await 方法，只要计数不是0，await 这个栓就会锁着。直到计数为 0，这个拴才会解锁。
 - 等待多少线程结束，线程结束后做 await 后面的代码。
 
  CountDownLatch 主要有两个方法，当一个或多个线程调用 await 方法时，这些线程会阻塞。
@@ -3035,19 +3110,19 @@ main	 班长关门走人，main线程是班长
 
 ### 原理
 
-CountDownLatch 使用 AQS 的方式与 Semaphore 很相似：在同步状态中保存的是当前的计数值。countDown 方法调用 release，从而导致计数值递减，并且当计数值为0时，解除所有线程的阻塞。awaite 调用 acquire，当计数器为0时，acquire 将立即返回，否则将阻塞。
+CountDownLatch 使用 AQS 的方式与 Semaphore 很相似：在同步状态中保存的是当前的计数值。countDown 方法调用 release，从而导致计数值递减，并且当计数值为 0 时，解除所有线程的阻塞。awaite 调用 acquire，当计数器为 0 时，acquire 将立即返回，否则将阻塞。
 
 ## CyclicBarrier
 
-循环栅栏，用来进行线程写作，等待线程满足某个计数。构造时设置**计数个数**，每个线程执行到某个需要“同步”的时刻调用 await() 方法进行等待，当等待的线程数满足 **计数个数** 时，继续执行。
+循环栅栏，用来进行线程写作，等待线程满足某个计数。构造时设置计数个数，每个线程执行到某个需要“同步”的时刻调用 await() 方法进行等待，当等待的线程数满足计数个数时，继续执行。
 
-`CyclicBarrier` 与 `CountDownLatch` 的主要区别在于 `CyclicBarrier` 是可以重用的 `CyclicBarrier` 可以被比 喻为『人满发车』
+`CyclicBarrier` 与 `CountDownLatch` 的主要区别在于 `CyclicBarrier` 是可以重用的 `CyclicBarrier` 可以被比喻为『人满发车』
 
 ### 用法
 
-`CountDownLatch` 实现3次等人发车。
+`CountDownLatch` 实现 3 次等人发车。
 
-<span style="color:red">**注意：**</span>要清楚线程数和`CyclicBarrier` 与 `CountDownLatch`的计数值到底要不要一样。这里的这个 demo 是需要保持一致的，这样才可以确保多次循环时，是这次循环的线程让计数值-1的。
+<span style="color:red">注意：</span>要清楚线程数和 `CyclicBarrier` 与 `CountDownLatch` 的计数值到底要不要一样。这里的这个 demo 是需要保持一致的，这样才可以确保多次循环时，是这次循环的线程让计数值 -1 的。
 
 ```java
 public static void CountDownLatch() throws InterruptedException {
@@ -3164,13 +3239,13 @@ J.U.C安全集合-->Concurrent类
         - 求大小弱一致性，size 操作未必是 100% 准确 
         - 读取弱一致性
 
-**遍历时如果发生了修改，对于非安全容器来讲，使用 fail-fast 机制也就是让遍历立刻失败，抛出 `ConcurrentModificationException`，不再继续遍历**
+<b>遍历时如果发生了修改，对于非安全容器来讲，使用 fail-fast 机制也就是让遍历立刻失败，抛出 `ConcurrentModificationException`，不再继续遍历</b>
 
 ## ConcurrentHashMap
 
 ### 概述
 
-并发编程中 `HashMap` 可能出现死循环（JDK7中有，因为JDK7用的头插法插入数据），JDK8已经修复了死循环，不过依旧有线程不安全
+并发编程中 `HashMap` 可能出现死循环（JDK7 中有，因为 JDK7 用的头插法插入数据），JDK8 已经修复了死循环，不过依旧有线程不安全
 
 ```java
 public static void testDeadLoop() throws InterruptedException {
@@ -3243,7 +3318,6 @@ public class ConcurrentHashMapDemo {
 
 
     private static void demo2() {
-
         Map<String, Integer> collect = IntStream.range(1, 27).parallel()
                 .mapToObj(idx -> readFromFile(idx))
                 .flatMap(list -> list.stream())
@@ -3274,7 +3348,6 @@ public class ConcurrentHashMapDemo {
                 e.printStackTrace();
             }
         });
-
         System.out.println(counterMap);
     }
 
@@ -3354,7 +3427,7 @@ public ConcurrentHashMap(int initialCapacity,
 }
 ```
 
-#### get 流程
+#### get流程
 
 ```java
 public V get(Object key) {
@@ -3382,7 +3455,7 @@ public V get(Object key) {
 }
 ```
 
-#### put 流程
+#### put流程
 
 以下数组简称（table），链表简称（bin）
 
@@ -3561,7 +3634,7 @@ private final void addCount(long x, int check) {
 
 ```
 
-#### size 计算流程
+#### size计算流程
 
 size 计算实际发生在 put，remove 改变集合元素的操作之中
 
@@ -3593,7 +3666,7 @@ final long sumCount() {
 }
 ```
 
-**Java 8** 数组（Node） +（ 链表 Node | 红黑树 TreeNode ） 以下数组简称（table），链表简称（bin）
+Java8 数组（Node） +（ 链表 Node | 红黑树 TreeNode ） 以下数组简称（table），链表简称（bin）
 
 - 初始化，使用 cas 来保证并发安全，懒惰初始化 table
 - 树化，当 table.length < 64 时，先尝试扩容，超过 64 时，并且 bin.length > 8 时，会将链表树化，树化过程会用 synchronized 锁住链表头
@@ -3602,17 +3675,15 @@ final long sumCount() {
 - 扩容，扩容时以 bin 为单位进行，需要对 bin 进行 synchronized，但这时妙的是其它竞争线程也不是无事可做，它们会帮助把其它 bin 进行扩容，扩容时平均只有 1/6 的节点会把复制到新 table 中
 - size，元素个数保存在 baseCount 中，并发时的个数变动保存在 CounterCell[] 当中。最后统计数量时累加即可
 
-**源码分析** http://www.importnew.com/28263.html
+源码分析 http://www.importnew.com/28263.html
 
-**其它实现** https://github.com/boundary/high-scale-lib
-
-
+其它实现 https://github.com/boundary/high-scale-lib
 
 ### JDK7
 
 - 由 `Segment` 数组和 `HashEntry` 数组结构组成，每个 segment 对应一把锁。
 
-- segment 数组的长度是通过 `concurrentcyLevel` 计算得来的。为了能够通过按位与的散列算法定位 segments 数组的索引，必须保证长度为 2。`segment.length >= concurrentcyLevel` 的最小的 2的n次方
+- segment 数组的长度是通过 `concurrentcyLevel` 计算得来的。为了能够通过按位与的散列算法定位 segments 数组的索引，必须保证长度为 2。`segment.length >= concurrentcyLevel` 的最小的 2 的 n 次方
 
     ```java
     private void writeObject(java.io.ObjectOutputStream s)
@@ -3652,18 +3723,18 @@ final long sumCount() {
     }
     ```
 
-- 定位 Segment。会进行再散列，减少散列冲突。尽量保证数据均匀分布在各个 segment 段中。
+- 定位 Segment。会进行再散列，减少散列冲突。尽量保证数据均匀分布在各个 Segment 段中。
 
 - get 操作。先进行再散列，然后使用这个散列值通过散列运算定位到 Segment，再通过散列算法定位到元素。
 
 - put 操作。先定位到 Segment，然后执行插入。插入前先判断是否要扩容，在定位添加元素的位置，然后放入数据。
 
-- size 操作。先尝试 2 次通过不锁柱 Segment 的方式来统计各个 Segment大小。如果统计过程中，容器的 count 发生了变化，则再采用加锁的方式来统计所有 segment 的大小。判断 count 是否发生变化时通过在 size 前后比较 `modCount` 是否发生变化。
+- size 操作。先尝试 2 次通过不锁柱 Segment 的方式来统计各个 Segment 大小。如果统计过程中，容器的 count 发生了变化，则再采用加锁的方式来统计所有 Segment 的大小。判断 count 是否发生变化时通过在 size 前后比较 `modCount` 是否发生变化。
 
 > 优缺点
 
-- 优点：如果多个线程访问不同的 segment，实际是没有冲突的，这与 `jdk8` 中是类似的
-- 缺点：Segments 数组默认大小为16，这个容量初始化指定后就不能改变了，并且不是懒惰初始化
+- 优点：如果多个线程访问不同的 Segment，实际是没有冲突的，这与 `jdk8` 中是类似的
+- 缺点：Segments 数组默认大小为 16，这个容量初始化指定后就不能改变了，并且不是懒惰初始化
 
 #### 构造器分析
 
@@ -3800,7 +3871,7 @@ final V put(K key, int hash, V value, boolean onlyIfAbsent) {
 }
 ```
 
-#### rehash 流程
+#### rehash流程
 
 发生在 put 中，因为此时已经获得了锁，因此 rehash 时不需要考虑线程安全
 
@@ -3898,7 +3969,7 @@ private static int hash(Object k) {
 }
 ```
 
-#### get 流程
+#### get流程
 
 get 时并未加锁，用了 UNSAFE 方法保证了可见性，扩容过程中，get 先发生就从旧表取内容，get 后发生就从新表取内容
 
@@ -3972,11 +4043,11 @@ public int size() {
 }
 ```
 
-#### JDK7 并发死链
+#### JDK7并发死链
 
 > 测试代码
 
-注意：需要在 jdk7 下运行。JDK7 是头插法。
+注意：需要在 JDK7 下运行。JDK7 是头插法。
 
 ```java
 package test;
@@ -4098,7 +4169,7 @@ e (1)->(35)->(16)->null
 next (35)->(16)->null
 ```
 
-在 Threads 面板选中 Thread-1 恢复运行，可以看到控制台输出新的内容如下，Thread-1 扩容已完成`newTable[1] (35)->(1)->null 扩容后大小：13`
+在 Threads 面板选中 Thread-1 恢复运行，可以看到控制台输出新的内容如下，Thread-1 扩容已完成 `newTable[1] (35)->(1)->null 扩容后大小：13`
 
 这时 Thread-0 还停在 594 处， Variables 面板变量的状态已经变化为
 
@@ -4266,7 +4337,7 @@ return x;
 
 ### 加锁分析
 
-==高明之处==在于用了两把锁和 dummy 节点
+高明之处在于用了两把锁和 dummy 节点
 
 - 用一把锁，同一时刻，最多只允许有一个线程（生产者或消费者，二选一）执行
 - 用两把锁，同一时刻，可以允许两个线程同时（一个生产者与一个消费者）执行
@@ -4275,7 +4346,7 @@ return x;
 
 线程安全分析
 
-- 当节点总数大于 2 时（包括 dummy 节点），putLock 保证的是last 节点的线程安全，takeLock 保证的是head 节点的线程安全。两把锁保证了入队和出队没有竞争。**因为你节点总数大于2的！**
+- 当节点总数大于 2 时（包括 dummy 节点），putLock 保证的是last 节点的线程安全，takeLock 保证的是head 节点的线程安全。两把锁保证了入队和出队没有竞争。<b>因为你节点总数大于2的！</b>
 - 当节点总数等于 2 时（即一个 dummy 节点，一个正常节点）这时候，仍然是两把锁锁两个对象，不会竞争
 - 当节点总数等于 1 时（就一个 dummy 节点）这时 take 线程会被 notEmpty 条件阻塞，有竞争，会阻塞
 
@@ -4442,7 +4513,7 @@ public void forEach(Consumer<? super E> action) {
 
 ### 原理
 
-#### get 弱一致性
+#### get弱一致性
 
 <img src="juc/image-20210815170614724.png">
 
