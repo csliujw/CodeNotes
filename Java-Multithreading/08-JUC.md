@@ -676,31 +676,50 @@ class MyCache {
 
 ## AQS概述
 
-
-
-# 深入理解
-
-## AQS 原理
+### AQS概述
 
 AQS 全称是 AbstractQueuedSynchronizer，是阻塞式锁和相关的同步器工具的框架。AQS 是用来构建锁或者其它同步器组件的重量级基础框架及整个<span style="color:red"> JUC 体系的基石</span>，通过内置的 FIFO 队列来完成资源获取线程的排队工作，<span style="color:red">并通过一个 int 型变量 state 表示持有锁的状态。</span>
 
 <span style="color:green">AQS = state + CHL ，AQS 是 JUC 内容中最重要的基石</span>
 
-CHL（三个大牛的名字组成），是一个双向队列。
+CHL（三个大牛的名字组成），是由双向链表和 CAS 实现的双向阻塞队列
+
+```java
+public abstract class AbstractQueuedSynchronizer
+    extends AbstractOwnableSynchronizer
+    implements java.io.Serializable {
+
+    private static final long serialVersionUID = 7373984972572414691L;
+
+    protected AbstractQueuedSynchronizer() { }
+		// 记录了锁的状态
+    static final class Node {
+        static final Node SHARED = new Node();
+        static final Node EXCLUSIVE = null;
+        static final int CANCELLED =  1;
+        static final int SIGNAL    = -1;
+					static final int CONDITION = -2;
+        static final int PROPAGATE = -3;
+        volatile int waitStatus;
+        volatile Node prev;
+        volatile Node next;
+        volatile Thread thread;
+        Node nextWaiter;
+    }
+    private transient volatile Node head; // 指向双链表头部
+    private transient volatile Node tail;// 指向双链表尾部
+    private volatile int state;
+}
+```
+
+入队就是把新的 Node 加到 tail 后面，然后对 tail 进行 CAS 操作；出队就是对 head 进行 CAS 操作，把 head 向后移一个位置。
+
+### 锁和同步器
 
 前面简单介绍了下 JUC 中几个锁的用法，而<span style="color:green">锁和同步器的关系</span>如下：
 
 - 锁，面向锁的<span style="color:red">使用者</span>，用户层面的 API
 - 同步器，面向锁的<span style="color:red">实现者</span>，比如 Doug Lee，提出统一规范并简化了锁的实现，屏蔽了同步状态管理、阻塞线程排队和通知、唤醒机制等。
-
-### 前置知识
-
-- 公平锁非公平锁
-- 可重入锁
-- `LockSupport`
-- 自旋锁
-- 数据结构链表
-- 模板设计模式
 
 ### 基本原理
 
@@ -723,6 +742,17 @@ abstract static class Sync extends AbstractQueuedSynchronizer {}
 
 <img src="juc/AQS03.png">
 
+# 深入理解
+
+### 前置知识
+
+- 公平锁非公平锁
+- 可重入锁
+- `LockSupport`
+- 自旋锁
+- 数据结构链表
+- 模板设计模式
+
 ### 变量一览
 
 AQS 类图
@@ -738,7 +768,7 @@ AQS 的 UML 图如下：
 > Node 类中
 
 - SHARED：标记该线程是获取共享资源时被阻塞挂起后放入 AQS 队列的
-- EXCLUSIVE： 标记线程是获取独占资源时被挂起后放入AQS队列的
+- EXCLUSIVE： 标记线程是获取独占资源时被挂起后放入 AQS 队列的
 - waitStatus：记录当前线程等待状态
     - CANCELLED： 线程被取消了
     - SIGNAL： 线程需要被唤醒
@@ -763,7 +793,9 @@ AQS 中使用用 state 属性来表示资源的状态【分独占模式和共享
 - `tryRelease` 
 - `tryAcquireShared` 
 - `tryReleaseShared` 
-- `isHeldExclusively`
+- `isHeldExclusively`：是否是独占锁。
+    - 每次调用 `AbstractQueuedSynchronizer.ConditionObject` 方法时都会调用该方法。
+    - `ConditionObject` 用于独占锁模式的。
 
 <span style="color:red">获取锁</span>
 
@@ -797,15 +829,15 @@ state 表示当前线程获取锁的可重入次数；
 
 > 对于读写锁 ReentrantReadWriteLock 来说
 
-state 的高16位表示读状态，也就是获取该读锁的次数，低16位表示获取到写锁的线程的可重入次数；
+state 的高 16 位表示读状态，也就是获取该读锁的次数，低 16 位表示获取到写锁的线程的可重入次数；
 
 > 对于 Semaphore 来说
 
-state 用来表示当前可用信号的个数；每 acquire 一次，state 值就减一
+state 用来表示当前可用信号的个数；每 acquire 一次，state 值就减一。
 
 > 对于 CountDownlatch 来说
 
-state 用来表示计数器当前的值；每 countDown 一次，state 值就加一（确定不是减一？）
+state 用来表示计数器当前的值；每 countDown 一次，state 值就减一。
 
 ### 阻塞队列
 
@@ -819,10 +851,10 @@ state 用来表示计数器当前的值；每 countDown 一次，state 值就加
 
 ```java
 /**
-     * Inserts node into queue, initializing if necessary. See picture above.
-     * @param node the node to insert
-     * @return node's predecessor
-     */
+* Inserts node into queue, initializing if necessary. See picture above.
+* @param node the node to insert
+* @return node's predecessor
+*/
 private Node enq(final Node node) {
     for (;;) {
         Node t = tail;
@@ -843,6 +875,263 @@ private Node enq(final Node node) {
 ```
 
 <img src="juc/image-20211104122707478.png">
+
+> AQS 申请锁
+
+```java
+public final void acquire(int arg) {
+    if (!tryAcquire(arg) && // 尝试获得锁，如果获得失败，即 !tryAcquire(arg) = false，则执行 && 后面的语句
+        // addWaiter 封装线程结点，准备将结点加入阻塞队列
+        // acquireQueued 先尝试自旋，自旋失败后就阻塞线程 
+        acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
+        selfInterrupt();
+}
+```
+
+> AQS 封装结点-基于 JDK11
+
+```java
+private Node addWaiter(Node mode) {
+    Node node = new Node(mode); // 创建一个队列结点
+		
+    for (;;) {
+        Node oldTail = tail;
+        // 队列存在的话，则尝试 CAS 向队尾加入结点
+        if (oldTail != null) {
+            node.setPrevRelaxed(oldTail);
+            if (compareAndSetTail(oldTail, node)) {
+                oldTail.next = node;
+                return node;
+            }
+        } else { // 如果还没有初始化队列的话，则初始化队列，然后在向队列中加入结点，初始化后，会让 Syn 对象中的 head 和 tail 指向这个虚拟头节点
+            initializeSyncQueue();
+        }
+    }
+}
+```
+
+> AQS 挂起线程
+
+```java
+final boolean acquireQueued(final Node node, int arg) {
+    boolean interrupted = false;
+    try {
+        for (;;) {
+            // 拿到 node 的前驱结点
+            final Node p = node.predecessor();
+            //如果前驱是 head 的话，说明我是阻塞队列中的第一个结点
+            // 则不直接加入阻塞队列，而是 tryAcuire 尝试自旋，看能不能获取到锁。
+            if (p == head && tryAcquire(arg)) { 
+                setHead(node);
+                p.next = null; // help GC
+                return interrupted;
+            }
+            //  第一次调用 shouldParkAfterFailedAcquire 的话
+            // 会 cas 修改 Node 的 SIGNAL 值,设置为需要阻塞，这样第二次循环的时候就是直接阻塞线程了
+            // 而不是还是尝试自旋。结点应该阻塞的话 return true
+            if (shouldParkAfterFailedAcquire(p, node)) 
+                interrupted |= parkAndCheckInterrupt(); // 阻塞当前线程
+        }
+    } catch (Throwable t) {
+        cancelAcquire(node);
+        if (interrupted)
+            selfInterrupt();
+        throw t;
+    }
+}
+```
+
+> AQS 释放锁
+
+```mermaid
+graph LR
+release-->|调用|tryRelease
+```
+
+```java
+public final boolean release(int arg) {
+    if (tryRelease(arg)) { // 尝试释放锁（一般是 state--）
+         // if ture，即可以释放锁了，那么就将队列中第一个被阻塞的线程释放。
+        // 释放锁后，唤醒阻塞队列中的线程。
+        Node h = head;
+        // 如果有被阻塞的线程，且等待唤醒
+        if (h != null && h.waitStatus != 0)
+            unparkSuccessor(h); // 通过 LockSupport 的 unpark 方法唤醒线程
+        return true;
+    }
+    return false;
+}
+```
+
+waitStatus 的取值
+
+```java
+static final class Node {
+    /** Marker to indicate a node is waiting in shared mode */
+    static final Node SHARED = new Node();
+    /** Marker to indicate a node is waiting in exclusive mode */
+    static final Node EXCLUSIVE = null;
+
+    /** waitStatus value to indicate thread has cancelled. */
+    static final int CANCELLED =  1;
+    /** waitStatus value to indicate successor's thread needs unparking. */
+    static final int SIGNAL    = -1;
+    /** waitStatus value to indicate thread is waiting on condition. */
+    static final int CONDITION = -2;
+    /** waitStatus value to indicate the next acquireShared should unconditionally propagate. */
+    static final int PROPAGATE = -3;
+}
+```
+
+tryRelease 具体细节
+
+```java
+@ReservedStackAccess // 保留stack访问。意识是，如果 StackOverflow 的话，会在预留的栈空间中完成剩下的代码操作
+protected final boolean tryRelease(int releases) {
+    int c = getState() - releases;
+    // 如果当前线程不是持有锁的线程，抛出非法管程异常。
+    if (Thread.currentThread() != getExclusiveOwnerThread())
+        throw new IllegalMonitorStateException();
+    boolean free = false;
+    if (c == 0) { // 如果 state 操作后等于 0，说明没有独占线程了，设置为 null
+        free = true;
+        setExclusiveOwnerThread(null);
+    }
+    setState(c);
+    return free; // return true，可以唤醒阻塞队列中的线程了。
+}
+```
+
+> AQS#await 方法
+
+```java
+public final void await() throws InterruptedException {
+    if (Thread.interrupted())
+        throw new InterruptedException();
+    Node node = addConditionWaiter(); // Condition 队列中，把当前线程封装为一个结点
+    int savedState = fullyRelease(node); // state-- 一次，如果 state = 0，则 unparkSuccessor 唤醒阻塞队列中的下一个线程
+    // fullyRelease --> release(1) -->tryRelease(1)-->
+    int interruptMode = 0;
+    while (!isOnSyncQueue(node)) {
+        LockSupport.park(this); // 阻塞当前线程，然后从这里就停住了。等待其他线程唤醒自己。执行后面的操作。
+        if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
+            break;
+    }
+    if (acquireQueued(node, savedState) && interruptMode != THROW_IE)
+        interruptMode = REINTERRUPT;
+    if (node.nextWaiter != null) // clean up if cancelled
+        unlinkCancelledWaiters();
+    if (interruptMode != 0)
+        reportInterruptAfterWait(interruptMode);
+}
+```
+
+> AQS#signalAll 方法唤醒所有线程
+
+signalAll 方法，将 Condition 队列中阻塞的结点加入到 sync 的阻塞队列中，然后等待有线程去唤醒 sync 阻塞队列中的线程。
+
+```mermaid
+graph LR
+signalAll -->doSignalAll-->transferForSignal
+```
+
+```java
+// debug 查看唤醒所有阻塞线程的操作
+public static void t3() {
+    ReentrantLock lock = new ReentrantLock();
+    Condition c1 = lock.newCondition();
+    boolean A = true, B = true, C = true;
+    // 启动，然后自己阻塞
+    new Thread(() -> {
+        try {
+            System.out.println(Thread.currentThread().getName() + "：想拿锁了");
+            lock.lock();
+            c1.await();
+            System.out.println(Thread.currentThread().getName() + "：拿到锁了");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }, "B").start();
+    
+    // 启动，然后自己阻塞
+    sleep(1);
+    new Thread(() -> {
+        try {
+            System.out.println(Thread.currentThread().getName() + "：想拿锁了");
+            lock.lock();
+            c1.await();
+            System.out.println(Thread.currentThread().getName() + "：拿到锁了");
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
+    }, "C").start();
+
+    sleep(2);
+    // 拿到锁，唤醒所有被阻塞的线程
+    new Thread(() -> {
+        lock.lock();
+        sleep(3);
+        try {
+            System.out.println("唤醒所有");
+            while (A) ; // debug 修改 A 的值
+            c1.signalAll(); // 会将那些在 Condition 队列中的线程转移到 sync 的阻塞队列中。
+            System.out.println("signalAll 后还可以执行");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock(); // 执行 unlock 后，如果 state = 0，会唤醒 sync 中的一个线程。
+        }
+    }, "A").start();
+    sleep(1);
+}
+```
+
+signalAll 源码
+
+```java
+public final void signalAll() {
+    if (!isHeldExclusively())
+        throw new IllegalMonitorStateException();
+    Node first = firstWaiter; // 拿到第一个等待的线程
+    if (first != null)
+        doSignalAll(first); // doSignalAll 中循环释放
+}
+```
+
+doSignalAll
+
+```java
+private void doSignalAll(Node first) {
+    lastWaiter = firstWaiter = null;
+    do {
+        Node next = first.nextWaiter;
+        first.nextWaiter = null;
+        transferForSignal(first); // 把 condition 队列中的结点加入 sync 队列中。
+        first = next;
+    } while (first != null);
+}
+```
+
+transferForSignal
+
+```java
+final boolean transferForSignal(Node node) {
+
+    if (!node.compareAndSetWaitStatus(Node.CONDITION, 0))
+        return false;
+
+    Node p = enq(node); // 返回原先的
+    int ws = p.waitStatus;
+    // 如果线程被取消了（这块不是很明白）
+    if (ws > 0 || !p.compareAndSetWaitStatus(ws, Node.SIGNAL)) 
+        LockSupport.unpark(node.thread);
+    return true;
+}
+```
 
 ### 条件变量
 
@@ -1125,10 +1414,11 @@ NonfairSync 继承自 AQS。
 
 ```java
 final void lock() {
-    // 视图把0改成1，进行加锁。
+    // 试图把0改成1，进行加锁。如果失败了，说明锁已经被占有了，则走else
     if (compareAndSetState(0, 1))
         setExclusiveOwnerThread(Thread.currentThread());
-    else
+    else 
+        // acquire 尝试重入获取。
         acquire(1);
 }
 ```
@@ -1276,7 +1566,7 @@ static final class NonfairSync extends Sync {
             int nextc = c + acquires;
             if (nextc < 0) // overflow
                 throw new Error("Maximum lock count exceeded");
-            setState(nextc);
+            setState(nextc); // 因为是在同一个线程内进行操作的，所以此处直接设置即可，不用 cas 进行操作
             return true;
         }
         return false;
