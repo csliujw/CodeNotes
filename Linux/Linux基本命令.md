@@ -68,7 +68,7 @@ $ tmux attach -t <session-name>
 
 ### nohup
 
-**nohup** 英文全称 no hang up（不挂起），用于在系统后台不挂断地运行命令，退出终端不会影响程序的运行。
+<b>nohup</b> 英文全称 no hang up（不挂起），用于在系统后台不挂断地运行命令，退出终端不会影响程序的运行。
 
 安装 nohup 命令： `sudo apt install coreutils`
 
@@ -110,8 +110,8 @@ nohup java Demo & > ./out.txt # 加上 & 直接在后台运行，不在终端显
 ```
 
 - jobs -l：列出当前在后台执行的命令
-- fg N：将命令进程号码为N的命令进程放到前台执行，同%N
-- bg N：将命令进程号码为N的命令进程放到后台执行，同%N，%N是通过jobs命令查到的后台正在执行的命令的序号，不是pid
+- fg N：将命令进程号码为N的命令进程放到前台执行，同 %N
+- bg N：将命令进程号码为N的命令进程放到后台执行，同 %N，%N 是通过jobs 命令查到的后台正在执行的命令的序号，不是pid
 
 ## 文件和目录操作
 
@@ -153,7 +153,7 @@ nohup java Demo & > ./out.txt # 加上 & 直接在后台运行，不在终端显
 
 - 管道命令 |
 
-    - 将前面的结果给后面的命令，例如：`ls -la | wc`，将ls的结果交由`wc`命令来统计字数。
+    - 将前面的结果给后面的命令，例如：`ls -la | wc`，将 ls 的结果交由`wc`命令来统计字数。
 
 - 重定向 
 
@@ -169,7 +169,7 @@ nohup java Demo & > ./out.txt # 加上 & 直接在后台运行，不在终端显
 - cp：复制文件或目录
 
     - cp 源文件 目标文件
-    - `cp   demo.txt   copy.txt` `把demo.txt 复制 到 copy.txt`
+    - `cp   demo.txt   copy.txt` `把 demo.txt 复制到 copy.txt`
 - mv：移动文件或目录、文件或目录改名
 
     - `mv a.txt copy/` `把 a.txt 移动到 copy/ 目录下`
@@ -180,11 +180,17 @@ nohup java Demo & > ./out.txt # 加上 & 直接在后台运行，不在终端显
 
 - cat	查看文本文件内容
 - more	可分页查看
-    - `more -20 demo.txt`   显示前20行
-    - `more +20 demo.txt`   前20行不显示
+    - `more -20 demo.txt`   显示前 20 行
+    - `more +20 demo.txt`   前 20 行不显示
 - less    可分页，可搜索，回翻
-- `tail -10`    查看文件的尾部的10行
-- `head -20`    查看文件的头部20行
+- `tail -10`    查看文件的尾部的 10 行
+- `head -20`    查看文件的头部 20 行
+
+### 统计
+
+- wc 统计
+  - `wc -l filename` 统计文件有多少行内容
+  - `cat /proc/cpuinfo| grep "processor"| wc -l` 查看逻辑 CPU 个数
 
 ## 打包和压缩文件
 
