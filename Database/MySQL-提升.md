@@ -4,7 +4,7 @@
 
 - 什么是事务,以及事务的四大特性? 
 - 事务的隔离级别有哪些, MySQL 默认是哪个? 
-    - 读未提交、读已提交、可重复读、可串行化。MySQL 默认是可重复度。
+    - <span style="color:orange">读未提交、读已提交、可重复读、可串行化。MySQL 默认是可重复读。</span>
 - 内连接与左外连接的区别是什么? 
 - 常用的存储引擎？InnoDB 与 MyISAM 的区别？ 
 - MySQL 默认 InnoDB 引擎的索引是什么数据结构? 
@@ -1475,7 +1475,7 @@ select count(*) from emp where dept_id = 1;
 
 ### 事务简介
 
-<span style="color:red">事务</span> 是一组操作的集合，它是一个不可分割的工作单位，事务会把所有的操作作为一个整体一起向系统提交或撤销操作 请求，即这些操作<span style="color:red">要么同时成功，要么同时失败。</span>
+<span style="color:red">事务</span>是一组操作的集合，它是一个不可分割的工作单位，事务会把所有的操作作为一个整体一起向系统提交或撤销操作请求，即这些操作<span style="color:red">要么同时成功，要么同时失败。</span>
 
 <img src="img/image-20220201163223983.png">
 
@@ -1537,7 +1537,7 @@ insert into account(id,name,momeny) value(null,'张三',2000),(null,'李四',200
 
 - 原子性（Atomicity）：事务是不可分割的最小操作单元，要么全部成功，要么全部失败。 
 - 一致性（Consistency）：事务完成时，必须使所有的数据都保持一致状态。 
-- 隔离性（Isolation）：数据库系统提供的隔离机制，保证事务在不受外部并发操作影响的独立环境下运行。 
+- <span style="color:orange">隔离性（Isolation）：数据库系统提供的隔离机制，保证事务在不受外部并发操作影响的独立环境下运行。</span> 
 - 持久性（Durability）：事务一旦提交或回滚，它对数据库中的数据的改变就是永久的。（一般，事务提交后，会把数据持久化到磁盘里，这个持久化时机是可以设置的）
 
 ### 并发事务问题
