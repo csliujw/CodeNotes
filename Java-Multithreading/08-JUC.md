@@ -3110,7 +3110,21 @@ main	 班长关门走人，main线程是班长
 
 ### 原理
 
-CountDownLatch 使用 AQS 的方式与 Semaphore 很相似：在同步状态中保存的是当前的计数值。countDown 方法调用 release，从而导致计数值递减，并且当计数值为 0 时，解除所有线程的阻塞。awaite 调用 acquire，当计数器为 0 时，acquire 将立即返回，否则将阻塞。
+CountDownLatch 使用 AQS 的方式与 Semaphore 很相似：在同步状态中保存的是当前的计数值。
+
+- countDown 方法调用 release，从而导致计数值递减，并且当计数值为 0 时，解除所有线程的阻塞。
+- await 调用 acquire，当计数器为 0 时，acquire 将立即返回，否则将阻塞。
+
+理解下为什么 CountDownLatch 是线程安全的？
+
+首先，state 的操作是线程安全的，state 用 volatile 修饰。state 的赋值用的是 CAS，是线程安全的，并且 state 被修改后，如果有线程要获取值可以确保获取到的是最新的。
+
+考虑下面这种情况，state = 2，调用两次 countDown，一个 await。
+
+- countDown1 执行完毕，countDown2 执行完毕，await 获取到的 state 是最新的，不会阻塞。
+- countDown1 执行完毕，countDown2 CAS 还在执行，await 获取到的 state 是 1，会阻塞自己。
+    - CAS 执行完毕，state 值为 0.
+    - await 尝试阻塞自己，在阻塞自己前，会看自己是不是第一个被阻塞的线程，然后再次尝试获取 state，此时 state = 0，不阻塞。
 
 ## CyclicBarrier
 
