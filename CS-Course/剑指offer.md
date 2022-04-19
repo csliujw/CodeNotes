@@ -1004,43 +1004,75 @@ public class Solution {
 
 ### 反转链表
 
+[剑指 Offer 24. 反转链表 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/fan-zhuan-lian-biao-lcof/submissions/)
+
 给定单链表的头节点 `head` ，请反转链表，并返回反转后的链表的头节点。
+
+```java
+输入: 1->2->3->4->5->NULL
+输出: 5->4->3->2->1->NULL
+```
 
 #### 解题思路
 
 - 哑节点，头插法，先插入的数据在后面。
-- 用 stack。
-- 双指针？
+- 遍历链表，让链表的后一个结点指向前一个结点。
 
 #### 代码
+
+头插法
 
 ```java
 class Solution {
     public ListNode reverseList(ListNode head) {
-        // 虚拟头节点。头插法
-        if(head == null || head.next == null) return head;
+        // 头插法，每次把摘除的结点放到头部。直到 head 为 空。
         ListNode dummy = new ListNode(-1);
         while(head!=null){
-            // 头插
-            ListNode tmp = head;
+            ListNode cur = head;
             head = head.next;
-            tmp.next = dummy.next;
-            dummy.next = tmp;
+            cur.next = dummy.next;
+            dummy.next = cur;
         }
         return dummy.next;
     }
 }
 ```
 
+后一个结点指向前一个结点
+
+```java
+class Solution {
+    // 遍历链表，并把后一个结点指向前一个结点
+    public ListNode reverseList(ListNode head) {
+        /**
+        1->2->3->4->5->6
+        1<-2
+        1<-2<-3
+        1<-2<-3<-4
+        拿到后一个结点，然后一个结点指向前一个结点。
+        从 1 开始。1 的前一个是null，2 的前一个是 1
+         */
+        ListNode pre = null;
+        while(head!=null){
+            ListNode headNext = head.next;
+            head.next = pre;
+            pre = head;
+            head = headNext;
+        }
+        return pre;
+    }
+}
+```
+
 ### 链表中的两数相加
 
-给定两个 非空链表 l1和 l2 来代表两个非负整数。数字最高位位于链表开始位置。它们的每个节点只存储一位数字。将这两数相加会返回一个新的链表。
+给定两个非空链表 l1和 l2 来代表两个非负整数。数字最高位位于链表开始位置。它们的每个节点只存储一位数字。将这两数相加会返回一个新的链表。
 
 可以假设除了数字 0 之外，这两个数字都不会以零开头。
 
 #### 解题思路
 
-- 链表中的数据分别放入，两个 stack，然后出stack，计算，创建节点。
+链表中的数据分别放入，两个 stack，然后出 stack，计算，创建节点。
 
 #### 代码
 
@@ -2675,6 +2707,91 @@ class Solution {
 }
 ```
 
+## 回溯法
+
+### 分割回文子串
+
+[剑指 Offer II 086. 分割回文子字符串 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/M99OJA/)
+
+给定一个字符串 s ，请将 s 分割成一些子串，使每个子串都是回文串，返回 s 所有可能的分割方案。
+
+回文串是正着读和反着读都一样的字符串。
+
+ 示例 1：
+输入：s = "google"
+输出：[["g","o","o","g","l","e"],["g","oo","g","l","e"],["goog","l","e"]]
+
+示例 2：
+输入：s = "aab"
+输出：[["a","a","b"],["aa","b"]]
+
+示例 3：
+输入：s = "a"
+输出：[["a"]]
+
+#### 解题思路
+
+枚举所有的情况，判断是否符合题目的要求。那么如何进行枚举呢？枚举的过程中能否剪枝？
+
+- 'g','go','goo','goog','googl','google' 开头
+- 如果以 'g' 为第一个串，则判断是否是回文串，是的话继续枚举后面的情况。后面的枚举方式和枚举 g 开头的类似，'o','oo','oog','oogl','oogle'。
+- 剪枝的方式就是每次枚举一个串时，判断它是否是回文串，是的话就继续枚举后面的，不是的话就不再枚举。
+
+核心思路：枚举+剪枝，注意枚举的策略。
+
+#### 代码
+
+```java
+class Solution {
+    public String[][] partition(String s) {
+        // LinkedList 会超时
+        List<List<String>> result = new ArrayList<>();
+        helper(s, 0, new ArrayList<>(), result);
+        // result 转 String
+        String[][] ans = new String[result.size()][];
+        for (int i = 0; i < result.size(); i++) {
+            String[] tmp = new String[result.get(i).size()];
+            result.get(i).toArray(tmp);
+            ans[i] = tmp;
+        }
+        return ans;
+    }
+
+    /**
+     * start 这次从那个下标的字符开始枚举
+     * cur 当前记录的部分解
+     * result 返回的结果
+     */
+    private void helper(String s, int start, List<String> single, List<List<String>> result) {
+        if (start == s.length()) {
+            // 符合要求，拷贝一份，加入 result
+            result.add(new LinkedList<>(single));
+            return;
+        }
+        // 因为要枚举 g~google 所s以需要 for
+        for (int i = start; i < s.length(); i++) {
+            if (isP(s, start, i)) {
+                single.add(s.substring(start, i + 1));
+                helper(s, i + 1, single, result);
+                single.remove(single.size() - 1); // 回溯后复原
+            }
+        }
+    }
+
+    // 判断回文串
+    private boolean isP(String str, int start, int end) {
+        while (start < end) {
+            if (str.charAt(start++) != str.charAt(end--)) return false;
+        }
+        return true;
+    }
+}
+```
+
+
+
+
+
 # 老版剑指offer
 
 ## **二维数组中的查找**
@@ -3522,6 +3639,363 @@ public class _806_NumberOfLines {
 }
 ```
 
+## 迷你语法分析器
+
+[385. 迷你语法分析器 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/mini-parser/)
+
+给定一个字符串 s 表示一个整数嵌套列表，实现一个解析它的语法分析器并返回解析的结果 NestedInteger 。
+
+列表中的每个元素只可能是整数或整数嵌套列表
+
+```
+示例 1：
+输入：s = "324",
+输出：324
+解释：你应该返回一个 NestedInteger 对象，其中只包含整数值 324。
+
+示例 2：
+输入：s = "[123,[456,[789]]]",
+输出：[123,[456,[789]]]
+解释：返回一个 NestedInteger 对象包含一个有两个元素的嵌套列表：
+
+1. 一个 integer 包含值 123
+2. 一个包含两个元素的嵌套列表：
+   i.  一个 integer 包含值 456
+   ii. 一个包含一个元素的嵌套列表
+        a. 一个 integer 包含值 789
+```
+
+### 解题思路
+
+没看懂题目意思。
+
+### 代码
+
+## 最大回文数乘积
+
+[479. 最大回文数乘积 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/largest-palindrome-product/)
+
+给定一个整数 n ，返回 可表示为两个 n 位整数乘积的最大回文整数 。因为答案可能非常大，所以返回它对 1337 取余 。
+
+```
+示例 1:
+输入：n = 2
+输出：987
+解释：99 x 91 = 9009, 9009 % 1337 = 987
+
+示例 2:
+输入： n = 1
+输出： 9
+```
+
+### 解题思路
+
+先模拟出可能的回文数字，然后判断回文数字能否拆成两个数字的乘积。
+
+- 用 max ~ 0 来模拟回文数字。假设 max 是 999，那么模拟出的第一个回文数字是 999.999。
+- 取值为 998 时，模拟出来的第二个回文数字时 998899，怎么模拟呢？
+  - $998*10+998的个位 = 998*10+8=9988$
+  - $9988*10+998的十位=99889$
+  - $99889*10+998的百位=998899$
+
+### 代码
+
+模拟求解
+
+```java
+class Solution {
+    public int largestPalindrome(int n) {
+        if (n == 1) return 9;
+        int max = (int) (Math.pow(10, n) - 1);
+
+        // 构造回文数
+        for (int i = max; i >= 0; i--) {
+            long pre = i, next = i;
+            // 开始构造回文数，为什么是 next!=0 而不是 next%10!=0,
+            // 因为 next 可能回取到 10. 10%10=0，不会再算后面的？
+            while (next != 0) {
+                pre = pre * 10 + next % 10;
+                next /= 10;
+            }
+            // 这个判断是否是符合要求的回文数的循环终止条件可以好好看看。
+            // 从大到小枚举。枚举到根号pre。因为最理想的情况下就是 j*j = pre 两个数一样大，不然就是 大的数*小的数
+            for (long j = max; j * j >= pre; j--) {
+                if (pre % j == 0) return (int) (pre % 1337);
+            }
+        }
+        // 判断回文数
+        return -1;
+    }
+}
+```
+
+打表
+
+```java
+class Solution {
+    public int largestPalindrome(int n) {
+        int[]s = {0, 9, 987, 123, 597, 677, 1218, 877, 475};
+        return s[n];
+    }
+}
+```
+
+## 最常见的单词
+
+[819. 最常见的单词 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/most-common-word/)
+
+给定一个段落 (paragraph) 和一个禁用单词列表 (banned)。返回出现次数最多，同时不在禁用列表中的单词。题目保证至少有一个词不在禁用列表中，而且答案唯一。
+
+禁用列表中的单词用小写字母表示，不含标点符号。段落中的单词不区分大小写。答案都是小写字母。
+
+```
+示例：
+输入: 
+paragraph = "Bob hit a ball, the hit BALL flew far after it was hit."
+banned = ["hit"]
+输出: "ball"
+解释: 
+"hit" 出现了3次，但它是一个禁用的单词。
+"ball" 出现了2次 (同时没有其他单词出现2次)，所以它是段落里出现次数最多的，且不在禁用列表中的单词。 
+注意，所有这些单词在段落里不区分大小写，标点符号需要忽略（即使是紧挨着单词也忽略， 比如 "ball,"）， 
+"hit"不是最终的答案，虽然它出现次数更多，但它在禁用单词列表中。
+```
+
+### 解题思路
+
+字符串模拟题。遍历一遍字符串，记录每个单词出现的次数。然后移除那些存在于 banned 中的键值对，然后统计剩余键值对中的 max。
+
+### 代码
+
+```java
+class Solution {
+    public String mostCommonWord(String s, String[] banned) {
+        Set<String> set = new HashSet<>();
+        for (String b : banned) set.add(b);
+        char[] cs = s.toCharArray();
+        int n = cs.length;
+        String ans = null;
+        Map<String, Integer> map = new HashMap<>();
+        
+        for (int i = 0; i < n; ) {
+            // 找出第一个是字母的字符
+            if (!Character.isLetter(cs[i]) && ++i >= 0) continue;
+            int j = i;
+            // 定位字符串的范围
+            while (j < n && Character.isLetter(cs[j])) j++;
+            // 截取字符串
+            String sub = s.substring(i, j).toLowerCase();
+            i = j + 1;
+            // 存在于 banned 中则不统计
+            if (set.contains(sub)) continue;
+            map.put(sub, map.getOrDefault(sub, 0) + 1);
+            if (ans == null || map.get(sub) > map.get(ans)) ans = sub;
+        }
+        return ans;
+    }
+}
+```
+
+## 字典序排序
+
+[386. 字典序排数 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/lexicographical-numbers/)
+
+给你一个整数 n，按字典序返回范围 [1, n] 内所有整数。你必须设计一个时间复杂度为 O(n) 且使用 O(1) 额外空间的算法。
+
+```shell
+示例 1：
+输入：n = 13
+输出：[1,10,11,12,13,2,3,4,5,6,7,8,9]
+
+示例 2：
+输入：n = 2
+输出：[1,2]
+```
+
+### 解题思路
+
+先来个暴力解题。
+
+- 开辟一个长度为 n 的字符串数组，把所有的数据转成字符串，进行排序，然后再转回数字。
+
+时间复杂度为 $O(N)$ 的解法怎么做呢？
+
+- 按规律进行枚举。先枚举 1 开头的数字，再枚举 2 开头的数字，再，枚举 3 开头的数字。
+- 假设数字是 1~110 位的，枚举规则就是：
+  - 1、10、100、101、102、103、...、109、11
+  - 如果 cur % 9 == 0 说明要退回上一位了。同时要满足数字不能超过 n，即 $cur + 1 <= n$
+
+### 代码
+
+暴力求解
+
+```java
+class Solution {
+    public List<Integer> lexicalOrder(int n) {
+        List<Integer> ans = new ArrayList();
+        String[] str = new String[n];
+        for (int i = 1; i <= n; i++) {
+            str[i - 1] = String.valueOf(i);
+        }
+        Arrays.sort(str);
+        for (int i = 0; i < str.length; i++) {
+            ans.add(Integer.parseInt(str[i]));
+        }
+        return ans;
+    }
+}
+```
+
+时间复杂度为 $O(N)$
+
+```java
+class Solution {
+    public List<Integer> lexicalOrder(int n) {
+        List<Integer> ans = new ArrayList<>();
+        for(int i=0,j=1;i<n;i++){
+            ans.add(j); // 确保计算的j不超过 i
+            // 进位
+            if(j*10<=n) j*=10;
+            else{
+                // 什么情况下退位？109 --> 11. 109%10==9 退位，退到10，然后++。1099 退到哪里？推到 10 然后 ++，11 110 1100.
+                // 所以是退位到 %10!=9 为止
+                while(j%10==9 || j+1>n) j/=10;
+                j++; // 退到合适的位置，++
+            }
+        }
+        return ans;
+    }
+}
+```
+
+
+
+## 字符串的最短距离
+
+[821. 字符的最短距离 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/shortest-distance-to-a-character/)
+
+给你一个字符串 s 和一个字符 c ，且 c 是 s 中出现过的字符。返回一个整数数组 answer ，其中 answer.length == s.length 且 answer[i] 是 s 中从下标 i 到离它最近的字符 c 的距离 。两个下标 i 和 j 之间的 距离为 abs(i - j) ，其中 abs 是绝对值函数。
+
+```
+示例 1：
+输入：s = "loveleetcode", c = "e"
+输出：[3,2,1,0,1,0,0,1,2,2,1,0]
+解释：字符 'e' 出现在下标 3、5、6 和 11 处（下标从 0 开始计数）。
+距下标 0 最近的 'e' 出现在下标 3 ，所以距离为 abs(0 - 3) = 3 。
+距下标 1 最近的 'e' 出现在下标 3 ，所以距离为 abs(1 - 3) = 2 。
+对于下标 4 ，出现在下标 3 和下标 5 处的 'e' 都离它最近，但距离是一样的 abs(4 - 3) == abs(4 - 5) = 1 。
+距下标 8 最近的 'e' 出现在下标 6 ，所以距离为 abs(8 - 6) = 2 。
+
+示例 2：
+输入：s = "aaab", c = "b"
+输出：[3,2,1,0]
+```
+
+### 解题思路
+
+只想到暴力解法。
+
+- 先遍历字符串，拿到所有 e 的位置。
+- 在遍历一次字符串，遍历每个字符的时候，找出距离它最近的 e。
+- 时间复杂度 $O(KN)$，K 是 e 的个数。
+
+### 代码
+
+```java
+class Solution {
+    public int[] shortestToChar(String s, char c) {
+        char[] chars = s.toCharArray();
+        int[] ans = new int[chars.length];
+
+        ArrayList<Integer> arrayList = new ArrayList();
+        for (int i = 0; i < chars.length; i++) {
+            if (chars[i] == c) arrayList.add(i);
+        }
+        for (int i = 0; i < chars.length; i++) {
+            int minShort = findMinShort(i, arrayList);
+            ans[i] = minShort;
+        }
+        return ans;
+    }
+		// find 这部分可以优化一下。可以优化为二分查找。
+    private int findMinShort(int index, ArrayList<Integer> local) {
+        int minShort = Integer.MAX_VALUE;
+        for (int i = 0; i < local.size(); i++) {
+            minShort = Math.min(minShort, Math.abs(local.get(i) - index));
+        }
+        return minShort;
+    }
+}
+```
+
+## 山羊拉丁文
+
+给你一个由若干单词组成的句子 sentence ，单词间由空格分隔。每个单词仅由大写和小写英文字母组成。
+
+请你将句子转换为“山羊拉丁文（Goat Latin）”（一种类似于猪拉丁文 - Pig Latin 的虚构语言）。山羊拉丁文的规则如下：
+
+- 如果单词以元音开头（'a', 'e', 'i', 'o', 'u'），在单词后添加"ma"。
+  例如，单词 "apple" 变为 "applema" 。
+- 如果单词以辅音字母开头（即，非元音字母），移除第一个字符并将它放到末尾，之后再添加"ma"。
+  - 例如，单词 "goat" 变为 "oatgma" 。
+- 根据单词在句子中的索引，在单词最后添加与索引相同数量的字母'a'，索引从 1 开始。
+  - 例如，在第一个单词后添加 "a" ，在第二个单词后添加 "aa" ，以此类推。
+
+返回将 sentence 转换为山羊拉丁文后的句子。
+
+### 解题思路
+
+扫描一遍单词
+
+- 遇到元音字母开头，进行相应处理
+- 遇到非元音字母开头，进行相应处理
+- 处理完一个单词后，再追加后缀 'a'
+
+### 代码
+
+```java
+class Solution {
+    /**
+     * 简而言之，根据单词的特点，对单词进行变形 "Imaa peaksmaa oatGmaaa atinLmaaaa"
+     */
+    public String toGoatLatin(String sentence) {
+        String[] s = sentence.split(" ");
+        char[] helper = {'a', 'e', 'i', 'o', 'u'};
+        StringBuilder ans = new StringBuilder();
+        StringBuilder suffix = new StringBuilder("a");
+        transformer(ans, s[0], helper, suffix.toString());
+        for (int i = 1; i < s.length; i++) {
+            ans.append(" ");
+            suffix.append("a");
+            transformer(ans, s[i], helper, suffix.toString());
+        }
+        return ans.toString();
+    }
+
+    /**
+     * 1.元音字母开头，在单词后加 ma
+     * 2.辅音字母开头，移除第一个字符串，并放到末尾，然后加 ma
+     * 3.最后追加一个suffix
+     */
+    private void transformer(StringBuilder ans, String word, char[] helper, String suffix) {
+        int length = ans.length();
+        // 元开头
+        for (int i = 0; i < helper.length; i++) {
+            if (Character.toLowerCase(word.charAt(0)) == helper[i]) {
+                ans.append(word).append("ma");
+            }
+        }
+        // 辅开头
+        if (length == ans.length()) {
+            ans.append(word.substring(1)).append(word.charAt(0)).append("ma");
+        }
+        ans.append(suffix);
+    }
+}
+```
+
+
+
 # 心血来潮
 
 ## 寻找两个正序数组的中位数
@@ -3600,6 +4074,23 @@ public double findMedianSortedArrays(int[] nums1, int[] nums2) {
 
 ```
 
+## 字符串转整数(atoi)
+
+[8. 字符串转换整数 (atoi) - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/string-to-integer-atoi/)
+
+请你来实现一个 myAtoi(string s) 函数，使其能将字符串转换成一个 32 位有符号整数（类似 C/C++ 中的 atoi 函数）。
+
+题目太长了，点击链接查看吧。
+
+### 解题思路
+
+模拟题，先移除空格，在判断符号，再计算数字值。为了避免爆 int，用 long long。
+
+也可以有限状态机。
+
+
+
+
 ## Z字形变换
 
 [6. Z 字形变换 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/zigzag-conversion/)
@@ -3619,15 +4110,470 @@ string convert(string s, int numRows);
 
 ### 解题思路
 
-一道模拟题，找出规律即可。如果 numRows = 2，那么 P 后面跟的字母是 arr[numRows*2+1],...依次类推。
+一道模拟题，需要找出规律。
 
-- P 后面补充字符的规则为 arr[numRows*2+1]，如果超出了索引，则继续补充紧挨着 P 后面的字符 
+```
+1	7		13		
+2	6	8	12		14
+3	5	9	11		15
+4		10			 16
+```
+
+头尾都是等差数列。差值为 $2n-2$。
+中间的数据是两个等差数列差值为 $2n-2$。如：`2,8,14`;`6,12`; 两个等差数列之间的距离是 $2n-2i$，$i$ 表示行数，从 1 开始。
+怎么写代码呢？n 行的话，就是枚举 1~n 行里面的所有情况。算出值来即可。
 
 ### 代码
 
 ```java
+class Solution {
+    public String convert(String s, int numRows) {
+        if(numRows==1) return s;
+        char[] chars = s.toCharArray();
+        int space = 2 * (numRows - 1);
+        StringBuilder ans = new StringBuilder();
+        for (int i = 0; i < numRows; i++) {
+            if (i == 0 || i == numRows - 1) {
+                int index = i;
+                while (index < chars.length) {
+                    ans.append(chars[index]);
+                    index = index + space;
+                }
+            } else {
+                int pre = i;
+                int end = 2 * numRows - i - 2;
+                while (pre < chars.length || end < chars.length) {
+                    if (pre < chars.length) ans.append(chars[pre]);
+                    if (end < chars.length) ans.append(chars[end]);
+                    pre += space;
+                    end += space;
+                }
+            }
+        }
+        return ans.toString();
+    }
+}
+```
+
+## 实现Str
+
+[28. 实现 strStr() - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/implement-strstr/submissions/)
+
+```java
+class Solution {
+    // 暴力求解。
+    // 一个一个比
+    public int strStr(String haystack, String needle) {
+        if (haystack.equals("") && needle.equals("")) return 0;
+        for (int i = 0; i < haystack.length() - needle.length()+1; i++) {
+            boolean isOk = true;
+            for (int j = 0; j < needle.length(); j++) {
+                if (haystack.charAt(i + j) != needle.charAt(j)) {
+                    isOk = false;
+                    break;
+                }
+            }
+            if (isOk) return i;
+        }
+        return -1;
+    }
+}
+```
+
+## 验证回文串
+
+[125. 验证回文串 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/valid-palindrome/)
+
+给定一个字符串，验证它是否是回文串，只考虑字母和数字字符，可以忽略字母的大小写。
+
+说明：本题中，我们将空字符串定义为有效的回文串。
+
+示例 1:
+输入: "A man, a plan, a canal: Panama"
+输出: true
+解释："amanaplanacanalpanama" 是回文串
+
+示例 2:
+输入: "race a car"
+输出: false
+解释："raceacar" 不是回文串
+
+### 解题思路
+
+首位指针两头扫描，遇到非字符数字就跳过，比较的时候注意大小写即可。时间复杂度$O(N)$,空间复杂度$O(1)$.
+
+也可以构造一个新的 String，遇到数字，字母就加入这个 String，然后再判断 String 是否是回文.
+
+### 代码
+
+```java
+class Solution {
+    public boolean isPalindrome(String s) {
+        char[] chars = s.toCharArray();
+        int start = 0, end = chars.length - 1;
+        while (start < end) {
+            if (Character.isLetterOrDigit(chars[start]) && Character.isLetterOrDigit(chars[end])) {
+                // 大小写转换。
+                if (Character.toLowerCase(chars[start]) != Character.toLowerCase(chars[end])) return false;
+                start++;
+                end--;
+            } else if (!Character.isLetterOrDigit(chars[start])) {
+                start++;
+            } else if (!Character.isLetterOrDigit(chars[end])) {
+                end--;
+            }
+        }
+        return true;
+    }
+}
+```
+
+## 全排列
+
+[46. 全排列 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/permutations/)
+
+给定一个不含重复数字的数组 nums ，返回其所有可能的全排列 。你可以 按任意顺序返回答案。
+
+示例 1：
+输入：nums = [1,2,3]
+输出：[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]
+
+示例 2：
+输入：nums = [0,1]
+输出：[[0,1],[1,0]]
+
+示例 3：
+输入：nums = [1]
+输出：[[1]]
+
+### 解题思路
+
+每次选一个，选的时候又有若干种选择，并且要得到所有的全排列，典型的回溯法。那么如何进行回溯呢？
+
+每次都有选择，选择当前的元素和不选择当前的元素。选完后就继续递归，选择下一个元素。递归的终止条件是，选择的元素个数==nums.length。
+
+此处选择的策略为，每次确定一个 index 上的元素。第一次确定 index = 0 处的元素（有 n 种选择），第二次确定 index = 1 处的元素（有 n-1 种选择）。
+
+### 代码
+
+```java
+class Solution{
+        public List<List<Integer>> permute(int... nums) {
+        List<List<Integer>> ans = new ArrayList<>();
+        helper(nums, 0, ans);
+        return ans;
+    }
+
+    // start 表示那些0~start-1 的 index 都确定了
+    private void helper(int[] nums, int start, List<List<Integer>> ans) {
+        if (start == nums.length) {
+            ArrayList<Integer> tmp = new ArrayList<>();
+            for (int num : nums) tmp.add(num);
+            ans.add(tmp);
+            return;
+        }
+        for (int i = start; i < nums.length; i++) {
+            swap(nums, start, i);
+            helper(nums, start + 1, ans);
+            swap(nums, start, i);
+        }
+    }
+
+    private void swap(int[] nums, int from, int to) {
+        if (from == to) return;
+        int tmp = nums[from];
+        nums[from] = nums[to];
+        nums[to] = tmp;
+    }
+}
+```
+
+## 全排列Ⅱ
+
+[47. 全排列 II - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/permutations-ii/)
+
+给定一个可包含重复数字的序列 nums ，按任意顺序返回所有不重复的全排列。
+
+示例 1：
+输入：nums = [1,1,2]
+输出：
+[[1,1,2],
+ [1,2,1],
+ [2,1,1]]
+
+示例 2：
+输入：nums = [1,2,3]
+输出：[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]
+
+### 解题思路
+
+这题与上一题不同，这题存在重复的数字。关键在于如果跳过重复的序列。
+
+法一：还是全排列，需要去重。
+
+法二：想办法不重复选择数据。什么办法呢？如果我们已经把值为 i 的放到了 index 上，就不要再把值为 i 的放到 index 上了。
+
+### 代码
+
+```java
+class Solution {
+    public List<List<Integer>> permuteUnique(int[] nums) {
+        List<List<Integer>> ans = new ArrayList<>();
+        helper(nums, 0, ans);
+        return ans;
+    }
+
+    // start 表示那些0~start-1 的 index 都确定了
+    private void helper(int[] nums, int start, List<List<Integer>> ans) {
+        if (start == nums.length) {
+            ArrayList<Integer> tmp = new ArrayList<>();
+            for (int num : nums) tmp.add(num);
+            ans.add(tmp);
+            return;
+        }
+        Set<Integer> set = new HashSet<>();
+        // 如果放过了这个值，那就不再放了
+        for (int i = start; i < nums.length; i++) {
+            if (!set.contains(nums[i])) {
+                set.add(nums[i]);
+                swap(nums, start, i);
+                helper(nums, start + 1, ans);
+                swap(nums, start, i);
+            }
+        }
+    }
+
+    private void swap(int[] nums, int from, int to) {
+        if (from == to) return;
+        int tmp = nums[from];
+        nums[from] = nums[to];
+        nums[to] = tmp;
+    }
+}
+```
+
+
+
+## 旋转图像
+
+[48. 旋转图像 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/rotate-image/)
+
+给定一个 n × n 的二维矩阵 matrix 表示一个图像。请你将图像顺时针旋转 90 度。
+
+你必须在原地旋转图像，这意味着你需要直接修改输入的二维矩阵。请不要使用另一个矩阵来旋转图像。
+
+### 解题思路
+
+好家伙，直接先根据 x 轴对称交换，再根据主对角线'\\',交换。
+
+对角线'\\'交换需要解释下公式。我们可以认为是要将'|\\'这个三角形的数据遍历一次，并交换。所以是遍历所有的行，而列遍历到对角线前一个元素即可。所有 row 取 `0~n`，col 取 `0~row-1` 
+
+### 代码
+
+```java
+class Solution {
+    public void rotate(int[][] matrix) {
+        // 先按水平对称交换。
+        for (int i = 0, j = matrix.length - 1; i < j; i++, j--) {
+            for (int k = 0; k < matrix[i].length; k++) {
+                int tmp = matrix[i][k];
+                matrix[i][k] = matrix[j][k];
+                matrix[j][k] = tmp;
+            }
+        }
+
+        // 在对角线交换
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < i; j++) {
+                int tmp = matrix[i][j];
+                matrix[i][j] = matrix[j][i];
+                matrix[j][i] = tmp;
+            }
+        }
+    }
+}
+```
+
+## 对称二叉树
+
+[101. 对称二叉树 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/symmetric-tree/)
+
+给你一个二叉树的根节点 `root` ， 检查它是否轴对称。
+
+### 解题思路
+
+<b>迭代</b>：层序遍历，拿到每层的结点，判断是否对称。注意，不管结点是 null 还是不是 null，都要在当前结点数组值中填充一个值。
+
+<b>迭代</b>：看下 leetcode 题解。可以每次把 root 入队两次，每次取两个结点并比较它们的值。队列中每两个连续的结点应该是相等的，而且它们的子树互为镜像。然后将两个结点的左右子结点按相反的顺序插入队列中。当队列为空时，或者我们检测到树不对称（即从队列中取出两个不相等的连续结点）时，该算法结束。
+
+<img src="https://pic.leetcode-cn.com/45a663b08efaa14193d63ef63ae3d1d130807467d13707f584906ad3af4adc36-1.gif">
+
+<b>递归</b>：定义一种和二叉树前序遍历对称的遍历方式，然后比较这两个遍历方式每次遍历的 node 的 val 是否相同。
+
+<img src="https://pic.leetcode-cn.com/2449af8862537df2cbbc45a07764415c1a10769677c822fa271ea7447c8fa128-2.gif">
+
+### 代码
+
+迭代
+
+```java
+class Solution {
+    public boolean isSymmetric(TreeNode root) {
+        return helper(root);
+    }
+
+    public boolean isSymmetric(TreeNode root) {
+        return helper(root);
+    }
+
+    private boolean helper(TreeNode root) {
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.offer(root);
+        while (!queue.isEmpty()) {
+            int[] curlevel = new int[queue.size()];
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                TreeNode poll = queue.poll();
+                if (poll != null) {
+                    queue.offer(poll.left);
+                    queue.offer(poll.right);
+                }
+                curlevel[i] = poll == null ? -10086 : poll.val;
+            }
+            System.out.println(Arrays.toString(curlevel));
+            for (int i = 0, j = curlevel.length - 1; i < j; i++) {
+                if (curlevel[i] != curlevel[j]) return false;
+            }
+        }
+        return true;
+    }
+    
+    // 每次入队元素两次，每次也拿两个，比较它们的值是否 same
+    private boolean helper3(TreeNode root1, TreeNode root2) {
+        Queue<TreeNode> q = new LinkedList<>();
+        q.offer(root1);
+        q.offer(root2);
+        while (!q.isEmpty()) {
+            root1 = q.poll();
+            root2 = q.poll();
+            if (root1 == null && null == root2) continue;
+            if ((root1 == null || root2 == null) || (root1.val != root2.val)) return false;
+            q.offer(root1.left);
+            q.offer(root2.right);
+
+            q.offer(root1.right);
+            q.offer(root2.left);
+        }
+        return true;
+    }
+}
+```
+
+递归，找一个和前序对称的遍历方式，然后比较它们的值。
+
+```java
+class Solution {
+    public boolean isSymmetric(TreeNode root) {
+        return helper2(root,root);
+    }
+
+    private boolean helper2(TreeNode p1, TreeNode p2) {
+        if (p1 == null && p2 == null) return true;
+        if ((p1 == null && p2 != null) || (p1 != null && p2 == null)) return false;
+        if (p1.val != p2.val) return false;
+        return helper2(p1.left, p2.right) && helper2(p1.right, p2.left);
+    }
+}
+```
+
+## 相同的树
+
+[100. 相同的树 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/same-tree/)
+
+给你两棵二叉树的根节点 `p` 和 `q` ，编写一个函数来检验这两棵树是否相同。
+
+如果两个树在结构上相同，并且节点具有相同的值，则认为它们是相同的。
+
+### 解题思路
+
+同时遍历两棵树，比较它们对应结点的值是否相同。
+
+### 代码
+
+```java
+class Solution {
+    public boolean isSameTree(TreeNode p, TreeNode q) {
+        return hepler(p, q);
+    }
+
+    private boolean hepler(TreeNode p, TreeNode q) {
+        if (q == null && p == null) return true;
+        // 一定有点不为空。如果有一个不为空，|| 都不为空 且 val 不等
+        if ((q == null || p == null) || (q.val != p.val)) return false;
+        return hepler(p.left, q.left) && hepler(p.right, q.right);
+    }
+}
+```
+
+## 二叉树的锯齿形层序遍历
+
+[103. 二叉树的锯齿形层序遍历 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/binary-tree-zigzag-level-order-traversal/)
+
+给你二叉树的根节点 `root` ，返回其节点值的<b>锯齿形层序遍历</b> 。（即先从左往右，再从右往左进行下一层遍历，以此类推，层与层之间交替进行）。
+
+<img src="https://assets.leetcode.com/uploads/2021/02/19/tree1.jpg">
 
 ```
+输入：root = [3,9,20,null,null,15,7]
+输出：[[3],[20,9],[15,7]]
+```
+
+### 解题思路
+
+题目要求「先从左往右，再从右往左」交替打印，可以用双端队列来维护当前层结点得输出顺序。
+
+- 从第二层结点形成的遍历序列开始考虑。
+- 第二层，利用头插法，
+  - 先插入 9，形成 `head->9`
+  - 再插入 10，形成 `head->20->9`
+- 第三层，利用尾插法，
+  - 先插入 15，形成 `head->15`
+  - 再插入 7，形成 `head->15->7`
+- 最终结果为
+  - `[[3],[20,9],[15,7]]`
+
+### 代码
+
+```java
+class Solution {
+    public List<List<Integer>> zigzagLevelOrder(TreeNode root) {
+        List<List<Integer>> ans = new LinkedList<>();
+        if(root==null) return ans;
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.offer(root);
+        boolean isHeadInsert = false;
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            LinkedList<Integer> cur = new LinkedList<>();
+            for (int i = 0; i < size; i++) {
+                TreeNode poll = queue.poll();
+                if (isHeadInsert) {
+                    cur.addFirst(poll.val);
+                } else {
+                    cur.addLast(poll.val);
+                }
+                if (poll.left != null) queue.offer(poll.left);
+                if (poll.right != null) queue.offer(poll.right);
+            }
+            isHeadInsert = !isHeadInsert;
+            ans.add(cur);
+        }
+        return ans;
+    }
+}
+```
+
+
 
 
 

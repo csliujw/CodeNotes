@@ -2,21 +2,40 @@
 
 ## 常见面试题
 
-- 什么是事务,以及事务的四大特性? 
-- 事务的隔离级别有哪些, MySQL 默认是哪个? 
+- <b>什么是事务,以及事务的四大特性</b>
+- <b>事务的隔离级别有哪些, MySQL 默认是哪个</b>
     - <span style="color:orange">读未提交、读已提交、可重复读、可串行化。MySQL 默认是可重复读。</span>
-- 内连接与左外连接的区别是什么? 
-- 常用的存储引擎？InnoDB 与 MyISAM 的区别？ 
-- MySQL 默认 InnoDB 引擎的索引是什么数据结构? 
-- 如何查看 MySQL 的执行计划? 
-- 索引失效的情况有哪些? 
-- 什么是回表查询? 
-- 什么是 MVCC? 
-- MySQL 主从复制的原理是什么? 
-- 主从复制之后的读写分离如何实现? 
-- 数据库的分库分表如何实现?
+- <b>内连接与左外连接的区别是什么 </b>
+    - <span style="color:orange">内连接只返回两个表中连接字段相等的行。</span>
+    - <span style="color:orange">左外连接返回包括左表中的所有记录和右表中连接字段相等的记录。</span>
+- <b>InnoDB 与 MyISAM 的区别</b>
+    - <span style="color:orange">InnoDB 支持事务，支持行级锁，支持外键。</span>
+    - <span style="color:orange">MyISAM 不支持事务，不支持行级锁，不支持外键。</span>
+- <b>MySQL 默认 InnoDB 引擎的索引是什么数据结构</b>
+    - <span style="color:orange">采用的 B+Tree 数据结构。采用这种数据结构，一个数据块中保存的结点数就多少，查找数据所需要的 IO 次数就少，查找效率高。</span>
+- <b>如何查看 MySQL 的执行计划 </b>
+    - <span style="color:orange">每次我们提交一个 SQL 查询语句给 MySQL，他内核里的查询优化器，都会针对这个 SQL 语句的语义去生成一个执行计划，这个执行计划就代表了，他会怎么查各个表，用哪些索引，如何做排序和分组。</span>
+    - <span style="color:orange">可以使用 explain sql 语句或者 desc sql 语句来查看执行计划。</span>
+- <b>索引失效的情况有哪些 </b>
+    - <span style="color:orange">联合索引中，出现范围查询(>,<),范围查询右侧的列索引失效。条件允许的话，尽量用 >=,<=。</span>
+    - <span style="color:orange">用 or 分隔开的条例，如果 or 前面条件中的列有索引，后面的没有索引，那么涉及到的索引都会失效。可以将 or 中的所有字段都设置为索引。</span>
+    - <span style="color:orange">字符串类型的字段使用时不加引号，索引会失效。</span>
+    - <span style="color:orange">不符合索引的最左前缀法则的话，索引会失效。如  like '%d' 这种模糊匹配。</span>
+    - <span style="color:orange">如果 MySQL 优化器评估发现走索引慢，就不会走索引。</span>
+- <b>什么是回表查询</b>
+    - <span style="color:orange">回表查询是指，当我们使用非聚集索引时，需要索引中没有完全包含我们需要检索的字段，需要根据当前索引查询到的主键 id，进行回表，通过主键 id 再查询一次数据库。</span>
+- <b>什么是 MVCC</b>
+    - <span style="color:orange">全称 Multi-Version Concurrency Control，即多版本并发控制，主要是为了提高数据库的并发性能。以下文章都是围绕InnoDB 引擎来讲，因为 MyLASM 不支持事务。</span>
+    - <span style="color:orange">MVCC 是“维持一个数据的多个版本，使读写操作没有冲突”的一个抽象概念。</span>
+    - <span style="color:orange">它的实现原理主要是版本链，undo 日志，Read View 来实现的。</span>
+- <b>MySQL 主从复制的原理是什么</b>
+    - 主从复制中分为<b>「主服务器（master）「和」从服务器（slave）」，「主服务器负责写，而从服务器负责读」</b>，MySQL 的主从复制的过程是一个「异步的过程」。这样读写分离的过程能够是整体的服务性能提高，即使写操作时间比较长，也不影响读操作的进行。
+    - 主从复制中主要有三个线程：master(binlog dump thread )、slave(I/O thread、SQL thread)，Master 一条线程，Slave 两条线程。
+    - master 的 binlog dump thread 负责主库中有数据更新是，按照 binlong 格式将更新的事件类型写入到主库。并且 Master 会乘积 log dump 线程通知 Slave 主库存在数据更新。Slave 中会创建 IO thread 用于请求 Master 的 binlog，将信息更新到 relay log 中。当 Slave 发现 relay log 有更新是，就创建 SQL 线程将更新的内容同步到 Slave 数据库中。
+- <b>主从复制之后的读写分离如何实现</b>
+- <b>数据库的分库分表如何实现</b>
 
-## 规划
+## 内容规划
 
 ### 基础复习
 
@@ -43,7 +62,7 @@
 - InnoDB 存储引擎
 - MySQL 管理
 
-### 运维
+### 运维相关
 
 - MySQL 日志
 - MySQL 复制
@@ -3695,8 +3714,12 @@ select object_schema,object_name,index_name,lock_type,lock_mode,lock_data from p
 
 - 逻辑存储结构：表空间、段、区、页、行
 - 架构：内存结构、磁盘结构
-- 事务原理：原子性 - undo log；持久性 - redo log；一致性 - undo log + redo log；隔离性 - 锁 + MVCC
-- MVCC：记录隐藏字段、undo log版本链、readview；
+- 事务原理：
+  - 原子性 - undo log；
+  - 持久性 - redo log；
+  - 一致性 - undo log + redo log；
+  - 隔离性 - 锁 + MVCC；
+- MVCC：记录隐藏字段、undo log 版本链、readview；
 
 ### 逻辑存储结构
 
@@ -3787,9 +3810,9 @@ Buffer Pool 缓存了数据页的信息。进行 update 时，会先操纵缓存
 
 #### undo log实现原子性
 
-<span style="color:red">回滚日志，用于记录数据被修改前的信息 , 作用包含两个：提供回滚和 MVCC (多版本并发控制) 。</span>
+<span style="color:red">回滚日志，用于记录数据被修改前的信息，即记录数据被修改前的样子。作用包含两个：提供回滚和 MVCC (多版本并发控制) 。</span>
 
-undo log 和 <span style="color:red">redo log 记录物理日志</span>不一样，它是逻辑日志。可以认为当 delete 一条记录时，undo log 中会记录一条对应的 insert 记录，反之亦然，当 update 一条记录时，它记录一条对应相反的 update 记录。当执行 rollback 时(<span style="color:orange">回滚是确保要么全部成功，要么全部失败</span>)，就可以从 undo log 中的逻辑记录读取到相应的内容并进行回滚。
+<span style="color:red">undo log 和 redo log 记录物理日志不一样，undo log 是逻辑日志。</span>可以认为当 delete 一条记录时，undo log 中会记录一条对应的 insert 记录，反之亦然，当 update 一条记录时，它记录一条对应相反的 update 记录。当执行 rollback 时<span style="color:orange">（回滚是确保要么全部成功，要么全部失败）</span>，就可以从 undo log 中的逻辑记录读取到相应的内容并进行回滚。
 
 Undo log 销毁：undo log 在事务执行时产生，事务提交时，并不会立即删除 undo log，因为这些日志可能还用于 MVCC。 
 
@@ -3799,16 +3822,19 @@ Undo log 存储：undo log 采用段的方式进行管理和记录，存放在�
 
 #### 基本概念
 
-- <b>当前读</b>：读取的是记录的最新版本，读取时还要保证其他并发事务不能修改当前记录，会对读取的记录进行加锁。对于我们日常的操作，如：select ... lock in share mode(共享锁)，select ... for update、update、insert、delete (排他锁) 都是一种当前读。
-- 快照读：简单的 select（不加锁）就是快照读，快照读，读取的是记录数据的可见版本，有可能是历史数据，不加锁，是非阻塞读。
-    - Read Committed：每次 select，都生成一个快照读。
-    - Repeatable Read：开启事务后第一个 select 语句才是快照读的地方。 
-    - Serializable：快照读会退化为当前读。
+<b>当前读</b>：读取的是记录的最新版本，读取时还要保证其他并发事务不能修改当前记录，会对读取的记录进行加锁。对于我们日常的操作，如：<span style="color:orange">select ... lock in share mode(共享锁)，select ... for update、update、insert、delete (排他锁) 都是一种当前读。</span>
+
+<b>快照读</b>：简单的 select（不加锁）就是快照读，快照读，读取的是记录数据的可见版本，有可能是历史数据，不加锁，是非阻塞读。
+
+- Read Committed：每次 select，都生成一个快照读。
+- Repeatable Read：开启事务后第一个 select 语句才是快照读的地方。 
+- Serializable：快照读会退化为当前读。
+
 - <span style="color:red">MVCC：全称 Multi-Version Concurrency Control，多版本并发控制。指维护一个数据的多个版本，使得读写操作没有冲突，快照读为 MySQL 实现  MVCC 提供了一个非阻塞读功能。MVCC 的具体实现，还需要依赖于数据库记录中的三个隐式字段、undo log 日志、readView。</span>
 
 #### 实现原理
 
-> 记录中的隐藏字段
+> <span style="color:red">记录中的隐藏字段</span>
 
 <img src="img/image-20220228212433507.png">
 
@@ -3820,33 +3846,35 @@ Undo log 存储：undo log 采用段的方式进行管理和记录，存放在�
 
 我们可以进入 MySQL 存放表空间结构的目录中用命令 `idb2sdi tablename.ibd` 查看表中到底有那些字段。
 
-> undo log
+> <span style="color:red">undo log</span>
 
 回滚日志，在 insert、update、delete 操作时产生的便于数据回滚的日志。事务一旦提交或回滚，undo log 日志是可以被删除的，但是不会立即删除。那什么时候可以立即删除，什么时候又不会呢？ 
 
 - 当 insert 的时候，产生的 undo log 日志只在回滚时需要，在事务提交后，可被立即删除。
 - 而 update、delete 的时候，产生的 undo log 日志不仅在回滚时需要，在快照读时也需要，不会立即被删除。【为什么快照读会需要？】
 
-> undo log 版本链
+> <span style="color:red">undo log 版本链</span>
 
-在事务中对记录进行操作时，undo log 日志中会记录数据被修改前的内容。事务 DB_TRX_ID 会自增。
+在事务中对记录进行操作时，undo log 日志中会记录数据被修改前的内容。事务 `DB_TRX_ID` 会自增。
 
 <img src="img/image-20220228212827231.png">
 <img src="img/image-20220228212910928.png">
 <img src="img/image-20220228213010220.png">
 
-不同事务或相同事务对同一条记录进行修改，会导致该记录的 undo log 生成一条记录版本链表，链表的头部是最新的旧记录，链表尾部是最早的旧记录。
+<b>不同事务或相同事务对同一条记录进行修改，会导致该记录的 undo log 生成一条记录版本链表，链表的头部是最新的旧记录，链表尾部是最早的旧记录。</b>
 
-> readview
+> readview，决定读取那个版本的历史记录。
 
-ReadView（读视图）是快照读 SQL 执行时 MVCC 提取数据的依据，记录并维护系统当前活跃的事务（未提交的）id。 ReadView 中包含了四个核心字段
+快照的读取数据的时候，不一定是读最新的数据，也可能读的是历史版本。快照读到底读取那个历史记录是由 ReadView 决定的。
 
-| 字段           | 含义                                                     |
-| -------------- | -------------------------------------------------------- |
-| m_ids          | 当前活跃的事务 ID 集合                                   |
-| min_trx_id     | 最小活跃事务 ID                                          |
-| max_trx_id     | 预分配事务 ID，当前最大事务 ID+1（因为事务 ID 是自增的） |
-| creator_trx_id | ReadView 创建者的事务 ID                                 |
+ReadView（读视图）是快照读 SQL 执行时 MVCC 提取数据的依据，<b>记录并维护系统当前活跃的事务（未提交的）id</b>。 ReadView 中包含了四个核心字段。
+
+| 字段             | 含义                                                     |
+| ---------------- | -------------------------------------------------------- |
+| `m_ids`          | 当前活跃的事务 ID 集合                                   |
+| `min_trx_id`     | 最小活跃事务 ID                                          |
+| `max_trx_id`     | 预分配事务 ID，当前最大事务 ID+1（因为事务 ID 是自增的） |
+| `creator_trx_id` | ReadView 创建者的事务 ID                                 |
 
 <img src="img/image-20220228213240595.png">
 
@@ -3855,13 +3883,21 @@ ReadView（读视图）是快照读 SQL 执行时 MVCC 提取数据的依据，�
 - <span style="color:red">READ COMMITTED ：在事务中每一次执行快照读时生成 ReadView。 </span>
 - <span style="color:red">REPEATABLE READ：仅在事务中第一次执行快照读时生成 ReadView，后续复用该 ReadView</span>
 
-RC 隔离级别下，在事务中每一次执行快照读时生成 ReadView。
+Read Committed 隔离级别下，在事务中每一次执行快照读时生成 ReadView。
 
 <img src="img/image-20220228213421031.png">
 
+上面的这两次事务，在读取的时候提取的到底是那个版本？【其实规则很简单，快照读只能读取到最近一条已经提交事务的数据或者是这个未提交的事务就是自己】
+
 <img src="img/image-20220228213526500.png">
 
+最上边那条事务 `m_ids:{3,4,5} 这个` 将 undo log 中的记录与右边的比较规则进行比较，发现当记录为 `30 3 A30 2` 时，符合右边的规则。所以读取到的记录是 `30 3 A30 2` 
+
 <img src="img/image-20220228213636400.png">
+
+下边那条事务 `m_ids:{4,5} 这个` 将 undo log 中的记录与右边的比较规则进行比较，发现当记录为 `30 3 A30 2` 时，符合右边的规则。所以读取到的记录是 `30 3 A30 2`。
+
+<span style="color:red">RR 隔离级别下，仅在事务中第一次执行快照读时生成 ReadView，后续复用该 ReadView。ReadView 一样，那么查找版本链的时候，查找到的版本数据也是一样的，这样就实现了可重复读。</span>
 
 > 汇总图
 
@@ -3869,14 +3905,11 @@ RC 隔离级别下，在事务中每一次执行快照读时生成 ReadView。
 
 MySQL 事务的隔离级别默认是可重复读。
 
-MySQL 的事务是通过
+MySQL 的事务是通过 redo log 日志保证持久性。
 
-redo log 日志保证持久性。
+update\delete 等操作先回到 buffer pool 里，然后把变化写入到 redo log buffer，redo log buffer 再写入 redo log 里。
 
-update\delete 等操作先回到 buffer pool 里，然后把变化写入到 redolog buffer，redo log buffer 再写入 redo log 里。
-
-为什么不直接 buffer pool 将脏页刷新到磁盘里？因为 update、delete 这些的数据极大可能是随机写入磁盘的，效率低，效率低的话，出现问题中断它写入的可能性就大。而 redo log 里的则是顺序写入，一条一条写进去写入速度很快，出现问题中断它的几率小很多。
-如果 buffer pool 写入 .ibd 文件时出错了，可以通过 redo log 里的数据进行恢复。
+为什么不直接 buffer pool 将脏页刷新到磁盘里？因为 update、delete 这些的数据极大可能是随机写入磁盘的，效率低，效率低的话，出现问题中断它写入的可能性就大。而 redo log 里的则是顺序写入，一条一条写进去写入速度很快，出现问题中断它的几率小很多。如果 buffer pool 写入 `.ibd` 文件时出错了，可以通过 redo log 里的数据进行恢复。
 
 ## MySQL管理
 
@@ -3890,6 +3923,13 @@ update\delete 等操作先回到 buffer pool 里，然后把变化写入到 redo
 - mysqlshow：查看数据库、表、字段的统计信息
 - mysqldump：数据库备份工具
 - mysqlimport/source：数据库导入工具
+
+# 运维
+
+- 日志
+- 主从复制
+- 分库分表
+- 读写分离
 
 # 实现分布式锁
 
