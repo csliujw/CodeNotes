@@ -1,4 +1,4 @@
-# 剑指专项练习
+# 剑指Offer专项突破
 
 ## 整数
 
@@ -6,10 +6,10 @@
 
 给定两个整数 `a` 和 `b` ，求它们的除法的商 `a/b` ，要求不得使用乘号 `'*'`、除号 `'/'` 以及求余符号 `'%'` 。
 
-注意：
+注意
 
 整数除法的结果应当截去（truncate）其小数部分，例如：truncate(8.345) = 8 以及 truncate(-2.7335) = -2
-假设我们的环境只能存储 32 位有符号整数，其数值范围是 [$−2^{31}$, $2^{31}$−1]。本题中，如果除法结果溢出，则返回 231 − 1
+假设我们的环境只能存储 32 位有符号整数，其数值范围是 [$−2^{31}$, $2^{31}$−1]。本题中，如果除法结果溢出，则返回 $2^{31} − 1$
 
 #### 解题思路
 
@@ -2375,9 +2375,372 @@ public class Offer049SumNumbers {
 
 ## 堆
 
+### 数据流的第K大数字
 
+[剑指 Offer II 059. 数据流的第 K 大数值 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/jBjn9C/)
+
+设计一个找到数据流中第 k 大元素的类（class）。注意是排序后的第 k 大元素，不是第 k 个不同的元素。
+
+请实现 KthLargest 类：
+
+KthLargest(int k, int[] nums) 使用整数 k 和整数流 nums 初始化对象。
+int add(int val) 将 val 插入数据流 nums 后，返回当前数据流中第 k 大的元素。
+
+```
+输入：
+["KthLargest", "add", "add", "add", "add", "add"]
+[[3, [4, 5, 8, 2]], [3], [5], [10], [9], [4]]
+输出：
+[null, 4, 5, 5, 8, 8]
+
+解释：
+KthLargest kthLargest = new KthLargest(3, [4, 5, 8, 2]);
+kthLargest.add(3);   // return 4
+kthLargest.add(5);   // return 5
+kthLargest.add(10);  // return 5
+kthLargest.add(9);   // return 8
+kthLargest.add(4);   // return 8
+```
+
+#### 解题思路
+
+使用 minHeap 小顶堆，存储 K 个最大的数。
+
+#### 代码
+
+```java
+class KthLargest {
+    PriorityQueue<Integer> minHeap;
+    int size;
+
+    public KthLargest(int k, int[] nums) {
+        minHeap = new PriorityQueue<>();
+        size = k;
+        for (int i = 0; i < nums.length; i++) {
+            add(nums[i]);
+        }
+    }
+
+    public int add(int val) {
+        if (minHeap.size() < size) {
+            minHeap.offer(val);
+        } else if (val > minHeap.peek()) {
+            minHeap.poll();
+            minHeap.offer(val);
+        }
+        return minHeap.peek();
+    }
+}
+```
+
+### 数据流的中位数
+
+[295. 数据流的中位数 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/find-median-from-data-stream/)
+
+中位数是有序列表中间的数。如果列表长度是偶数，中位数则是中间两个数的平均值。
+
+例如，
+
+[2,3,4] 的中位数是 3
+
+[2,3] 的中位数是 (2 + 3) / 2 = 2.5
+
+设计一个支持以下两种操作的数据结构：
+
+- void addNum(int num) - 从数据流中添加一个整数到数据结构中。
+- double findMedian() - 返回目前所有元素的中位数。
+
+```
+addNum(1)
+addNum(2)
+findMedian() -> 1.5
+addNum(3) 
+findMedian() -> 2
+```
+
+#### 解题思路
+
+- 每次都使用快排找中位数
+- 使用两个优先队列，大顶堆+小顶堆
+  - 小顶堆，保存较大的一半
+  - 大顶堆，保存较小的一半
+  - 如果 $small.size = big.size$ 则两个堆顶元素的均值就是中位数
+  - 如果 $small.size = big.size+1$，则 small 堆顶的元素就是中位数（这里我把多余的一个数字放到 smallHeap 中）
+  - 那么如何确保小顶堆，保存较大的一半，大顶堆，保存较小的一半呢？
+  - 如，需要将元素保存到小顶堆的话，先把元素加入 bigHeap，再把 bigHeap 中最大的加入到 smallHeap 中。反之亦然。
+
+#### 代码
+
+```java
+class MedianFinder {
+    Queue<Integer> smallHeap, bigHeap;
+
+    public MedianFinder() {
+        // small 中多存一个
+        smallHeap = new PriorityQueue<>(); // 小顶堆，保存较大的一半
+        bigHeap = new PriorityQueue<>((x, y) -> (y - x)); // 大顶堆，保存较小的一半
+    }
+
+    public void addNum(int num) {
+        // small = big+1,，然后又有新元素要插入
+        // 则向 bigHeap 里插入一个。
+        if (smallHeap.size() == bigHeap.size()+1) {
+            smallHeap.add(num);
+            bigHeap.add(smallHeap.poll());
+        } else {
+            // small size= big size. 说明为奇数。
+            // 则把元素插入大堆里，再把大堆的最大值插入到 small 里。
+            // 相当于在 small 里插入了一个。small 就比 big 多一个
+            bigHeap.add(num);
+            smallHeap.add(bigHeap.poll());
+        }
+    }
+
+    public double findMedian() {
+        return smallHeap.size() != bigHeap.size() ? smallHeap.peek() : (smallHeap.peek() + bigHeap.peek()) / 2.0;
+    }
+}
+```
+
+### 出现频率最高的K个数字
+
+[剑指 Offer II 060. 出现频率最高的 k 个数字 - 力扣（LeetCode）](https://leetcode.cn/problems/g5c51o/)
+
+给定一个整数数组 `nums` 和一个整数 `k` ，请返回其中出现频率前 `k` 高的元素。可以按任意顺序返回答案。
+
+```
+输入: nums = [1,1,1,2,2,3], k = 2
+输出: [1,2]
+
+输入: nums = [1], k = 1
+输出: [1]
+```
+
+#### 解题思路
+
+出现频率最高的 K 个数字，显而易见，可以使用优先队列。
+
+- 先用 Map 统计出元素出现的频率
+- 在将 Map 中的 entry 加入优先队列，并限制队列的大小，即可得到出现频率最高的 K 个数字
+
+#### 代码
+
+Java 的话，这代码有点考 API 使用的意思。
+
+```java
+public int[] topKFrequent(int[] nums, int k) {
+    int[] ans = new int[k];
+    Map<Integer, Integer> numToCount = new HashMap<>();
+    PriorityQueue<Map.Entry<Integer, Integer>> minHeap = new PriorityQueue<>((e1, e2) -> {
+        return e1.getValue() - e2.getValue();
+    });
+
+    for (int i = 0; i < nums.length; i++) {
+        numToCount.put(nums[i], numToCount.getOrDefault(nums[i], 0) + 1);
+    }
+    Set<Map.Entry<Integer, Integer>> entries = numToCount.entrySet();
+    for (Map.Entry<Integer, Integer> entry : entries) {
+        if (minHeap.size() < k) {
+            minHeap.offer(entry);
+        } else {
+            if (entry.getValue() > minHeap.peek().getValue()) {
+                minHeap.poll();
+                minHeap.offer(entry);
+            }
+        }
+    }
+
+    for (int i = 0, len = minHeap.size(); i < len; i++) {
+        ans[i] = minHeap.poll().getKey();
+    }
+    return ans;
+}
+```
+
+### 和最小的K个数对
+
+[剑指 Offer II 061. 和最小的 k 个数对 - 力扣（LeetCode）](https://leetcode.cn/problems/qn8gGX/)
+
+给定两个以升序排列的整数数组 nums1 和 nums2 , 以及一个整数 k 。
+
+定义一对值 (u,v)，其中第一个元素来自 nums1，第二个元素来自 nums2 。
+
+请找到和最小的 k 个数对 (u1,v1),  (u2,v2)  ...  (uk,vk) 。
+
+```
+输入: nums1 = [1,7,11], nums2 = [2,4,6], k = 3
+输出: [1,2],[1,4],[1,6]
+解释: 返回序列中的前 3 对数：
+    [1,2],[1,4],[1,6],[7,2],[7,4],[11,2],[7,6],[11,4],[11,6]
+
+输入: nums1 = [1,1,2], nums2 = [1,2,3], k = 2
+输出: [1,1],[1,1]
+解释: 返回序列中的前 2 对数：
+     [1,1],[1,1],[1,2],[2,1],[1,2],[2,2],[1,3],[1,3],[2,3]
+
+输入: nums1 = [1,2], nums2 = [3], k = 3 
+输出: [1,3],[2,3]
+解释: 也可能序列中所有的数对都被返回:[1,3],[2,3]
+```
+
+#### 解题思路
+
+组合出所有可能的数对，然后加入 bigHeap 中。
+
+- 如果 Heap 中元素没有超过 k 个，则有数对就加入。
+- 如果 Heap 中元素个数 == k，则判断 peek 的数对和 cur 数对的大小
+  - cur 数对小则移除 peek，将 cur 加入。
+  - cur 数对大则不做任何操作。
+
+#### 代码
+
+这题的测试用例，感觉不太好，后期如果增加了数据这个答案可能过不去？
+
+```java
+public void addToQueue(PriorityQueue<List<Integer>> queue, List<Integer> ele, int size) {
+    if (queue.size() < size) {
+        queue.add(ele);
+    } else if (ele.get(0) + ele.get(1) < queue.peek().get(0) + queue.peek().get(1)) {
+        queue.poll();
+        queue.add(ele);
+    }
+}
+
+public List<List<Integer>> kSmallestPairs(int[] nums1, int[] nums2, int k) {
+
+    List<List<Integer>> ans = new LinkedList<>();
+    PriorityQueue<List<Integer>> queue = new PriorityQueue<>((e1, e2) -> {
+        return -(e1.get(0) + e1.get(1) - e2.get(0) - e2.get(1));
+    });
+    for (int i = 0; i < nums1.length; i++) {
+        for (int j = 0; j < nums2.length; j++) {
+            List<Integer> tmp = Arrays.asList(nums1[i], nums2[j]);
+            addToQueue(queue, tmp, k);
+        }
+    }
+
+    for (int i = 0, len = queue.size(); i < len; i++) {
+        ans.add(queue.poll());
+    }
+    return ans;
+}
+```
 
 ## 前缀树
+
+### 基本知识
+
+前缀树，也称字典树，是用一个树状的数据结构存储一个字典中的所有单词。一颗包含 'can','cat','do','i','in' 的字典树。圆角表示是一个单词的结尾。
+
+```mermaid
+graph
+start-->c
+start-->d
+start-->i(i)
+c-->a
+d-->oo(o)
+i-->n(n)
+a-->nnn(n)
+a-->t(t)
+
+```
+
+一个单词的结尾是会有一个特殊标记，用于判断是否是一个完整的字符串。刷题时，一般都是默认小写英文字母。
+
+### 实现前缀树
+
+请设计实现一颗前缀树 Trie，它有如下操作
+
+- 函数 insert，在前缀树中添加一个字符串。
+- 函数 search，查找字符串。如果包含则返回 true，不包含则返回 false。
+- 函数 startWith，查找字符串前缀。如果前缀树中包含以该前缀开头的字符串，则返回 true，否则返回 false。
+
+#### 解题思路
+
+先要构建前缀树结点的数据结构。
+
+```java
+class Trie{
+    static class TrieNode{
+        TrieNode children[];
+        boolean isWord;
+        public TreiNode(){
+            children = new TrieNode[26];
+        }
+    }
+    private TrieNode root;
+    public Trie(){
+        root = new TrieNode();
+    }
+}
+```
+
+#### 代码
+
+```java
+class Trie {
+    static class TrieNode {
+        TrieNode children[];
+        boolean isWord;
+
+        public TrieNode() {
+            children = new TrieNode[26];
+        }
+    }
+
+    private TrieNode root;
+
+
+    /**
+     * Initialize your data structure here.
+     */
+    public Trie() {
+        root = new TrieNode();
+    }
+
+    /**
+     * Inserts a word into the trie.
+     */
+    public void insert(String word) {
+        TrieNode node = root;
+        for (char ch : word.toCharArray()) {
+            if (node.children[ch - 'a'] == null) {
+                node.children[ch - 'a'] = new TrieNode();
+            }
+            node = node.children[ch - 'a'];
+        }
+        node.isWord = true;
+    }
+
+    /**
+     * Returns if the word is in the trie.
+     */
+    public boolean search(String word) {
+        TrieNode node = root;
+        for (char ch : word.toCharArray()) {
+            if (node.children[ch - 'a'] == null) {
+                return false;
+            }
+            node = node.children[ch - 'a'];
+        }
+        return node.isWord;
+    }
+
+    /**
+     * Returns if there is any word in the trie that starts with the given prefix.
+     */
+    public boolean startsWith(String prefix) {
+        TrieNode node = root;
+        for (char ch : prefix.toCharArray()) {
+            if (node.children[ch - 'a'] == null) {
+                return false;
+            }
+            node = node.children[ch - 'a'];
+        }
+        return true;
+    }
+}
+```
 
 
 
@@ -2788,13 +3151,1144 @@ class Solution {
 }
 ```
 
+## 动态规划
 
+适用于动态规划的问题，都存在若干步，且每个步骤都面临若干选择。如果要求列出所有选择，考虑使用回溯法；如果只要求最优解，则可能适合用动态规划。
+
+DP 的题做过，才会做，没做过类似的套路，基本就是不会做。
+
+### 爬楼梯的最少成本
+
+[剑指 Offer II 088. 爬楼梯的最少成本 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/GzCJIP/)
+
+数组的每个下标作为一个阶梯，第 i 个阶梯对应着一个非负数的体力花费值 cost[i]（下标从 0 开始）。
+
+每当爬上一个阶梯都要花费对应的体力值，一旦支付了相应的体力值，就可以选择向上爬一个阶梯或者爬两个阶梯。
+
+请找出达到楼层顶部的最低花费。在开始时，你可以选择从下标为 0 或 1 的元素作为初始阶梯。 
+
+```
+示例 1：
+输入：cost = [10, 15, 20]
+输出：15
+解释：最低花费是从 cost[1] 开始，然后走两步即可到阶梯顶，一共花费 15 。
+
+示例 2：
+输入：cost = [1, 100, 1, 1, 1, 100, 1, 1, 100, 1]
+输出：6
+解释：最低花费方式是从 cost[0] 开始，逐个经过那些 1 ，跳过 cost[3] ，一共花费 6 。
+```
+
+#### 解题思路
+
+斐波那契数列的既视感。这题要求求出最优解考虑使用动态规划。动态规划的话需要我们找出递推式。分析题目，支付了当前的拦路费，就可以向上走一级或两级。
+$$
+f[i] = Min(f[i-1],f[i-2])+cost[i]
+$$
+递推式出来了，就可以写代码了。
+
+- 可以用递归实现 -- 超时
+- 带记忆的递归 - 不超时
+- 可以用迭代实现
+  - 需要开一个数据，存储先前的计算结果。
+- 可以思考，能够压缩空间（滚动数组？）
+  - 因为只有前两个值对当前值有影响，因此用两个变量保存值即可。
+
+#### 代码
+
+递归实现，超时了，测了几组数据，没啥问题。
+
+```java
+class Solution {
+    public int minCostClimbingStairs(int... cost) {
+        return Math.min(helper(cost, cost.length - 1), helper(cost, cost.length - 2));
+    }
+
+    private int helper(int[] cost, int cur) {
+        if (cur == 0 || cur == 1) return cost[cur];
+        return Math.min(helper(cost, cur - 1), helper(cost, cur - 2)) + cost[cur];
+    }
+}
+```
+
+带记忆的递归，不超时
+
+```java
+class Solution {
+    public int minCostClimbingStairs(int... cost) {
+        int len = cost.length;
+        int[] dp = new int[len];
+        for (int i = 0; i <len ; i++) {
+            dp[i] = -1;
+        }
+        dp[0] = cost[0];
+        dp[1] = cost[1];
+        helper(cost, len - 1, dp);
+        return Math.min(dp[len - 1], dp[len - 2]);
+    }
+
+    private void helper(int[] cost, int cur, int[] dp) {
+        if (dp[cur] == -1) {
+            helper(cost, cur - 1, dp);
+            helper(cost, cur - 2, dp);
+            dp[cur] = Math.min(dp[cur - 1], dp[cur - 2]) + cost[cur];
+        }
+    }
+}
+```
+
+迭代
+
+```java
+public int minCostClimbingStairs(int... cost) {
+    int len = cost.length;
+    int[] dp = new int[len];
+    Arrays.fill(dp, -1);
+    dp[0] = cost[0];
+    dp[1] = cost[1];
+    for (int i = 2; i < len; i++) {
+        dp[i] = Math.min(dp[i - 1], dp[i - 2]) + cost[i];
+    }
+    return Math.min(dp[len - 1], dp[len - 2]);
+}
+```
+
+压缩空间
+
+```java
+public int minCostClimbingStairs(int... cost) {
+    int len = cost.length;
+    int f1 = cost[0], f2 = cost[1];
+    for (int i = 2; i < len; i++) {
+        int tmp = Math.min(f1, f2) + cost[i];
+        f1 = f2;
+        f2 = tmp;
+    }
+    return Math.min(f1, f2);
+}
+```
+
+### 房屋偷盗
+
+[剑指 Offer II 089. 房屋偷盗 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/Gu0c2T/)
+
+一个专业的小偷，计划偷窃沿街的房屋。每间房内都藏有一定的现金，影响小偷偷窃的唯一制约因素就是相邻的房屋装有相互连通的防盗系统，如果两间相邻的房屋在同一晚上被小偷闯入，系统会自动报警。
+
+给定一个代表每个房屋存放金额的非负整数数组 nums ，请计算不触动警报装置的情况下 ，一夜之内能够偷窃到的最高金额。
+
+```
+输入：nums = [1,2,3,1]
+输出：4
+解释：偷窃 1 号房屋 (金额 = 1) ，然后偷窃 3 号房屋 (金额 = 3)。
+     偷窃到的最高金额 = 1 + 3 = 4 。
+
+输入：nums = [2,7,9,3,1]
+输出：12
+解释：偷窃 1 号房屋 (金额 = 2), 偷窃 3 号房屋 (金额 = 9)，接着偷窃 5 号房屋 (金额 = 1)。
+     偷窃到的最高金额 = 2 + 9 + 1 = 12 。
+```
+
+#### 解题思路
+
+假定 $f(i)$ 是从 $0~i$ 可以偷盗到最大值。状态转移方程和上一题类似。（差点往背包问题上想了）
+
+- 偷 $f(i)$，$cur = f(i-2) + nums[i]$
+- 不偷 $f(i)$，$cur=f(i-1)$
+
+$$
+f(i) = max(f(i-2)+nums[i],f(i-1))
+$$
+
+- 递归
+- 带记忆的递归
+- 迭代
+- 压缩空间的迭代
+
+#### 代码
+
+递归的代码--超时
+
+```java
+class Solution {
+    public int rob(int... nums) {
+        int len = nums.length;
+        if(len==1) return nums[0];
+        if(len == 2) return Math.max(nums[0],nums[1]);
+        return Math.max(helper(nums, len-1), helper(nums, len - 3) + nums[len - 1]);
+    }
+
+    // fi = Max(fi-2+nums[i],fi-1)
+    // 死递归
+    public int helper(int[] nums, int cur) {
+        // 注意递归的终止条件，要返回符合条件的值，可偷盗的最大值
+        if (cur == 0) return nums[0];
+        if(cur == 1) return Math.max(nums[0],nums[1]);
+        return Math.max(helper(nums, cur - 2) + nums[cur], helper(nums, cur-1));
+    }
+}
+```
+
+带记忆的递归
+
+```java
+class Solution {
+    public int rob(int... nums) {
+        int len = nums.length;
+        if (len == 1) return nums[0];
+        if (len == 2) return Math.max(nums[0], nums[1]);
+        int[] dp = new int[len];
+        Arrays.fill(dp, -1);
+        dp[0] = nums[0];
+        dp[1] = Math.max(nums[0], nums[1]);
+        helper(nums, len - 1, dp);
+        return dp[len - 1];
+    }
+
+    // fi = Max(fi-2+nums[i],fi-1)
+    // 死递归
+    public void helper(int[] nums, int cur, int[] dp) {
+        if (dp[cur] == -1) {
+            helper(nums, cur - 2, dp);
+            helper(nums, cur - 1, dp);
+            dp[cur] = Math.max(dp[cur - 2] + nums[cur], dp[cur - 1]);
+        }
+    }
+}
+```
+
+迭代
+
+```java
+public int rob(int... nums) {
+    int len = nums.length;
+    if (len == 1) return nums[0];
+    if (len == 2) return Math.max(nums[0], nums[1]);
+    int[] dp = new int[len];
+    Arrays.fill(dp, -1);
+    dp[0] = nums[0];
+    dp[1] = Math.max(nums[0], nums[1]);
+    for (int i = 2; i < len; i++) {
+        dp[i] = Math.max(dp[i - 2] + nums[i], dp[i - 1]);
+    }
+    return dp[len - 1];
+}
+```
+
+压缩空间
+
+```java
+// 和上一题类似。也是只与其中的两个值相关，用两个变量保存相关的值即可。
+public int rob(int... nums) {
+    int len = nums.length;
+    if (len == 1) return nums[0];
+    if (len == 2) return Math.max(nums[0], nums[1]);
+    int f1 = nums[0];
+    int f2 = Math.max(nums[0], nums[1]);
+    for (int i = 2; i < len; i++) {
+        int tmp = Math.max(f1 + nums[i], f2);
+        f1 = f2;
+        f2 = tmp;
+    }
+    return f2;
+}
+```
+
+### 环形房屋偷盗
+
+[剑指 Offer II 090. 环形房屋偷盗 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/PzWKhm/)
+
+一个专业的小偷，计划偷窃一个环形街道上沿街的房屋，每间房内都藏有一定的现金。这个地方所有的房屋都 围成一圈 ，这意味着第一个房屋和最后一个房屋是紧挨着的。同时，相邻的房屋装有相互连通的防盗系统，如果两间相邻的房屋在同一晚上被小偷闯入，系统会自动报警 。
+
+给定一个代表每个房屋存放金额的非负整数数组 nums ，请计算 在不触动警报装置的情况下 ，今晚能够偷窃到的最高金额。
+
+```
+输入：nums = [2,3,2]
+输出：3
+解释：你不能先偷窃 1 号房屋（金额 = 2），然后偷窃 3 号房屋（金额 = 2）, 因为他们是相邻的。
+
+输入：nums = [1,2,3,1]
+输出：4
+解释：你可以先偷窃 1 号房屋（金额 = 1），然后偷窃 3 号房屋（金额 = 3）。
+     偷窃到的最高金额 = 1 + 3 = 4 。
+```
+
+#### 解题思路
+
+环形的房屋，假设编号是从 $0 \to n$ 那么偷盗的方式就有这几种了。
+
+- $0 \to n-1$
+- $1 \to n$
+
+#### 代码
+
+压缩空间的 dp。
+
+```java
+class Solution {
+    public int rob(int... nums) {
+        int len = nums.length;
+        if (len == 1) return nums[0];
+        if (len == 2) return Math.max(nums[0], nums[1]);
+        int left = _rob(nums, 0, len - 1);
+        int right = _rob(nums, 1, len);
+        return Math.max(left, right);
+    }
+
+    public int _rob(int[] nums, int from, int to) {
+        if (to - from == 0) return 0;
+        if (to - from == 1) return Math.max(nums[from], nums[to]);
+        int f1 = nums[from];
+        int f2 = Math.max(nums[from], nums[from + 1]);
+        for (int i = from + 2; i < to; i++) {
+            int tmp = Math.max(f1 + nums[i], f2);
+            f1 = f2;
+            f2 = tmp;
+        }
+        return f2;
+    }
+}
+```
+
+### 粉刷房子
+
+[剑指 Offer II 091. 粉刷房子 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/JEj789/)
+
+假如有一排房子，共 n 个，每个房子可以被粉刷成红色、蓝色或者绿色这三种颜色中的一种，你需要粉刷所有的房子并且使其相邻的两个房子颜色不能相同。
+
+当然，因为市场上不同颜色油漆的价格不同，所以房子粉刷成不同颜色的花费成本也是不同的。每个房子粉刷成不同颜色的花费是以一个 n x 3 的正整数矩阵 costs 来表示的。
+
+例如，$costs[0][0]$ 表示第 0 号房子粉刷成红色的成本花费；$costs[1][2]$ 表示第 1 号房子粉刷成绿色的花费，以此类推。
+
+请计算出粉刷完所有房子最少的花费成本。
+
+输入: costs = [[17,2,17],[16,16,5],[14,3,19]]
+输出: 10
+解释: 将 0 号房子粉刷成蓝色，1 号房子粉刷成绿色，2 号房子粉刷成蓝色。最少花费: 2 + 5 + 3 = 10。
+
+输入: costs = [[7,6,2]]
+输出: 2
+
+#### 解题思路
+
+先理解题目意思。第一个测试用例，`costs = [[17,2,17],[16,16,5],[14,3,19]]` 表示需要粉刷三个房子，
+
+- 第一个房子的粉刷费用从 `[17,2,17]` 里算，
+- 第二个房子的粉刷费用从 `[16,16,5]` 里算，
+- 第三个房子的粉刷费用从 `[14,3,19]` 里算；
+
+下面就是找状态转移方程了。
+
+因为相邻的房子不能被粉刷成相同的颜色，所以在粉刷标号为 $i$ 的房子时，需要考虑 $i-1$ 的颜色。因此需要三个表达式，$r(i),g(i),b(i)$，分别表示将标号为 i 的房子粉刷成红、绿、蓝时的最小成本。
+$$
+标号为i的房子被刷成红色 \ r(i)=min(g(i-1),b(i-1))+cost[i][0] \\
+标号为i的房子被刷成绿色 \ g(i)=min(b(i-1),r(i-1))+cost[i][1] \\
+标号为i的房子被刷成蓝色 \ b(i)=min(r(i-1),g(i-1))+cost[i][2] \\
+$$
+
+- 用一个二维数组记录状态。
+- 或者做空间压缩，用一个空间大小为 $3*2$ 的数组，记录 pre 的状态。
+
+以后遇到带多种条件的 dp 题，可以考虑是不是和这题类似。
+
+#### 代码
+
+不做空间压缩。
+
+```java
+public int minCost(int[][] costs) {
+    int len = costs.length;
+    int dp[][] = new int[len][3];
+    dp[0][0] = costs[0][0];
+    dp[0][1] = costs[0][1];
+    dp[0][2] = costs[0][2];
+    for (int i = 1; i < len; i++) {
+        for (int j = 0; j < 3; j++) {
+            dp[i][j] = Math.min(dp[i - 1][(j + 1) % 3], dp[i - 1][(j + 2) % 3]) + costs[i][j];
+        }
+    }
+    return Math.min(dp[len - 1][0], Math.min(dp[len - 1][1], dp[len - 1][2]));
+}
+```
+
+做空间压缩呢？由于 $r(i),g(i),b(i)$ 计算时只需用到 $r(i-1),g(i-1),b(i-1)$，因此不用完整保存整个计算过程，用一个 $3*2$ 的数组即可。
+
+```java
+public int minCost(int[][] costs) {
+    int len = costs.length;
+    int dp[][] = new int[2][3];
+    dp[0][0] = costs[0][0];
+    dp[0][1] = costs[0][1];
+    dp[0][2] = costs[0][2];
+    for (int i = 1; i < len; i++) {
+        for (int j = 0; j < 3; j++) {
+            dp[i % 2][j] = Math.min(dp[(i - 1) % 2][(j + 1) % 3], dp[(i - 1) % 2][(j + 2) % 3]) + costs[i][j];
+        }
+    }
+    // i 循环了 len-1 次，实在不行，就举例子，n=2，n=3 时的结果
+    int last = (len - 1) % 2;
+    return Math.min(dp[last][0], Math.min(dp[last][1], dp[last][2]));
+}
+```
+
+### 翻转字符串
+
+[剑指 Offer II 092. 翻转字符 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/cyJERH/)
+
+如果一个由 '0' 和 '1' 组成的字符串，是以一些 '0'（可能没有 '0'）后面跟着一些 '1'（也可能没有 '1'）的形式组成的，那么该字符串是单调递增的。
+
+我们给出一个由字符 '0' 和 '1' 组成的字符串 s，我们可以将任何 '0' 翻转为 '1' 或者将 '1' 翻转为 '0'。
+
+返回使 s 单调递增的最小翻转次数。
+
+```
+输入：s = "00110"
+输出：1
+解释：我们翻转最后一位得到 00111.
+
+输入：s = "010110"
+输出：2
+解释：我们翻转得到 011111，或者是 000111。
+
+输入：s = "00011000"
+输出：2
+解释：我们翻转得到 00000000。
+```
+
+#### 解题思路
+
+这题，我从直觉上看，想不到用 dp 来做。暴力枚举的话，我也不一定做得出。
+
+$f(i)$ 单调递增旋转的最小次数=前一个串单调递增的最小次数+当前的操作。因为有 +1 和 +0 两种情况，所以需要开辟一个大小为 $len*2$ 的数组，$f[i][0]$ 表示当前字符置为 0 的话，最小操作次数，$f[i][i]$ 表示当前字符置为 1 的话，最小操作次数，所以状态转移方程应该是
+$$
+f[i][0] = f[i-1][0]+ isNeedPlusOne \\
+f[i][1] = Min(f[i-1][0],f[i-1][1]) + isNeedPlusOne
+$$
+
+#### 代码
+
+直接 dp，不压缩空间
+
+```java
+// DP 题，一遍 AC！
+public int minFlipsMonoIncr(String s) {
+    char[] chars = s.toCharArray();
+    // 直接统计即可
+    int[][] dp = new int[s.length()][2];
+    dp[0][0] = (chars[0] == '1' ? 1 : 0);
+    dp[0][1] = (chars[0] == '0' ? 1 : 0);
+    for (int i = 1; i < chars.length; i++) {
+        dp[i][0] = dp[i - 1][0] + (chars[i] == '1' ? 1 : 0);
+        dp[i][1] = Math.min(dp[i - 1][0], dp[i - 1][1]) + (chars[i] == '1' ? 0 : 1);
+    }
+    return Math.min(dp[chars.length - 1][0], dp[chars.length - 1][1]);
+}
+```
+
+压缩空间的话，该怎么压缩呢？滚动数组，对 2 取模
+
+```java
+// DP 题，一遍 AC！
+public int minFlipsMonoIncr(String s) {
+    char[] chars = s.toCharArray();
+    // 直接统计即可
+    int[][] dp = new int[2][2];
+    dp[0][0] = (chars[0] == '1' ? 1 : 0);
+    dp[0][1] = (chars[0] == '0' ? 1 : 0);
+    for (int i = 1; i < chars.length; i++) {
+        dp[i%2][0] = dp[(i - 1)%2][0] + (chars[i] == '1' ? 1 : 0);
+        dp[i%2][1] = Math.min(dp[(i - 1)%2][0], dp[(i - 1)%2][1]) + (chars[i] == '1' ? 0 : 1);
+    }
+    int last = (chars.length-1)%2;
+    return Math.min(dp[last][0], dp[last][1]);
+}
+```
+
+### 最长斐波那契数列
+
+[剑指 Offer II 093. 最长斐波那契数列 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/Q91FMA/)
+
+如果序列 $X_1, X_2, ..., X_n$ 满足下列条件，就说它是斐波那契式的：
+
+- $n >= 3$
+- 对于所有 $i + 2 <= n$，都有 $X_i + X_{i+1} = X_{i+2}$
+
+给定一个严格递增的正整数数组形成序列 arr ，找到 arr 中最长的斐波那契式的子序列的长度。如果一个不存在，返回 0。（回想一下，子序列是从原序列 arr 中派生出来的，它从 arr 中删掉任意数量的元素（也可以不删），而不改变其余元素的顺序。例如， [3, 5, 8] 是 [3, 4, 5, 6, 7, 8] 的一个子序列）
+
+```
+输入: arr = [1,2,3,4,5,6,7,8]
+输出: 5
+解释: 最长的斐波那契式子序列为 [1,2,3,5,8] 。
+
+输入: arr = [1,3,7,11,12,14,18]
+输出: 3
+解释: 最长的斐波那契式子序列有 [1,11,12]、[3,11,14] 以及 [7,11,18] 。
+```
+
+#### 解题思路
+
+找出最长的子序列，要求一个最优值。考虑用动态规划做。状态转移方程又是什么呢？看了下书和 leetcode 题解，还是书上的写的好。
+
+- 以 $A[i]$ 结尾的数列的长度依赖于它前一个数字 $A[j]$，不同的 $A[j]$ 可以和 $A[i]$ 形成不同的数列，长度也可能不同。我们用 $f(i,j)$ 表示 i 为最后一个数字，j 为倒数第二个数字的数列长度。
+  - 如果存在数字 k 使得 $A[i] = A[j]+A[k]$，那么 A[i] 的序列长度就等于在 A[k] 序列长度的基础上 +1。
+  - 如果不存在，则 A[i] 的序列长度为 2.
+
+$$
+存在 \ \ \ f[i][j] = f[j][k] + 1 \\
+不存在 \ \ f[i][j] = 2
+$$
+
+#### 代码
+
+```java
+public int lenLongestFibSubseq(int[] arr) {
+    Map<Integer, Integer> map = new HashMap<>();
+    int len = arr.length;
+    for (int i = 0; i < len; i++) {
+        map.put(arr[i], i); // 缓存 value 对应的 index
+    }
+    int[][] dp = new int[len][len];
+    int ans = 2; // 至少要是 3
+    for (int i = 1; i < len; i++) {
+        for (int j = 0; j < i; j++) {
+            int key = map.getOrDefault(arr[i] - arr[j], -1);
+            if (key > -1 && key < j) { // key 存在且合法的话
+                dp[i][j] = dp[j][key] + 1;
+            } else {
+                dp[i][j] = 2;
+            }
+            ans = Math.max(dp[i][j], ans);
+        }
+    }
+    return ans > 2 ? ans : 0;
+}
+```
 
 
 
 # 老版剑指offer
 
-## **二维数组中的查找**
+## 27.二叉树的镜像
+
+[剑指 Offer 27. 二叉树的镜像 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/er-cha-shu-de-jing-xiang-lcof/)
+
+请完成一个函数，输入一个二叉树，该函数输出它的镜像。
+
+    例如输入：
+    			4
+        /   \
+      2     7
+     / \   / \
+    1   3 6   9
+    
+    镜像输出：
+     			4
+        /   \
+      7     2
+     / \   / \
+    9   6 3   1
+```
+输入：root = [4,2,7,1,3,6,9]
+输出：[4,7,2,9,6,3,1]
+```
+
+### 解题思路
+
+一个简单的遍历即可完成。此处采用前序遍历递归算法。遍历到一个节点时：
+
+- 如果结点存在子树，则交换左右孩子。
+- 如果不存在，则结束递归。
+
+### 代码
+
+```java
+class Solution {
+    public TreeNode mirrorTree(TreeNode root) {
+        preOrder(root);
+        return root;
+    }
+
+    private void preOrder(TreeNode root){
+        if(root==null || root.left == root.right) return;
+        TreeNode tmp = root.left;
+        root.left = root.right;
+        root.right = tmp;
+        preOrder(root.left);
+        preOrder(root.right);
+    }
+}
+```
+
+## 28.对称的二叉树
+
+[剑指 Offer 28. 对称的二叉树 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/dui-cheng-de-er-cha-shu-lcof/)
+
+请实现一个函数，用来判断一棵二叉树是不是对称的。如果一棵二叉树和它的镜像一样，那么它是对称的。
+
+```
+例如，二叉树 [1,2,2,3,4,4,3] 是对称的。
+    1
+   / \
+  2   2
+ / \ / \
+3  4 4  3
+
+但是下面这个 [1,2,2,null,3,null,3] 则不是镜像对称的:
+    1
+   / \
+  2   2
+   \   \
+   3    3
+```
+
+### 解题思路
+
+剑指 Offer：找出一种和前序遍历的对称的遍历方式。
+
+- 前序遍历：根左右。
+- 对称遍历：根右左。
+
+使用递归进行遍历。要理解递归的含义！当前点是否符合要求？符合则递归判断其他点。
+
+- 如果 root1，root2 都为 null，return true；
+- 如果 root1，root2 有一个不为 null，return false；
+- 如果 root1 的值不等于 root2 的值，return false，反之 true
+
+### 代码
+
+```java
+class Solution {
+    public boolean isSymmetric(TreeNode root) {
+        return isSymmetric(root,root);
+    }
+
+    private boolean isSymmetric(TreeNode root1,TreeNode root2){
+        if(root1== null && null == root2) return true;
+        if(root1==null || root2==null) return false;
+        if(root1.val!=root2.val) return false;
+        // 符合要求，再递归判断，其他结点
+        return isSymmetric(root1.left,root2.right) && isSymmetric(root1.right,root2.left);
+    }
+}
+```
+
+## 31.栈的压入、弹出序列
+
+输入两个整数序列，第一个序列表示栈的压入顺序，请判断第二个序列是否为该栈的弹出顺序。假设压入栈的所有数字均不相等。例如，序列 {1,2,3,4,5} 是某栈的压栈序列，序列 {4,5,3,2,1} 是该压栈序列对应的一个弹出序列，但 {4,3,5,1,2} 就不可能是该压栈序列的弹出序列
+
+```
+输入：pushed = [1,2,3,4,5], popped = [4,5,3,2,1]
+输出：true
+解释：我们可以按以下顺序执行：
+push(1), push(2), push(3), push(4), pop() -> 4,
+push(5), pop() -> 5, pop() -> 3, pop() -> 2, pop() -> 1
+
+输入：pushed = [1,2,3,4,5], popped = [4,3,5,1,2]
+输出：false
+解释：1 不能在 2 之前弹出。
+```
+
+### 解题思路
+
+根据栈的特点来解题。判断合不合法，用一个辅助栈
+
+- 把压栈的元素按顺序压入，当栈顶元素和出栈的第一个元素相同，则将该元素弹出。
+- 最后判断出栈列表指针是否指向出栈列表的末尾即可。
+
+### 代码
+
+```java
+public boolean validateStackSequences(int[] pushed, int[] popped) {
+    Stack<Integer> stack = new Stack<>();
+    for (int i = 0, j = 0; i < pushed.length; i++) {
+        stack.push(pushed[i]);
+        while (!stack.isEmpty() && stack.peek() == popped[j]) {
+            stack.pop();
+            j++;
+        }
+    }
+    return stack.size() == 0;
+}
+```
+
+## 32.从上到下打印二叉树
+
+[剑指 Offer 32 - I. 从上到下打印二叉树 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/cong-shang-dao-xia-da-yin-er-cha-shu-lcof/)
+
+从上到下打印出二叉树的每个节点，同一层的节点按照从左到右的顺序打印。
+
+之字形打印。
+
+### 解题思路
+
+- 普通打印：层序遍历
+- 之字形打印
+  - 每次加入的时候判断下是否需要逆序，需要就逆序一下。
+  - 或者是用两个 stack，并且判断下每次用那个 stack，元素是左右入，还是右左入。
+  - 或者是用一个 stack，一个队列。入队的顺序还是和常规的层序遍历一样，加入 path 的时候判断下是头插法还是尾插法。
+
+### 代码
+
+```java
+public int[] levelOrder(TreeNode root) {
+    if (root == null) return new int[0];
+    List<Integer> ans = new ArrayList<>();
+    Queue<TreeNode> queue = new LinkedList<>();
+    queue.add(root);
+    while (!queue.isEmpty()) {
+        TreeNode poll = queue.poll();
+        ans.add(poll.val);
+        if (poll.left != null) queue.add(poll.left);
+        if (poll.right != null) queue.add(poll.right);
+    }
+    int[] ret = new int[ans.size()];
+    for (int i = 0; i < ans.size(); i++) {
+        ret[i] = ans.get(i);
+    }
+    return ret;
+}
+```
+
+ZigZa
+
+```java
+class Solution {
+    public List<List<Integer>> levelOrder(TreeNode root) {
+        Queue<TreeNode> queue = new LinkedList<>();
+        List<List<Integer>> res = new ArrayList<>();
+        if(root != null) queue.add(root);
+        while(!queue.isEmpty()) {
+            List<Integer> tmp = new ArrayList<>();
+            for(int i = queue.size(); i > 0; i--) {
+                TreeNode node = queue.poll();
+                tmp.add(node.val);
+                if(node.left != null) queue.add(node.left);
+                if(node.right != null) queue.add(node.right);
+            }
+            if(res.size() % 2 == 1) Collections.reverse(tmp);
+            res.add(tmp);
+        }
+        return res;
+    }
+}
+```
+
+## 33.二叉搜索树的后续遍历序列
+
+输入一个整数数组，判断该数组是不是某二叉搜索树的后序遍历结果。如果是则返回 `true`，否则返回 `false`。假设输入的数组的任意两个数字都互不相同。
+
+参考以下这颗二叉搜索树：
+
+         5
+        / \
+       2   6
+      / \
+     1   3
+     
+    输入: [1,6,3,2,5]
+    输出: false
+    
+    输入: [1,3,2,6,5]
+    输出: true
+### 解题思路
+
+根据后续遍历+二叉搜索树的规则来判断是否符合要求。
+
+- 后续遍历的最后一个节点是 root 节点。找出 root 的左右子树范围
+  - 判断左子树的节点是否都小于 root。
+  - 判断右子树的节点是否都大于 root。
+- 如果左右子树都符合规则，则递归判断左/右边
+- 子树序列是否是二叉搜索的后续遍历序列
+
+递归代码该怎么写呢？
+
+- 终止条件，没有节点，或只有一个节点，return true 结束递归。
+- 左右子树有一个不符合要求 return false。
+- 这题需要考虑比较多的边界问题。
+  - 找 left/right 的终止位置的时候要注意 root 节点
+  - 进行递归的时候，右子树传入的节点范围要记得排除 root 节点。
+
+### 代码
+
+```java
+class Solution {
+    public boolean verifyPostorder(int... postorder) {
+        return verify(postorder, 0, postorder.length - 1);
+    }
+
+    private boolean verify(int[] postorder, int start, int end) {
+        if (start >= end - 1) return true;
+        int root = postorder[end];
+        int left = -1, right;
+        // 找到 left 的位置
+        for (int i = start; i < end; i++) {
+            if (postorder[i] > root) break;
+            left = i;
+        }
+        if (left == -1) right = start;
+        else right = left + 1;
+        // 判断 right 的位置是否都符合要求
+        for (int i = right; i < end; i++) {
+            if (postorder[i] < root) return false;
+        }
+
+        return verify(postorder, start, left) && verify(postorder, right, end-1);
+    }
+}
+```
+
+大佬解法，简洁明了
+
+```java
+class Solution {
+    public boolean verifyPostorder(int[] postorder) {
+        return verifyPostorder(postorder, 0, postorder.length - 1);
+    }
+    
+    private boolean verifyPostorder(int[]postorder,int start,int end){
+        if(start>=end) return true;
+        int point = start;
+        // 找左子树范围
+        while(postorder[point]<postorder[end]) point++;
+        int mid = point; // 找到了左子树的 end+1 位置
+        while(postorder[point]>postorder[end]) point++;
+					// 如果右子树的 end+1 的位置正好是 root 的位置，说明从 mid~end-1 都是大于 root 的，符合要求，继续进行递归。 
+        return point == end && verifyPostorder(postorder,start,mid-1) && verifyPostorder(postorder,mid,end-1);
+    }
+}
+```
+
+## 34.二叉树种和为某一值的路径
+
+给你二叉树的根节点 root 和一个整数目标和 targetSum ，找出所有从根节点到叶子节点路径总和等于给定目标和的路径。
+
+叶子节点是指没有子节点的节点
+
+<img src="https://assets.leetcode.com/uploads/2021/01/18/pathsumii1.jpg">
+
+```
+输入：root = [5,4,8,11,null,13,4,7,2,null,null,5,1], targetSum = 22
+输出：[[5,4,11,2],[5,8,4,5]]
+```
+
+### 解题思路
+
+题目限制了从 root->leaf。采用前序遍历，如果遍历到了 leaf，且当前的和等于 target 就保存。
+
+递归代码该怎么写？
+
+- 终止条件，遍历到了叶节点。判断是否符合要求，符合要求就加入，然后 return，不符合直接 return。
+- 如何保存路径？用一个 list 保存，回溯的时候重置状态。遍历到末尾时复制链接。
+
+### 代码
+
+累加到 sum == target 的写法
+
+```java
+class Solution {
+    List<List<Integer>> ans = new ArrayList<>();
+
+    public List<List<Integer>> pathSum(TreeNode root, int target) {
+        helper(root, target, 0, new LinkedList<>());
+        return ans;
+    }
+
+    private void helper(TreeNode root, int target, int sum, LinkedList<Integer> path) {
+        // 会重复检索
+        if (root == null) return;
+        path.add(root.val);
+        sum +=root.val;
+        if (root.left == null && root.right == null && target == sum) {
+            ans.add(new LinkedList<Integer>(path));
+        }
+        helper(root.left, target, sum, path);
+        helper(root.right, target, sum, path);
+        path.removeLast();
+    }
+}
+```
+
+减到 target == 0 的写法
+
+```java
+class Solution {
+    List<List<Integer>> ans = new ArrayList<>();
+
+    public List<List<Integer>> pathSum(TreeNode root, int target) {
+        helper(root, target, new LinkedList<>());
+        return ans;
+    }
+
+    private void helper(TreeNode root, int target, LinkedList<Integer> path) {
+        // 会重复检索
+        if (root == null) return;
+        path.add(root.val);
+        target -=root.val;
+        if (root.left == null && root.right == null && target == 0) {
+            ans.add(new LinkedList<Integer>(path));
+        }
+        helper(root.left, target, path);
+        helper(root.right, target, path);
+        path.removeLast();
+    }
+}
+```
+
+
+
+## 36.二叉搜索树与双向链表
+
+输入一棵二叉搜索树，将该二叉搜索树转换成一个排序的循环双向链表。要求不能创建任何新的节点，只能调整树中节点指针的指向。
+
+ 以下面的二叉搜索树为例：
+
+<img src="https://assets.leetcode.com/uploads/2018/10/12/bstdlloriginalbst.png">
+
+我们希望将这个二叉搜索树转化为双向循环链表。链表中的每个节点都有一个前驱和后继指针。对于双向循环链表，第一个节点的前驱是最后一个节点，最后一个节点的后继是第一个节点。
+
+下图展示了上面的二叉搜索树转化成的链表。“head” 表示指向链表中有最小元素的节点。
+
+<img src="https://assets.leetcode.com/uploads/2018/10/12/bstdllreturndll.png">
+
+### 解题思路
+
+二叉搜索树转为双链表，且有序。很明显使用中序遍历即可。关键在于指针的重新赋值。
+
+假定遍历到了 Node(1). 假定 left 指向前驱，right 指向后继。
+
+- Node(1).right= Node(2)
+- Node(2).left = Node(1)
+- Node(2).right = Node(3)
+- Node(3).left = Node(2)
+- ...
+- Node(5).right = ?
+- Node(5).left = Node(4)
+
+我们用 pre 记录前一个结点。用 head 记录值最小的那个结点。在遍历完成之后，最后/最大结点的 next 应该指向最小结点。最小结点的 pre 应该指向最大的元素。
+
+- next ~ right
+- pre ~ left
+
+### 代码
+
+```java
+class Solution {
+    Node pre = null;
+    Node head = null;
+
+    public Node treeToDoublyList(Node root) {
+        if(root==null) return null;
+        head = root;
+        dfs(root);
+        head.left = pre;
+        pre.right = head;
+        return head;
+    }
+
+    private void dfs(Node root) {
+        if(root==null) return;
+        if(head.val>root.val) head = root; 
+        dfs(root.left);
+        if (pre != null) {
+            pre.right = root;
+            root.left = pre;
+        }
+        pre = root;
+        dfs(root.right);
+    }
+}
+```
+
+
+
+
+
+## 40.最小的K个数
+
+[剑指 Offer 40. 最小的k个数 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/zui-xiao-de-kge-shu-lcof/submissions/)
+
+输入整数数组 `arr` ，找出其中最小的 `k` 个数。例如，输入4、5、1、6、2、7、3、8这8个数字，则最小的4个数字是1、2、3、4。
+
+### 解题思路
+
+要求最小的 k 个数，使用大顶堆。
+
+- 还未找到所有的，则直接入堆
+- 如果堆满了，则比较待加入的元素和大顶堆堆顶的元素
+  - cur<堆顶，说明堆顶元素不符合要求，移除堆顶元素，并将 cur 加入
+  - cur>堆顶，说明 cur 不符合要求，跳过。
+
+### 代码
+
+```java
+class Solution {
+    public int[] getLeastNumbers(int[] input, int k) {
+        int[]ans = new int[k];
+        if(k>input.length){
+            return input;
+        }
+        PriorityQueue<Integer> queue = new PriorityQueue<Integer>();
+        for(int i=0;i<input.length;i++) {
+            queue.add(input[i]);
+        }
+        
+        while(k>0&&!queue.isEmpty()) {
+            ans[--k] = queue.remove();
+        }
+        return ans;
+    }
+}
+```
+
+## 41.数据流中的中位数
+
+[剑指 Offer 41. 数据流中的中位数 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/shu-ju-liu-zhong-de-zhong-wei-shu-lcof/)
+
+中位数是有序列表中间的数。如果列表长度是偶数，中位数则是中间两个数的平均值。
+
+例如，
+
+[2,3,4] 的中位数是 3
+
+[2,3] 的中位数是 (2 + 3) / 2 = 2.5
+
+设计一个支持以下两种操作的数据结构：
+
+- void addNum(int num) - 从数据流中添加一个整数到数据结构中。
+- double findMedian() - 返回目前所有元素的中位数。
+
+```
+addNum(1)
+addNum(2)
+findMedian() -> 1.5
+addNum(3) 
+findMedian() -> 2
+```
+
+### 解题思路
+
+- 每次都使用快排找中位数
+- 使用两个优先队列，大顶堆+小顶堆
+  - 小顶堆，保存较大的一半
+  - 大顶堆，保存较小的一半
+  - 如果 $small.size = big.size$ 则两个堆顶元素的均值就是中位数
+  - 如果 $small.size = big.size+1$，则 small 堆顶的元素就是中位数（这里我把多余的一个数字放到 smallHeap 中）
+  - 那么如何确保小顶堆，保存较大的一半，大顶堆，保存较小的一半呢？
+  - 如，需要将元素保存到小顶堆的话，先把元素加入 bigHeap，再把 bigHeap 中最大的加入到 smallHeap 中。反之亦然。
+
+### 代码
+
+```java
+class MedianFinder {
+    Queue<Integer> smallHeap, bigHeap;
+
+    public MedianFinder() {
+        // small 中多存一个
+        smallHeap = new PriorityQueue<>(); // 小顶堆，保存较大的一半
+        bigHeap = new PriorityQueue<>((x, y) -> (y - x)); // 大顶堆，保存较小的一半
+    }
+
+    public void addNum(int num) {
+        // small = big+1,，然后又有新元素要插入
+        // 则向 bigHeap 里插入一个。
+        if (smallHeap.size() == bigHeap.size()+1) {
+            smallHeap.add(num);
+            bigHeap.add(smallHeap.poll());
+        } else {
+            // small size= big size. 说明为奇数。
+            // 则把元素插入大堆里，再把大堆的最大值插入到 small 里。
+            // 相当于在 small 里插入了一个。small 就比 big 多一个
+            bigHeap.add(num);
+            smallHeap.add(bigHeap.poll());
+        }
+    }
+
+    public double findMedian() {
+        return smallHeap.size() != bigHeap.size() ? smallHeap.peek() : (smallHeap.peek() + bigHeap.peek()) / 2.0;
+    }
+}
+```
+
+## 42.连续子数组的最大和
+
+[剑指 Offer 42. 连续子数组的最大和 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/lian-xu-zi-shu-zu-de-zui-da-he-lcof/)
+
+输入一个整型数组，数组中的一个或连续多个整数组成一个子数组。求所有子数组的和的最大值。
+
+要求时间复杂度为O(n)
+
+```
+输入: nums = [-2,1,-3,4,-1,2,1,-5,4]
+输出: 6
+解释: 连续子数组 [4,-1,2,1] 的和最大，为 6。
+```
+
+### 解题思路
+
+动态规划题。我们需要找状态转移方程。假定 $f[i]$ 记录的是以索引 i 结尾的最大的连续子数组和。
+
+- 对于 nums[i] 而言，以它结尾的子数组分两种情况
+  - nums[i] 自己作为独立子数组
+  - nums[i] 和之前的数值组成子数组
+- 取两种情况的 max 即可。
+
+$$
+f[i] = Max(nums[i],f[i-1]+nums[i])
+$$
+
+### 代码
+
+```java
+class Solution {
+    public int maxSubArray(int... nums) {
+        int ans = nums[0];
+        int pre = nums[0];
+        for (int i = 1; i < nums.length; i++) {
+            pre = Math.max(pre + nums[i], nums[i]);
+            ans = Math.max(ans, pre);
+        }
+        return ans;
+    }
+}
+```
+
+## 二叉搜索树的第K大节点
+
+[剑指 Offer 54. 二叉搜索树的第k大节点 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/er-cha-sou-suo-shu-de-di-kda-jie-dian-lcof/)
+
+给定一棵二叉搜索树，请找出其中第 `k` 大的节点的值。
+
+### 解题思路
+
+典型的中序遍历问题。问题在于如何查找第 K 大的节点？我们可以用一个小顶堆存储 K 个最大的元素，这样，遍历结束后，堆顶的元素就是第 K 大的值。
+
+### 代码
+
+```java
+public class Offer054KthLargest {
+    PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+
+    public int kthLargest(TreeNode root, int k) {
+        dfs(root, k);
+        return minHeap.peek();
+    }
+
+    public void dfs(TreeNode root, int k) {
+        if (root == null) return;
+        dfs(root.left, k);
+        if (minHeap.size() < k) {
+            minHeap.offer(root.val);
+        } else if (minHeap.peek() < root.val) {
+            minHeap.poll();
+            minHeap.offer(root.val);
+        }
+        dfs(root.right, k);
+    }
+}
+```
+
+
+
+## 二维数组中的查找
 
 - [x] 矩阵有序
 - 基本思路就是给矩阵降低阶数
@@ -3118,8 +4612,6 @@ public ListNode reverseList(ListNode head) {
 }
 ```
 
-
-
 ## 合并两个排序的链表
 
 ```java
@@ -3142,6 +4634,69 @@ public ListNode Merge(ListNode list1, ListNode list2) {
 	return head.next;
 }
 ```
+
+## 两个链表的第一个公共结点
+
+哈希表判重，空间复杂度 $O(N)$
+
+```java
+public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+    HashMap<ListNode, Boolean> map = new HashMap<>();
+    while (headA != null) {
+        map.put(headA, true);
+        headA = headA.next;
+    }
+    while (headB != null) {
+        if (map.getOrDefault(headB, false)) return headB;
+        headB = headB.next;
+    }
+    return null;
+}
+```
+
+## 数据流中的中位数
+
+用两个堆，大顶堆+小顶堆。
+
+- 大顶堆中存储较小的一半元素
+- 小顶堆中存储较大的一半元素
+- $bigHeap.size() = smallHeap.size()$，则中位数为两个堆顶元素的均值。
+- $bigHeap.size() != smallHeap.size()$，我们在 smallHeap 中多存储一个元素，则中位数为 smallHeap 的堆顶元素。
+
+```java
+public class Offer041MedianFinder {
+    class MedianFinder {
+        Queue<Integer> smallHeap, bigHeap;
+
+        public MedianFinder() {
+            // small 中多存一个
+            smallHeap = new PriorityQueue<>(); // 小顶堆，保存较大的一半
+            bigHeap = new PriorityQueue<>((x, y) -> (y - x)); // 大顶堆，保存较小的一半
+        }
+
+        public void addNum(int num) {
+            // small = big+1,，然后又有新元素要插入
+            // 则向 bigHeap 里插入一个。
+            if (smallHeap.size() == bigHeap.size()+1) {
+                smallHeap.add(num);
+                bigHeap.add(smallHeap.poll());
+            } else {
+                // small size= big size. 说明为奇数。
+                // 则把元素插入大堆里，再把大堆的最大值插入到 small 里。
+                // 相当于在 small 里插入了一个。small 就比 big 多一个
+                bigHeap.add(num);
+                smallHeap.add(bigHeap.poll());
+            }
+        }
+
+        public double findMedian() {
+            return smallHeap.size() != bigHeap.size() ? smallHeap.peek() : (smallHeap.peek() + bigHeap.peek()) / 2.0;
+        }
+    }
+}
+```
+
+
 
 ## 从上往下打印二叉树
 
@@ -3360,6 +4915,23 @@ public double myPow(double x, int n) {
     return half * half * mod;
 }
 ```
+
+## 不用加减乘除做加法
+
+```java
+class Solution {
+    public int add(int a, int b) {
+        while(b != 0) { // 当进位为 0 时跳出
+            int c = (a & b) << 1;  // c = 进位
+            a ^= b; // a = 非进位和
+            b = c; // b = 进位
+        }
+        return a;
+    }
+}
+```
+
+
 
 # CodeTop
 
@@ -3994,7 +5566,157 @@ class Solution {
 }
 ```
 
+## 随机数索引
 
+[398. 随机数索引 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/random-pick-index/)
+
+给定一个可能含有重复元素的整数数组，要求随机输出给定的数字的索引。 您可以假设给定的数字一定存在于数组中。
+
+注意：
+数组大小可能非常大。 使用太多额外空间的解决方案将不会通过测试。
+
+```
+示例:
+int[] nums = new int[] {1,2,3,3,3};
+Solution solution = new Solution(nums);
+
+// pick(3) 应该返回索引 2,3 或者 4。每个索引的返回概率应该相等。
+solution.pick(3);
+
+// pick(1) 应该返回 0。因为只有nums[0]等于1。
+solution.pick(1);
+```
+
+### 解题思路
+
+- 先考虑用哈希表进行模拟。
+  - key 存数字的值，value 存数字的索引。随机返回的话就取随机数获取指定下标的数据。此处没有规定时间复杂度，只是特地说明了可能会爆内存，在内存使用上可能需要进行优化。先尝试用最暴力的解法做一下。
+- 再思考下有没有更好的做法？评论区，蓄水池算法。
+  - 对于每个 $nums[i] = target$ 执行「是否要将 $i$ 作为最新答案候选」的操作。
+  - 假定共有 m 个下标满足 $nums[i] == target$，我们需要使得每个数据返回的概率都是 $\frac{1}{m}$。
+  - 如果我们对遇到的第 k 个数取随机值，当随机结果为 0 是就将它<span style="color:red">作为候选答案</span>，则这个的概率是 $\frac{1}{k}$。注意，第 1 个数，取的概率是 1！
+  - 对遇到的每个数都做这样的操作，那么第 k 个是最终答案的概率是 $\frac{1}{k} * (1-\frac{1}{k+1})*(1- \frac{1}{k+2})*((1- \frac{1}{m})) = \frac{1}{m}$
+
+### 代码
+
+哈希表暴力求解。执行用时 70ms。
+
+```java
+class Solution {
+    HashMap<Integer, List<Integer>> numToIndexs;
+    Random random;
+
+    public Solution(int[] nums) {
+        random = new Random();
+        numToIndexs = new HashMap<>();
+        for (int i = 0; i < nums.length; i++) {
+            if (!numToIndexs.containsKey(nums[i])) {
+                numToIndexs.put(nums[i], new ArrayList<>());
+            }
+            numToIndexs.get(nums[i]).add(i);
+        }
+    }
+
+    public int pick(int target) {
+        if (numToIndexs.containsKey(target)) {
+            List<Integer> indexs = numToIndexs.get(target);
+            int i = random.nextInt(indexs.size());
+            return indexs.get(i);
+        }
+        return -1;
+    }
+}
+```
+
+蓄水池算法
+
+```java
+class Solution {
+    Random random;
+    private int[] nums;
+
+    public Solution(int[] nums) {
+        this.nums = nums;
+        random = new Random();
+    }
+
+    public int pick(int target) {
+        int meetCount = 0, ans = -1;
+        for (int i = 0; i < nums.length; i++) {
+            if (nums[i] == target) {
+                meetCount++;
+                if (random.nextInt(meetCount) == 0) ans = nums[i];
+            }
+        }
+        return ans;
+    }
+}
+```
+
+## 三维形体投影面积
+
+
+
+在 $n * n$ 的网格 grid 中，我们放置了一些与 x，y，z 三轴对齐的 $1 * 1 * 1$ 立方体。
+
+每个值 $v = grid[i][j]$ 表示 v 个正方体叠放在单元格 (i, j) 上。
+
+现在，我们查看这些立方体在 xy 、yz 和 zx 平面上的投影。
+
+投影就像影子，将三维形体映射到一个二维平面上。从顶部、前面和侧面看立方体时，我们会看到“影子”。
+
+返回所有三个投影的总面积。
+
+<img src="https://s3-lc-upload.s3.amazonaws.com/uploads/2018/08/02/shadow.png">
+
+```
+输入：[[1,2],[3,4]]
+输出：17
+解释：这里有该形体在三个轴对齐平面上的三个投影(“阴影部分”)。
+
+输入：grid = [[2]]
+输出：5
+
+输入：[[1,0],[0,2]]
+输出：8
+```
+
+### 解题思路
+
+这是一个找规律的题。我们需要从三个角度去看投影的面积。
+
+- 从顶部，投影面积等于非 0 元素的个数。
+- 从前面看，投影面积等于每列元素的最大值的累加和。
+- 从侧面看，投影面积等于每行元素的最大值的累加和。
+
+因此我们只要找到非 0 元素的个数，找到每列元素的最大值，每行元素的最大值即可。
+
+- 非 0 元素的统计遍历一次即可。
+- 每列元素的最大值，在正常遍历二维数组的每个一维子数组时，以这种形式访问 $arr[col][row]$ 可找到。
+- 每行元素的最大值，在正常遍历二维数组的每个一维子数组时，可找到。
+
+### 代码
+
+```java
+public int projectionArea(int[][] grid) {
+    int noZero = 0;
+    int rowMaxSum = 0;
+    int colMaxSum = 0;
+    for (int i = 0; i < grid.length; i++) {
+        int rowMax = 0;
+        int colMax = 0;
+
+        for (int j = 0; j < grid[i].length; j++) {
+            if (grid[i][j] != 0) noZero++;
+            rowMax = Math.max(rowMax, grid[i][j]);
+            colMax = Math.max(colMax, grid[j][i]);
+        }
+        rowMaxSum += rowMax;
+        colMaxSum += colMax;
+    }
+    return noZero + rowMaxSum + colMaxSum;
+}
+```
 
 # 心血来潮
 
@@ -4569,6 +6291,81 @@ class Solution {
             ans.add(cur);
         }
         return ans;
+    }
+}
+```
+
+## 按奇偶排序数组
+
+[905. 按奇偶排序数组 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/sort-array-by-parity/)
+
+给你一个整数数组 `nums`，将 `nums` 中的的所有偶数元素移动到数组的前面，后跟所有奇数元素。
+
+返回满足此条件的任一数组作为答案。
+
+```
+输入：nums = [3,1,2,4]
+输出：[2,4,3,1]
+解释：[4,2,3,1]、[2,4,1,3] 和 [4,2,1,3] 也会被视作正确答案。
+```
+
+### 解题思路
+
+一个典型的双指针的题。start 指针和 end 指针
+
+- 当 start 找到了一个奇数，end 找到一个偶数时
+  - 若 start < end，则交换元素
+  - 若 start >= end，则跳出循环
+
+### 代码
+
+```java
+public int[] sortArrayByParity(int[] nums) {
+    for(int start=0,end=nums.length-1;start<end;){
+        while(start<end && ((nums[start] & 1) == 0)) start++;
+        while(end>start && ((nums[end] & 1) ==1)) end--;
+        if(start<end){
+            int tmp = nums[start];
+            nums[start] = nums[end];
+            nums[end] = tmp;
+        }else{
+            break;
+        }
+    }
+    return nums;
+}
+```
+
+## 最小差值Ⅰ
+
+[908. 最小差值 I - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/smallest-range-i/)
+
+给你一个整数数组 nums，和一个整数 k 。
+
+在一个操作中，您可以选择 $0 <= i < nums.length$ 的任何索引 i 。将 nums[i] 改为 nums[i] + x ，其中 x 是一个范围为 [-k, k] 的整数。对于每个索引 i ，最多只能应用一次此操作。
+
+nums 的分数是 nums 中最大和最小元素的差值。 
+
+在对 nums 中的每个索引最多应用一次上述操作后，返回 nums 的最低分数。
+
+### 解题思路
+
+在做改变前，$result=max-min$。做改变后呢？
+
+- 原本 max  和 min 的差距如果在 2k 以内的话，min 和 max 的差值会变成 0。$max-某个数$，$min+某个数$。
+- 如果差距在 2k 以上的话，$result = max-min-2k$。 
+
+### 代码
+
+```java
+class Solution {
+    public int smallestRangeI(int[] nums, int k) {
+        int min=10001,max=-1;
+        for(int i=0;i<nums.length;i++){
+            min = Math.min(min,nums[i]);
+            max = Math.max(max,nums[i]);
+        }
+        return max-min<= 2*k?0:max-min-2*k;
     }
 }
 ```
