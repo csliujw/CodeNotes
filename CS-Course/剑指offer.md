@@ -3667,6 +3667,219 @@ public int lenLongestFibSubseq(int[] arr) {
 
 # 老版剑指offer
 
+## 04.二维数组中的查找
+
+[剑指 Offer 04. 二维数组中的查找 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/er-wei-shu-zu-zhong-de-cha-zhao-lcof/)
+
+在一个 n * m 的二维数组中，每一行都按照从左到右递增的顺序排序，每一列都按照从上到下递增的顺序排序。请完成一个高效的函数，输入这样的一个二维数组和一个整数，判断数组中是否含有该整数。
+
+### 解题思路
+
+矩阵有序
+
+- 基本思路就是给矩阵降低阶数
+- 第一行最右边的那个元素 A 是此行最大的，是此列最小的
+- 如果 A>target 说明这一列都大于 target 的，就可以把这一列都移除不进行比较
+- 如果 A<target 说明这一行都是小于 target 的，就可以把这一行都移除不进行比较
+- 移除的策略是限定二维数字行列的坐标
+- 列的下标最后会趋于 0
+- 行的下标最后会趋于 length-1
+
+### 代码
+
+```java
+public boolean Find(int target, int[][] array) {
+	boolean find = false;
+	if (array[0].length > 0 && array.length > 0) {
+		int row = 0;
+		int col = array.length - 1;
+		while (row <= array[0].length-1 && col >= 0) {
+			if (array[row][col] == target) {
+				return true;
+			} else if (array[row][col] > target) {
+				col--;
+			} else {
+				row++;
+			}
+		}
+	}
+	return find;
+}
+```
+
+
+
+## 05.替换空格
+
+[剑指 Offer 05. 替换空格 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/ti-huan-kong-ge-lcof/)
+
+请实现一个函数，把字符串 `s` 中的每个空格替换成"%20"
+
+### 解题思路
+
+- 建立队列，元素全部入队再出队拼接字符串，空格用"%20"替代。
+- 先扫描数组的长度，统计空字符串的数目，确定好新数组的大小，在遍历替换存入数组.
+- Java 直接拼接字符串。
+
+### 代码
+
+直接拼接字符串
+
+```java
+public String replaceSpace(StringBuffer str) {
+	String s = "";
+	for(int i=0;i<str.length();i++) {
+		if(str.charAt(i)==' ') {
+			s+="%20";
+		}else {
+			s+=str.charAt(i);
+		}
+	}
+	return s;
+}
+```
+
+## 06.从头到尾打印链表
+
+[剑指 Offer 06. 从尾到头打印链表 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/cong-wei-dao-tou-da-yin-lian-biao-lcof/)
+
+### 解题思路
+
+- 用堆栈
+- 单链表逆置再输出
+
+### 代码
+
+```java
+public ArrayList<Integer> printList(ListNode listNode) {
+	ArrayList<Integer> arrayList = new ArrayList<Integer>();
+	//定义一个哑结点 方便操作
+	ListNode head = new ListNode(-1);
+	ListNode cur = listNode;
+	while(cur!=null) {
+		ListNode temp = cur.next;
+		cur.next = head.next;
+		head.next = cur;
+		cur = temp;
+	}
+	head = head.next;
+	while(head!=null) {
+		arrayList.add(head.val);
+		head = head.next;
+	}
+	return arrayList;
+}
+```
+
+## 07.重建二叉树
+
+[剑指 Offer 07. 重建二叉树 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/zhong-jian-er-cha-shu-lcof/)
+
+输入某二叉树的前序遍历和中序遍历的结果，请构建该二叉树并返回其根节点。
+
+假设输入的前序遍历和中序遍历的结果中都不含重复的数字。
+
+### 解题思路
+
+- [x] 递归建立左右子树
+- 先获取前序发现根元素，在遍历中序序列得到它的左右子树
+- 找到了就对这个左右子树进行递归在确定左右子树
+
+### 代码
+
+- 下面的代码挺好理解但是效率不行
+
+```java
+int index = 0;
+public TreeNode reConstructBinaryTree(int [] pre,int [] in) {
+    return helper(pre, in, 0, in.length - 1);
+}
+
+TreeNode helper(int[] preorder, int[] inorder, int inStart, int inEnd){
+    if(inStart > inEnd) return null;
+    int val = preorder[index++];//获取根节点
+    for(int i = inStart; i <= inEnd; i++){
+    //在中序序列中找到左右子树
+        if(inorder[i] == val){//如果找到根了
+            TreeNode root = new TreeNode(val);//建立根节点
+            root.left = helper(preorder, inorder, inStart, i - 1);//递归创建其左子树
+            root.right = helper(preorder, inorder, i + 1, inEnd);//递归创建其右子树
+            return root;//返回root给上一级做子树
+        }
+    }
+    return null;
+}
+```
+
+## 09.用两个栈实现队列
+
+[剑指 Offer 09. 用两个栈实现队列 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/yong-liang-ge-zhan-shi-xian-dui-lie-lcof/)
+
+用两个栈实现一个队列。队列的声明如下，请实现它的两个函数 appendTail 和 deleteHead ，分别完成在队列尾部插入整数和在队列头部删除整数的功能。(若队列中没有元素，deleteHead 操作返回 -1 )
+
+```
+输入：
+["CQueue","appendTail","deleteHead","deleteHead"]
+[[],[3],[],[]]
+输出：[null,null,3,-1]
+```
+
+### 解题思路
+
+- stack1 负责元素入栈。stack2 负责元素出栈
+- 1 2 3 4 5入栈，栈顶是 5
+- 然后输出队列元素。先把 stack1 的所有元素移动到到 stack2 中
+- 5 4 3 2 1 栈顶是 1
+- 1 2 3 4 5 入队 1 2 3 4 5 出队。
+
+### 代码
+
+```java
+class CQueue {
+    Stack<Integer> stack1;
+    Stack<Integer> stack2;
+    public CQueue() {
+        stack1 = new Stack<>();
+        stack2 = new Stack<>();
+    }
+
+    // s1 中入
+    public void appendTail(int value) {
+        stack1.push(value);
+    }
+
+    public int deleteHead() {
+        if (stack2.isEmpty()) {
+            while (!stack1.isEmpty()) {
+                stack2.push(stack1.pop());
+            }
+        }
+        if(stack2.isEmpty()) return -1;
+        return stack2.pop();
+    }
+}
+```
+
+## 14.剪绳子★
+
+[剑指 Offer 14- I. 剪绳子 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/jian-sheng-zi-lcof/)
+
+给你一根长度为 n 的绳子，请把绳子剪成整数长度的 m 段（m、n 都是整数，n>1 并且 m>1），每段绳子的长度记为 $k[0],k[1]...k[m-1]$。请问 $k[0]*k[1]*...*k[m-1]$ 可能的最大乘积是多少？例如，当绳子的长度是 8 时，我们把它剪成长度分别为 2、3、3 的三段，此时得到的最大乘积是 18。
+
+```
+输入: 2
+输出: 1
+解释: 2 = 1 + 1, 1 × 1 = 1
+
+输入: 10
+输出: 36
+解释: 10 = 3 + 3 + 4, 3 × 3 × 4 = 36
+```
+
+### 解题思路
+
+先pass
+
 ## 27.二叉树的镜像
 
 [剑指 Offer 27. 二叉树的镜像 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/er-cha-shu-de-jing-xiang-lcof/)
@@ -4251,7 +4464,186 @@ class Solution {
 }
 ```
 
-## 二叉搜索树的第K大节点
+## 53.在排序数组中查找数字
+
+统计一个数字在排序数组中出现的次数。
+
+### 解题思路
+
+- 遍历一次，暴力求解。
+- 两次二分查找。第一次二分查找，找到 target 第一次出现的位置；第二次二分查找，找到 target 第二次出现的位置。
+  - 查找左边的逻辑 cur>=target, right=mid-1
+    - 最后 return left，left 会多
+  - 查找右边的逻辑 cur<=target, left=mid+1
+
+### 代码
+
+遍历一次，暴力求解。
+
+```java
+class Solution {
+    public int search(int[] nums, int target) {
+        int count = 0;
+        for(int i=0;i<nums.length;i++){
+            if(nums[i]>target) return count;
+            else if(nums[i]==target) count++;
+        }
+        return count;
+    }
+}
+```
+
+二分查找
+
+```java
+public class Offer053Search {
+    public int search(int[] nums, int target) {
+        return searchRight(nums, target) - searchLeft(nums, target);
+    }
+
+    private int searchLeft(int[] nums, int target) {
+        int left = 0, right = nums.length - 1;
+        while (left <= right) {
+            int mid = (right + left) >>> 1;
+            if (nums[mid] >= target) {
+                right = mid - 1;
+            } else {
+                left = mid + 1;
+            }
+        }
+        return left;
+    }
+
+    private int searchRight(int[] nums, int target) {
+        int left = 0, right = nums.length - 1;
+        while (left <= right) {
+            int mid = (right + left) >>> 1;
+            if (nums[mid] <= target) {
+                left = mid + 1; // 可以找到 target 右边的一个数
+            } else {
+                right = mid - 1;
+            }
+        }
+        return left;
+    }
+}
+```
+
+## 54.0~n-1中缺失的数字
+
+[剑指 Offer 53 - II. 0～n-1中缺失的数字 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/que-shi-de-shu-zi-lcof/)
+
+一个长度为n-1的递增排序数组中的所有数字都是唯一的，并且每个数字都在范围0～n-1之内。在范围0～n-1内的n个数字中有且只有一个数字不在该数组中，请找出这个数字。
+
+```
+输入: [0,1,3]
+输出: 2
+
+输入: [0,1,2,3,4,5,6,7,9]
+输出: 8
+```
+
+### 解题思路
+
+- 暴力求解，直接遍历一次，看 pre,next 直接的差值是否是 1，如果不是 1，那么缺失的数字就是 $(pre+next)/2$
+- 再仔细思考下？似乎可以用二分查找？
+  - $if(num[left]+num[right]>left+right)$ 说明这里存在缺失的值？发现规律了。
+  - $if(nums[left]+nums[mid]>left+mid)$ 说明缺失的数字在[left,mid] 区间内，继续进行二分
+  - 右半边同理。
+- 特判一下缺失的是不是 0 和 nums.length;
+- 不是的话则说明缺失的是中间值，`return (nums[left]+nums[right])/2`
+
+### 代码
+
+```java
+class Solution {
+    public int missingNumber(int... nums) {
+        if(nums[0]!=0) return 0;
+        if(nums[nums.length-1]!=nums.length) return nums.length;
+        int left = 0, right = nums.length - 1;
+        while (left <= right) {
+            int mid = (left + right) >>> 1;
+            if (nums[left] + nums[mid] > left + mid) { // 说明缺失的数字就在这里
+                right = mid - 1;
+            } else {
+                left = mid + 1;
+            }
+        }
+        return (nums[left]+nums[right])/2;
+    }
+}
+```
+
+
+
+## 55.二叉树的深度&平衡二叉树
+
+[剑指 Offer 55 - I. 二叉树的深度 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/er-cha-shu-de-shen-du-lcof/)
+
+此题要求最大深度，最大深度即左右子树的最大深度。可用后续遍历来做
+
+[剑指 Offer 55 - II. 平衡二叉树 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/ping-heng-er-cha-shu-lcof/)
+
+输入一棵二叉树的根节点，判断该树是不是平衡二叉树。如果某二叉树中任意节点的左右子树的深度相差不超过1，那么它就是一棵平衡二叉树。
+
+```
+给定二叉树 [3,9,20,null,null,15,7]
+
+    3
+   / \
+  9  20
+    /  \
+   15   7
+true
+
+给定二叉树 [1,2,2,3,3,null,null,4,4]
+       1
+      / \
+     2   2
+    / \
+   3   3
+  / \
+ 4   4
+ false
+```
+
+### 解题思路
+
+- 求二叉树的深度可以直接用后续遍历来做
+- 判断是否是 blanceTree，也可用后续遍历来做
+
+因为需要判断左右子树的深度差值，所以考虑采用后续遍历。
+
+如何编写递归代码呢？
+
+### 代码
+
+求二叉树的深度
+
+```java
+class Solution {
+    public int maxDepth(TreeNode root) {
+        return dfs(root);
+    }
+
+    private int dfs(TreeNode root){
+        if(root == null) return 0;
+        int left = dfs(root.left);
+        int right = dfs(root.right);
+        return Math.max(left,right)+1;
+    }
+}
+```
+
+判断是否是平衡二叉树
+
+```java
+
+```
+
+
+
+## 54.二叉搜索树的第K大节点
 
 [剑指 Offer 54. 二叉搜索树的第k大节点 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/er-cha-sou-suo-shu-de-di-kda-jie-dian-lcof/)
 
@@ -4286,134 +4678,167 @@ public class Offer054KthLargest {
 }
 ```
 
+## 56.数组中数字出现的次数
 
+[剑指 Offer 56 - I. 数组中数字出现的次数 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/shu-zu-zhong-shu-zi-chu-xian-de-ci-shu-lcof/)
 
-## 二维数组中的查找
+一个整型数组 `nums` 里除两个数字之外，其他数字都出现了两次。请写程序找出这两个只出现一次的数字。要求时间复杂度是O(n)，空间复杂度是 O(1)。
 
-- [x] 矩阵有序
-- 基本思路就是给矩阵降低阶数
-- 第一行最右边的那个元素A是此行最大的，是此列最小的
-- 如果A>target说明这一列都大于target的，就可以把这一列都移除不进行比较
-- 如果A<target说明这一行都是小于target的，就可以把这一行都移除不进行比较
-- 移除的策略是限定二维数字行列的坐标
-- 列的下标最后会趋于0
-- 行的下标最后会趋于length-1
+### 解题思路
+
+map 统计，但是空间复杂度要求的是 $O(N)$
+
+谁能想到用 bit 位来做呢？
+
+- 假定数据是 `[10,10,2,2,5,5,3,1]`
+- 只有两个数字是只出现一次，其他数字都是出现两次。可以先进行异或，得到只出现两次数字的异或结果。这个结果肯定不是零。
+- 异或后得到 `3^1 = 11 ^01=10`。第二个 bit 位为 0，说明这两个数字第二个 bit 位是不一样的。同样的数字，bit 位一定完全一样，如果我们按 bit 位来将数组分成两份，那么就可以把只出现一次的数字给拆散了。
+- 再分别对分开的数组进行异或，即可得到两个只出现一次的数字。
+
+如何获取到一个为 1 的 bit 位？如果数字不是偶数，则将数字右移，直到数字为奇数才停止，这样就可以直到第几个 bit 位值为 1。也可以直接用 toBinaryString，然后遍历得到不为 0 的 bit 位的 index。
+
+<span style="color:red">注意：比如最后异或的结果是 1000，第 4 个 bit 位是 1，那么我们求的得 bit=4，在进行判断第四个 bit 位是否为 1 时，我们用 cur&(1<<(bit-1)) 来判断，记得 -1.</span>
+
+### 代码
+
 ```java
-public boolean Find(int target, int[][] array) {
-	boolean find = false;
-	if (array[0].length > 0 && array.length > 0) {
-		int row = 0;
-		int col = array.length - 1;
-		while (row <= array[0].length-1 && col >= 0) {
-			if (array[row][col] == target) {
-				return true;
-			} else if (array[row][col] > target) {
-				col--;
-			} else {
-				row++;
-			}
-		}
-	}
-	return find;
+class Solution {
+    public int[] singleNumbers(int[] nums) {
+
+        // 异或，不同为 1 相同为 0。0 和任何数异或都是数字本身
+        int ans = 0;
+        for (int i = 0; i < nums.length; i++) {
+            ans ^= nums[i];
+        }
+        // 看 ans 那个 bit 位是 1.
+        //
+        int bit = 1;
+        // 100
+        while ((ans & 1) != 1) {
+            ans = ans >> 1;
+            bit++;
+        }
+        bit--; // 1 只需要移动 bit-1 位，因此 bit--
+        int an1 = 0, an2 = 0;
+        for (int i = 0; i < nums.length; i++) {
+            if ((nums[i] & (1 << bit)) != 0) {
+                an1 ^= nums[i];
+            } else {
+                an2 ^= nums[i];
+            }
+        }
+        // 8+2 1010
+        // 2   0010
+        // 1   1000
+        return new int[]{an1, an2};
+    }
 }
 ```
 
-## **替换空格**
+## 56.数组中数字出现的次数Ⅱ
 
-- [x] 建立队列，元素全部入队再出队拼接字符串，空格用"%20"替代。
-- [x] 先扫描数组的长度，统计空字符串的数目，确定好新数组的大小，在遍历替换存入数组
-- [x] 以上方法都不优，未考虑内存消耗。
-```java
-public String replaceSpace(StringBuffer str) {
-	String s = "";
-	for(int i=0;i<str.length();i++) {
-		if(str.charAt(i)==' ') {
-			s+="%20";
-		}else {
-			s+=str.charAt(i);
-		}
-	}
-	return s;
-}
+[剑指 Offer 56 - II. 数组中数字出现的次数 II - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/shu-zu-zhong-shu-zi-chu-xian-de-ci-shu-ii-lcof/)
+
+在一个数组 `nums` 中除一个数字只出现一次之外，其他数字都出现了三次。请找出那个只出现一次的数字。
+
+```
+输入：nums = [3,4,3,3]
+输出：4
+
+输入：nums = [9,1,7,9,7,9,7]
+输出：1
 ```
 
-## 从头到尾打印链表
+### 解题思路
 
-- [x] 用堆栈
-- [x] 单链表逆置再输出
+和上一题的做法也是很类似的。也是统计 bit 位的。
+
+- 我们将所有的数字统一转换为 bit 位表示。用一个 32 位的数组统计每个 bit 位出现的次数。
+- 然后遍历数组，如果某个 bit 位出现的次数不是 3 的倍数，说明只出现一次的数字，它的这个 bit 位值是 1；如果是 3 个倍数，说明它的这个 bit 位值是 0。这样就可以还原数字的值了。
+
+### 代码
+
 ```java
-public ArrayList<Integer> printList(ListNode listNode) {
-	ArrayList<Integer> arrayList = new ArrayList<Integer>();
-	//定义一个哑结点 方便操作
-	ListNode head = new ListNode(-1);
-	ListNode cur = listNode;
-	while(cur!=null) {
-		ListNode temp = cur.next;
-		cur.next = head.next;
-		head.next = cur;
-		cur = temp;
-	}
-	head = head.next;
-	while(head!=null) {
-		arrayList.add(head.val);
-		head = head.next;
-	}
-	return arrayList;
-}
-```
-## 前序中序重建二叉树
-
-- [x] 递归建立左右子树
-- 先获取前序发现根元素，在遍历中序序列得到它的左右子树
-- 找到了就对这个左右子树进行递归在确定左右子树
-- 下面的代码挺好理解但是效率不行
-```java
-int index = 0;
-public TreeNode reConstructBinaryTree(int [] pre,int [] in) {
-    return helper(pre, in, 0, in.length - 1);
-}
-
-TreeNode helper(int[] preorder, int[] inorder, int inStart, int inEnd){
-    if(inStart > inEnd) return null;
-    int val = preorder[index++];//获取根节点
-    for(int i = inStart; i <= inEnd; i++){
-    //在中序序列中找到左右子树
-        if(inorder[i] == val){//如果找到根了
-            TreeNode root = new TreeNode(val);//建立根节点
-            root.left = helper(preorder, inorder, inStart, i - 1);//递归创建其左子树
-            root.right = helper(preorder, inorder, i + 1, inEnd);//递归创建其右子树
-            return root;//返回root给上一级做子树
+public int singleNumber(int... nums) {
+    int[] bits = new int[31]; // 存储 bit 位为 1 的个数。
+    // 怎么统计 bit 位呢？看最低的 bit 位是不是 1，看完后再右移动
+    for (int i = 0; i < nums.length; i++) {
+        int cur = nums[i];
+        int bit = 0;
+        // 拿到 nums 所有 bit 位的值。
+        while (cur != 0) { // 说明还有 bit 为 1的位置
+            if ((cur & 1) == 1) { // 说明当前 bit 为 1
+                bits[bit]+=(cur & 1);
+            }
+            cur >>= 1;
+            bit++;
         }
     }
-    return null;
+    int ans = 0;
+    for (int i = 0; i < bits.length; i++) {
+        if (bits[i] % 3 != 0) {
+            ans += (1 << i);
+        }
+    }
+    return ans;
 }
 ```
-## 用两个栈实现队列
 
-- [x] 题目思路
-- stack1负责元素入栈。stack2负责元素出栈
-- 1 2 3 4 5入栈 栈顶是5
-- 然后输出队列元素。先把stack1的所有元素移动到到stack2中
-- 5 4 3 2 1 栈顶是1
-- 1 2 3 4 5入队 1 2 3 4 5出队 ok！
+leetcode 精简的代码
+
 ```java
-Stack<Integer> stack1 = new Stack<Integer>();
-Stack<Integer> stack2 = new Stack<Integer>();
-
-public void push(int node) {
-	stack1.push(node);
-}
-
-public int pop() {
-	if (!stack2.isEmpty())
-		return stack2.pop();
-	else {
-		while (!stack1.isEmpty())
-			stack2.push(stack1.pop());
-		return stack2.pop();
-	}
+class Solution {
+    public int singleNumber(int[] nums) {
+        int[] counts = new int[32];
+        for(int num : nums) {
+            for(int j = 0; j < 32; j++) {
+                counts[j] += num & 1;
+                num >>>= 1;
+            }
+        }
+        int res = 0, m = 3;
+        for(int i = 0; i < 32; i++) {
+            res <<= 1;
+            res |= counts[31 - i] % m;
+        }
+        return res;
+    }
 }
 ```
+
+## 58.左旋转字符串
+
+[剑指 Offer 58 - II. 左旋转字符串 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/zuo-xuan-zhuan-zi-fu-chuan-lcof/)
+
+字符串的左旋转操作是把字符串前面的若干个字符转移到字符串的尾部。请定义一个函数实现字符串左旋转操作的功能。比如，输入字符串 "abcdefg" 和数字 2，该函数将返回左旋转两位得到的结果 "cdefgab"。
+
+```
+输入: s = "abcdefg", k = 2
+输出: "cdefgab"
+
+输入: s = "lrloseumgh", k = 6
+输出: "umghlrlose"
+```
+
+### 解题思路
+
+- 一个简单的方法是，把 new_str = s+s，然后截取 k~k+s.length 位置的字符串。
+- ？？
+
+### 代码
+
+```java
+public class Offer058ReverseLeftWords {
+    public String reverseLeftWords(String s, int n) {
+        int len = s.length();
+        s = s + s;
+        return s.substring(n, len + n);
+    }
+}
+```
+
+
+
 ## 旋转数组的最小数字
 
 >题目描述：
