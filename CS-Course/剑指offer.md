@@ -1,3 +1,13 @@
+# 说明
+
+## 推荐
+
+先复习剑指 Offer 里的题和 CodeTop 里的题。常用的模板要搞熟悉。
+
+## 题目
+
+不记录那些太水的题，除非非常具有代表性。
+
 # 剑指Offer专项突破
 
 ## 整数
@@ -13,9 +23,9 @@
 
 #### 解题思路
 
-- 注意边界条件。int 的最小负数 / -1 会爆 int 的max。
-- O(N)的解法，直接用减法的话，复杂度太高
-- O(logN)的解法：
+- 注意边界条件。int 的最小负数 / -1 会爆 int 的 max。
+- O(N) 的解法，直接用减法的话，复杂度太高
+- O(logN) 的解法：
     - a 减去 $b*2^n$ 的整数倍数，得到部分的商。
     - $a-b*2^n$  的结果继续减去 $b*2^n$ 的整数倍数，得到部分的商。
 
@@ -84,7 +94,7 @@ class Solution {
 #### 解题思路
 
 - 按位相加记录进位
-- 没加完的，后面for循环继续加。
+- 没加完的，后面 for 循环继续加。
 - 累加的时候记得加上进位
 
 #### 代码
@@ -854,13 +864,72 @@ class Solution {
 }
 ```
 
+### 找到字符串中所有字母异位词
+
+[438. 找到字符串中所有字母异位词 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/find-all-anagrams-in-a-string/)
+
+给定两个字符串 s 和 p，找到 s 中所有 p 的异位词的子串，返回这些子串的起始索引。不考虑答案输出的顺序。
+
+异位词指由相同字母重排列形成的字符串（包括相同的字符串）。
+
+```
+输入: s = "cbaebabacd", p = "abc"
+输出: [0,6]
+解释:
+起始索引等于 0 的子串是 "cba", 它是 "abc" 的异位词。
+起始索引等于 6 的子串是 "bac", 它是 "abc" 的异位词。
+```
+
+#### 解题思路
+
+- 暴力枚举。逐一暴力判断 `0~len，1~len+1` 的字符串是否符合要求。
+- 用 hash 表记录以 index 结尾，长度为 len 的字符串字符出现的频率。
+  - 比如，最开始 hash 中记录的是 $0 \to len$ 范围内字符出现的频率。
+  - 然后指针后移，记录 $1 \to len+1$ 范围内字符出现的频率。
+  - 每次后移后，该 map 中字符出现的频率是否和 p 中字符的频率一样。
+
+如何编写代码呢？
+
+- 首先记录 s 和 p 前 s.len 长度的字符出现的频率，smap 和 pmap。
+- 继续遍历 s 中的字符。并维护 smap。smap 仅记录以 $cur\_index$ 结尾前 s.len 个字符的频率。
+- 每向前移动一个字符，就减去之前的一个字符的频率（使用双指针），并比较 smap 和 pmap 中的值是否相等。
+
+#### 代码
+
+```java
+public List<Integer> findAnagrams(String s, String p) {
+    List<Integer> ans = new ArrayList<>();
+    if (s.length() < p.length()) return ans;
+    int[] map = new int[26];
+    int[] count = new int[26];
+
+    // 预先记录一些字符的出现频率
+    for (int i = 0; i < p.length(); i++) {
+        map[p.charAt(i) - 'a']++; // 0 1 2
+        count[s.charAt(i) - 'a']++; // 0 1 2
+    }
+    if (Arrays.equals(map, count)) {
+        ans.add(0);
+    }
+    // 继续检索还未记录的。使用双指针。start 指向最前面那个即将被移除的，i 指向即将被加入的
+    for (int i = p.length(), start = 0; i < s.length(); i++, start++) {
+        count[s.charAt(i) - 'a']++;
+        count[s.charAt(start) - 'a']--;
+        if (Arrays.equals(map, count)) {
+            ans.add(i - p.length() + 1);
+        }
+    }
+    return ans;
+}
+```
+
 ## 链表
 
 ### 删除链表的倒数第n个结点
 
 给定一个链表，删除链表的倒数第 `n` 个结点，并且返回链表的头结点
 
-![img](https://assets.leetcode.com/uploads/2020/10/03/remove_ex1.jpg)
+<img src="https://assets.leetcode.com/uploads/2020/10/03/remove_ex1.jpg">
 
 ```shell
 输入：head = [1,2,3,4,5], n = 2
@@ -914,7 +983,7 @@ class Solution {
 
 说明：不允许修改给定的链表
 
-![img](https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/12/07/circularlinkedlist.png)
+<img src="https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/12/07/circularlinkedlist.png">
 
 ```shell
 输入：head = [3,2,0,-4], pos = 1
@@ -942,8 +1011,6 @@ public class Solution {
     }
 }
 ```
-
-
 
 ### 两个链表的第一个重合节点
 
@@ -1167,7 +1234,6 @@ class Node {
     public Node child;
 };
 */
-
 class Solution {
     public Node flatten(Node head) {
         flattenGetTail(head);
@@ -1359,13 +1425,121 @@ class RandomizedSet {
 
 实现 LRUCache 类：
 
-LRUCache(int capacity) 以正整数作为容量 capacity 初始化 LRU 缓存
-int get(int key) 如果关键字 key 存在于缓存中，则返回关键字的值，否则返回 -1 。
-void put(int key, int value) 如果关键字已经存在，则变更其数据值；如果关键字不存在，则插入该组「关键字-值」。当缓存容量达到上限时，它应该在写入新数据之前删除最久未使用的数据值，从而为新的数据值留出空间。
+- LRUCache(int capacity) 以正整数作为容量 capacity 初始化 LRU 缓存
+- int get(int key) 如果关键字 key 存在于缓存中，则返回关键字的值，否则返回 -1 。
+- void put(int key, int value) 如果关键字已经存在，则变更其数据值；如果关键字不存在，则插入该组「关键字-值」。当缓存容量达到上限时，它应该在写入新数据之前删除最久未使用的数据值，从而为新的数据值留出空间。
+
+要求再 O(1) 时间复杂度内完成操作。
 
 #### 解题思路
 
+要在 O(1) 时间内获取到元素的话可以使用哈希表记录缓存中的每个元素。put 元素的话。
+
+如何实现最近最少使用的被移除？
+
+- 我们假定元素从尾部插入，从头部出。所以，最近最少用的元素应该出现在链表头部。
+- 插入一个元素时
+  - 如果数据已经存在，找到该元素，移除元素将其移动到末尾
+  - 如果数据不存在
+    - 如果容量够，则直接从尾部插入
+    - 如果容量不够，则先移除元素，再从尾部插入（哈希表中也要移除、添加对应的元素）
+- 删除一个元素时，直接从尾部删除即可。同时移除哈希表中的元素
+
 #### 代码
+
+```java
+// 双向链表节点
+class Node {
+    int val;
+    int key;
+    Node next;
+    Node pre;
+
+    public Node() {
+    }
+
+    public Node(int key, int val, Node pre, Node next) {
+        this.key = key;
+        this.val = val;
+        this.pre = pre;
+        this.next = next;
+    }
+}
+
+class LRUCache {
+    private Map<Integer, Node> map;
+    private Node head;//双链表头节点
+    private Node tail;//双链表，尾节点
+    private int capacity;
+    private int curSize;
+
+    public LRUCache(int capacity) {
+        this.capacity = capacity;
+        this.curSize = 0;
+        map = new HashMap<>();
+        head = new Node(-1, -1, null, null);
+        tail = head;
+    }
+
+    public int get(int key) {
+        Node node = map.get(key);
+        if (node != null) {
+            // 存在，则得到值，并把节点移动到末尾。
+            moveToTail(node);
+            return node.val;
+        }
+        return -1;
+    }
+
+    private void moveToTail(Node node) {
+        remove(node);
+        addNode(node);
+    }
+
+    public void put(int key, int value) {
+        Node node = map.get(key);
+        if (node != null) {
+            // 存在，则找到节点然后移动,size 不变
+            node.val = value;
+            map.put(key, node);
+            moveToTail(node);
+        } else { // 不存在
+            Node waitInsert = new Node(key, value, null, null);
+            map.put(key, waitInsert);
+            if (curSize < capacity) { // 没有超过容量，直接添加
+                addNode(waitInsert);
+                curSize++;
+            } else { // 超过容量，先移除，再添加
+                map.remove(head.next.key);
+                remove(head.next); // 移除头部的元素
+                addNode(waitInsert);
+            }
+        }
+    }
+
+    private void remove(Node node) {
+        // 移除双链表中的节点
+        Node head = node.pre;
+        if (node.next == null) {
+            // 说明 node 是尾部节点
+            head.next = null;
+            tail = head;
+        } else {
+            node.next.pre = head;
+            head.next = node.next;
+        }
+    }
+
+    private void addNode(Node insert) {
+        insert.pre = tail;
+        insert.next = null;
+        tail.next = insert;
+        tail = insert;
+    }
+}
+```
+
+
 
 ### 有效的变位词
 
@@ -1422,7 +1596,6 @@ public class Offer032IsAnagram {
 
 ```java
 public class Offer033GroupAnagrams {
-
     // 一对变位词组
     public List<List<String>> groupAnagrams(String[] strs) {
         HashMap<String, LinkedList<String>> map = new HashMap<>();
@@ -6148,6 +6321,149 @@ public int projectionArea(int[][] grid) {
 题目说的很绕，实际上就是一个一个二维平面回溯算法的题目。
 
 算了，太难了。明天做。
+
+## 建立四叉树
+
+[427. 建立四叉树 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/construct-quad-tree/)
+
+题意：如果范围内所有节点的值都一样，则合并成一个子节点。
+
+### 解题思路
+
+<a href="https://leetcode-cn.com/problems/construct-quad-tree/solution/jian-li-si-cha-shu-by-leetcode-solution-gcru/"> 请看官方题解</a>
+
+递归构建四叉树。
+
+- 每次将矩阵划分为 4 个区域，分别处理这四个区域的数据。如果值都相同则合并成一个节点。
+- 如果有不同的值，则递归继续划分这四个区域。
+- 时间复杂度 $O(n^2logn)$
+
+如何编写代码呢？
+
+- 因为划定区域，所以我们要给出 row 和 col 的范围。
+- 递归何时结束？当区域内所有节点的值都相同就停止递归，否则继续递归四个区域。区域划分的代码手动算一下。
+- 最后一层递归一定是 $col_{start} = col_{end},row_{start}=row_{end}$ 一定是叶子节点。
+
+### 代码
+
+递归构建四叉树代码
+
+```java
+class Solution {
+    public Node construct(int[][] grid) {
+        return helper(grid,0,0,grid.length);
+    }
+		// offset 表示计算的范围
+    public Node helper(int[][]grid,int row,int col,int offset){
+        boolean isSame = true;
+        int cur = -1;
+        // 只有一个点的话，必定是叶子节点，也无需遍历了
+        for(int i=row;i<row+offset;i++){
+            for(int j=col;j<col+offset;j++){
+                if(grid[row][col]!=grid[i][j]){
+                    isSame = false;
+                    break;
+                }
+            }
+        }
+        if(isSame){
+            // 相同的话，就合并成同一个叶子节点
+             return new Node(grid[row][col]==1, true,null,null,null,null);
+        }else{
+            // 不相同的话，就递归创建
+            return new Node(
+                false,false,
+                helper(grid,row,col,offset/2),
+                helper(grid,row,col+offset/2,offset/2),
+                helper(grid,row+offset/2,col,offset/2),
+                helper(grid,row+offset/2,col+offset/2,offset/2)
+            );
+        }
+    }
+}
+```
+
+精简版本
+
+```java
+class Solution {
+    public Node construct(int[][] grid) {
+        return helper(grid,0,0,grid.length);
+    }
+
+    public Node helper(int[][]grid,int row,int col,int offset){
+        boolean isSame = true;
+        int cur = -1;
+        // 只有一个点的话，必定是叶子节点，也无需遍历了
+        for(int i=row;i<row+offset;i++){
+            for(int j=col;j<col+offset;j++){
+                if(grid[row][col]!=grid[i][j]){
+                    // 不相同的话，就递归创建
+                    return new Node(
+                        false,false,
+                        helper(grid,row,col,offset/2),
+                        helper(grid,row,col+offset/2,offset/2),
+                        helper(grid,row+offset/2,col,offset/2),
+                        helper(grid,row+offset/2,col+offset/2,offset/2)
+                    );
+                }
+            }
+        }
+        // 相同的话，就合并成同一个叶子节点
+        return new Node(grid[row][col]==1, true,null,null,null,null);
+    }
+}
+```
+
+## 二维区域和检索-矩阵不可变
+
+[304. 二维区域和检索 - 矩阵不可变 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/range-sum-query-2d-immutable/)
+
+给定一个二维矩阵 matrix，以下类型的多个请求：
+
+- 计算其子矩形范围内元素的总和，该子矩阵的 左上角 为 (row1, col1) ，右下角为 (row2, col2) 。
+
+实现 $NumMatrix$ 类：
+
+- NumMatrix(int[][] matrix) 给定整数矩阵 matrix 进行初始化
+- int sumRegion(int row1, int col1, int row2, int col2) 返回左上角 (row1, col1) 、右下角 (row2, col2) 所描述的子矩阵的元素总和 。
+
+### 解题思路
+
+乍一看，咦，不就是二维数组求和吗。一顿操作猛如虎，一看击败 5%。所有这题的做法应该是：前缀和。请看高票题解。
+
+<a href="https://leetcode-cn.com/problems/range-sum-query-2d-immutable/solution/xia-ci-ru-he-zai-30-miao-nei-zuo-chu-lai-ptlo/">题解</a>
+
+- 典型的二维前缀和，求解二维矩阵中的矩形区域求和问题。
+- 二维前缀和数组中的每一个格子记录的是「以当前位置为右下角的区域和(即，【0，0】~【i，j】这个矩形区域的和)」
+- 如何求指定区域的面积呢？比如求 $arr[1][1]~arr[3][4]$ 的面积？
+  - 小学数学题。A-B+C+D。具体请看下图。
+
+<img src="https://pic.leetcode-cn.com/1614650837-SAIiWg-1.png" width="50%">
+
+<img src="https://pic.leetcode-cn.com/1614650906-cznQhe-image.png" width="50%">
+
+### 代码
+
+```java
+class NumMatrix {
+    private int[][] sum;
+
+    public NumMatrix(int[][] matrix) {
+        int n = matrix.length, m = (n == 0 ? 0 : matrix[0].length);
+        sum = new int[n + 1][m + 1]; // 比如求arr[1][1] ~ arr[2][2] 处的元素 sum[3][3] - sum[2][3] - sim[3][2] + arr[2][2]
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= m; j++) {
+                sum[i][j] = sum[i - 1][j] + sum[i][j - 1] - sum[i - 1][j - 1] + matrix[i - 1][j - 1];
+            }
+        }
+    }
+
+    public int sumRegion(int row1, int col1, int row2, int col2) {
+        return sum[row2 + 1][col2 + 1] - sum[row2 + 1][col1] - sum[row1][col2 + 1] + sum[row1][col1];
+    }
+}
+```
 
 # 心血来潮
 
