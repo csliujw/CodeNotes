@@ -314,7 +314,9 @@ class Solution {
 
 ### 排序数组中两个数字之和
 
-给定一个已按照 升序排列  的整数数组 numbers ，请你从数组中找出两个数满足相加之和等于目标数 target 。
+[剑指 Offer II 006. 排序数组中两个数字之和 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/kLl5u1/)
+
+给定一个已按照升序排列的整数数组 numbers ，请你从数组中找出两个数满足相加之和等于目标数 target 。
 
 函数应该以长度为 2 的整数数组的形式返回这两个数的下标值。numbers 的下标 从 0 开始计数 ，所以答案数组应当满足 0 <= answer[0] < answer[1] < numbers.length 。
 
@@ -322,7 +324,9 @@ class Solution {
 
 #### 解题思路
 
-- 双指针。
+- 双指针，start 和 end
+  - nums[start] + nums[end] >0 ，end--；
+  - nums[start] + nums[end] <0 ，start++;
 
 #### 代码
 
@@ -342,58 +346,58 @@ class Solution {
 }
 ```
 
-### ★数组中和为0的三个数
+### 数组中和为0的三个数
 
-给定一个包含 n 个整数的数组 nums，判断 nums 中是否存在三个元素 a ，b ，c ，使得 a + b + c = 0 ？请找出所有和为 0 且不重复的三元组。
+[剑指 Offer II 007. 数组中和为 0 的三个数 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/1fGaJU/)
+
+给定一个包含 n 个整数的数组 nums，判断 nums 中是否存在三个元素 a ，b ，c ，使得 a + b + c = 0 ？请找出所有和为 0 且<b>不重复</b>的三元组。
 
 #### 解题思路
 
-- 法一：固定一个数字，在其他数字中找是否存在 a = -(b+c) 的数
-- 法二：先排序，在固定一个数，双指针查找其余两个数
+- 先排序，在固定一个数，双指针查找是否存在 a = -(b+c) 的数。
+- 在查找的时候要注意排除重复的数字。
+  - 固定的那个数字需要排除重复的数字。
+  - 双指针查找 b、c 的时候也要注意排除 b、c 的重复数字。
 
 #### 代码
 
 ```java
 class Solution {
     public List<List<Integer>> threeSum(int[] nums) {
-        List<List<Integer>> res = new ArrayList<>();
-        int len = nums.length;
-        if(len < 3) return res;
         Arrays.sort(nums);
-        // 三元组的下标 i, j , k
-        for(int i = 0; i < len-2; i++){
-            int a = nums[i];
-            int j = i + 1, k = len - 1;
-            // 固定 a ,等价于 b + c 两数之和为 -a
-            while(j < k){
-                int b = nums[j], c = nums[k];
-                if(a + b + c > 0){
-                    k--;
-                }else if (a + b + c < 0){
-                    j++;
-                }else{
-                    res.add(Arrays.asList(a, b, c));
-                    // 保证不重复的三元组
-                    while(j < k && nums[j] == b){
-                        j++;
-                    }
+        List<List<Integer>> ans = new LinkedList<>();
+        for (int i = 0; i < nums.length; i++) {
+            if (i > 0 && nums[i] == nums[i - 1]) continue; // 当前的元素和上一个重复了，直接跳过
+            int start = i + 1, end = nums.length - 1;
+            while (start < end) {
+                int sum = nums[i] + nums[start] + nums[end];
+                if (sum == 0) {
+                    ans.add(Arrays.asList(nums[i], nums[start], nums[end]));
+                    // 排除重复的 start
+                    while (start < end && nums[start] == nums[start + 1]) start++;
+                    // 排除重复的 end
+                    while (start < end && nums[end] == nums[end - 1]) end--;
+                    // 尝试寻找下一组符合条件的数据
+                    start++; end--;
+                } else if (sum > 0) {
+                    end--;
+                } else {
+                    start++;
                 }
             }
-            // 保证不重复的三元组
-            while(i < len - 2 && nums[i + 1] == a){
-                i++;
-            }
         }
-        return res;
+        return ans;
     }
 }
 ```
 
-### ★和大于等于 target 的最短子数组
+### 和大于等于 target 的最短子数组
+
+[剑指 Offer II 008. 和大于等于 target 的最短子数组 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/2VG8Kg/)
 
 给定一个含有 n 个正整数的数组和一个正整数 target 。
 
-找出该数组中满足其和 ≥ target 的长度最小的连续子数组 [numsl, numsl+1, ..., numsr-1, numsr] ，并返回其长度。如果不存在符合条件的子数组，返回 0 。
+找出该数组中满足其和 ≥ target 的长度最小的连续子数组 $[nums_l, nums_{l+1}, ..., nums_{r-1}, nums_r]$ ，并返回其长度。如果不存在符合条件的子数组，返回 0 。
 
 #### 解题思路
 
@@ -433,19 +437,19 @@ class Solution {
 }
 ```
 
-### ★乘积小于k的子数组
+### 乘积小于k的子数组
 
-给定一个正整数数组 `nums`和整数 `k` ，请找出该数组内乘积小于 `k` 的连续的子数组的个数。
+给定一个正整数数组 `nums` 和整数 `k` ，请找出该数组内乘积小于 `k` 的连续的子数组的个数。
 
 #### 解题思路
 
 双指针的思路，求出双指针范围内数组的乘积。right-left+1
 
-比如某次遍历符合题意的子数组为 ABCX，那么在该条件下符合条件的有X，CX，BCX，ABCX共四个（可以进行多个例子，发现个数符合right-left+1）
-我们可能会有疑问：AB，BC也算，为什么不算进去？
-记住一点我们是以最右边的X为必要条件，进行计算符合条件的子数组，否则会出现重复的！
-比如在X为右侧边界时（ABCX），我们把BC算进去了，可是我们在C为最右侧时（ABC），BC已经出现过，我们重复加了BC这个子数组两次！
-换言之，我们拆分子数组时，让num[right]存在，能避免重复计算。
+比如某次遍历符合题意的子数组为 ABCX，那么在该条件下符合条件的有 X，CX，BCX，ABCX 共四个（可以进行多个例子，发现个数符合 right-left+1）
+我们可能会有疑问：AB，BC 也算，为什么不算进去？
+记住一点我们是以最右边的 X 为必要条件，进行计算符合条件的子数组，否则会出现重复的！
+比如在X为右侧边界时（ABCX），我们把 BC 算进去了，可是我们在 C 为最右侧时（ABC），BC 已经出现过，我们重复加了 BC 这个子数组两次！
+换言之，我们拆分子数组时，让 num[right] 存在，能避免重复计算。
 
 #### 代码
 
@@ -474,7 +478,7 @@ class Solution {
 #### 解题思路
 
 由于数字并非是正数数组，所以双指针的思路行不通。最简单的办法是 双重for，暴力求解。
-比较高效的解法是：用hash表记录前面累加的和。查找前面有多少满足 sum-k=0 的。就是（？~k范围内）符合要求的子数组个数。
+比较高效的解法是：用 hash 表记录前面累加的和。查找前面有多少满足 sum-k=0 的。就是（？~k 范围内）符合要求的子数组个数。
 
 #### 代码
 
@@ -503,7 +507,7 @@ class Solution {
 
 #### 解题思路
 
-把0改成-1，解题思路就和上面的一样了。求和为0的子数组的个数。
+把 0 改成 -1，解题思路就和上面的一样了。求和为 0 的子数组的个数。
 
 #### 代码
 
@@ -541,7 +545,7 @@ class Solution {
 
 #### 解题思路
 
-先求出数组的总和sum。然后在遍历一次数组，统计当前遍历过的数字的总和curSum，如果curSum-cur = sum - curSum，则找到了中心下标。 
+先求出数组的总和 sum。然后在遍历一次数组，统计当前遍历过的数字的总和 curSum，如果 curSum-cur = sum - curSum，则找到了中心下标。 
 
 #### 代码
 
@@ -566,9 +570,46 @@ class Solution {
 }
 ```
 
-### ★★二维子矩阵的和
+### 二维子矩阵的和
 
-不会
+这是一道典型的二维数组前缀和的题目。
+
+#### 解题思路
+
+乍一看，咦，不就是二维数组求和吗。一顿操作猛如虎，一看击败 5%。所有这题的做法应该是：前缀和。请看高票题解。
+
+<a href="https://leetcode-cn.com/problems/range-sum-query-2d-immutable/solution/xia-ci-ru-he-zai-30-miao-nei-zuo-chu-lai-ptlo/">题解</a>
+
+- 典型的二维前缀和，求解二维矩阵中的矩形区域求和问题。
+- 二维前缀和数组中的每一个格子记录的是「以当前位置为右下角的区域和(即，【0，0】~【i，j】这个矩形区域的和)」
+- 如何求指定区域的面积呢？比如求 $arr[1][1]~arr[3][4]$ 的面积？
+  - 小学数学题。A-B+C+D。具体请看下图。
+
+<img src="https://pic.leetcode-cn.com/1614650837-SAIiWg-1.png" width="50%">
+
+<img src="https://pic.leetcode-cn.com/1614650906-cznQhe-image.png" width="50%">
+
+#### 代码
+
+```java
+class NumMatrix {
+    private int[][] sum;
+
+    public NumMatrix(int[][] matrix) {
+        int n = matrix.length, m = (n == 0 ? 0 : matrix[0].length);
+        sum = new int[n + 1][m + 1]; // 比如求arr[1][1] ~ arr[2][2] 处的元素 sum[3][3] - sum[2][3] - sim[3][2] + arr[2][2]
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= m; j++) {
+                sum[i][j] = sum[i - 1][j] + sum[i][j - 1] - sum[i - 1][j - 1] + matrix[i - 1][j - 1];
+            }
+        }
+    }
+
+    public int sumRegion(int row1, int col1, int row2, int col2) {
+        return sum[row2 + 1][col2 + 1] - sum[row2 + 1][col1] - sum[row1][col2 + 1] + sum[row1][col1];
+    }
+}
+```
 
 ## 字符串
 
@@ -586,9 +627,9 @@ class Solution {
 
 #### 解题思路
 
-主要是要明白题目的意思。比如 s1="ab", 如果s2中的子串包含 “ab” 或 “ba”，那就是有变位词。
+主要是要明白题目的意思。比如 s1="ab", 如果 s2 中的子串包含“ab”或 “ba”，那就是有变位词。
 
-先统计 s1 中字符串的频率（大数组当hash表）。在用双指针遍历 s2 中的字符串，统计字符出现的次数。如果当前范围内，所有字符出现的频率都一样，则这个范围内的字符串是变位词。
+先统计 s1 中字符串的频率（大数组当 hash 表）。在用双指针遍历 s2 中的字符串，统计字符出现的次数。如果当前范围内，所有字符出现的频率都一样，则这个范围内的字符串是变位词。
 
 #### 代码
 
@@ -682,7 +723,7 @@ class Solution {
 
 ### 不含重复字符串的最长子字符串
 
-给定一个字符串 `s` ，请你找出其中不含有重复字符的 **最长连续子字符串** 的长度。
+给定一个字符串 `s` ，请你找出其中不含有重复字符的<b>最长连续子字符串</b>的长度。
 
 ```shell
 输入: s = "abcabcbb"
@@ -692,7 +733,7 @@ class Solution {
 
 #### 解题思路
 
-双指针，hash表判重
+双指针，hash 表判重
 
 #### 代码
 
@@ -721,15 +762,15 @@ class Solution {
 }
 ```
 
-### ★含有所有字符的最短字符串
+### 含有所有字符的最短字符串
 
 直接放弃
 
 ### 有效回文
 
-给定一个字符串 `s` ，验证 `s` 是否是 **回文串** ，只考虑字母和数字字符，可以忽略字母的大小写。
+给定一个字符串 `s` ，验证 `s` 是否是<b>回文串</b>，只考虑字母和数字字符，可以忽略字母的大小写。
 
-本题中，将空字符串定义为有效的 **回文串** 。
+本题中，将空字符串定义为有效的回文串。
 
 ```shell
 输入: s = "A man, a plan, a canal: Panama"
@@ -763,7 +804,7 @@ class Solution {
 
 ### 最多删除一个字符得到回文
 
-给定一个非空字符串 `s`，请判断如果 **最多** 从字符串中删除一个字符能否得到一个回文字符串。
+给定一个非空字符串 `s`，请判断如果最多从字符串中删除一个字符能否得到一个回文字符串。
 
 ```shell
 输入: s = "abca"
@@ -776,7 +817,7 @@ class Solution {
 
 #### 解题思路
 
-也是用双指针去做。如果发现，start 和 end 两个字符不相等，则考虑是去除 start 的字符还是去除 end 的字符。两者都试一试，继续判断剩下还未判断的，只要有一个为 true，那就是true。
+也是用双指针去做。如果发现，start 和 end 两个字符不相等，则考虑是去除 start 的字符还是去除 end 的字符。两者都试一试，继续判断剩下还未判断的，只要有一个为 true，那就是 true。
 
 #### 代码
 
@@ -825,7 +866,7 @@ class Solution {
 #### 解题思路
 
 这个题的思路是：找到每个可能是回文串的中心点，发散开来找回文串。
-如：以index=0为中心的找回文串，以index=1为中心的找回文串，以index=2为中心的找回文串...
+如：以 index=0 为中心的找回文串，以 index=1 为中心的找回文串，以 index=2 为中心的找回文串...
 
 #### 代码
 
@@ -4051,7 +4092,7 @@ class CQueue {
 
 ### 解题思路
 
-先pass
+先 pass
 
 ## 27.二叉树的镜像
 
@@ -7100,7 +7141,7 @@ nums 的分数是 nums 中最大和最小元素的差值。
 在做改变前，$result=max-min$。做改变后呢？
 
 - 原本 max  和 min 的差距如果在 2k 以内的话，min 和 max 的差值会变成 0。$max-某个数$，$min+某个数$。
-- 如果差距在 2k 以上的话，$result = max-min-2k$。 
+- 如果差距在 $2k$ 以上的话，$result = max-min-2k$。 
 
 ### 代码
 
