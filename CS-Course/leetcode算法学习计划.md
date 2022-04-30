@@ -96,7 +96,7 @@ class Solution {
 
 ### 螺旋矩阵
 
-给你一个 `m` 行 `n` 列的矩阵 `matrix` ，请按照 **顺时针螺旋顺序** ，返回矩阵中的所有元素。
+给你一个 `m` 行 `n` 列的矩阵 `matrix` ，请按照<b>顺时针螺旋顺序</b>，返回矩阵中的所有元素。
 
  <img src="https://assets.leetcode.com/uploads/2020/11/13/spiral1.jpg">
 
@@ -141,8 +141,6 @@ public int[] twoSum3(int[] nums, int target) {
     return new int[]{};
 }
 ```
-
-
 
 # 20天算法刷题计划
 

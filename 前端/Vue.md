@@ -43,12 +43,12 @@ v-model 指令双向数据绑定，只要 vm 监听到 data 中任何一条数�
 
 ## 常见指令
 
-vue中的指令，只有=={{}}==是用在内容节点中的，其它所有的指令，都是用在==属性节点==中的！！
+vue中的指令，只有`{{}}`是用在内容节点中的，其它所有的指令，都是用在属性节点中的！！
 
-- 内容节点`<div>{{msg}}</div>`
-- 属性节点`<div v-html='msg'></div>`
+- 内容节点 `<div>{{msg}}</div>`
+- 属性节点 `<div v-html='msg'></div>`
 
-> ==数据模板==
+> 数据模板
 
 ```html
 <script>
@@ -79,7 +79,7 @@ vue中的指令，只有=={{}}==是用在内容节点中的，其它所有的指
 // 显示 hello。12313会被覆盖掉的。
 ```
 
-v-text中使用简单的语句
+v-text 中使用简单的语句
 
 ```html
 <h3 v-text="msg + 666">
@@ -92,11 +92,11 @@ v-text中使用简单的语句
 // 显示 hellabc    
 ```
 
-v-text不存在闪烁问题。
+v-text 不存在闪烁问题。
 
-**场景：向元素的内容区域中，渲染指定的文本。**
+场景：向元素的内容区域中，渲染指定的文本。
 
-> ==v-html==
+> v-html
 
 ```html
 <h3 v-html="elem">
@@ -104,21 +104,21 @@ v-text不存在闪烁问题。
 </h3>
 ```
 
-> ==v-bind：== 属性绑定；用的很频繁
+> v-bind：属性绑定；用的很频繁
 
-为html属性节点动态绑定数据的，如：
+为 html 属性节点动态绑定数据的，如：
 
 `<buttuon v-bind:title="mytitle">按钮</button>`
 
-应用场景：如果元素的属性值，需要动态地进行绑定，则需要使用v-bind：指令
+应用场景：如果元素的属性值，需要动态地进行绑定，则需要使用 v-bind：指令
 
 简写形式：
 
-- v-bind可以简写为==:==，如
+- v-bind可以简写为 `:`，如
 - `<buttuon :title="mytitle">按钮</button>`
 - `<img :src="boo ？img1:img2" />` boo是布尔值，img1/2 是图片链接，以此动态切换图片路径
 
-> ==v-on：==  事件绑定
+> v-on：事件绑定
 
 `<div v-on:click="show">按钮</div>`   绑定事件不传参
 
@@ -126,17 +126,17 @@ v-text不存在闪烁问题。
 
 `<div @click="show('hello')">按钮</div>`   **==简写==**
 
-> ==v-model：== 双向数据绑定
+> v-model：双向数据绑定
 
 <a href="https://segmentfault.com/a/1190000006599500">几种实现双向绑定的做法</a>
 
 <a href="https://www.cnblogs.com/kidney/p/6052935.html">csdn</a>
 
-> ==v-bind==
+> v-bind
 
-> ==v-for==
+> v-for
 
-> ==v-if /v-show==
+> v-if /v-show
 
 ## 答疑
 
@@ -146,23 +146,23 @@ var let const
 
 定义使用过滤器：处理文本显示格式
 
-了解实例`生命周期`和`生命周期函数`
+了解实例生命周期和生命周期函数
 
-使用axios发起Ajax请求
+使用 axios 发起 Ajax 请求
 
-- ES6中的Promise
-- ES7中的async和await
+- ES6 中的 Promise
+- ES7 中的 async 和 await
 
 带数据交互的案例
 
-Vue常见的过渡动画（不重要）
+Vue 常见的过渡动画（不重要）
 
 ## 过滤器
 
 - 过滤器的作用示例：“2020-01-23T:10:02.945Z” => 2020-01-23
 - 概念：过滤器本质上是一个函数，可被用作一些常见的文本格式化。
-- 过滤器只可以用在两个地方：mustache插值表达式和 v-bind表达式
-- 过滤器应该被添加在JavaScript表达式的尾部，由管道符指示；
+- 过滤器只可以用在两个地方：mustache 插值表达式和 v-bind 表达式
+- 过滤器应该被添加在 JavaScript 表达式的尾部，由管道符指示；
 
 ### 全局过滤器
 
@@ -172,12 +172,12 @@ Vue常见的过渡动画（不重要）
 
 - 定义全局过滤器语法
 
-    - ```js
-        Vue.filter('过滤器名称',function(originVal){
-        	// doing something 对数据进行处理
-        	return 处理结果;
-        })
-        ```
+    ```js
+    Vue.filter('过滤器名称',function(originVal){
+    	// doing something 对数据进行处理
+    	return 处理结果;
+    })
+    ```
 
 - 使用过滤器的注意事项
 
@@ -225,28 +225,26 @@ Vue常见的过渡动画（不重要）
 </html>
 ```
 
-
-
 ## 铺垫知识
 
 ## 实例生命周期
 
 ### 什么是生命周期
 
-**生命周期**：实例的生命周期，就是一个阶段，从创建到运行，再到销毁的阶段。
-**生命周期函数**：在实例的生命周期钟，在特定阶段执行的一些特定的事件，这些事件，叫做生命周期函数；
+<b>生命周期</b>：实例的生命周期，就是一个阶段，从创建到运行，再到销毁的阶段。
+<b>生命周期函数</b>：在实例的生命周期钟，在特定阶段执行的一些特定的事件，这些事件，叫做生命周期函数；
 
 - 生命周期函数 = 生命周期钩子 = 生命周期事件
 
 ### 主要的生命周期函数分类
 
 - 创建期间的生命周期函数：（特点：每个实例一辈子只执行一次）
-    - `beforeCreate`：创建之前，此时data和methods尚未初始化
-    - ==created==（第一个重要的函数，此时，data和methods已经创建好了，可以被访问了，首页数据的请求一般在这里发起！）
+    - `beforeCreate`：创建之前，此时 data 和 methods 尚未初始化
+    - created（第一个重要的函数，此时，data 和 methods 已经创建好了，可以被访问了，首页数据的请求一般在这里发起！）
     - `beforeMount`：挂在模板结构之前，此时，页面还没有被渲染到浏览器中（如果想初始化一些第三方的JS插件，必须在mounted中进行初始化。比如echarts，它需要在初始化完毕的dom中进行操作）
-    - ==mounted==（第二个重要的函数，此时，页面刚被渲染出来；如果需要操作DOM元素，最好在这个阶段；如使用三方插件，该插件需要DOM初始化完毕！）
+    - mounted（第二个重要的函数，此时，页面刚被渲染出来；如果需要操作 DOM 元素，最好在这个阶段；如使用三方插件，该插件需要 DOM 初始化完毕！）
 
-- 运行期间的生命周期函数：（特点：按需被调用至少0次，最多N次）
+- 运行期间的生命周期函数：（特点：按需被调用至少 0 次，最多 N 次）
     - beforeUpdate：数据是最新的，页面是旧的。
     - updated：页面和数据都是最新的。
 - 销毁期间的生命周期函数：（特点：每个实例一辈子只执行一次）
@@ -261,9 +259,9 @@ Vue常见的过渡动画（不重要）
 
 > 概念：
 
-ES6中的新语法，Promise是一个构造函数；每个new出来的Promise实例对象，都代表一个异步操作。
+ES6 中的新语法，Promise 是一个构造函数；每个 new 出来的 Promise 实例对象，都代表一个异步操作。
 
-JS解析引擎是单线程的；宿主环境（浏览器、Node环境）是多线程的。
+JS 解析引擎是单线程的；宿主环境（浏览器、Node 环境）是多线程的。
 
 异步的任务会放到异步回调函数的队列中。当js把自己栈中的任务执行完后，才会执行异步回调函数队列中的任务。
 
@@ -305,8 +303,6 @@ fs.readFile('./files/1.txt', 'utf-8', (err, dataStr1) => {
 })
 ```
 
-----
-
 Promise不会减少代码量，但是可以解决回调地狱的问题。
 
 创建形式上的异步操作
@@ -315,7 +311,7 @@ Promise不会减少代码量，但是可以解决回调地狱的问题。
 const p = new Promise()
 ```
 
-创建具体的异步操作；只要new了就会立即执行！
+创建具体的异步操作；只要 new 了就会立即执行！
 
 ```js
 // 只要new了，就会立即执行！
@@ -326,18 +322,14 @@ const p = new Promise(function(successCb,errorCb){
 p.then(successCallback,errorCallback);
 ```
 
----
+查看下 Promise 的原型链
 
-查看下Promise的原型链
-
-Promise
-
-- prototype
-    - ==catch==：function catch()
-    - constructor：function Promise()
-    - finally：function finally()
-    - ==then==：function then()  为Promise示例对象，.then()方法最多需要两个参数，成功 和 失败的回调函数；它的返回值是Promise对象。
-    - catch：function catch() 捕获前面所有.then()中发生的错误，集中处理。
+prototype
+- catch：function catch()
+- constructor：function Promise()
+- finally：function finally()
+- then：function then()  为 Promise 示例对象，.then() 方法最多需要两个参数，成功和失败的回调函数；它的返回值是 Promise 对象。
+- catch：function catch() 捕获前面所有 .then() 中发生的错误，集中处理。
 
 ```js
 const fs = require('fs')
@@ -375,11 +367,11 @@ r1.then(function (info) { console.log(info); console.log("success"); }, function
 //==================有效写法================
 ```
 
-实际我们不会自己封装Promise，会使用其他人封装的方法。
+实际我们不会自己封装 Promise，会使用其他人封装的方法。
 
 ### async和await
 
-> ES7中async和await可以简化Promise调用，提高Promise代码的阅读性和理解性。
+> ES7 中 async 和 await 可以简化 Promise 调用，提高 Promise 代码的阅读性和理解性。
 
 - 如果某个方法的返回值是 Promise 对象，那么，就可以用 await关键字，来修饰 promise 实例
 - 如果一个方法内部用了 await 那么这个方法必须修饰为 async 异步方法
@@ -407,29 +399,29 @@ async function test(){
 
 > 之前发起请求的方式
 
-- 最开始封装XMLHttpRequest对象发起Ajax请求。
-- 使用Jquery中提供的工具函数：
+- 最开始封装 XMLHttpRequest 对象发起 Ajax 请求。
+- 使用 Jquery 中提供的工具函数：
     - `$.ajax({配置对象})`
     - `$.post(url地址, function(){})`
     - `$.get(url地址，处理函数)`
-- 现在，用axios发起Ajax请求。
-    - 只支持get和post请求，无法发起JSONP请求。
-    - 如果设计到JSONP请求，让后端启用cors跨域资源共享即可。
-- 在Vue中使用 vue-resource 发起数据请求
-    - 支持get post jsonp ，vue官方不推荐。
+- 现在，用 axios 发起 Ajax 请求。
+    - 只支持 get 和 post 请求，无法发起 JSONP 请求。
+    - 如果涉及到 JSONP 请求，让后端启用 cors 跨域资源共享即可。
+- 在 Vue 中使用 vue-resource 发起数据请求
+    - 支持 get post jsonp ，vue 官方不推荐。
 
 ### axios的使用
 
 - 测试数据地址
     - get 测试地址 http://www.liulongbin.top:3005/api/get
     - post 测试地址 http://www.liulongbin.top:3005/api/post
-- 使用axios.get() 和 axios.post() 发起请求。
-- 使用拦截器实现loading效果
-- 使用 async 和 await 结合 axios 发起 Ajax请求 
+- 使用 axios.get() 和 axios.post() 发起请求。
+- 使用拦截器实现 loading 效果
+- 使用 async 和 await 结合 axios 发起 Ajax 请求 
 
 #### get请求
 
-> 使用axios发起get请求
+> 使用 axios 发起 get 请求
 
 ```html
 <!DOCTYPE html>
@@ -465,7 +457,7 @@ async function test(){
 </html>
 ```
 
-> 结合async await
+> 结合 async await
 
 ```html
 <!DOCTYPE html>
@@ -522,7 +514,7 @@ const { name, age: userage } = user
 console.log(name, userage);
 ```
 
-==这样我们获取数据的时候，就可以用解构赋值，得到我们想要的那部分数据了！==
+这样我们获取数据的时候，就可以用解构赋值，得到我们想要的那部分数据了！
 
 ```js
 async function getInfo() {
@@ -721,13 +713,13 @@ this.$http.get('/user/10',{params:{name:'zs',age:22}}) // ===> http://127.0.0.1:
 
 ## 主要内容
 
-- Vue.js中的过渡动画
-- webpack的基本配置和使用
-- ES6模块化导入和导出
+- Vue.js 中的过渡动画
+- webpack 的基本配置和使用
+- ES6 模块化导入和导出
     - CommonJS ==> 必须有 require，exports，module
         - 导入模块：const fs = require('fs')
         - 暴露模块：module.exports={}
-    - ES6模块化规范：
+    - ES6 模块化规范：
         - import $ from 'jquery' ==> 从jquery包中导入 `$`
 
 ## Vue中的动画
@@ -736,22 +728,22 @@ this.$http.get('/user/10',{params:{name:'zs',age:22}}) // ===> http://127.0.0.1:
 
 ### 基本介绍
 
-> **每个动画分为两部分**
+> 每个动画分为两部分
 
 - 入场动画：从不可见（flag=false）-> 可见（flag=true）
 - 离场动画：可见（flag=true）-> 不可见（flag=false）
 
 > 入场动画：两个时间点，一个时间段
 
-- v-enter：入场前的样式。(class名)
-- v-enter-to：入场完成以后的样式。(class名)
-- v-enter-active：入场的时间段，即中间过渡的时间段。(class名)
+- v-enter：入场前的样式。(class 名)
+- v-enter-to：入场完成以后的样式。(class 名)
+- v-enter-active：入场的时间段，即中间过渡的时间段。(class 名)
 
 >离场动画：两个时间点，一个时间段
 
-- v-leave：离场前的样式。(class名)
-- v-leave-to：离场完成以后的样式。(class名)
-- v-leave-active：离场的时间段，即中间过渡的时间段。(class名)
+- v-leave：离场前的样式。(class 名)
+- v-leave-to：离场完成以后的样式。(class 名)
+- v-leave-active：离场的时间段，即中间过渡的时间段。(class 名)
 
 <img src="../pics/vue/transition.png">
 
@@ -804,7 +796,7 @@ this.$http.get('/user/10',{params:{name:'zs',age:22}}) // ===> http://127.0.0.1:
 
 ### 三方动画库
 
-==Vue不支持animate4.0==
+Vue不支持animate4.0
 
 - 把需要添加动画的元素，使用v-if或v-show进行控制。
 - 把需要添加动画的元素，使用Vue提供的元素`<transition></transition>`包裹起来
