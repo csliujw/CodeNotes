@@ -2,11 +2,174 @@
 
 ## 推荐
 
-先复习剑指 Offer 里的题和 CodeTop 里的题。常用的模板要搞熟悉。
+先复习常见数据结构算法然后再刷剑指 Offer 里的题和 CodeTop 里的题。常用的模板要搞熟悉。
 
 ## 题目
 
 不记录那些太水的题，除非非常具有代表性。
+
+# 常见算法
+
+## 动态规划
+
+- 背包问题
+- 线性 DP
+- 区间 DP
+- 计数类 DP
+- 数位统计 DP
+- 状态压缩 DP
+- 树形 DP
+- 记忆化搜索
+
+### 背包问题
+
+#### 0-1背包
+
+n 个物品，容量为 v 的背包。每个物品有两个属性，体积 $v_i$ 和价值 $w_i$ 每个物品最多只能用一次。选出的物品的总价值要最大，问最大值是多少。
+
+<img src="img\image-20220501205520428.png">
+
+- DP
+  - 状态表示 f(i,j)
+    - 属性：f(i,j) 表示的是什么属性？即 f(i,j) 表示什么意思。max？min？数量？
+    - 集合：
+      - 所有选法
+      - 条件：①从前 i 个物品中选（不一定会选第 i 个物品），②总体积 `≤j`
+  - 状态计算--具体做法
+    - 集合划分，把当前的集合用更小的集合来表示。
+    - 含 i，不包含 i，两种选法，两个子集；f(i-1,j) f(i,j)。
+      - f(i,j) = f(i-1,j-wi) + i 不选 i 且体积足够容纳 i 的选法。
+
+```cpp
+#include<iostream>
+using namespace std;
+const int N = 1e3 + 10;
+// v 表示体积，w 表示价值
+int v[N], w[N], f[N][N];
+
+int main(){
+    int n, m;
+    scanf("%d%d", &n, &m);
+    for(int i = 1; i <= n; i++) scanf("%d%d", &v[i], &w[i]);
+    
+    for(int i = 1; i <= n; i++)
+        for(int j = 0; j <= m; j++){
+            f[i][j] = f[i - 1][j];
+            if(j >= v[i]) f[i][j] = max(f[i][j], f[i - 1][j - v[i]] + w[i]); 
+        }
+    printf("%d\n", f[n][m]);
+    return 0;
+}
+```
+
+#### 完全背包
+
+每个物品有无限个。
+
+<img src="img\image-20220501212957456.png">
+
+朴素版解法
+
+```cpp
+#include <iostream>
+#include <algorithm>
+
+using namespace std;
+
+const int N = 1010;
+int n, m;
+int v[N], w[N];
+int f[N][N];
+
+int main(){
+    cin >> n >> m;
+    for (int i = 1; i <= n; i ++ ) cin >> v[i] >> w[i];
+
+    for (int i = 1; i <= n; i ++ )
+        for (int j = 0; j <= m; j ++ )
+            for(int k = 0; k * v[i] <= j; k ++)
+                f[i][j] = max(f[i][j],f[i - 1][j - v[i] * k] + w[i] * k);
+    cout << f[n][m] << endl;
+    return 0;
+}
+```
+
+完全背包可以优化成两维的。
+$$
+f[i][j] = Max(f[i-1][j], f[i-1][j-v]+w,f[i-1][j-v]+2w,...) \\
+f[i][j-v] =  Max(f[i-1][j-v], f[i-1][j-2v]+w,f[i-1][j-3v]+2w,...) \\
+$$
+我们发现，$f[i][j]$ 的状态和 $f[i][j-v]$ 很像。
+$$
+f[i][j] = Max(f[i-1][j],f[i][j-v]+w) \ \ f[i][j-v] \ 表示什么意思?
+$$
+
+```cpp
+#include <iostream>
+#include <algorithm>
+
+using namespace std;
+
+const int N = 1010;
+int n, m;
+int v[N], w[N];
+int f[N][N];
+
+int main(){
+    cin >> n >> m;
+    for (int i = 1; i <= n; i ++ ) cin >> v[i] >> w[i];
+
+    for (int i = 1; i <= n; i ++ )
+        for (int j = 0; j <= m; j ++ ){
+            f[i][j] = f[i - 1][j];
+            if(j>=v[i]) f[i][j] = max(f[i][j],f[i - 1][j - v[i]] + w[i]);
+        }
+    cout << f[n][m] << endl;
+    return 0;
+}
+```
+
+采用滚动数组，如何变形呢？
+$$
+f[i][j] = Max(f[i-1][j], \ \ f[i-1,j-v]+w) \ \ 0-1背包 \\
+f[i][j] = Max(f[i-1][j], \ \ f[i,j-v]+w) \ \ 完全背包
+$$
+0-1 背包都是从第 i-1 层转移过来的，完全背包是从 i-1 和 i 转移过来的。
+
+```cpp
+#include <iostream>
+#include <algorithm>
+// 直接删除一维，且没有 0-1 背包的那个问题。
+// f[j - v[i]] 是小于 f[j] 的，在算 f[j] 之前，f[j - v[i]] 就已经算过了，所以相当于 f[j - v[i]] 
+using namespace std;
+
+const int N = 1010;
+int n, m;
+int v[N], w[N];
+int f[N];
+
+int main(){
+    cin >> n >> m;
+    for (int i = 1; i <= n; i ++ ) cin >> v[i] >> w[i];
+
+    for (int i = 1; i <= n; i ++ )
+        for (int j = v[i]; j <= m; j ++ )
+            f[j] = max(f[j], f[j - v[i]] + w[i]);
+
+    cout << f[m] << endl;
+    return 0;
+}
+```
+
+#### 多重背包
+
+每个物品有 $s_i$ 个，每个物品的价值都不一样。
+
+#### 分组背包问题
+
+物品有 n 组，每组中有若干个，每组中最多选一个物品
+
+
 
 # 剑指Offer专项突破
 
@@ -2587,6 +2750,81 @@ public class Offer049SumNumbers {
 }
 ```
 
+### 两颗二叉搜索树中的所有元素
+
+[1305. 两棵二叉搜索树中的所有元素 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/all-elements-in-two-binary-search-trees/)
+
+给你 `root1` 和 `root2` 这两棵二叉搜索树。请你返回一个列表，其中包含两棵树中的所有整数并按升序排序。
+
+#### 解题思路
+
+- 最简单的思路：遍历两棵二叉树，存储它们的序列，然后再排序。时间复杂度 $O(NlogN)$ N 是所有元素的个数。
+- 稍好一点的思路：用两个集合分别存储两颗树的中序序列，然后进行归并排序。时间复杂度 $O(m+n)$ m 和 n 分别是两颗树的元素个数。
+
+#### 代码
+
+暴力求解：遍历+无脑排序
+
+```java
+class Solution {
+    public List<Integer> getAllElements(TreeNode root1, TreeNode root2) {
+        List<Integer> ans = new ArrayList<Integer>();
+        helper(root1,ans);
+        helper(root2,ans);
+        Collections.sort(ans);
+        return ans;
+    }
+
+    public void helper(TreeNode root,List<Integer> ans){
+        if(root == null) return;
+        helper(root.left,ans);
+        ans.add(root.val);
+        helper(root.right,ans);
+    }
+}
+```
+
+两个集合存储，然后进行归并排序。（实际速度比快排慢，且优化后 [提取变量后] 和快排的速度差不多）
+
+```java
+class Solution {
+    public List<Integer> getAllElements(TreeNode root1, TreeNode root2) {
+        List<Integer> ans = new ArrayList<Integer>();
+        List<Integer> list1 = new ArrayList<Integer>();
+        List<Integer> list2 = new ArrayList<Integer>();
+
+        helper(root1,list1);
+        helper(root2,list2);
+        // 归并排序
+        int i=0,j=0;
+        while(i<list1.size() && j<list2.size()){
+            if(list1.get(i)==list2.get(j)){
+                ans.add(list1.get(i++));
+                ans.add(list2.get(j++));
+            }else if(list1.get(i)>list2.get(j)){
+                ans.add(list2.get(j++));
+            }else{
+                ans.add(list1.get(i++));
+            }
+        }
+        while(i<list1.size()){
+            ans.add(list1.get(i++));
+        }
+        while(j<list2.size()){
+            ans.add(list2.get(j++));
+        }
+        return ans;
+    }
+
+    public void helper(TreeNode root,List<Integer> ans){
+        if(root == null) return;
+        helper(root.left,ans);
+        ans.add(root.val);
+        helper(root.right,ans);
+    }
+}
+```
+
 ## 堆
 
 ### 数据流的第K大数字
@@ -4070,6 +4308,66 @@ class CQueue {
         }
         if(stack2.isEmpty()) return -1;
         return stack2.pop();
+    }
+}
+```
+
+## 12.矩阵中的路径
+
+[剑指 Offer 12. 矩阵中的路径 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/ju-zhen-zhong-de-lu-jing-lcof/)
+
+给定一个 m x n 二维字符网格 board 和一个字符串单词 word 。如果 word 存在于网格中，返回 true ；否则，返回 false 。
+
+单词必须按照字母顺序，通过相邻的单元格内的字母构成，其中“相邻”单元格是那些水平相邻或垂直相邻的单元格。同一个单元格内的字母不允许被重复使用。
+
+例如，在下面的 3×4 的矩阵中包含单词 "ABCCED"（单词中的字母已标出）。
+
+<img src="https://assets.leetcode.com/uploads/2020/11/04/word2.jpg">
+
+### 解题思路
+
+感觉就是一个枚举的过程。不断的枚举，直到不满足条件或找到了符合条件的数据。
+
+枚举二维数组中所有可能的点，以该点为起始点进行枚举。
+
+- 枚举的方向只能是水平或垂直，即上下左右四个方向。
+  - 当枚举的字符和目标字符不等，则返回 false。
+  - 当枚举的字符个数=对应的目标字符，则继续搜索
+
+如何编写代码呢？
+
+- 首先，我们考虑以二维数组中是每个点为起始点进行枚举，需要双重 for 循环。
+- 递归终止条件是当前字符和目标字符不相等，或查找范围超出了解析、
+- 当前检索的是最后一个字符的话，且最后一个字符相等，则返回 true。
+
+### 代码
+
+```java
+class Solution {
+    public boolean exist(char[][] board, String word) {
+        boolean ans = false;
+        char []ch = word.toCharArray();
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[0].length; j++) {
+                if(helper(board, ch, i, j, 0)) return true;
+            }
+        }
+        return ans;
+    }
+
+    private boolean helper(char[][] board, char[] word, int col, int row, int index) {
+        // 上下左右四个方向进行枚举。
+        if (col < 0 || row < 0 || col >= board.length || row >= board[0].length || board[col][row] != word[index])
+            return false;
+        if (index == word.length - 1) return true;
+        board[col][row] = '\0';
+        // 这样更快，有一个是 false 都不会在进行后面的递归。
+        boolean ans =  helper(board, word, col + 1, row, index + 1) 
+            || helper(board, word, col - 1, row, index + 1) 
+            || helper(board, word, col, row + 1, index + 1) 
+            || helper(board, word, col, row - 1, index + 1);
+        board[col][row] = word[index];
+        return ans;
     }
 }
 ```
@@ -6402,8 +6700,7 @@ class Solution {
         for(int i=row;i<row+offset;i++){
             for(int j=col;j<col+offset;j++){
                 if(grid[row][col]!=grid[i][j]){
-                    isSame = false;
-                    break;
+                    isSame = false; break;
                 }
             }
         }
@@ -6462,7 +6759,7 @@ class Solution {
 
 给定一个二维矩阵 matrix，以下类型的多个请求：
 
-- 计算其子矩形范围内元素的总和，该子矩阵的 左上角 为 (row1, col1) ，右下角为 (row2, col2) 。
+- 计算其子矩形范围内元素的总和，该子矩阵的左上角为 (row1, col1) ，右下角为 (row2, col2) 。
 
 实现 $NumMatrix$ 类：
 
@@ -6477,8 +6774,7 @@ class Solution {
 
 - 典型的二维前缀和，求解二维矩阵中的矩形区域求和问题。
 - 二维前缀和数组中的每一个格子记录的是「以当前位置为右下角的区域和(即，【0，0】~【i，j】这个矩形区域的和)」
-- 如何求指定区域的面积呢？比如求 $arr[1][1]~arr[3][4]$ 的面积？
-  - 小学数学题。A-B+C+D。具体请看下图。
+- 如何求指定区域的面积呢？比如求 $arr[1][1]~arr[3][4]$ 的面积？小学数学题。A-B+C+D。具体请看下图。
 
 <img src="https://pic.leetcode-cn.com/1614650837-SAIiWg-1.png" width="50%">
 
@@ -7158,7 +7454,102 @@ class Solution {
 }
 ```
 
+## 单词规律
 
+[290. 单词规律 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/word-pattern/)
 
+给定一种规律 pattern 和一个字符串 s ，判断 s 是否遵循相同的规律。
 
+这里的遵循指完全匹配，例如， pattern 里的每个字母和字符串 str 中的每个非空单词之间存在着双向连接的对应规律。
+
+```
+输入: pattern = "abba", str = "dog cat cat dog"
+输出: true
+
+输入:pattern = "abba", str = "dog cat cat fish"
+输出: false
+
+输入: pattern = "aaaa", str = "dog cat cat dog"
+输出: false
+```
+
+### 解题思路
+
+首先我们要找到这题的规律。通过测试用例可以发现，我们需要做到的是确保 `key -- value` 都是我只和你对应，你只和我对应。这种映射关系可以使用哈希表来实现。
+
+由于是 a 只能对应 b，b 只能对应 a，一个哈希表够吗？不够！只用一个哈希表的话，a 可以对应 b，c 也可以对应 b。所以需要两个哈希表。
+
+- 哈希表1，维护 pattern --> str 的关系
+- 哈希表2，维护 str--> pattern 的关系
+- 如果两个哈希表 1 中没有 pattern 的 key，哈希表 2 没有 str 的 key，则向两个哈希表中添加数据。
+- 如果有一个哈希表中有 key，则判断这两个哈希表 pattern <--> str 的关系是否一一对应。
+
+### 代码
+
+```java
+class Solution {
+    public boolean wordPattern(String pattern, String s) {
+        String[] text = s.split(" ");
+        if(pattern.length() != text.length) return false;
+        Map<String, Character> strToChar = new HashMap<>();
+        Map<Character, String> charToStr = new HashMap<>();
+        for (int i = 0; i < text.length; i++) {
+            // 都不包含，则添加.
+            if (!strToChar.containsKey(text[i]) && !charToStr.containsKey(pattern.charAt(i))) {
+                strToChar.put(text[i], pattern.charAt(i));
+                charToStr.put(pattern.charAt(i), text[i]);
+            } else {
+                // 有包含的，看是否 str->char  char->str 能否对应上
+                // getOrDefault 防止用包装类比较时出现 NPE。
+                Character character = strToChar.getOrDefault(text[i],'*');
+                String s1 = charToStr.get(pattern.charAt(i));
+                if (character != pattern.charAt(i) || !text[i].equals(s1)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+高票题解的解法，仅用一个哈希表就完成了这个操作。只要 key -- value 互相都是一一对应的，那么我们 put(key,index) put(value,index) 它们返回的各自的 oldVale 应该是一样的。 
+
+```
+dog cat cat dog
+abba
+
+a-->0 return 0	dog-->0 return 0
+b-->0 return 1	dog-->1 return 1
+b-->0 return 2	dog-->2 return 2
+a-->0 return 3	dog-->3 return 3  // true
+
+dog cat cat fish
+abba
+
+a-->0 return 0	dog-->0 return 0
+b-->0 return 1	dog-->1 return 1
+b-->0 return 2	dog-->2 return 2
+a-->0 return 3	fish-->3 return 0  // false
+```
+
+代码如下
+
+```java
+class Solution {
+    public boolean wordPattern(String pattern, String str) {
+        String[] text = str.split(" ");
+        if (text.length != pattern.length()) return false;
+        Map<Object, Integer> map = new HashMap<>();
+        // 注意 要用 Integer，这样才可以确保，当 i>127 时，map 中存放
+        // 的 Integer 对象是同一个
+        for (Integer i = 0; i < text.length; i++) {
+            if (map.put(text[i], i) != map.put(pattern.charAt(i), i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+```
 
