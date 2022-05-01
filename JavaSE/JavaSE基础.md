@@ -79,7 +79,7 @@ public class OpBin {
 
 # Java基础
 
-## 第一章 面向对象概述
+## 第一章-面向对象概述
 
 面向对象编程（Object-Oriented Programming OOP）是一种编程思维方式和编码架构。它将现实世界的事物抽象为一个一个的类。
 
@@ -306,7 +306,7 @@ public Class Counter{
 }
 ```
 
-## 第二章 补充内容
+## 第二章-补充内容
 
 ### 原反补
 
@@ -429,7 +429,7 @@ public class StaticImport {
 - 看类的解释和说明。
 - 学习构造方法。
 
-## 第三章 初始化和清理
+## 第三章-初始化和清理
 
 ### 构造器
 
@@ -1104,7 +1104,7 @@ FLAMING:4
 */
 ```
 
-## 第四章 封装
+## 第四章-封装
 
 写了一段代码，过段时间再看这些代码，可能会发现更好的实现方式，这时可以考虑重构这些代码，使之更加可读、易懂，更易维护。将数据和方法包装进类中并把具体实现隐藏起来称为封装。
 
@@ -1176,7 +1176,7 @@ public class Soup1 {
 }
 ```
 
-## 第五章 复用
+## 第五章-复用
 
 Java 通过类来解决代码复用。
 
@@ -1741,7 +1741,7 @@ j = 39
 
 至此，必要的类都加载完毕，对象可以被创建了。首先，对象中的所有基本类型变量都被置为默认值，对象引用被设为 null —— 这是通过将对象内存设为二进制零值一举生成的。接着会调用基类的构造器。本例中是自动调用的，也可以使用 super 调用指定的基类构造器（在 Beetle 构造器中的第一步操作）。基类构造器和派生类构造器一样以相同的顺序经历相同的过程。当基类构造器完成后，实例变量按文本顺序初始化。最终，构造器的剩余部分被执行。
 
-## 第六章 抽象
+## 第六章-抽象
 
 若父类中的方法不能确定如何进行 {} 方法体实现，那么这就应该是一个抽象方法。
 
@@ -1807,7 +1807,7 @@ public class Cat extends Animal {
 - ③现实逻辑：抽象是从现实实物的抽离
 - ④设计层面：为了实现[多态](https://www.zhihu.com/search?q=多态&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A95406830})，当某些类只希望作为父类使用，不希望被实例化。
 
-## 第七章 多态
+## 第七章-多态
 
 能够改善代码的组织结构和可读性，还能够创造可扩展的程序；可以消除类型之间的耦合关系。
 
@@ -2175,7 +2175,7 @@ RTTI：运行时类型识别。在运行时检查类型的行为称为 RTTI。�
 
 只有普通方法的调用可以是多态的。成员变量、静态变量、静态方法、私有方法、final 修饰的方法都是不存在多态的。
 
-## 第八章 接口
+## 第八章-接口
 
 接口和抽象类提供了一种将接口与实现分离的更加结构化的方法。
 
@@ -3054,7 +3054,7 @@ public class Factories {
 
 恰当的原则是优先使用类而不是接口。从类开始，如果使用接口的必要性变得很明确，那么就重构。接口是一个伟大的工具，但它们容易被滥用。
 
-## 第九章 内部类 
+## 第九章-内部类 
 
 一个定义在另一个类中的类，叫作内部类。内部类是一个独立的实体，无法被覆盖。
 
@@ -3803,7 +3803,7 @@ LocalInnerClass.class
 
 如果内部类是匿名的，编译器会简单地产生一个数字作为其标识符。如果内部类是嵌套在别的内部类之中，只需直接将它们的名字加在其外部类标识符与 “$” 的后面。
 
-## 第十章 Object & 日期
+## 第十章-Object
 
 ### Object
 
@@ -3834,7 +3834,7 @@ public void fn2(){
 }
 ```
 
-Java8 提供的日期类 **都是final修饰的**
+Java8 提供的日期类**都是final修饰的**
 - Instant——它代表的是时间戳
 - LocalDate——不包含具体时间的日期，比如2014-01-14。它可以用来存储生日，周年纪念日，入职日期等。
 - LocalTime——它代表的是不含日期的时间
@@ -3916,9 +3916,9 @@ public void fn6(){
 }
 ```
 
-## 第十一章 日期专题
+## 第十一章-日期专题
 
-## 第十二章 集合
+## 第十二章-集合
 
 java.util 库提供了一套相当完整的集合类（collection classes）来解决非固定长度数据的问题，其中基本的类型有 List 、Set 、Queue 和 Map。
 
@@ -4618,7 +4618,7 @@ public class myxx implements Comparator{
 }
 ```
 
-## 第十三章 函数式编程
+## 第十三章-函数式编程
 
 传递的是行为，而不仅仅是数据。
 
@@ -5101,7 +5101,7 @@ public class ConsumerDemo {
   - ```java
     boolean test(T t) //对给定参数进行逻辑判断，判断表达式由Lambda实现。
     default Predicate<T>negate(); //返回一个逻辑的否定， 对应逻辑非
-default Predicate<T>and(Predicate other) //返回一个组合逻辑判断，对应短路与
+  default Predicate<T>and(Predicate other) //返回一个组合逻辑判断，对应短路与
     default Predicate<T>or(Predicate other) //返回一个组合判断，对应短路或
     ```
     
@@ -5945,7 +5945,7 @@ public class InterDemo {
 - Lambda调用方法的形参必须是接口
 - 匿名内部类编译时会生成一个单独的class文件。Lambda表达式不会，它对应的字节码会在运行时动态生成。
 
-## 第十四章 流式编程
+## 第十四章-流式编程
 
 ### 为什么使用流
 
@@ -7065,7 +7065,7 @@ IntSummaryStatistics{count=9, sum=45, min=1, average=5.000000, max=9}
 
 
 
-## 第十五章 容器深入研究
+## 第十五章-容器深入研究
 
 学习散列机制，如何编写 `hashCode` 和 `equals`，容器为什么会有不同版本的实现，如何进行选择；学习通用工具类和特殊类。
 
@@ -8169,7 +8169,7 @@ HashSet 由 HashMap 实现。
 
 由 TreeMap 实现。
 
-## 第十六章 异常
+## 第十六章-异常
 
 ### 异常的概念
 
@@ -9108,7 +9108,7 @@ information-expression 可以产生任何类型的对象，通常我们会构造
 
 。。。。。这个还是后面再看~。买了实体书，我再看这部分的内容。这个翻译一言难尽啊。
 
-## 第十七章 文件、IO
+## 第十七章-文件&IO
 
 Java 的 IO 编程方式在 Java7 上终于简化了~。这些新的 IO 操作位于 java.nio.file 包下。
 
@@ -10929,7 +10929,7 @@ public class PropertiesDemo {
 }
 ```
 
-## 第十八章 字符串
+## 第十八章-字符串
 
 ### 概述
 
@@ -11544,7 +11544,7 @@ class StringTokenizerDemo {
 }
 ```
 
-## 第十九章 类型信息
+## 第十九章-类型信息
 
 ### RTTI 概述
 
@@ -12420,7 +12420,7 @@ class ProxyHandler<T> implements InvocationHandler {
 
 <span style="color:green">`RTTI` 有时候也能解决效率问题。假设你的代码运用了多态，但是为了实现多态，导致其中某个对象的效率非常低。这时候，你就可以挑出那个类，使用 `RTTI` 为它编写一段特别的代码以提高效率。然而必须注意的是，不要太早地关注程序的效率问题。</span>
 
-## 第二十章 泛型
+## 第二十章-泛型
 
 ### 引入泛型
 
@@ -13350,11 +13350,11 @@ public class Demo {
 }
 ```
 
-## 第二十一章 数组工具类
+## 第二十一章-数组工具类
 
 就一些常见 API。
 
-## 第二十二章 枚举
+## 第二十二章-枚举
 
 ### 枚举的优点
 
@@ -13363,7 +13363,7 @@ public class Demo {
 > 枚举的优点
 
 - 定义枚举的语法更为简洁。
-- 枚举更为安全，一个枚举类型的变量，它的值要么为null，要么为枚举值之一，不可能为其他值。
+- <span style="color:red">枚举更为安全</span>，一个枚举类型的变量，它的值要么为 null，要么为枚举值之一，不可能为其他值。
 - 枚举类型自带很多便利方法（如 `values`、`valueOf`、`toString` 等），易于使用。
 
 比如，我们需要创建一个整数常量集，但是这些值并不会将自身限制在这个常量集的范围内，因此使用它们更有风险，而且更难使用。而枚举可以完美解决这个问题。
@@ -13374,7 +13374,7 @@ public class Demo {
 
 - 创建 `enum`  时，编译器会自动添加一些有用的特性
   - 创建 `toString()` 方法，方便的显示某个 `enum` 实例的名称
-  - 创建 `ordinal()` 方法表示某个特定 `enum` 常量的声明顺序
+  - 创建 `ordinal()` 方法，用户表示某个特定 `enum` 常量的声明顺序，其实就是元素所在的索引值，如 0，1，2
   - `static values()` 方法按照 `enum` 常量的声明顺序，生成这些常量值构成的数组
 
 ```java
@@ -13396,14 +13396,14 @@ class SimpleEnumUse {
 }
 ```
 
-`enum` 看起来像是一种新的数据类型，但是 `enum` 只是告诉编译器要执行一些内容。本质上， `enum` 就是一个类，可以有自己的方法。实际上  `enum` 类都继承自 `Enum` 类。
+`enum` 看起来像是一种新的数据类型，但是，本质上， `enum` 就是一个类，可以有自己的方法，只是告诉编译器要执行一些内容。实际上  `enum` 类都继承了 `Enum` 类，这个继承是隐式的，我们看不到，可以尝试使用反射，获取 enum 类的父类。
 
 <span style="color:red">`enum` 中的元素都是唯一的</span>
 
 > 在 switch 中使用枚举
 
 - switch 中使用数字/变量也可达成这样的效果，但是代码不直观。
-- 定义一个常量类也可，但是不安全，无法保证传入的值会限制在这些常量范围内。
+- 定义一个常量类也可以，但是不安全，无法保证传入的值会限制在这些常量范围内。
 
 ```java
 public class Burrito {
@@ -13514,7 +13514,7 @@ EAST:This is EAST
 
 ### switch 中的 enum
 
-不必 类名.值 来使用，直接使用枚举的值即可。
+不必通过<b>类名.值</b>来使用，直接使用枚举的值即可。
 
 ```java
 enum Signal {
@@ -13559,8 +13559,8 @@ public class TrafficLight {
 
  `enum` 类都继承自 `Enum` 类，而 `Enum` 类并没有 values 方法。那 values 方法来自那里？
 
-- <span style="color:red">values() 是由编译器添加的 static 方法。</span>可以看出，在创建 Explore 的过 程中，编译器还为其添加了 `valueOf()` 方法。`Enum` 类不是已经有 `valueOf()` 方法了吗？为什么还要再添加一个？
-- 因为 `Enum` 中的 `valueOf()` 方法需要两个参数，而这个新增的方法只需一个参数。
+- <span style="color:red">values() 是由编译器添加的 static 方法。</span>运行下面的代码可以看出，在创建 Explore 的过程中，编译器还为其添加了 `valueOf()` 方法。`Enum` 类不是已经有 `valueOf()` 方法了吗？为什么还要再添加一个？
+- 因为 `Enum` 中的 `valueOf()` 方法需要两个参数，字节码对象和枚举变量的字符串名称，而这个新增的方法只需字符串名称这个参数，使用方便。
 
 ```java
 import java.lang.reflect.Method;
@@ -13615,7 +13615,7 @@ Methods:
 [compareTo, equals, getClass, getDeclaringClass, hashCode, name, notify, notifyAll, ordinal, toString, valueOf, wait]
 Explore.containsAll(Enum)? true
 Explore.removeAll(Enum): [values]
-// 摘自 Think in Java
+# 摘自 Think in Java
 final class Explore extends java.lang.Enum<Explore> {
     public static final Explore HERE;
     public static final Explore THERE;
@@ -13627,18 +13627,20 @@ final class Explore extends java.lang.Enum<Explore> {
 
 编译器会将枚举类 Explore 标记为 final 类，所以 Explore 无法被继承。
 
-由于泛型擦除，反编译无法得到枚举的完整信息，展示出来的 Explore 的父类只是原始的 `Enum` 实际上应该是 `Enum<Explore>`
+<span style="color:orange">由于泛型擦除，反编译无法得到枚举的完整信息，展示出来的 Explore 的父类只是原始的 Enum，实际上 Explore 的父类应该是 Enum\<Explore\></span>
 
 ### 枚举的实现
 
-枚举类型实际上会被Java编译器转换为一个对应的类，这个类继承了`Java API` 中的`java.lang.Enum` 类。`Enum` 类有 `name`和 `ordinal` 两个实例变量，在构造方法中需要传递，`name()`、`toString()`、`ordinal()`、`compareTo()`、`equals()` 方法都是由 `Enum` 类根据其实例变量 `name` 和 `ordinal` 实现的。`values` 和 `valueOf` 方法是编译器给每个枚举类型自动添加的。
+枚举类型实际上会被 Java 编译器转换为一个对应的类，这个类继承了 `Java API` 中的 `java.lang.Enum` 类。`Enum` 类有 `name` 和 `ordinal` 两个实例变量，在构造方法中需要为这两个变量赋值。
+
+`name()`、`toString()`、`ordinal()`、`compareTo()`、`equals()` 方法都是由 `Enum` 类根据其实例变量 `name` 和 `ordinal` 实现的。`values` 和 `valueOf` 方法是编译器给每个枚举类型自动添加的。
 
 > 枚举类反编译后的代码
 
-- 构造器是私有的，不能在外部创建新的实例。
+- 构造器是私有的，不能在外部创建新的实例
 - 三个枚举值实际上是三个静态常量（static final）
-- values方法是编译器添加的，内部有一个values数组保持所有枚举值
-- `valueOf()` 方法，如 `valueOf("ONE")` 可以得到 `Demo.ONE`
+- values 方法是编译器添加的，用户获取内部的数组（内部有一个 values 数组存储所有枚举值）
+- `valueOf()` 方法，得到和传入字符串相同的枚举值，如 `valueOf("ONE")` 可以得到 `Demo.ONE` 这个枚举值
 
 ```java
 public final class Demo extends Enum {
@@ -13680,9 +13682,9 @@ public final class Demo extends Enum {
 
 ### 扩展枚举中的元素
 
-我们希望用枚举表示食物，且食物又分为很多的大类，我们希望对每个大类的食物也进行分组。如何实现？
+我们希望用枚举表示食物，且食物又分为很多的大类，我们希望对每个大类的食物也进行分组，如何实现？
 
-- 定义一个接口。
+- 定义一个接口
 - 接口中的枚举实现该接口
 
 ```java
@@ -13757,15 +13759,15 @@ VERSION, getInfo=1.8.0_301
 */
 ```
 
-#### 职责/责任 链模式
+#### 职责/责任链模式
 
 通过常量相关的方法，我们可以很容易地实现一个简单的职责链。
 
 我们以一个邮局的模型为例。邮局需要以尽可能通用的方式来处理每一封邮件，并且要不断尝试处理邮件，直到该邮件最终被确定为一封死信。其中的每一次尝试可以看作为一个策略（也是一个设计模式），而完整的处理方式列表就是一个职责链。
 
-## 第二十三章 注解
+## 第二十三章-注解
 
-注解就是给程序添加一些信息，用字符@开头，这些信息用于修饰它后面紧挨着的其他代码元素，比如类、接口、字段、方法、方法中的参数、构造方法等。注解可以被编译器、程序运行时和其他工具使用，<span style="color:green">**用于增强或修改程序行为，减轻编写 “样板” 代码的负担。**</span>
+注解就是给程序添加一些信息，用字符@开头，这些信息用于修饰它后面紧挨着的其他代码元素，比如类、接口、字段、方法、方法中的参数、构造方法等。注解可以被编译器、程序运行时和其他工具使用，<b style="color:green">用于增强或修改程序行为，减轻编写 “样板” 代码的负担。</b>
 
 > 注解的优点（主要）
 
@@ -13775,15 +13777,15 @@ VERSION, getInfo=1.8.0_301
 
 > 常见注解
 
-- `@Override：` 表示当前的方法定义将覆盖基类的方法。如果你不小心拼写错误，或 者方法签名被错误拼写的时候，编译器就会发出错误提示。
-- `@Deprecated： `如果使用该注解的元素被调用，编译器就会发出警告信息。
+- `@Override`：表示当前的方法定义将覆盖基类的方法。如果你不小心拼写错误，或 者方法签名被错误拼写的时候，编译器就会发出错误提示。
+- `@Deprecated`：如果使用该注解的元素被调用，编译器就会发出警告信息。
   - Java 9 开始 `@Deprecated` 多了两个属性：`since` 和 `forRemoval`
   - `since` 表示从哪个版本开始过时的
   - `forRemoval` 表示未来是否会删除
-- `@SuppressWarnings： `压制编译器警告信息
+- `@SuppressWarnings`：压制编译器警告信息
   - `@SuppressWarnings({"deprecation","unused"})`
-- `@SafeVarags： `在 Java 7 中加入用于禁止对具有泛型 varargs 参数的方法或构 造函数的调用方发出警告。
-- `@FunctionalInterface：` Java 8 中加入用于表示类型声明为函数式接口。
+- `@SafeVarags`：在 Java 7 中加入用于禁止对具有泛型 varargs 参数的方法或构造函数的调用方发出警告。
+- `@FunctionalInterface`： Java 8 中加入用于表示类型声明为函数式接口。
 
 <span style="color:red">每当创建涉及重复工作的类或接口时，你通常可以使用注解来自动化和简化流程。</span>
 
@@ -13793,13 +13795,12 @@ VERSION, getInfo=1.8.0_301
 
 ```java
 @Deprecated
-public class TemplateMethod {
-}
+public class TemplateMethod {}
 ```
 
 > 定义注解
 
-注解的定义看起来很像接口，实际上，定义的注解和接口一样，也会被编译成 calssk 文件
+注解的定义看起来很像接口，实际上，定义的注解和接口一样，也会被编译成 class 文件
 
 ```java
 import java.lang.annotation.ElementType;
@@ -13809,32 +13810,31 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Test {
-}
+public @interface Test {}
 ```
 
 - 注解的定义也需要一些元注解
 - `@Target`  定义注解可以用在那里 【 类、方法、字段 】
   - `@Target(ElementType.METHOD)`，`ElementType` 是一个注解，包含如下几种类型
   - TYPE：表示类、接口（包括注解），或者枚举声明；
-  - FIELD：字段，包括枚举常量
+  - FIELD：字段，包括枚举常量；
   - METHOD：方法；
-  - PARAMETER：方法中的参数
+  - PARAMETER：方法中的参数；
   - CONSTRUCTOR：构造方法；
-  - LOCAL_VARIABLE：本地变量
-  - MODULE：模块（Java 9引入的）
+  - LOCAL_VARIABLE：本地变量；
+  - MODULE：模块（Java 9 引入的）
 - `@Retention`  定义注解在那里可用 【源码（source）、class 文件、运行时（RUNTIME）】
   - `@Retention(RetentionPolicy.SOURCE)`
   - SOURCE：只在源代码中保留，编译器将代码编译为字节码文件后就会丢掉。
-  - CLASS：保留到字节码文件中，但Java虚拟机将class文件加载到内存时不一定会在内存中保留。
-  - <span style="color:red">RUNTIME：一直保留到运行时。一般选这个</span>
-  - <span style="color:red">如果没有声明@Retention，则默认为CLASS。</span>
+  - CLASS：保留到字节码文件中，但 Java 虚拟机将 class 文件加载到内存时不一定会在内存中保留。
+  - <span style="color:red">RUNTIME：一直保留到运行时，一般选这个。</span>
+  - <span style="color:red">如果没有声明 @Retention，则默认为 CLASS。</span>
 
-`@Override` 和 `@SuppressWarnings` 都是给编译器用的，所以 `@Retention` 都是`RetentionPolicy.SOURCE`。
+`@Override` 和 `@SuppressWarnings` 都是给编译器用的，所以 `@Retention` 都是 `RetentionPolicy.SOURCE`。
 
 > 小细节
 
-当只有一个参数，且名称为value时，提供参数值时可以省略"value="，即可以简写为
+当只有一个参数，且名称为 value 时，提供参数值时可以省略 "value="，即可以简写为
 
 ```java
 @SupressWarnings(value={"deprecation","unused"})
@@ -13866,7 +13866,7 @@ public @interface Test {
 
 #### 查看注解信息
 
-Annotation是一个接口，它表示注解，具体定义为
+Annotation 是一个接口，它表示注解，具体定义为
 
 ```java
 package java.lang.annotation;
@@ -13896,7 +13896,7 @@ public interface Annotation {
 
 > 定义的注解
 
- `@Component` - DI 注解
+`@Component` - DI 注解
 
 `@Singleton` - DI 注解，表示是单例的
 
@@ -14214,7 +14214,7 @@ public class TableCreator {
 }
 ```
 
-## 第二十四章 并发编程
+## 第二十四章-并发编程
 
 **进程与线程的概念，看下操作系统课本。**
 
@@ -15069,7 +15069,7 @@ pool-1-thread-2捡到了AK47
 - 使用本地变量和不可变类来保证线程安全。
 - 使用线程池而不是直接创建线程，这是因为创建线程代价很高，线程池可以有效地利用有限的线程来启动任务。
 
-## 第二十五章 设计模式
+## 第二十五章-设计模式
 
 设计模式：解决特定类问题的一种方法。<span style="color:red">将易变的事物与不变的事物分开。</span>设计模式的目标是隔离代码中的更改。例如：迭代器允许你编写通用代码，该代码对序列中的所有元素执行操作，而不考虑序列的构建方式。
 
@@ -15125,7 +15125,7 @@ public class Singleton {
 
 重用现有类中的大部分代码，并根据需要覆盖一个或多个方法来定制应用程序。
 
-## 第二十六章 网络编程
+## 第二十六章-网络编程
 
 ### 网络编程入门
 
@@ -15527,9 +15527,9 @@ public class BSDemo3 {
 
 [netty的基本介绍 - KyleInJava - 博客园 (cnblogs.com)](https://www.cnblogs.com/kyleinjava/articles/10396859.html)
 
-## 第二十七章 JDBC
+## 第二十七章-JDBC
 
-### C3P0
+### 使用 C3P0
 
 在 src 下放配置文件 `c3p0-config.xml`
 
