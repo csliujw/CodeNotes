@@ -5086,17 +5086,45 @@ class Solution {
 }
 ```
 
-
-
-## 55.二叉树的深度&平衡二叉树
+## 55.二叉树的深度
 
 [剑指 Offer 55 - I. 二叉树的深度 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/er-cha-shu-de-shen-du-lcof/)
 
 此题要求最大深度，最大深度即左右子树的最大深度。可用后续遍历来做
 
+### 解题思路
+
+- 求二叉树的深度可以直接用后续遍历来做
+
+如何编写递归代码呢？
+
+- 递归的终止条件是什么？当节点为 null 时，结束递归。
+- 当前二叉树的深度 = max(right,left)+1;
+
+### 代码
+
+求二叉树的深度
+
+```java
+class Solution {
+    public int maxDepth(TreeNode root) {
+        return dfs(root);
+    }
+
+    private int dfs(TreeNode root){
+        if(root == null) return 0;
+        int left = dfs(root.left);
+        int right = dfs(root.right);
+        return Math.max(left,right)+1;
+    }
+}
+```
+
+## 55.平衡二叉树
+
 [剑指 Offer 55 - II. 平衡二叉树 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/ping-heng-er-cha-shu-lcof/)
 
-输入一棵二叉树的根节点，判断该树是不是平衡二叉树。如果某二叉树中任意节点的左右子树的深度相差不超过1，那么它就是一棵平衡二叉树。
+输入一棵二叉树的根节点，判断该树是不是平衡二叉树。如果某二叉树中任意节点的左右子树的深度相差不超过 1，那么它就是一棵平衡二叉树。
 
 ```
 给定二叉树 [3,9,20,null,null,15,7]
@@ -5121,36 +5149,71 @@ true
 
 ### 解题思路
 
-- 求二叉树的深度可以直接用后续遍历来做
-- 判断是否是 blanceTree，也可用后续遍历来做
+判断是否是 AVL 需要计算左右子树的深度差。得到左子树的深度，右子树的深度，如果差值大于 1，说明不是 AVL。因为需要得到左右子树的深度，所以可以采用后序遍历。
 
-因为需要判断左右子树的深度差值，所以考虑采用后续遍历。
+如果编写递归代码呢？
 
-如何编写递归代码呢？
+- 使用一个 flag 记录是否是平衡二叉树。
+  - 如果当前节点为 null，return 0，
+  - 如果当前的二叉树不是平衡二叉树，为 flag 设置为 false；return 当前节点的最大深度
+- 上述的做法存在一个问题，进行了多余的递归，可以进行剪枝，如果已经判定了不是 AVL，则不用继续遍历了。
 
 ### 代码
 
-求二叉树的深度
-
 ```java
 class Solution {
-    public int maxDepth(TreeNode root) {
-        return dfs(root);
+    boolean ans = true;
+    public boolean isBalanced(TreeNode root) {
+        helper(root);
+        return ans;
     }
 
-    private int dfs(TreeNode root){
+    private int helper(TreeNode root){
         if(root == null) return 0;
-        int left = dfs(root.left);
-        int right = dfs(root.right);
+        int left = helper(root.left);
+        int right = helper(root.right);
+        if(Math.abs(left-right)>1) ans = false;
         return Math.max(left,right)+1;
     }
 }
 ```
 
-判断是否是平衡二叉树
+剪枝，避免不必要的遍历。
 
 ```java
+class Solution {
+    boolean ans = true;
+    public boolean isBalanced(TreeNode root) {
+        helper(root);
+        return ans;
+    }
 
+    private int helper(TreeNode root){
+        if(root == null || !ans) return 0;
+        int left = helper(root.left);
+        int right = helper(root.right);
+        if(Math.abs(left-right)>1) ans = false;
+        return Math.max(left,right)+1;
+    }
+}
+```
+
+有没有办法，不用成员遍历 ans 来做？我们可以为返回值设置一个标记，如果返回值是某个值，说明已经判定不是平衡二叉树了，可以不必继续递归下去了。我们取这个值我为 -1。
+
+```java
+class Solution {
+    public boolean isBalanced(TreeNode root) {
+        return -1!=helper(root);
+    }
+
+    private int helper(TreeNode root){
+        if(root == null) return 0;
+        int left = helper(root.left);
+        int right = helper(root.right);
+        if(left==-1 || right == -1 || Math.abs(left-right)>1) return -1;
+        return Math.max(left,right)+1;
+    }
+}
 ```
 
 
