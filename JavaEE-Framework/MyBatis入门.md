@@ -1,6 +1,6 @@
-# `MyBatis`概述
+# MyBatis概述
 
-MyBatis 3.4x 版本，把他内部需要的三方 jar 都整合在一起了。
+MyBatis 3.4x 版本，把它内部需要的三方 jar 都整合在一起了。
 
 ## 解决的问题
 
@@ -12,26 +12,26 @@ MyBatis 减少了样板代码，简化了持久层的开发。
 
 - Alt + Tab 选择活动窗口
 
-> idea快捷键
+> IDEA 快捷键
 
 - ctrl + Tab 切换窗口
 - ctrl + E 最近编辑的窗口 
 - Alt + 1 显示/隐藏侧边栏
 - ctrl + F4 关闭当前窗口
-- Alt + Insert 插入代码【如：生成set get方法】
+- Alt + Insert 插入代码【如：生成 set/get 方法】
 - Alt + Shift + R 重命名
 - Ctrl + Shift + F10 运行代码
 - Ctrl + W 关闭侧边栏
 
-# `MyBatis`设计模式
+# MyBatis设计模式
 
 相对路径 `src/java/main/文件名.xml`
 
 读配置文件 ①用类加载器，读类路径下的
 
-​		  			②用 `Servlet Context `对象的 `getRealPath`
+​		  			②用 `Servlet Context` 对象的 `getRealPath`
 
-创建工程 `MyBatis `用了构建者模式。告诉需求，根据需求创建我们想要的。
+创建工程 `MyBatis` 用了构建者模式。告诉需求，根据需求创建我们想要的。
 
 ```java
 build.build(in) // in形式下创建的工厂，多了几个类，操作看起来麻烦了，但是组合更加灵活的。
@@ -43,7 +43,7 @@ build.build(in) // in形式下创建的工厂，多了几个类，操作看起�
 
 在看 `MyBatis` 源码的时候，通过一些类的名称大概知道了 `MyBatis` 用到了什么技术。`MyBatis` 解析的时候应该用到了词法分析，分析字符串。在动态生成代理类的时候用到了字节码增强技术。
 
-# `MyBatis`基础篇
+# MyBatis基础篇
 
 ## 基本环境搭建
 
@@ -278,7 +278,7 @@ Mapper 映射文件放在 maven 工程 resource 下 com/daily/mapper 也是 reso
 </mappers>
 ```
 
-> 2、用包名引入★
+> 2、用包名引入
 
 这种引入方式相当于批量引入一个包下的所有映射器。此种方式要求 xml 和接口名称一致？
 
@@ -298,7 +298,7 @@ Mapper 映射文件放在 maven 工程 resource 下 com/daily/mapper 也是 reso
 </mappers>
 ```
 
-> 4、使用URL方式引入
+> 4、使用 URL 方式引入
 
 ```xml
 <mappers>
@@ -306,9 +306,9 @@ Mapper 映射文件放在 maven 工程 resource 下 com/daily/mapper 也是 reso
 </mappers>
 ```
 
-一般我喜欢使用 `包名引入`。
+一般我喜欢使用`包名引入`。
 
-maven 项目下，所有的非 `*.java` 文件都要放在 resources 目录下。resources 是项目的`资源根目录！`
+maven 项目下，所有的非 `*.java` 文件都要放在 resources 目录下。resources 是项目的资源根目录！
 
 如：src/main/java 目录下的包和类都是以 classes 为根目录进行发布。resources 下的资源也是以 classes 为根目录。
 
@@ -610,7 +610,7 @@ public Object getNamedParams(Object[] args) {
 }
 ```
 
-# `MyBatis`中级篇
+# MyBatis中级篇
 
 ## 查询返回map
 
@@ -677,11 +677,11 @@ id：唯一标识符，让别名在后面引用
 
 ## 一对一查询
 
-**association**：只是表示对象
+<b>association</b>：只是表示对象
 
 ## 一对多查询
 
-**collection**
+<b>collection</b>
 
 collection：定义集合元素的封装
 
@@ -773,7 +773,7 @@ where 标签可以帮我们去除掉前面的 and
 
 `foreach` 元素的功能非常强大，它允许你指定一个集合，声明可以在元素体内使用的集合项（`item`）和索引（`index`）变量。它也允许你指定开头与结尾的字符串以及集合项迭代之间的分隔符。这个元素也不会错误地添加多余的分隔符，看它多智能！
 
-**提示** 你可以将任何可迭代对象（如 `List`、`Set` 等）、`Map` 对象或者数组对象作为集合参数传递给 `foreach`。当使用可迭代对象或者数组时，`index` 是当前迭代的序号，item 的值是本次迭代获取到的元素。当使用 `Map` 对象（或者 `Map.Entry` 对象的集合）时，`index` 是键，`item` 是值。
+<b>提示</b> 你可以将任何可迭代对象（如 `List`、`Set` 等）、`Map` 对象或者数组对象作为集合参数传递给 `foreach`。当使用可迭代对象或者数组时，`index` 是当前迭代的序号，item 的值是本次迭代获取到的元素。当使用 `Map` 对象（或者 `Map.Entry` 对象的集合）时，`index` 是键，`item` 是值。
 
 ```xml
 select xxxxx where id in
@@ -953,7 +953,7 @@ class A{
 
 ### `MyBatis`中的连接池
 
-**提供三种方式**
+<b>提供三种方式</b>
 
 - 配置的位置，主配置文件（我命名为`SqlConfig.xml`）中的 `dataSource` 标签，type 表示采用何种连接。
 - type 取值
@@ -973,9 +973,9 @@ class A{
 
 它是通过 `sqlsession` 对象的 commit 方法和 rollback 方法实现事务的提交和回滚
 
-### 动态`SQL`全部代码
+### 动态SQL全部代码
 
-#### `Java`代码
+#### Java代码
 
 ```java
 public interface IUserDao {
@@ -1006,7 +1006,7 @@ public interface IUserDao {
 }
 ```
 
-#### `xml`文件
+#### xml文件
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1225,7 +1225,7 @@ public class Demo {
 </resultMap>
 ```
 
-## `javaType`和`ofType`
+## javaType和ofType
 
 `JavaType `和 `ofType` 都是用来指定对象类型的，但是 `JavaType` 是用来指定 `pojo` 中属性的类型，而 `ofType` 指定的是映射到 list 集合属性中 `pojo` 的类型。
 
@@ -1326,7 +1326,7 @@ public interface IAccountDao {
 }
 ```
 
-IUserDao的mapper文件
+IUserDao 的 mapper 文件
 
 ```xml
 <mapper namespace="com.bbxx.dao.lazy.IUserDao">
@@ -1361,7 +1361,7 @@ IAccountDao的mapper文件
 </mapper>
 ```
 
-# `MyBatis`高级篇
+# MyBatis高级篇
 
 ## MyBatis生成Mapper
 

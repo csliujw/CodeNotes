@@ -13,18 +13,18 @@ MyBatis-Plus（简称 MP）是一个 MyBatis 的增强工具，在 MyBatis 的�
 
 > 特性
 
-- **无侵入**：只做增强不做改变，引入它不会对现有工程产生影响，如丝般顺滑
-- **损耗小**：启动即会自动注入基本 CURD，性能基本无损耗，直接面向对象操作
-- **强大的 CRUD 操作**：内置通用 Mapper、通用 Service，仅仅通过少量配置即可实现单表大部分 CRUD 操作，更有强大的条件构造器，满足各类使用需求
-- **支持 Lambda 形式调用**：通过 Lambda 表达式，方便的编写各类查询条件，无需再担心字段写错
-- **支持主键自动生成**：支持多达 4 种主键策略（内含分布式唯一 ID 生成器 - Sequence），可自由配置，完美解决主键问题
-- **支持 ActiveRecord 模式**：支持 ActiveRecord 形式调用，实体类只需继承 Model 类即可进行强大的 CRUD 操作
-- **支持自定义全局通用操作**：支持全局通用方法注入（ Write once, use anywhere ）
-- **内置代码生成器**：采用代码或者 Maven 插件可快速生成 Mapper 、 Model 、 Service 、 Controller 层代码，支持模板引擎，更有超多自定义配置等您来使用
-- **内置分页插件**：基于 MyBatis 物理分页，开发者无需关心具体操作，配置好插件之后，写分页等同于普通 List 查询
-- **分页插件支持多种数据库**：支持 MySQL、MariaDB、Oracle、DB2、H2、HSQL、SQLite、Postgre、SQLServer 等多种数据库
-- **内置性能分析插件**：可输出 SQL 语句以及其执行时间，建议开发测试时启用该功能，能快速揪出慢查询
-- **内置全局拦截插件**：提供全表 delete 、 update 操作智能分析阻断，也可自定义拦截规则，预防误操作
+- <b>无侵入</b>：只做增强不做改变，引入它不会对现有工程产生影响，如丝般顺滑
+- <b>损耗小</b>：启动即会自动注入基本 CURD，性能基本无损耗，直接面向对象操作
+- <b>强大的 CRUD 操作</b>：内置通用 Mapper、通用 Service，仅仅通过少量配置即可实现单表大部分 CRUD 操作，更有强大的条件构造器，满足各类使用需求
+- <b>支持 Lambda 形式调用</b>：通过 Lambda 表达式，方便的编写各类查询条件，无需再担心字段写错
+- <b>支持主键自动生成</b>：支持多达 4 种主键策略（内含分布式唯一 ID 生成器 - Sequence），可自由配置，完美解决主键问题
+- <b>支持 ActiveRecord 模式</b>：支持 ActiveRecord 形式调用，实体类只需继承 Model 类即可进行强大的 CRUD 操作
+- <b>支持自定义全局通用操作</b>：支持全局通用方法注入（ Write once, use anywhere ）
+- <b>内置代码生成器</b>：采用代码或者 Maven 插件可快速生成 Mapper 、 Model 、 Service 、 Controller 层代码，支持模板引擎，更有超多自定义配置等您来使用
+- <b>内置分页插件</b>：基于 MyBatis 物理分页，开发者无需关心具体操作，配置好插件之后，写分页等同于普通 List 查询
+- <b>分页插件支持多种数据库</b>：支持 MySQL、MariaDB、Oracle、DB2、H2、HSQL、SQLite、Postgre、SQLServer 等多种数据库
+- <b>内置性能分析插件</b>：可输出 SQL 语句以及其执行时间，建议开发测试时启用该功能，能快速揪出慢查询
+- <b>内置全局拦截插件</b>：提供全表 delete 、 update 操作智能分析阻断，也可自定义拦截规则，预防误操作
 
 > MyBatis 架构图
 
@@ -171,7 +171,7 @@ public class ApplicationTest {
 
 通过继承 BaseMapper 就可以获取到各种各样的单表操作，接下来详细讲解这些操作。
 
-<img src="img\ibatis\plus\image-20211105220903263.png">
+<img src="img/ibatis/plus/image-20211105220903263.png">
 
 没啥好记的，现查现用。只记录一个分页查询
 
@@ -213,7 +213,7 @@ MP 在启动后会将 BaseMapper 中的一系列的方法注册到 meppedStateme
 
 在 MP 中，ISqlInjector 负责 SQL 的注入工作，它是一个接口，AbstractSqlInjector 是它的实现类，实现关系如下：
 
-<img src="img\ibatis\plus\image-20211105224958774.png">
+<img src="img/ibatis/plus/image-20211105224958774.png">
 
 在 AbstractSqlInjector 中，主要是由 inspectInject() 方法进行注入的，如下：
 
@@ -249,7 +249,7 @@ public void inject(MapperBuilderAssistant builderAssistant, Class<?> mapperClass
 
 在实现方法中，`methodList.forEach(m -> m.inject(builderAssistant, mapperClass, modelClass, tableInfo));` 是关键，循环遍历方法，进行注入。 最终调用抽象方法 injectMappedStatement 进行真正的注入；该抽象方法的实现如下：
 
-<img src="img\ibatis\plus\image-20211105225432807.png">
+<img src="img/ibatis/plus/image-20211105225432807.png">
 
 以 DeleteById 为例
 
@@ -277,7 +277,7 @@ public class DeleteById extends AbstractMethod {
 }
 ```
 
-<img src="img\ibatis\plus\image-20211105225944851.png">
+<img src="img/ibatis/plus/image-20211105225944851.png">
 
 ## 配置
 
