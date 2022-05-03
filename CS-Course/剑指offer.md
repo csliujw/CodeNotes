@@ -21,13 +21,23 @@
 - 树形 DP
 - 记忆化搜索
 
+> 做题步骤
+
+和闫总的做题思路是类似的
+
+- 确定 DP 数组以及下标的含义
+- 确定递推公式
+- DP 数组如何初始化
+- 确定遍历顺序
+- 举例推导 DP 数组
+
 ### 背包问题
 
 #### 0-1背包
 
 n 个物品，容量为 v 的背包。每个物品有两个属性，体积 $v_i$ 和价值 $w_i$ 每个物品最多只能用一次。选出的物品的总价值要最大，问最大值是多少。
 
-<img src="img\image-20220501205520428.png">
+<img src="img/image-20220501205520428.png">
 
 - DP
   - 状态表示 f(i,j)
@@ -64,9 +74,9 @@ int main(){
 
 #### 完全背包
 
-每个物品有无限个。
+每个物品有无限个。（枚举第 i 组物品，选几个）
 
-<img src="img\image-20220501212957456.png">
+<img src="img/image-20220501212957456.png">
 
 朴素版解法
 
@@ -161,15 +171,247 @@ int main(){
 }
 ```
 
+#### 0-1和完全
+
+0-1 背包的循环是从大到小循环，完全背包问题是从小到大循环。
+
 #### 多重背包
 
 每个物品有 $s_i$ 个，每个物品的价值都不一样。
 
+<img src="img/image-20220503192339430.png">
+$$
+f[i][j] = max(f[i-1][j-v[i]*k]+w[i]*k)
+$$
+
+```cpp
+#include <iostream>
+#include <algorithm>
+
+using namespace std;
+
+const int N = 110;
+int n, m;
+// v 表示体积，w 表示价值，s 表示个数
+int v[N], w[N], s[N];
+int f[N][N];
+
+int main(){
+    cin >> n >> m;
+			// 数据赋值是从 1 开始的
+    for (int i = 1; i <= n; i ++ ) cin >> v[i] >> w[i] >> s[i];
+
+    for (int i = 1; i <= n; i ++ )
+        for (int j = 0; j <= m; j ++ )
+            for (int k = 0; k <= s[i] && k * v[i] <= j; k ++ ) // 所需物体的总体积不能超过 j
+                f[i][j] = max(f[i][j], f[i - 1][j - v[i] * k] + w[i] * k);
+
+    cout << f[n][m] << endl;
+    return 0;
+}
+```
+
+优化思路，能否和完全背包一样优化呢？我们来看下 $f[i][j-v] \ 和 \ f[i][j]$ 的关系
+$$
+f[i,j] = max(f[i-1,j],f[i-1,j-v]+w,f[i-1,j-2v]+2w,...,f[i-1,j-sv]+sw)
+$$
+
+$$
+f[i,j-v] = max(f[i-1,j-v],f[i-1,j-2v]+w,...,f[i-1,j-sv]+(s-1)w,f[i-1,j-(s+1)v]+sw)
+$$
+
+不能和完全背包一样进行优化，那么如何进行优化呢？采用二进制优化。
+
+假定，我们想去枚举 0~1023，我们可以把若干个物品打包在一起考虑。比如我们把数据分为 10 组
+
+$1,2,4,8,16,32,...,512$，
+
+- 第一组只有一个第 i 个物品
+- 第二组只有两个第 i 个物品
+- ....
+- 第十组只有 512 个第 i 个物品
+
+我们是否可以用这十组拼凑出 0~1023 中的任意一个数字呢？可以！每组只选一次。相当于用 10 个新的物品来表示原来的第 i 个物品，可以看成一个 0-1 背包问题，选这组，不选这组。本来要枚举 1024 次，分组后只需要枚举 10 次了。
+
+s=200 时，$1,2,4,8,16,32,64,73$ 因为 128 不能要，但是我们又要凑出 200，$200-1-2-4-8-16-32-64=73$，所以最后补了一个 73。
+
+怎么凑物品呢？$1+2+4+8+...+2^k+k^{k+1}>s$ 的话，那么就 2 的次幂就只能选到 $2^k$
+
+```cpp
+#include <iostream>
+#include <algorithm>
+
+using namespace std;
+// 用一维来优化
+const int N = 12010, M = 2010;
+
+int n, m;
+int v[N], w[N];
+int f[M];
+
+int main(){
+    cin >> n >> m;
+
+    int cnt = 0;
+    for (int i = 1; i <= n; i ++ ){
+        int a, b, s;
+        cin >> a >> b >> s;
+        int k = 1; // 每次把 k 个第 i 个物品打包在一起
+        while (k <= s){
+            cnt ++ ;
+            v[cnt] = a * k; // k 个物品的体积
+            w[cnt] = b * k; // k 个物品的价值
+            s -= k; // 什么意思？还剩 s 个需要打包
+            k *= 2;
+        }
+        // 还剩下一些需要补上
+        if (s > 0){
+            cnt ++ ;
+            v[cnt] = a * s; 
+            w[cnt] = b * s;
+        }
+    }
+		// 什么意思？cnt 记录的是转换成 0-1 背包后，一共多少物品
+    n = cnt;
+		
+    // 做一遍 0-1 背包
+    for (int i = 1; i <= n; i ++ )
+        for (int j = m; j >= v[i]; j -- )
+            f[j] = max(f[j], f[j - v[i]] + w[i]);
+
+    cout << f[m] << endl;
+
+    return 0;
+}
+```
+
 #### 分组背包问题
 
-物品有 n 组，每组中有若干个，每组中最多选一个物品
+物品有 n 组，每组中有若干个，每组中最多选一个物品。（枚举第 i 组物品，选那个）
+
+PS：如果状态用的是上一层的状态就从大到小枚举体积，如果是用的本层的，就从小到大枚举体积。
+
+<img src="img\image-20220503201251613.png">
 
 
+
+<img src="img\image-20220503201532911.png">
+
+```cpp
+#include <iostream>
+#include <algorithm>
+
+using namespace std;
+
+const int N = 110;
+
+int n, m;
+int v[N][N], w[N][N], s[N];
+int f[N];
+
+int main(){
+    cin >> n >> m;
+
+    for (int i = 1; i <= n; i ++ ){
+        cin >> s[i];
+        for (int j = 0; j < s[i]; j ++ )
+            cin >> v[i][j] >> w[i][j];
+    }
+	
+    for (int i = 1; i <= n; i ++ )
+        for (int j = m; j >= 0; j -- )
+            for (int k = 0; k < s[i]; k ++ )
+                if (v[i][k] <= j) // 体积小，才可以用，需要更新
+                    f[j] = max(f[j], f[j - v[i][k]] + w[i][k]);
+
+    cout << f[m] << endl;
+
+    return 0;
+}
+```
+
+### 线性DP
+
+求 DP 时，有个明显的线性关系。
+
+#### 数字三角形
+
+[剑指 Offer II 100. 三角形中最小路径之和 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/IlPe0q/)
+
+<img src="img\image-20220503204221665.png">
+
+如果下标涉及到 i-1，i 最好是从 1 开始。
+
+$DP 时间复杂度 = 状态数量 * 转移的计算量$
+
+#### 最长上升子序列
+
+[300. 最长递增子序列 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/longest-increasing-subsequence/)
+
+```
+输入：nums = [10,9,2,5,3,7,101,18]
+输出：4
+解释：最长递增子序列是 [2,3,7,101]，因此长度为 4 。
+```
+
+<img src="img\image-20220503210054574.png">
+
+```java
+class Solution {
+    public int lengthOfLIS(int[] nums) {
+        if (nums.length == 0) {
+            return 0;
+        }
+        int[] dp = new int[nums.length];
+        dp[0] = 1;
+        int maxans = 1;
+        for (int i = 1; i < nums.length; i++) {
+            dp[i] = 1;
+            for (int j = 0; j < i; j++) {
+                if (nums[i] > nums[j]) {
+                    dp[i] = Math.max(dp[i], dp[j] + 1);
+                }
+            }
+            maxans = Math.max(maxans, dp[i]);
+        }
+        return maxans;
+    }
+}
+```
+
+#### 最长公共子序列
+
+[1143. 最长公共子序列 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/longest-common-subsequence/)
+
+```
+输入：text1 = "abcde", text2 = "ace" 
+输出：3  
+解释：最长公共子序列是 "ace" ，它的长度为 3 。
+```
+
+<img src="img/image-20220503220015363.png">
+
+```java
+class Solution {
+    public int longestCommonSubsequence(String s1, String s2) {
+        int n = s1.length(), m = s2.length();
+        char[] cs1 = s1.toCharArray(), cs2 = s2.toCharArray();
+        int[][] f = new int[n + 1][m + 1]; 
+        for (int i = 1; i <= n; i++) {
+            for (int j = 1; j <= m; j++) {
+                if (cs1[i - 1] == cs2[j - 1]) {
+                    f[i][j] = f[i - 1][j - 1] + 1;
+                } else {
+                    f[i][j] = Math.max(f[i - 1][j], f[i][j - 1]);
+                }
+            }
+        }
+        return f[n][m];
+    }
+}
+```
+
+### 区间DP
 
 # 剑指Offer专项突破
 
@@ -2824,6 +3066,50 @@ class Solution {
     }
 }
 ```
+
+### 合并二叉树
+
+给你两棵二叉树： root1 和 root2 。
+
+想象一下，当你将其中一棵覆盖到另一棵之上时，两棵树上的一些节点将会重叠（而另一些不会）。你需要将这两棵树合并成一棵新二叉树。合并的规则是：如果两个节点重叠，那么将这两个节点的值相加作为合并后节点的新值；否则，不为 null 的节点将直接作为新二叉树的节点。
+
+返回合并后的二叉树。
+
+注意: 合并过程必须从两个树的根节点开始。
+
+<img src="https://assets.leetcode.com/uploads/2021/02/05/merge.jpg">
+
+#### 解题思路
+
+可以使用前序遍历来做。最终的结果构建在 root1 上。
+
+- root1 为 null 则 root2 作为 root1 根节点的子树
+- root2 为 null，则 root1 作为 root1 根节点的子树
+- 都不会空，则 root1.val = root1.val+root2.val;
+  - 再递归合并 root1 和 root2 的左子树。合并的结果作为 root1 的左子树
+  - 合并右子树的方式同上
+
+#### 代码
+
+```java
+class Solution {
+    public TreeNode mergeTrees(TreeNode root1, TreeNode root2) {
+        return merge(root1, root2);
+    }
+
+    private TreeNode merge(TreeNode root1, TreeNode root2) {
+        if (root1 == null) return root2;
+        if (root2 == null) return root1;
+        // 合并左右子树
+        root1.val += root2.val;
+        root1.left = merge(root1.left, root2.left);
+        root1.right = merge(root1.right, root2.right);
+        return root1;
+    }
+}
+```
+
+
 
 ## 堆
 
@@ -6862,6 +7148,69 @@ class NumMatrix {
     public int sumRegion(int row1, int col1, int row2, int col2) {
         return sum[row2 + 1][col2 + 1] - sum[row2 + 1][col1] - sum[row1][col2 + 1] + sum[row1][col1];
     }
+}
+```
+
+## 重新排列日志文件
+
+[937. 重新排列日志文件 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/reorder-data-in-log-files/)
+
+给你一个日志数组 `logs`。每条日志都是以空格分隔的字串，其第一个字为字母与数字混合的<b>标识符</b>。
+
+有两种不同类型的日志：
+
+- <b>字母日志</b>：除标识符之外，所有字均由小写字母组成
+- <b>数字日志</b>：除标识符之外，所有字均由数字组成
+
+请按下述规则将日志重新排序：
+
+- 所有字母日志都排在数字日志之前。
+- 字母日志在内容不同时，忽略标识符后，按内容字母顺序排序；在内容相同时，按标识符排序。
+- 数字日志应该保留原来的相对顺序。
+
+返回日志的最终顺序。
+
+### 解题思路
+
+一个按指定规则对字符串进行排序的题，可通过重写比较器实现。比较器的比较规则如下：
+
+- 数字都在字母后面
+- 数字的相对顺序要保持不变
+- 如果是字母的话，则按字母的正常字典序进行比较
+
+如何编写代码呢？
+
+重写 Arrays.sort() 中的比较器。
+
+- 传入里两个待比较的对象。
+- 去除两个对象的标识符，比较标识符后面的内容
+  - 数字始终在字符后面
+  - 都是字符的话按字典序进行排序
+    - 如果标识符后面的内容大小相等，则按标识符进行排序。
+  - 都是数字的话，保持原来的相对顺序。
+
+### 代码
+
+```java
+public String[] reorderLogFiles(String[] logs) {
+    Arrays.sort(logs, (log1, log2) -> {
+        // 重写比较器
+        String sub1 = log1.substring(log1.indexOf(' ') + 1);
+        String sub2 = log2.substring(log2.indexOf(' ') + 1);
+        // 都是数字开头，保持不变
+        if (Character.isDigit(sub1.charAt(0)) && Character.isDigit(sub2.charAt(0))) {
+            return 0;
+        } else if (Character.isDigit(sub1.charAt(0))) {
+            return 1;
+        } else if (Character.isDigit(sub2.charAt(0))) {
+            return -1;
+        }
+        // 都是字符串
+        int i = sub1.compareTo(sub2);
+        return i == 0 ? log1.compareTo(log2) : i;
+    });
+    Arrays.stream(logs).forEach(System.out::println);
+    return logs;
 }
 ```
 
