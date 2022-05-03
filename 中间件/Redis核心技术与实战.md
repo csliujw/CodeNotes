@@ -312,7 +312,7 @@ SCAN 命令是一个基于游标的迭代器，每次被调用之后， 都会�
 
 ### 基本IO模型与阻塞点
 
-<img src="img/redis_io_net.webp" width="50%">
+<img src="img/redis_io_net.webp" width="70%">
 
 在网络 IO 操作中，<span style="color:red">有潜在的阻塞点，分别是 accept() 和 recv()。</span>当 Redis 监听到一个客户端有连接请求，但一直未能成功建立起连接时，会阻塞在 accept() 函数这里，导致其他客户端无法和 Redis 建立连接。类似的，当 Redis 通过 recv() 从一个客户端读取数据时，如果数据一直没有到达，Redis 也会一直阻塞在 recv()。
 
@@ -320,7 +320,7 @@ SCAN 命令是一个基于游标的迭代器，每次被调用之后， 都会�
 
 ### 非阻塞模式
 
-<img src="img/net_method.webp" width="50%">
+<img src="img/net_method.webp" width="70%">
 
 设置非阻塞模式的 accept，如果 Redis 调用 accept 一直未有连接请求达到，Redis 线程可以返回处理其他操作，不用一直等待。
 
@@ -334,7 +334,7 @@ Linux 中的 IO 多路复用机制是指一个线程处理多个 IO 流，就是
 
 下图就是基于多路复用的 Redis IO 模型。图中的多个 FD 就是刚才所说的多个套接字。Redis 网络框架调用 epoll 机制，让内核监听这些套接字。此时，Redis 线程不会阻塞在某一个套接字上。因此，Redis 可以同时监听多个请求，并及时处理请求。
 
-<img src="img/linux_io_model.webp" width="50%">
+<img src="img/linux_io_model.webp" width="70%">
 
 select/epoll 提供了基于事件的回调机制，可以在请求到达时通知 Redis 线程。即针对不同事件的发生，调用相应的处理函数。
 
@@ -550,7 +550,7 @@ Redis 提供了主从库模式，以保证数据副本的一致，主从库之�
 replicaof  172.16.19.3  6379
 ```
 
-<img src="img/master_slave_sync.webp" >
+<img src="img/master_slave_sync.webp" width="70%">
 
 - <span style="color:orange">第一阶段是主从库间建立连接、协商同步的过程，主要是为全量复制做准备。在这一步，从库和主库建立起连接，并告诉主库即将进行同步，主库确认回复后，主从库间就可以开始同步了。</span>
     - 从库发送命令 `psync` 希望进行数据同步。主库收到命令后，根据命令的参数来启动赋值。psync 命令包含了主库的 runID 和复制进度 offset 两个参数。
@@ -577,7 +577,7 @@ replicaof  所选从库的IP 6379
 
 这样一来，这些从库就会知道，在进行同步时，不用再和主库进行交互了，只要和级联的从库进行写操作同步就行了，这就可以减轻主库上的压力。
 
-<img src="img/master_slave_slave.webp">
+<img src="img/master_slave_slave.webp" width="70%">
 
 一旦主从库完成了全量复制，它们之间就会一直维护一个网络连接，主库会通过这个连接将后续陆续收到的命令操作再同步给从库，这个过程也称为基于长连接的命令传播，可以避免频繁建立连接的开销。
 
@@ -764,7 +764,7 @@ sentinel monitor <master-name> <ip> <redis-port> <quorum>
 
 然后，哨兵 2、3 可以和哨兵 1 建立网络连接。通过这个方式，哨兵 2 和 3 也可以建立网络连接，这样一来，哨兵集群就形成了。它们相互间可以通过网络连接进行通信，比如说对主库有没有下线这件事儿进行判断和协商。
 
-<img src="img/pub_sub_shaobing.webp">
+<img src="img/pub_sub_shaobing.webp" width="70%">
 
 哨兵除了彼此之间建立起连接形成集群外，还需要和从库建立连接。在哨兵的监控任务中，它需要对主从库都进行心跳判断，而且在主从库切换完成后，它还需要通知从库，让它们和新主库进行同步。
 
@@ -772,7 +772,7 @@ sentinel monitor <master-name> <ip> <redis-port> <quorum>
 
 哨兵向主库发送 INFO 命令得到从库的 IP 地址和端口。哨兵就可以根据从库列表中的连接信息，和每个从库建立连接，并在这个连接上持续地对从库进行监控。
 
-<img src="img/shaobing_and_slave.webp">
+<img src="img/shaobing_and_slave.webp" width="70%">
 
 主从切换后，我们需要告诉客户端新的主库是谁，从库是那些，而告知客户端新主库的操作也是由哨兵完成的。
 
@@ -780,7 +780,7 @@ sentinel monitor <master-name> <ip> <redis-port> <quorum>
 
 主从切换的时候如何在客户端通过监控了解哨兵进行主从切换的过程呢？这要求，客户端能够获取到哨兵集群在监控、选主、切换这个过程中发生的各种事件。而这些也可以通过 pub/sub 机制来获取。
 
-<img src="img/master_slave_status.webp">
+<img src="img/master_slave_status.webp" width="70%">
 
 让客户端订阅需要的消息，就可以获取主从切换的过程了。
 
@@ -822,7 +822,7 @@ PSUBSCRIBE  * # 订阅所有的事件
 
 Redis 的切片集群。可以保存大量数据，而且对 Redis 主线程的阻塞影响较小。如果把 25GB 的数据平均分成 5 份（当然，也可以不做均分），使用 5 个实例来保存，每个实例只需要保存 5GB 数据。
 
-<img src="img/split_clu.webp">
+<img src="img/split_clu.webp" width="70%">
 
 在切片集群中，实例在为 5GB 数据生成 RDB 时，数据量就小了很多，fork 子进程一般不会给主线程带来较长时间的阻塞。采用多个实例保存数据切片后，我们既能保存 25GB 数据，又避免了 fork 子进程阻塞主线程而导致的响应突然变慢。
 
@@ -873,7 +873,7 @@ Redis 集群方案的两个关键问题：①：请求路由；②：数据迁�
 
 <span style="color:orange">横向扩展</span>：横向增加当前 Redis 实例的个数，就像下图中，原来使用 1 个 8GB 内存、50GB 磁盘的实例，现在使用三个相同配置的实例。
 
-<img src="img/expand_redis.webp">
+<img src="img/expand_redis.webp" width="70%">
 
 <span style="color:orange">纵向扩展</span>：实施起来简单、直接，但是存在两个问题
 
@@ -901,7 +901,7 @@ Redis Cluster 方案采用哈希槽（Hash Slot，简称 Slot），来处理数�
 
 也可以使用 cluster meet 命令手动建立实例间的连接，形成集群，再使用 cluster addslots 命令，指定每个实例上的哈希槽个数。
 
-<img src="img/redis_hash_slot.webp">
+<img src="img/redis_hash_slot.webp" width="70%">
 
 ```shell
 redis-cli -h 172.16.19.3 –p 6379 cluster addslots 0,1 # 保存 0，1 两个哈希槽
@@ -937,7 +937,7 @@ GET hello:key
 
 > 定位数据
 
-<img src="img/redis_local_data.webp">
+<img src="img/redis_local_data.webp" width="70%">
 
 Slot 2 中的数据已经从实例 2 迁移到了实例 3，但是，客户端缓存仍然记录着“Slot 2 在实例 2”的信息，所以会给实例 2 发送命令。实例 2 给客户端返回一条 MOVED 命令，把 Slot  2 的最新位置（也就是在实例 3 上），返回给客户端，客户端就会再次向实例 3 发送请求，同时还会更新本地缓存，把 Slot  2 与实例的对应关系更新过来。
 
@@ -954,7 +954,7 @@ GET hello:key
 
 ASK 命令表示两层含义：第一，表明 Slot 数据还在迁移中；第二，ASK 命令把客户端所请求数据的最新实例地址返回给客户端，此时，客户端需要给实例 3 发送 ASKING 命令，然后再发送操作命令。
 
-<img src="img/redis_ask.webp">
+<img src="img/redis_ask.webp" width="70%">
 
 和 MOVED 命令不同，ASK 命令并不会更新客户端缓存的哈希槽分配信息。所以，在上图中，如果客户端再次请求 Slot 2 中的数据，它还是会给实例 2 发送请求。这也就是说，ASK 命令的作用只是让客户端能给新实例发送一次请求，而不像 MOVED 命令那样，会更改本地缓存，让后续所有命令都发往新实例。
 
@@ -964,7 +964,7 @@ ASK 命令表示两层含义：第一，表明 Slot 数据还在迁移中；第�
 
 > 问题：和跟 Redis 相比，SimpleKV 还缺少什么？
 
-<img src="img/redis_one_question.webp">
+<img src="img/redis_one_question.webp" width="70%">
 
 > 问题：整数数组和压缩列表作为底层数据结构的优势是什么？
 
@@ -972,7 +972,7 @@ ASK 命令表示两层含义：第一，表明 Slot 数据还在迁移中；第�
 
 Redis 之所以采用不同的数据结构，其实是在性能和内存使用效率之间进行的平衡。
 
-<img src="img/redis_two_question.webp">
+<img src="img/redis_two_question.webp" width="70%">
 
 > 问题：Redis 基本 IO 模型中还有哪些潜在的性能瓶颈？
 
@@ -1068,7 +1068,7 @@ Redis 启动以后，本身就是一个进程，它会接收客户端发送的�
 
 然后，我们再看下 Redis 使用的线程。从 4.0 版本开始，Redis 也开始使用 pthread_create 创建线程，这些线程在创建后，一般会自行执行一些任务，例如执行异步删除任务。相对于完成主要工作的主线程来说，我们一般可以称这些线程为后台线程。
 
-<img src="img/redis_thread.webp">
+<img src="img/redis_thread.webp" width="70%">
 
 #### 写时复制的底层实现机制
 
@@ -1080,7 +1080,7 @@ Redis 在使用 RDB 方式进行持久化时，会用到写时复制机制。写
 
 bgsave 子进程复制主线程的页表以后，假如主线程需要修改虚页 7 里的数据，那么，主线程就需要新分配一个物理页（假设是物理页 53），然后把修改后的虚页 7 里的数据写到物理页 53 上，而虚页 7 里原来的数据仍然保存在物理页 33 上。这个时候，虚页 7 到物理页 33 的映射关系，仍然保留在 bgsave 子进程中。所以，bgsave 子进程可以无误地把虚页 7 的原始数据写入 RDB 文件。
 
-<img src="img/redis_copy_on_write.webp">
+<img src="img/redis_copy_on_write.webp" width="70%">
 
 #### replication buffer 和 repl_backlog_buffer 的区别
 
@@ -1092,7 +1092,7 @@ Redis 主从库在进行复制时，当主库要把全量复制期间的写操�
 
 repl_backlog_buffer 是一块专用 buffer，在 Redis 服务器启动后，开始一直接收写操作命令，这是所有从库共享的。主库和从库会各自记录自己的复制进度，所以，不同的从库在进行恢复时，会把自己的复制进度（slave_repl_offset）发给主库，主库就可以和它独立同步。
 
-<img src="img/redis_log_buffer.webp">
+<img src="img/redis_log_buffer.webp" width="70%">
 
 # 实战篇
 
