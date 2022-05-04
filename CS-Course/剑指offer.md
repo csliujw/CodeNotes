@@ -10,6 +10,87 @@
 
 # 常见算法
 
+## 链表
+
+单链表&双链表
+
+用数组模拟链表，速度快（ACM 模式下）。用 e 表示结点数组，en 表示它对应的 next 指针。
+
+```mermaid
+graph LR
+head-->node1-->node2-->node3-->node4-->node5
+```
+
+e[0] = node1, en[0]=node2 -- en[0] 表示结点 e[0] 的 next 指针指向的结点。如果是空的话，就存储一个特殊值。暂时不记。
+
+## 单调栈\队列
+
+- <span style="color:orange">单调栈常见模型：找出每个数左边离它最近的比它大/小的数。</span>
+- <span style="color:orange">单调队列常见模型：找出滑动窗口中的最大值/最小值。</span>
+
+### 单调栈
+
+给定一个长度为 N 的整数数列，输出每个数左边第一个比它小的数，如果不存在则输出 −1。
+
+```
+输入
+5
+3 4 2 7 5
+输出
+-1 3 -1 2 2
+```
+
+用一个栈存储 i 左边所有的元素。
+
+看看是否有些元素永远不会作为答案。
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+const int N = 100010;
+int stk[N], tt; // stk 栈，tt 栈指针
+
+int main(){
+    int n;
+    cin >> n;
+    while (n -- ){
+        int x;
+        scanf("%d", &x);
+        // 栈不为空，且栈顶元素大于 x，则栈顶元素永远不可能是答案，可以移除。
+        // 每个元素最多入栈一次，出栈一次
+        while (tt && stk[tt] >= x) tt -- ;
+        if (!tt) printf("-1 ");
+        else printf("%d ", stk[tt]);
+        stk[ ++ tt] = x;
+    }
+
+    return 0;
+}
+```
+
+### 单调队列
+
+给定一个大小为 n≤$10^6$ 的数组。有一个大小为 k 的滑动窗口，它从数组的最左边移动到最右边。你只能在窗口中看到 k 个数字。每次滑动窗口向右移动一个位置。
+
+举例：数组为 `[1 3 -1 -3 5 3 6 7]`，k 为 3。
+
+| 窗口位置                      | 最小值 | 最大值 |
+| :---------------------------- | :----- | :----- |
+| 队首 [1 3 -1] 队尾 -3 5 3 6 7 | -1     | 3      |
+| 1 [3 -1 -3] 5 3 6 7           | -3     | 3      |
+| 1 3 [-1 -3 5] 3 6 7           | -3     | 5      |
+| 1 3 -1 [-3 5 3] 6 7           | -3     | 5      |
+| 1 3 -1 -3 [5 3 6] 7           | 3      | 6      |
+| 1 3 -1 -3 5 [3 6 7]           | 3      | 7      |
+
+你的任务是确定滑动窗口位于每个位置时，窗口中的最大值和最小值。
+
+先思考暴力的做法，再想下怎么优化？
+
+队列中有些元素是不是没有用到，如果把没有用到删除了会怎么样？
+
 ## 动态规划
 
 - 背包问题
@@ -412,6 +493,206 @@ class Solution {
 ```
 
 ### 区间DP
+
+在定义状态的时候定义的是区间。
+
+设有 N 堆石子排成一排，其编号为 1，2，3，…，N。
+
+每堆石子有一定的质量，可以用一个整数来描述，现在要将这 N 堆石子合并成为一堆。
+
+每次只能合并相邻的两堆，合并的代价为这两堆石子的质量之和，合并后与这两堆石子相邻的石子将和新堆相邻，合并时由于选择的顺序不同，合并的总代价也不相同。
+
+例如有 4 堆石子分别为 `1 3 5 2`， 我们可以先合并 1、2 堆，代价为 4，得到 `4 5 2`， 又合并 1，2 堆，代价为 9，得到 `9 2` ，再合并得到 11，总代价为 4+9+11=24；
+
+如果第二步是先合并 2，3 堆，则代价为 7，得到 `4 7`，最后一次合并代价为 11，总代价为 4+7+11=22。
+
+问题是：找出一种合理的方法，使总的代价最小，输出最小代价。
+
+<b>输入格式</b>
+
+第一行一个数 N 表示石子的堆数 N。
+
+第二行 NN、 个数，表示每堆石子的质量(均不超过 1000)。
+
+<b>输出格式</b>
+
+输出一个整数，表示最小代价。
+
+<b>数据范围</b>
+
+1≤N≤300
+
+输入样例
+
+```
+4
+1 3 5 2
+```
+
+输出样例
+
+```
+22
+```
+
+```mermaid
+graph LR
+DP-->state1["状态表示f[i,j]"]
+DP-->state2["状态计算"]
+state1-->集合:所有将第i堆石子到第j堆石子合并成一堆石子的合并方式
+state1-->属性:Min
+```
+
+最后一次一定是两堆合并成一堆。可以按照最后一次分界线的位置来对集合进行分类。
+
+```
+	f[i][j] 按分界线进行划分
+------------------------------
+| 1 | 2 | 3 | .. | k-2 | k-1 |
+------------------------------
+```
+
+假定目前要合并的是 [i,k] 和 [k+1,j]，那么合并的最小代价是什么呢？
+
+min(f[i,k] + f[k+1,j] + 从第 i 堆到第 j 堆石子的重量总和 (s[j]-s[i-1]))
+
+k 的枚举范围是从 i~j-1，因为右边至少要有一堆，所以 k 最大到 j-1
+
+按照区间长度从小到大进行枚举。
+
+```java
+import java.util.Arrays;
+import java.util.Scanner;
+
+public class A00282{
+    static Scanner in = new Scanner(System.in);
+    static int n; // 输入值
+    static int N = 310; // 最大值
+    static int INF = 1000000010;
+    static int qzh[] = new int[N]; // 石子前缀和数组
+    static int dp[][] = new int[N][N]; // dp数组表示将i到j区间内石子合并需要的代价
+
+    public static void main(String[] args){
+        n = in.nextInt();
+
+        csh();// 初始化
+        // 构造前缀和数组
+        for (int i = 1; i <= n; i++) qzh[i] = qzh[i - 1] + in.nextInt();
+
+        // len 表示区间长度，从小到大循环 合并 len 长度的区间石子。len=1 时没有代价，所以从 2 开始
+        for (int len = 2; len <= n; len++)
+            // 枚举i: i表示区间起点,j表示区间终点 合并i到j区间内的石子
+            for (int i = 1, j = i + len - 1; j <= n; i++, j++) // 区间左右端点
+                // 枚举k: k表示以此分界,合并k左边和k右边的石子
+                for (int k = i; k < j; k++) // 那个决策边界最好
+                    dp[i][j] = Math.min(dp[i][j], dp[i][k] + dp[k + 1][j] + qzh[j] - qzh[i - 1]);
+
+        System.out.println(dp[1][n]);
+    }
+
+    private static void csh(){
+        for (int i = 1; i <= n; i++){
+            Arrays.fill(dp[i], INF); // 初始合并代价全为INF
+            dp[i][i] = 0; // 一堆石子没有代价
+        }
+    }
+}
+```
+
+### 计数类DP
+
+整数划分问题。
+
+一个正整数 n 可以表示成若干个正整数之和，形如：n=n1+n2+…+nk，其中 n1≥n2≥…≥nk, k≥1。
+
+我们将这样的一种表示称为正整数 n 的一种划分。
+
+现在给定一个正整数 n，请你求出 n 共有多少种不同的划分方法。
+
+<b>输入格式</b>
+
+共一行，包含一个整数 n。
+
+<b>输出格式</b>
+
+共一行，包含一个整数，表示总划分数量。
+
+由于答案可能很大，输出结果请对 10e9+7 取模。
+
+<b>数据范围</b>
+
+1≤n≤1000
+
+输入样例
+
+```
+5
+```
+
+输出样例
+
+```
+7
+# 可以有如下几种方案
+5=4+1
+5=3+2
+5=3+1+1
+5=2+2+1
+5=2+1+2
+5=2+1+1+1+1
+5=1+1+1+1+1
+```
+
+可以看成是一个完全背包问题。物体体积是 1~n，物体无限个，恰好装满背包的方案数。
+
+```mermaid
+graph LR
+DP-->state1["状态表示f[i,j]"]
+DP-->state2["状态计算"]
+state1-->集合:从1到i选,总体积恰好是j
+state1-->属性:数量
+```
+
+```
+	f[i][j] 选几个
+----------------------
+| 0 | 1 | 2 | .. | s |
+----------------------
+0->f[i-1,j]
+1->f[i-1,j-1]
+2->f[i-1,j-2i]
+s->f[i-1,j-si]
+```
+
+可以当作计数类 DP 来做
+
+```mermaid
+graph LR
+DP-->state1["状态表示f[i,j]"]
+DP-->state2["状态计算"]
+state1-->集合:所有和总是i,并且恰好表示成j个数的和的方案
+state1-->属性:数量
+```
+
+```
+					f[i][j]的状态计算
+---------------------------------------
+| 方案中最小值是1 | 方案中最小值大于1 |
+---------------------------------------
+```
+
+- 最小值是 1->f[i-1,j-1]，由于方案中一定存在一个 1，如果我们把这个 1 去掉，它就会变成 f[i-1,j-1]，所以，最小值为 1 的方案的个数就是 f[i-1,j-1]。
+- 最小值大于 1->f[i-j,j]，每个数都是严格大于 1 的，我们把每个数都减去一个 1，它还是一个正整数，所以最小值大于 1 的方案的个数就是 f[i-j,j]。
+- f[i,j] = f[i-1,j-1] + f[i-j,j]；f[i,j] 中最小值是 1 的+最小值不是 1 的方案的总和就是
+
+### 数位DP
+
+计数问题
+
+给定两个整数 a 和 b，求 a 和 b 之间的所有数字中 0~9 的出现次数。
+
+- 分别求出 1 在每一位上出现的次数。
+- 如，求 1 在第四位上出现的次数
 
 # 剑指Offer专项突破
 
@@ -5684,7 +5965,6 @@ class Solution {
 ### 解题思路
 
 - 一个简单的方法是，把 new_str = s+s，然后截取 k~k+s.length 位置的字符串。
-- ？？
 
 ### 代码
 
@@ -5698,7 +5978,166 @@ public class Offer058ReverseLeftWords {
 }
 ```
 
+## 62.圆圈中最后剩下的数字
 
+[剑指 Offer 62. 圆圈中最后剩下的数字 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/yuan-quan-zhong-zui-hou-sheng-xia-de-shu-zi-lcof/)
+
+0,1,···,n-1 这 n 个数字排成一个圆圈，从数字 0 开始，每次从这个圆圈里删除第m个数字（删除后从下一个数字开始计数）。求出这个圆圈里剩下的最后一个数字。
+
+例如，0、1、2、3、4 这 5 个数字组成一个圆圈，从数字 0 开始每次删除第 3 个数字，则删除的前 4 个数字依次是 2、0、4、1，因此最后剩下的数字是 3。
+
+```
+输入: n = 5, m = 3
+输出: 3
+
+输入: n = 10, m = 17
+输出: 2
+```
+
+### 解题思路
+
+一个经典的约瑟夫环问题，我们需要找到它的递归式。我们假定 f(10,3) 表示从 10 个数字，数到第 3 数字就淘汰掉。
+
+```shell
+0-1-2-3-4-5-6-7-8-9 # 开始的数字
+f(10,3) 开始淘汰一个数字
+0-1-x-3-4-5-6-7-8-9 # 淘汰了 x，还剩 9 个数字
+# 最后就变成了从 9 个数字中继续淘汰。f(10,3) 和 f(9,3) 是否有映射关系？
+0-1-x-3-4-5-6-7-8-9 # 可以表示为
+3-4-5-6-7-8-9-10%10-11%11 # 从这里，我们可以发现 f(10,3) 和 f(9,3) 的递推关系
+# (f(9,3)+3)%10 = f(10,3)  把 f(9,3) 中 9 个幸存的数字映射到 f(10,3) 对应的编号中
+# 所以 f(1,3) --> f(2,3)-->...-->f(10,3)
+# 我把最后一个幸存的数字逐一映射到最开始的元素
+```
+
+### 代码
+
+```java
+public int lastRemaining(int n,int m){
+    // ans 的初始值是多少？0
+    int ans = 0;
+    for(int i=1;i<=n;i++){
+        // (0+m)%1 = 0； 
+        ans = (last+i)%cur;
+    }
+    return ans;
+}
+```
+
+## 63.股票的最大利润
+
+[剑指 Offer 63. 股票的最大利润 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/gu-piao-de-zui-da-li-run-lcof/)
+
+假设把某股票的价格按照时间先后顺序存储在数组中，请问买卖该股票一次可能获得的最大利润是多少？
+
+```
+输入: [7,1,5,3,6,4]
+输出: 5
+解释: 在第 2 天（股票价格 = 1）的时候买入，在第 5 天（股票价格 = 6）的时候卖出，最大利润 = 6-1 = 5 。
+注意利润不能是 7-1 = 6, 因为卖出价格需要大于买入价格。
+```
+
+### 解题思路
+
+因为股票只买卖一次，可以暴力解题。
+
+因为求的是最大值，可以考虑用动态规划。
+
+- 我们需要知道最大的利润。我们假定 $f[i]$ 表示以 i 结尾的股票的最大利润，则动态转移方程为
+
+$$
+f[i] = nums[i]-min(i-1)\ \ \ \  min(i-1) 表示\ 0 \ 到\  i-1 \ 中最小的数
+$$
+
+
+
+### 代码
+
+暴力求解
+
+```java
+class Solution {
+    public int maxProfit(int[] prices) {
+        int len = prices.length;
+        int ans = 0;
+        for(int i=0;i<len-1;i++){
+            for(int j=i+1;j<len;j++){
+                ans = Math.max(ans,prices[j]-prices[i]);
+            }
+        }
+        return ans;
+    }
+}
+```
+
+应用动态规划进行求解
+
+```java
+class Solution {
+    // 需要一个 min 来维护前 i-1 中的最小值
+    public int maxProfit(int[] prices) {
+        if(prices.length == 0) return 0;
+        int min = prices[0];
+        int ans = 0;
+        int f;
+        for(int i=1;i<prices.length;i++){
+            f = prices[i]-min;
+            ans = Math.max(ans,f);
+            min = Math.min(min,prices[i]);
+        }
+        return ans;
+    }
+}
+```
+
+## 68.二叉树的最近公共祖先
+
+[剑指 Offer 68 - II. 二叉树的最近公共祖先 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/er-cha-shu-de-zui-jin-gong-gong-zu-xian-lcof/)
+
+给定一个二叉树, 找到该树中两个指定节点的最近公共祖先。例如，给定如下二叉树: root = [3,5,1,6,2,0,8,null,null,7,4]
+
+<img src="https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/12/15/binarytree.png">
+
+```
+输入: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 1
+输出: 3
+解释: 节点 5 和节点 1 的最近公共祖先是节点 3。
+```
+
+### 解题思路
+
+如果有 parent 指针的话，可以转化为求两个链表的第一个相交的结点。
+
+如果没有 parent 指针的话，可以这么来做，<a href="https://leetcode-cn.com/problems/er-cha-shu-de-zui-jin-gong-gong-zu-xian-lcof/solution/mian-shi-ti-68-ii-er-cha-shu-de-zui-jin-gong-gon-7/">来自 K 神的题解</a>
+
+- 终止条件：
+  - 当越过叶节点，则直接返回 null；
+  - 当 rootroot 等于 p, qp,q ，则直接返回 root；
+- 递推工作：
+  - 开启递归左子节点，返回值记为 left；
+  - 开启递归右子节点，返回值记为 right ；
+- 返回值： 根据 left 和 right ，可展开为四种情况；
+  - 当 left 和 right 同时为空 ：说明 root 的左 / 右子树中都不包含 p,q 返回 nullnull ；
+  - 当 left 和 right 同时不为空 ：说明 p, q 分列在 root 的异侧 （分别在 左 / 右子树），因此 root 为最近公共祖先，返回 root；
+  - 当 left 为空 ，right 不为空 ：p,q 都不在 root 的左子树中，直接返回 right。具体可分为两种情况：
+    - p,q 其中一个在 root 的右子树中，此时 right 指向 p（假设为 p ）；
+    - p,q 两节点都在 root 的右子树中，此时的 right 指向最近公共祖先节点 ；
+
+### 代码
+
+```java
+class Solution {
+    public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+        if(root == null || root == p || root == q) return root;
+        TreeNode left = lowestCommonAncestor(root.left, p, q);
+        TreeNode right = lowestCommonAncestor(root.right, p, q);
+        if(left == null) return right;
+        if(right == null) return left;
+        // root 的左右指针都能找到 p 和 q，root 就是我们要求的。
+        return root;
+    }
+}
+```
 
 ## 旋转数组的最小数字
 
@@ -7213,6 +7652,171 @@ public String[] reorderLogFiles(String[] logs) {
     return logs;
 }
 ```
+
+## 找出游戏的获胜者
+
+[1823. 找出游戏的获胜者 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/find-the-winner-of-the-circular-game/)
+
+约瑟夫环问题。
+
+共有 n 名小伙伴一起做游戏。小伙伴们围成一圈，按顺时针顺序从 1 到 n 编号。确切地说，从第 i 名小伙伴顺时针移动一位会到达第 (i+1) 名小伙伴的位置，其中 1 <= i < n ，从第 n 名小伙伴顺时针移动一位会回到第 1 名小伙伴的位置。
+
+游戏遵循如下规则：
+
+- 从第 1 名小伙伴所在位置开始 。
+- 沿着顺时针方向数 k 名小伙伴，计数时需要包含起始时的那位小伙伴。逐个绕圈进行计数，一些小伙伴可能会被数过不止一次。
+- 你数到的最后一名小伙伴需要离开圈子，并视作输掉游戏。
+- 如果圈子中仍然有不止一名小伙伴，从刚刚输掉的小伙伴的顺时针下一位 小伙伴开始，回到步骤 2 继续执行。
+- 否则，圈子中最后一名小伙伴赢得游戏。
+
+给你参与游戏的小伙伴总数 `n` ，和一个整数 `k` ，返回游戏的获胜者
+
+<div align="center"><img src="https://assets.leetcode.com/uploads/2021/03/25/ic234-q2-ex11.png"></div>
+
+```
+输入：n = 5, k = 2
+输出：3
+解释：游戏运行步骤如下：
+1) 从小伙伴 1 开始。
+2) 顺时针数 2 名小伙伴，也就是小伙伴 1 和 2 。
+3) 小伙伴 2 离开圈子。下一次从小伙伴 3 开始。
+4) 顺时针数 2 名小伙伴，也就是小伙伴 3 和 4 。
+5) 小伙伴 4 离开圈子。下一次从小伙伴 5 开始。
+6) 顺时针数 2 名小伙伴，也就是小伙伴 5 和 1 。
+7) 小伙伴 1 离开圈子。下一次从小伙伴 3 开始。
+8) 顺时针数 2 名小伙伴，也就是小伙伴 3 和 5 。
+9) 小伙伴 5 离开圈子。只剩下小伙伴 3 。所以小伙伴 3 是游戏的获胜者。
+```
+
+### 解题思路
+
+这是一个约瑟夫环的模板题。我们可以模拟上述规则来做题，也可以套用约瑟夫环的模板来做题。
+
+<b>模拟的思路</b>
+
+- 创建一个标记数组 marked，已经淘汰的值为 true。每次从当前位置 cur 开始，找到第 k 个未被淘汰的电，并将其标记为已淘汰
+- 当淘汰了 n 个点时，最后剩下的那个点就是最终的答案。
+
+<b>约瑟夫环模板</b>
+
+假定 $f(n,m)=(f(n-1,m)+m)\%n$，$f(n,m)$ 表示第总共 n 个人，数到第 m 的被淘汰。
+
+以 0 1 2 3 4 5 6 7 8 9 进行距离。$f(10,3)$
+
+```
+0--1--2--3--4--5--6--7--8--9
+淘汰了 2
+0--1-- --3--4--5--6--7--8--9  			记为 A
+这个序列还有 9 个数
+ -- -- --3--4--5--6--7--8--9--0--1	 记为 B
+等价于
+3--4--5--6--7--8--9--10%10--11%10
+所以 f(10,3) 的结果可用转化为 f(9,3) 的表达式。然后 f(9,3) 和 f(10,3) 的映射关系又是什么呢？ A = (B+m)%10
+f(10,3) = f((9,3)+3)%10
+f(9,3)=(f(8,3)+3)%9
+……
+f(2,3)=(f(1,3)+3)%2
+f(1,3)=0
+这样我们就找到了递推关系。
+```
+
+### 代码
+
+暴力模拟
+
+```java
+public int findTheWinner(int n, int k) {
+    // 暴力模拟
+    boolean marked[] = new boolean[n];
+    int remind = n;
+    int cur = 0;
+    while (remind != 1) {
+        for (int i = 1; i < k; i++) {
+            cur++;
+            // 如果这个点被淘汰了，则我们需要找到一个未被淘汰的点
+            while (marked[cur%n]) cur++;
+        }
+        // System.out.println(cur%n);
+        // 淘汰这个点
+        marked[cur % n] = true;
+        cur++;
+        remind--;
+        while (marked[cur%n]) cur++;
+    }
+    return (cur % n)+1;
+} 
+```
+
+约瑟夫环
+
+```java
+// 递归做法
+public int findTheWinner(int n, int k) {
+		if(n==1) return 0; // 当只剩一个时，这个幸存者就是 0，然后我们需要把 0 逐级映射到原来对应的数字
+   return (findTheWinner(n-1,k)+k)%n;
+}
+
+public int helper(int n,int k){
+    if(n==1) return 0; // 当只剩一个时，这个幸存者就是 0，然后我们需要把 0 逐级映射到原来对应的数字
+   return (findTheWinner(n-1,k)+k)%n;
+}
+
+// 迭代写法
+public int findTheWinner2(int n,int k){
+    return helper2(n,k)+1;
+}
+
+public int helper2(int n,int k){
+    int ans = 0;
+    // 最后剩下的人编号映射到还剩两个人时的编号，映射到...，映射到还剩 n 个人时的编号。
+    for(int i=1;i<=n;i++){
+        // ans 是 f(i-1,k) 的结果
+        // (f(i-1,k)+k)%i = f(i,k) 符合递推式
+        ans = (ans+k)%i;
+    }
+    return ans;
+}
+```
+
+## 最近的请求次数
+
+写一个 `RecentCounter` 类来计算特定时间范围内最近的请求。
+
+请你实现 `RecentCounter` 类：
+
+- `RecentCounter()` 初始化计数器，请求数为 0 。
+- int ping(int t) 在时间 t 添加一个新请求，其中 t 表示以毫秒为单位的某个时间，并返回过去 3000 毫秒内发生的所有请求数（包括新请求）。确切地说，返回在 [t-3000, t] 内发生的请求数。
+
+<b>保证</b>每次对 `ping` 的调用都使用比之前更大的 `t` 值。
+
+### 解题思路
+
+队列模拟题。队列中维护所有的请求数。
+
+- 当有一个请求 cur 加入队列时，将队列中所有和 cur 差值大于 3000 的移除队列。
+- 移除结束后，再将 cur 加入队列。
+
+### 代码
+
+```java
+class RecentCounter {
+    Queue<Integer> queue;
+
+    public RecentCounter() {
+        queue = new ArrayDeque<>();
+    }
+    
+    public int ping(int t) {
+        while (!queue.isEmpty() && t - queue.peek() > 3000) {
+            queue.poll();
+        }
+        queue.add(t);
+        return queue.size();
+    }
+}
+```
+
+
 
 # 心血来潮
 

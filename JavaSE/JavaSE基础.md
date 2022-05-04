@@ -2195,7 +2195,7 @@ RTTI：运行时类型识别。在运行时检查类型的行为称为 RTTI。�
 - <span style="color:orange">如果接口的实现类没有覆盖重写接口中所有的抽象方法，那么这个类必须是抽象类！</span>
 - 接口中的成员变量默认是，且只能 `public static final` 修饰的，无方法体的方法默认是且只能是 `public abstract` 修饰的；
 
-<img src="img/image-20210827192635164.png">
+<div align="center"><img src="img/image-20210827192635164.png"></div>
 
 ```java
 // 这是一个抽象方法
@@ -2263,7 +2263,7 @@ private static 返回值类型 方法名称(参数列表) {
 
 <b>接口中可定义常量, 且可省略 public static final，默认就是它，也只能是它！</b>【接口中的常量必须赋值！因为有 final 修饰！】
 
-<img src="img/image-20220403162153240.png">
+<div align="center"><img src="img/image-20220403162153240.png">
 
 ```java
 public static final int num = 10;

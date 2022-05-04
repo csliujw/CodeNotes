@@ -817,17 +817,15 @@ response.sendRedirect("/blog/xx.do")
     - 不同项目之间可能会有重复的路径名称。
     - 怎么办？写上项目名进行区分！
 
-----
-
 ### 4.6.7 Response输出
 
-==response获取地流在一次响应后会自动关闭流，销毁对象。==
+response 获取地流在一次响应后会自动关闭流，销毁对象。
 
-> response输出流不刷新也可以把数据写出到浏览器
+> response 输出流不刷新也可以把数据写出到浏览器
 
 **乱码问题**
 
-response流是我们获取出来的，不是new出来的。如果是new出来的，编码是和当前操作系统一致的。但是现在的流是tomcat提供的，和tomcat中配置的编码是一样的。tomcat默认是IOS-8859-1。
+response 流是我们获取出来的，不是 new 出来的。如果是 new 出来的，编码是和当前操作系统一致的。但是现在的流是tomcat提供的，和tomcat中配置的编码是一样的。tomcat默认是 IOS-8859-1。
 
 ```java
 // 在获取流对象之前设置编码，让流以这个编码进行。即设置缓冲区编码为UTF-8编码形式
@@ -850,10 +848,6 @@ response.setContentType("text/html;charset=utf-8");
 response.setContentType("text/html;charset=utf-8");
 response.getWriter().write("你好");
 ```
-
-
-
-----
 
 # 五、`ServletContext`对象
 

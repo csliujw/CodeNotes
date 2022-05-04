@@ -282,7 +282,7 @@ invoke(Object obj, Object... args)
 
 **`ClassLoader`的类继承图如下：**
 
-<img src="img\classLoader.png">
+<img src="img/classLoader.png">
 
 ### 4.3 动态代理
 
@@ -292,7 +292,7 @@ invoke(Object obj, Object... args)
 
 动态代理对比其他方法增强方式
 
-<img src="img\proxy.png">
+<img src="img/proxy.png">
 
 #### 4.3.2 基本Demo
 
@@ -387,7 +387,7 @@ public Object invoke(Object proxy, Method method, Object[] args)
 - `Object [ ] args`：实参
 - 返回的是方法的返回值。
 
-<img src="img\invoke_explain.png">
+<img src="img/invoke_explain.png">
 
 ----
 
@@ -738,7 +738,7 @@ tomcat破坏了双亲委派模型
 
 应用类加载器：先自己动手，然后再去委托
 
-<img src="img\tomcat_classLoader.png" style="float:left">
+<img src="img/tomcat_classLoader.png">
 
 ## 第七章 并发
 
