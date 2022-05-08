@@ -8,6 +8,16 @@
 
 不记录那些太水的题，除非非常具有代表性。
 
+[CS-Notes/Leetcode 题解 - 动态规划.md at master · CyC2018/CS-Notes (github.com)](https://github.com/CyC2018/CS-Notes/blob/master/notes/Leetcode 题解 - 动态规划.md)
+
+[CS-Notes/Leetcode 题解 - 搜索.md at master · CyC2018/CS-Notes (github.com)](https://github.com/CyC2018/CS-Notes/blob/master/notes/Leetcode 题解 - 搜索.md)
+
+[CS-Notes/Leetcode 题解 - 数学.md at master · CyC2018/CS-Notes (github.com)](https://github.com/CyC2018/CS-Notes/blob/master/notes/Leetcode 题解 - 数学.md)
+
+[CS-Notes/Leetcode 题解 - 分治.md at master · CyC2018/CS-Notes (github.com)](https://github.com/CyC2018/CS-Notes/blob/master/notes/Leetcode 题解 - 分治.md)
+
+[CS-Notes/剑指 Offer 题解 - 目录.md at master · CyC2018/CS-Notes (github.com)](https://github.com/CyC2018/CS-Notes/blob/master/notes/剑指 Offer 题解 - 目录.md)
+
 # 常见算法
 
 ## 链表

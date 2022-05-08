@@ -2,9 +2,7 @@
 
 ## 第一章 枚举
 
-### 1.1 枚举的使用Demo
-
-下面看一段骚气的代码
+### 枚举的使用Demo
 
 ```java
 public String judge(String str){
@@ -20,12 +18,10 @@ public String judge(String str){
 }
 ```
 
-- 条件一多 就要改源码【扩展性弱】，有没有解决办法
+- 条件一多就要改源码【扩展性弱】，有没有解决办法
 - 代码看起来不优雅，有没有解决办法
 
-**枚举！**
-
-> **第一版，用枚举替代if else**
+<b>用枚举替代 if else</b>
 
 ```java
 // 直接用枚举
@@ -96,7 +92,7 @@ public class Demo1 {
 }
 ```
 
-### 1.2 枚举的常用方法
+### 枚举的常用方法
 
 | values()    | 以数组形式返回枚举类型的所有成员 |
 | ----------- | -------------------------------- |
@@ -131,17 +127,6 @@ public class SomeFunc {
         System.out.println(Color.BLUE.ordinal());
     }
 
-
-    /**
-     *     public final int compareTo(E o) {
-     *         Enum<?> other = (Enum<?>)o;
-     *         Enum<E> self = this;
-     *         if (self.getClass() != other.getClass() && // optimization
-     *             self.getDeclaringClass() != other.getDeclaringClass())
-     *             throw new ClassCastException();
-     *         return self.ordinal - other.ordinal;
-     *     }
-     */
     @Test
     public void func4() {
         // RED 和 BLUE比较， RED小于BLUE 返回负数 ；equals返回0；大于返回 正数
@@ -154,7 +139,6 @@ public class SomeFunc {
         System.out.println(Color.RED);
         // output RED
     }
-
 }
 
 enum Color {
@@ -164,20 +148,20 @@ enum Color {
 
 ## 第二章 比较对象
 
-**Comparator和Comparable**
+<b>Comparator 和 Comparable</b>
 
-Comparable接口/ Comparator接口
+Comparable 接口/ Comparator 接口
 
-- Comparator  函数式接口 jdk1.8引入
-- Comparable 普通接口
+- Comparator==>函数式接口 jdk1.8 引入
+- Comparable==>普通接口，可比较的。
 
 ## 第三章 单元测试
 
-### 3.1 单元测试的优点
+### 单元测试的优点
 
 保证的程序代码的正确性【语法上了逻辑上】。
 
-### 3.2单元测试的使用
+### 单元测试的使用
 
 @Test
 
@@ -196,8 +180,7 @@ public class JunitDemo {
 
     @Test
     /**
-     * 单元测试判断数据的正确性
-     * 一般用Assert里面的方法
+     * 单元测试判断数据的正确性，一般用Assert里面的方法
      */
     public void fn1(){
         // 断言不为null  不是null则成功
@@ -212,57 +195,53 @@ public class JunitDemo {
 }
 ```
 
-### 3.3 单元测试原理
-
 ## 第四章 反射
 
-### 4.1 反射概述
+### 反射概述
 
-反射可以把类的各个组成部分封装为其他对象。
+反射可以把类的各个组成部分封装为其他对象。流行的框架基本都是基于反射的思想写成的。
 
-反射，Java的高级特性，流行的框架基本都是基于反射的思想写成的。
+Java 反射机制是在程序的运行过程中，对于任何一个类，都能够知道它的所有属性和方法；对于任意一个对象，都能够知道它的所有属性和方法，<b style="color:green">这种动态获取信息以及动态调用对象方法的功能称为Java语言的反射机制。</b>
 
-Java反射机制是在程序的运行过程中，对于任何一个类，都能够知道它的所有属性和方法；对于任意一个对象，都能够知道它的所有属性和方法，**<span style="color:green">这种动态获取信息以及动态调用对象方法的功能称为Java语言的反射机制。</span>**
-
-Java反射机制主要提供了以下这几个功能：
+Java 反射机制主要提供了以下这几个功能：
 
 - 在运行时判断任意一个对象所属的类
 - 在运行时构造任意一个类的对象
 - 在运行时判断任意一个类所有的成员变量和方法
 - 在运行时调用任意一个对象的方法
 
-### 4.2 反射的基本操作
+### 反射的基本操作
 
-#### 4.2.1 获取成员变量
+#### 获取成员变量
 
-- `File[] getFileds()` // **获得所有公有字段，包括继承的**
-- `Filed getFiled(String name)` // 获取指定name的
+- `File[] getFileds()` // <b>获得所有公有字段，包括继承的</b>
+- `Filed getFiled(String name)` // 获取指定 name 的
 - `Filed[] getDeclaredFileds() `// 获取该类自己声明的，包括私有
 - `Filed[] getDeclaredFileds(String name)` // 获取指定名称的
 
-#### 4.2.2 获取构造方法
+#### 获取构造方法
 
 - `Constructor<?>[] getConstructors()` // 获得所有公有构造器
 
 - `Constructor<?> getConstructor(Class<?>...parameterTypes)` //获得指定参数的公有构造器
 - `Constructor<?>[]getDeclaredConstructors()`// 获得所有私有构造器
-- `Constructor<T>[]getDeclaredConstructors()`//  得指定参数的构造器【包括public~~~private 】
+- `Constructor<T>[]getDeclaredConstructors()`//  得指定参数的构造器【包括 public~~~private 】
 
-#### 4.2.3 获取成员方法
+#### 获取成员方法
 
-- `Method[] getMethods()` // **获得所有public修饰的方法，包括继承的**
+- `Method[] getMethods()` // <b>获得所有 public 修饰的方法，包括继承的</b>
 
-- `Method getMethod(String name, Class<?>... parameterTypes)` // 获得指定名称和参数类型的public修饰的方法
-- `Method[] getDeclaredMethods()` //获得所有的私有方法
+- `Method getMethod(String name, Class<?>... parameterTypes)` // 获得指定名称和参数类型的 public 修饰的方法
+- `Method[] getDeclaredMethods()` // 获得所有的私有方法
 - `Method getDeclaredMethod(String name, Class<?>... parameterTypes)` // 获得指定名称和参数类型的方法
 
-#### 4.2.4 获取类名
+#### 获取类名
 
-- `String getName()` // 获得类全名`com.bbxx.junits.Son`
+- `String getName()` // 获得类全名 `com.bbxx.junits.Son`
 
-#### 4.2.5 几个重要的类
+#### 几个重要的类
 
-> **Class类**
+> **Class 类**
 
 每定义一个`java` `class` 实体都会产生一个Class对象。我们编写一个类，编译完成后，在生成的 `.class`文件中，就会产生一个Class对象，这个Class对象用于表示这个类的类型信息。Class中没有公共构造器，即Class对象不能被实例化。
 
@@ -1058,11 +1037,11 @@ JDK中的本地方法类一般由根加载器（Bootstrap loader）装载；JDK�
 
 ----
 
-假设有两个Web应用程序，它们都有一个类，叫做User，并且它们的类全限定名都一样，如都是 `com.yyy.User`，但是他们的具体实现是不一样的。那么tomcat如何保证它们是不会冲突的？**tomcat为每个Web应用创建一个类加载实例（WebAppClassLoader），该加载器重写了 loadClass 方法，优先加载当前应用目录下的嘞，如果当前找不到了，才一层一层往上找**，这样就做到了Web应用层级的隔离。
+假设有两个Web应用程序，它们都有一个类，叫做User，并且它们的类全限定名都一样，如都是 `com.yyy.User`，但是他们的具体实现是不一样的。那么tomcat如何保证它们是不会冲突的？**tomcat为每个Web应用创建一个类加载实例（WebAppClassLoader），该加载器重写了 loadClass 方法，优先加载当前应用目录下的类，如果当前找不到了，才一层一层往上找**，这样就做到了Web应用层级的隔离。
 
 ----
 
-并不是Web应用程序下的所有依赖都需要隔离的，比如 Redis 就可以 Web 应用之间共享（有需要的话），因为如果版本相同，没必要每个Web应用程序都独自加载一份。具体做法是：Tomcat 在 WebAppClassLoader 上加了个父类加载器 （Shared ClassLoader），**如果 WebAppClassLoader 自身没有加载到某个类，就委托 SharedClassLoader 去加载（把需要应用程序之间需要共享的类放到一个共享目录下，Share ClassLoader 读共享目录的类即可**）。
+并不是Web应用程序下的所有依赖都需要隔离的，比如 Redis 就可以 Web 应用之间共享（有需要的话），因为如果版本相同，没必要每个Web应用程序都独自加载一份。具体做法是：Tomcat 在 WebAppClassLoader 上加了个父类加载器 （Shared ClassLoader），**如果 WebAppClassLoader（加载指定目录下的类） 自身没有加载到某个类，就委托 SharedClassLoader 去加载（把需要应用程序之间需要共享的类放到一个共享目录下，Share ClassLoader 读共享目录的类即可**）。
 
 为了隔绝Web应用程序与Tomcat本身的类，又有类加载器（CatalinaClassLoader）来装载 Tomcat 本身的依赖。如果 Tomcat 本身的依赖和 Web 应用还需要共享，那么还有类加载器（CommonClassLoader）来装载而达到共享。各个类加载器的加载目录可以到 Tomcat 的 catalina.properties 配置文件上查看。
 
