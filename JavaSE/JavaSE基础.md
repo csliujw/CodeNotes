@@ -5101,7 +5101,7 @@ public class ConsumerDemo {
   - ```java
     boolean test(T t) //对给定参数进行逻辑判断，判断表达式由Lambda实现。
     default Predicate<T>negate(); //返回一个逻辑的否定， 对应逻辑非
-  default Predicate<T>and(Predicate other) //返回一个组合逻辑判断，对应短路与
+    default Predicate<T>and(Predicate other) //返回一个组合逻辑判断，对应短路与
     default Predicate<T>or(Predicate other) //返回一个组合判断，对应短路或
     ```
     
@@ -11621,9 +11621,9 @@ After creating Cookie
 
 #### Class类
 
-所有 Class 对象都属于 Class 类，而且它跟其他普通对象一样，我们可以通过 `Class.forName` 方法获得 Class 对象的引用 (这也是类加载器的工作)。forName() 是 Class 类的一个静态方法，我们可以使用 forName() 根据目标类的类全名（String）得到该类的 Class 对象。forName() 执行的作用是如果 Gum 类的字节码对象没有被加载就加载它的字节码对象，而在加载字节码对象的过程中，Gum 的 static 初始化块被执行了。如果 Class.forName() 找不到要加载的类，它就会抛出异常 ClassNotFoundException。
+所有 Class 对象都属于 Class 类，而且它跟其他普通对象一样，我们可以通过 `Class.forName` 方法获得 Class 对象的引用 (这也是类加载器的工作)。forName() 是 Class 类的一个静态方法，我们可以使用 forName() 根据目标类的类全名（String）得到该类的 Class 对象。<span style="color:orange">forName() 执行的作用是，如果 Gum 类的字节码对象没有被加载就加载它的字节码对象</span>，而在加载字节码对象的过程中，Gum 的 static 初始化块被执行了。如果 Class.forName() 找不到要加载的类，它就会抛出异常 ClassNotFoundException。
 
-如果存在一个实例对象了，可以通过实例对象`.getClass()` 来获得 Class 对象的引用。
+如果存在一个实例对象了，可以通过实例对象 `.getClass()` 来获得 Class 对象的引用。
 
 Class 类中包含了很多方法，部分方法的使用如下
 
@@ -11663,7 +11663,7 @@ public class ToyTest {
         Class up = c.getSuperclass();
         Object obj = null;
         try {
-            // Requires no-arg constructor:
+            // Requires no-arg constructor: 该方法在 Java 9 中已经被废弃了。
             obj = up.newInstance();
         } catch (InstantiationException e) {
             System.out.println("Cannot instantiate");
@@ -11698,14 +11698,14 @@ Canonical name : tij.chapter19.Toy
 - getSimpleName() 产生不带包名的类名
 - getCanonicalName() 也是产生完整类名（除内部类和数组外，对大部分类产生的结果与 getName() 相同）
 - isInterface() 用于判断某个 Class 对象代表的是否为一个接口。
-- Class对象.getInterfaces() 方法返回该 Class对象实现的接口名称组成的数组
+- Class 对象.getInterfaces() 方法返回该 Class 对象实现的接口名称组成的数组
 -  newInstance() 来创建对象
 
 #### 类字面量
 
 Java 还提供了另一种方法来生成类对象的引用：类字面常量。
 
-类字面量的使用语法：XXx.class。这种凡是简单，安全，受编译时检查。并且它根除了对 forName() 方法的调用，所以效率更高。
+类字面量的使用语法：XXx.class。这种方式简单，安全，受编译时检查。并且它根除了对 forName() 方法的调用，所以效率更高。
 
 类字面常量不仅可以应用于普通类，也可以应用于接口、数组以及基本数据类型。 另外，对于基本数据类型的包装类，还有一个标准字段 TYPE。TYPE 字段是一个引用，指向对应的基本数据类型的 Class 对象，不过建议使用 .class 的形式，与普通类保持一致。如下所示
 
