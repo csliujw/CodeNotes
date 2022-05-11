@@ -1,4 +1,10 @@
-# 补充内容
+# 🚀补充
+
+## 更新了！
+
+我买的《On Java》已经到手了！先前，这份笔记是阅读的 github 的开源项目 《On Java 8》做的读书笔记。现在，我会重新阅读《On Java》并更新、修补笔记中的一些内容。 
+
+## 零散的补充
 
 - `javac - java compiler java 编译器`
 - `javadoc - 抽取Java 文档`
