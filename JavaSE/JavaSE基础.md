@@ -11550,7 +11550,12 @@ class StringTokenizerDemo {
 }
 ```
 
-## 第十九章-类型信息
+## 第十九章-反射
+
+反射使我们摆脱了只能再编译时指向面向类型操作的限制，让我们可以编写一些强大的程序。本章讨论的是 Java 如何再运行时发现和使用类的信息。
+
+- 简单反射，编译时就已经知道了所有可用的类型
+- 复杂反射，在程序运行时发现和使用类的信息
 
 ### RTTI 概述
 
@@ -11567,13 +11572,76 @@ class StringTokenizerDemo {
 - 代表对象的类型的 Class 对象
 - 关键字 `instanceof`
 
-使用 RTTI，我们可以查询某个类型引用所指向对象的确切类型，然后选择或者剔除特例。
+### 为什么需要反射
 
-### Class 对象
+通常我们写代码的时候，喜欢通过多态隐藏具体的类别，只与它的父类打交道，这样编码难度更小，代码编写更灵活。
 
-要理解 RTTI 在 Java 中的工作原理，首先必须知道类型信息在运行时是如何表示的。这项工作是由称为 Class 对象的特殊对象完成的，它包含了与类有关的信息。实际上，Class 对象就是用来创建该类所有"常规"对象的。Java 使用 Class 对象来实现 RTTI，即便是类型转换这样的操作都是用 Class 对象实现的。不仅如此，Class 类还提供了使用 RTTI 的其它方式。
+下面的代码是将三个父类为 Shape 的对象放到了 Stream 流中。
 
-类是程序的一部分，每个类都有一个 Class 对象。换言之，每当我们编写并且编译 了一个新类，就会产生一个 Class 对象（更恰当的说，是被保存在一个同名的 .class 文件中）。为了生成这个类的对象，Java 虚拟机 (JVM) 先会调用 “类加载器” 子系统把这个类加载到内存中。
+```mermaid
+classDiagram
+class Shape
+Shape:+draw() void
+<<abstract>> Shape
+class Circle
+class Square
+class Triangle
+Square--|>Shape:实现
+Circle--|>Shape:实现
+Triangle--|>Shape:实现
+```
+
+```java
+public abstract class Shape {
+    public void draw() {
+        System.out.println(this + " type");
+    }
+    @Override
+    public abstract String toString();
+
+    public static void main(String[] args) {
+        Stream<Shape> shape = Stream.of(new Circle(), new Square(), new Triangle());
+        shape.forEach(System.out::println);
+    }
+}
+
+class Circle extends Shape {
+    public String toString() { return "Circle"; }
+}
+
+class Square extends Shape {
+    public String toString() { return "Square"; }
+}
+
+class Triangle extends Shape {
+    public String toString() { return "Triangle"; }
+}
+```
+
+将一个 Shape 的子类对象放入 Stream\<Shape\> 时，会发生隐式的向上类型转换，转型为 Shape。转型为 Shape 后，对象的确切类型信息就丢失了。
+
+实际上 Stream\<Shape\> 是将所有的内容都当作 Object 保存，当有一个元素被取出是，会被自动转型为 Shape。<span style="color:orange">这就是反射最基本的形式，在运行时检查所有的类型转换是否正确。</span>
+
+但是，当我们需要对个别的子类进行一些操作时，就需要可以获取到对象的确切类型。如，我们需要对三角形进行旋转，这时候就需要通过反射查询某个 Shape 引用所指的确切类型。
+
+```java
+public static void main(String[] args) {
+    Stream<Shape> shape = Stream.of(new Circle(), new Square(), new Triangle());
+    shape.forEach(e->{
+        if(e.getClass() == Triangle.class){
+            System.out.println("I find Triangle. We can op it");
+        }
+    });
+}
+```
+
+使用反射，我们可以查询某个类型引用所指向对象的确切类型，然后选择或者剔除特例。
+
+### Class对象
+
+<span style="color:orange">Class 对象，存储了类的相关信息，也是理解 Java 反射工作原理的关键。</span>Java 的类型信息在运行时的表示是由称为 Class 对象的特殊对象完成的，它包含了与类有关的信息。实际上，Class 对象就是用来创建该类所有"常规"对象的。Java 使用 Class 对象来执行反射，即便是类型转换这样的操作都是用 Class 对象实现的。不仅如此，Class 类还提供了使用反射的其它方式。
+
+程序中的每个类都有一个 Class 对象。每当我们编写并且编译了一个新类，就会产生一个 Class 对象（更恰当的说，是被保存在一个同名的 .class 文件中）。为了生成这个类的对象，Java 虚拟机 (JVM) 先会调用“类加载器”子系统把这个类加载到内存中。
 
 类加载器子系统可能包含一条类加载器链，但有且只有一个原生类加载器，它是 JVM 实现的一部分。原生类加载器加载的是"可信类"（包括 Java API 中的类）。它们通常是从本地盘加载的。在这条链中，通常不需要添加额外的类加载器，但是如果有特殊的需求（例如以某种特殊的方式加载类，以支持 Web 服务器应用，或者通过网络下载类），也可以挂载额外的类加载器。
 
@@ -11627,11 +11695,11 @@ After creating Cookie
 
 #### Class类
 
-所有 Class 对象都属于 Class 类，而且它跟其他普通对象一样，我们可以通过 `Class.forName` 方法获得 Class 对象的引用 (这也是类加载器的工作)。forName() 是 Class 类的一个静态方法，我们可以使用 forName() 根据目标类的类全名（String）得到该类的 Class 对象。<span style="color:orange">forName() 执行的作用是，如果 Gum 类的字节码对象没有被加载就加载它的字节码对象</span>，而在加载字节码对象的过程中，Gum 的 static 初始化块被执行了。如果 Class.forName() 找不到要加载的类，它就会抛出异常 ClassNotFoundException。
+所有 Class 对象都属于 Class 类，而且它跟其他普通对象一样，我们可以通过 `Class.forName` 方法获得 Class 对象的引用 (这也是类加载器的工作)。forName() 是 Class 类的一个静态方法，我们可以使用 forName() 根据目标类的类全名（String）得到该类的 Class 对象。<span style="color:orange">forName() 执行的作用是，如果 Gum 类的字节码对象没有被加载就加载它的字节码对象</span>，而在加载字节码对象的过程中，会执行 Gum 的静态代码块。如果 Class.forName() 找不到要加载的类，它就会抛出异常 ClassNotFoundException。
 
 如果存在一个实例对象了，可以通过实例对象 `.getClass()` 来获得 Class 对象的引用。
 
-Class 类中包含了很多方法，部分方法的使用如下
+Class 类中包含了很多方法，部分方法如下
 
 ```java
 interface HasBatteries {}
@@ -11703,50 +11771,46 @@ Canonical name : tij.chapter19.Toy
 - getName() 来产生完整类名
 - getSimpleName() 产生不带包名的类名
 - getCanonicalName() 也是产生完整类名（除内部类和数组外，对大部分类产生的结果与 getName() 相同）
+- getSuperclass() 获得直接基类（父类），可以一直调用父类的 getSuperclass，以此获得一个完整的继承链
 - isInterface() 用于判断某个 Class 对象代表的是否为一个接口。
 - Class 对象.getInterfaces() 方法返回该 Class 对象实现的接口名称组成的数组
--  newInstance() 来创建对象
+-  newInstance() 来创建对象。在 Java9 及以上的版本被弃用了，Java9 及以上的版本推荐使用 Constructor.newInstance() 来替代。
 
 #### 类字面量
 
-Java 还提供了另一种方法来生成类对象的引用：类字面常量。
+Java 还提供了另一种方法来生成 Class 对象的引用：<b>类字面常量</b>。
 
-类字面量的使用语法：XXx.class。这种方式简单，安全，受编译时检查。并且它根除了对 forName() 方法的调用，所以效率更高。
+类字面量的使用语法：XXx.class。这种方式简单，安全，受编译时检查。并且它消除了对 forName() 方法的调用，效率更高。
 
-类字面常量不仅可以应用于普通类，也可以应用于接口、数组以及基本数据类型。 另外，对于基本数据类型的包装类，还有一个标准字段 TYPE。TYPE 字段是一个引用，指向对应的基本数据类型的 Class 对象，不过建议使用 .class 的形式，与普通类保持一致。如下所示
+类字面常量不仅可以应用于普通类，也可以应用于接口、数组以及基本数据类型。 此外，每个包装类都有一个 TYPE 字段。TYPE 字段是一个引用，每个包装类的 TYEP 字段的值和其基本类的 class 对象是同一个。
 
 ```java
-boolean.class
-Boolean.TYPE
-char.class
-Character.TYPE
-byte.class
-Byte.TYPE
-short.class
-Short.TYPE
-int.class
-Integer.TYPE
-long.class
-Long.TYPE
-float.class
-Float.TYPE
-double.class
-Double.TYPE
-void.class
-Void.TYPE
+System.out.println(int.class == Integer.TYPE); // true
 ```
+
+| 类字面量      | 等价于         |
+| ------------- | -------------- |
+| boolean.class | Boolean.TYPE   |
+| char.class    | Character.TYPE |
+| byte.class    | Byte.TYPE      |
+| short.class   | Short.TYPE     |
+| int.class     | Integer.TYPE   |
+| long.class    | Long.TYPE      |
+| float.class   | Float.TYPE     |
+| double.class  | Double.TYPE    |
+| void.class    | Void.TYPE      |
+
+推荐使用 .class 形式，统一风格。
 
 当使用 .class 来创建对 Class 对象的引用时，不会自动地初始化该 Class 对象。
 
 ```java
 class D {
     static final int a = 10;
-    static {
-        System.out.println("INIT");
-    }
+    static { System.out.println("INIT"); }
 }
 
-class TEST {
+public class Test {
     public static void main(String[] args) {
         System.out.println(D.class);
     }
@@ -11760,7 +11824,7 @@ class TEST {
 2. 链接。在链接阶段将验证类中的字节码，为 static 字段分配存储空间，并且如果 需要的话，将解析这个类创建的对其他类的所有引用。 
 3. 初始化。如果该类具有超类，则先初始化超类，执行 static 初始化器和 static 初始化块。
 
-直到第一次引用一个 static 方法（构造器隐式地是 static）或者非常量的 static 字段（使用 staic final 修饰的常量不会触发类的初始化，注意是类的初始化，且要是常量！），才会进行类初始化。
+首次引用静态方法（构造器是隐式静态的）或非常量的静态字段时才会进行类初始化。<span style="color:orange">[使用 staic final 修饰的常量不会触发类的初始化，注意是类的初始化，且要是常量！]</span>。
 
 ```java
 class D{
@@ -11777,7 +11841,7 @@ class TEST{
 // 不会触发 static 的执行。（static 代码块会被组合成一个类方法 cinit<>）并未触发 D 的类加载
 /*
 添加虚拟机参数，查看 D 类是否加载了。-XX:+TraceClassLoading
-测试后发现，并未触发 D字节码对象的加载。
+测试后发现，并未触发 D 字节码对象的加载。
 因为常量在编译阶段会存入到调用这个常量的方法所在的类的常量池中，
 所以在上述例子中常量 a 在运行时存在 D 类的常量池中和 D 类没有任何关系，所以 D 并不会被初始化，理所当然也不会执行 D 类的静态代码块。
 */
@@ -11806,12 +11870,13 @@ public class ClassInitialization {
     public static void main(String[] args) throws Exception {
         Class initable = Initable.class; // 不会触发类的初始化
         System.out.println("After creating Initable ref");
-        // Does not trigger initialization:
+        // 不会触发初始化
         System.out.println(Initable.STATIC_FINAL);
-        // Does trigger initialization:
+        // 会触发初始化
         System.out.println(Initable.STATIC_FINAL2);
-        // Does trigger initialization:
+        // 不会触发初始化
         System.out.println(Initable2.staticNonFinal);
+        // 会触发初始化
         Class initable3 = Class.forName("tij.chapter19.Initable3");
         System.out.println("After creating Initable3 ref");
         System.out.println(Initable3.staticNonFinal);
@@ -11830,19 +11895,20 @@ After creating Initable3 ref
 */
 ```
 
-初始化有效地实现了尽可能的 “惰性”，从对 initable 引用的创建中可以看到，
+初始化会“尽可能的惰性”，从对 initable 引用的创建中可以看到，
 
 - 仅使用 .class 语法来获得对类对象的引用不会引发初始化
-- Class.forName() 来产生 Class 引用会立即就进行初始化
-- static final 值是 “编译期常量”（如 Initable.staticFinal），那么这个值不需要对 Initable 类进行初始化就可以被读取
-- 但是，如果只是将一个字段设置成为 static 和 final，还不足以确保这种行为。例如，对 Initable.staticFinal2 的访问将强制进行类的初始化，因为它不是一个编译期常量。
+- Class.forName() 会立即初始化类以产生 Class 引用
+- static final 值是“编译期常量”（如 Initable.staticFinal），那么这个值不需要对 Initable 类进行初始化就可以被读取
+- 但是，如果只是将一个字段设置成为 static 和 final，还不足以确保这种行为，比如 Initable.staticFinal2，不是编译时常量，会触发初始化。
+- 对 Initable.staticFinal2 的访问将强制进行类的初始化，因为它不是一个编译期常量。
 - 如果一个 static 字段不是 final 的，那么在对它访问时，总是要求在它被读取之前，要先进行链接（为这个字段分配存储空间）和初始化（初始化该存储空间）
 
-#### 泛化的 Class 引用
+#### 泛化的Class引用
 
-Class 引用总是指向某个 Class 对象，而 Class 对象可以用于产生类的实例，并且包含可作用于这些实例的所有方法代码。它还包含该类的 static 成员，因此 Class 引用表明了它所指向对象的确切类型，而该对象便是 Class 类的一个对象。
+Class 引用指向的是一个 Class 对象，该对象可以用于生成类的实例，并且包含这些实例的所有方法代码。它还包含该类的 static 成员，因此 Class 引用表示的就是它所指向对象的确切类型：Class 类的一个对象。
 
-Java 引入泛型语法 之后，我们可以使用泛型对 Class 引用所指向的 Class 对象的类型进行限定。在下面的实例中，两种语法都是正确的
+我们可以使用泛型语法来限定 Class 的类型。在下面的实例中，两种语法都是正确的
 
 ```java
 public class GenericClassReferences {
@@ -11851,11 +11917,12 @@ public class GenericClassReferences {
         Class<Integer> genericIntClass = int.class;
         genericIntClass = Integer.class; // 同一个东西
         intClass = double.class;
-//         genericIntClass = double.class; // 非法
+					// genericIntClass = double.class; // 非法
     }
 }
-// 通过泛型，我们可以明确限定类引用只能指向声明的类型。
 ```
+
+通过泛型，我们可以明确限定类引用只能指向声明的类型，不能指向声明类型之外的类型。如 `genericIntClass`，通过使用泛型，让编译器强制指向额外的类型检查。
 
 再看下面这行代码
 
@@ -11863,7 +11930,7 @@ public class GenericClassReferences {
 Class<Number> geenericNumberClass = int.class; // 可以吗？不可以
 ```
 
-看起来似乎是可以的，因为 Integer 继承自 Number。但事实却是不行，为什么？因为泛型不支持协变类型。如果希望他可以实现某种类似与多态的机制，需要使用泛型边界。
+看起来似乎是可以的，+自 Number。但事实却是不行，为什么？<span style="color:orange">因为 Integer 的 Class 对象不是 Number 的 Class 对象的子类。</span>如果希望他可以实现某种类似与多态的机制，需要使用泛型边界。
 
 为了在使用 Class 引用时放松限制，我们可以使用通配符，它是 Java 泛型中的一部分。通配符就是 ?，表示 “任何事物”。因此，我们可以在上例的普通 Class 引用中添加通配符
 
@@ -11876,9 +11943,9 @@ public class WildcardClassReferences {
 }
 ```
 
-使用 Class 比单纯使用 Class 要好，虽然它们在效果上是等价的，并且单纯使用 Class 不会产生编译器警告信息。但是 Class\<?\> 的语义更清晰。它表明我们并非是碰巧或者由于疏忽才使用了一个非具体的类引用，而是特意为之。
+使用 Class\<?\> 比单纯使用 Class 要好，虽然它们在效果上是等价的，并且单纯使用 Class 不会产生编译器警告信息。但是 Class\<?\> 的语义更清晰。它表明我们并非是碰巧或者由于疏忽才使用了一个非具体的类引用，而是特意为之。
 
-为了创建一个限定指向某种类型或其子类的 Class 引用，我们需要将通配符与 extends 关键字配合使用，创建一个范围限定。
+如果想创建 Class 引用，并限定它只能是某个类型或该类型的任意子类，可以将通配符与 extends 关键字配合使用，创建一个范围限定。
 
 ```java
 public class BoundedClassReferences {
@@ -11888,7 +11955,7 @@ public class BoundedClassReferences {
         Class<? extends Number> bounded = int.class;
         bounded = double.class;
         bounded = Number.class;
-        // Or anything else derived from Number.
+        // 或者任何继承了 Number 的类
     }
 }
 ```
@@ -11896,13 +11963,12 @@ public class BoundedClassReferences {
 向 Class 引用添加泛型语法的原因只是为了提供编译期类型检查，可以提前检查出错误。
 
 ```java
-import java.util.function.Supplier;
-import java.util.stream.Stream;
-
-class CountedInteger {
+class ID {
     private static long counter;
     private final long id = counter++;
-
+    // 如果 CountedInteger 类是 public 修饰的，则自动生成的构造方法是 public 的。可以通过反编译的结果进行验证
+    // 如果类不是 public 修饰的则自动生成的构造方法不是 public 的
+    public ID(){}
     @Override
     public String toString() {
         return Long.toString(id);
@@ -11918,30 +11984,43 @@ public class DynamicSupplier<T> implements Supplier<T> {
 
     public T get() {
         try {
-            return type.newInstance();
-        } catch (InstantiationException |
-                IllegalAccessException e) {
+            return type.getConstructor().newInstance();
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     public static void main(String[] args) {
-        Stream.generate(
-                        new DynamicSupplier<>(CountedInteger.class))
-                .skip(10)
-                .limit(5)
+        Stream.generate(new DynamicSupplier<>(CountedInteger.class)).skip(10).limit(5).forEach(System.out::println);
+    }
+}
+```
+
+如果 ID 是 public 修饰的，那么我们就不必手动为它添加 public 修饰的构造方法了
+
+```java
+public class ID2 {
+    private static long counter;
+    private final long id = counter++;
+
+    @Override
+    public String toString() {
+        return "ID2{" + "id=" + id + '}';
+    }
+
+    public static void main(String[] args) {
+        Stream.generate(new DynamicSupplier<>(ID2.class))
+                .skip(5).limit(5)
                 .forEach(System.out::println);
     }
 }
 ```
 
-当你将泛型语法用于 Class 对象时，newInstance() 将返回该对象的确切类型
+对 Class 对象使用泛型语法时，newInstance() 会返回对象的确切类型，但是也会受一点影响。
 
 ```java
 class FancyToy extends Toy implements HasBatteries, Waterproof, Shoots {
-    FancyToy() {
-        super(1);
-    }
+    FancyToy() { super(1); }
 }
 public class GenericToyTest {
     public static void main(String[] args) throws Exception {
@@ -11949,19 +12028,19 @@ public class GenericToyTest {
         // Produces exact type:
         FancyToy fancyToy = ftClass.newInstance();
         Class<? super FancyToy> up = ftClass.getSuperclass();
-        // This won't compile: 很奇怪的语法
+        // 很奇怪的语法，无法通过编译. getSuperclass 的返回值类型是 Class<? super T> 
         // Class<Toy> up2 = ftClass.getSuperclass();
-        // Only produces Object:
-        Object obj = up.newInstance();
+        // 只能生成 Object，new Instance 的返回值是 T 
+        Object obj = up.getConstructor().newInstance();
     }
 }
 ```
 
-虽然 getSuperClass() 方法返回的是父类 Toy（不是接口），并且编译器在编译期就知道它是什么类型了（在本例中就是 Toy.class），但是指明确切类型却无法通过编译，返回值含糊不清。正是由于这种含糊性， up.newInstance 的返回值不是精确类型，而只是 Object。
+虽然 getSuperClass() 方法返回的是父类 Toy（不是接口），并且编译器在编译期就知道它是什么类型了（在本例中就是 Toy.class），但即便我们指明了确切类型仍无法通过编译，因为它的返回值含糊不清，up.newInstance 的返回值不是一个确切的类型，而只是一个 Object。
 
-#### cast() 方法
+#### cast()方法
 
-Java 中还有用于 Class 引用的转型语法，即 cast() 方法
+Java 中还有用于 Class 引用的转型语法，即 cast() 方法，不过基本没有应用场景。
 
 ```java
 class Building {}
