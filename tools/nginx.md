@@ -199,13 +199,13 @@ server {
 
 先理解下正向代理，如下图：
 
-![image-20220512215108806](C:\development\Code\note\CodeNotes\tools\img\image-20220512215108806.png)
+<img src="img/image-20220512215108806.png">
 
 正向代理是针对你的客户端，而反向代理是针对服务器的，如下图
 
-![image-20220512215131200](C:\development\Code\note\CodeNotes\tools\img\image-20220512215131200.png)
+<img src="img/image-20220512215131200.png">
 
-![image-20220512215136121](C:\development\Code\note\CodeNotes\tools\img\image-20220512215136121.png)
+<img src="img/image-20220512215136121.png">
 
 #### 配置反向代理-准备工作
 
@@ -233,7 +233,7 @@ server {
 }
 ```
 
-（2）重新启动 Nginx  然后用浏览器测试：http://www.hmtravel.com （此域名须配置域名指向）
+（2）重新启动 Nginx 然后用浏览器测试：http://www.hmtravel.com（此域名须配置域名指向）
 
 ### 负载均衡
 
@@ -255,27 +255,27 @@ server {
 
 修改 Nginx 配置文件：
 
-```
-  upstream tomcat-travel {
-	   server 192.168.177.129:8080;
-	   server 192.168.177.129:8081;
-	   server 192.168.177.129:8082;
-    }
+```shell
+upstream tomcat-travel {
+    server 192.168.177.129:8080;
+    server 192.168.177.129:8081;
+    server 192.168.177.129:8082;
+}
 
-    server {
-        listen       80; # 监听的端口
-        server_name  www.hmtravel.com; # 域名或ip
-        location / {	# 访问路径配置
-            # root   index;# 根目录
-	    proxy_pass http://tomcat-travel;
+server {
+    listen       80; # 监听的端口
+    server_name  www.hmtravel.com; # 域名或ip
+    location / {	# 访问路径配置
+        # root   index;# 根目录
+        proxy_pass http://tomcat-travel;
 
-            index  index.html index.htm; # 默认首页
-        }
-        error_page   500 502 503 504  /50x.html;	# 错误页面
-        location = /50x.html {
-            root   html;
-        }
+        index  index.html index.htm; # 默认首页
     }
+    error_page   500 502 503 504  /50x.html;	# 错误页面
+    location = /50x.html {
+    	root   html;
+    }
+}
 ```
 
 地址栏输入http:// www.hmtravel.com /  刷新观察每个网页的标题，看是否不同。
