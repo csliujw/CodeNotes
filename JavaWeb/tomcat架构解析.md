@@ -2,6 +2,8 @@
 
 <a href="https://www.cnblogs.com/alimayun/archive/2004/01/13/10611862.html">博主关于tomcat架构的读书笔记，写的很精炼，值得参考！</a>
 
+[tomcat (u19900101.github.io)](https://u19900101.github.io/2021-09-07-tomcat/#1tomcat)
+
 # 简单入门
 
 ```java
