@@ -1,4 +1,4 @@
-# MyBatis概述
+# 概述
 
 MyBatis 3.4x 版本，把它内部需要的三方 jar 都整合在一起了。
 
@@ -23,7 +23,7 @@ MyBatis 减少了样板代码，简化了持久层的开发。
 - Ctrl + Shift + F10 运行代码
 - Ctrl + W 关闭侧边栏
 
-# MyBatis设计模式
+# 设计模式
 
 相对路径 `src/java/main/文件名.xml`
 
@@ -41,7 +41,28 @@ build.build(in) // in 形式下创建的工厂，多了几个类，操作看起�
 
 在看 `MyBatis` 源码的时候，通过一些类的名称大概知道了 `MyBatis` 用到了什么技术。`MyBatis` 解析的时候应该用到了词法分析，分析字符串。在动态生成代理类的时候用到了字节码增强技术。
 
-# MyBatis基础篇
+# 基础篇
+
+## 表结构
+
+- clazz 表
+- users 表
+
+```sql
+create table mybatis.clazz
+(
+    id   int auto_increment primary key,
+    name varchar(60) default 'one' null
+);
+
+create table mybatis.users
+(
+    id       int auto_increment primary key,
+    name     varchar(60)      not null,
+    sex      char default '1' null,
+    clazz_id int  default 1   null -- 和 clazz 表的 id 对应，是逻辑外键关系
+);
+```
 
 ## 基本环境搭建
 
@@ -512,40 +533,52 @@ public class CRUDTest {
 只有一个形式参数时：
 
 ```java
-public Employee getXX(Integer id);
+public User getOne(int id);
 ```
 
 ```xml
-<select id="getXX" resultType="com.xx.xx.Employee">
-	select * from xxx where id=#{随便写什么} <!-- 建议还是见名知意奥 -->
+<select id="getOne" resultType="cn.pojo.User">
+    select *
+    from users
+    where id = #{随便写什么}<!-- 随便写什么，最好见名知意 -->
 </select>
 ```
 
-有多个形参时：
+有多个形参时：可以用注解取别名，方便拿对应的参数；也可以不取别名，按框架的规则进行取数据
 
 ```java
-public Employee getXX(Integer id, String name);
+// 有多个形参
+public User getTwo(String name, String sex);
+
+// 有多个形参，直接用注解为它取别名
+public User getTwoAnnotation(@Param("findName") String name, @Param("findSex") String sex);
 ```
 
 ```xml
 <!--
-	直接用id，name作为#{}的话，会报错。
-	Caused by: org.apache.ibatis.binding.BindingException:
-	Parameter 'id' not found
-	Available parameters are [0, 1, param1, param2]
+     直接用 name，sex 作为 #{} 的话，会报错。
+     Caused by: org.apache.ibatis.binding.BindingException:
+     Parameter 'id' not found
+     Available parameters are [arg0, arg1, param1, param2]
 -->
-<select id="getXX" resultType="com.xx.xx.Employee">
-	select * from xxx where id=#{param1} and name=#{param2}
+<select id="getTwo" resultType="cn.pojo.User">
+    select *
+    from users
+    where name = #{arg0} and sex=#{arg1}
+    <!-- 或者是 #{param1}, #{param2} -->
 </select>
-<!-- 或者是 -->
-<select id="getXX" resultType="com.xx.xx.Employee">
-	select * from xxx where id=#{0} and name=#{1}
+
+<!-- 也可以用注解指定别名 -->
+<select id="getTwoAnnotation" resultType="cn.pojo.User">
+    select *
+    from users
+    where name = #{findName} and sex = #{findSex}
 </select>
 ```
 
 > 总结
 
-- 要么写 #{0} #{1} 要么写 #{param1} #{param2} 
+- 要么写 #{arg0} #{arg1} 要么写 #{param1} #{param2}，具体的方式可能会随 MyBatis 版本的变化产生变动。
 - 只有一个形参的话写什么都行 #{asf} #{haha} 都行
 - 原因：只要传入了多个参数；MyBatis 会自动的将这些参数封装在一个 map 中；封装的时候使用的 key 就是参数的索引和参数的第几个表示
 
@@ -557,30 +590,33 @@ map.put("2","传入的值2");
 
 > 如果我们不想这样做，想指定 key，那么我们如何指定封装时使用的 key？
 
-- 使用注解 `@Param` 指定 map 的 key 的值！具体看看源码。
+使用注解 `@Param` 指定 map 的 key 的值！具体看看源码。
 
 ```java
-Employee getXX(@Param("id")Integer id, @Param("enmName")String empName);
+// 有多个形参，直接用注解为它取别名
+public User getTwoAnnotation(@Param("findName") String name, @Param("findSex") String sex);
 ```
 
 ```xml
-<select id="getXX" resultType="com.xx.xx.Employee">
-	select * from xxx where id=#{id} and name=#{empName}
-    <!-- 这个id是因为@Pamra注解的value是id；这个empName是因为@Param注解的value是empName -->
+<select id="getTwoAnnotation" resultType="cn.pojo.User">
+    select *
+    from users
+    where name = #{findName} and sex = #{findSex}
+    <!-- name 和 findName 是一组映射关系，sex 和 findSex 又是一组映射关系 -->
 </select>
 ```
 
-## MyBatis 取值总结
+## 取值总结
 
 1）单个参数
 
 - 基本类型：取值用 #{随便写}
-- 传入 POJO：取值用 #{POJO字段名称}，是使用 OGNL 表达式语言来实现的
+- 传入 POJO：取值用 #{POJO 字段名称}，是使用 OGNL 表达式语言来实现的
 
 2）多个参数：
 
 - public Employee getXXX(Integer id, String name)，取值：#{参数名}是无效了
-- 可以用：0，1（参数索引）或 param1,param2（第几个参数paramN）来取值，#{0},#{1} / #{param1},#{param2}
+- 可以用：0，1（参数索引）或 param1,param2（第几个参数paramN）来取值，#{arg0},#{arg1} / #{param1},#{param2}
 - 原因：只要传入了多个参数；MyBatis 会自动的将这些参数封装在一个 map 中；封装时使用的 key 就是参数的索引和参数的第几个表示
 
 ```java
@@ -613,12 +649,12 @@ Employee employee（取出它的email）==> #{param3.email}
 
 mybatis 的取值方式可分为两类：
 
-- #{属性名}：是参数预编译的方式，参数的位置都是用？替代，参数后来都是预编译设置进去的，安全，不会有sql注入问题。
-- ${属性名}：不是参数预编译，而是直接和sql语句进行拼串，不安全
+- <span style="color:red">#{属性名}：是参数预编译的方式，参数的位置都是用？替代，参数后来都是预编译设置进去的，安全，不会有 sql 注入问题。</span>
+- ${属性名}：不是参数预编译，而是直接和 sql 语句进行拼串，不安全
     - eg：id=1 or 1 = 1 and empname=
     - 传入一个1 or 1=1 or
 
-## MyBatis 取值源码分析
+## 取值源码分析
 
 MapperMethod 类
 
@@ -652,10 +688,16 @@ public Object execute(SqlSession sqlSession, Object[] args) {
             } else if (method.returnsCursor()) {
                 result = executeForCursor(sqlSession, args);
             } else {
-                // 我用的 UserVO selectOne(String name);
-                // 转换为SQL参数
+                // 单条结果的查询方法 走这里。
+                // converArgsToSqlCommandParam 做 sql 语句的参数映射
+                // 将 args 中的内容封装为一个 map。
+                // 跟进 converXX 方法进去看一下。
                 Object param = method.convertArgsToSqlCommandParam(args);
                 result = sqlSession.selectOne(command.getName(), param);
+                if (method.returnsOptional()
+                    && (result == null || !method.getReturnType().equals(result.getClass()))) {
+                    result = Optional.ofNullable(result);
+                }
             }
             break;
         case FLUSH:
@@ -665,7 +707,7 @@ public Object execute(SqlSession sqlSession, Object[] args) {
             throw new BindingException("Unknown execution method for: " + command.getName());
     }
     if (result == null && method.getReturnType().isPrimitive() && !method.returnsVoid()) {
-        throw new BindingException("Mapper method '" + command.getName() 
+        throw new BindingException("Mapper method '" + command.getName()
                                    + " attempted to return null from a method with a primitive return type (" + method.getReturnType() + ").");
     }
     return result;
@@ -696,10 +738,12 @@ public Object getNamedParams(Object[] args) {
         final Map<String, Object> param = new ParamMap<Object>();
         int i = 0;
         for (Map.Entry<Integer, String> entry : names.entrySet()) {
+            // 封装成 map，names 中的内容是 args0, args1
             param.put(entry.getValue(), args[entry.getKey()]);
             // add generic param names (param1, param2, ...)
             // GENERIC_NAME_PREFIX = "param";
             final String genericParamName = GENERIC_NAME_PREFIX + String.valueOf(i + 1);
+            // 再尝试将 param1 作为 key，args[x] 作为 value 存入 map
             // ensure not to overwrite parameter named with @Param
             if (!names.containsValue(genericParamName)) {
                 param.put(genericParamName, args[entry.getKey()]);
@@ -711,26 +755,28 @@ public Object getNamedParams(Object[] args) {
 }
 ```
 
-# MyBatis中级篇
+# 中级篇
 
-## 查询返回map
+## 返值为map
 
 > 常规情况
 
 ```java
-public Map<String, Object> getEmpByIdReturnMap(Integer id);
+public Map<String, Object> getByIdReturnMap(int id);
 // key是列名，value是字段对应的值。
 id	name	email
 1	a		afsdf
 2	b		afsf
-// 此处 id就是列名，1，2就是value
-// 这个如果查询出的是多条数据，value应该会是一个集合。
+// 此处 id 就是列名，1，2 就是 value
+// 这个如果查询出的是多条数据，value 应该会是一个集合。
 ```
 
 ```xml
 <!-- pamramater一般可以不写。 -->
-<select id="getEmpByIdReturnMap" resultType="map">
-    select * from emplate where id=#{id}
+<select id="getByIdReturnMap" resultType="java.util.Map">
+    select *
+    from users
+    where id = #{id}
 </select>
 ```
 
@@ -741,17 +787,19 @@ id	name	email
 // value 就是这条记录封装好的对象
 // 把查询记录的id的值作为key封装这个map（注解@MapKey）
 @MapKey("id")
-public Map<String, Employee> getAllEmp();
+public Map<String, User> getAllUser();
 ```
 
 ```xml
-<!-- 查询多个返回一个map，查询多个情况下，集合里面写元素类型 视频P252 10分30秒左右 -->
-<select id="getAllEmp" resultType="com.xx.xx.Employee">
-	select * from employee;
+<!-- 查询多个返回一个map，查询多个情况下，集合里面写元素类型 不过 IDEA 中安装的 MyBatis 插件居然会报错，说返回值类型不正确 -->
+<select id="getAllUser" resultType="User">
+    select * from users
 </select>
 ```
 
 ## 自定义结果集
+
+当 JavaBean 中的字段名和数据库表中的列名并非完全一致，且驼峰规则无效时，可以使用自定义 ResultType，将数据库中的字段和 JavaBean 中的进行一一对应。
 
 type：指定为哪个 JavaBean 自定义封装规则；全类名。
 
@@ -760,17 +808,16 @@ id：唯一标识符，让别名在后面引用
 ```xml
 <resultMap type="com.xx.xx.Cat" id="mycat">
     <!--
-	column="id"：指定哪一列是主键列
-	property=""：指定cat的哪个属性封装id这一列数据
+        column="id"：指定哪一列是主键列（数据库中的字段名）
+        property=""：指定cat的哪个属性封装id这一列数据（JavaBean 中的字段名）
 	-->
     <!-- 主键列 -->
 	<id property="pojoid" column="id">
     <!-- 普通列 -->
     <result property="" column=""></result>
 </resultMap>
-<!--
-	resultMap="mycat"：查出数据封装结果的时候，使用mycat自定义的规则。
--->
+    
+<!-- resultMap="mycat"：查出数据封装结果的时候，使用mycat自定义的规则。-->
 <select id="getAllCat" resultMap="mycat">
 	select * from cat where id=#{id} 
 </select>
@@ -779,6 +826,27 @@ id：唯一标识符，让别名在后面引用
 ## 一对一查询
 
 <b>association</b>：只是表示对象
+
+```xml
+<select id="queryUserById" resultType="cn.pojo.User" resultMap="queryUserByIdNap">
+    select u.*, c.name as c_name, c.id as c_id
+    from mybatis.users as u,
+    mybatis.clazz as c
+    where u.id = #{id}
+    and u.clazz_id = c.id
+</select>
+
+<resultMap id="queryUserByIdNap" type="User">
+    <id property="id" column="id"/>
+    <result property="name" column="name"/>
+    <result property="sex" column="sex"/>
+    <!-- 一对一查询 -->
+    <association property="clazz" javaType="Clazz">
+        <id property="id" column="c_id"/>
+        <result property="name" column="c_name"/>
+    </association>
+</resultMap>
+```
 
 ## 一对多查询
 
@@ -800,6 +868,84 @@ ofType：指定集合里面元素的类型
 </collection>
 ```
 
+一对多查询案例
+
+```java
+public class Clazz {
+    int id;
+    String name;
+    List<User> student;
+}
+
+public class User {
+    private int id;
+    private String name;
+    private String sex;
+    private String classId;
+    private Clazz clazz;
+}
+// 省略setter getter
+public interface AssociationQuery {
+
+    public Clazz queryClazzById(int clazzId);
+}
+
+```
+
+xml 文件
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.mapper.AssociationQuery">
+	<!-- resultMap 的 key 和 value 一定要一一对应！-->
+    <select id="queryClazzById" resultType="cn.pojo.Clazz" resultMap="queryClazzByIdMap">
+        select c.id as c_id, c.name as c_name, u.id, u.name, u.clazz_id, u.sex
+        from clazz as c, users as u
+        where u.clazz_id = #{clazzId} and c.id = #{clazzId};
+    </select>
+
+    <resultMap id="queryClazzByIdMap" type="clazz">
+        <id property="id" column="c_id"/>
+        <result property="name" column="c_name"/>
+        <collection property="student" ofType="User">
+            <id property="id" column="id"/>
+            <result property="name" column="name"/>
+            <result property="classId" column="clazz_id"/>
+            <result property="sex" column="sex"/>
+        </collection>
+    </resultMap>
+</mapper>
+```
+
+测试代码
+
+```java
+public class AssociationQueryTest {
+    String resourcePath = "MyBatisConfig.xml";
+    SqlSession sqlSession;
+    AssociationQuery dao;
+
+    @BeforeEach
+    public void init() throws IOException {
+        InputStream in = Resources.getResourceAsStream(resourcePath);
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
+        sqlSession = sqlSessionFactory.openSession(true); // 設置自動提交事務
+        dao = sqlSession.getMapper(AssociationQuery.class);
+    }
+
+    @Test
+    public void t1() {
+        Clazz clazz = dao.queryClazzById(1);
+        System.out.println(clazz);
+    }
+}
+```
+
+JavaType 和 OfType：`JavaType `和 `ofType` 都是用来指定对象类型的，但是 `JavaType` 是用来指定 `pojo` 中属性的类型，而 `ofType` 指定的是映射到 list 集合属性中 `pojo` 的类型。
+
 ## 分步查询
 
 ```xml
@@ -807,11 +953,11 @@ ofType：指定集合里面元素的类型
 	select * from key where id=#{id}
 </select>
 <!--
-	告诉mybatis自己去调用一个查询
-	select:指定一个查询sql的唯一标识；mybatis自动调用指定的sql将查询出的lock封装起来
-		public Lock getLockByIdSimple(Integer id); 需要传入锁子id
-	column:指定将哪一列的数据传递过去。
-		getLockByIdSimple(Integer id)不是需要一个查询条件 id吗，column就是把指定列的数据传递过去。
+	告诉 mybatis 自己去调用一个查询
+	select：指定一个查询sql的唯一标识；mybatis自动调用指定的sql将查询出的lock封装起来
+			public Lock getLockByIdSimple(Integer id); 需要传入锁子id
+	column：指定将哪一列的数据传递过去。
+			getLockByIdSimple(Integer id)不是需要一个查询条件 id吗，column就是把指定列的数据传递过去。
 -->
 <resultMap type="com.xx.key" id="mykey02">
     <id></id>
@@ -820,9 +966,7 @@ ofType：指定集合里面元素的类型
 </resultMap>
 ```
 
-分布查询，两个查询都会执行，即便没有用到第二个查询的数据。这样严重浪费了数据库的性能。
-
-我们可以采用按需加载，需要的时候再去查询：全局开启按需加载策略！
+分布查询，两个查询都会执行，即便没有用到第二个查询的数据。这样严重浪费了数据库的性能。我们可以采用按需加载，需要的时候再去查询：全局开启按需加载策略！
 
 ## 按需加载
 
@@ -840,6 +984,8 @@ ofType：指定集合里面元素的类型
 ```
 
 ## 动态SQL
+
+### 标签学习
 
 > where 标签
 
@@ -911,170 +1057,7 @@ select xxxxx where id in
 </select>
 ```
 
-## 缓存机制
-
-暂时存储一些数据；加快系统的查询速度
-
-MyBatis 缓存机制：Map；能保存查询出的一些数据；
-
-一级缓存：线程级别的缓存；本地缓存；SqlSession 级别的缓存
-
-二级缓存：全局范围的缓存；除过当前线程；SqlSession 能用外其他也可以用
-
-- 一级缓存
-  - 一级缓存是 `SqlSession` 范围的缓存，当调用 `SqlSession` 的修改，添加，删除，`commit()，close()`等方法时，就会清空一级缓存。
-- 二级缓存
-  - 二级缓存是 `mapper` 映射级别的缓存，多个 `SqlSession` 去操作同一个 `Mapper` 映射的 `sql` 语句，多个 `SqlSession` 可以共用二级缓存，二级缓存是跨 `SqlSession` 的
-
-### 一级缓存失效
-
-一级缓存是 `SqlSession` 级别的缓存，只要 `SqlSession` 没有 flush 或 close，它就存在！
-
-```xml
-<mapper namespace="com.itheima.dao.IUserDao">
-<!-- 根据 id 查询 -->
-<select id="findById" resultType="UsEr" parameterType="int" useCache="true">
-select * from user where id = #{uid}
-</select>
-</mapper>
-```
-
-请自行编码验证！
-
-看下 MyBatis 缓存部分的源码就知道，这个缓存机制真的很弱鸡。
-
-一级缓存是 SqlSession 级别的缓存
-
-1）不同的 sqlSession，使用不同的一级缓存
-
-​	只有在同一个 sqlSession 期间查询到的数据会保存在这个 sqlSession 的缓存中。
-
-​	下次使用这个 sqlSession 查询会从缓存中拿
-
-2）同一个方法，不同的参数，由于可能之前没查询过，所以还有发新的 sql；
-
-3）在这个 sqlSession 期间执行任何一次增删改操作，增删改都会把缓存清空。（不管你改的是不是我的数据，我都清空）
-
-4）手动清空缓存 openSession.clearCache()
-
-MyBatis 缓存是在
-
-Cache 类 - org.apache.ibatis.cache
-
-	- PerpetualCache变量中
-
-```java
-/**
- * @author Clinton Begin
- */
-public class PerpetualCache implements Cache {
-
-  private final String id;
-	
-  // 所谓的缓存其实就是一个Map
-  private Map<Object, Object> cache = new HashMap<Object, Object>();
-
-  // some method
-}
-```
-
-### 二级缓存失效
-
-全局作用域缓存
-
-二级缓存默认不开启，需要手动配置
-
-MyBatis 提供二级缓存的接口及其实现，缓存实现要求 POJO 实现 Serializable 接口
-
-这些用不到，不想记，要用再说。
-
-## #和$
-
-`#{}`表示一个占位符号
-
-通过 `#{}` 可以实现 `preparedStatement` 向占位符中设置值，自动进行 `Java` 类型和 `jdbc` 类型转换，
-
-`#{}`可以有效防止 `sql` 注入。 `#{}`可以接收简单类型值或 `pojo` 属性值。 如果 `parameterType` 传输单个简单类
-型值，`#{}`括号中可以是 value 或其它名称。
-
-`${}`表示拼接 `sql` 串
-
-通过 `${}` 可以将 `parameterType` 传入的内容拼接在 `sql` 中且不进行 `jdbc` 类型转换， `${}`可以接收简
-单类型值或 `pojo` 属性值，如果 `parameterType` 传输单个简单类型值，`${}`括号中只能是 value。
-
-> 源码级别解析
-
-```java
-class A{
-    @Override
-    public String handleToken(String content) {
-      Object parameter = context.getBindings().get("_parameter");
-      if (parameter == null) {
-        context.getBindings().put("value", null);
-      } else if (SimpleTypeRegistry.isSimpleType(parameter.getClass())) {
-        context.getBindings().put("value", parameter);
-      }
-      Object value = OgnlCache.getValue(content, context.getBindings());
-      String srtValue = (value == null ? "" : String.valueOf(value)); // issue #274 return "" instead of "null"
-      checkInjection(srtValue);
-      return srtValue;
-    }
-}
-```
-
->读取的 key 的名字就是”value”，所以我们在绑定参数时就只能叫 value 的名字
-
-## 深入理解
-
-- `MyBatis` 可自己写 `Dao` 实现类也可不写实现类。推荐不写实现类。
-- 不写实现类采用的是基于代理的 CRUD 操作。
-- `MyBatis` 用到了 `OGNL` 表达式
-  - `Object Graphic Navigation Language`
-    	对象	图	导航	   语言
-  - 它是通过对象的取值方法来获取数据。在写法上把 get 给省略了。
-    比如：我们获取用户的名称
-    	类中的写法：`user.getUsername();`
-    	`OGNL` 表达式写法：`user.username`
-    `mybatis `中为什么能直接写 `username` ,而不用 user. 呢：
-    	因为在 `parameterType` 中已经提供了属性所属的类，所以此时不需要写对象名
-
-## 简单实现`MyBatis`
-
-先空着
-
-## 连接池及事务控制
-
-### 连接池介绍
-
-相当于实现分配好很多数据库连接在容器中，需要用时从容器中拿连接，不需要用时把连接归还到容器中，可避免频繁的打开关闭，节约资源（打开关闭连接很消耗资源）。
-
-优点：减少获取连接所消耗的时间
-
-缺点：初始化连接时速度慢
-
-### `MyBatis`中的连接池
-
-<b>提供三种方式</b>
-
-- 配置的位置，主配置文件（我命名为`SqlConfig.xml`）中的 `dataSource` 标签，type 表示采用何种连接。
-- type 取值
-  - POOLED： 采用传统的 `javax.sql.DataSource` 规范中的连接池，`mybatis` 中有针对规范的实现。我们可以用其他连接池替代，如 `Druid`，`type="我们的druid"`，因为 `druid` 是遵循规范的，所以把类全名加上就行了。
-  - `UNPOOLED`：采用传统的获取连接的方式，虽然也实现 `Javax.sql.DataSource`接口，但是并没有使用池的思想。
-  - `JNDI`：采用服务器提供的 `JNDI` 技术实现，来获取 `DataSource` 对象，不同的服务器所能拿到 `DataSource` 是不一样。
-    		   注意：如果不是 web 或者 `maven` 的 `war` 工程，是不能使用的。
-          		  使用 `tomcat` 服务器的话，采用连接池就是 `dbcp` 连接池。
-
-### `MyBatis`中的事务
-
-事务的四大特性 ACID
-
-不考虑隔离性会产生的3个问题
-
-解决办法：四种隔离级别
-
-它是通过 `sqlsession` 对象的 commit 方法和 rollback 方法实现事务的提交和回滚
-
-### 动态SQL全部代码
+### 完整示例
 
 #### Java代码
 
@@ -1087,22 +1070,22 @@ public interface IUserDao {
     // 查询所有 -- 查看事务是否成功提交
     List<UserVO> findAll();
 
-    // 条件查询 -- 动态SQL 之if
+    // 条件查询 -- 动态 SQL 之 if
     List<UserVO> findCondition(UserVO vo);
 
-    // 条件查询 -- 动态SQL 之where
+    // 条件查询 -- 动态 SQL 之 where
     List<UserVO> findCondition2(UserVO vo);
 
     // 新增 -- 动态SQL 之 set
     boolean update(UserVO vo);
 
-    // 循环新增 -- 动态SQL 之 foreach
+    // 循环新增 -- 动态 SQL 之 foreach
     Long insertBatch(List<UserVO> vos);
 
-    // 循环删除 -- 动态SQL之 foreach 数组
+    // 循环删除 -- 动态 SQL之 foreach 数组
     Long deleteBatch(Integer[] ids);
 
-    // 循环删除 -- 动态SQL之 foreach 集合
+    // 循环删除 -- 动态 SQL 之 foreach 集合
     Long deleteBatch(List<Integer> lists);
 }
 ```
@@ -1289,6 +1272,147 @@ public class Demo {
 }
 ```
 
+## 缓存机制
+
+暂时存储一些数据；加快系统的查询速度
+
+MyBatis 缓存机制：Map；能保存查询出的一些数据；
+
+- 一级缓存：线程级别的缓存；本地缓存；SqlSession 级别的缓存，当调用 `SqlSession` 的修改，添加，删除，`commit()，close()`等方法时，就会清空一级缓存。
+- 二级缓存：全局范围的缓存；除过当前线程；SqlSession 能用外其他也可以用。二级缓存是 `mapper` 映射级别的缓存，多个 `SqlSession` 去操作同一个 `Mapper` 映射的 `sql` 语句，多个 `SqlSession` 可以共用二级缓存，二级缓存是跨 `SqlSession` 的
+
+### 一级缓存失效
+
+一级缓存是 `SqlSession` 级别的缓存，只要 `SqlSession` 没有 flush 或 close，它就存在！
+
+```xml
+<mapper namespace="com.itheima.dao.IUserDao">
+    <!-- 根据 id 查询 -->
+    <select id="findById" resultType="UsEr" parameterType="int" useCache="true">
+        select * from user where id = #{uid}
+    </select>
+</mapper>
+```
+
+请自行编码验证！
+
+看下 MyBatis 缓存部分的源码就知道，这个缓存机制真的很弱鸡。
+
+一级缓存是 SqlSession 级别的缓存
+
+1）不同的 sqlSession，使用不同的一级缓存
+
+​	只有在同一个 sqlSession 期间查询到的数据会保存在这个 sqlSession 的缓存中。
+
+​	下次使用这个 sqlSession 查询会从缓存中拿
+
+2）同一个方法，不同的参数，由于可能之前没查询过，所以还有发新的 sql；
+
+3）在这个 sqlSession 期间执行任何一次增删改操作，增删改都会把缓存清空。（不管你改的是不是我的数据，我都清空）
+
+4）手动清空缓存 openSession.clearCache()
+
+MyBatis 缓存是在 Cache 类 - org.apache.ibatis.cache - PerpetualCache变量中
+
+```java
+public class PerpetualCache implements Cache {
+
+  private final String id;
+	
+  // 所谓的缓存其实就是一个Map
+  private Map<Object, Object> cache = new HashMap<Object, Object>();
+
+  // some method
+}
+```
+
+### 二级缓存失效
+
+全局作用域缓存
+
+二级缓存默认不开启，需要手动配置
+
+MyBatis 提供二级缓存的接口及其实现，缓存实现要求 POJO 实现 Serializable 接口
+
+## #和$
+
+`#{}`表示一个占位符号
+
+通过 `#{}` 可以实现 `preparedStatement` 向占位符中设置值，自动进行 `Java` 类型和 `jdbc` 类型转换，
+
+`#{}`可以有效防止 `sql` 注入。 `#{}`可以接收简单类型值或 `pojo` 属性值。 如果 `parameterType` 传输单个简单类
+型值，`#{}`括号中可以是 value 或其它名称。
+
+`${}`表示拼接 `sql` 串
+
+通过 `${}` 可以将 `parameterType` 传入的内容拼接在 `sql` 中且不进行 `jdbc` 类型转换， `${}`可以接收简
+单类型值或 `pojo` 属性值，如果 `parameterType` 传输单个简单类型值，`${}`括号中只能是 value。
+
+> 源码级别解析
+
+```java
+class A{
+    @Override
+    public String handleToken(String content) {
+      Object parameter = context.getBindings().get("_parameter");
+      if (parameter == null) {
+        context.getBindings().put("value", null);
+      } else if (SimpleTypeRegistry.isSimpleType(parameter.getClass())) {
+        context.getBindings().put("value", parameter);
+      }
+      Object value = OgnlCache.getValue(content, context.getBindings());
+      String srtValue = (value == null ? "" : String.valueOf(value)); // issue #274 return "" instead of "null"
+      checkInjection(srtValue);
+      return srtValue;
+    }
+}
+```
+
+>读取的 key 的名字就是 ”value”，所以我们在绑定参数时就只能叫 value 的名字
+
+## 深入理解
+
+- `MyBatis` 可自己写 `Dao` 实现类也可不写实现类。推荐不写实现类。
+- 不写实现类采用的是基于代理的 CRUD 操作。
+- `MyBatis` 用到了 `OGNL` 表达式
+  - `Object Graphic Navigation Language`
+    	对象	图	导航	   语言
+  - 它是通过对象的取值方法来获取数据。在写法上把 get 给省略了。
+  - 比如：我们获取用户的名称
+    - 类中的写法：`user.getUsername();`
+    - ``OGNL` 表达式写法：`user.username`
+    - `mybatis `中为什么能直接写 `username` ，而不用 user. 呢？因为在 `parameterType` 中已经提供了属性所属的类，所以此时不需要写对象名
+
+## 连接池及事务控制
+
+### 连接池介绍
+
+相当于实现分配好很多数据库连接在容器中，需要用时从容器中拿连接，不需要用时把连接归还到容器中，可避免频繁的打开关闭，节约资源（打开关闭连接很消耗资源）。
+
+优点：减少获取连接所消耗的时间
+
+缺点：初始化连接时速度慢
+
+### 连接池
+
+<b>提供三种方式</b>
+
+- 配置的位置，主配置文件（我命名为`SqlConfig.xml`）中的 `dataSource` 标签，type 表示采用何种连接。
+- type 取值
+  - POOLED： 采用传统的 `javax.sql.DataSource` 规范中的连接池，`mybatis` 中有针对规范的实现。我们可以用其他连接池替代，如 `Druid`，`type="我们的druid"`，因为 `druid` 是遵循规范的，所以把类全名加上就行了。
+  - `UNPOOLED`：采用传统的获取连接的方式，虽然也实现 `Javax.sql.DataSource`接口，但是并没有使用池化的思想。
+  - `JNDI`：采用服务器提供的 `JNDI` 技术实现，来获取 `DataSource` 对象，不同的服务器所能拿到 `DataSource` 是不一样。注意：如果不是 web 或者 `maven` 的 `war` 工程，是不能使用的。使用 `tomcat` 服务器的话，采用连接池就是 `dbcp` 连接池。
+
+### 事务
+
+事务的四大特性 ACID
+
+不考虑隔离性会产生的3个问题
+
+解决办法：四种隔离级别
+
+它是通过 `sqlsession` 对象的 commit 方法和 rollback 方法实现事务的提交和回滚
+
 ## 多表操作
 
 如果 POJO 字段的名称和数据库的名称不对应则采用
@@ -1326,32 +1450,27 @@ public class Demo {
 </resultMap>
 ```
 
-## javaType和ofType
 
-`JavaType `和 `ofType` 都是用来指定对象类型的，但是 `JavaType` 是用来指定 `pojo` 中属性的类型，而 `ofType` 指定的是映射到 list 集合属性中 `pojo` 的类型。
 
 
 ## 延迟加载
 
 ### 一对一的延迟加载
 
-#### 概要
-
 举例：用户和账户之间是 一个用户对应多个账户。一个账户对应一个用户。所以账户和用户是一对一的关系。
 
 我们对用户信息进行懒加载。
 
-- `proerty `是 `Java `字段的名称
+- `proerty` 是 `Java `字段的名称
 - `javaType` 是查询出来的数据类型
 - select 是要调用的查询方法，通过这个查询方法把懒数据查询出来
 - column 是查询的条件，即 where xx = column 的值。这个 column 取自 `resultMap`。
 
 ```xml
-<association property="user" javaType="User" select="com.bbxx.dao.lazy.IUserDao.findOne" column="uid">
-</association>
+<association property="user" javaType="User" select="com.bbxx.dao.lazy.IUserDao.findOne" column="uid"></association>
 ```
 
-#### 具体代码
+<b>具体代码</b>
 
 ```java
 public interface IAccountDao {
@@ -1398,8 +1517,6 @@ public interface IUserDao {
 
 ### 一对多延迟加载
 
-#### 概要
-
 用户和账户是一对多查询。我们对“多”进行懒加载，要用时在查询
 
 对多的查询采用
@@ -1407,13 +1524,13 @@ public interface IUserDao {
 - `proerty` 是数据对应的 `Java` 字段的名称
 - `ofType` 是查询出来集合中存储的数据类型
 - `select` 是要调用的查询方法，通过这个查询方法把懒数据查询出来
-- `column` 是查询的条件，即 `where xx = column` 的值。这个 `column` 取自`resultMap`
+- `column` 是查询的条件，即 `where xx = column` 的值。这个 `column` 取自 `resultMap`
 
 ```xml
 <collection property="accounts" ofType="Account" select="com.bbxx.dao.lazy.IAccountDao.findById" column="id">
 </collection>
 ```
-#### 具体代码
+<b>具体代码</b>
 
 ```java
 public interface IUserDao {
@@ -1462,7 +1579,7 @@ IAccountDao的mapper文件
 </mapper>
 ```
 
-# MyBatis高级篇
+# 高级篇
 
 ## MyBatis生成Mapper
 
@@ -1586,7 +1703,7 @@ public Object execute(SqlSession sqlSession, Object[] args) {
 }
 ```
 
-看 `executeForMany 方法`
+看 `executeForMany` 方法
 
 ```java
 private <E> Object executeForMany(SqlSession sqlSession, Object[] args) {
