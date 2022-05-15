@@ -27,14 +27,12 @@ MyBatis 减少了样板代码，简化了持久层的开发。
 
 相对路径 `src/java/main/文件名.xml`
 
-读配置文件 ①用类加载器，读类路径下的
-
-​		  			②用 `Servlet Context` 对象的 `getRealPath`
+读配置文件 ① 用类加载器，读类路径下的；② 用 `Servlet Context` 对象的 `getRealPath`
 
 创建工程 `MyBatis` 用了构建者模式。告诉需求，根据需求创建我们想要的。
 
 ```java
-build.build(in) // in形式下创建的工厂，多了几个类，操作看起来麻烦了，但是组合更加灵活的。
+build.build(in) // in 形式下创建的工厂，多了几个类，操作看起来麻烦了，但是组合更加灵活的。
 ```
 
 生成 `SqlSession` 用了工厂模式
@@ -64,47 +62,42 @@ maven 的 pom 文件
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.bbxx</groupId>
-    <artifactId>MyBatis02</artifactId>
+    <groupId>cn.payphone</groupId>
+    <artifactId>LearnMyBatis</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>8</source>
-                    <target>8</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.mybatis</groupId>
             <artifactId>mybatis</artifactId>
-            <version>3.4.5</version>
+            <version>3.5.6</version>
         </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.17</version>
-        </dependency>
+
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.21</version>
         </dependency>
+        
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.1.1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+        </dependency>
     </dependencies>
+
 </project>
 ```
 
@@ -154,12 +147,52 @@ mapper 文件示例
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <!-- namespace是接口的类全名 resultType是返回类型的类全民，可通过配置简写 -->
-<mapper namespace="xx.dao.xx">
-    <select id="select" resultType="xx.Article">
-		select title,username from article;
-	</select>
+<mapper namespace="cn.mapper.UserMapper">
+    <select id="selectAll" resultType="cn.pojo.User">
+        select * from users
+    </select>
 </mapper>
 ```
+
+执行 SQL 的代码
+
+```java
+public class HelloMyBatis {
+    public static void main(String[] args) throws IOException {
+        String resourcePath = "MyBatisConfig.xml";
+        InputStream in = Resources.getResourceAsStream(resourcePath);
+        // 创建 SqlSessionFactory 工厂
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+		
+        // 根据唯一空间标识符，调用方法对应的 SQL 语句
+        List<User> objects = sqlSession.selectList("cn.mapper.UserMapper.selectAll",User.class);
+        // 如果方法名是唯一的，则可以省略前缀 cn.mapper.UserMapper
+        List<User> selectAll = sqlSession.selectList("selectAll", User.class);
+
+        selectAll.forEach(System.out::println);
+        
+        // 直接拿到UserMapper 接口对应的动态代理对象，然后调用方法
+        UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+        List<User> users = mapper.selectAll();
+        users.forEach(System.out::println);
+    }
+}
+
+public class User {
+    private int id;
+    private String name;
+    private String sex;
+	//... some code
+}
+
+// mapper 
+public interface UserMapper {
+    List<User> selectAll();
+}
+```
+
+<img src="img/image-20220515171601297.png">
 
 ## 集成Druid
 
@@ -228,6 +261,8 @@ public class DataSourceDruid extends UnpooledDataSourceFactory {
 
 ## 日志相关
 
+log4j 的日志放在 resources 下。
+
 <b>`log4j`日志配置</b>
 
 ```properties
@@ -280,7 +315,7 @@ Mapper 映射文件放在 maven 工程 resource 下 com/daily/mapper 也是 reso
 
 > 2、用包名引入
 
-这种引入方式相当于批量引入一个包下的所有映射器。此种方式要求 xml 和接口名称一致？
+这种引入方式相当于批量引入一个包下的所有映射器。此种方式要求 xml 和接口名称一致。
 
 ```xml
 <mappers>
@@ -306,109 +341,175 @@ Mapper 映射文件放在 maven 工程 resource 下 com/daily/mapper 也是 reso
 </mappers>
 ```
 
-一般我喜欢使用`包名引入`。
-
 maven 项目下，所有的非 `*.java` 文件都要放在 resources 目录下。resources 是项目的资源根目录！
 
 如：src/main/java 目录下的包和类都是以 classes 为根目录进行发布。resources 下的资源也是以 classes 为根目录。
 
 <img src="img/ibatis/maven.png">
 
-mybatis 多对多是由两个一对一组成的，如：user 一对多role，role 一对多user，这样 user 和 role 就是多对多关系了。 数据库的多对多需要一个中间表来描述两表的多对多关系。
+mybatis 多对多是由两个一对一组成的，如：user 一对多 role，role 一对多 user，这样 user 和 role 就是多对多关系了。 数据库的多对多需要一个中间表来描述两表的多对多关系。
 
 <a href="https://github.com/csliujw/MyBatis-Study">项目地址</a>
 
 ## 简单的CURD
 
-```java
-package com.bbxx.dao;
+POJO 代码
 
-import com.bbxx.pojo.UserVO;
+```java
+public class User {
+    private int id;
+    private String name;
+    private String sex;
+
+    public User(){}
+    public User(String name,String sex){
+        this.name = name;
+        this.sex = sex;
+    }
+    // 省略 set get toString
+}
+```
+
+Mapper 接口
+
+```java
+package cn.mapper;
+
+import cn.pojo.User;
+
 import java.util.List;
 
-public interface IUserDao {
-    // 查询所有
-    List<UserVO> findAll();
-    // 条件查询
-    List<UserVO> findCondition(UserVO vo);
-    // 删除
-    Integer delete(Integer id);
-    // 修改
-    Boolean update(UserVO vo);
-    // 新增
-    Boolean insert(UserVO vo);
-    // 模糊查询
-    List<UserVO> findByName(String username);
-    // 聚合函数
-    Long findTotal();
+public interface UserMapper {
+    List<User> selectAll();
+
+    List<User> findByName(String name);
+
+    boolean insert(User user);
+
+    boolean update(User user);
+
+    boolean deleteById(int id);
+
+    long findTotal();
 }
 ```
 
 ```xml
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bbxx.dao.IUserDao">
-    <!-- 配置查询所有操作 -->
-    <select id="findAll" resultType="com.bbxx.pojo.UserVO">
-        select * from users
-    </select>
-
-    <select id="findCondition" resultType="UserVO">
-        select * from users where 1 = 1
-        <if test="id!=null">
-            and id=#{id}
-        </if>
-        <if test="username!=null">
-            and username=#{username}
-        </if>
-        <if test="birthday!=null">
-            and birthday=#{birthday}
-        </if>
-    </select>
-
-    <delete id="delete">
-        delete from users where id = #{value}
-    </delete>
-
-    <update id="update" parameterType="UserVO">
-        update users
-        <set>
-            <if test="username!=null">
-                username = #{username}
-            </if>
-        </set>
-        where id=#{id}
-    </update>
-	<!--
-		让MyBatis自动地将自增id赋值给传入地employee对象的id属性。
-		useGeneratedKeys="true";原生jdbc获取自增主键的方法：
-			keyProperty="",将刚才自增的id封装给哪个属性。
-	-->
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        insert into users(username, birthday, address)
-        values (#{username}, #{birthday}, #{address})
-    </insert>
-
-    <select id="findByName" resultType="UserVO">
+<mapper namespace="cn.mapper.UserMapper">
+	<!-- 如果配置了别名，那么 resultType 就不用写全名了 -->
+    <select id="selectAll" resultType="cn.pojo.User">
         select *
         from users
-        where username like concat("%", #{value}, "%")
     </select>
 
-    <select id="findTotal" resultType="long">
-        select count(1)
+    <select id="findByName" resultType="cn.pojo.User">
+        select *
+        from users
+        where name like concat("%", #{name}, "%")
+    </select>
+
+    <!--    拿到自增的主键 id-->
+    <!--
+            让MyBatis自动地将自增id赋值给传入地 User 对象的id属性。
+            useGeneratedKeys="true";原生jdbc获取自增主键的方法：
+            keyProperty="",将刚才自增的id封装给哪个属性。
+ 	-->
+    <insert id="insert"  useGeneratedKeys="true" keyProperty="id">
+        insert into users(name, sex)
+        values (#{name}, #{sex} )
+    </insert>
+
+    <!-- parameterType默认可以不写！mybatis会自动判断的 -->
+    <update id="update" parameterType="User">
+        update users
+        set name=#{name},
+            sex=#{sex}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="int">
+        delete
+        from users
+        where id = #{value}
+    </delete>
+
+    <select id="findTotal" resultType="java.lang.Long">
+        select count(*)
         from users
     </select>
+
 </mapper>
+```
+
+测试代码
+
+```java
+public class CRUDTest {
+    String resourcePath = "MyBatisConfig.xml";
+    SqlSession sqlSession;
+    UserMapper userDao;
+
+    @BeforeEach
+    public void init() throws IOException {
+        InputStream in = Resources.getResourceAsStream(resourcePath);
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
+        sqlSession = sqlSessionFactory.openSession(true); // 設置自動提交事務
+        userDao = sqlSession.getMapper(UserMapper.class);
+    }
+
+    @Test
+    void selectAll() {
+        List<User> users = userDao.selectAll();
+        Assertions.assertNotEquals(users.size(), 0);
+    }
+
+    @Test
+    void findByName() {
+        List<User> byName = userDao.findByName("1");
+        byName.forEach(System.out::println);
+    }
+
+    @Test
+    void insert() {
+        User cqq1 = new User("cqq", "0");
+        boolean cqq = userDao.insert(cqq1);
+        System.out.println(cqq1.getId());
+        Assertions.assertTrue(cqq);
+    }
+
+    @Test
+    void update() {
+        User cqq1 = new User("cqq", "1");
+        cqq1.setId(9);
+        boolean cqq = userDao.update(cqq1);
+        Assertions.assertTrue(cqq);
+    }
+
+
+    @Test
+    void deleteById() {
+        boolean b = userDao.deleteById(9);
+        Assertions.assertTrue(b);
+    }
+
+    @Test
+    void findTotal() {
+        long total = userDao.findTotal();
+        Assertions.assertNotEquals(total,0);
+    }
+
+}
 ```
 
 ## 参数占位符用法
 
-> #{}等同于占位符 "?"
+> #{} 等同于占位符 "?"
 
-- 只有一个形式参数时：
+只有一个形式参数时：
 
 ```java
 public Employee getXX(Integer id);
@@ -420,7 +521,7 @@ public Employee getXX(Integer id);
 </select>
 ```
 
-- 有多个形参时：
+有多个形参时：
 
 ```java
 public Employee getXX(Integer id, String name);
@@ -444,7 +545,7 @@ public Employee getXX(Integer id, String name);
 
 > 总结
 
-- 要么写#{0} #{1} 要么写 #{param1} #{param2} 
+- 要么写 #{0} #{1} 要么写 #{param1} #{param2} 
 - 只有一个形参的话写什么都行 #{asf} #{haha} 都行
 - 原因：只要传入了多个参数；MyBatis 会自动的将这些参数封装在一个 map 中；封装的时候使用的 key 就是参数的索引和参数的第几个表示
 
