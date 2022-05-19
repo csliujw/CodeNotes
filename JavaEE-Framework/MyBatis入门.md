@@ -1,10 +1,32 @@
 # 概述
 
-MyBatis 3.4x 版本，把它内部需要的三方 jar 都整合在一起了。
+MyBatis 框架，ORM（Object/Relational Mapping，即对象关系映射）框架。ORM 框架描述乐 Java 对象与数据库表之间的映射关系，可以自动将 Java 应用程序中的对象持久化到关系型数据库的表中。
+
+PS：MyBatis 3.4x 版本，把它内部需要的三方 jar 都整合在一起了。
+
+常见的 ORM 框架有：Hibernate、MyBatis、Spring JPA。
+
+- Hibernate：全自动的 ORM 框架，无需编写 SQL 语句，不支持存储过程，开发效率高，但是不能通过优化 SQL 来提高性能。
+- MyBatis 半自动化的 ORM 框架，需要写 SQL，支持存储过程。对可以通过优化 SQL 来提高性能，适合一些复杂的和需要优化性能的项目。
 
 ## 解决的问题
 
 MyBatis 减少了样板代码，简化了持久层的开发。
+
+## 基本原理
+
+<img src="img/ibatis/epub_22655629_78.jpg">
+
+MyBatis 框架在操作数据库时，大体经过了 8 个步骤
+
+- （1）读取 MyBatis 配置文件 mybatis-config.xml。mybatis-config.xml 是 MyBatis 的全局配置文件，配置了 MyBatis 的运行环境等信息，其中主要内容是获取数据库连接。
+- （2）加载映射文件 Mapper.xml。Mapper.xml 文件是 SQL 映射文件，该文件中配置了操作数据库的 SQL 语句，需要在 mybatis-config.xml 中加载才能执行。mybatis-config.xml 可以加载多个配置文件，每个配置文件对应数据库中的一张表。
+- （3）构建会话工厂。通过 MyBatis 的环境等配置信息构建会话工厂 SqlSessionFactory。
+- （4）创建 SqlSession 对象。由会话工厂创建 SqlSession 对象，该对象中包含了执行 SQL 的所有方法。
+- （5）MyBatis 底层定义了一个 Executor 接口来操作数据库，它会根据 SqlSession 传递的参数<span style="color:orange">动态生成需要执行的 SQL 语句</span>，同时负责查询缓存的维护。
+- （6）在 Executor 接口的执行方法中，包含一个 MappedStatement 类型的参数，该参数是对映射信息的封装，用于存储要映射的 SQL 语句的 id、参数等。Mapper.xml 文件中一个 SQL 对应一个 MappedStatement 对象，SQL 的 id 即是 MappedStatement 的 id。
+- （7）输入参数映射。在执行方法时，MappedStatement 对象会对用户执行 SQL 语句的输入参数进行定义（可以定义为 Map、List 类型、基本类型和 POJO 类型），Executor 执行器会通过 MappedStatement 对象在执行 SQL 前，将输入的 Java 对象映射到 SQL 语句中。这里对输入参数的映射过程就类似于 JDBC 编程中对 preparedStatement 对象设置参数的过程。
+- （8）输出结果映射。在数据库中执行完 SQL 语句后，MappedStatement 对象会对 SQL 执行输出的结果进行定义（可以定义为 Map 和 List 类型、基本类型、POJO 类型）, Executor 执行器会通过 MappedStatement 对象在执行 SQL 语句后，将输出结果映射至 Java 对象中。这种将输出结果映射到 Java 对象的过程就类似于 JDBC 编程中对结果的解析处理过程。
 
 ## 快捷键基础
 
@@ -754,6 +776,37 @@ public Object getNamedParams(Object[] args) {
     }
 }
 ```
+
+## 核心配置
+
+- 核心对象的作用
+- 配置文件中各个元素的作用
+- 映射文件中常用元素的作用
+
+### 核心对象
+
+在使用 MyBatis 框架时，主要涉及两个核心对象：SqlSessionFactory 和 SqlSession。
+
+#### SqlSessionFactory
+
+可以认为 SqlSessionFactory 与数据库一一对应，一个 SqlSessionFactory 对应一个数据库实例。它的主要作用是创建 SqlSession。
+
+<span style="color:orange">SqlSessionFactory 的创建：SqlSessionFactoryBuilder 通过 xml 配置文件创建出一个具体的 SqlSessionFactory。</span>
+
+```java
+InputStream in = Resources.getResourceAsStream("配置文件路径");
+SqlSessionFactory sf = new SqlSessionFactoryBuilder().build(in);
+```
+
+SqlSessionFactory 对象是线程安全的，它一旦被创建，在整个应用执行期间都会存在。如果我们多次地创建同一个数据库的SqlSessionFactory，那么此数据库的资源将很容易被耗尽。为了解决此问题，通常每一个数据库都会只对应一个 SqlSessionFactory，所以在构建 SqlSessionFactory 实例时，建议使用单列模式。
+
+#### SqlSession
+
+可以将 SqlSession 当作是一个 JDBC 连接，可以用来执行 SQL 语句。实际上，SqlSession 是应用程序和持久层之间交互操作的一个单线程对象。每个线程都有一个自己的 SqlSession 实例，不能被共享。
+
+因为 SqlSession 实例是线程不安全的，所以最好不要共享。用完后及时关闭（对应数据库连接池中的归还连接嘛）。
+
+
 
 # 中级篇
 
