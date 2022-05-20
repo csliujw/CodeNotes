@@ -88,6 +88,8 @@ create table mybatis.users
 
 ## 基本环境搭建
 
+### 工程环境
+
 Maven 工程使用 `MyBatis` 的时候，配置文件需要放在 `resrouces` 目录下，否则无法找到。
 
 整合 Druid 的时候，需要的是数据源，需要我们手动 new 出 Druid 的数据源。
@@ -237,7 +239,7 @@ public interface UserMapper {
 
 <img src="img/image-20220515171601297.png">
 
-## 集成Druid
+### 集成Druid
 
 集成 Druid 只需要在前面的基础上修改一点东西即可。
 
@@ -302,7 +304,7 @@ public class DataSourceDruid extends UnpooledDataSourceFactory {
 </dependency>
 ```
 
-## 日志相关
+### 日志相关
 
 log4j 的日志放在 resources 下。
 
@@ -340,7 +342,7 @@ log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
 log4j.appender.stdout.layout.ConversionPattern=%5p [%t] - %m%n
 ```
 
-## Mapper映射文件
+### Mapper映射文件
 
 <a href="https://mybatis.org/mybatis-3/zh/configuration.html#mappers">官方链接</a>
 
@@ -445,13 +447,11 @@ public interface UserMapper {
 <mapper namespace="cn.mapper.UserMapper">
 	<!-- 如果配置了别名，那么 resultType 就不用写全名了 -->
     <select id="selectAll" resultType="cn.pojo.User">
-        select *
-        from users
+        select * from users
     </select>
 
     <select id="findByName" resultType="cn.pojo.User">
-        select *
-        from users
+        select * from users
         where name like concat("%", #{name}, "%")
     </select>
 
@@ -548,11 +548,515 @@ public class CRUDTest {
 }
 ```
 
-## 参数占位符用法
+## 核心配置
 
-> #{} 等同于占位符 "?"
+- 核心对象的作用
+- 配置文件中各个元素的作用
+- 映射文件中常用元素的作用
 
-只有一个形式参数时：
+### 核心对象
+
+在使用 MyBatis 框架时，主要涉及两个核心对象：SqlSessionFactory 和 SqlSession。
+
+#### SqlSessionFactory
+
+可以认为 SqlSessionFactory 与数据库一一对应，一个 SqlSessionFactory 对应一个数据库实例。它的主要作用是创建 SqlSession。
+
+<span style="color:orange">SqlSessionFactory 的创建：SqlSessionFactoryBuilder 通过 xml 配置文件创建出一个具体的 SqlSessionFactory。</span>
+
+```java
+InputStream in = Resources.getResourceAsStream("配置文件路径");
+SqlSessionFactory sf = new SqlSessionFactoryBuilder().build(in);
+```
+
+SqlSessionFactory 对象是线程安全的，它一旦被创建，在整个应用执行期间都会存在。如果我们多次地创建同一个数据库的SqlSessionFactory，那么此数据库的资源将很容易被耗尽。为了解决此问题，通常每一个数据库都会只对应一个 SqlSessionFactory，所以在构建 SqlSessionFactory 实例时，建议使用单列模式。
+
+#### SqlSession
+
+可以将 SqlSession 当作是一个 JDBC 连接，可以用来执行 SQL 语句，里面封装了一些常用的操作数据库的方法，如查询、修改、删除等操作。
+
+> DefaultSqlSession
+
+SqlSession 是 MyBatis 中的一个接口，它的子类 DefaultSqlSession 存在线程安全问题。而 SqlSessionManager 和 SqlSessionTemplate 是线程安全的。
+
+> SqlSessionManager 和 SqlSessionTemplate
+
+SqlSessionManager 和 SqlSessionTemplate  是怎么保证 SqlSession 线程安全的呢？避免多个线程并发使用同一个 DefaultSqlSession 实例即可。
+
+SqlSessionManager 内部通过维护一个 ThreadLocal 变量，记录一个与当前线程绑定的 SqlSession。当通过 SqlSessionFactory 创建 SqlSession 时就从这个 ThreadLocal 里取。
+
+```java
+public class SqlSessionManager implements SqlSessionFactory, SqlSession {
+
+  private final SqlSessionFactory sqlSessionFactory;
+  private final SqlSession sqlSessionProxy;
+  // ThreadLocal 用来记录一个与当前线程绑定的 SqlSession
+  private final ThreadLocal<SqlSession> localSqlSession = new ThreadLocal<>();
+
+  private SqlSessionManager(SqlSessionFactory sqlSessionFactory) {
+    this.sqlSessionFactory = sqlSessionFactory;
+    // 对 sqlSessionFactory 对象进行代理，所有的操作都是由代理对象完成
+    this.sqlSessionProxy = (SqlSession) Proxy.newProxyInstance(
+        SqlSessionFactory.class.getClassLoader(),
+        new Class[]{SqlSession.class},
+        new SqlSessionInterceptor()); // 仔细看下 SqlSessionInterceptor 中的方法可以发现，是从 localSqlSession 中获取 Session
+  }
+
+  @Override
+  public SqlSession openSession(Connection connection) {
+    return sqlSessionFactory.openSession(connection);
+  }
+
+  private class SqlSessionInterceptor implements InvocationHandler {
+	// some code
+
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+      final SqlSession sqlSession = SqlSessionManager.this.localSqlSession.get();
+      if (sqlSession != null) {
+        try {
+          return method.invoke(sqlSession, args);
+        } catch (Throwable t) {
+          throw ExceptionUtil.unwrapThrowable(t);
+        }
+      } else {
+        try (SqlSession autoSqlSession = openSession()) {
+          try {
+            final Object result = method.invoke(autoSqlSession, args);
+            autoSqlSession.commit();
+            return result;
+          } catch (Throwable t) {
+            autoSqlSession.rollback();
+            throw ExceptionUtil.unwrapThrowable(t);
+          }
+        }
+      }
+    }
+  }
+
+}
+```
+
+SqlSessionTemplate  又是怎么保证线程安全的呢？和 SqlSessionManager 的做法类似。详细内容可参考这篇博客[Spring+MyBatis源码解析之SqlSessionTemplate_henry_2016的博客-CSDN博客](https://blog.csdn.net/qq_33996921/article/details/106301832?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_title~default-0-106301832-blog-82746187.pc_relevant_priorsearch_v1&spm=1001.2101.3001.4242.1&utm_relevant_index=3)
+
+```java
+public SqlSessionTemplate(SqlSessionFactory sqlSessionFactory, ExecutorType executorType,
+                          PersistenceExceptionTranslator exceptionTranslator) {
+
+    notNull(sqlSessionFactory, "Property 'sqlSessionFactory' is required");
+    notNull(executorType, "Property 'executorType' is required");
+
+    this.sqlSessionFactory = sqlSessionFactory;
+    this.executorType = executorType;
+    this.exceptionTranslator = exceptionTranslator;
+    // 对 SqlSessionFactory 进行代理。
+    this.sqlSessionProxy = (SqlSession) newProxyInstance(SqlSessionFactory.class.getClassLoader(),
+                                                         new Class[] { SqlSession.class }, new SqlSessionInterceptor());
+}
+
+private class SqlSessionInterceptor implements InvocationHandler {
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        // 保证每次请求都是生成一个新的 sqlSession。（如果 ThreadLocal 中有，会返回 ThreadLocal 中的）
+        SqlSession sqlSession = getSqlSession(SqlSessionTemplate.this.sqlSessionFactory,
+                                              SqlSessionTemplate.this.executorType, SqlSessionTemplate.this.exceptionTranslator);
+        try {
+            Object result = method.invoke(sqlSession, args);
+			//...
+            return result;
+        } catch (Throwable t) {
+		   //...
+        } finally {
+		   // ...
+        }
+    }
+}
+
+/*
+SqlSessionUtils#getSqlSession
+TransactionSynchronizationManager获取当前线程threadLocal是否有SqlSessionHolder，
+如果有就从SqlSessionHolder取出当前SqlSession，
+如果当前线程threadLocal没有SqlSessionHolder，就从sessionFactory中创建一个SqlSession，
+最后注册会话到当前线程threadLocal中。
+*/
+public static SqlSession getSqlSession(SqlSessionFactory sessionFactory, ExecutorType executorType,
+                                       PersistenceExceptionTranslator exceptionTranslator) {
+
+    notNull(sessionFactory, NO_SQL_SESSION_FACTORY_SPECIFIED);
+    notNull(executorType, NO_EXECUTOR_TYPE_SPECIFIED);
+
+    SqlSessionHolder holder = (SqlSessionHolder) TransactionSynchronizationManager.getResource(sessionFactory);
+
+    SqlSession session = sessionHolder(executorType, holder);
+    if (session != null) {
+        return session;
+    }
+
+    LOGGER.debug(() -> "Creating a new SqlSession");
+    session = sessionFactory.openSession(executorType);
+
+    registerSessionHolder(sessionFactory, executorType, exceptionTranslator, session);
+
+    return session;
+}
+```
+
+> SqlSessionManager 的获取
+
+```java
+InputStream in = Resources.getResourceAsStream(resourcePath);
+SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
+SqlSessionManager sqlSessionManager = SqlSessionManager.newInstance(sqlSessionFactory);
+```
+
+SqlSessionTemplate 是 mybatis-spring 整合包中的。
+
+#### SqlSession中的方法
+
+SqlSession 对象中包含了很多方法，部分方法如下。
+
+```java
+public interface SqlSession extends Closeable {
+    // statement 表示的是 <select> 元素的id
+    // 使用该方法后，会返回执行 SQL 语句查询结果的一条泛型对象
+    <T> T selectOne(String statement);
+	
+    // parameter 是查询所需的参数。
+    <T> T selectOne(String statement, Object parameter);
+
+    <E> List<E> selectList(String statement);
+
+    <E> List<E> selectList(String statement, Object parameter);
+
+    // 返回一个和 SqlSession 绑定的 Mapper 接口的代理对象。
+    <T> T getMapper(Class<T> type);
+}
+```
+
+### 配置文件
+
+#### 主要元素
+
+```mermaid
+graph LR
+c(configuration<根元素>)--子元素-->properties
+c--子元素-->settings
+c--子元素-->typeAliases
+c--子元素-->typeHandlers
+c--子元素-->objectFactory
+c--子元素-->plugins
+c--子元素-->environments--子元素-->environment
+c--子元素-->databaseUdProvider
+c--子元素-->mappers
+environment--子元素-->transactionManager
+environment--子元素-->dataSource
+```
+
+#### properties
+
+\<properties\> 是一个配置属性的元素，该元素通常用于将内部的配置外在化，即通过外部的配置来动态地替换内部定义的属性。例如，数据库的连接等属性，就可以通过典型的 Java 属性文件中的配置来替换，具体方式如下。
+
+```properties
+# properties
+jdbc.driver=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://localhost:3306/xx
+jdbc.username=root
+jdbc.password=root
+```
+
+在 MyBatis 配置文件 mybatis-config.xml 中配置 \<properties... /\> 属性
+
+```xml
+<properties resource="db.properties" />
+```
+
+修改配置文件中数据库连接的信息，具体如下。
+
+```xml
+<dataSource type="POOLED">
+	<property name="driver" value="${jdbc.driver}" />
+	<property name="name" value="${jdbc.name}" />
+	<property name="password" value="${jdbc.password}" />
+	<property name="url" value="${jdbc.url}" />
+</dataSource>
+```
+
+完成上述配置后，dataSource 中连接数据库的 4 个属性（driver、url、username 和 password）值将会由 db.properties 文件中对应的值来动态替换。这样就为配置提供了诸多灵活的选择。
+
+#### settings
+
+\<settings\> 元素主要用于改变 MyBatis 运行时的行为，例如开启二级缓存、开启延迟加载等。
+
+<img src="img/ibatis/epub_22655629_93.jpg">
+
+#### typeAliases
+
+\<typeAliases\> 元素用于为配置文件中的 Java 类型设置一个简短的别名。别名的设置与 XML 配置相关，可以避免写全类名。
+
+```xml
+<typeAliases>
+    <!-- 为某个类配置别名 -->
+	<typeAlias alias="user" type="xx.it.po.User"/>
+</typeAliases>
+```
+
+使用自动扫描包来配置别名，这样会使用 Bean 的首字母小写的非限定类名来作为它的别名。如 xx.it.po.User 类对应的别名就是 user。如果类有注解的话，则别名为其注解的值。
+
+```xml
+<typeAliases>
+    <!-- 使用自动扫描包来配置别名 -->
+	<oackage  name="xx.it.po"/>
+</typeAliases>
+```
+
+```java
+@Alias(value="user")
+public class User{}
+```
+
+#### typeHandler
+
+typeHandler（类型处理器）将预处理语句中传入的参数从 javaType（Java 类型）转换为 jdbcType（JDBC 类型），或者从数据库取出结果时将 jdbcType 转换为 javaType。
+
+MyBatis 提供的一些默认的类型处理器。如果需要定义类型处理器可以通过实现 TypeHandler 接口或者继承 BaseTypeHandle 类来定义
+
+<img src="img/ibatis/epub_22655629_95.jpg">
+
+注册类型处理器
+
+```xml
+<typeHandlers>
+    <!-- 注册一个包中所有的 typeHandler -->
+	<package name="cn.it.type" />
+</typeHandlers>
+```
+
+#### objectFactory
+
+每次 MyBatis 创建<span style="color:orange">结果对象</span>的新实例时，它都会使用一个对象工厂（ObjectFactory）实例来完成实例化工作。 默认的对象工厂需要做的仅仅是实例化目标类，要么通过默认无参构造方法，要么通过存在的参数映射来调用带有参数的构造方法。 如果想覆盖对象工厂的默认行为，可以通过创建自己的对象工厂来实现。<span style="color:red">(了解即可)</span>
+
+```java
+// ExampleObjectFactory.java
+public class ExampleObjectFactory extends DefaultObjectFactory {
+  public Object create(Class type) {
+    return super.create(type);
+  }
+  public Object create(Class type, List<Class> constructorArgTypes, List<Object> constructorArgs) {
+    return super.create(type, constructorArgTypes, constructorArgs);
+  }
+  public void setProperties(Properties properties) {
+    super.setProperties(properties);
+  }
+  public <T> boolean isCollection(Class<T> type) {
+    return Collection.class.isAssignableFrom(type);
+  }
+}
+```
+
+```xml
+<!-- mybatis-config.xml -->
+<objectFactory type="org.mybatis.example.ExampleObjectFactory">
+  <property name="someProperty" value="100"/>
+</objectFactory>
+```
+
+#### plugins
+
+MyBatis 允许在已映射语句执行过程中的某一点进行拦截调用，这种拦截调用是通过插件来实现的。\<plugins\> 元素的作用就是配置用户所开发的插件。
+
+MyBatis 允许使用插件来拦截的方法调用有：
+
+- Executor (update, query, flushStatements, commit, rollback, getTransaction, close, isClosed)
+- ParameterHandler (getParameterObject, setParameters)
+- ResultSetHandler (handleResultSets, handleOutputParameters)
+- StatementHandler (prepare, parameterize, batch, update, query)
+
+编写插件时，只需实现 Interceptor 接口，并指定想要拦截的方法签名即可。
+
+```java
+// ExamplePlugin.java
+@Intercepts({@Signature(
+    type= Executor.class,
+    method = "update",
+    args = {MappedStatement.class,Object.class})})
+public class ExamplePlugin implements Interceptor {
+    private Properties properties = new Properties();
+    public Object intercept(Invocation invocation) throws Throwable {
+        // implement pre processing if need
+        Object returnObject = invocation.proceed();
+        // implement post processing if need
+        return returnObject;
+    }
+    public void setProperties(Properties properties) {
+        this.properties = properties;
+    }
+}
+```
+
+```xml
+<!-- mybatis-config.xml -->
+<plugins>
+    <plugin interceptor="org.mybatis.example.ExamplePlugin">
+        <property name="someProperty" value="100"/>
+    </plugin>
+</plugins>
+```
+
+#### environments
+
+可以通过 \<environments\> 元素配置多种数据源，即配置多种数据库。
+
+```xml
+<environments default="development">
+    <environment id="development">
+        <!-- 使用 JDBC 事务管理 -->
+        <transactionManager type="JDBC" />
+        <!-- 配置数据源 -->
+        <dataSource type="POOLED">
+            <property name="driver" value="${driver}"/>
+            <property name="url" value="${url}"/>
+            <property name="username" value="${username}"/>
+            <property name="password" value="${password}"/>
+        </dataSource>
+    </environment>
+</environments>
+```
+
+- transactionManager，元素用于配置事务管理，它的 type 属性用于指定事务管理的方式，即使用哪种事务管理器
+    - JDBC：直接使用了 JDBC 的提交和回滚设置，它依赖于从数据源得到的连接来管理事务的作用域。
+    - MANAGED：从来不提交或回滚一个连接，而是让容器来管理事务的整个生命周期。在默认情况下，它会关闭连接，但一些容器并不希望这样，为此可以将 closeConnection 属性设置为 false 来阻止它默认的关闭行为。
+    - Spring + MyBatis 的组合无须配置 MyBatis 的事务管理器，会使用 Spring 自带的管理器来实现事务管理。
+- dataSource 元素用于配置数据源，它的 type 属性用于指定使用哪种数据源，如果使用的是外部的数据源，type 属性的值就是 dataSource 的类全名。
+
+#### mappers
+
+mappers 元素用于指定 MyBatis 映射文件的位置
+
+使用类路径引入
+
+```xml
+<mappers>
+	<mapper resource="cn/xx/xx/A.xml" />
+</mappers>
+```
+
+使用本地文件路径引入
+
+```xml
+<mappers>
+	<mapper url="file:///D:/cn/xx/xx/A.xml" />
+</mappers>
+```
+
+使用接口类引入
+
+```xml
+<mappers>
+	<mapper class="cn.xx.xx.AMapper" />
+</mappers>
+```
+
+使用包名引入
+
+```xml
+<mappers>
+	<mapper name="cn.xx.xx.dao" />
+</mappers>
+```
+
+### 映射文件
+
+```mermaid
+graph LR
+mapper-->select-->查询语句,可自定义参数,返回结果
+mapper-->insert-->插入语句,返回整数
+mapper-->update-->更新语句,返回整数
+mapper-->delete-->删除语句,返回整数
+mapper-->sql-->sql片段
+mapper-->cache-->给定命名空间的缓存配置
+mapper-->cache-ref-->其他命名空间缓存配置的引用
+mapper-->resultMap-->用于描述如何从数据库结果集中加载对象
+```
+
+> 简单介绍下 resultMp。
+
+resultMap 元素表示结果映射集，是 MyBatis 中最重要也是最强大的元素。它的主要作用是定义映射规则、级联的更新以及定义类型转化器等。
+
+```xml
+<!--resultMap的元素结构 -->
+<resultMap type="" id="">
+    <constructor>  <!-- 类在实例化时，用来注入结果到构造方法中-->
+        <idArg/>   <!-- ID参数；标记结果作为ID-->
+        <arg/>      <!-- 注入到构造方法的一个普通结果-->
+    </constructor>
+    <id/>           <!-- 用于表示哪个列是主键-->
+    <result/>       <!-- 注入到字段或JavaBean属性的普通结果-->
+    <association property="" />  <!-- 用于一对一关联 -->
+    <collection property="" />   <!-- 用于一对多关联 -->
+    <discriminator javaType="">  <!-- 使用结果值来决定使用哪个结果映射-->
+        <case value="" />        <!-- 基于某些值的结果映射 -->
+    </discriminator>
+</resultMap>
+```
+
+- resultMap 元素的 type 属性表示需要映射的 POJO，id 属性是 resultMap 的唯一标识。
+- 子元素 constructor 用于配置构造方法（当一个 POJO 中未定义无参的构造方法时，就可以使用 constructor 元素进行配置）。
+- 子元素 id 用于表示哪个列是主键，而 result 用于表示 POJO 和数据表中普通列的映射关系。
+- \<association\> 和 \<collection\> 用于处理多表时的关联关系，
+- <discriminator\> 元素主要用于处理一个单独的数据库查询返回很多不同数据类型结果集的情况。
+
+默认情况下，MyBatis 程序在运行时会自动地将查询到的数据与需要返回的对象的属性进行匹配赋值（<span style="color:orange">需要表中的列名与对象的属性名称完全一致</span>）。然而实际开发时，数据表中的列和需要返回的对象的属性可能不会完全一致，这种情况下 MyBatis 是不会自动赋值的。此时，就可以使用 \<resultMap\> 元素进行处理。
+
+xml 示例文件
+
+```xml
+<mapper namespace="com.xx.mapper.UserMapper">
+    <resultMap type="com.xx.po.User" id="resultMap">
+        <id property="id" column="t_id"/>
+        <result property="name" column="t_name"/>
+        <result property="age" column="t_age"/>
+    </resultMap>
+    <select id="findAllUser" resultMap="resultMap">
+        select * from t_user
+    </select>
+</mapper>
+```
+
+## 参数取值
+
+### 基本用法
+
+> #{} 和 ${}；#{} 等同于占位符 "?"，\${} 相当于字符串拼接
+
+#{} 表示一个占位符号。通过 #{} 可以实现 preparedStatement 向占位符中设置值，自动进行 Java 类型和 jdbc 类型转换，
+
+#{} 可以有效防止 sql 注入。#{} 可以接收简单类型值或  pojo 属性值。 如果 parameterType 传输单个简单类型值，#{} 括号中可以是 value 或其它名称。
+
+\${} 表示拼接 sql 串。通过 \${} 可以将 parameterType 传入的内容拼接在 sql 中且不进行 jdbc 类型转换，\${} 可以接收简单类型值或 pojo 属性值，如果 parameterType 传输单个简单类型值，\${} 括号中只能是 value。
+
+从源码上理解
+
+```java
+class A{
+    @Override
+    public String handleToken(String content) {
+      Object parameter = context.getBindings().get("_parameter");
+      if (parameter == null) {
+        context.getBindings().put("value", null);
+      } else if (SimpleTypeRegistry.isSimpleType(parameter.getClass())) {
+        context.getBindings().put("value", parameter);
+      }
+      Object value = OgnlCache.getValue(content, context.getBindings());
+      String srtValue = (value == null ? "" : String.valueOf(value)); // issue #274 return "" instead of "null"
+      checkInjection(srtValue);
+      return srtValue;
+    }
+}
+```
+
+读取的 key 的名字就是 ”value”，所以我们在绑定参数时就只能叫 value 的名字
+
+> 只有一个形式参数时
 
 ```java
 public User getOne(int id);
@@ -566,7 +1070,7 @@ public User getOne(int id);
 </select>
 ```
 
-有多个形参时：可以用注解取别名，方便拿对应的参数；也可以不取别名，按框架的规则进行取数据
+> 有多个形参时：可以用注解取别名，方便拿对应的参数；也可以不取别名，按框架的规则进行取数据
 
 ```java
 // 有多个形参
@@ -628,7 +1132,7 @@ public User getTwoAnnotation(@Param("findName") String name, @Param("findSex") S
 </select>
 ```
 
-## 取值总结
+### 用法小结
 
 1）单个参数
 
@@ -676,7 +1180,7 @@ mybatis 的取值方式可分为两类：
     - eg：id=1 or 1 = 1 and empname=
     - 传入一个1 or 1=1 or
 
-## 取值源码分析
+### 源码分析
 
 MapperMethod 类
 
@@ -777,40 +1281,9 @@ public Object getNamedParams(Object[] args) {
 }
 ```
 
-## 核心配置
-
-- 核心对象的作用
-- 配置文件中各个元素的作用
-- 映射文件中常用元素的作用
-
-### 核心对象
-
-在使用 MyBatis 框架时，主要涉及两个核心对象：SqlSessionFactory 和 SqlSession。
-
-#### SqlSessionFactory
-
-可以认为 SqlSessionFactory 与数据库一一对应，一个 SqlSessionFactory 对应一个数据库实例。它的主要作用是创建 SqlSession。
-
-<span style="color:orange">SqlSessionFactory 的创建：SqlSessionFactoryBuilder 通过 xml 配置文件创建出一个具体的 SqlSessionFactory。</span>
-
-```java
-InputStream in = Resources.getResourceAsStream("配置文件路径");
-SqlSessionFactory sf = new SqlSessionFactoryBuilder().build(in);
-```
-
-SqlSessionFactory 对象是线程安全的，它一旦被创建，在整个应用执行期间都会存在。如果我们多次地创建同一个数据库的SqlSessionFactory，那么此数据库的资源将很容易被耗尽。为了解决此问题，通常每一个数据库都会只对应一个 SqlSessionFactory，所以在构建 SqlSessionFactory 实例时，建议使用单列模式。
-
-#### SqlSession
-
-可以将 SqlSession 当作是一个 JDBC 连接，可以用来执行 SQL 语句。实际上，SqlSession 是应用程序和持久层之间交互操作的一个单线程对象。每个线程都有一个自己的 SqlSession 实例，不能被共享。
-
-因为 SqlSession 实例是线程不安全的，所以最好不要共享。用完后及时关闭（对应数据库连接池中的归还连接嘛）。
-
-
-
 # 中级篇
 
-## 返值为map
+## 返回值为map
 
 > 常规情况
 
@@ -876,32 +1349,551 @@ id：唯一标识符，让别名在后面引用
 </select>
 ```
 
-## 一对一查询
+## 按需加载
+
+```xml
+<settings>
+    <!-- 开启延迟加载开关 -->
+	<setting name="lazyLoadingEnable" value="true"></setting>
+    <!-- 开启属性按需加载 -->
+    <setting name="aggressiveLazyLoading" value="true"></setting>
+</settings>
+
+<!-- Mapper xml文件中按需加载的写法 -->
+<!-- fetchType	可选的。有效值为 lazy 和 eager。 指定属性后，将在映射中忽略全局配置参数 lazyLoadingEnabled，使用属性的值 -->
+<association xx fetchType="eager"></association>
+```
+
+## 动态SQL
+
+动态 SQL 是 MyBatis 的强大特性之一，MyBatis 3 采用 OGNL 表达式来实现的动态 SQL。
+
+| 元素                        | 说明                                                         |
+| --------------------------- | ------------------------------------------------------------ |
+| <if>                        | 判断语句，用于单条件分支判断                                 |
+| <choose>(<when><otherwise>) | 相当于 Java 中得 switch...case...default 语句，<br>用于多分支判断 |
+| <where>、<trim>、<set>      | 辅助元素，处理 SQL 拼接和特殊字符问题                        |
+| <foreach>                   | 循环语句，常用于 in 语句等列举条件中                         |
+| <bind>                      | 从 OGBL 表达式中创建一个变量，将其绑定到上下文，<br/>常用于模糊查询得 sql 中。 |
+
+### 标签学习
+
+> if 标签
+
+用于实现某些简单的条件选择。
+
+```xml
+<select id="xxx" resultType='User'>
+	select * from t_user where 1=1
+    <if test="name!=null and name!=''">
+    	and name like concat('%d',#{name},'%')
+    </if>
+    <if test="jobs!=null and jobs!=''">
+    	and jobs=#{jobs}
+    </if>
+</select>
+```
+
+>\<choose\> (\<when\> \<otherwise\>)
+
+有时候，我们不想使用所有的条件，而只是想从多个条件中选择一个使用。针对这种情况，MyBatis 提供了 choose 元素，它有点像 Java 中的 switch 语句。
+
+举例：查询条件为，传入了 “title” 就按 “title” 查找，传入了 “author” 就按 “author” 查找的情形。若两者都没有传入，就返回标记为 featured 的 BLOG
+
+```xml
+<select id="findActiveBlogLike" resultType="Blog">
+    SELECT * FROM BLOG WHERE state = ‘ACTIVE’
+    <choose>
+        <when test="title != null">
+            AND title like #{title}
+        </when>
+        <when test="author != null and author.name != null">
+            AND author_name like #{author.name}
+        </when>
+        <otherwise>
+            AND featured = 1
+        </otherwise>
+    </choose>
+</select>
+```
+
+> where 标签
+
+where 标签可以帮我们去除掉前面的 and
+
+```xml
+<select id="findActiveBlogLike" resultType="Blog">
+    SELECT * FROM BLOG
+    <where>
+        <if test="state != null">
+            state = #{state}
+        </if>
+        <if test="title != null">
+            AND title like #{title}
+        </if>
+        <if test="author != null and author.name != null">
+            AND author_name like #{author.name}
+        </if>
+    </where>
+</select>
+```
+
+> trim 标签
+
+```xml
+<!--
+	prefix=""	前缀：为我们下面的sql整体添加一个前缀
+	prefixOverrides	取出整体字符串前面多余的字符
+	suffix	为整体添加一个后缀
+	suffixOverrides	后面哪个多了可以去掉
+-->
+<trim prefix="where" prefixOverrides="and">
+	<if test="id!=null">
+    	id > #{id} and
+    </if>
+    <!--
+		有些字符是xml的标记，所以需要转义
+	-->
+    <if test="name != null &amp;&amp; !name.equals(&quot;&quot;)">
+    	teacherName like #{name} and
+    </if>
+    <if test="birth != null">
+    	birth_date &lt; #{birth} and
+    </if>
+</trim>
+```
+
+> foreach
+
+foreach 元素的功能非常强大，它允许你指定一个集合，声明可以在元素体内使用的集合项（item）和索引（index）变量。它也允许你指定开头与结尾的字符串以及集合项迭代之间的分隔符。这个元素也不会错误地添加多余的分隔符！
+
+<b>提示：</b>我们可以将任何可迭代对象（如 List、Set 等）、Map 对象或者数组对象作为集合参数传递给 foreach。
+
+- <span style="color:orange">当使用可迭代对象或者数组时，index 是当前迭代的序号，item 的值是本次迭代获取到的元素。</span>
+- <span style="color:orange">当使用 Map 对象（或者 Map.Entry 对象的集合）时，index 是键，item 是值。</span>
+- collection：配置的 list 是传递过来的参数类型（首字母小写），可以是一个 array、list（或 collection）、Map 集合的键、POJO 包装类中数组或集合类型的属性名等
+- open 和 close：配置的是以什么符号将这些集合元素包装起来。
+- separator：配置的是各个元素的间隔符。
+
+```xml
+select xxxxx where id in
+<!--
+	collection	指定要遍历的集合的key
+	close		以什么结束
+	open		以什么开始
+	index		索引
+		如果遍历的是一个list，index指定的变量保存了当前索引
+		如果遍历的是一个map，index 指定的变量就是保存了当前遍历元素的key
+	item		变量名
+	separator	每次遍历元素的分隔符
+	(#{id_item},#{id_item},#{id_item})
+	这里collection可以用ids 是因为 用了@Param("ids")为key重新命名了。没有这个的话，List类型默认用的key是list
+-->
+<foreach collection="ids" item="id_item" index="id_index" separator="," open="(" close=")">
+    #{id_item}
+</foreach>
+```
+
+> 抽取 sql 片段
+
+```xml
+<sql id="selectSql">
+	select xxx sfaf
+</sql>
+<select id="xx" xx>
+	<include refid="selectSql"></include>
+    where id=#{id}
+</select>
+
+<!-- 传递参数 -->
+<sql id="userColumns"> ${alias}.id,${alias}.username,${alias}.password </sql>
+<select id="selectUsers" resultType="map">
+    select
+    <include refid="userColumns"><property name="alias" value="t1"/></include>,
+    <include refid="userColumns"><property name="alias" value="t2"/></include>
+    from some_table t1
+    cross join some_table t2
+</select>
+```
+
+### 完整示例
+
+#### Java代码
+
+```java
+public interface IUserDao {
+
+    // 删除 -- 测试事务
+    Integer delete(Integer id);
+
+    // 查询所有 -- 查看事务是否成功提交
+    List<UserVO> findAll();
+
+    // 条件查询 -- 动态 SQL 之 if
+    List<UserVO> findCondition(UserVO vo);
+
+    // 条件查询 -- 动态 SQL 之 where
+    List<UserVO> findCondition2(UserVO vo);
+
+    // 新增 -- 动态SQL 之 set
+    boolean update(UserVO vo);
+
+    // 循环新增 -- 动态 SQL 之 foreach
+    Long insertBatch(List<UserVO> vos);
+
+    // 循环删除 -- 动态 SQL之 foreach 数组
+    Long deleteBatch(Integer[] ids);
+
+    // 循环删除 -- 动态 SQL 之 foreach 集合
+    Long deleteBatch(List<Integer> lists);
+}
+```
+
+#### xml文件
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bbxx.dao.IUserDao">
+    <!-- 配置查询所有操作 -->
+    <select id="findAll" resultType="UserVO">
+        select *
+        from users
+    </select>
+
+    <!--动态SQL if-->
+    <select id="findCondition" resultType="UserVO">
+        select * from users where 1 = 1
+        <if test="id!=null">
+            and id=#{id}
+        </if>
+        <if test="username!=null">
+            and username like concat("%",#{username},"%")
+        </if>
+        <if test="birthday!=null">
+            and birthday=#{birthday}
+        </if>
+    </select>
+    
+    <!--动态SQL where 去除前面多余的and-->
+    <select id="findCondition2" resultType="UserVO">
+        select * from users
+        <where>
+            <if test="id!=null">
+                and id=#{id}
+            </if>
+            <if test="username!=null">
+                and username like concat("%",#{username},"%")
+            </if>
+            <if test="birthday!=null">
+                and birthday=#{birthday}
+            </if>
+        </where>
+    </select>
+    
+    <!--测试事务-->
+    <delete id="delete">
+        delete
+        from users
+        where id = #{value}
+    </delete>
+
+    <!--动态SQL测试set 去除后面多余的逗号-->
+    <update id="update" parameterType="UserVO">
+        update users
+        <set>
+            <if test="username!=null">username=#{username},</if>
+            <if test="birthday!=null">,birthday=#{birthday}</if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <!-- 循环新增 ==> 动态SQL 之 foreach 使用ArrayList集合，collection中写的是参数的类型！这里是list集合 -->
+    <insert id="insertBatch" parameterType="UserVO">
+        insert into users(username,birthday,address)
+        values
+        <foreach collection="list" item="data" separator=",">
+            (#{data.username},#{data.birthday},#{data.address})
+        </foreach>
+    </insert>
+
+    <!--
+    循环删除 ==> 动态SQL 之 动态SQL之 foreach 数组
+    Map的话，查文档得知 index是key item是value
+    -->
+    <insert id="deleteBatch">
+        delete from users where id in
+        <foreach collection="array" item="data" open="(" separator="," close=")">
+            #{data}
+        </foreach>
+    </insert>
+</mapper>
+```
+
+#### 单元测试代码
+
+```java
+public class Demo {
+    InputStream in = null;
+    SqlSessionFactoryBuilder builder = null;
+    SqlSessionFactory factory = null;
+    SqlSession sqlSession = null;
+    IUserDao mapper = null;
+
+    @Before
+    public void init() throws IOException {
+        in = Resources.getResourceAsStream("SqlConfig.xml");
+        builder = new SqlSessionFactoryBuilder();
+        factory = builder.build(in);
+        sqlSession = factory.openSession();
+        mapper = sqlSession.getMapper(IUserDao.class);
+    }
+
+    @Test
+    public void findAll() {
+        List<UserVO> all = mapper.findAll();
+    }
+
+    // 测试事务
+    @Test
+    public void affairs() {
+        sqlSession.commit(false);
+        Integer delete = mapper.delete(5);
+        System.out.println(delete);
+        sqlSession.commit();// 提交事务后数据才会真的删除。 // 对比数据库中的信息查看即可。
+    }
+
+    // 测试动态SQL ==> if
+    @Test
+    public void testIf() {
+        // 查出四条数据
+        List<UserVO> condition = mapper.findCondition(new UserVO(null, null, null));
+        // 查出三条数据
+        List<UserVO> o = mapper.findCondition(new UserVO(null, "o", null));
+    }
+
+    // 测试where，会去掉前面多余的and
+    @Test
+    public void testWhere() {
+        // 查出四条数据
+        List<UserVO> condition = mapper.findCondition2(new UserVO(null, null, null));
+        // 查出三条数据
+        List<UserVO> o = mapper.findCondition2(new UserVO(null, "o", null));
+    }
+
+    // 测试set，会去掉末尾多余的 逗号(,)
+    @Test
+    public void testSet() {
+        boolean kkx = mapper.update(new UserVO(2, "kkx", null));
+        sqlSession.commit();
+    }
+
+    // 批量新增
+    @Test
+    public void testForeach1() {
+        ArrayList<UserVO> userVOS = new ArrayList<>();
+        userVOS.add(new UserVO(null, "001", "1988-11-11"));
+        userVOS.add(new UserVO(null, "002", "1988-02-01"));
+        userVOS.add(new UserVO(null, "003", "1999-11-11"));
+        userVOS.add(new UserVO(null, "004", "1995-02-21"));
+        Long aLong = mapper.insertBatch(userVOS);
+        System.out.println(aLong);
+        sqlSession.commit();
+        findAll();
+    }
+
+    // 循环删除
+    @Test
+    public void testForeach2() {
+        Integer[] ids = {10, 11, 12, 13};
+        Long aLong = mapper.deleteBatch(ids);
+        System.out.println(aLong);
+        sqlSession.commit();
+    }
+
+    @After
+    public void destroy() throws IOException {
+        sqlSession.close();
+        in.close();
+    }
+}
+```
+
+## 关联查询
+
+关联查询是 MyBatis 针对多表操作提供的关联映射，通过关联映射就可以很好地处理对象与对象之间的关联关系。
+
+在关系型数据库中，多表之间存在着三种关联关系，分别为一对一、一对多和多对多。
+
+- 一对一：在任意一方引入对方主键作为外键。
+- 一对多：在“多”的一方，添加“一”的一方的主键作为外键。
+- 多对多：产生中间关系表，引入两张表的主键作为外键，两个主键成为联合主键或使用新的字段作为主键。
+
+```java
+class A{
+    B b; // 一对一关系
+}
+
+class A{
+    List<B> b;// 一对多关系
+}
+
+// 多对多关系
+class A{
+    List<B> b;
+}
+class B{
+    List<A> a;
+}
+```
+
+### 一对一查询
+
+resultMap 元素中，包含了一个 association 子元素，通过该元素可以处理一对一关联关系的。
 
 <b>association</b>：只是表示对象
 
-```xml
-<select id="queryUserById" resultType="cn.pojo.User" resultMap="queryUserByIdNap">
-    select u.*, c.name as c_name, c.id as c_id
-    from mybatis.users as u,
-    mybatis.clazz as c
-    where u.id = #{id}
-    and u.clazz_id = c.id
-</select>
+```sql
+# 准备数据库表信息
+USE mybatis;
+# 创建一个名称为tb_idcard的表
+CREATE TABLE  tb_idcard(
+                           id INT PRIMARY KEY AUTO_INCREMENT,
+                           CODE VARCHAR(18)
+);
+# 插入两条数据
+INSERT INTO tb_idcard(CODE) VALUES('152221198711020624');
+INSERT INTO tb_idcard(CODE) VALUES('152201199008150317');
+# 创建一个名称为tb_person的表
+CREATE TABLE  tb_person(
+                           id INT PRIMARY KEY AUTO_INCREMENT,
+                           name VARCHAR(32),
+                           age INT,
+                           sex VARCHAR(8),
+                           card_id INT UNIQUE,
+                           FOREIGN KEY(card_id) REFERENCES tb_idcard(id)
+);
+# 插入两条数据
+INSERT INTO tb_person(name, age, sex, card_id) VALUES('Rose',29, '女',1);
+INSERT INTO tb_person(name, age, sex, card_id) VALUES('tom',27, '男',2);
+```
 
-<resultMap id="queryUserByIdNap" type="User">
-    <id property="id" column="id"/>
-    <result property="name" column="name"/>
-    <result property="sex" column="sex"/>
-    <!-- 一对一查询 -->
-    <association property="clazz" javaType="Clazz">
-        <id property="id" column="c_id"/>
-        <result property="name" column="c_name"/>
+POJO 代码
+
+```java
+public class IdCard {
+    private Integer id;
+    private String code;
+	// some code
+}
+
+public class Person {
+    private Integer id;
+    private String name;
+    private Integer age;
+    private String sex;
+    private IdCard card;
+	// some code
+}
+```
+
+Mapper 代码
+
+```java
+import cn.pojo.IdCard;
+
+public interface IdCardMapper {
+    IdCard findCardById(int id);
+}
+
+import cn.pojo.Person;
+
+public interface PersonMapper {
+    Person findPersonById(int id);
+}
+```
+
+xml 文件
+
+```xml
+<mapper namespace="cn.mapper.IdCardMapper">
+
+    <select id="findCardById" resultType="cn.pojo.IdCard">
+        select *
+        from mybatis.tb_idcard
+        where id = #{id}
+    </select>
+</mapper>
+
+
+<mapper namespace="cn.mapper.PersonMapper">
+    <select id="findPersonById" resultMap="findPersonByIdResult">
+        select *
+        from mybatis.tb_person
+        where id = #{id}
+    </select>
+
+    <resultMap id="findPersonByIdResult" type="Person">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="age" property="age"/>
+        <result column="sex" property="sex"/>
+        <association property="card" column="card_id" javaType="IdCard" select="cn.mapper.IdCardMapper.findCardById"/>
+    </resultMap>
+</mapper>
+```
+
+测试代码
+
+```java
+package quickstart;
+
+public class TestAssociation {
+    String resourcePath = "MyBatisConfig.xml";
+    SqlSession sqlSession;
+    PersonMapper dao;
+
+    @BeforeEach
+    public void init() throws IOException {
+        InputStream in = Resources.getResourceAsStream(resourcePath);
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
+        sqlSession = sqlSessionFactory.openSession(true); // 設置自動提交事務
+        dao = sqlSession.getMapper(PersonMapper.class);
+    }
+
+    @Test
+    public void f1() {
+        Person personById = dao.findPersonById(1);
+        System.out.println(personById);
+    }
+}
+```
+
+使用嵌套查询的方式比较简单，但是 MyBatis 嵌套查询的方式要执行多条 SQL 语句，这对于大型数据集合和列表展示不是很好，因为这样可能会导致成百上千条关联的 SQL 语句被执行，从而极大地消耗数据库性能并且会降低查询效率。这并不是开发人员所期望的。为此，我们可以使用 MyBatis 提供的嵌套结果方式，来进行关联查询。
+
+```xml
+<select id="findPersonById2" resultMap="findPersonByIdResult2">
+    select p.*, idcard.code
+    from mybatis.tb_person as p,
+    mybatis.tb_idcard as idcard
+    where p.card_id = idcard.id
+    and p.id = #{id}
+</select>
+<resultMap id="findPersonByIdResult2" type="Person">
+    <id column="id" property="id"/>
+    <result column="name" property="name"/>
+    <result column="age" property="age"/>
+    <result column="sex" property="sex"/>
+    <association property="card" column="card_id" javaType="IdCard">
+        <id property="id" column="card_id"/>
+        <result property="code" column="code"/>
     </association>
 </resultMap>
 ```
 
-## 一对多查询
+### 一对多查询
 
 <b>collection</b>
 
@@ -999,7 +1991,7 @@ public class AssociationQueryTest {
 
 JavaType 和 OfType：`JavaType `和 `ofType` 都是用来指定对象类型的，但是 `JavaType` 是用来指定 `pojo` 中属性的类型，而 `ofType` 指定的是映射到 list 集合属性中 `pojo` 的类型。
 
-## 分步查询
+### 分步查询
 
 ```xml
 <select id="getXX" resultMap="mykey02">
@@ -1020,310 +2012,6 @@ JavaType 和 OfType：`JavaType `和 `ofType` 都是用来指定对象类型的�
 ```
 
 分布查询，两个查询都会执行，即便没有用到第二个查询的数据。这样严重浪费了数据库的性能。我们可以采用按需加载，需要的时候再去查询：全局开启按需加载策略！
-
-## 按需加载
-
-```xml
-<settings>
-    <!-- 开启延迟加载开关 -->
-	<setting name="lazyLoadingEnable" value="true"></setting>
-    <!-- 开启属性按需加载 -->
-    <setting name="aggressiveLazyLoading" value="true"></setting>
-</settings>
-
-<!-- Mapper xml文件中按需加载的写法 -->
-<!-- fetchType	可选的。有效值为 lazy 和 eager。 指定属性后，将在映射中忽略全局配置参数 lazyLoadingEnabled，使用属性的值 -->
-<association xx fetchType="eager"></association>
-```
-
-## 动态SQL
-
-### 标签学习
-
-> where 标签
-
-where 标签可以帮我们去除掉前面的 and
-
-> trim 标签
-
-```xml
-<!--
-	prefix=""	前缀：为我们下面的sql整体添加一个前缀
-	prefixOverrides	取出整体字符串前面多余的字符
-	suffix	为整体添加一个后缀
-	suffixOverrides	后面哪个多了可以去掉
--->
-<trim prefix="where" prefixOverrides="and">
-	<if test="id!=null">
-    	id > #{id} and
-    </if>
-    <!--
-		有些字符是xml的标记，所以需要转义
-	-->
-    <if test="name != null &amp;&amp; !name.equals(&quot;&quot;)">
-    	teacherName like #{name} and
-    </if>
-    <if test="birth != null">
-    	birth_date &lt; #{birth} and
-    </if>
-</trim>
-```
-
-> foreach
-
-`foreach` 元素的功能非常强大，它允许你指定一个集合，声明可以在元素体内使用的集合项（`item`）和索引（`index`）变量。它也允许你指定开头与结尾的字符串以及集合项迭代之间的分隔符。这个元素也不会错误地添加多余的分隔符，看它多智能！
-
-<b>提示</b> 你可以将任何可迭代对象（如 `List`、`Set` 等）、`Map` 对象或者数组对象作为集合参数传递给 `foreach`。当使用可迭代对象或者数组时，`index` 是当前迭代的序号，item 的值是本次迭代获取到的元素。当使用 `Map` 对象（或者 `Map.Entry` 对象的集合）时，`index` 是键，`item` 是值。
-
-```xml
-select xxxxx where id in
-<!--
-	collection	指定要遍历的集合的key
-	close		以什么结束
-	open		以什么开始
-	index		索引
-		如果遍历的是一个list，index指定的变量保存了当前索引
-		如果遍历的是一个map，index 指定的变量就是保存了当前遍历元素的key
-	item		变量名
-	separator	每次遍历元素的分隔符
-	(#{id_item},#{id_item},#{id_item})
-	这里collection可以用ids 是因为 用了@Param("ids")为key重新命名了。没有这个的话，List类型默认用的key是list
--->
-<foreach collection="ids" item="id_item" separator="," open="(" close=")">
-    #{id_item}
-</foreach>
-```
-
-> choose 选择
-
-用到的时候查文档吧，感觉很少会用到。
-
-> 抽取 sql 片段
-
-```xml
-<sql id="selectSql">
-	select xxx sfaf
-</sql>
-<select id="xx" xx>
-	<include refid="selectSql"></include>
-    where id=#{id}
-</select>
-```
-
-### 完整示例
-
-#### Java代码
-
-```java
-public interface IUserDao {
-
-    // 删除 -- 测试事务
-    Integer delete(Integer id);
-
-    // 查询所有 -- 查看事务是否成功提交
-    List<UserVO> findAll();
-
-    // 条件查询 -- 动态 SQL 之 if
-    List<UserVO> findCondition(UserVO vo);
-
-    // 条件查询 -- 动态 SQL 之 where
-    List<UserVO> findCondition2(UserVO vo);
-
-    // 新增 -- 动态SQL 之 set
-    boolean update(UserVO vo);
-
-    // 循环新增 -- 动态 SQL 之 foreach
-    Long insertBatch(List<UserVO> vos);
-
-    // 循环删除 -- 动态 SQL之 foreach 数组
-    Long deleteBatch(Integer[] ids);
-
-    // 循环删除 -- 动态 SQL 之 foreach 集合
-    Long deleteBatch(List<Integer> lists);
-}
-```
-
-#### xml文件
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bbxx.dao.IUserDao">
-    <!-- 配置查询所有操作 -->
-    <select id="findAll" resultType="UserVO">
-        select *
-        from users
-    </select>
-
-    <!--动态SQL if-->
-    <select id="findCondition" resultType="UserVO">
-        select * from users where 1 = 1
-        <if test="id!=null">
-            and id=#{id}
-        </if>
-        <if test="username!=null">
-            and username like concat("%",#{username},"%")
-        </if>
-        <if test="birthday!=null">
-            and birthday=#{birthday}
-        </if>
-    </select>
-    <!--动态SQL where 去除前面多余的and-->
-    <select id="findCondition2" resultType="UserVO">
-        select * from users
-        <where>
-            <if test="id!=null">
-                and id=#{id}
-            </if>
-            <if test="username!=null">
-                and username like concat("%",#{username},"%")
-            </if>
-            <if test="birthday!=null">
-                and birthday=#{birthday}
-            </if>
-        </where>
-    </select>
-    <!--测试事务-->
-    <delete id="delete">
-        delete
-        from users
-        where id = #{value}
-    </delete>
-
-    <!--动态SQL测试set 去除后面多余的逗号-->
-    <update id="update" parameterType="UserVO">
-        update users
-        <set>
-            <if test="username!=null">username=#{username},</if>
-            <if test="birthday!=null">,birthday=#{birthday}</if>
-        </set>
-        where id=#{id}
-    </update>
-
-    <!-- 循环新增 ==> 动态SQL 之 foreach 使用ArrayList集合，collection中写的是参数的类型！这里是list集合 -->
-    <insert id="insertBatch" parameterType="UserVO">
-        insert into users(username,birthday,address)
-        values
-        <foreach collection="list" item="data" separator=",">
-            (#{data.username},#{data.birthday},#{data.address})
-        </foreach>
-    </insert>
-
-    <!--
-    循环删除 ==> 动态SQL 之 动态SQL之 foreach 数组
-    Map的话，查文档得知 index是key item是value
-    -->
-    <insert id="deleteBatch">
-        delete from users where id in
-        <foreach collection="array" item="data" open="(" separator="," close=")">
-            #{data}
-        </foreach>
-    </insert>
-</mapper>
-```
-
-#### 单元测试代码
-
-```java
-public class Demo {
-    InputStream in = null;
-    SqlSessionFactoryBuilder builder = null;
-    SqlSessionFactory factory = null;
-    SqlSession sqlSession = null;
-    IUserDao mapper = null;
-
-    @Before
-    public void init() throws IOException {
-        in = Resources.getResourceAsStream("SqlConfig.xml");
-        builder = new SqlSessionFactoryBuilder();
-        factory = builder.build(in);
-        sqlSession = factory.openSession();
-        mapper = sqlSession.getMapper(IUserDao.class);
-    }
-
-    @Test
-    public void findAll() {
-        List<UserVO> all = mapper.findAll();
-    }
-
-    /**
-     * 测试事务
-     */
-    @Test
-    public void affairs() {
-        sqlSession.commit(false);
-        Integer delete = mapper.delete(5);
-        System.out.println(delete);
-        sqlSession.commit();// 提交事务后数据才会真的删除。 // 对比数据库中的信息查看即可。
-    }
-
-    /**
-     * 测试动态SQL ==> if
-     */
-    @Test
-    public void testIf() {
-        // 查出四条数据
-        List<UserVO> condition = mapper.findCondition(new UserVO(null, null, null));
-        // 查出三条数据
-        List<UserVO> o = mapper.findCondition(new UserVO(null, "o", null));
-    }
-
-    /**
-     * 测试where，会去掉前面多余的and
-     */
-    @Test
-    public void testWhere() {
-        // 查出四条数据
-        List<UserVO> condition = mapper.findCondition2(new UserVO(null, null, null));
-        // 查出三条数据
-        List<UserVO> o = mapper.findCondition2(new UserVO(null, "o", null));
-    }
-
-    /**
-     * 测试set，会去掉末尾多余的 逗号(,)
-     */
-    @Test
-    public void testSet() {
-        boolean kkx = mapper.update(new UserVO(2, "kkx", null));
-        sqlSession.commit();
-    }
-
-    /**
-     * 批量新增
-     */
-    @Test
-    public void testForeach1() {
-        ArrayList<UserVO> userVOS = new ArrayList<>();
-        userVOS.add(new UserVO(null, "001", "1988-11-11"));
-        userVOS.add(new UserVO(null, "002", "1988-02-01"));
-        userVOS.add(new UserVO(null, "003", "1999-11-11"));
-        userVOS.add(new UserVO(null, "004", "1995-02-21"));
-        Long aLong = mapper.insertBatch(userVOS);
-        System.out.println(aLong);
-        sqlSession.commit();
-        findAll();
-    }
-
-    /**
-     * 循环删除
-     */
-    @Test
-    public void testForeach2() {
-        Integer[] ids = {10, 11, 12, 13};
-        Long aLong = mapper.deleteBatch(ids);
-        System.out.println(aLong);
-        sqlSession.commit();
-    }
-
-    @After
-    public void destroy() throws IOException {
-        sqlSession.close();
-        in.close();
-    }
-}
-```
 
 ## 缓存机制
 
@@ -1387,54 +2075,19 @@ public class PerpetualCache implements Cache {
 
 MyBatis 提供二级缓存的接口及其实现，缓存实现要求 POJO 实现 Serializable 接口
 
-## #和$
-
-`#{}`表示一个占位符号
-
-通过 `#{}` 可以实现 `preparedStatement` 向占位符中设置值，自动进行 `Java` 类型和 `jdbc` 类型转换，
-
-`#{}`可以有效防止 `sql` 注入。 `#{}`可以接收简单类型值或 `pojo` 属性值。 如果 `parameterType` 传输单个简单类
-型值，`#{}`括号中可以是 value 或其它名称。
-
-`${}`表示拼接 `sql` 串
-
-通过 `${}` 可以将 `parameterType` 传入的内容拼接在 `sql` 中且不进行 `jdbc` 类型转换， `${}`可以接收简
-单类型值或 `pojo` 属性值，如果 `parameterType` 传输单个简单类型值，`${}`括号中只能是 value。
-
-> 源码级别解析
-
-```java
-class A{
-    @Override
-    public String handleToken(String content) {
-      Object parameter = context.getBindings().get("_parameter");
-      if (parameter == null) {
-        context.getBindings().put("value", null);
-      } else if (SimpleTypeRegistry.isSimpleType(parameter.getClass())) {
-        context.getBindings().put("value", parameter);
-      }
-      Object value = OgnlCache.getValue(content, context.getBindings());
-      String srtValue = (value == null ? "" : String.valueOf(value)); // issue #274 return "" instead of "null"
-      checkInjection(srtValue);
-      return srtValue;
-    }
-}
-```
-
->读取的 key 的名字就是 ”value”，所以我们在绑定参数时就只能叫 value 的名字
-
 ## 深入理解
 
-- `MyBatis` 可自己写 `Dao` 实现类也可不写实现类。推荐不写实现类。
-- 不写实现类采用的是基于代理的 CRUD 操作。
-- `MyBatis` 用到了 `OGNL` 表达式
-  - `Object Graphic Navigation Language`
-    	对象	图	导航	   语言
-  - 它是通过对象的取值方法来获取数据。在写法上把 get 给省略了。
-  - 比如：我们获取用户的名称
-    - 类中的写法：`user.getUsername();`
-    - ``OGNL` 表达式写法：`user.username`
-    - `mybatis `中为什么能直接写 `username` ，而不用 user. 呢？因为在 `parameterType` 中已经提供了属性所属的类，所以此时不需要写对象名
+`MyBatis` 可自己写 `Dao` 实现类也可不写实现类。推荐不写实现类。不写实现类采用的是基于代理的 CRUD 操作。
+
+`MyBatis` 用到了 `OGNL` 表达式
+
+- `Object Graphic Navigation Language`
+  	对象	图	导航	   语言
+- 它是通过对象的取值方法来获取数据。在写法上把 get 给省略了。
+- 比如：我们获取用户的名称
+  - 类中的写法：`user.getUsername();`
+  - `OGNL` 表达式写法：`user.username`
+  - `mybatis `中为什么能直接写 `username`，而不用 user. 呢？因为在 `parameterType` 中已经提供了属性所属的类，所以此时不需要写对象名
 
 ## 连接池及事务控制
 
