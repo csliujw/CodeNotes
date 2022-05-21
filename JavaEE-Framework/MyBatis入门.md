@@ -15,7 +15,7 @@ MyBatis 减少了样板代码，简化了持久层的开发。
 
 ## 基本原理
 
-<img src="img/ibatis/epub_22655629_78.jpg">
+<div align="center"><img src="img/ibatis/epub_22655629_78.jpg"></div>
 
 MyBatis 框架在操作数据库时，大体经过了 8 个步骤
 
@@ -237,7 +237,7 @@ public interface UserMapper {
 }
 ```
 
-<img src="img/image-20220515171601297.png">
+<div align="center"><img src="img/image-20220515171601297.png"></div>
 
 ### 集成Druid
 
@@ -390,7 +390,7 @@ maven 项目下，所有的非 `*.java` 文件都要放在 resources 目录下�
 
 如：src/main/java 目录下的包和类都是以 classes 为根目录进行发布。resources 下的资源也是以 classes 为根目录。
 
-<img src="img/ibatis/maven.png">
+<div align="center"><img src="img/ibatis/maven.png"></div>
 
 mybatis 多对多是由两个一对一组成的，如：user 一对多 role，role 一对多 user，这样 user 和 role 就是多对多关系了。 数据库的多对多需要一个中间表来描述两表的多对多关系。
 
@@ -787,7 +787,7 @@ jdbc.password=root
 
 \<settings\> 元素主要用于改变 MyBatis 运行时的行为，例如开启二级缓存、开启延迟加载等。
 
-<img src="img/ibatis/epub_22655629_93.jpg">
+<div align="center"><img src="img/ibatis/epub_22655629_93.jpg"></div>
 
 #### typeAliases
 

@@ -13,7 +13,8 @@ MyBatis-Plus（简称 MP）是一个 MyBatis 的增强工具，在 MyBatis 的�
 
 > 特性
 
-- <b>无侵入</b>：只做增强不做改变，引入它不会对现有工程产生影响，如丝般顺滑
+- <div align="center"><img src="img/ibatis/MyBatis_quick_star.png"></div>
+
 - <b>损耗小</b>：启动即会自动注入基本 CURD，性能基本无损耗，直接面向对象操作
 - <b>强大的 CRUD 操作</b>：内置通用 Mapper、通用 Service，仅仅通过少量配置即可实现单表大部分 CRUD 操作，更有强大的条件构造器，满足各类使用需求
 - <b>支持 Lambda 形式调用</b>：通过 Lambda 表达式，方便的编写各类查询条件，无需再担心字段写错
@@ -171,7 +172,7 @@ public class ApplicationTest {
 
 通过继承 BaseMapper 就可以获取到各种各样的单表操作，接下来详细讲解这些操作。
 
-<img src="img/ibatis/plus/image-20211105220903263.png">
+<div align="center"><img src="img/ibatis/plus/image-20211105220903263.png"></div>
 
 没啥好记的，现查现用。只记录一个分页查询
 
@@ -213,7 +214,7 @@ MP 在启动后会将 BaseMapper 中的一系列的方法注册到 meppedStateme
 
 在 MP 中，ISqlInjector 负责 SQL 的注入工作，它是一个接口，AbstractSqlInjector 是它的实现类，实现关系如下：
 
-<img src="img/ibatis/plus/image-20211105224958774.png">
+<div align="center"><img src="img/ibatis/plus/image-20211105224958774.png"></div>
 
 在 AbstractSqlInjector 中，主要是由 inspectInject() 方法进行注入的，如下：
 
@@ -249,7 +250,7 @@ public void inject(MapperBuilderAssistant builderAssistant, Class<?> mapperClass
 
 在实现方法中，`methodList.forEach(m -> m.inject(builderAssistant, mapperClass, modelClass, tableInfo));` 是关键，循环遍历方法，进行注入。 最终调用抽象方法 injectMappedStatement 进行真正的注入；该抽象方法的实现如下：
 
-<img src="img/ibatis/plus/image-20211105225432807.png">
+<div align="center"><img src="img/ibatis/plus/image-20211105225432807.png"></div>
 
 以 DeleteById 为例
 
@@ -277,7 +278,7 @@ public class DeleteById extends AbstractMethod {
 }
 ```
 
-<img src="img/ibatis/plus/image-20211105225944851.png">
+<div align="center"><img src="img/ibatis/plus/image-20211105225944851.png"></div>
 
 ## 配置
 

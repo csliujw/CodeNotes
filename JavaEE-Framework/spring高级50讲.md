@@ -29,7 +29,7 @@
 
 Ctrl + Alt + U 显示类图的继承关系
 
-<img src="img\image-20220325235132737.png">
+<div align="center"><img src="img/image-20220325235132737.png"></div>
 
 #### 收获💡
 
@@ -2217,11 +2217,11 @@ curl https://start.spring.io
 
 步骤1：创建模块，区别在于打包方式选择 war
 
-<img src="img/spring-senior/image-20211021160145072.png" alt="image-20211021160145072" style="zoom: 50%;" />
+<div align="center"><img src="img/spring-senior/image-20211021160145072.png" alt="image-20211021160145072" style="zoom: 70%;" /></div>
 
 接下来勾选 Spring Web 支持
 
-<img src="img/spring-senior/image-20211021162416525.png" alt="image-20211021162416525" style="zoom:50%;" />
+<div align="center"><img src="img/spring-senior/image-20211021162416525.png" alt="image-20211021162416525" style="zoom:70%;" /></div>
 
 步骤2：编写控制器
 

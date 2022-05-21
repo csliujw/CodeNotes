@@ -13,7 +13,7 @@
 - 执行器 Executor
 - JDBC 处理器 StatementHandler
 
-<img src="img\ibatis\MyBatis_quick_star.png">
+<div align="center"><img src="img/ibatis/MyBatis_quick_star.png"></div>
 
 ## 会话部分源码
 
