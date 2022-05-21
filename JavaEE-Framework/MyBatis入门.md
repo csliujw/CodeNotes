@@ -1349,21 +1349,6 @@ id：唯一标识符，让别名在后面引用
 </select>
 ```
 
-## 按需加载
-
-```xml
-<settings>
-    <!-- 开启延迟加载开关 -->
-	<setting name="lazyLoadingEnable" value="true"></setting>
-    <!-- 开启属性按需加载 -->
-    <setting name="aggressiveLazyLoading" value="true"></setting>
-</settings>
-
-<!-- Mapper xml文件中按需加载的写法 -->
-<!-- fetchType	可选的。有效值为 lazy 和 eager。 指定属性后，将在映射中忽略全局配置参数 lazyLoadingEnabled，使用属性的值 -->
-<association xx fetchType="eager"></association>
-```
-
 ## 动态SQL
 
 动态 SQL 是 MyBatis 的强大特性之一，MyBatis 3 采用 OGNL 表达式来实现的动态 SQL。
@@ -1721,7 +1706,7 @@ public class Demo {
 }
 ```
 
-## 关联查询
+## 关联查询&延迟加载
 
 关联查询是 MyBatis 针对多表操作提供的关联映射，通过关联映射就可以很好地处理对象与对象之间的关联关系。
 
@@ -1751,12 +1736,24 @@ class B{
 
 ### 一对一查询
 
-resultMap 元素中，包含了一个 association 子元素，通过该元素可以处理一对一关联关系的。
+resultMap 元素中，包含了一个 association 子元素，通过该元素可以处理一对一关联关系的。MyBatis 中一对一的查询方式有两种：
 
-<b>association</b>：只是表示对象
+- 使用嵌套子查询：`<association property="card" column="card_id" javaType="IdCard" select="mapper.method"/>`
+- 使用嵌套结果。
+
+<b>association：只是表示对象，它具有以下属性</b>
+
+- property：指定映射到的实体类对象属性，与表字段一一对应。
+- column：指定 SQL 语句中对应的字段。是查询的条件，即 where xx = column 的值。配合 select 属性使用，column 中的值会作为参数传递给 select 中的查询语句。
+- javaType：指定映射到实体对象属性的类型。（返回的结果封装成 javaType 类型）
+- select：指定引入嵌套查询的子 SQL 语句，该属性用于关联映射中的嵌套查询。
+- fetchType：指定在关联查询时是否启用延迟加载。fetchType 属性有 lazy 和 eager 两个属性值，默认值为 lazy（即默认关联映射延迟加载）。
+
+#### 准备数据
+
+> 数据库表信息
 
 ```sql
-# 准备数据库表信息
 USE mybatis;
 # 创建一个名称为tb_idcard的表
 CREATE TABLE  tb_idcard(
@@ -1780,7 +1777,7 @@ INSERT INTO tb_person(name, age, sex, card_id) VALUES('Rose',29, '女',1);
 INSERT INTO tb_person(name, age, sex, card_id) VALUES('tom',27, '男',2);
 ```
 
-POJO 代码
+> POJO 代码
 
 ```java
 public class IdCard {
@@ -1799,27 +1796,23 @@ public class Person {
 }
 ```
 
-Mapper 代码
+> Mapper 代码
 
 ```java
-import cn.pojo.IdCard;
-
 public interface IdCardMapper {
     IdCard findCardById(int id);
 }
 
-import cn.pojo.Person;
-
+// 一对多查询
 public interface PersonMapper {
     Person findPersonById(int id);
 }
 ```
 
-xml 文件
+#### 嵌套子查询方式
 
 ```xml
 <mapper namespace="cn.mapper.IdCardMapper">
-
     <select id="findCardById" resultType="cn.pojo.IdCard">
         select *
         from mybatis.tb_idcard
@@ -1827,20 +1820,24 @@ xml 文件
     </select>
 </mapper>
 
-
+<!-- 一对一关联查询 -->
 <mapper namespace="cn.mapper.PersonMapper">
     <select id="findPersonById" resultMap="findPersonByIdResult">
         select *
         from mybatis.tb_person
         where id = #{id}
     </select>
-
+	
     <resultMap id="findPersonByIdResult" type="Person">
         <id column="id" property="id"/>
         <result column="name" property="name"/>
         <result column="age" property="age"/>
         <result column="sex" property="sex"/>
-        <association property="card" column="card_id" javaType="IdCard" select="cn.mapper.IdCardMapper.findCardById"/>
+        <!-- 一对一关联查询的方式，嵌套查询的方式 -->
+        <association property="card" 
+                     column="card_id" 
+                     javaType="IdCard" 
+                     select="cn.mapper.IdCardMapper.findCardById"/>
     </resultMap>
 </mapper>
 ```
@@ -1871,7 +1868,9 @@ public class TestAssociation {
 }
 ```
 
-使用嵌套查询的方式比较简单，但是 MyBatis 嵌套查询的方式要执行多条 SQL 语句，这对于大型数据集合和列表展示不是很好，因为这样可能会导致成百上千条关联的 SQL 语句被执行，从而极大地消耗数据库性能并且会降低查询效率。这并不是开发人员所期望的。为此，我们可以使用 MyBatis 提供的嵌套结果方式，来进行关联查询。
+#### 嵌套结果方式
+
+使用嵌套查询的方式比较简单，但是 MyBatis 嵌套查询的方式要执行多条 SQL 语句，这对于大型数据集合和列表展示不是很好，因为这样可能会导致成百上千条关联的 SQL 语句被执行，从而极大地消耗数据库性能并且会降低查询效率。<span style="color:orange">我们可以使用 MyBatis 提供的嵌套结果方式，来进行关联查询。</span>
 
 ```xml
 <select id="findPersonById2" resultMap="findPersonByIdResult2">
@@ -1886,24 +1885,24 @@ public class TestAssociation {
     <result column="name" property="name"/>
     <result column="age" property="age"/>
     <result column="sex" property="sex"/>
-    <association property="card" column="card_id" javaType="IdCard">
-        <id property="id" column="card_id"/>
-        <result property="code" column="code"/>
+    <association property="card" javaType="IdCard">
+        <id column="card_id" property="id"/>
+        <result column="code" property="code"/>
     </association>
 </resultMap>
 ```
 
+<span style="color:red">注意：association 中的列名（column） 不要和 resultMap 中的重复了，否则在对 Java POJO 数据进行赋值时会出现问题。</span>
+
 ### 一对多查询
 
-<b>collection</b>
+MyBatis 通过 collection 来实现一对多关联查询。collection 元素与 association 元素基本相同，但 collection 保护一个特殊的属性 ofType。ofType属性与javaType属性对应，它用于指定实体对象中集合类属性所包含的元素类型。
 
-collection：定义集合元素的封装
+<b>collection：定义集合元素的封装</b>
 
-property：指定哪个属性是集合属性
-
-javaType：指定对象类型
-
-ofType：指定集合里面元素的类型
+- property：指定映射到的实体类对象属性，与表字段一一对应。
+- javaType：指定对象类型（返回的结果封装成 javaType 类型）
+- ofType：表示集合里面元素的类型
 
 ```xml
 <!-- 这个property应该是用注解标记了，使用keys作为property -->
@@ -1913,53 +1912,81 @@ ofType：指定集合里面元素的类型
 </collection>
 ```
 
-一对多查询案例
+#### 准备数据
 
-```java
-public class Clazz {
-    int id;
-    String name;
-    List<User> student;
-}
+> 数据库表
 
-public class User {
-    private int id;
-    private String name;
-    private String sex;
-    private String classId;
-    private Clazz clazz;
-}
-// 省略setter getter
-public interface AssociationQuery {
-
-    public Clazz queryClazzById(int clazzId);
-}
-
+```mysql
+use mybatis;
+# 创建一个名称为tb_user的表
+CREATE TABLE tb_user (
+                         id int(32) PRIMARY KEY AUTO_INCREMENT,
+                         username varchar(32),
+                         address varchar(256)
+);
+# 插入3条数据
+INSERT INTO tb_user VALUES ('1', '詹姆斯', '克利夫兰');
+INSERT INTO tb_user VALUES ('2', '科比', '洛杉矶');
+INSERT INTO tb_user VALUES ('3', '保罗', '洛杉矶');
+# 创建一个名称为tb_orders的表
+CREATE TABLE tb_orders (
+                           id int(32) PRIMARY KEY AUTO_INCREMENT,
+                           number varchar(32) NOT NULL,
+                           user_id int(32) NOT NULL,
+                           FOREIGN KEY(user_id) REFERENCES tb_user(id)
+);
+# 插入3条数据
+INSERT INTO tb_orders VALUES ('1', '1000011', '1');
+INSERT INTO tb_orders VALUES ('2', '1000012', '1');
+INSERT INTO tb_orders VALUES ('3', '1000013', '2');
 ```
 
-xml 文件
+> POJO 代码
+
+```java
+public class Orders {
+    private Integer id;
+    private String number;
+	// some code
+}
+
+public class Users {
+    private Integer id;
+    private String username;
+    private String address;
+    private List<Orders> ordersList;
+	// some code
+}
+```
+
+> Mapper 代码
+
+```java
+public interface UsersMapper {
+    Users findById(int id);
+}
+```
+
+#### 嵌套结果方式
 
 ```xml
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="cn.mapper.AssociationQuery">
-	<!-- resultMap 的 key 和 value 一定要一一对应！-->
-    <select id="queryClazzById" resultType="cn.pojo.Clazz" resultMap="queryClazzByIdMap">
-        select c.id as c_id, c.name as c_name, u.id, u.name, u.clazz_id, u.sex
-        from clazz as c, users as u
-        where u.clazz_id = #{clazzId} and c.id = #{clazzId};
+<mapper namespace="cn.mapper.UsersMapper">
+    <select id="findById" resultType="cn.pojo.Users" resultMap="findByIdMap">
+        select u.*, o.id as order_id, o.number as order_number
+        from tb_user as u,
+             tb_orders as o
+        where u.id = o.user_id
+          and u.id = #{id}
     </select>
 
-    <resultMap id="queryClazzByIdMap" type="clazz">
-        <id property="id" column="c_id"/>
-        <result property="name" column="c_name"/>
-        <collection property="student" ofType="User">
-            <id property="id" column="id"/>
-            <result property="name" column="name"/>
-            <result property="classId" column="clazz_id"/>
-            <result property="sex" column="sex"/>
+    <resultMap id="findByIdMap" type="Users">
+        <id property="id" column="id"/>
+        <id property="username" column="username"/>
+        <id property="address" column="address"/>
+        <!-- ofType 表示集合中元素的类型 -->
+        <collection property="ordersList" ofType="Orders">
+            <id property="id" column="order_id"/>
+            <result property="number" column="order_number"/>
         </collection>
     </resultMap>
 </mapper>
@@ -1968,28 +1995,240 @@ xml 文件
 测试代码
 
 ```java
-public class AssociationQueryTest {
+public class TestAssociationOne2Mu {
     String resourcePath = "MyBatisConfig.xml";
     SqlSession sqlSession;
-    AssociationQuery dao;
+    UsersMapper dao;
 
     @BeforeEach
     public void init() throws IOException {
         InputStream in = Resources.getResourceAsStream(resourcePath);
         SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
         sqlSession = sqlSessionFactory.openSession(true); // 設置自動提交事務
-        dao = sqlSession.getMapper(AssociationQuery.class);
+        dao = sqlSession.getMapper(UsersMapper.class);
     }
 
     @Test
-    public void t1() {
-        Clazz clazz = dao.queryClazzById(1);
-        System.out.println(clazz);
+    public void f1() {
+        Users byId = dao.findById(1);
+        System.out.println(byId);
     }
+
 }
 ```
 
 JavaType 和 OfType：`JavaType `和 `ofType` 都是用来指定对象类型的，但是 `JavaType` 是用来指定 `pojo` 中属性的类型，而 `ofType` 指定的是映射到 list 集合属性中 `pojo` 的类型。
+
+### 多对多查询
+
+典型的多对多例子：一个订单可以包含多种商品，而一种商品又可以属于多个订单，订单和商品就属于多对多的关联关系。
+
+<span style="color:orange">而多对多查询的意思是，我们如何从这个多对多的关系中查询到我们想要的数据：如查询某个订单表的信息，包括订单表中涉及到的所有的商品信息。</span>
+
+在数据库中，多对多的关联关系通常使用一个中间表来维护，中间表中的订单 id 作为外键参照订单表的 id，商品 id 作为外键参照商品表的 id。
+
+```mermaid
+graph LR
+订单表---中间表---商品表
+```
+
+在 MyBatis 中我们可以通过这几种方式来实现多对多查询。
+
+- 如，多订单表执行一对多的查询，然后再将订单表中存在的那些商品再次进行多对多查询。
+
+    ```mermaid
+    graph LR
+    订单表-->一对多查询-->拿到查询到的商品-->对商品进行一对多查询
+    ```
+
+- 使用 MyBatis 的嵌套查询，进行多对多嵌套查询，通过执行另一条 SQL 映射语句来返回预期的特殊类型。
+
+<a href="https://blog.csdn.net/qq_42524262/article/details/98383977">一个不错的博客</a>
+
+#### 准备数据
+
+假定我们的需求是，查询某个订单的信息，订单中涉及到的商品信息也都要查询出来。
+
+> 数据库表
+
+```mysql
+# 创建一个名称为tb_product的表
+CREATE TABLE tb_product
+(
+    id    INT(32) PRIMARY KEY AUTO_INCREMENT,
+    NAME  VARCHAR(32),
+    price DOUBLE
+);
+# 插入3条数据
+INSERT INTO tb_product
+VALUES ('1', 'Java基础入门', '44.5');
+INSERT INTO tb_product
+VALUES ('2', 'Java Web程序开发入门', '38.5');
+INSERT INTO tb_product
+VALUES ('3', 'SSM框架整合实战', '50');
+
+# 创建一个名称为tb_ordersitem的中间表
+CREATE TABLE tb_ordersitem
+(
+    id         INT(32) PRIMARY KEY AUTO_INCREMENT,
+    orders_id  INT(32),
+    product_id INT(32),
+    FOREIGN KEY (orders_id) REFERENCES tb_orders (id),
+    FOREIGN KEY (product_id) REFERENCES tb_product (id)
+);
+# 插入3条数据
+INSERT INTO tb_ordersitem
+VALUES ('1', '1', '1');
+INSERT INTO tb_ordersitem
+VALUES ('2', '1', '3');
+INSERT INTO tb_ordersitem
+VALUES ('3', '3', '3');
+
+# 创建一个名称为tb_orders的表，如果之前没有创建的话
+CREATE TABLE tb_orders (
+                           id int(32) PRIMARY KEY AUTO_INCREMENT,
+                           number varchar(32) NOT NULL,
+                           user_id int(32) NOT NULL,
+                           FOREIGN KEY(user_id) REFERENCES tb_user(id)
+);
+# 插入3条数据
+INSERT INTO tb_orders VALUES ('1', '1000011', '1');
+INSERT INTO tb_orders VALUES ('2', '1000012', '1');
+INSERT INTO tb_orders VALUES ('3', '1000013', '2');
+```
+
+> POJO 代码
+
+```java
+// some code
+public class Orders {
+    private Integer id;
+    private String number;
+    private List<Product> productList;
+}
+
+public class Product {
+    private Integer id;
+    private String name;
+    private Double price;
+    private List<Orders> orders;
+	// some code
+}
+```
+
+> Mapper 代码
+
+```java
+public interface OrderMapper {
+    Orders findOrdersWithProduct(int id);
+}
+
+public interface ProductMapper {
+    Product findProductById(int id);
+}
+```
+
+#### 嵌套子查询
+
+```xml
+<mapper namespace="cn.mapper.OrderMapper">
+    <select id="findOrdersWithProduct" resultType="cn.pojo.Orders" resultMap="findOrdersWithProductMap">
+        select * from tb_orders where id=#{id}
+    </select>
+
+    <resultMap id="findOrdersWithProductMap" type="Orders">
+        <id column="id" property="id"/>
+        <result column="number" property="number"/>
+        <!-- 
+			会将 id 这列 作为参数传递给 collection 
+			中的查询语句findProductById 
+		-->
+        <collection property="productList" 
+                    column="id" 
+                    ofType="Product" 
+                    select="cn.mapper.ProductMapper.findProductById"/>
+    </resultMap>
+</mapper>
+
+<mapper namespace="cn.mapper.ProductMapper">
+    <select id="findProductById" resultType="cn.pojo.Product">
+        select *
+        from tb_product
+        where id in (
+            select product_id
+            from tb_ordersitem
+            where orders_id = #{id}
+        )
+    </select>
+</mapper>
+```
+
+测试代码
+
+```java
+public class TestAssociationMu2Mu {
+    String resourcePath = "MyBatisConfig.xml";
+    SqlSession sqlSession;
+    OrderMapper dao;
+
+    @BeforeEach
+    public void init() throws IOException {
+        InputStream in = Resources.getResourceAsStream(resourcePath);
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(in);
+        sqlSession = sqlSessionFactory.openSession(true); // 設置自動提交事務
+        dao = sqlSession.getMapper(OrderMapper.class);
+    }
+
+    @Test
+    public void f1(){
+        Orders ordersWithProduct = dao.findOrdersWithProduct(1);
+        System.out.println(ordersWithProduct);
+
+    }
+}
+
+/*
+Orders{id=1, number='1000011'
+[[
+Product{id=1, name='Java基础入门', price=44.5, orders=null}, 
+Product{id=3, name='SSM框架整合实战', price=50.0, orders=null}
+]]}
+*/
+```
+
+#### 嵌套结果方式
+
+就是通过一条 SQL 查询到所有的数据
+
+```xml
+<select id="findOrdersWithProduct" resultType="cn.pojo.Orders" resultMap="findOrdersWithProductMap">
+    select o.*, p.id as pid, p.NAME, p.price
+    from tb_orders o,
+    tb_product p,
+    tb_ordersitem item
+    where item.orders_id = o.id
+    and item.product_id = p.id
+    and o.id = #{id}
+</select>
+
+<resultMap id="findOrdersWithProductMap" type="Orders">
+    <id column="id" property="id"/>
+    <result column="number" property="number"/>
+    <collection property="productList" ofType="Product">
+        <id property="id" column="pid"/>
+        <result property="name" column="name"/>
+        <result property="price" column="price"/>
+    </collection>
+</resultMap>
+<!-- 
+查询出的结果和上面的一样
+Orders{id=1, number='1000011'
+[[
+Product{id=1, name='Java基础入门', price=44.5, orders=null}, 
+Product{id=3, name='SSM框架整合实战', price=50.0, orders=null}
+]]}
+-->
+```
 
 ### 分步查询
 
@@ -2007,11 +2246,92 @@ JavaType 和 OfType：`JavaType `和 `ofType` 都是用来指定对象类型的�
 <resultMap type="com.xx.key" id="mykey02">
     <id></id>
     <result></result>
-    <association property="lock" select="getLockByIdSimple" column="lockid"></association>
+    <association property="lock" 
+                 select="getLockByIdSimple" 
+                 column="lockid"/>
 </resultMap>
 ```
 
 分布查询，两个查询都会执行，即便没有用到第二个查询的数据。这样严重浪费了数据库的性能。我们可以采用按需加载，需要的时候再去查询：全局开启按需加载策略！
+
+### 延迟加载
+
+使用嵌套查询方式进行关联查询映射时，使用 延迟加载在一定程度上可以降低运行消耗并提高查询效率。<span style="color:red">MyBatis 默认没有开启延迟加载，可以在核心配置文件 mybatis-config.xml 中的  \<settings\> 元素内进行全局配置</span>，具体配置方式如下
+
+```xml
+<settings>
+    <!-- 打开延迟加载的开关 -->
+    <setting name="lazyLoadingEnabled" value="true" />
+    <!-- 将积极加载改为消息加载，即按需加载 -->
+    <setting name="aggressiveLazyLoading" value="false"/>
+</settings>
+```
+
+如果只是个别的 SQL 需要开启延迟加载，则直接在需要延迟加载的 SQL 配置中将 fetchType 改为 lazy
+
+```xml
+<select id="findPersonById" resultMap="findPersonByIdResult">
+    select *
+    from mybatis.tb_person
+    where id = #{id}
+</select>    
+<resultMap id="findPersonByIdResult" type="Person">
+    <id column="id" property="id"/>
+    <result column="name" property="name"/>
+    <result column="age" property="age"/>
+    <result column="sex" property="sex"/>
+    <!-- Mapper xml文件中按需加载的写法 -->
+    <!-- 将 fetchType 改为 lazy，默认是 eager 指定属性后，将在映射中忽略全局配置参数-->
+    <association property="card" fetchType="lazy" 
+                 column="card_id" javaType="IdCard" 
+                 select="cn.mapper.IdCardMapper.findCardById"/>
+</resultMap>
+```
+
+### 总结
+
+如果 POJO 字段的名称和数据库的名称不对应则采用
+
+```xml
+<resultMap type="类型 如xx类" id="标识符">
+	<id column="数据库字段名" property="代码中的字段名"></id> // 主键
+    <result column="数据库字段名" property="代码中的字段名"></result> // 普通字段
+</resultMap>
+```
+
+如果是一对一采用
+
+```xml
+<resultMap type="类型 如xx类" id="标识符">
+	<id column="数据库字段名" property="代码中的字段名"></id> // 主键
+    <result column="数据库字段名" property="代码中的字段名"></result> // 普通字段
+    <association property="代码字段名" javaType="POJO属性的类型">
+        <id column="数据库字段名" property="代码中的字段名"></id> 
+    	<result column="数据库字段名" property="代码中的字段名"></result>
+    </association>
+</resultMap>
+```
+
+如果是一对多采用
+
+```xml
+<resultMap type="类型 如xx类" id="标识符">
+	<id column="数据库字段名" property="代码中的字段名"></id> // 主键
+    <result column="数据库字段名" property="代码中的字段名"></result> // 普通字段
+    <collection property="代码字段名" ofType="指定的是映射到list集合属性中pojo的类型。">
+        <id column="数据库字段名" property="代码中的字段名"></id> 
+    	<result column="数据库字段名" property="代码中的字段名"></result>
+    </collection>
+</resultMap>
+```
+
+延迟加载指定属性
+
+```xml
+    <association fetchType="lazy" property="card"
+                 column="card_id" javaType="IdCard" 
+                 select="cn.mapper.IdCardMapper.findCardById"/>
+```
 
 ## 缓存机制
 
@@ -2075,7 +2395,63 @@ public class PerpetualCache implements Cache {
 
 MyBatis 提供二级缓存的接口及其实现，缓存实现要求 POJO 实现 Serializable 接口
 
-## 深入理解
+## 整合Spring
+
+除了导入 Spring 和 MyBatis 的包之外，还需要导入 MyBatis 和 Spring 的整合包。
+
+### 思路
+
+整合的思路比较简单，就是将 MyBatis 的对象交由 Spring 进行关联。
+
+- 将 MyBatis 的 SqlSessionFactory 交给 Spring 管理。SqlSessionFactory 用到的数据库连接池是从 Spring 容器中的。
+- MyBatis 不再管理事务，事务由 Spring 进行管理。
+
+### 整合方式
+
+> 传统 Dao 方式开发整合
+
+编写 Dao 接口和 Dao 接口的实现类
+
+```java
+public interface CDao{
+    public XX find(int id);
+}
+
+public class CDaoImpl extends SqlSessionDaoSupport implements CDao{
+    public XX find(int id){
+        return this.getSqlSession().selectOne("命名空间",id);
+    }
+}
+```
+
+CustomerDaoImpl 类继承了 SqlSessionDaoSupport 类，并实现了 CustomerDao 接口。其中，SqlSessionDaoSupport 类在使用时需要一个 SqlSessionFactory 或一个 SqlSessionTemplate 对象，所以需要通过 Spring 给 SqlSessionDaoSupport 类的子类对象注入一个 SqlSessionFactory 或 SqlSessionTemplate。这样，在子类中就能通过调用 SqlSessionDaoSupport 类的 getSqlSession() 方法来获取  SqlSession 对象，并使用 SqlSession 对象中的方法了。
+
+> Mapper 接口方式
+
+接口的实现类通过动态代理生成。无需用户编写。
+
+基于 MapperFactoryBean 的整合
+
+- MapperFactoryBean 是 MyBatis-Spring 团队提供的一个用于根据 Mapper 接口生成 Mapper 对象的类，该类在 Spring 配置文件中使用时可以配置以下参数。
+
+    - mapperInterface：用于指定接口，动态代理所需要的接口信息。
+    - SqlSessionFactory：用于指定 SqlSessionFactory
+    - SqlSessionTemplate：用于指定 SqlSessionTemplate。如果与 SqlSessionFactory 同时设定，则只会启用 SqlSessionTemplate。
+
+    ```xml
+    <!-- 示例文件 -->
+    <! -- Mapper代理开发（基于MapperFactoryBean）-->
+    <bean id="customerMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
+        <property name="mapperInterface" value="com.itheima.mapper.CustomerMapper" />
+        <property name="sqlSessionFactory" ref="sqlSessionFactory" />
+    </bean>
+    ```
+
+基于 MapperScannerConfigurer 的整合
+
+- 写配置文件太麻烦了，可以直接用注解扫描，让 Spring 自动地通过包中的接口来生成映射器。
+
+## 原理概述
 
 `MyBatis` 可自己写 `Dao` 实现类也可不写实现类。推荐不写实现类。不写实现类采用的是基于代理的 CRUD 操作。
 
@@ -2103,11 +2479,11 @@ MyBatis 提供二级缓存的接口及其实现，缓存实现要求 POJO 实现
 
 <b>提供三种方式</b>
 
-- 配置的位置，主配置文件（我命名为`SqlConfig.xml`）中的 `dataSource` 标签，type 表示采用何种连接。
+- 配置的位置，主配置文件（此处命名为 SqlConfig.xml）中的 dataSource 标签，type 表示采用何种连接。
 - type 取值
-  - POOLED： 采用传统的 `javax.sql.DataSource` 规范中的连接池，`mybatis` 中有针对规范的实现。我们可以用其他连接池替代，如 `Druid`，`type="我们的druid"`，因为 `druid` 是遵循规范的，所以把类全名加上就行了。
-  - `UNPOOLED`：采用传统的获取连接的方式，虽然也实现 `Javax.sql.DataSource`接口，但是并没有使用池化的思想。
-  - `JNDI`：采用服务器提供的 `JNDI` 技术实现，来获取 `DataSource` 对象，不同的服务器所能拿到 `DataSource` 是不一样。注意：如果不是 web 或者 `maven` 的 `war` 工程，是不能使用的。使用 `tomcat` 服务器的话，采用连接池就是 `dbcp` 连接池。
+  - POOLED： 采用传统的 javax.sql.DataSource 规范中的连接池，mybatis 中有针对规范的实现。我们可以用其他连接池替代，如 Druid，type="我们的druid" ，因为 druid 是遵循规范的，所以把类全名加上就行了。
+  - UNPOOLED：采用传统的获取连接的方式，虽然也实现 Javax.sql.DataSource接口，但是并没有使用池化的思想。
+  - JNDI：采用服务器提供的 JNDI 技术实现，来获取 DataSource 对象，不同的服务器所能拿到 DataSource 是不一样。注意：如果不是 web 或者 maven 的 war 工程，是不能使用的。使用 tomcat 服务器的话，采用连接池就是 dbcp 连接池。
 
 ### 事务
 
@@ -2117,173 +2493,7 @@ MyBatis 提供二级缓存的接口及其实现，缓存实现要求 POJO 实现
 
 解决办法：四种隔离级别
 
-它是通过 `sqlsession` 对象的 commit 方法和 rollback 方法实现事务的提交和回滚
-
-## 多表操作
-
-如果 POJO 字段的名称和数据库的名称不对应则采用
-
-```xml
-<resultMap type="类型 如xx类" id="标识符">
-	<id column="数据库字段名" property="代码中的字段名"></id> // 主键
-    <result column="数据库字段名" property="代码中的字段名"></result> // 普通字段
-</resultMap>
-```
-
-如果是一对一采用
-
-```xml
-<resultMap type="类型 如xx类" id="标识符">
-	<id column="数据库字段名" property="代码中的字段名"></id> // 主键
-    <result column="数据库字段名" property="代码中的字段名"></result> // 普通字段
-    <association property="代码字段名" javaType="POJO属性的类型">
-        <id column="数据库字段名" property="代码中的字段名"></id> 
-    	<result column="数据库字段名" property="代码中的字段名"></result>
-    </association>
-</resultMap>
-```
-
-如果是一对多采用
-
-```xml
-<resultMap type="类型 如xx类" id="标识符">
-	<id column="数据库字段名" property="代码中的字段名"></id> // 主键
-    <result column="数据库字段名" property="代码中的字段名"></result> // 普通字段
-    <collection property="代码字段名" ofType="指定的是映射到list集合属性中pojo的类型。">
-        <id column="数据库字段名" property="代码中的字段名"></id> 
-    	<result column="数据库字段名" property="代码中的字段名"></result>
-    </collection>
-</resultMap>
-```
-
-
-
-
-## 延迟加载
-
-### 一对一的延迟加载
-
-举例：用户和账户之间是 一个用户对应多个账户。一个账户对应一个用户。所以账户和用户是一对一的关系。
-
-我们对用户信息进行懒加载。
-
-- `proerty` 是 `Java `字段的名称
-- `javaType` 是查询出来的数据类型
-- select 是要调用的查询方法，通过这个查询方法把懒数据查询出来
-- column 是查询的条件，即 where xx = column 的值。这个 column 取自 `resultMap`。
-
-```xml
-<association property="user" javaType="User" select="com.bbxx.dao.lazy.IUserDao.findOne" column="uid"></association>
-```
-
-<b>具体代码</b>
-
-```java
-public interface IAccountDao {
-    // 懒加载案例，只查账号不查用户信息 一对一
-    List<Account> findAll();
-}
-
-public interface IUserDao {
-    // User是一对一查询 懒加载中的那个懒数据
-    User findOne(Integer id);
-}
-```
-
-```xml
-<mapper namespace="com.bbxx.dao.lazy.IAccountDao">
-	<resultMap id="accountMap" type="Account">
-        <id column="id" property="id"/>
-        <result column="uid" property="uid"/>
-        <result column="money" property="money"/>
-        <association property="user" javaType="User" select="com.bbxx.dao.lazy.IUserDao.findOne" column="uid">
-        </association>
-    </resultMap>
-
-    <select id="findAll" resultMap="accountMap">
-        select *
-        from account
-    </select>
-</mapper>
-
-<mapper namespace="com.bbxx.dao.lazy.IUserDao">
-    <resultMap id="userMap" type="User">
-        <id column="id" property="id"/>
-        <result column="username" property="username"/>
-        <result column="address" property="address"/>
-        <result column="sex" property="sex"/>
-        <result column="birthday" property="birthday"/>
-    </resultMap>
-
-    <select id="findOne" resultMap="userMap">
-        select * from user where id = #{uid}
-    </select>
-</mapper>
-```
-
-### 一对多延迟加载
-
-用户和账户是一对多查询。我们对“多”进行懒加载，要用时在查询
-
-对多的查询采用
-
-- `proerty` 是数据对应的 `Java` 字段的名称
-- `ofType` 是查询出来集合中存储的数据类型
-- `select` 是要调用的查询方法，通过这个查询方法把懒数据查询出来
-- `column` 是查询的条件，即 `where xx = column` 的值。这个 `column` 取自 `resultMap`
-
-```xml
-<collection property="accounts" ofType="Account" select="com.bbxx.dao.lazy.IAccountDao.findById" column="id">
-</collection>
-```
-<b>具体代码</b>
-
-```java
-public interface IUserDao {
-    // 懒加载 一对多查询 查询每个用户的所有账户信息
-    List<User> findAll();
-}
-
-public interface IAccountDao {
-	// 懒加载  对“多”的懒加载
-    List<Account> findById(Integer id);
-}
-```
-
-IUserDao 的 mapper 文件
-
-```xml
-<mapper namespace="com.bbxx.dao.lazy.IUserDao">
-    <resultMap id="userMap" type="User">
-        <id column="id" property="id"/>
-        <result column="username" property="username"/>
-        <result column="address" property="address"/>
-        <result column="sex" property="sex"/>
-        <result column="birthday" property="birthday"/>
-        <collection property="accounts" ofType="Account" select="com.bbxx.dao.lazy.IAccountDao.findById" column="id">
-
-        </collection>
-    </resultMap>
-
-    <select id="findAll" resultMap="userMap">
-        select * from user
-    </select>
-</mapper>
-
-IAccountDao的mapper文件
-<mapper namespace="com.bbxx.dao.lazy.IAccountDao">
-<!--  一对一的查询  -->
-    <resultMap id="accountMap" type="Account">
-        <id column="id" property="id"/>
-        <result column="uid" property="uid"/>
-        <result column="money" property="money"/>
-    </resultMap>
-
-    <select id="findById" resultMap="accountMap">
-        select * from account where uid = #{id}
-    </select>
-</mapper>
-```
+它是通过 sqlsession 对象的 commit 方法和 rollback 方法实现事务的提交和回滚
 
 # 高级篇
 
