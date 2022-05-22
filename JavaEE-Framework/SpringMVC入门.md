@@ -278,6 +278,45 @@ public class RequestMappingHeaderController {
 | @DeleteMapping | 匹配 DELETE 方式的请求。...                                  |
 | @PatchMapping  | 匹配 PATCH 方式的请求。...                                   |
 
+## @PathVariable
+
+<b>获取请求路径占位符中的值</b>
+
+- @PathVariable 获取请求路径中占位符的值
+- 占位符的名称和方法中的参数名称一致，就不用在注解里设置占位符的名称
+- 占位符的名称和方法中的参数名称不一致，就要在注解里设置占位符的名称
+
+```java
+package cn.payphone.controller;
+
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class PathVariableController {
+
+    // {id}是占位符
+    @RequestMapping("/user/{id}")
+    // @PathVariable 获取请求路径中占位符的值
+    public String pathVariableTest(@PathVariable("id") String id) {
+        return id;
+    }
+
+    // 占位符的名称和方法中的参数名称一致就不用在注解里设置别名
+    @RequestMapping("/user/info/{id}")
+    public String pathVariableTest2(@PathVariable String id) {
+        return id;
+    }
+
+    // 占位符的名称和方法中的参数名称不一致就要在注解里设置
+    @RequestMapping("/user/infos/{id}")
+    public String pathVariableTest3(@PathVariable("id") String ids) {
+        return ids;
+    }
+}
+```
+
 ## ant风格的URL
 
 <b>URL地址可以写模糊的通配符</b>
@@ -336,46 +375,7 @@ public class AntController {
 }
 ```
 
-## @PathVariable
-
-<b>获取请求路径占位符中的值</b>
-
-- @PathVariable 获取请求路径中占位符的值
-- 占位符的名称和方法中的参数名称一致，就不用在注解里设置占位符的名称
-- 占位符的名称和方法中的参数名称不一致，就要在注解里设置占位符的名称
-
-```java
-package cn.payphone.controller;
-
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-@RestController
-public class PathVariableController {
-
-    // {id}是占位符
-    @RequestMapping("/user/{id}")
-    // @PathVariable 获取请求路径中占位符的值
-    public String pathVariableTest(@PathVariable("id") String id) {
-        return id;
-    }
-
-    // 占位符的名称和方法中的参数名称一致就不用在注解里设置别名
-    @RequestMapping("/user/info/{id}")
-    public String pathVariableTest2(@PathVariable String id) {
-        return id;
-    }
-
-    // 占位符的名称和方法中的参数名称不一致就要在注解里设置
-    @RequestMapping("/user/infos/{id}")
-    public String pathVariableTest3(@PathVariable("id") String ids) {
-        return ids;
-    }
-}
-```
-
-## Rest 风格
+## Rest风格
 
 ### 概述
 
@@ -460,19 +460,282 @@ protected void doFilterInternal(HttpServletRequest request, HttpServletResponse 
 </html>
 ```
 
-# 请求处理
+# 数据绑定
 
-## 概述
-
-Spring MVC 获取请求带来的各种信息
-
-- 入参名称与请求参数名称一致，自动赋值
+- 数据绑定流程
 - @RequestParam
 - @RequestHeader
 - @CookieValue：获取某个 cookie 的值
 - POJO 自动赋值。字段名一致即可。
 - 使用 Servlet 原生 API。（session 推荐使用原生 API）
 - 重定向和转发
+
+## 概述
+
+在执行程序时，Spring MVC 会根据客户端请求参数的不同，<span style="color:orange">将请求消息中的信息以一定的方式转换并绑定到控制器类的方法参数中。</span>这种将请求消息数据与后台方法参数建立连接的过程就是 Spring MVC 中的数据绑定。
+
+在数据绑定过程中，Spring MVC 框架会通过数据绑定组件（DataBinder）将请求参数串的内容进行类型转换，然后将转换后的值赋给控制器类中方法的形参，这样后台方法就可以正确绑定并获取客户端请求携带的参数了。整个数据绑定的过程如图所示。
+
+<div align="center"><img src="img/mvc/databind.jpg"></div>
+
+
+
+1️⃣Spring MVC 将 ServletRequest 对象传递给 DataBinder。
+
+2️⃣将处理方法的入参对象传递给 DataBinder。比如是 IndexController 中的 index 方法响应请求，则把 index 中的入参对象传递给 DataBinder。
+
+3️⃣DataBinder 调用 ConversionService 组件进行数据类型转换、数据格式化等工作，并将 ServletRequest 对象中的消息填充到参数对象中。
+
+4️⃣调用 Validator 组件对已经绑定了请求消息数据的参数对象进行数据合法性校验。
+
+5️⃣校验完成后会生成数据绑定结果 BindingResult 对象，Spring MVC 会将 BindingResult 对象中的内容赋给处理方法的相应参数。
+
+## 简单数据绑定
+
+### 绑定默认数据类型
+
+当前端请求的参数比较简单时，可以在后台方法的形参中直接使用 Spring MVC 提供的默认参数类型进行数据绑定。
+
+- HttpServletRequest：通过 request 对象获取请求信息。
+- HttpServletResponse：通过 response 处理响应信息。
+- HttpSession：通过 session 对象得到 session 中存储的对象。
+- Model/ModelMap：Model 是一个接口，ModelMap 是一个接口实现，作用是将 model 数据填充到 request 域。
+
+```java
+@RestController
+// 测试 HttpServletRequest 绑定
+public class FirstController {
+
+    @GetMapping("/request")
+    public String request(HttpServletRequest request) {
+        return request.getParameter("id");
+    }
+}
+
+// 发起请求：http://localhost:8080/request?id=4
+```
+
+### 绑定简单数据类型
+
+int、String、double 等数据类型。
+
+```java
+@GetMapping("/ints")
+public String ints(int id){
+    return String.valueOf(id);
+}
+```
+
+前端请求中参数名和后台控制器类方法中的形参名不一样，这就会导致后台无法正确绑定并接收到前端请求的参数。此时，需要使用 Spring MVC 提供的 @RequestParam 注解来进行间接数据绑定。
+
+```java
+@GetMapping("/param")
+// 将前端传过来的 id
+public int param(@RequestParam(name = "id") int idd) {
+    return idd;
+}
+// 请求地址：http://localhost:8080/param?id=4
+```
+
+### 绑定POJO类型
+
+POJO 类型的数据绑定就是将所有关联的请求参数封装在一个 POJO 中，然后在方法中直接使用该 POJO 作为形参来完成数据绑定。
+
+```java
+static class User {
+    public String name;
+    public String address;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+}
+
+@GetMapping("/user/info")
+// POJO 对象属性的赋值是通过调用 setter getter 方法来赋值的
+// 将 setter getter 方法注释后，发现对象赋值失败
+public User userInformation(User user) {
+    return user;
+}
+// http://localhost:8080/user/info?name=123&address=123
+```
+
+<span style="color:red">注意</span>：返回对象类型的 POJO 要引入 JSON 库，此处用的 jackson。如果是创建的 SpringBoot 项目，会自动引，无需手动配置，用默认的即可。
+
+```xml
+<dependency>
+    <!-- https://mvnrepository.com/artifact/org.codehaus.jackson/jackson-core-asl -->
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.11.4</version>
+</dependency>
+```
+
+### 绑定包装POJO
+
+使用简单 POJO 类型已经可以完成多数的数据绑定，但有时客户端请求中传递的参数会比较复杂，可能会存在某个 POJO 是另一个 POJO 中的属性。
+
+```java
+static class User {
+    public String name;
+    public String address;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+}
+
+@GetMapping("/user/info")
+public User userInformation(User user) {
+    return user;
+}
+
+static class Order {
+    public User user;
+    public String orderName;
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public String getOrderName() {
+        return orderName;
+    }
+
+    public void setOrderName(String orderName) {
+        this.orderName = orderName;
+    }
+}
+
+@GetMapping("/order")
+public Order orderInformation(Order order) {
+    return order;
+}
+
+// localhost:8080/order?orderName=123&user.address=xx&user.name=kk
+```
+
+### 自定义数据绑定
+
+如果有些特殊类型的参数是无法在后台进行直接转换的，例如日期数据就需要开发者自定义转换器（Converter）或格式化（Formatter）来进行数据绑定。
+
+Formatte r与 Converter 的作用相同，只是 Formatter 的源类型必须是一个 String 类型，而 Converter 可以是任意类型。
+
+以自定义日期转换为例：我们可以自定义一个 Converter 类来进行日期转换。
+
+1️⃣实现 Converter 接口（org.springframework.core.convert.converter.Converter）
+
+2️⃣编写转换代码
+
+3️⃣将转换器注册到 IOC 容器
+
+```java
+// 实现 Converter 接口
+public class DataConverter implements Converter<String, Date> {
+    private String pattern = "yyyy-MM-dd HH:mm:ss";
+
+    @Override
+    public Date convert(String source) {
+        SimpleDateFormat sdf = new SimpleDateFormat(pattern);
+        try {
+            return sdf.parse(source);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("无效日期格式");
+        }
+    }
+}
+```
+
+```java
+// 注册到 IOC 容器中
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addConverter(new DataConverter());
+    }
+}
+```
+
+```java
+// 测试
+@GetMapping("/date")
+public String time(Date date) {
+    System.out.println(date);
+    return "ok";
+}
+
+// localhost:8080/date?date=2017-04-12 2015:55:55
+```
+
+## 复杂数据绑定
+
+如绑定数组、集合等。
+
+### 绑定数组
+
+写法也很简单
+
+```java
+@GetMapping("/array")
+public String array(int[] ids) {
+    Arrays.stream(ids).forEach(System.out::print);
+    return Arrays.stream(ids).toArray().toString();
+}
+// http://localhost:8080/array?ids=1,2,3,4,5
+```
+
+### 绑定集合
+
+如果需要批量修改信息的时候，就需要使用到集合了。
+
+注意：在使用集合数据绑定时，后台方法中不支持直接使用集合形参进行数据绑定，所以需要使用包装 POJO 作为形参，然后在包装 POJO 中包装一个集合属性。
+
+```java
+static class UserVO {
+    public List<User> user;
+
+    public List<User> getUser() {
+        return user;
+    }
+
+    public void setUser(List<User> user) {
+        this.user = user;
+    }
+}
+
+@GetMapping("/list")
+public List<User> list(UserVO vo) {
+    return vo.getUser();
+}
+```
 
 ## 注解获取请求参数
 
@@ -500,16 +763,17 @@ RequestParam 注解的几个重要的值：
 
 ### RequestHeader 
 
-<b>@RequestHeader 获取请求头中某个key的值。</b>
+<b>@RequestHeader 获取请求头中某个 key 的值。</b>
 
 request.getHeader("User-Agent")
 
 ```java
-@RequestHeader("User-Agent") String MyUserAgent 写在方法参数上
-等同于 String MyUserAgent = request.getHeader("User-Agent")
+@RequestHeader("User-Agent") String MyUserAgent 
+写在方法参数上等同于 
+String MyUserAgent = request.getHeader("User-Agent")
 ```
 
-RequestHeader注解的几个重要的值
+RequestHeader 注解的几个重要的值
 
 - value
 - required
@@ -559,36 +823,6 @@ public String getSession(@SessionAttribute("user") String user) {}
 ```
 
 <b>Session  还是用原生 API 获取的好。</b>
-
-## POJO自动赋值
-
-<span style="color:red">注意</span>：返回对象类型的 POJO 要引入 JSON 库，我用的 jackson。
-
-```xml
-<dependencies>
-    <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-webmvc</artifactId>
-        <version>5.3.3</version>
-    </dependency>
-    <dependency>
-        <groupId>javax.servlet.jsp</groupId>
-        <artifactId>jsp-api</artifactId>
-        <version>2.0</version>
-    </dependency>
-    <dependency>
-        <groupId>javax.servlet</groupId>
-        <artifactId>javax.servlet-api</artifactId>
-        <version>3.0.1</version>
-    </dependency>
-    <dependency>
-        <!-- https://mvnrepository.com/artifact/org.codehaus.jackson/jackson-core-asl -->
-        <groupId>com.fasterxml.jackson.core</groupId>
-        <artifactId>jackson-databind</artifactId>
-        <version>2.11.4</version>
-    </dependency>
-</dependencies>
-```
 
 ```java
 @ResponseBody
@@ -1399,7 +1633,9 @@ private void initHandlerMappings(ApplicationContext context) {
 }
 ```
 
-# 视图解析
+# 视图解析器
+
+Spring MVC 中的视图解析器是负责解析视图的。我们可以配置一个视图解析器，设置视图前缀和后缀简化开发。
 
 ## 视图解析的应用
 
@@ -1423,7 +1659,7 @@ request.getRequestDispatcher("/地址").forward(request, response);
 
 1）地址栏发生变化，显示新的地址；浏览器端进行的跳转。
 
-2）请求次数：2次
+2）请求次数：2 次
 
 3）可重定向到其他项目或其他网址
 
