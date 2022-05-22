@@ -379,12 +379,12 @@ public class AntController {
 
 ### 概述
 
-Rest--->Representational State Transfer。（资源）表现层状态转化。是目前最流行的一种互联网软件架构。【前段时间提出了一种新的软件架构，是图的】
+Rest--->Representational State Transfer。（资源）表现层状态转化。是目前最流行的一种互联网软件架构。Rest 风格就是把请求参数变成请求路径的一种风格【一种新的软件架构是图风格】
 
 - 资源（Resource）：网络上的一个实体，或者说是网络上的一个具体信息。
     - URI：统一资源标识符
     - URL：统一资源定位符
-- 表现层（Representation）：把资源具体呈现出来的形式，叫做它的表现层。如文本可用 txt 格式表现，也可用 html 格式、xml格式、JSON 格式表现。
+- 表现层（Representation）：把资源具体呈现出来的形式，叫做它的表现层。如文本可用 txt 格式表现，也可用 html 格式、xml 格式、JSON 格式表现。
 - 状态转化（State Transfer）：HTTP 协议是无状态的，所有状态都保存在服务器端。所谓的表现层状态转化就是 HTTP 协议里面，四个表示操作方式的动词：GET、POST、PUT、DELETE。
     - GET：获取资源
     - POST：新建资源
@@ -835,6 +835,44 @@ public User pojo(User user) {
 
 ## Servlet原生API
 
+Servlet 里怎么用，MVC 里就怎么用。
+
+```java
+@RestController
+public class ServletAPI {
+    @GetMapping("/api")
+    public String api(HttpServletRequest request, HttpSession session) {
+        session.setAttribute("JSESSIONID", "123123");
+        request.setAttribute("request", "requestValue");
+        return "111";
+    }
+}
+```
+
+如果涉及到原生的过滤器，Servlet 对象的注入，参考官方文档
+
+## JSON数据转换
+
+Spring 提供了一个 HttpMessageConverter\<T\> 接口来完成 HTTP 请求和响应直接的转换策略。该接口主要用于将请求信息中的数据转换为一个类型为 T 的对象。
+
+MappingJackson2HttpMessageConverter 是 HttpMessageConverter 的子类，也是 Spring MVC 默认处理 JSON 格式请求响应的实现类。
+
+- @RequestBody：用于将前端请求体中的 JSON 格式数据绑定到形参上。
+- @ResponseBody：用于直接返回 User 对象（当返回 POJO 对象时，会默认转换为 JSON 格式数据进行响应）
+
+```java
+public class JSONController {
+
+    @PostMapping("/json")
+    public FirstController.User getJson(@RequestBody FirstController.User user) {
+        user.setName(user.name+"-after");
+        return user;
+    }
+}
+```
+
+
+
 ## 解决提交数据乱码
 
 提交数据可能乱码
@@ -1089,7 +1127,81 @@ public void ModelAttribute(Model model) {
 
 <div align="center"><img src="img/mvc/ModelAttribute.png"></div>
 
-# 前端控制器源码
+# 静态资源放行
+
+SpringMVC 的工作机制是：来自浏览器的所有访问都会被前端控制器（DispatcherServlet）捕获，然后前端控制器把请求转交给处理器映射（HandlerMapping），HandlerMapping 为请求分配对应的控制器（Controller）进行请求处理。
+
+默认情况下，DispatcherServlet 将捕获 Web 容器所有请求，包括静态资源请求。
+
+浏览器访问服务器的一个页面，实际上是包含了很多次请求的。除了请求页面本身，页面上的图片，js 等静态资源也是通过请求资源在服务器上的相对地址实现的。<span style="color:orange">但是 SpringMVC 的环境下，对静态资源的请求也会被前端控制器捕获，并转交给处理器映射。由于我们的代码中不会有对应的控制器处理请求，因此请求无法被相应，导致网页无法加载静态资源。</span>
+
+那么，如何解决静态资源放行的问题呢？
+
+- 修改 Spring MVC 前端控制器拦截范围，不让 DispatcherServlet 拦截所有请求，比如所有的非静态资源以 .do 结尾，DispatcherServlet 只拦截 .do 结尾的请求。
+- 由 Spring MVC框架自己处理静态资源
+- 由一个 Servlet 处理所有请求，将非静态资源交由 DispatcherServlet 处理，静态资源交由默认的 Servlet 处理。
+
+## 修改前端控制器
+
+```java
+public class MyWebApplicationInitializer implements WebApplicationInitializer {
+
+    @Override
+    public void onStartup(ServletContext servletContext) {
+
+        // Load Spring web application configuration
+        AnnotationConfigWebApplicationContext context = new AnnotationConfigWebApplicationContext();
+        context.register(AppConfig.class);
+
+        // Create and register the DispatcherServlet
+        DispatcherServlet servlet = new DispatcherServlet(context);
+        ServletRegistration.Dynamic registration = servletContext.addServlet("app", servlet);
+        registration.setLoadOnStartup(1);
+        // 限定拦截的请求路径。
+        registration.addMapping("/app/*");
+    }
+}
+```
+
+## MVC自行处理静态资源🤓
+
+将 /public 和类路径下的 static 目录都映射到 /resources 开头的路径下。推荐这种做法。
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/resources/**")
+                .addResourceLocations("/public", "classpath:/static/")
+                .setCacheControl(CacheControl.maxAge(Duration.ofDays(365)));
+    }
+}
+```
+
+## Default Servlet
+
+DefaultServletHttpRequestHandler，它会像一个检查员，对进入DispatcherServlet 的 URL 进行筛查，如果发现是静态资源请求，就将该请求转由 Web 服务器 默认的 Servlet 处理，如果不是静态资源请求，才由 DispatcherServlet 继续处理。
+
+```java
+@Configuration
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
+        configurer.enable();
+    }
+}
+```
+
+
+
+
+
+# 前端控制器详解
 
 ## 如何看SpringMVC源码
 
@@ -1101,9 +1213,7 @@ public void ModelAttribute(Model model) {
 
 ## 梳理流程
 
-### 文字分析
-
-<b>文字描述：</b>
+<b>文字描述</b>
 
 请求一进来，应该是来到 HttpServlet 的 doPost 或 doGet 方法。
 
@@ -1186,8 +1296,6 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 ```
 
 源码注释上写，处理对处理程序的实际调度！！而且，该类中调用了类中的很多方法，再根据这些被调用方法的名字，我们猜测 doDispatch 就是调度的核心方法，于是我们对它进行debug！！！
-
-### 总结
 
 <b>图示总结</b>
 
@@ -2639,9 +2747,9 @@ use the @EnableWebMvc annotation to enable MVC configuration。使用 EnableWebM
 
 ## 格式化
 
-1）日期格式化：@DateFormat注解，可以用在字段上，方法形参上。
+1）日期格式化：@DateFormat 注解，可以用在字段上，方法形参上。
 
-2）数字格式化：@NumberFormat注解，可以用在字段上，方法形参上。
+2）数字格式化：@NumberFormat 注解，可以用在字段上，方法形参上。
 
 ```java
 @RequestMapping("/date")
@@ -2878,23 +2986,25 @@ public class UploadServlet extends HttpServlet {
 
 # 拦截器/跨域
 
+Spring MVC 中的拦截器（Interceptor）类似于 Servlet 中的过滤器（Filter），它主要用于拦截用户请求并做相应的处理。例如通过拦截器可以进行权限验证、记录请求信息的日志、判断用户是否登录等。
+
 ## 拦截器
 
 > 自定义拦截器流程
 
-1）实现 HandlerInterceptor 接口。
+1️⃣实现 HandlerInterceptor 接口或继承 HandlerInterceptor 的实现类 HandlerInterceptorAdapter。
 
-2）配置到 IOC 容器中。(WebConfig 中配置？)
+2️⃣配置到 IOC 容器中。(WebConfig 中配置？)
 
 - 拦截什么请求？默认是拦截所有。
 
-3）拦截器的执行顺序是什么？
+3️⃣拦截器的执行顺序是什么？
 
-- preHandle ：目标方法运行之前
+- preHandle ：目标方法运行之前，返回值为 true 表示继续执行后面的拦截器，false 表示不再执行后面的拦截器。
 
-- postHandle：目标方法运行之后（方法出错的话，不会执行。）
+- postHandle：目标方法运行之后，解析视图之前执行，可以通过此方法对请求域中的模型和视图做出进一步的修改（方法出错的话，不会执行。）
 
-- afterCompletion：页面来到之后（来到页面就行，不管什么页面，报错页面也是页面。只要放行了，afterCompletion 就会执行）
+- afterCompletion：该方法会在整个请求完成，即视图渲染结束之后执行。可以通过此方法实现一些资源清理、记录日志信息等工作。（报错的视图，afterCompletion 也会执行）
 
 - <span style="color:green"><b>正常运行流程：</b></span>拦截器的 preHandle----目标方法----拦截器的 postHandle---页面---拦截器的 afterCompletion
 
@@ -2908,7 +3018,12 @@ public class UploadServlet extends HttpServlet {
 
 > 运行流程
 
-<span style="color:green">正常运行流程：</span>拦截器的preHandle----目标方法----拦截器的 postHandle---页面---拦截器的 afterCompletion
+<span style="color:green">正常运行流程：</span>拦截器的 preHandle ----目标方法 ---- 拦截器的 postHandle --- 页面 ---拦截器的 afterCompletion
+
+```mermaid
+graph
+CustomIntercepto[CustomInterceptor preHandle]--true-->HandlerAdapter[HandlerAdapter Handle]-->CustomInterceptor[CustomInterceptor postHandle]-->DispatcherServlet[DispatcherServlet render]-->CustomInterceptors[CustomInterceptor afterCompletion]
+```
 
 <span style="color:green">多个拦截器：</span>流程和 filter 的流程一样
 
@@ -2922,7 +3037,42 @@ public class UploadServlet extends HttpServlet {
 
 如果过滤请求非常复杂，需要用 IOC 容器中的对象，那么用拦截器。因为过滤器是 JavaWeb 的，要想从 IOC 容器中拿对象比较麻烦。
 
-## 跨域
+> 示例代码
+
+```java
+// 自定义拦截器
+public class MyInterceptors implements HandlerInterceptor {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
+            throws Exception {
+        System.out.println("MyInterceptors preHandle");
+        return true;
+    }
+
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler,
+                           @Nullable ModelAndView modelAndView) throws Exception {
+        System.out.println("MyInterceptors postHandle");
+    }
+
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
+                                @Nullable Exception ex) throws Exception {
+        System.out.println("MyInterceptors afterCompletion");
+
+    }
+}
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addConverter(new DataConverter());
+    }
+	// 把拦截器注入容器
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new MyInterceptors());
+    }
+}
+```
+
+## 跨域配置
 
 ### 基本跨域配置
 
