@@ -1,29 +1,31 @@
 # 概述
 
+[(1条消息) Spring源码_从头再来_f的博客-CSDN博客](https://blog.csdn.net/weixin_42128429/category_11339692.html)
+
 ## 学习内容
 
 > 容器
 
-- `AnnotationConfigApplicationContext`
+- AnnotationConfigApplicationContext
 - 组件添加
 - 组件赋值
 - 组件注入
-- `AOP`
+- AOP
 - 声明式事务
 
 > 扩展原理
 
-- `BeanFactoryPostProcessor`
-- `BeanDefinitionRegistryPostProcessor`
-- `ApplicationListener`
+- BeanFactoryPostProcessor
+- BeanDefinitionRegistryPostProcessor
+- ApplicationListener
 - Spring 容器创建过程
 
 > web
 
-- `servlet3.0` 请求
+- Servlet 3.0 请求
 - 异步请求
 
-<a href="https://docs.spring.io/spring-framework/docs/current/spring-framework-reference/core.html#beans-factory-extension">如何扩展Spring的功能</a>
+<a href="https://docs.spring.io/spring-framework/docs/current/spring-framework-reference/core.html#beans-factory-extension">如何扩展 Spring 的功能</a>
 
 > 配置文件注意点
 
@@ -33,7 +35,7 @@
 
    src|
 
-  ​     |com 类所在的包名
+  ​      |com 类所在的包名
 
   conf 配置文件所在的文件夹，与 src 目录同级别
 
@@ -59,6 +61,287 @@
 </dependency>
 ```
 
+## Spring的优点
+
+1️⃣非入侵式框架。可以使应用程序代码对框架的依赖最小化（其实也小不到哪里去）
+
+2️⃣方便解耦，简化开发。Spring就是一个大工厂，可以将所有对象的创建和依赖关系的维护工作都交给Spring容器管理，大大地降低了组件之间的耦合性。
+
+3️⃣支持 AOP。Spring 提供了对 AOP 的支持，它允许将一些通用任务，如安全、事务、日志等进行集中式处理，从而提高了程序的复用性。
+
+4️⃣支持声明式事务处理。只需要通过配置就可以完成对事务的管理，而无须手动编程。
+
+5️⃣方便集成各种优秀框架。Spring 内部提供了对各种优秀框架（如Struts、Hibernate、MyBatis、Quartz 等）的直接支持。
+
+6️⃣降低 Java EE API 的使用难度。Spring 对 Java EE 开发中非常难用的一些 API（如 JDBC、JavaMail 等），都提供了封装，使这些 API 应用难度大大降低。
+
+7️⃣提供了对 JUnit 的支持，方便程序测试。
+
+# Spring核心容器
+
+Spring 框架的主要功能是通过其核心容器来实现的，而 Spring 框架提供了两种核心容器，分别为 BeanFactory 和 ApplicationContext。
+
+## BeanFactory
+
+BeanFactory 是基础类型的 IoC 容器。简单说，BeanFactory 就是一个管理 Bean 的工厂，它主要负责初始化各种 Bean，并调用它们的生命周期方法。
+
+## ApplicationContext
+
+ApplicationContext 是 BeanFactory 的子接口，也被称为应用上下文，是另一种常用的 Spring 核心容器。ApplicationContext 里不仅包含了 BeanFactory 的所有功能，还添加了对国际化、资源访问、事件传播等方面的支持。
+
+## 依赖注入
+
+依赖注入（Dependency Injection，简称 DI）与控制反转（IoC）的含义相同，只不过这两个称呼是从两个角度描述的同一个概念。
+
+<b>控制反转</b>：不再是自己实例化对象，而是交给 Spring 容器来创建对象，控制权发生了反转。
+
+<b>依赖注入</b>：A 类和 B 类，如果 A 要用到 B，就是 A 依赖了 B。Spring 的 IOC 容器会为 A 初始化这个 B 对象，即注入这个依赖。
+
+> Spring 的依赖注入的方式有如下两种
+
+1️⃣setter 方法注入
+
+2️⃣构造方法注入：<a href="https://blog.csdn.net/weixin_42128429/article/details/121395148">一篇优质博客</a>
+
+- 如果有多个构造方法，默认会使用无参构造方法进行初始化。
+- 如果有多个构造方法，但是没有无参数的，那么会报错。
+- 报错了，怎么办？为某个构造方法加上 Autowired，就会使用那个构造方法进行初始化。
+- 如果需要根据不同的情况来实例化对象怎么办？请看下面的多构造实例化代码
+
+setter 注入（需要加上 Autowired 注解）和构造方法注入（无需加注解）
+
+```java
+@Component
+public class User {
+    public UserP p;
+
+    public UserPTwo t;
+
+    public User(UserPTwo t) {
+        this.t = t;
+    }
+
+    @Autowired
+    public void setP(UserP p){
+        this.p = p;
+    }
+}
+
+@Component
+class UserP {}
+
+@Component
+class UserPTwo {}
+```
+
+测试代码
+
+```java
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = SpringConfig.class)
+public class Hello {
+    @Autowired
+    User user;
+
+    @Test
+    public void f1() {
+        Assert.assertNotNull(user);
+        System.out.println(user.t);
+        System.out.println(user.p);
+    }
+}
+```
+
+不想使用单元测试的写法
+
+```java
+@ComponentScan(basePackages = "cn.study")
+public class SpringConfig {
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig.class);
+        User bean = context.getBean(User.class);
+        System.out.println(bean);
+    }
+}
+```
+
+多构造方法指定某个构造方法进行实例化
+
+```java
+@Component
+@Scope(value = "prototype")
+public class User {
+    public UserP p;
+    public UserPTwo t;
+    public Object o;
+    public User() {}
+
+    public User(UserPTwo t) {
+        this.t = t;
+    }
+
+    public User(UserP p) {
+        this.p = p;
+    }
+}
+
+@ComponentScan(basePackages = "cn.study")
+public class SpringConfig {
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig.class);
+        User bean = context.getBean(User.class, new UserP());
+        System.out.println(bean.p);
+
+        User beant = context.getBean(User.class, new UserPTwo());
+        System.out.println(beant.t);
+    }
+}
+```
+
+## Bean
+
+[(1条消息) Spring源码学习（十）--推断构造方法_从头再来_f的博客-CSDN博客_spring推断构造方法](https://blog.csdn.net/weixin_42128429/article/details/121395148)
+
+### 实例化
+
+在 Spring 中，要想使用容器中的 Bean，需要实例化 Bean。实例化 Bean 有三种方式，分别为<span style="color:orange">构造器实例化、静态工厂方式实例化和实例工厂方式实例化</span>
+
+### 构造器
+
+默认是使用无参构造方法。如果既有无参又有有参，默认使用无参。可以通过 @Autowire 指定使用某个构造方法。
+
+```java
+@Component
+@Scope(value = "prototype")
+public class User {
+    public UserP p;
+
+    public UserPTwo t;
+
+    public Object o;
+
+    public User() {
+    }
+	
+    // @Autowired 指定使用这个构造方法初始化
+    @Autowired
+    public User(UserPTwo t) {
+        this.t = t;
+    }
+}
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = SpringConfig.class)
+public class Hello {
+    @Autowired
+    User user;
+
+    @Test
+    public void f1() {
+        Assert.assertNotNull(user);
+        System.out.println(user.t);
+    }
+}
+```
+
+### 静态工厂方法
+
+静态工厂是实例化 Bean 的另一种方式。该方式要求开发者创建一个静态工厂的方法来创建 Bean 的实例。
+
+```java
+@Configuration
+public class StaticFactoryMethod {
+
+    @Bean("staticFactoryUser")
+    public static User createUser() {
+        return new User();
+    }
+}
+```
+
+### 实例工厂
+
+```java
+@Configuration
+public class InstanceFactory {
+
+    @Bean("instanceFactoryUser")
+    public User createBean() {
+        return new User();
+    }
+}
+```
+
+测试代码
+
+```java
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = SpringConfig.class)
+public class Hello {
+
+    @Autowired
+    @Qualifier("staticFactoryUser")
+    User staticUser;
+
+    @Autowired
+    @Qualifier("instanceFactoryUser")
+    User instanceUser;
+
+    @Test
+    public void f1() {
+        Assert.assertNotNull(staticUser);
+        Assert.assertNotNull(instanceUser);
+    }
+}
+```
+
+### 作用域
+
+通过 Spring 容器创建一个 Bean 的实例时，不仅可以完成 Bean 的实例化，还可以为 Bean 指定特定的作用域。Spring 中为 Bean 的实例定义了 7 种作用域。
+
+| 作用域名称        | 说明                                                         |
+| ----------------- | ------------------------------------------------------------ |
+| singleton（单例） | 使用 singleton 定义的 Bean 在 Spring 容器中将只有一个实例，即单例模型。 |
+| prototype（原型） | 每次通过 Spring 容器获取的 prototype 定义的 Bean 时，容器都将创建一个新的 Bean 实例。 |
+| request           | 在一次 HTTP 请求中，容器会返回一个 Bean 实例，不同的 HTTP 请求会产生不同的 Bean，且仅在当前 HTTP request 内有效。 |
+| session           | 在一次 HTTP Session 中，容器会返回同一个 Bean 实例，且仅在当前 HTTP Session 内有效。 |
+| globalSession     | 在一次 HTTP Session 中，容器会返回一个 Bean 实例，仅在使用 portlet 上下文时有效。 |
+| application       | 为每个 ServletContext 对象创建一个实例。仅在 Web 相关的 ApplicationContext 中生效。 |
+| websocket         | 为每个 websocket 对象创建一个实例。仅在 Web 相关的 ApplicationContext 中生效。 |
+
+### 生命周期
+
+<span style="color:red">Spring 会管理 singleton 作用域的生命周期，不会管理 prototype 作用域的 Bean。在 singleton 作用域下，Spring 能够精确地知道该 Bean 何时被创建，何时初始化完成以及何时被销毁。</span>
+
+<div align="center"><b>Spring 流程图</b></div>
+<div align="center">
+    <img src="img/spring/quick_start.png">
+</div>
+
+### 装配方式
+
+Spring 提供了基于 XML 的配置、基于注解的配置和自动装配等。主要讲解基于注解的配置。
+
+Spring 中定义了一系列的注解，常用的注解如下：
+
+- @Component：可以使用此注解描述 Spring 中的 Bean，但它是一个泛化的概念，仅仅表示一个组件（Bean），并且可以作用在任何层次。使用时只需将该注解标注在相应类上即可。
+- @Repository：用于将数据访问层（DAO 层）的类标识为 Spring 中的 Bean，其功能与 @Component 相同。
+- @Service：通常作用在业务层（Service 层），用于将业务层的类标识为 Spring 中的 Bean，其功能与 @Component 相同。
+- @Controller：通常作用在控制层（如 Spring MVC 的 Controller），用于将控制层的类标识为 Spring 中的 Bean，其功能与 @Component相同。
+- @Autowired：用于对 Bean 的属性变量、属性的 setter 方法及构造方法进行标注，配合对应的注解处理器完成 Bean 的自动配置工作。默认按照 Bean 的类型进行装配。
+- @Resource：其作用与 Autowired 一样。其区别在于 @Autowired 默认按照 Bean 类型装配，而 @Resource 默认按照 Bean 实例名称进行装配。@Resource 中有两个重要属性：name 和 type。
+    - Spring 将 name 属性解析为 Bean 实例名称，type 属性解析为 Bean 实例类型。
+    - 如果指定 name 属性，则按实例名称进行装配；如果指定 type 属性，则按 Bean 类型进行装配；
+    - 如果都不指定，则先按 Bean 实例名称装配，如果不能匹配，再按照 Bean 类型进行装配；如果都无法匹配，则抛出 NoSuchBeanDefinitionException 异常。
+- @Qualifier：与 @Autowired 注解配合使用，会将默认的按 Bean 类型装配修改为按 Bean 的实例名称装配，Bean 的实例名称由 @Qualifier 注解的参数指定。
+
 # 组件注解
 
 ## 导包
@@ -74,9 +357,9 @@
 </dependency>
 ```
 
-## 原始的 xml 方式写法
+## xml写法
 
-- POJO 对象
+POJO 对象
 
 ```java
 package org.example.pojo;
@@ -85,36 +368,17 @@ public class Person {
     private String name;
     private Integer age;
 
-    public Person() {
-    }
+    public Person() {}
 
     public Person(String name) {
         this.name = name;
     }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Integer getAge() {
-        return age;
-    }
-
-    public void setAge(Integer age) {
-        this.age = age;
-    }
-
-    @Override
-    public String toString() { return this.name; }
+	// 省略 setter getter
 }
 
 ```
 
-- 获取bean
+获取 bean
 
 ```java
 package org.example;
@@ -138,9 +402,9 @@ public class BeanXMLTest {
 
 ## 用注解配置类
 
-- `@Configuration` 可以替代 XML，进行类的配置。典型的应用有三方jar包，我们需要把它交给Spring容器进行管理，于是用 `@Configuration` 的方式把这个类注入到Spring中。
+@Configuration 可以替代 XML，进行类的配置。典型的应用有三方 jar 包，我们需要把它交给 Spring 容器进行管理，于是用 @Configuration 的方式把这个类注入到 Spring 中。
 
-`JavaConfig` 配置类
+JavaConfig 配置类
 
 ```java
 package org.example.configuration;
@@ -202,7 +466,7 @@ public class BeanXMLTest {
 
 ```xml
 <!-- 配置包扫描 , 只要标注了@Controller、@Service、@Repository、@Component的都会被自动的扫描加入容器中-->
-<context:component-scan base-package="org.example"></context:component-scan>
+<context:component-scan base-package="org.example" />
 ```
 
 注解方式，按指定类型排除
@@ -1231,7 +1495,7 @@ public class LifeCycleConfiguration {
 ```java
 public interface BeanPostProcessor {
 
-	/<b>
+	/**
 	 * Apply this {@code BeanPostProcessor} to the given new bean instance <i>before</i> any bean
 	 * initialization callbacks (like InitializingBean's {@code afterPropertiesSet} 
 	 * or a custom init-method). The bean will already be populated with property values.
@@ -1249,7 +1513,7 @@ public interface BeanPostProcessor {
 		return bean;
 	}
 
-	/<b>
+	/**
 	 * Apply this {@code BeanPostProcessor} to the given new bean instance <i>after</i> any bean
 	 * initialization callbacks (like InitializingBean's {@code afterPropertiesSet}
 	 * or a custom init-method). The bean will already be populated with property values.
@@ -1274,7 +1538,6 @@ public interface BeanPostProcessor {
 	default Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
 		return bean;
 	}
-
 }
 ```
 
@@ -2192,10 +2455,19 @@ IOC是一个容器，棒我们管理所有的组件
  - 实例化
    	- 在堆空间中申请一块空间，对象的属性值都是默认的。
  - 初始化
-   	- 填充属性
-      	- 调用初始化方法
+   	- 填充属性，调用初始化方法
 
 # AOP
+
+AOP 的全称是 Aspect-Oriented Programming，即面向切面编程（也称面向方面编程）。它是面向对象编程（OOP）的一种补充。
+
+在传统的业务处理代码中，通常都会进行事务处理、日志记录等操作。虽然使用 OOP 可以通过组合或者继承的方式来达到代码的重用，但如果要实现某个功能（如日志记录），同样的代码仍然会分散到各个方法中。这样，如果想要关闭某个功能，或者对其进行修改，就必须要修改所有的相关方法。增加了开发人员的工作量，提高了代码的出错率。
+
+AOP 采取横向抽取机制，将分散在各个方法中的重复代码提取出来，然后在程序编译或运行时，再将这些提取出来的代码应用到需要执行的地方。
+
+<b>PS：AOP 是横向抽取机制，OOP 是父子关系的纵向的重用。</b>
+
+<div><img src="img/spring/aop.jpg"></div>
 
 ## 概述
 
@@ -2203,7 +2475,7 @@ AOP：面向切面编程
 
 OOP：面向对象编程
 
-面向切面编程：基于OOP基础之上新的编程思想；
+面向切面编程：基于 OOP 基础之上新的编程思想；
 
 指在程序运行期间，<span style="color:red">将某段代码</span><span style="color:green">动态的切入</span>到<span style="color:red">指定方法</span>的<span style="color:red">指定位置</span>进行运行的这种编程方式，面向切面编程；
 
@@ -2213,7 +2485,23 @@ OOP：面向对象编程
 
 ==>事务控制
 
-## AOP概念
+## AOP术语
+
+Aspect、Joinpoint、Pointcut、Advice、TargetObject、Proxy 和 Weaving。
+
+1️⃣<b>Aspect（切面）</b>：在实际应用中，切面<span style="color:orange">通常是指封装的用于横向插入系统功能（如事务、日志等）的类。</span>
+
+2️⃣Joinpoint（连接点）：在程序执行过程中的某个阶段点，它实际上是对象的一个操作，例如方法的调用或异常的抛出。<span style="color:orange">在 Spring AOP 中，连接点就是指方法的调用。</span>
+
+3️⃣<b>Pointcut（切入点）</b>：是指切面与程序流程的交叉点，即那些需要处理的连接点，<span style="color:orange">通常在程序中，切入点指的是类或者方法名，如某个通知要应用到所有以 add 开头的方法中，那么所有满足这一规则的方法都是切入点。</span>
+
+4️⃣<b>Advice（通知/增强处理）</b>：AOP 框架在特定的切入点执行的增强处理，即在定义好的切入点处所要执行的程序代码。<span style="color:orange">可以将其理解为切面类中的方法，它是切面的具体实现。</span>
+
+5️⃣Target Object（目标对象）：是指所有被通知的对象，也称为<span style="color:orange">被增强对象</span>。如果 AOP 框架采用的是动态的 AOP 实现，那么该对象就是一个被代理对象。
+
+6️⃣Proxy（代理）：将通知应用到目标对象之后，被动态创建的对象。
+
+7️⃣Weaving（织入）：将切面代码插入到目标对象上，从而<span style="color:orange">生成代理对象的过程</span>
 
 > 几种通知
 
@@ -2241,24 +2529,274 @@ try{
 
 > 重要概念图
 
-<img src="img/spring/SpringAOP.png">
+<div align="center"><img src="img/spring/SpringAOP.png"></div>
 
-## AOP代码
+## 动态代理
 
-> <b>如何使用注解AOP？</b>
+Spring 中的 AOP 是基于代理实现的，可以是 JDK 动态代理，也可以是 CGLIB 代理。
+
+### JDK动态代理
+
+JDK 动态代理是通过 java.lang.reflect.Proxy 类来实现的，我们可以调用 Proxy 类的 newProxyInstance() 方法来创建代理对象。对于使用业务接口的类，Spring 默认会使用 JDK 动态代理来实现 AOP。
+
+JDK 动态代理示例：
+
+切面代码
+
+```java
+public class MyAspect {
+    public void checkPermissions() {
+        System.out.println("检查权限");
+    }
+
+    public void log(){
+        System.out.println("记录日志");
+    }
+}
+```
+
+接口及实现类
+
+```java
+public interface UserDao {
+    void addUser();
+    void deleteUser();
+}
+
+public class UserDaoImpl implements UserDao {
+    @Override
+    public void addUser() {
+        System.out.println("add");
+    }
+
+    @Override
+    public void deleteUser() {
+        System.out.println("delete");
+    }
+
+    public static void main(String[] args) {
+        JdkProxy jdkProxy = new JdkProxy();
+        UserDao dao = (UserDao) jdkProxy.createProxy(new UserDaoImpl());
+        dao.addUser();
+    }
+}
+```
+
+动态代理
+
+```java
+public class JdkProxy implements InvocationHandler {
+
+    // 目标类接口
+    private UserDao userDao;
+
+    public Object createProxy(UserDao userDao) {
+        this.userDao = userDao;
+        ClassLoader classLoader = JdkProxy.class.getClassLoader();
+        Class<?>[] interfaces = userDao.getClass().getInterfaces();
+        // 当前类的类加载器
+        return Proxy.newProxyInstance(classLoader, interfaces, this);
+    }
+
+    /**
+     * 所有动态代理类的方法调用，都会交由 invoke 方法处理
+     * @param proxy  被代理后的对象 class com.sun.proxy.$Proxy0 假定原来是 A 对象，然后由 $Proxy0 代理对象 A。
+     * @param method 将要被执行的方法信息
+     * @param args   执行方法时需要的参数
+     */
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        MyAspect aspect = new MyAspect();
+        System.out.println("proxy "+proxy.getClass());
+        aspect.checkPermissions();
+        Object invoke = method.invoke(userDao, args);
+        aspect.log();
+        return invoke;
+    }
+}
+```
+
+### CGLIB代理
+
+CGLIB（Code Generation Library）是一个高性能开源的代码生成包，它采用非常底层的字节码技术，对指定的目标类生成一个子类，并对子类进行增强。Spring 的核心包中已经集成了 CGLIB 所需要的包，如果是单独使用 CGLIB 则需要导入相关的依赖包。
+
+<span style="color:orange">CGLIB 无需使用接口，比 JDK 动态代理方便一些。</span>
+
+```java
+public class UserDao {
+    public void addUser() {
+        System.out.println("add");
+    }
+
+    public void deleteUser() {
+        System.out.println("delete");
+    }
+}
+
+public class CGLIBProxy implements MethodInterceptor {
+
+    public Object createProxy() {
+        Enhancer enhancer = new Enhancer();
+        enhancer.setSuperclass(UserDao.class);
+        // 添加回调函数
+        enhancer.setCallback(this);
+        // 返回创建的代理类
+        return enhancer.create();
+    }
+
+    @Override
+    /**
+     * proxy        CGLib 根据指定父类生成的代理对象
+     * method       拦截的方法
+     * args         拦截方法的参数
+     * methodProxy  方法的代理对象，用于执行父类的方法
+     */
+    public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+        MyAspect aspect = new MyAspect();
+        aspect.checkPermissions();
+        Object retVal = methodProxy.invokeSuper(proxy, args);
+        aspect.log();
+        return retVal;
+    }
+}
+
+```
+
+## 基于代理类的AOP实现
+
+Spring 中的 AOP 代理默认就是使用 JDK 动态代理的方式来实现的。在 Spring 中，使用 ProxyFactoryBean 是创建 AOP 代理的最基本方式。
+
+ProxyFactoryBean 是 FactoryBean 接口的实现类，FactoryBean 负责实例化一个 Bean，而 ProxyFactoryBean 负责为其他 Bean 创建代理实例。在 Spring 中，使用 ProxyFactoryBean 是创建 AOP 代理的基本方式。
+
+<div align="center"><b>ProxyFactoryBean 的常用属性</b></div>
+
+| 属性名称         | 描述                                                      |
+| ---------------- | --------------------------------------------------------- |
+| target           | 代理的目标对象                                            |
+| proxyInterfaces  | 代理类要实现的接口                                        |
+| proxyTargetClass | 是否对类代理而不是接口，设置为 true 时使用 cglib 动态代理 |
+| interceptorNames | 需要织入目标的 Advice                                     |
+| singleton        | 返回的代理是否为单实例，默认为 true                       |
+| optimize         | 设置为 true 时，强制使用 cglib                            |
+
+ProxyFactoryBean 使用示例：
+
+1️⃣定义接口
+
+```java
+public interface UserDao {
+    void addUser();
+    void deleteUser();
+}
+```
+
+2️⃣接口实现类
+
+```java
+@Service
+public class UserDaoImpl implements UserDao {
+    @Override
+    public void addUser() {
+        System.out.println("add");
+    }
+
+    @Override
+    public void deleteUser() {
+        System.out.println("delete");
+    }
+}
+```
+
+3️⃣AOP 通知
+
+```java
+import org.springframework.aop.MethodBeforeAdvice;
+import org.springframework.stereotype.Component;
+
+import java.lang.reflect.Method;
+
+
+@Component("beforeAop")
+public class BeforeAOP implements MethodBeforeAdvice {
+    @Override
+    public void before(Method method, Object[] args, Object target) throws Throwable {
+        System.out.println("执行了前置通知");
+    }
+}
+
+```
+
+4️⃣测试代码
+
+```java
+import org.springframework.aop.framework.ProxyFactoryBean;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class Test {
+
+    public static void main(String[] args) {
+
+        AnnotationConfigApplicationContext ac = new AnnotationConfigApplicationContext("cn.study.aop");
+
+        // 使用Spring 的 AOP，
+        // 配置好 ProxyFactoryBean，给 ProxyFactoryBean 设置一个bean id
+        // 通过 ac.getBean, 可以获得 ProxyFactoryBean代 理的对象，不是 ProxyFactoryBean
+        // 这个bean id 虽然代表 ProxyFactoryBean 对象，直接 getBean 获取的是 
+        // ProxyFactoryBean.getObject()返回的对象，即代理对象
+        //ac.getBean(&bean id),才能取得 ProxyFactoryBean 对象
+
+        ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
+
+        proxyFactoryBean.setBeanFactory(ac.getBeanFactory());
+        // aop拦截处理类
+        proxyFactoryBean.setInterceptorNames("beforeAop");
+
+        // 代理的接口
+        proxyFactoryBean.setInterfaces(UserDao.class);
+
+        // 被代理对象
+        proxyFactoryBean.setTarget(ac.getBean(UserDaoImpl.class));
+
+        // 放入bean工厂，实际开发是在config下使用注解，设置多个proxyFactoryBean代理，设置不同bean id
+        ac.getBeanFactory().registerSingleton("myProxy", proxyFactoryBean);
+
+        UserDao servInterProxy = ac.getBean("myProxy", UserDao.class);
+        servInterProxy.addUser();
+        // 获取直接的ProxyFactoryBean对象，加&
+        System.out.println(ac.getBean("&myProxy"));
+    }
+}
+```
+
+## AspectJ开发
+
+> <b>如何使用注解 AOP</b>
 
 点进 `@EnableAspectJAutoProxy` 注解里，会发现文档注释里给了很详细的用法！！！
 
+<div align="center"><b>AspectJ </b>注解</div>
+
+| 注解            | 描述                                                         |
+| --------------- | ------------------------------------------------------------ |
+| @Aspect         | 定义切面                                                     |
+| @Pointcut       | 定义切入点表达式                                             |
+| @Before         | 定义前置通知                                                 |
+| @AfterReturning | 定义后置通知，returning 属性用于表示 Advice 方法中可定义与此同名的形参，<br>该形参可用于访问目标方法的返回值。（简单说就是方法的返回值） |
+| @Around         | 定义环绕通知                                                 |
+| @AfterThrowing  | 定义异常通知，returning 属性用于表示 Advice 方法中可定义与此同名的形参，<br/>该形参可用于访问目标方法的抛出的异常。 |
+| @After          | 定义最终 final 通知                                          |
+| @DeclareParents | 定义引介通知                                                 |
+
 > <b>三步走</b>
 
-- 在业务逻辑组件和切面类都加入到容器中，告诉 Spring 哪个是切面类（<span  style="color:green">@Aspect注解标注</span>）
+- 在业务逻辑组件和切面类都加入到容器中，告诉 Spring 哪个是切面类（<span style="color:green">@Aspect 注解标注</span>）
 - 在切面类上的每一个通知方法上标注通知注解，告诉 Spring 何时何地运行（<span  style="color:green">切入点表达式</span>）
     - @After("public int com.cc.ClassName.method(int,int)")
 - 开启基于注解的 `aop` 模式：`@EnableAspectJAutoProxy`
 
 > 基本 Demo
 
-- 配置环境
+配置环境
 
 ```xml
 <!-- aop需要再额外导入 切面包 -->
@@ -2269,22 +2807,9 @@ try{
 </dependency>
 ```
 
-- JavaConfig
+JavaConfig
 
 ```java
-package org.example.configuration.aop;
-
-import com.google.inject.internal.util.Join;
-import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.Signature;
-import org.aspectj.lang.annotation.*;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
-
-import java.util.Arrays;
-
 /**
  * AOP[动态代理]
  * 指程序运行期间动态的将某段代码切入到指定位置进行运行的编程方式
@@ -2324,9 +2849,7 @@ public class MainConfigOfAOP {
     }
 }
 
-/**
- * 用AOP做个日志
- */
+// 用AOP做个日志
 class MathCalculator {
     public int div(int i, int j) {
         System.out.println("div method");
@@ -2338,9 +2861,7 @@ class MathCalculator {
 @Aspect
 //告诉Spring容器 当前类是一个切面类
 class LogAspects {
-    /**
-     * 抽取公共的表达式 需要使用execution
-     */
+    // 抽取公共的表达式 需要使用 execution
     @Pointcut("execution(public int org.example.configuration.aop.MathCalculator.*(..))")
     public void pointCut() {}
 
@@ -2538,6 +3059,22 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 ```
 
 # 事务控制
+
+Spring 事务管理有 3 个核心接口：
+
+- PlatformTransactionManager：Spring 提供的平台事务管理器，主要用于管理事务。
+- TransactionDefinition：定义了事务规则，并提供了获取事务相关信息的方法。
+- TransactionStatus：描述了某一时间点上事务的状态信息。
+
+## 事务管理核心接口
+
+### PlatformTransactionManager
+
+
+
+### TransactionDefinition
+
+### TransactionStatus
 
 ## 声明式事务概述
 
@@ -3480,7 +4017,7 @@ public class AsyncController extends HttpServlet {
 }
 ```
 
-# SpringMVC异步请求
+# MVC异步请求
 
 ##  返回Callable
 
@@ -3583,7 +4120,7 @@ class DeferredResultQueue {
 }
 ```
 
-# Spring 5 新特性
+# Spring5新特性
 
 ## 新功能
 
