@@ -2377,11 +2377,10 @@ obj.getClass.getGeneriSuperclass()
 
 ## 容器
 
-- `AnnotationConfigApplicationContext`
+- AnnotationConfigApplicationContext
 - 组件添加
     - @ComponentScan
-    - @Bean
-    - @Configuration
+    - @Bean、@Configuration
     - @Component
     - @Service
     - @Controller
@@ -2391,7 +2390,7 @@ obj.getClass.getGeneriSuperclass()
     - @Lazy
     - @Scope 
     - @Import★
-    - `ImportSelector`
+    - ImportSelector
     - 工厂模式
 - 组件赋值
     - @Value [ ${} 读 properties 文件  #{} 表达式语言 ]
@@ -2413,49 +2412,44 @@ obj.getClass.getGeneriSuperclass()
 
 ## 扩展原理
 
-- `BeanFactoryPostProcessor`
-- `BeanDefinitionRegistryPostProcessor`
-- `ApplicationListener`
-- `Spring容器创建过程`
+- BeanFactoryPostProcessor
+- BeanDefinitionRegistryPostProcessor
+- ApplicationListener
+- Spring 容器创建过程
 
 ## 其他
 
 IOC是一个容器，棒我们管理所有的组件
 
-1）依赖注入：@Autowired 自动赋值
+1️⃣依赖注入：@Autowired 自动赋值
 
-2）某个组件要使用 Spring 提供的更多（IOC、AOP）必须加入到容器中
+2️⃣某个组件要使用 Spring 提供的更多（IOC、AOP）必须加入到容器中
 
-3）容器启动。创建所有单实例 Bean
+3️⃣容器启动。创建所有单实例 Bean
 
-4）autowired 自动装配的时候，是从容器中找这些符合要求的 bean。
+4️⃣@Autowired 自动装配的时候，是从容器中找这些符合要求的 bean。
 
-5）ioc.getBean("bookServlet")；也是从容器中找到这个bean
+5️⃣ioc.getBean("bookServlet")；也是从容器中找到这个 bean
 
-6）容器中包含了所有的 bean
+6️⃣容器中包含了所有的 bean
 
-7）探索，单实例的 bean 都保存到了哪个 map 中了。【源码-扩展】
+7️⃣探索，单实例的 bean 都保存到了哪个 map 中了。【源码-扩展】
 
-8）源码调试思路：
+8️⃣源码调试思路：从 HelloWorld 开始；给 HelloWorld 每一个关键步骤打上断点，进去看里面都做了些什么工作。怎么知道哪些方法都是干什么的？
 
-​	从 HelloWorld 开始；给 HelloWorld 每一个关键步骤打上断点，进去看里面都做了些什么工作。
+​	-  翻译方法名称，猜猜是做什么的
 
-​	怎么知道哪些方法都是干什么的
+​	-  放行这个方法，看控制台
 
-​	1、翻译方法名称，猜猜是做什么的
-
-​	2、放行这个方法，看控制台
-
-​	3、看方法注释
+​	-  看方法注释
 
 学到的一点：1）规范注释；2）规范方法和类名
 
-9）创建 Java 对象做了那些事？
+9️⃣创建 Java 对象做了那些事？
 
- - 实例化
-   	- 在堆空间中申请一块空间，对象的属性值都是默认的。
- - 初始化
-   	- 填充属性，调用初始化方法
+​	- 实例化：在堆空间中申请一块空间，对象的属性值都是默认的。
+
+​	- 初始化：填充属性，调用初始化方法。
 
 # AOP
 
@@ -3062,30 +3056,251 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
 Spring 事务管理有 3 个核心接口：
 
-- PlatformTransactionManager：Spring 提供的平台事务管理器，主要用于管理事务。
-- TransactionDefinition：定义了事务规则，并提供了获取事务相关信息的方法。
-- TransactionStatus：描述了某一时间点上事务的状态信息。
+1️⃣PlatformTransactionManager：Spring 提供的平台事务管理器，主要用于管理事务。
+
+2️⃣TransactionDefinition：定义了事务规则，并提供了获取事务相关信息的方法。
+
+3️⃣TransactionStatus：描述了某一时间点上事务的状态信息。
 
 ## 事务管理核心接口
 
 ### PlatformTransactionManager
 
+该接口中提供了 3 个事务操作的方法，getTRansaction 获取事务状态信息；commit 提交事务信息；rollback 回滚事务。
 
+PlatformTransactionManager 的几个实现类如下
+
+```java
+org.springframework.jdbc.datasource.DataSourceTransactionManager
+    ：用于配置JDBC数据源的事务管理器
+org.springframework.orm.hibernate4.HibernateTransactionManager
+    ：用于配置Hibernate的事务管理器
+org.springframework.transaction.jta.JtaTransactionManager
+    ：用于配置全局事务管理器
+```
+
+当底层采用不同的持久层技术时，系统需使用不同的 PlatformTransactionManager实现类。
 
 ### TransactionDefinition
 
+接口中定义了如下方法
+
+```java
+public interface TransactionDefinition {
+    
+    // 获取事务的传播行为
+	default int getPropagationBehavior() {
+		return PROPAGATION_REQUIRED;
+	}
+
+    // 获取事务的隔离级别
+	default int getIsolationLevel() {
+		return ISOLATION_DEFAULT;
+	}
+
+    // 获取事务的超时时间
+	default int getTimeout() {
+		return TIMEOUT_DEFAULT;
+	}
+
+    // 获取事务是否只读
+	default boolean isReadOnly() {
+		return false;
+	}
+
+	// 获取事务对象名称
+	default String getName() {
+		return null;
+	}
+
+	static TransactionDefinition withDefaults() {
+		return StaticTransactionDefinition.INSTANCE;
+	}
+}
+```
+
+上述方法中，事务的传播行为是指在同一个方法中，不同操作前后所使用的事务。传播行为有很多种
+
+```java
+
+	/**
+	 * Support a current transaction; create a new one if none exists.
+	 * Analogous to the EJB transaction attribute of the same name.
+	 * <p>This is typically the default setting of a transaction definition,
+	 * and typically defines a transaction synchronization scope.
+	 */
+	int PROPAGATION_REQUIRED = 0;
+
+	/**
+	 * Support a current transaction; execute non-transactionally if none exists.
+	 * Analogous to the EJB transaction attribute of the same name.
+	 * <p><b>NOTE:</b> For transaction managers with transaction synchronization,
+	 * {@code PROPAGATION_SUPPORTS} is slightly different from no transaction
+	 * at all, as it defines a transaction scope that synchronization might apply to.
+	 * As a consequence, the same resources (a JDBC {@code Connection}, a
+	 * Hibernate {@code Session}, etc) will be shared for the entire specified
+	 * scope. Note that the exact behavior depends on the actual synchronization
+	 * configuration of the transaction manager!
+	 * <p>In general, use {@code PROPAGATION_SUPPORTS} with care! In particular, do
+	 * not rely on {@code PROPAGATION_REQUIRED} or {@code PROPAGATION_REQUIRES_NEW}
+	 * <i>within</i> a {@code PROPAGATION_SUPPORTS} scope (which may lead to
+	 * synchronization conflicts at runtime). If such nesting is unavoidable, make sure
+	 * to configure your transaction manager appropriately (typically switching to
+	 * "synchronization on actual transaction").
+	 * @see org.springframework.transaction.support.AbstractPlatformTransactionManager#setTransactionSynchronization
+	 * @see org.springframework.transaction.support.AbstractPlatformTransactionManager#SYNCHRONIZATION_ON_ACTUAL_TRANSACTION
+	 */
+	int PROPAGATION_SUPPORTS = 1;
+
+	/**
+	 * Support a current transaction; throw an exception if no current transaction
+	 * exists. Analogous to the EJB transaction attribute of the same name.
+	 * <p>Note that transaction synchronization within a {@code PROPAGATION_MANDATORY}
+	 * scope will always be driven by the surrounding transaction.
+	 */
+	int PROPAGATION_MANDATORY = 2;
+
+	/**
+	 * Create a new transaction, suspending the current transaction if one exists.
+	 * Analogous to the EJB transaction attribute of the same name.
+	 * <p><b>NOTE:</b> Actual transaction suspension will not work out-of-the-box
+	 * on all transaction managers. This in particular applies to
+	 * {@link org.springframework.transaction.jta.JtaTransactionManager},
+	 * which requires the {@code javax.transaction.TransactionManager} to be
+	 * made available it to it (which is server-specific in standard Java EE).
+	 * <p>A {@code PROPAGATION_REQUIRES_NEW} scope always defines its own
+	 * transaction synchronizations. Existing synchronizations will be suspended
+	 * and resumed appropriately.
+	 * @see org.springframework.transaction.jta.JtaTransactionManager#setTransactionManager
+	 */
+	int PROPAGATION_REQUIRES_NEW = 3;
+
+	/**
+	 * Do not support a current transaction; rather always execute non-transactionally.
+	 * Analogous to the EJB transaction attribute of the same name.
+	 * <p><b>NOTE:</b> Actual transaction suspension will not work out-of-the-box
+	 * on all transaction managers. This in particular applies to
+	 * {@link org.springframework.transaction.jta.JtaTransactionManager},
+	 * which requires the {@code javax.transaction.TransactionManager} to be
+	 * made available it to it (which is server-specific in standard Java EE).
+	 * <p>Note that transaction synchronization is <i>not</i> available within a
+	 * {@code PROPAGATION_NOT_SUPPORTED} scope. Existing synchronizations
+	 * will be suspended and resumed appropriately.
+	 * @see org.springframework.transaction.jta.JtaTransactionManager#setTransactionManager
+	 */
+	int PROPAGATION_NOT_SUPPORTED = 4;
+
+	/**
+	 * Do not support a current transaction; throw an exception if a current transaction
+	 * exists. Analogous to the EJB transaction attribute of the same name.
+	 * <p>Note that transaction synchronization is <i>not</i> available within a
+	 * {@code PROPAGATION_NEVER} scope.
+	 */
+	int PROPAGATION_NEVER = 5;
+
+	/**
+	 * Execute within a nested transaction if a current transaction exists,
+	 * behave like {@link #PROPAGATION_REQUIRED} otherwise. There is no
+	 * analogous feature in EJB.
+	 * <p><b>NOTE:</b> Actual creation of a nested transaction will only work on
+	 * specific transaction managers. Out of the box, this only applies to the JDBC
+	 * {@link org.springframework.jdbc.datasource.DataSourceTransactionManager}
+	 * when working on a JDBC 3.0 driver. Some JTA providers might support
+	 * nested transactions as well.
+	 * @see org.springframework.jdbc.datasource.DataSourceTransactionManager
+	 */
+	int PROPAGATION_NESTED = 6;
+
+
+	/**
+	 * Use the default isolation level of the underlying datastore.
+	 * All other levels correspond to the JDBC isolation levels.
+	 * @see java.sql.Connection
+	 */
+	int ISOLATION_DEFAULT = -1;
+
+	/**
+	 * Indicates that dirty reads, non-repeatable reads and phantom reads
+	 * can occur.
+	 * <p>This level allows a row changed by one transaction to be read by another
+	 * transaction before any changes in that row have been committed (a "dirty read").
+	 * If any of the changes are rolled back, the second transaction will have
+	 * retrieved an invalid row.
+	 * @see java.sql.Connection#TRANSACTION_READ_UNCOMMITTED
+	 */
+	int ISOLATION_READ_UNCOMMITTED = 1;  // same as java.sql.Connection.TRANSACTION_READ_UNCOMMITTED;
+
+	/**
+	 * Indicates that dirty reads are prevented; non-repeatable reads and
+	 * phantom reads can occur.
+	 * <p>This level only prohibits a transaction from reading a row
+	 * with uncommitted changes in it.
+	 * @see java.sql.Connection#TRANSACTION_READ_COMMITTED
+	 */
+	int ISOLATION_READ_COMMITTED = 2;  // same as java.sql.Connection.TRANSACTION_READ_COMMITTED;
+
+	/**
+	 * Indicates that dirty reads and non-repeatable reads are prevented;
+	 * phantom reads can occur.
+	 * <p>This level prohibits a transaction from reading a row with uncommitted changes
+	 * in it, and it also prohibits the situation where one transaction reads a row,
+	 * a second transaction alters the row, and the first transaction re-reads the row,
+	 * getting different values the second time (a "non-repeatable read").
+	 * @see java.sql.Connection#TRANSACTION_REPEATABLE_READ
+	 */
+	int ISOLATION_REPEATABLE_READ = 4;  // same as java.sql.Connection.TRANSACTION_REPEATABLE_READ;
+
+	/**
+	 * Indicates that dirty reads, non-repeatable reads and phantom reads
+	 * are prevented.
+	 * <p>This level includes the prohibitions in {@link #ISOLATION_REPEATABLE_READ}
+	 * and further prohibits the situation where one transaction reads all rows that
+	 * satisfy a {@code WHERE} condition, a second transaction inserts a row
+	 * that satisfies that {@code WHERE} condition, and the first transaction
+	 * re-reads for the same condition, retrieving the additional "phantom" row
+	 * in the second read.
+	 * @see java.sql.Connection#TRANSACTION_SERIALIZABLE
+	 */
+	int ISOLATION_SERIALIZABLE = 8;  // same as java.sql.Connection.TRANSACTION_SERIALIZABLE;
+```
+
+
+
+| 属性名称                            | 值   | 描述                                                         |
+| ----------------------------------- | ---- | ------------------------------------------------------------ |
+| <b>PROPAGATION_REQUIRED（默认）</b> | 0    | 当前方法在运行的时候，如果没有事务，则会创建一个新的事务；如果有事务则直接用。 |
+| PROPAGATION_SUPPORTS                | 1    | 当前方法在运行的时候，有事务就用，没有就不用，不会创建新的事务 |
+| PROPAGATION_MANDATORY               | 2    | 如果当前方法没有事务会抛出异常，                             |
+| PROPAGATION_REQUIRES_NEW            | 3    | 要求方法在一个新的事务环境中执行。如果改方法已经处于一个事务中，则会暂停当前事务，然后启动新的事务执行该方法。 |
+| PROPAGATION_NOT_SUPPORTED           | 4    | 不支持事务，总是以非事务的状态执行。如果有事务，会先暂停事务，然后执行该方法。 |
+| PROPAGATION_NEVER                   | 5    | 不支持当前事务。如果方法处于事务环境中，会抛出异常。         |
+| PROPAGATION_NESTED                  | 6    | 即使当前执行的方法处于事务环境中，依旧会启动一个新的事务，并且方法在嵌套的事务里执行；如果不在事务环境中，也会启动一个新事务，然后执行方法。（有无事务都会创建新事务，然后在新事务中执行方法） |
+
+
+
 ### TransactionStatus
+
+描述了某一时间点上事务的状态信息。接口中的方法如下：
+
+```java
+void flush();  // 刷新事务
+boolean hasSavepoint(); // 获取是否存在保存点
+boolean isCompleted(); // 获取事务是否完成
+boolean isNewTransaction(); // 获取是否是新事务。
+boolean isRollbackOnly(); // 获取是否回滚
+void setRollbackOnly(); // 设置事务回滚。
+```
+
+
 
 ## 声明式事务概述
 
-告诉 Spring 哪个方法是事务即可。
-
-Spring 自动进行事务控制。
+告诉 Spring 哪个方法是事务即可，Spring 会自动进行事务控制。
 
 ## 编程式事务概述
 
 ```java
-// 用过滤器控制事务！秒啊！
+// 用过滤器控制事务！妙啊！
 TransactionFilter{
     try{
         // 获取连接
@@ -3108,7 +3323,7 @@ TransactionFilter{
 
 > Spring 支持的事务控制
 
-<img src="img/spring/transactionManager.png">
+<div align="center"><img src="img/spring/transactionManager.png"></div>
 
 ```java
 package com.atguigu.service;
@@ -3250,10 +3465,12 @@ public class MulService {
 
 ## 事务隔离级别
 
-数据库事务并发问题：
-1.脏读：读到了未提交的数据
-2.不可重复读：两次读取数据不一样（第一次读到了原来的数据；接下来数据更新了；第二次又读了这个数据，数据不一样了，因为更新了）
-3.幻读：多读了，或少读了数据
+事务的隔离级别有四种：读未提交、读已提交、可重复的、串行化。
+
+<span style="color:red">数据库事务并发问题有如下三种：</span>
+1️⃣<b>脏读</b>：读到了未提交的数据
+2️⃣<b>不可重复读</b>：两次读取数据不一样（第一次读到了原来的数据；接下来数据更新了；第二次又读了这个数据，数据不一样了，因为更新了）
+3️⃣<b>幻读</b>：多读了，或少读了数据
 
 事务的隔离级别是需要根据业务的特性进行调整
 
@@ -3263,7 +3480,7 @@ public class MulService {
 
 > 嵌套事务
 
-<img src="img/spring/shiwu.png">
+<div align="center"><img src="img/spring/shiwu.png" width="60%"></div>
 
 本类方法的嵌套调用是一个事务
 
@@ -3273,36 +3490,39 @@ public class MulService {
 
 ### 概述
 
-- BeanPostProcessor：bean 后置处理器，bean 创建对象初始话前后进行拦截工作的。
+BeanPostProcessor：bean 后置处理器，bean 创建对象初始话前后进行拦截工作的。
 
-- `BeanFactoryPostProcessor：beanFactory `的后置处理器，可以在 `beanFactory` 初始化后进行一些操作
+BeanFactoryPostProcessor：beanFactory 的后置处理器，可以在 `beanFactory` 初始化后进行一些操作
 
-    - 在 `BeanFactory` 标准初始化之后调用；所有的bean定义已经保存加载到 `beanFactory` 中，<b>但是 bean 的实例还未创建。</b>
+- 在 BeanFactory 标准初始化之后调用；所有的 bean 定义已经保存加载到 beanFactory 中，<b>但是 bean 的实例还未创建。</b>
 
-    - BeanFactoryPostProcessor 的源码注释
+- BeanFactoryPostProcessor 的源码注释
 
-        ```
-        Modify the application context's internal bean factory after its standard
-        initialization. All bean definitions will have been loaded, but no beans
-        will have been instantiated yet.
-        ```
+    ```
+    Modify the application context's internal bean factory after its standard
+    initialization. All bean definitions will have been loaded, but no beans
+    will have been instantiated yet.
+    ```
 
-    - 在 bean factory 标准初始化后执行。所有的 bean 的定义信息已经加载了，但是 bean 没有初始化！
+- 在 bean factory 标准初始化后执行。所有的 bean 的定义信息已经加载了，但是 bean 没有初始化！
 
 ### 原理
 
-- 1）IOC 容器创建对象
-- 2）invokeBeanFactoryPostProcessor（beanFactory）
-    - 如何找到所有的 BeanFactoryPostProcessor 并执行他们的方法？
-        - 直接在 `BeanFactory `中找到所有类型是 `BeanFactoryPostProcessor` 的组件，并执行他们的方法
-        - 在初始化创建其他组件前面执行
-- 3）学到的一种写法，用接口表示排序规则，获取类时，查看它是否实现了 xxx 接口，以此判断执行顺序。
+1️⃣IOC 容器创建对象
+
+2️⃣invokeBeanFactoryPostProcessor（beanFactory）
+
+- 如何找到所有的 BeanFactoryPostProcessor 并执行他们的方法？
+    - 直接在 BeanFactory 中找到所有类型是 BeanFactoryPostProcessor 的组件，并执行他们的方法
+    - 在初始化创建其他组件前面执行
+
+3️⃣学到的一种写法，用接口表示排序规则，获取类时，查看它是否实现了 xxx 接口，以此判断执行顺序。
 
 ## BeanDefinitionegistryPostProcessor
 
 ### 概述
 
-`BeanDefinitionegistryPostProcessor`是`BeanFactoryPostProcessor`的子接口
+BeanDefinitionegistryPostProcessor 是 BeanFactoryPostProcessor 的子接口
 
 ```java
 public interface BeanDefinitionRegistryPostProcessor extends BeanFactoryPostProcessor {
@@ -3319,12 +3539,12 @@ public interface BeanDefinitionRegistryPostProcessor extends BeanFactoryPostProc
 }
 ```
 
-`postProcessBeanstDefinitionRegistry()` 在所有 bean 定义信息将要被加载，bean 实例还未创建的时候执行。
+postProcessBeanstDefinitionRegistry() 在所有 bean 定义信息将要被加载，bean 实例还未创建的时候执行。
 
 先给结论：
 
-- `BeanDefinitionRegistryPostProcessor() `优于`BeanFactoryPostProcessor `执行。
-- 我们可以利用 `BeanDefinitionRegistryPostProcessor()` 给容器中再额外添加一些组件。
+- BeanDefinitionRegistryPostProcessor() 优于 BeanFactoryPostProcessor 执行。
+- 我们可以利用 BeanDefinitionRegistryPostProcessor()` 给容器中再额外添加一些组件。
 - 可以在如下代码的两个方法中打断点，看看执行流程。
 
 验证代码如下
@@ -3381,12 +3601,16 @@ class MyBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPos
 
 ### 原理
 
-- 1）IOC 创建对象
-- 2）`refresh()-->invokeBeanFactoryPostProcssors(beanFactory)`
-- 3）从容器中获取所有的 `BeanDefinitionRegistryPostProcessor` 组件
-    - 1、依次触发所有的 `postProessBeanDefinitionRegistry() `方法
-    - 2、再来触发 `postProcessBeanFactory()` 方法【该方法位于 `BeanFactoryPostProcessor` 类里】
-- 4）再来从容器中找到 `BeanFactoryPostProcessor `组件，然后依次触发 `postProcessBeanFactory()` 方法
+1️⃣IOC 创建对象
+
+2️⃣refresh()-->invokeBeanFactoryPostProcssors(beanFactory)
+
+3️⃣从容器中获取所有的 BeanDefinitionRegistryPostProcessor 组件
+
+- 依次触发所有的 postProessBeanDefinitionRegistry() 方法
+- 再来触发 postProcessBeanFactory() 方法【该方法位于 BeanFactoryPostProcessor 类里】
+
+4️⃣再来从容器中找到 BeanFactoryPostProcessor 组件，然后依次触发 postProcessBeanFactory() 方法
 
 ## ApplicationListener
 
@@ -3404,27 +3628,25 @@ class MyBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPos
 
 要想实现事件监听机制，我们需要这样做：
 
-我们要写一个类实现如下监听器接口
+我们要写一个类实现如下监听器接口 public interface ApplicationListener\<E extends ApplicationEvent\> extends EventListener {}
 
-`public interface ApplicationListener<E extends ApplicationEvent> extends EventListener {}`
+这个接口，它所带的泛型就是我们要监听的事件。即它会监听 ApplicationEvent 及下面的子事件。
 
-这个接口，它所带的泛型就是我们要监听的事件。即它会监听 `ApplicationEvent` 及下面的子事件。
-
-然后重写接口中的 `onApplicationEvent() `方法即可
+然后重写接口中的 onApplicationEvent() 方法即可
 
 <b>容器事件监听步骤</b>
 
-1）写一个监听器来监听某个事件（ApplicationEvent 及其子类）
+1️⃣写一个监听器来监听某个事件（ApplicationEvent 及其子类）
 
-2）把监听器加入到容器
+2️⃣把监听器加入到容器
 
-3）只要容器中有相关事件的发布，我们就能监听到这个事件
+3️⃣只要容器中有相关事件的发布，我们就能监听到这个事件
 
-- `ContextRefreshedEvent`：容器刷新完成（所有 bean 都完全创建）会发布这个事件。
-- `ContextClosedEvent`：关闭容器会发布这个事件。
+- ContextRefreshedEvent：容器刷新完成（所有 bean 都完全创建）会发布这个事件。
+- ContextClosedEvent：关闭容器会发布这个事件。
 - 我们也可以自定义事件！
 
-4）发布一个事件
+4️⃣发布一个事件
 
 ```java
 package org.example.configuration.ext;
@@ -3465,11 +3687,11 @@ class MyApplicationEvent implements ApplicationListener<ApplicationEvent> {
 
 <b>自己发布事件</b>
 
-1）写一个监听器来监听这个世界（`ApplicationEvent `及其子类）。
+1️⃣写一个监听器来监听这个事件（ApplicationEvent 及其子类）。
 
-2）把监听器加入到容器。
+2️⃣把监听器加入到容器。
 
-3）只要容器中有相关事件的发布，我们就能监听到这个事件。
+3️⃣只要容器中有相关事件的发布，我们就能监听到这个事件。
 
 ## SmartInitializingSingleton
 
@@ -3502,11 +3724,9 @@ Shared libraries（共享库） / `runtimes pluggability`（运行时插件能�
 
 maven工厂，`JavaWeb` 项目，工程目录结构如下：
 
-<img src="img/spring/Spring_ann_runtimes_pluggability.png">
+<div align="center"><img src="img/spring/Spring_ann_runtimes_pluggability.png"></div>
 
 ```java
-package lg;
-
 import javax.servlet.ServletContainerInitializer;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -3546,13 +3766,11 @@ class Demo implements Hello {
 
 PS：Servlet，Filter，XxxListener 的实现类要是 public 修饰的！！！不然会失败！！
 
-- 例子：你直接 `class Servlet xxx` 这样注册组件，添加范围路径访问的话，浏览器会显示 `no this function`!!
+例子：你直接 `class Servlet xxx` 这样注册组件，添加范围路径访问的话，浏览器会显示 `no this function`！
 
 > `ServletContainerInitializer` 实现类
 
 ```java
-package lg;
-
 import javax.servlet.*;
 import javax.servlet.annotation.HandlesTypes;
 import javax.servlet.http.HttpServlet;
@@ -3611,8 +3829,6 @@ class Demos extends HttpServlet {
 > Servlet 实现类
 
 ```java
-package lg;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -3630,8 +3846,6 @@ public class UserServlet extends HttpServlet implements Hello {
 > Filter 实现类
 
 ```java
-package lg;
-
 import javax.servlet.*;
 import java.io.IOException;
 
@@ -3658,8 +3872,6 @@ public class UserFilter implements Filter {
 > ServletContextListener 实现类
 
 ```java
-package lg;
-
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
@@ -3683,13 +3895,13 @@ public class UserListener implements ServletContextListener, Hello {
 
 SpringMVC 文件中指定了 SpringServletContainerInitializer
 
-<img src="img/spring/SpringMVC_config.png">
+<div align="center"><img src="img/spring/SpringMVC_config.png"></div>
 
 用监听器启动 Spring 的配置（配置 ContextLoaderListener 加载 Spring 的配置启动 Spring 容器）
 
 启动 SpringMVC 的配置（配置 DispatcherServlet 启动 SpringMVC，配好映射）
 
-看一下 `SpringServletContainerInitializer `的源码：
+看一下 SpringServletContainerInitializer 的源码：
 
 ```java
 @HandlesTypes(WebApplicationInitializer.class) // 对WebApplicationInitializer及其子类感兴趣
@@ -3735,59 +3947,59 @@ public class SpringServletContainerInitializer implements ServletContainerInitia
 
 <b>梳理一下：</b>
 
-1.web 容器在启动的时候，会扫描每个 jar 包下的 META-INFO/services/javax.servlet.ServletContainerInitializer
+1️⃣web 容器在启动的时候，会扫描每个 jar 包下的 META-INFO/services/javax.servlet.ServletContainerInitializer
 
-2.加载这个文件指定的类 `SpringServletContainerInitializer`
+2️⃣加载这个文件指定的类 SpringServletContainerInitializer
 
-3.Spring 应用一启动就会加载感兴趣的 WebAppleicationInitializer 下的所有组件
+3️⃣Spring 应用一启动就会加载感兴趣的 WebAppleicationInitializer 下的所有组件
 
-4.并且为这些组件创建对象（组件不是接口，不是抽象类，从源码里看的哦），下面让我看看 WebAppleicationInitializer 的子类。
+4️⃣并且为这些组件创建对象（组件不是接口，不是抽象类，从源码里看的哦），下面让我看看 WebAppleicationInitializer 的子类。
 
-- ```java
-    public abstract class AbstractContextLoaderInitializer{}
-    // 作用是createRootApplicationContext() 创建根容器
-    ```
+```java
+public abstract class AbstractContextLoaderInitializer{}
+// 作用是createRootApplicationContext() 创建根容器
+```
 
-- ```java
-    public abstract class AbstractContextLoaderInitializer{}
-    ```
+```java
+public abstract class AbstractContextLoaderInitializer{}
+```
 
-- ```java
-    public abstract class AbstractDispatcherServletInitializer{} 
-    // 看registerDispatcherServlet方法里的代码
-    // 创建一个web的ioc容器：createServletApplicationContext
-    // 创建一个DispatcherServlet：createDispatcherServlet
-    // 然后根据ServletContext的api，把创建的Servlet添加到web容器中/ 将创建的DispatcherServlet添加到Servletcontext中
-    ```
+```java
+public abstract class AbstractDispatcherServletInitializer{} 
+// 看registerDispatcherServlet方法里的代码
+// 创建一个web的ioc容器：createServletApplicationContext
+// 创建一个DispatcherServlet：createDispatcherServlet
+// 然后根据ServletContext的api，把创建的Servlet添加到web容器中/ 将创建的DispatcherServlet添加到Servletcontext中
+```
 
-    - ```java
-        // 注解方式的配置的DispatcherServlet初始化器
-        public abstract class AbstractAnnotationConfigDispatcherServletInitializer{
-        	// 创建根容器：createRootApplicationContext
-        	protected WebApplicationContext createRootApplicationContext() {
-                // 获得配置类
-        		Class<?>[] configClasses = getRootConfigClasses();
-        		if (!ObjectUtils.isEmpty(configClasses)) {
-        			AnnotationConfigWebApplicationContext rootAppContext = new AnnotationConfigWebApplicationContext();
-                    // 把配置类注册到根容器中
-        			rootAppContext.register(configClasses);
-        			return rootAppContext;
-        		}
-        		else {
-        			return null;
-        		}
-        	}
-            // 创建Web的ioc容器
-            protected WebApplicationContext createServletApplicationContext() {
-                AnnotationConfigWebApplicationContext servletAppContext = new AnnotationConfigWebApplicationContext();
-                Class<?>[] configClasses = getServletConfigClasses();
-                if (!ObjectUtils.isEmpty(configClasses)) {
-                    servletAppContext.register(configClasses);
-                }
-                return servletAppContext;
-            }
+```java
+// 注解方式的配置的DispatcherServlet初始化器
+public abstract class AbstractAnnotationConfigDispatcherServletInitializer{
+    // 创建根容器：createRootApplicationContext
+    protected WebApplicationContext createRootApplicationContext() {
+        // 获得配置类
+        Class<?>[] configClasses = getRootConfigClasses();
+        if (!ObjectUtils.isEmpty(configClasses)) {
+            AnnotationConfigWebApplicationContext rootAppContext = new AnnotationConfigWebApplicationContext();
+            // 把配置类注册到根容器中
+            rootAppContext.register(configClasses);
+            return rootAppContext;
         }
-        ```
+        else {
+            return null;
+        }
+    }
+    // 创建Web的ioc容器
+    protected WebApplicationContext createServletApplicationContext() {
+        AnnotationConfigWebApplicationContext servletAppContext = new AnnotationConfigWebApplicationContext();
+        Class<?>[] configClasses = getServletConfigClasses();
+        if (!ObjectUtils.isEmpty(configClasses)) {
+            servletAppContext.register(configClasses);
+        }
+        return servletAppContext;
+    }
+}
+```
 
 <b>总结</b>
 
@@ -3803,9 +4015,9 @@ public class SpringServletContainerInitializer implements ServletContainerInitia
 > <b>简单介绍</b>
 
 - org.example.config
-    - AppConfig.java	配置 controller 的扫描
-    - MyWebApplicationInitializer.java   Web 容器启动的时候创建对象；调用方法来初始化容器前端控制器
-    - RootConfig.java 根容器的配置。也就是 Spring 的，如配置 datasource，service，middle-tier
+    - AppConfig.java ==> 配置 controller 的扫描
+    - MyWebApplicationInitializer ==> Web 容器启动的时候创建对象；调用方法来初始化容器前端控制器
+    - RootConfig ==> 根容器的配置。也就是 Spring 的，如配置 datasource，service，middle-tier
 - controller
     - HelloController.java
 - service
@@ -3869,7 +4081,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.stereotype.Controller;
 
-/<b>
+/**
  * 这个是 Root WebApplicationContext；根容器的配置。也就是Spring的
  * 如datasource、services、middle-tier
  */
@@ -3944,15 +4156,13 @@ public class HelloController {
 
 [SpringMVC 注解配置官方文档](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-config)
 
-1）`@EnableWebMvc`：开启 SpringMVC 定制配置功能；相当于 xml 中的 `<mvc:annotation-drivern />`
+1️⃣@EnableWebMvc：开启 SpringMVC 定制配置功能；相当于 xml 中的 <mvc:annotation-drivern />
 
-2）配置组件（视图解析器、视图映射、静态资源映射、拦截器...）
+2️⃣配置组件（视图解析器、视图映射、静态资源映射、拦截器...）
 
-3）实现 `WebMvcConfigurer` 类，但是这个类的所有方法都要实现，有时候我们用不了这么多方法！怎么办？？
+3️⃣实现 WebMvcConfigurer 类，但是这个类的所有方法都要实现，有时候我们用不了这么多方法！怎么办？？SpringMVC 在这里用了一个设计模式，有一个实现了 WebMvcConfigurer 的抽象子类 WebMvcConfigurerAdapter，这个子类实现了它的所有方法，不过都是空方法！我们可以继承这个类哦！
 
-- SpringMVC 在这里用了一个设计模式，有一个实现了 `WebMvcConfigurer` 的抽象子类 `WebMvcConfigurerAdapter`，这个子类实现了它的所有方法，不过都是空方法！我们可以继承这个类哦！
-
-4）具体代码看 github 吧。不贴代码了。
+具体代码看 github 吧。不贴代码了。
 
 > <b>SpringMVC maven 目录结构说明</b>
 
@@ -3962,19 +4172,21 @@ public class HelloController {
 
 3）webapp 是 web 目录；WEB-INF 目录下的最后是输出到 WEB-INF。static 与 webapp 的 WEB-INF 同级，那么它也会与最终输出文件的 WEB-INF 同级。
 
-<img src="img/spring/maven_mvc.png" >
+<div align="center"><img src="img/spring/maven_mvc.png"></div>
 
-<img src="img/spring/maven_mvc2.png">
+<div align="center"><img src="img/spring/maven_mvc2.png"></div>
 
-# 原生异步请求
+# 异步请求
+
+## 原生异步请求
 
 Servlet 3.0 异步请求
 
-## 概述
+### 概述
 
-<img src="img/spring/servlet3.0_async.png">
+<div align="center"><img src="img/spring/servlet3.0_async.png"></div>
 
-## 代码
+### 代码
 
 ```java
 package org.example;
@@ -4017,9 +4229,9 @@ public class AsyncController extends HttpServlet {
 }
 ```
 
-# MVC异步请求
+## MVC异步请求
 
-##  返回Callable
+### 返回 Callable
 
 ```java
 @Controller
@@ -4068,7 +4280,7 @@ public class AsyncController {
 }
 ```
 
-## 真实场景用法
+### 真实场景用法
 
 ```java
 package org.example.controller;
@@ -4124,15 +4336,58 @@ class DeferredResultQueue {
 
 ## 新功能
 
-- 代码基于Java8，运行时兼容 Java 9，把不建议的代码、库删除了。
+- 代码基于 Java8，运行时兼容 Java 9，把不建议的代码、库删除了。
 - 自带通用日志封装
   - Spring 5 移除了 Log4jConfigListener，官方建议使用 Log4j2
   - Spring 5 框架整合 Log4j2
-
 - 核心容器
-  - 支持@Nullable注解
+  - 支持 @Nullable 注解
     - 可以使用在方法、属性、参数上
     - 方法：返回值可以为空
     - 属性：属性可以为空
     - 参数值：参数值可以为空
 
+## Spring WebFlux
+
+Spring 5 新功能，用于 web 开发，与 Spring MVC 类似，但是 WebFlux 是一种响应式编程框架。
+
+WeblFlux 时一种异步非阻塞框架，Servlet 3.1 开始支持的。核心是基于 Reactor 相关的 API 实现的。
+
+不扩充硬件资源的情况下，可以提升系统的吞吐量和伸缩性（秒杀系统用 WebFlux 试试）。
+
+WebFlux 使用函数式编程实现路由请求。（观察者模式，数据发生变化就通知）
+
+### 概述
+
+响应式流规范可以总结为 4 个接口：Publisher、Subscriber、Subscription 和 Processor。Publisher 负责生成数据，并将数据发送给 Subscription（每个 Subscriber 对应一个 Subscription）。Publisher 接口声明了一个方法subscribe()，Subscriber 可以通过该方法向 Publisher 发起订阅。
+
+1️⃣命令式编程，假定有一批数据需要处理，每个数据都需要经过若干步骤才能完成。使用命令式编程模型，每行代码执行一个步骤，按部就班，并且肯定在同一个线程中进行。每一步在执行完成之前都会阻止执行线程执行下一步。
+
+```java
+String name = "xxx";
+String cap = name.toUpperCase();
+String out = "DFS "+ cap;
+System.out.println(out);
+```
+
+2️⃣响应式编程，看起来依然保持着按步骤执行的模型，但实际是数据会流经处理管线。在处理管线的每一步，都对数据进行了某种形式的加工，但是我们不能判断数据会在哪个线程上执行操作。它们既可能在同一个线程，也可能在不同的线程。
+
+```java
+Mono.just("Craig")
+    .map(n->n.toUpperCase())
+    .map(cn->"DFS "+cn)
+    .subscribe(System.out::println);
+```
+
+有点 Stream 流的并行编程的意思。
+
+Reactor 有两个核心的类，Mono 和 Flux，这两个类实现了接口 Publisher，提供了丰富的操作接口。两者都实现了反应式流的 Publisher 接口。Flux 代表具有零个、一个或者多个（可能是无限个）数据项的管道。Mono 是一种特殊的反应式类型，针对数据项不超过一个的场景，它进行了优化。
+
+```java
+Mono.just("Craig")
+    .map(n->n.toUpperCase())
+    .map(cn->"DFS "+cn)
+    .subscribe(System.out::println);
+```
+
+在这个例子中，有 3 个 Mono。just() 操作创建了第一个Mono。map 创建了第二个 Mono，map 创建了第三个 Mono。最后，对第三个 Mono 上的 subscribe() 方法调用时，会接收数据并将数据打印出来。
