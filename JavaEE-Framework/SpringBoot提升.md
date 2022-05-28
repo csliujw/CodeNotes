@@ -1717,11 +1717,8 @@ public class Hello{
 
 ```xml
 <context:component-scan base-package="xxx.xx.web"/>
-
 <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping"/>
-
 <bea class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter"/>
-
 <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
 	<property name="viewClass" value="org.springframework.web.servlet.view.JstlView"></property>
     <property name="prefix" value="/WEB-INF/views/"></property>
@@ -1729,7 +1726,7 @@ public class Hello{
 </bean>
 ```
 
-- 部署DispatcherServlet [在web.xml中配置]
+- 部署 DispatcherServlet [在web.xml中配置]
 
 ```xml
 <servlet>
@@ -1739,7 +1736,6 @@ public class Hello{
         <param-name>contextConfigLocation</param-name>
         <param-value>/WEB-INF/app-context.xml</param-value>
     </init-param>
-   <!--  --> 
     <load-on-startup>1</load-on-startup>
 </servlet>
 <servlet-mapping>
@@ -1748,7 +1744,7 @@ public class Hello{
 </servlet-mapping>
 ```
 
-- 使用可执行Tomcat Maven插件 [这个好像可以打包成jar包, 我们可以直接运行这个jar包！]
+- 使用可执行 Tomcat Maven 插件 [这个好像可以打包成 jar 包, 然后直接运行这个 jar 包]
 
 ```xml
 <plugin>

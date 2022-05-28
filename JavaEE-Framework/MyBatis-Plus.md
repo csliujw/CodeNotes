@@ -13,7 +13,7 @@ MyBatis-Plus（简称 MP）是一个 MyBatis 的增强工具，在 MyBatis 的�
 
 > 特性
 
-- <div align="center"><img src="img/ibatis/MyBatis_quick_star.png"></div>
+<div align="center"><img src="img/ibatis/MyBatis_quick_star.png"></div>
 
 - <b>损耗小</b>：启动即会自动注入基本 CURD，性能基本无损耗，直接面向对象操作
 - <b>强大的 CRUD 操作</b>：内置通用 Mapper、通用 Service，仅仅通过少量配置即可实现单表大部分 CRUD 操作，更有强大的条件构造器，满足各类使用需求

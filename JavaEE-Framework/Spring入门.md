@@ -335,7 +335,7 @@ Spring 中定义了一系列的注解，常用的注解如下：
 - @Repository：用于将数据访问层（DAO 层）的类标识为 Spring 中的 Bean，其功能与 @Component 相同。
 - @Service：通常作用在业务层（Service 层），用于将业务层的类标识为 Spring 中的 Bean，其功能与 @Component 相同。
 - @Controller：通常作用在控制层（如 Spring MVC 的 Controller），用于将控制层的类标识为 Spring 中的 Bean，其功能与 @Component相同。
-- @Autowired：用于对 Bean 的属性变量、属性的 setter 方法及构造方法进行标注，配合对应的注解处理器完成 Bean 的自动配置工作。默认按照 Bean 的类型进行装配。
+- @Autowired：用于对 Bean 的属性变量、属性的 setter 方法及构造方法进行标注，配合对应的注解处理器完成 Bean 的自动配置工作。<span style="color:orange">默认按照 Bean 的类型进行装配。如果按类型匹配发现有多个，且没有指定优先选那个，会报错。</span>
 - @Resource：其作用与 Autowired 一样。其区别在于 @Autowired 默认按照 Bean 类型装配，而 @Resource 默认按照 Bean 实例名称进行装配。@Resource 中有两个重要属性：name 和 type。
     - Spring 将 name 属性解析为 Bean 实例名称，type 属性解析为 Bean 实例类型。
     - 如果指定 name 属性，则按实例名称进行装配；如果指定 type 属性，则按 Bean 类型进行装配；
@@ -417,7 +417,7 @@ import org.springframework.context.annotation.Configuration;
 public class MainConfiguration {
     // 给容器中注册一个Bean  默认是以方法名为bean的名称，如果不想要方法名可以这样 @Bean("person") 或 @Bean({"person1","person2"})
     // 具体看看源码注释 一目了然。
-    // value 与 name之间 好像是别名关系
+    // value 与 name之间 是别名关系
     @Bean("person3")
     public Person person() {
         return new Person();
@@ -447,7 +447,7 @@ public class BeanXMLTest {
         }
         System.out.println("===========");
         for (int i = 0; i < beanNamesForType.length; i++) {
-            // 同一个类的多个别名好像只会输出其中一个。
+            // 同一个类的多个别名只会输出其中一个。
             System.out.println(beanNamesForType[i]);
         }
     }
@@ -456,13 +456,9 @@ public class BeanXMLTest {
 
 ## 包扫描
 
-用到的注解有
+用到的注解有 @Configuration、@ComponentScan，如果是 JDK8，它被设置成了重复注解，可以重复用。
 
-`@Configuration`
-
-`@ComponentScan`，如果是 `jdk8`，它被设置成了重复注解，可以重复用。
-
-`xml` 的配置方式
+xml 的配置方式
 
 ```xml
 <!-- 配置包扫描 , 只要标注了@Controller、@Service、@Repository、@Component的都会被自动的扫描加入容器中-->
@@ -478,7 +474,8 @@ public class BeanXMLTest {
 // MainConfiguration的配置对象不会被排除的
 @Configuration
 @ComponentScan(basePackages = "org.example", excludeFilters = {
-        @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = {Controller.class, Service.class})
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, 
+                              classes = {Controller.class, Service.class})
 })
 public class MainConfiguration {
     // 给容器中注册一个Bean
@@ -500,7 +497,8 @@ public class MainConfiguration {
 // IncludeConfiguration的配置对象是也会包含的。
 @Configuration
 @ComponentScan(basePackages = "org.example", includeFilters = {
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = DemoService.class)
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, 
+                              classes = DemoService.class)
 }, useDefaultFilters = false)
 public class IncludeConfiguration {
     // 给容器中注册一个Bean
@@ -562,8 +560,7 @@ import java.io.IOException;
 @ComponentScan(basePackages = "org.example", includeFilters = {
         @ComponentScan.Filter(type = FilterType.CUSTOM, classes = {DefineFilter.class})
 }, useDefaultFilters = false)
-public class DefineFilterConfiguration {
-}
+public class DefineFilterConfiguration {}
 
 class DefineFilter implements TypeFilter {
     // 自定义匹配规则
@@ -612,7 +609,7 @@ public class ScanTest {
 
 ## Spring单元测试
 
-引入依赖，需要的 `JUnit` 的版本有点高
+引入依赖，需要的 JUnit 的版本有点高
 
 [Spring测试官方文档](https://docs.spring.io/spring-framework/docs/current/reference/html/testing.html)
 
@@ -680,8 +677,7 @@ public class ScopeConfigurationTest {
 public class LazyConfiguration {
     @Scope("prototype")
     @Bean
-    @Lazy
-    public Person person() {
+    @Lazy public Person person() {
         System.out.println("Create Person");
         return new Person();
     }
@@ -694,7 +690,9 @@ public class LazyConfiguration {
 }
 ```
 
-## 按条件注入
+## @Conditional按条件注入
+
+符合条件的 Bean 才会被注册到 IoC 容器中。
 
 > @Conditional
 
@@ -704,7 +702,7 @@ public class LazyConfiguration {
 @Documented
 public @interface Conditional {
 
-	/<b>
+	/**
 	 * All {@link Condition} classes that must {@linkplain Condition#matches match}
 	 * in order for the component to be registered.
 	 */
@@ -716,7 +714,7 @@ public @interface Conditional {
 @FunctionalInterface
 public interface Condition {
 
-	/<b>
+	/**
 	 * Determine if the condition matches.
 	 * @param context the condition context
 	 * @param metadata the metadata of the {@link org.springframework.core.type.AnnotationMetadata class}
@@ -730,22 +728,53 @@ public interface Condition {
 // 由此可看出，Conditional传入的是Condition数组
 ```
 
-> 按条件注入具体 Demo
+> 按条件进行注入
 
 ```java
-package org.example.configuration;
+package cn.study.ioc;
 
-import org.example.pojo.Person;
+import cn.study.ioc.pojo.Person;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.*;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
+import java.util.Arrays;
+
+@Configuration
+public class BeanConditionInject {
+    @Bean("linux")
+    @Conditional(value = {LinuxCondition.class})
+    public Person getLinux() {
+        return new Person("linux");
+    }
+
+    @Bean("windows")
+    @Conditional(value = {WindowsCondition.class})
+    public Person getWindows() {
+        return new Person("windows");
+    }
+
+    // 包含指定的Bean才注入此obj对象
+    @Bean("obj")
+    @Conditional(value = {OtherCondition.class})
+    public Object getObj() {
+        return new Object();
+    }
+
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanConditionInject.class);
+        Arrays.stream(context.getBeanNamesForType(Person.class)).forEach(System.out::println);
+        System.out.println("=========================");
+        Arrays.stream(context.getBeanDefinitionNames()).forEach(System.out::println);
+
+    }
+}
+
 class LinuxCondition implements Condition {
 
-    /<b>
+    /**
      * @param context  判断能使用的上下文环境
      * @param metadata 当前标注了Condtion注解的标注信息
-     * @return
      */
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
@@ -767,10 +796,8 @@ class WindowsCondition implements Condition {
     }
 }
 
-/<b>
- * 包含某个bean才xxx
- */
-class ConditionDemo implements Condition {
+// 包含 名为 windows 的 bean才 注入
+class OtherCondition implements Condition {
 
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
@@ -782,84 +809,22 @@ class ConditionDemo implements Condition {
         if (windows)
             return true;
         return false;
-        // bean的注冊还未学习
-    }
-}
-
-
-@Configuration
-public class ConditionConfiguration {
-
-    @Bean("linux")
-    @Conditional(value = {LinuxCondition.class})
-    public Person getLinux() {
-        return new Person("linux");
-    }
-
-    @Bean("windows")
-    @Conditional(value = {WindowsCondition.class})
-    public Person getWindows() {
-        return new Person("windows");
-    }
-
-    // 包含指定的Bean才注入此obj对象
-    @Bean("obj")
-    @Conditional(value = {ConditionDemo.class})
-    public Object getObj() {
-        return new Object();
-    }
-}
-```
-
-> 测试代码
-
-```java
-package org.example;
-
-import org.example.configuration.ConditionConfiguration;
-import org.example.pojo.Person;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import java.util.stream.Stream;
-
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = ConditionConfiguration.class)
-public class ConditionTest {
-
-    @Autowired
-    ApplicationContext context;
-
-    @Test
-    public void test1() {
-        String[] beanNamesForType = context.getBeanNamesForType(Person.class);
-        Stream.of(beanNamesForType).forEach(System.out::println);
-    }
-
-    @Test
-    public void test2() {
-        String[] beanDefinitionNames = context.getBeanDefinitionNames();
-        Stream.of(beanDefinitionNames).forEach(System.out::println);
     }
 }
 ```
 
 ## @Import导入另一组件
 
-### 容器注入组件
+> 容器注入组件
 
-- 包扫描+组件标注注解（`@Controller / @Service / @Repository / @Component`）,局限于我们自己写的类
-- `@Bean` [导入的第三方包里面的组件]，xml 的 bean 配置方式也可以做到。 
-- `@Import` [快速给容器中导入一个组件]，xml 也有对应的引入方式。
-  - `@ImportSelector`[导入的选择器,返回需要导入的组件的全类名数组]
-  - `@ImportBeanDefinitionRegistrar`[也是一个接口]
-- 使用 Spring 提供的 `FactoryBean`
-  - 默认获取到的是工厂 bean 调用 `getObject` 创建的对象
-  - 要获取工厂 Bean 本身，我们需要给 id 前面加一个& 如：`&ColorFactoryBean`
+- 包扫描 + 组件标注注解（@Controller / @Service / @Repository / @Component），局限于我们自己写的类
+- @Bean [导入的第三方包里面的组件]，xml 的 bean 配置方式也可以做到。 
+- @Import [快速给容器中导入一个组件]，xml 也有对应的引入方式。
+  - @ImportSelector [导入的选择器，返回需要导入的组件的全类名数组]
+  - @ImportBeanDefinitionRegistrar [也是一个接口]
+- 使用 Spring 提供的 FactoryBean
+  - 默认获取到的是工厂 bean 调用 getObject 创建的对象
+  - 要获取工厂 Bean 本身，我们需要给 id 前面加一个& 如：&ColorFactoryBean
   - 这个的特点或者是优势到底是什么？为什么会提供这种方法？
 
 import 注解的具体定义及注释
@@ -867,7 +832,7 @@ import 注解的具体定义及注释
 ```java
 public @interface Import {
 
-	/<b>
+	/**
 	 * {@link Configuration @Configuration}, {@link ImportSelector},
 	 * {@link ImportBeanDefinitionRegistrar}, or regular component classes to import.
 	 */
@@ -875,355 +840,174 @@ public @interface Import {
 }
 ```
 
-#### Import的基本用法
+### Import的基本用法
+
+将没有使用 @Component 注解的普通 class 加入到 Spring 容器, 由 Spring 管理。
 
 ```java
-package org.example.configuration;
-
-import org.example.pojo.Person;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-
 @Configuration
-@Import(Color.class)
-public class ImportConfiguration {
-
-    @Bean
-    public Person person() {
-        return new Person();
+@Import(Color.class) // 导入 Color
+public class BeanImport {
+    public static void main(String[] args) {
+        ApplicationContext context = new AnnotationConfigApplicationContext(BeanImport.class);
+        Arrays.stream(context.getBeanDefinitionNames()).forEach(System.out::println);
     }
 }
 
-// 这个Color什么注解都不用加！太棒了！！
 class Color {
-}
-
-```
-
-测试代码
-
-```java
-// 测试代码
-package org.example;
-
-import org.example.configuration.ImportConfiguration;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import java.util.stream.Stream;
-
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = ImportConfiguration.class)
-public class ImportTest {
-
-    @Autowired
-    ApplicationContext context;
-
-    @Test
-    public void test1() {
-        String[] beanDefinitionNames = context.getBeanDefinitionNames();
-        Stream.of(beanDefinitionNames).forEach(System.out::println);
+    @Bean
+    public Person getColor() {
+        return new Person("color");
     }
 }
+/*
+...
+beanImport
+cn.study.ioc.Color
+getColor
+*/
 ```
 
-#### Import的高级用法一
+### Import的高级用法一
 
-`ImportSelector`
+ImportSelector，最重要的是 selectImports 方法。
+
+selectImports 方法的返回值是一个字符串数组，如果在配置类中，通过 @Import 注解，导入了该类，那么 selectImports 返回的字符串数组中的类名就会被 Spring 容器 new 出来，然后再把这些对象放到工厂当中去。
 
 ```java
-
-/<b>
- * Interface to be implemented by types that determine which @{@link Configuration}
- * class(es) should be imported based on a given selection criteria, usually one or
- * more annotation attributes.
- *
- * <p>An {@link ImportSelector} may implement any of the following
- * {@link org.springframework.beans.factory.Aware Aware} interfaces,
- * and their respective methods will be called prior to {@link #selectImports}:
- * <ul>
- * <li>{@link org.springframework.context.EnvironmentAware EnvironmentAware}</li>
- * <li>{@link org.springframework.beans.factory.BeanFactoryAware BeanFactoryAware}</li>
- * <li>{@link org.springframework.beans.factory.BeanClassLoaderAware BeanClassLoaderAware}</li>
- * <li>{@link org.springframework.context.ResourceLoaderAware ResourceLoaderAware}</li>
- * </ul>
- *
- * <p>Alternatively, the class may provide a single constructor with one or more of
- * the following supported parameter types:
- * <ul>
- * <li>{@link org.springframework.core.env.Environment Environment}</li>
- * <li>{@link org.springframework.beans.factory.BeanFactory BeanFactory}</li>
- * <li>{@link java.lang.ClassLoader ClassLoader}</li>
- * <li>{@link org.springframework.core.io.ResourceLoader ResourceLoader}</li>
- * </ul>
- *
- * <p>{@code ImportSelector} implementations are usually processed in the same way
- * as regular {@code @Import} annotations, however, it is also possible to defer
- * selection of imports until all {@code @Configuration} classes have been processed
- * (see {@link DeferredImportSelector} for details).
- *
- * @author Chris Beams
- * @author Juergen Hoeller
- * @since 3.1
- * @see DeferredImportSelector
- * @see Import
- * @see ImportBeanDefinitionRegistrar
- * @see Configuration
- */
 public interface ImportSelector {
 
-	/<b>
-	 * Select and return the names of which class(es) should be imported based on
-	 * the {@link AnnotationMetadata} of the importing @{@link Configuration} class.
-	 * @return the class names, or an empty array if none
-	 */
+	// 选择并返回需要导入的类的名称
 	String[] selectImports(AnnotationMetadata importingClassMetadata);
 
-	/<b>
-	 * Return a predicate for excluding classes from the import candidates, to be
-	 * transitively applied to all classes found through this selector's imports.
-	 * <p>If this predicate returns {@code true} for a given fully-qualified
-	 * class name, said class will not be considered as an imported configuration
-	 * class, bypassing class file loading as well as metadata introspection.
-	 * @return the filter predicate for fully-qualified candidate class names
-	 * of transitively imported configuration classes, or {@code null} if none
-	 * @since 5.2.4
-	 */
+	// 返回排除的类，是一个类过滤器
 	@Nullable
 	default Predicate<String> getExclusionFilter() {
 		return null;
 	}
-
 }
 ```
 
-测试 ImportSelector
-
 ```java
-package org.example.configuration;
+package cn.study.ioc;
 
-import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.ImportSelector;
 import org.springframework.core.type.AnnotationMetadata;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Set;
 
+/**
+ * 测试 ImportSelect 接口的功能
+ */
 @Configuration
-@Import({ImportSelectorDemo.class})
-public class ImportSelectorConfiguration {
-    @Bean
-    public Object getObj() {
-        return new Object();
+@Import(MyImportSelector.class)
+public class BeanImportSelector {
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanImportSelector.class);
+        Arrays.stream(context.getBeanDefinitionNames()).forEach(System.out::println);
     }
 }
 
-class ImportSelectorDemo implements ImportSelector {
+class MyImportSelector implements ImportSelector {
 
-    /<b>
-     * @param importingClassMetadata 当前标注@Import注解的类的所有注解信息，
-     *                               简而言之，可以获取到Import注解和其他注解的信息
+    /***
+     * @param importingClassMetadata 当前标注@Import注解的类的所有注解信息，可以用它获取到Import注解和其他注解的信息
      * @return 要导入到组件的全类名
      */
     @Override
     public String[] selectImports(AnnotationMetadata importingClassMetadata) {
         Set<String> annotationTypes = importingClassMetadata.getAnnotationTypes();
-        ArrayList<String> list = new ArrayList<String>();
-        String[] strings = new String[annotationTypes.size()];
-        for (int i = 0; i < list.size(); i++) {
-            strings[i] = list.get(i);
-        }
-        return strings;
-    }
-
-}
-
-class SelectorClassDemo {}
-```
-
-```java
-// 单元测试代码
-package org.example;
-
-import org.example.configuration.ImportSelectorConfiguration;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import java.util.stream.Stream;
-
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = ImportSelectorConfiguration.class)
-public class ImportSelectorTest {
-
-    @Autowired
-    ApplicationContext context;
-
-    @Test
-    public void test1() {
-        String[] beanDefinitionNames = context.getBeanDefinitionNames();
-        Stream.of(beanDefinitionNames).forEach(System.out::println);
+        annotationTypes.stream().forEach(System.out::println);
+        System.out.println("==============");
+        return new String[]{Person.class.getName(), B.class.getName(), C.class.getName()};
     }
 }
 ```
 
-#### Import的高级用法二
+### Import的高级用法二
 
-ImportBeanDefinitionRegistrar 接口
+ImportBeanDefinitionRegistrar 接口，这个接口的功能比 ImportSelector 接口要更为强大，可以拿到 所有 bean 的定义信息（BeanDefinitionRegistry）。
 
 ```java
 public interface ImportBeanDefinitionRegistrar {
 
-	/<b>
-	 * Register bean definitions as necessary based on the given annotation metadata of
-	 * the importing {@code @Configuration} class.
-	 * <p>Note that {@link BeanDefinitionRegistryPostProcessor} types may <em>not</em> be
-	 * registered here, due to lifecycle constraints related to {@code @Configuration}
-	 * class processing.
-	 * <p>The default implementation delegates to
-	 * {@link #registerBeanDefinitions(AnnotationMetadata, BeanDefinitionRegistry)}.
-	 * @param importingClassMetadata annotation metadata of the importing class
-	 * @param registry current bean definition registry
-	 * @param importBeanNameGenerator the bean name generator strategy for imported beans:
-	 * {@link ConfigurationClassPostProcessor#IMPORT_BEAN_NAME_GENERATOR} by default, or a
-	 * user-provided one if {@link ConfigurationClassPostProcessor#setBeanNameGenerator}
-	 * has been set. In the latter case, the passed-in strategy will be the same used for
-	 * component scanning in the containing application context (otherwise, the default
-	 * component-scan naming strategy is {@link AnnotationBeanNameGenerator#INSTANCE}).
-	 * @since 5.2
-	 * @see ConfigurationClassPostProcessor#IMPORT_BEAN_NAME_GENERATOR
-	 * @see ConfigurationClassPostProcessor#setBeanNameGenerator
-	 */
 	default void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry,
 			BeanNameGenerator importBeanNameGenerator) {
-
 		registerBeanDefinitions(importingClassMetadata, registry);
 	}
 
-	/<b>
-	 * Register bean definitions as necessary based on the given annotation metadata of
-	 * the importing {@code @Configuration} class.
-	 * <p>Note that {@link BeanDefinitionRegistryPostProcessor} types may <em>not</em> be
-	 * registered here, due to lifecycle constraints related to {@code @Configuration}
-	 * class processing.
-	 * <p>The default implementation is empty.
-	 * @param importingClassMetadata annotation metadata of the importing class
-	 * @param registry current bean definition registry
-	 */
-    /<b>
+    /**
     通过调这个方法，给容器自己添加一些组件
     AnnotationMetadata 是当前类的注解信息
     BeanDefinitionRegistry Bean定义的注册类，通过它给容器注册Bean
     */
-    
 	default void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 	}
-
 }
 ```
 
-如果存在 xxbean，就把 oobean 注册进去
-
-JavaConfig 代码
+我们可以通过 ImportBeanDefinitionRegistart 接口实现这个功能：如果存在 xxbean，就把 oobean 注册进去。
 
 ```java
-package org.example.configuration;
-
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.RootBeanDefinition;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
+import org.springframework.context.annotation.*;
 import org.springframework.core.type.AnnotationMetadata;
 
 @Configuration
 @Import({ImportBeanDefinitionDemo.class})
-public class ImportBeanDefinitionRegistrarConfiguration {
-
+public class BeanImportBeanDefinitionRegistrar {
     @Bean("red")
     public Red red() {
         return new Red();
     }
 
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanImportBeanDefinitionRegistrar.class);
+        System.out.println(context.containsBean("red")); // true
+        System.out.println(context.containsBean("rain")); // true
+    }
 }
 
 class ImportBeanDefinitionDemo implements ImportBeanDefinitionRegistrar {
+    /***
+     * @param importingClassMetadata
+     * @param registry 拿到所有 bean 的注册信息。
+     * 如果存在名为 red 的 bean 定义信息，就把 rain 也注册进去。和 Condition 的功能类似
+     */
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
         boolean red = registry.containsBeanDefinition("red");
         if (red) {
             RootBeanDefinition rootBeanDefinition = new RootBeanDefinition(Rain.class);
-            registry.registerBeanDefinition("Rain", rootBeanDefinition);
+            registry.registerBeanDefinition("rain", rootBeanDefinition);
         }
     }
 }
 
-class Red {
-
-}
-
-class Rain {
-
-}
-```
-
-测试代码
-
-```java
-package org.example;
-
-import org.example.configuration.ImportBeanDefinitionRegistrarConfiguration;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import java.util.stream.Stream;
-
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = ImportBeanDefinitionRegistrarConfiguration.class)
-public class ImportBeanDefinitionTest {
-    @Autowired
-    ApplicationContext context;
-
-    @Test
-    public void test1() {
-        String[] beanDefinitionNames = context.getBeanDefinitionNames();
-        Stream.of(beanDefinitionNames).forEach(System.out::println);
-    }
-}
+class Red {}
+class Rain {}
 ```
 
 ## FactoryBean创建
 
-使用 Spring 提供的 `FactoryBean`
+使用 Spring 提供的 FactoryBean
 
-- 默认获取到的是工厂 bean 调用 `getObject` 创建的对象
-- 要获取工厂 Bean 本身，我们需要给 id 前面加一个& 如：`&ColorFactoryBean`
+- 默认获取到的是工厂 bean 调用 getObject 创建的对象
+- 要获取工厂 Bean 本身，我们需要给 id 前面加一个& 如：&ColorFactoryBean
 - 这个的特点或者是优势到底是什么？为什么会提供这种方法？
 
 代码
 
 ```java
-package org.example.configuration;
-
-import org.example.pojo.Person;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-public class FactoryBeanConfiguration implements FactoryBean<Person> {
+public class BeanFactoryBean implements FactoryBean<Person> {
     @Override
     public Person getObject() throws Exception {
         return new Person();
@@ -1234,7 +1018,7 @@ public class FactoryBeanConfiguration implements FactoryBean<Person> {
         return Person.class;
     }
 
-    /<b>
+    /**
      * @return true 单实例 容器中只保存一份
      * false 多实例 每次调用创建新对象
      */
@@ -1242,25 +1026,21 @@ public class FactoryBeanConfiguration implements FactoryBean<Person> {
     public boolean isSingleton() {
         return false;
     }
-}
-```
 
-测试代码
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanFactoryBean.class);
+        Person p1 = (Person) context.getBean("beanFactoryBean");
+        Person p2 = (Person) context.getBean("beanFactoryBean");
 
-```java
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = FactoryBeanConfiguration.class)
-public class FactoryBeanTest {
-    @Autowired
-    ApplicationContext context;
+        System.out.println(p1.getClass()); // xx.Person
+        System.out.println(p1 == p2); // false
 
-    @Test
-    public void test1() {
-        Object factoryBeanDemo = context.getBean("factoryBeanDemo");
-        System.out.println(factoryBeanDemo.getClass());
         // 加上&符号 获取的是工厂对象 而非getObject返回的Bean
-        Object bean = context.getBean("&factoryBeanDemo");
-        System.out.println(bean.getClass());
+        BeanFactoryBean bean2 = (BeanFactoryBean) context.getBean("&beanFactoryBean");
+        // 也可以直接按类型查找 Bean
+        BeanFactoryBean bean1 = context.getBean(BeanFactoryBean.class);
+
+        System.out.println(bean1 == bean2); // true
     }
 }
 ```
@@ -1270,7 +1050,7 @@ public class FactoryBeanTest {
 ```java
 public interface BeanFactory {
 
-	/<b>
+	/**
 	 * Used to dereference a {@link FactoryBean} instance and distinguish it from
 	 * beans <i>created</i> by the FactoryBean. For example, if the bean named
 	 * {@code myJndiObject} is a FactoryBean, getting {@code &myJndiObject}
@@ -1284,7 +1064,7 @@ public interface BeanFactory {
 
 ## Bean指定初始化和销毁方法
 
-- `@Bean(initMethod = "init", destroyMethod = "destroy")`
+- @Bean(initMethod = "init", destroyMethod = "destroy")
 
 - 原本在 xml 中的配置方式
 
@@ -1300,12 +1080,29 @@ public interface BeanFactory {
 </beans>
 ```
 
-- pojo类
+使用 JavaConfig
 
 ```java
-package org.example.pojo;
+import org.springframework.context.annotation.*;
 
-public class Car {
+@Configuration
+public class BeanLifeCycle {
+    // 可以在自定义数据源，用init和destroy进行数据源的初始化和关闭
+    @Scope("prototype")
+    @Bean(initMethod = "init", destroyMethod = "destroy")
+    public Car car() {
+        return new Car();
+    }
+
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(BeanLifeCycle.class);
+         Object car = annotationConfigApplicationContext.getBean("car");
+        // annotationConfigApplicationContext.close();
+        // 多实例的bean在获取时才创建对象
+    }
+}
+
+class Car {
     public Car() {
         System.out.println("Car constructor...");
     }
@@ -1318,175 +1115,110 @@ public class Car {
         System.out.println("car ... destroy");
     }
 }
-
 ```
 
-- JavaConfig
-
-```java
-package org.example.configuration.lifecycle;
-
-import org.example.pojo.Car;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
-
-@Configuration
-public class LifeCycleConfiguration {
-
-    // 可以在自定义数据源，用init和destroy进行数据源的初始化和关闭
-    @Scope("prototype")
-    @Bean(initMethod = "init", destroyMethod = "destroy")
-    public Car car() {
-        return new Car();
-    }
-
-    public static void main(String[] args) {
-        AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(LifeCycleConfiguration.class);
-//        Object car = annotationConfigApplicationContext.getBean("car");
-//        annotationConfigApplicationContext.close();
-        // 多实例的bean在获取时才创建对象
-    }
-}
-```
-
-## Bean实现接口
+## Bean实现接口自定义初始化和销毁
 
 通过实现接口，自定义初始化和销毁的逻辑
 
 ```java
-package org.example.pojo;
-
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-
-public class Car2 implements InitializingBean, DisposableBean {
-
-    @Override
-    public void destroy() throws Exception {
-        System.out.println("car2 destroy");
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        System.out.println("car2 init afterPropertiesSet");
-    }
-}
-
-package org.example.configuration.lifecycle;
-
-import org.example.pojo.Car;
-import org.example.pojo.Car2;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.*;
 
 @Configuration
-public class LifeCycleConfiguration {
-
-    // 可以在自定义数据源，用init和destroy进行数据源的初始化和关闭
+public class BeanLifeCycle {
     @Scope("prototype")
-    @Bean(initMethod = "init", destroyMethod = "destroy")
-    public Car car() {
-        return new Car();
-    }
-
     @Bean
-    public Car2 car2(){
+    public Car2 car() {
         return new Car2();
     }
-    public static void main(String[] args) {
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(LifeCycleConfiguration.class);
-        Object car2 = context.getBean("car2");
 
-//        Object car = annotationConfigApplicationContext.getBean("car");
-//        annotationConfigApplicationContext.close();
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanLifeCycle.class);
+        Object car = context.getBean("car");
+        context.close();
         // 多实例的bean在获取时才创建对象
     }
 }
 
+class Car2 implements InitializingBean, DisposableBean {
+
+    @Override
+    public void destroy() throws Exception {
+        System.out.println("destroy");
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        System.out.println("init");
+    }
+}
 ```
 
 ## JS250规范定义的注解
 
-- `@PostConstruct`, 在 bean 创建完成并属性赋值完成，来执行初始化方法
-- `@PreDestroy`，在容器销毁 bean 之前通知我们进行清理操作
-- 这几个注解是 Java 提供的，好像是需要提供 J2EE 的依赖。
+- @PostConstruct，在 bean 创建完成并属性赋值完成，来执行初始化方法
+- @PreDestroy，在容器销毁 bean 之前通知我们进行清理操作
+- 这几个注解是 Java 提供的，需要提供 J2EE 的依赖。
+
+```xml
+<dependency>
+    <groupId>jakarta.annotation</groupId>
+    <artifactId>jakarta.annotation-api</artifactId>
+    <version>1.3.5</version>
+    <scope>compile</scope>
+</dependency>
+```
 
 ```java
-package org.example.pojo;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.annotation.*;
 
-import javax.annotation.PostConstruct;
+import javax.annotation.PostConstruct;W
 import javax.annotation.PreDestroy;
+import java.util.Arrays;
 
-public class Car3 {
+@Configuration
+public class BeanLifeCycle {
+    @Bean
+    public Car3 car3() {
+        return new Car3();
+    }
+
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanLifeCycle.class);
+        Object car = context.getBean("car3");
+        context.close();
+        // 多实例的bean在获取时才创建对象
+    }
+}
+
+class Car3 {
     public Car3() {
         System.out.println("car3 construct");
     }
 
     @PostConstruct
     public void init() {
-        System.out.println("PostConstruct");
+        System.out.println("car3 postConstruct");
     }
 
     @PreDestroy
     public void destroy() {
-        System.out.println("PreDestroy");
-    }
-
-}
-```
-
-test code
-
-```java
-package org.example.configuration.lifecycle;
-
-import org.example.pojo.Car;
-import org.example.pojo.Car2;
-import org.example.pojo.Car3;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
-
-@Configuration
-public class LifeCycleConfiguration {
-
-    // 可以在自定义数据源，用init和destroy进行数据源的初始化和关闭
-    @Scope("prototype")
-    @Bean(initMethod = "init", destroyMethod = "destroy")
-    public Car car() {
-        return new Car();
-    }
-
-    @Bean
-    public Car2 car2(){
-        return new Car2();
-    }
-
-    @Bean Car3 car3(){
-        return new Car3();
-    }
-    public static void main(String[] args) {
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(LifeCycleConfiguration.class);
-        Object car2 = context.getBean("car2");
-        Object car3 = context.getBean("car3");
-        context.close();
-//        Object car = annotationConfigApplicationContext.getBean("car");
-//        annotationConfigApplicationContext.close();
-        // 多实例的bean在获取时才创建对象
+        System.out.println("car3 preDestroy");
     }
 }
 ```
 
 ## Bean后置处理器
 
-- `interface BeanPostProcessor`：bean的后置处理器；在bean初始化前后进行一些处理工作
-  - `postProcessBeforeInitialization`：初始化之前工作
-  - `postProcessAfterInitialization`：初始化之后工作
+参照官方文档
+
+- interface BeanPostProcessor：bean 的后置处理器；在 bean 初始化前后进行一些处理工作
+  - postProcessBeforeInitialization：初始化之前工作
+  - postProcessAfterInitialization：初始化之后工作
 
 ### 用法
 
@@ -1544,67 +1276,79 @@ public interface BeanPostProcessor {
 我测试了一下，`@Configuration 的 @Bean 注解注册的 Bean，用下面实现接口的方式无效`
 
 ```java
-package org.example.configuration.lifecycle;
+package cn.study.ioc.lifecycle;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 @Configuration
-@ComponentScan(basePackages = "org.example.configuration.lifecycle")
-public class BeanPostProcessConfiguration {
+@ComponentScan(basePackages = "cn.study.ioc.lifecycle")
+public class BeanBeanPostProcessor {
 
     public static void main(String[] args) {
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanPostProcessConfiguration.class);
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanBeanPostProcessor.class);
+        Demo bean = context.getBean(Demo.class);
+        System.out.println("before close");
         context.close();
+        System.out.println("after close");
     }
 }
 
 @Component
-class BeanPostProcessDemo implements BeanPostProcessor {
-    public BeanPostProcessDemo() {
+class Demo implements BeanPostProcessor {
+    public Demo() {
         System.out.println("construct");
     }
 
-    @Override
+    @Nullable
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-        System.out.println("before initialization");
+        System.out.println("demo post process before");
         return bean;
     }
 
-    @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-        System.out.println("after initialization");
+        System.out.println("demo post process after");
         return bean;
     }
-
 }
+/*
+construct
+demo post process before
+demo post process after
+before close
+after close
+*/
 ```
 
 ### 原理
 
 原理那两个视频没看，记得补 `P16&17`
 
-```java
- 遍历得到容器中所有的BeanPostProcessor；挨个执行beforeInitialization
- 一旦返回null，跳出for循环，不会执行后面的BeanPostProcess.postProcessors
- BeanPostProcessor的大致执行流程
- populateBean(beanName, mbd, instanceWrapper);给bean进行属性赋值
+遍历得到容器中所有的 BeanPostProcessor；挨个执行 beforeInitialization
+
+一旦返回 null，跳出 for 循环，不会执行后面的 BeanPostProcess.postProcessors
+
+
+
+ BeanPostProcessor 的大致执行流程
+
+ populateBean(beanName, mbd, instanceWrapper); 给 bean 进行属性赋值
  initializeBean{
- applyBeanPostProcessorsBeforeInitialization//for循环得到全部beanPost
- invokeInitMethods(beanName, wrappedBean, mbd);//初始化方法
- applyBeanPostProcessorsAfterInitialization//for循环得到全部beanPost
+ applyBeanPostProcessorsBeforeInitialization //for 循环得到全部 beanPost
+ invokeInitMethods(beanName, wrappedBean, mbd); //初始化方法
+ applyBeanPostProcessorsAfterInitialization //for 循环得到全部 beanPost
 }
-```
 
 # 属性赋值
 
 ## @Value
 
-Value 的用法，请看源码注释！这个注解还可作用于字段上。
+Value 的用法，请看源码注释。这个注解还可作用于字段上。
 
 ```java
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER, ElementType.ANNOTATION_TYPE})
@@ -1612,7 +1356,7 @@ Value 的用法，请看源码注释！这个注解还可作用于字段上。
 @Documented
 public @interface Value {
 
-	/<b>
+	/**
 	 * The actual value expression such as <code>#{systemProperties.myProp}</code>
 	 * or property placeholder such as <code>${my.app.myProp}</code>.
 	 */
@@ -1620,7 +1364,7 @@ public @interface Value {
 }
 ```
 
-使用 `@Value` 赋值
+使用 @Value 赋值
 
 - 基本数值
 - 可以写 SpEL；#{}
@@ -1628,8 +1372,6 @@ public @interface Value {
 - pojo 对象
 
 ```java
-package org.example.pojo;
-
 import org.springframework.beans.factory.annotation.Value;
 
 public class Person {
@@ -1646,27 +1388,7 @@ public class Person {
     public Person(String name) {
         this.name = name;
     }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Integer getAge() {
-        return age;
-    }
-
-    public void setAge(Integer age) {
-        this.age = age;
-    }
-
-    @Override
-    public String toString() {
-        return "Person{" + "name='" + name + '\'' + ", age=" + age + '}';
-    }
+	// 省略 setter getter
 }
 ```
 
@@ -1689,7 +1411,7 @@ public class ValueConfig {
 
     public static void main(String[] args) {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(ValueConfig.class);
-        Person person = (Person) context.getBean("person");
+        Person person = context.getBean(Person.class);
         System.out.println(person);
     }
 }
@@ -1712,57 +1434,33 @@ person.name=zhangsan
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Repeatable(PropertySources.class)
+Given a file app.properties containing the key/value pair testbean.name=myTestBean, the following @Configuration class uses @PropertySource to contribute app.properties to the Environment's set of PropertySources.
+/**
+   @Configuration
+   @PropertySource("classpath:/com/myco/app.properties")
+   public class AppConfig {
+
+       @Autowired
+       Environment env;
+
+       @Bean
+       public TestBean testBean() {
+           TestBean testBean = new TestBean();
+           testBean.setName(env.getProperty("testbean.name"));
+           return testBean;
+       }
+   }
+**/
 public @interface PropertySource {
 
-	/<b>
-	 * Indicate the name of this property source. If omitted, the {@link #factory}
-	 * will generate a name based on the underlying resource (in the case of
-	 * {@link org.springframework.core.io.support.DefaultPropertySourceFactory}:
-	 * derived from the resource description through a corresponding name-less
-	 * {@link org.springframework.core.io.support.ResourcePropertySource} constructor).
-	 * @see org.springframework.core.env.PropertySource#getName()
-	 * @see org.springframework.core.io.Resource#getDescription()
-	 */
 	String name() default "";
 
-	/<b>
-	 * Indicate the resource location(s) of the properties file to be loaded.
-	 * <p>Both traditional and XML-based properties file formats are supported
-	 * &mdash; for example, {@code "classpath:/com/myco/app.properties"}
-	 * or {@code "file:/path/to/file.xml"}.
-	 * <p>Resource location wildcards (e.g. *&#42;/*.properties) are not permitted;
-	 * each location must evaluate to exactly one {@code .properties} or {@code .xml}
-	 * resource.
-	 * <p>${...} placeholders will be resolved against any/all property sources already
-	 * registered with the {@code Environment}. See {@linkplain PropertySource above}
-	 * for examples.
-	 * <p>Each location will be added to the enclosing {@code Environment} as its own
-	 * property source, and in the order declared.
-	 */
 	String[] value();
 
-	/<b>
-	 * Indicate if a failure to find a {@link #value property resource} should be
-	 * ignored.
-	 * <p>{@code true} is appropriate if the properties file is completely optional.
-	 * <p>Default is {@code false}.
-	 * @since 4.0
-	 */
 	boolean ignoreResourceNotFound() default false;
 
-	/<b>
-	 * A specific character encoding for the given resources, e.g. "UTF-8".
-	 * @since 4.3
-	 */
 	String encoding() default "";
 
-	/<b>
-	 * Specify a custom {@link PropertySourceFactory}, if any.
-	 * <p>By default, a default factory for standard resource files will be used.
-	 * @since 4.3
-	 * @see org.springframework.core.io.support.DefaultPropertySourceFactory
-	 * @see org.springframework.core.io.support.ResourcePropertySource
-	 */
 	Class<? extends PropertySourceFactory> factory() default PropertySourceFactory.class;
 }
 ```
@@ -1780,34 +1478,16 @@ public class Person {
     // 2 可以写SpEL， #{}，取出配置文件中的值
     @Value("${person.name}")
     private String name;
+
     @Value("#{20-5}")
     private Integer age;
 
-    public Person() {}
-
-    public Person(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Integer getAge() {
-        return age;
-    }
-
-    public void setAge(Integer age) {
-        this.age = age;
-    }
-
     @Override
     public String toString() {
-        return "Person{" + "name='" + name + '\'' + ", age=" + age + '}';
+        return "Person{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                '}';
     }
 }
 ```
@@ -1841,6 +1521,7 @@ public class PropertySourceConfig {
         System.out.println(person);
     }
 }
+// Person{name='kkx', age=15}
 ```
 
 # 自动装配
@@ -1849,19 +1530,21 @@ public class PropertySourceConfig {
 
 <b>Spring 利用依赖注入（DI），完成对 IOC 容器中各个组件的依赖关系赋值；</b>
 
-* 1、`@AutoWired`：自动注入【Spring 定义的】
-    * 默认按照类型去容器中找对应的组件 `applicationContext.getBean(BookService.class)`，找到就赋值
-    * 如果找到相同类型的组件，再将属性的名称作为组件的id去容器中查找 `applicationContext.getBean("bookDao")`
-* 2、`@Qualifier("bookDao")`：使用该注解来指定需要装配的组件的 id，而不是使用属性名
-* 3、自动装配默认一定要将属性赋值好，没有就会报错，可通过在 `Autowire` 的注解中将 required=false 来使该配置设置为非必需
-* 4、`@Primary`：让 Spring 进行自动装配的时候，默认使用首选的 bean, 也可以继续使用 @Qualifier 来指定需要装配的 bean
+1️⃣@AutoWired：自动注入【Spring 定义的】
+
+* 默认按照类型去容器中找对应的组件 applicationContext.getBean(BookService.class)，找到就赋值
+* 如果找到相同类型的组件，再将属性的名称作为组件的 id 去容器中查找 applicationContext.getBean("bookDao")
+
+2️⃣@Qualifier("bookDao")：使用该注解来指定需要装配的组件的 id，而不是使用属性名
+
+3️⃣自动装配默认一定要将属性赋值好，没有就会报错，可通过在 Autowire 的注解中将 required=false 来使该配置设置为非必需
+
+4️⃣@Primary：让 Spring 进行自动装配的时候，默认使用首选的 bean, 也可以继续使用 @Qualifier 来指定需要装配的 bean
 
 <b>Spring 还支持使用 @Resource（JSR250）和 @Inject（JSR330）【Java 规范】</b>
 
- * @Resource：
-     *              可以和 `@Autowired` 一样实现自动装配功能；默认是按照组件名称进行装配的；没有能支持 `@Primary` 的功能以及 `@Autowired（required=false）`的功能
- * @Inject（需要导入依赖）：
-     *              导入 `javax.inject` 的包，和 `Autowired` 的功能一样，没有 required=false 的功能
+ * @Resource：可以和 @Autowired 一样实现自动装配功能；默认是按照组件名称进行装配的；没有能支持 @Primary 的功能以及 @Autowired(required=false) 的功能
+ * @Inject（需要导入依赖）：导入 javax.inject 的包，和 Autowired 的功能一样，没有 required=false 的功能
 
 ## @Autowired
 
@@ -1869,8 +1552,8 @@ public class PropertySourceConfig {
 
 <span style="color:red">以前常见的一个错误，如果是按接口注入，找到了很多相同类型的组件，且属性名查找失败，则会提示 NoUniqueBeanDefinitionException</span>
 
-- `@Autowired`
-- `@Autowired(required=false)` 能装配上就装，不能就不装
+- @Autowired
+- @Autowired(required=false) 能装配上就装，不能就不装
 
 ```java
 @Configuration
@@ -1941,13 +1624,13 @@ class Books {
 
 @Inject Autowired 的功能一样，没有 required=false 的功能，支持 @Primary，但是没有 required=false 的功能
 
-## @Autowired还是JSRxxx
+<b>@Autowired 还是 JSR</b>
 
-JSRxx 是会被其他 IOC 框架支持的，使用 JSR 的，脱离了 Spring，换其他 IOC 框架也可。（JSR 是规范！！）
+JSR 是会被其他 IOC 框架支持的，使用 JSR 的，脱离了 Spring，换其他 IOC 框架也可。
 
 ## 自动装配功能原理
 
-`AutowiredAnnotationBeanPostProcessor` 解析完成自动装配功能
+AutowiredAnnotationBeanPostProcessor 解析完成自动装配功能
 
 - AutowiredAnnotationBeanProcessor 类
 
@@ -1973,18 +1656,19 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 
 ### 方法
 
-`@Autowired`：构造器，参数，方法，属性
+<b>@Autowired：构造器，参数，方法，属性</b>
 
-- <b>标注在方法位置：</b>标注在方法，Spring 容器创建当前对象，就会调用方法，完成赋值，方法使用的参数，自定义类型的值从 IOC 容器中获取, @Bean 标注的方法创建对象的时侯，方法参数的值默认从 IOC 容器中获取，默认不写 Autowired，效果是一样的。
+1️⃣<b>标注在方法位置：</b>标注在方法，Spring 容器创建当前对象，就会调用方法，完成赋值。方法使用的参数，自定义类型的值从 IOC 容器中获取，@Bean 标注的方法创建对象的时侯，方法参数的值默认从 IOC 容器中获取，默认不写 Autowired，效果是一样的。
 
- *        <b>标注在构造器位置：</b>默认加在 IOC 容器中的组件，容器启动会调用无参构造器创建对象，再进行初始化赋值等操作。标注在构造器上可以默认调用该方法，方法中用的参数同样从 IOC 容器中获取，如果容器只有一个有参构造器，这个有参构造器的 Autowired 可以省略，参数位置的组件还是可以自动从容器中获取
- *        <b>标注在参数位置：</b>从 IOC 容器中获取参数组件的值
+2️⃣<b>标注在构造器位置：</b>默认加在 IOC 容器中的组件，容器启动会调用无参构造器创建对象，再进行初始化赋值等操作。标注在构造器上可以默认调用该方法，方法中用的参数同样从 IOC 容器中获取，如果容器只有一个有参构造器，这个有参构造器的 Autowired 可以省略，参数位置的组件还是可以自动从容器中获取
+
+3️⃣<b>标注在参数位置：</b>从 IOC 容器中获取参数组件的值
 
 ### 构造器
 
 @Component 注解。
 
-默认再加载 IOC 容器中的组件，容器启动会调用无参构造器创建对象，再进行初始化赋值等操作。
+默认在加载 IOC 容器中的组件，容器启动会调用无参构造器创建对象，再进行初始化赋值等操作。
 
 如果当前类只有一个有参构造器，那么 Autowired 是可以省略的。@Bean 注入，若只有一个有参构造则也是可以省略的。
 
@@ -2015,49 +1699,43 @@ P23 Spring 注解驱动
 
 ### 概述
 
-自定义组件想要使用 Spring 容器底层的一些组件（ApplicationContext，BeanFactory，xxx）
-
-只需要让自定义组件实现 xxxAware 接口：在创建对象的时候，会调用接口规定的方法注入相关组件
-
-基本 Demo
+自定义组件想要使用 Spring 容器底层的一些组件时（如：ApplicationContext，BeanFactory，xxx），只需要让自定义组件实现 xxxAware 接口。在创建对象的时候，会调用xxxAware 接口中规定的方法注入相关组件。
 
 ```java
-package org.example.configuration.automatically;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 @Configuration
-@ComponentScan(basePackages = "org.example.configuration.automatically")
 public class AwareConfig {
+
+    @Bean
+    public Dog dog() {
+        return new Dog();
+    }
 
     public static void main(String[] args) {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AwareConfig.class);
         Dog bean = context.getBean(Dog.class);
-//        context.close();
+        context.close();
     }
 }
 
-@Component
 class Dog implements ApplicationContextAware {
 
     private ApplicationContext context;
 
-    /**
-     * 在 IOC 创建启动 dog 对象时，这个方法会被调用
-     */
+    // 在 dog 对象创建后，这个方法会被调用，为 Dog 对象注入 context 组件。当然，你直接使用 @Autowired 
     @Override
     public void setApplicationContext(ApplicationContext context) throws BeansException {
         this.context = context;
-        System.out.println("context hashcode is" + context);
+        System.out.println("context hashcode is " + context);
     }
 
     public Dog() {
@@ -2078,16 +1756,21 @@ class Dog implements ApplicationContextAware {
 
 ### 常用的Aware接口
 
-- 1、`ApplicationContextAware` 设置 ApplicationContext 对象
-- 2、`BeanNameAware` 设置 BeanName
-- 3、`EmbeddedValueResolverAware` 解析字符用
-- 4、字符串解析，如解析 `#{} ${}`，表达式解析？【占位符解析】
-    - `${}`取出环境变量中的值。`#{}` Spring 的表达式语言
-- 使用 `xxxProcessor `进行处理的，每个 `xxxAware` 都有对应的 `xxxProcessor`，
-    - 利用后置处理器，判断这个 Bean。是这个 Aware 接口，然后把组件传过来。
+1️⃣ApplicationContextAware 设置 ApplicationContext 对象
+
+2️⃣BeanNameAware 设置 BeanName
+
+3️⃣EmbeddedValueResolverAware 解析字符用
+
+- 字符串解析，如解析 `#{} ${}`，表达式解析？【占位符解析】
+- `${}`取出环境变量中的值。`#{}` Spring 的表达式语言
+
+4️⃣使用 xxxProcessor 进行处理的，每个 xxxAware 都有对应的 xxxProcessor
+
+- 利用后置处理器，判断这个 Bean。是这个 Aware 接口，然后把组件传过来。
 
 ```java
-package org.example.configuration.automatically;
+package cn.study.ioc.aware;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanNameAware;
@@ -2095,25 +1778,31 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.EmbeddedValueResolverAware;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringValueResolver;
 
-/**
- * 常用的Aware接口
- */
 @Configuration
-@ComponentScan(basePackages = "org.example.configuration.automatically")
 public class AwareCommonConfig {
+
+    @Bean
+    public AwareCommonDemo get() {
+        return new AwareCommonDemo();
+    }
+
     public static void main(String[] args) {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AwareCommonConfig.class);
         AwareCommonDemo bean = context.getBean(AwareCommonDemo.class);
         System.out.println(bean);
     }
+    /*
+    setBeanName is get
+    setEmbeddedValueResolver is os.name is Windows 10 Spring EL 7
+    setApplicationContext org.springframework.context.annotation.AnnotationConfigApplicationContext@60c6f5b, started on Sat May 28 21:34:02 CST 2022
+    cn.study.ioc.aware.AwareCommonDemo@2657d4dd
+    */
 }
 
-@Component
 class AwareCommonDemo implements ApplicationContextAware, BeanNameAware, EmbeddedValueResolverAware {
     private ApplicationContext context;
 
@@ -2159,9 +1848,7 @@ class AwareCommonDemo implements ApplicationContextAware, BeanNameAware, Embedde
 @Conditional(ProfileCondition.class)
 public @interface Profile {
 
-	/**
-	 * The set of profiles for which the annotated component should be registered.
-	 */
+	// The set of profiles for which the annotated component should be registered.
 	String[] value();
 }
 ```
@@ -2260,7 +1947,7 @@ class ProfileDemo implements EmbeddedValueResolverAware {
 }
 ```
 
-- <b>激活环境后bean才有效。如何激活？</b>
+<b>激活环境后 bean 才有效。如何激活？</b>
 
 - 1、使用命令行动态参数：在虚拟机参数位置加载 `-Dspring.profiles.active=test`
 
@@ -2359,7 +2046,7 @@ class ProfileDemo implements EmbeddedValueResolverAware {
             }
         }
         ```
-    
+
 
 # 带泛型的DI
 
@@ -2419,7 +2106,7 @@ obj.getClass.getGeneriSuperclass()
 
 ## 其他
 
-IOC是一个容器，棒我们管理所有的组件
+IOC 是一个容器，棒我们管理所有的组件
 
 1️⃣依赖注入：@Autowired 自动赋值
 
@@ -2443,8 +2130,6 @@ IOC是一个容器，棒我们管理所有的组件
 
 ​	-  看方法注释
 
-学到的一点：1）规范注释；2）规范方法和类名
-
 9️⃣创建 Java 对象做了那些事？
 
 ​	- 实例化：在堆空间中申请一块空间，对象的属性值都是默认的。
@@ -2461,7 +2146,7 @@ AOP 采取横向抽取机制，将分散在各个方法中的重复代码提取�
 
 <b>PS：AOP 是横向抽取机制，OOP 是父子关系的纵向的重用。</b>
 
-<div><img src="img/spring/aop.jpg"></div>
+<div align="center"><img src="img/spring/aop.jpg"></div>
 
 ## 概述
 
@@ -3017,11 +2702,6 @@ package org.springframework.context.annotation;
  * Registers an {@link org.springframework.aop.aspectj.annotation.AnnotationAwareAspectJAutoProxyCreator
  * AnnotationAwareAspectJAutoProxyCreator} against the current {@link BeanDefinitionRegistry}
  * as appropriate based on a given @{@link EnableAspectJAutoProxy} annotation.
- *
- * @author Chris Beams
- * @author Juergen Hoeller
- * @since 3.1
- * @see EnableAspectJAutoProxy
  */
 class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
@@ -3034,7 +2714,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 	public void registerBeanDefinitions(
 			AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 
-// 注册这样一个组件，如果需要的话。我们点进去看一下。
+		// 注册这样一个组件，如果需要的话。我们点进去看一下。
 		AopConfigUtils.registerAspectJAnnotationAutoProxyCreatorIfNecessary(registry);
 
 		AnnotationAttributes enableAspectJAutoProxy =
@@ -3703,7 +3383,7 @@ class MyApplicationEvent implements ApplicationListener<ApplicationEvent> {
 
 ## Servlet的运行时插件能力
 
-### 概述
+<b>概述</b>
 
 Shared libraries（共享库） / `runtimes pluggability`（运行时插件能力）
 
@@ -3716,7 +3396,7 @@ Shared libraries（共享库） / `runtimes pluggability`（运行时插件能�
     - `javax.servlet.ServletContainerInitializer` 是一个没有后缀的文件哦！
 - 文件的内容就是 `ServletContainerInitServletContainerIntiializer` 实现类的全类名
 
-<b>总结：</b>
+<b>总结</b>
 
 容器在启动应用的时候，会扫描当前应用每一个 jar 包里面 `META-INF/services/javax.servlet.ServletContainerInitializer` 指定的实现类，启动并运行这个实现类的方法；传入感兴趣的类型。`SpringMVC` 也是通过这种原理来实现的。
 
@@ -3768,7 +3448,7 @@ PS：Servlet，Filter，XxxListener 的实现类要是 public 修饰的！！！
 
 例子：你直接 `class Servlet xxx` 这样注册组件，添加范围路径访问的话，浏览器会显示 `no this function`！
 
-> `ServletContainerInitializer` 实现类
+> ServletContainerInitializer 实现类
 
 ```java
 import javax.servlet.*;
