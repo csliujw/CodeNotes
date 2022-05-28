@@ -1,214 +1,202 @@
-# 一、HTTP协议
-
-## 小知识
-
-> **扩展**
+# HTTP协议
 
 HTTP 协议是明文传输，不安全，不适合传输安全性要求高的文件，如密码
 
-HTTPS，对 HTTP 协议不安全的改进，叫安全套接字超文本传输协议，采用了基于 SSL(Secure Sockets Layer) 进行加密，安全性高！SSL 依靠证书来验证服务器的身份，并为浏览器和服务器之间的通信加密。
+HTTPS 是对 HTTP 协议不安全的改进，HTTPS 全称叫安全套接字超文本传输协议，采用了基于 SSL(Secure Sockets Layer) 进行加密，安全性高！SSL 依靠证书来验证服务器的身份，并为浏览器和服务器之间的通信加密。
 
-> HTTP和HTTPS的对比
+> <b>HTTP 和 HTTPS 的对比</b>
 
 - https 相对于 http 加入了 ssl 层，
-- 需要到ca申请收费的证书，SSL 证书需要钱，功能越强大的证书费用越高，个人网站、小网站没有必要一般不会用。
-- 安全但是耗时多，缓存不是很好，HTTPS 协议握手阶段比较费时，会使页面的加载时间延长近50%，增加10%到20%的耗电；
+- 需要到 ca 申请收费的证书，SSL 证书需要钱，功能越强大的证书费用越高，个人网站、小网站没有必要一般不会用。
+- 安全但是耗时多，缓存不是很好，HTTPS 协议握手阶段比较费时，会使页面的加载时间延长近 50%，增加 10% 到 20% 的耗电；
 - 注意兼容 http 和 https
 
-> **SSL**
+> <b>SSL</b>
 
-SSL 协议位于 [TCP/IP协议](https://baike.baidu.com/item/TCP%2FIP协议) 与各种[应用层](https://baike.baidu.com/item/应用层)协议之间，为[数据通讯](https://baike.baidu.com/item/数据通讯)提供安全支持。SSL协议可分为两层： SSL记录协议（SSL Record Protocol）：它建立在可靠的[传输协议](https://baike.baidu.com/item/传输协议)（如TCP）之上，为高层协议提供[数据封装](https://baike.baidu.com/item/数据封装)、压缩、加密等基本功能的支持。 SSL[握手协议](https://baike.baidu.com/item/握手协议)（SSL Handshake Protocol）：它建立在SSL记录协议之上，用于在实际的数据传输开始前，通讯双方进行[身份认证](https://baike.baidu.com/item/身份认证)、协商[加密算法](https://baike.baidu.com/item/加密算法)、交换加密[密钥](https://baike.baidu.com/item/密钥)等。
+SSL 协议位于 [TCP/IP协议](https://baike.baidu.com/item/TCP%2FIP协议) 与各种[应用层](https://baike.baidu.com/item/应用层)协议之间，为[数据通讯](https://baike.baidu.com/item/数据通讯)提供安全支持。SSL 协议可分为两层： SSL 记录协议（SSL Record Protocol）：它建立在可靠的[传输协议](https://baike.baidu.com/item/传输协议)（如TCP）之上，为高层协议提供[数据封装](https://baike.baidu.com/item/数据封装)、压缩、加密等基本功能的支持。 SSL [握手协议](https://baike.baidu.com/item/握手协议)（SSL Handshake Protocol）：它建立在 SSL 记录协议之上，用于在实际的数据传输开始前，通讯双方进行[身份认证](https://baike.baidu.com/item/身份认证)、协商[加密算法](https://baike.baidu.com/item/加密算法)、交换加密[密钥](https://baike.baidu.com/item/密钥)等。
 
-## 1.1 基本知识
+## 基本知识
 
-> **概念：Hyper Text Transfer Protocol 超文本传输协议**
+概念：Hyper Text Transfer Protocol 超文本传输协议
 
-> **传输协议：定义了，客户端和服务器端通信时，发送数据的格式**
+传输协议：定义了，客户端和服务器端通信时，发送数据的格式
 
-- **基于TCP/IP的高级协议**
-- **默认端口号:80**
-  - 常见端口8080 tomcat端口
-  - 3306 `MySQL`端口
-  - 6379 `Redis`端口
+- 基于 TCP/IP 的高级协议
+- 默认端口号 80
+  - tomcat 端口 8080 
+  - MySQL 端口 3306 
+  - Redis 端口 6379 
   - 1521 oracle端口
-- **基于请求/响应模型的：一次请求对应一次响应**
-  - tomcat采用的`NIO`，一次请求对应一个新的线程
-- **无状态的：每次请求之间相互独立，不能交互数据**
-- **历史版本**
+- 基于请求/响应模型的：一次请求对应一次响应
+  - 较高版本的 tomcat 采用的 NIO，一次请求对应一个新的线程
+- 无状态的：每次请求之间相互独立，不能交互数据
+- 历史版本
   - 1.0：每一次请求响应都会建立新的连接
   - 1.1：复用连接
 
-## 1.2 请求消息数据格式
+## 请求消息数据格式
 
-### 1.2.1 请求行
+### 请求行
 
-- 请求方式 请求url 请求协议/版本
+- 请求方式 请求 url 请求协议/版本
   - GET /login.html	HTTP/1.1
 
-- HTTP协议有7种请求方式，常用的有2种
+- HTTP 协议有 7 种请求方式，常用的有 2 种
   - GET：请求参数在请求行中，在 url 后；请求的 url 长度有限制的；不太安全。
   - POST：请求参数在请求体中；请求的 url 长度没有限制的；相对安全。
 
-### 1.2.2 请求头
+### 请求头
 
-> **客户端浏览器告诉服务器一些信息**，格式==请求头名称: 请求头值==
+请求头就是客户端浏览器告诉服务器一些信息，格式==>请求头名称: 请求头值
 
-- 常见的请求头：
-  - User-Agent：浏览器告诉服务器，我访问你使用的浏览器的版本信息；可以在服务器端获取该头的信息，解决浏览器的兼容性问题。
-  - Referer：http://localhost/login.html，告诉服务器，我(当前请求)从哪里来？
-    - 可以防盗链
-    - 可以进行统计工作
+常见的请求头：
+- User-Agent：浏览器告诉服务器，我访问你使用的浏览器的版本信息；可以在服务器端获取该头的信息，解决浏览器的兼容性问题。
+- Referer：http://localhost/login.html，告诉服务器，我(当前请求)从哪里来？
+  - 可以防盗链
+  - 可以进行统计工作
 
-### 1.2.3 请求空行
+### 请求空行
 
-空行，就是用于分割POST请求的请求头，和请求体的。
+空行，用于分割 POST 请求的请求头，和请求体的。
 
 ### 1.2.4 请求体(正文)：
 
-封装POST请求消息的请求参数的
+封装 POST 请求消息的请求参数的
 
 字符格式
 
 ```http
 请求方式 请求的url      协议版本
 POST    /login.html	  HTTP/1.1
-
 // 主机名称
 Host: localhost
-
 // 浏览器信息
 User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:60.0) Gecko/20100101 Firefox/60.0
-
 // 可接收的文件格式
 Accept:text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
-
 // 可接收的语言
 Accept-Language: zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2
-
 Accept-Encoding: gzip, deflate
-
 Referer: http://localhost/login.html
-
 Connection: keep-alive
-
 Upgrade-Insecure-Requests: 1
-
 username=zhangsan	
 ```
 
-## 1.3 响应消息数据格式
+## 响应消息数据格式
 
-> **响应消息：服务器端发送给客户端的数据**
+响应消息：服务器端发送给客户端的数据
 
-### 1.3.1 响应消息基础知识
+### 响应消息基础知识
 
 * 数据格式：
 * 响应行
-	* 组成：协议/版本 响应状态码 状态码描述 如HTTP/1.1 200 Ok
+	* 组成：协议/版本 响应状态码 状态码描述 如 HTTP/1.1   200   Ok
 	* 响应状态码：服务器告诉客户端浏览器本次请求和响应的一个状态。
-	* 状态码都是3位数字 
+	* 状态码都是 3 位数字 
 
-- **状态码分类**
-  - 1xx：服务器就收客户端消息，但没有接受完成，等待一段时间后，发送1xx多状态码
+- 状态码分类
+  - 1xx：服务器就收客户端消息，但没有接受完成，等待一段时间后，发送 1xx 多状态码
   - 2xx：成功。代表：200
   - 3xx：重定向。代表：302(重定向)，304(访问缓存)
   - 4xx：客户端错误。
   - 5xx：服务器端错误。
 
-* **典型状态码代表**：
+* <b>典型状态码代表</b>：
 	* 404：请求路径没有对应的资源）
-	* 405：请求方式没有对应的doXxx方法
+	* 405：请求方式没有对应的 doXxx 方法
 	* 500：服务器内部出现异常
 	* 302：重定向
 	* 304：访问缓存
 
-----
+### 常见响应消息
 
-### 1.3.2 常见响应消息
+> 格式==>头名称： 值
 
-> 格式：头名称： 值
+- Content-Type：服务器告诉客户端本次响应体数据格式以及编码格式
 
-- **Content-Type：**服务器告诉客户端本次响应体数据格式以及编码格式
-
-- **Content-disposition：**服务器告诉客户端以什么格式打开响应体数据
-
-  - in-line:默认值,在当前页面内打开【值】
+- Content-disposition：服务器告诉客户端以什么格式打开响应体数据
+  - in-line：默认值，在当前页面内打开【值】
   - attachment;filename=xxx：以附件形式打开响应体。文件下载【值】
-
+  
 - 响应空行
 
-- **响应体:**传输的数据
+- 响应体：传输的数据
 
-- **响应字符串格式**
+- 响应字符串格式
 
-  HTTP/1.1 200 OK
-  Content-Type: text/html;charset=UTF-8
-  Content-Length: 101
-  Date: Wed, 06 Jun 2018 07:08:42 GMT
 
-  <html>  
+```html
+HTTP/1.1 200 OK
+Content-Type: text/html;charset=UTF-8
+Content-Length: 101
+Date: Wed, 06 Jun 2018 07:08:42 GMT
 
-  <body>
-    hello , response
-   </body>
-  </html>
+<html>  
+<body>
+  hello , response
+ </body>
+</html>
+```
 
-----
+# tomcat基础知识
 
-# 二、tomcat基础知识
+- web 相关概念
+- web 服务器软件：Tomcat
+- Servlet 入门学习
 
-- web相关概念
-- web服务器软件：Tomcat
-- Servlet入门学习
+## web相关概念
 
-## 2.1 web相关概念
+<b>软件架构</b>
 
-- **软件架构**
-  - **C/S：客户端/服务器端；**一般主要的计算由客户端自行完成，服务器用作数据交互，存储客户端计算出的数据结果。
-  - **B/S**：**浏览器/服务器端**：服务器承担主要的计算。
-- **资源分类**
-  - **静态资源**：所有用户访问后，得到的结果都是一样的，称为静态资源.静态资源可以直接被浏览器解析【如：html，css，js】
-  - **动态资源**：每个用户访问相同资源后，得到的结果可能不一样。称为动态资源。动态资源被访问后，需要先转换为静态资源，在返回给浏览器【如：servlet/jsp，php】
-- **网络通信三要素**
-  - IP：电子设备(计算机)在网络中的唯一标识。
-  - 端口：应用程序在计算机中的唯一标识。 0~65536
-  - 传输协议：规定了数据传输的规则
-    - 基础协议：**TCP**【安全协议，三次握手，速度稍慢】**UDP**：【不安全协议。 速度快】
+- C/S：客户端/服务器端；一般主要的计算由客户端自行完成，服务器用作数据交互，存储客户端计算出的数据结果。
+- B/S**：**浏览器/服务器端：服务器承担主要的计算。
 
-## 2.2 web服务器软件
+<b>资源分类</b>
+
+- 静态资源：所有用户访问后，得到的结果都是一样的，称为静态资源.静态资源可以直接被浏览器解析【如：html，css，js】
+- 动态资源：每个用户访问相同资源后，得到的结果可能不一样。称为动态资源。动态资源被访问后，需要先转换为静态资源，在返回给浏览器【如：servlet/jsp，php】
+
+<b>网络通信三要素</b>
+
+- IP：电子设备(计算机)在网络中的唯一标识。
+- 端口：应用程序在计算机中的唯一标识。 0~65536
+- 传输协议：规定了数据传输的规则；基础协议，TCP【可靠传输协议，三次握手，速度稍慢】UDP【不可靠传输协议。 速度快】
+
+## web服务器软件
 
 - 服务器：安装了服务器软件的计算机
 - 服务器软件：接收用户的请求，处理请求，做出响应。
-- web服务器软件：接收用户的请求，处理请求，做出响应。
-  - 在web服务器软件中，可以部署web项目，让用户通过浏览器来访问这些项目。
-- 常见的Java相关的web服务器软件：
-  - webLogic：oracle公司，大型的JavaEE服务器，支持所有的JavaEE规范，收费的。
-  - webSphere：IBM公司，大型的JavaEE服务器，支持所有的JavaEE规范，收费的。
-  - JBOSS：JBOSS公司的，大型的JavaEE服务器，支持所有的JavaEE规范，收费的。
-  - Tomcat：Apache基金组织，中小型的JavaEE服务器，仅仅支持少量的JavaEE规范servlet/jsp。开源的，**免费**的。
-- JavaEE：Java语言在企业级开发中使用的技术规范的总和，一共规定了13项大的规范
+- web 服务器软件：接收用户的请求，处理请求，做出响应。
+  - 在 web 服务器软件中，可以部署 web 项目，让用户通过浏览器来访问这些项目。
+- 常见的 Java 相关的 web 服务器软件：
+  - webLogic：oracle 公司，大型的 JavaEE 服务器，支持所有的 JavaEE 规范，收费的。
+  - webSphere：IBM 公司，大型的 JavaEE 服务器，支持所有的 JavaEE 规范，收费的。
+  - JBOSS：JBOSS 公司的，大型的 JavaEE 服务器，支持所有的 JavaEE 规范，收费的。
+  - Tomcat：Apache 基金组织，中小型的 JavaEE 服务器，仅仅支持少量的 JavaEE 规范 servlet/jsp。开源的，免费。
+- JavaEE：Java 语言在企业级开发中使用的技术规范的总和，一共规定了 13 项大的规范
 
-## 2.3 Tomcat的安装启动
+## Tomcat的安装启动
 
-### 2.3.1 安装
+### 安装
 
 - 下载：http://tomcat.apache.org/
 - 安装：解压压缩包即可。
 - 卸载：删除目录就行了
 - 启动：
   - bin/startup.bat ,双击运行该文件即可
-  - 访问：浏览器输入：http://localhost:8080 回车访问自己
-  - http://别人的ip:8080 访问别人
+  - 访问：浏览器输入，http://localhost:8080 回车访问自己
+  - http://别人的 ip:8080 访问别人
 
 ### 2.3.2 可能遇到的问题：
 
 - 黑窗口一闪而过：
 
-  - 原因： 没有正确配置JAVA_HOME环境变量，配置下JAVA_HOME即可。
+  - 原因： 没有正确配置 JAVA_HOME 环境变量，配置下 JAVA_HOME 即可。
 
 - 启动报错：
 
-  - 暴力：找到占用的端口号，并且找到对应的进程，杀死该进程【Windows下用 netstat -ano】
+  - 暴力：找到占用的端口号，并且找到对应的进程，杀死该进程【Windows 下用 netstat -ano】
 
   - 温柔：修改自身的端口号
 
@@ -217,83 +205,76 @@ username=zhangsan
     <Connector port="8888" protocol="HTTP/1.1"
     		               connectionTimeout="20000"
     		               redirectPort="8445" />
-    
     ```
+    
 
-    一般会将tomcat的默认端口号修改为80。80端口号是HTTP协议的默认端口号。
-    好处：在访问时，就不用输入端口号
+一般会将 tomcat 的默认端口号修改为 80。80 端口号是 HTTP 协议的默认端口号。这样在访问时，就不用输入端口号
 
-### 2.3.3 关闭
+### 关闭
 
-- 正常关闭
-  - bin/shutdown.bat
-  - ctrl+c
-- 强制关闭
-  - 点击启动窗口的==×==
+- 正常关闭：bin/shutdown.bat 或 ctrl+c
+- 强制关闭：点击启动窗口的❌
 
-## 2.4 部署项目
+## 部署项目
 
-- **部署方式**
+- 部署方式
 
-  - 1.直接将项目放到webapps目录下即可。
-  - 2.配置conf/server.xml文件
-  - 3.在conf\Catalina\localhost创建任意名称的xml文件。在文件中编写
+  - 1.直接将项目放到 webapps 目录下即可。
+  - 2.配置 conf/server.xml 文件
+  - 3.在 conf\Catalina\localhost 创建任意名称的 xml 文件。在文件中编写
 
-- **webapps 部署方式**
+- webapps 部署方式
 
-  - 直接将项目放到webapps目录下
+  - 直接将项目放到 webapps 目录下
   - /hello：项目的访问路径会被映射为虚拟目录
-  - 简化部署：将项目打成一个war包，再将war包放置到webapps目录下。war包会被自动解压。【war包的压缩方式和zip的压缩方式一样】
+  - 简化部署：将项目打成一个 war 包，再将 war 包放置到 webapps 目录下。war 包会被自动解压。【war 包的压缩方式和 zip 的压缩方式一样】
 
-- **conf/server.xml部署方式**
+- conf/server.xml 部署方式
 
-  - 在<Host>标签体中配置
+  - 在 \<Host\> 标签体中配置
 
-    <Context docBase="D:\hello" path="/hehe" />
+    \<Context docBase="D:\hello" path="/hehe" />
 
     docBase：项目存放的路径
 
     path：虚拟目录
 
-- **conf\Catalina\localhost配置方式**
+- conf\Catalina\localhost 配置方式
 
-  - 在conf\Catalina\localhost创建任意名称的xml文件。在文件中编写<Context docBase="D:\hello" />
+  - 在 conf\Catalina\localhost 创建任意名称的 xml 文件。在文件中编写 \<Context docBase="D:\hello" />
   - D:\hello 是项目的绝对路径
-  - 虚拟目录：xml文件的名称。如xml名称为demo，那么虚拟目录就是`localhost:8080/demo`
+  - 虚拟目录：xml 文件的名称。如 xml 名称为 demo，那么虚拟目录就是 `localhost:8080/demo`
 
-- **静态项目和动态项目：**
+> Web 项目的目录结构
+>
+> |-- 项目的根目录
+>
+> ​	|-- WEB-INF 目录：WEB-INF 下的文件无法通过 URL 直接访问
+>
+> ​		|-- web.xml：web 项目的核心配置文件
+>
+> ​		|-- classes 目录：放置字节码文件的目录
+>
+> ​		|-- lib 目录：放置依赖的 jar 包
 
-【java动态项目的目录结构】
 
-|-- 项目的根目录
 
-​	|-- WEB-INF目录：WEB-INF下的文件无法通过URL直接访问
+> <b>URL和URI</b>
+>
+> - URL：统一资源定位符，用于定位这个资源在哪里。
+> - URI：统一资源标识符，标识这个资源唯一。
 
-​		|-- web.xml：web项目的核心配置文件
+# Servlet
 
-​		|-- classes目录：放置字节码文件的目录
+> Servlet：server applet。运行在服务器端的小程序。
 
-​		|-- lib目录：放置依赖的jar包
+Servlet 就是一个接口，定义了 Java 类被浏览器访问到( tomcat 识别)的规则。
 
-> **URL和URI**
+Java 定制规范，提供接口，其他厂商根据规范和接口进行实际的功能实现。
 
-URL：统一资源定位符，用于定位这个资源在哪里。
+## Servlet的配置
 
-URI：统一资源标识符，标识这个资源唯一。
-
-----
-
-# 三、Servlet
-
-> **Servlet：server applet**。运行在服务器端的小程序。
-
-Servlet 就是一个接口，定义了Java类被浏览器访问到(tomcat识别)的规则。
-
-Java定制规范，提供接口，其他厂商根据规范和接口进行实际的功能实现。
-
-## 3.1 Servlet的配置
-
-> **XML和注解不能同时配置一个`Servlet`，不过如果配置的`URL`不一样，那么就没事，是可以的！**
+> XML 和注解不能同时配置一个 Servlet，不过如果配置的 URL 不一样，那么就没事，是可以的！
 
 ```xml
 在web.xml中配置：[xml解析，servlet-name一样的进行匹配！]
@@ -309,67 +290,56 @@ Java定制规范，提供接口，其他厂商根据规范和接口进行实际�
 </servlet-mapping>
 ```
 
-## 3.2 Servlet执行原理
+## Servlet执行原理
 
-- 当服务器接受到客户端浏览器的请求后，会解析请求URL路径，获取访问的`Servlet`的资源路径
-- 查找`web.xml`文件，是否有对应的<url-pattern>标签体内容。
-- 如果有，则在找到对应的<servlet-class>全类名
-- tomcat会将==字节码文件==加载进内存，并且创建其对象
-- 调用其方法
-  - `servlet`的`service`方法是一定会调用的，
+- 当服务器接受到客户端浏览器的请求后，会解析请求 URL 路径，获取访问的 Servlet 的资源路径
+- 查找 web.xml 文件，是否有对应的 \<url-pattern\> 标签体内容。
+- 如果有，则在找到对应的 \<servlet-class\> 全类名
+- tomcat 会将字节码文件加载进内存，并且创建其对象
+- 调用该对象的 service 方法
 
-## 3.3 Servlet生命周期方法
+## Servlet生命周期方法
 
-- 被创建：执行init方法，只执行一次
+- 创建 Servlet 对象时会执行 init 方法，且只执行一次
 
-  - 默认情况下，第一次被访问时，Servlet被创建
+  - 默认情况下，第一次被访问时，Servlet 被创建
 
-  - 可以配置执行Servlet的创建时机。
+  - 可以配置执行 Servlet 的创建时机。
 
     ```xml
-    在<servlet>标签下配置
-    第一次被访问时，创建
+    在<servlet>标签下配置 第一次被访问时，创建
     <load-on-startup>的值为负数
     
     在服务器启动时，创建
     <load-on-startup>的值为0或正整数
     ```
     
-    
 
-- 初始化：init方法，只执行一次，说明一个Servlet在内存中只存在一个对象，Servlet是单例的
+- <b>初始化：会执行 init 方法，只执行一次，说明一个 Servlet 在内存中只存在一个对象，Servlet 是单例的</b>
+
   - 多个用户同时访问时，可能存在线程安全问题。
-  - 解决：尽量不要在Servlet中定义成员变量。即使定义了成员变量，也不要对修改值
+  - 解决：尽量不要在 Servlet 中定义成员变量。即使定义了成员变量，也不要对修改值
 
-----
+- 提供服务：每次访问 Servlet 时，service 方法都会被调用一次。
 
-- 提供服务：执行service方法，执行多次
-  - 每次访问Servlet时，service方法都会被调用一次。
-
-----
-
-- 被销毁：执行destroy方法，只执行一次
-  - Servlet被销毁时执行。服务器关闭时，Servlet被销毁
-  - 只有服务器正常关闭时，才会执行destroy方法。
+- 被销毁：执行 destroy 方法，只执行一次
+  - Servlet 被销毁时执行。服务器关闭时，Servlet 被销毁
+  - 只有服务器正常关闭时，才会执行 destroy 方法。
   - destroy方法在Servlet被销毁之前执行，一般用于释放资源
 
-## 3.4 Servlet3.0
+## Servlet3.0
 
-> 优点：
+支持注解配置。可以不需要 web.xml 了。
 
-* 支持注解配置。可以不需要web.xml了。
-	
-* 步骤：
-	- 创建JavaEE项目，选择Servlet的版本3.0以上，可以不创建web.xml
-	
-	- 定义一个类，实现Servlet接口
-	
-	- 复写方法
-	
-	- 在类上使用@WebServlet注解，进行配置
-	
-	* @WebServlet("资源路径")`
-	  * **注意：name是指类的名称不是资源路径**
+- 创建 JavaEE 项目，选择 Servlet 的版本 3.0 以上，可以不创建 web.xml
+
+- 定义一个类，实现 Servlet 接口
+
+- 复写方法
+
+- 在类上使用 @WebServlet 注解，进行配置
+
+* @WebServlet("资源路径") 注意，name 是指类的名称不是资源路径
 
 
 ```java
@@ -380,7 +350,7 @@ public @interface WebServlet {
     //相当于<Servlet-name>
     String name() default "";
     
-	//代表urlPatterns()属性配置
+	//代表 urlPatterns() 属性配置
     String[] value() default {};
     
 	//相当于<url-pattern>
@@ -403,34 +373,34 @@ public @interface WebServlet {
 }
 ```
 
-> **IDEA与tomcat的相关配置**
+> <b>IDEA 与 tomcat 的相关配置</b>
 
-- IDEA会为每一个tomcat部署的项目单独建立一份配置文件
-- 工作空间项目和tomcat部署的web项目
-  - tomcat真正访问的是“tomcat部署的web项目”，"tomcat部署的web项目"对应着"工作空间项目" 的web目录下的所有资源
-  - `WEB-INF目录下的资源不能被浏览器直接访问。`
-- **WEB-INF目录下的资源不能被浏览器直接访问。**
+- IDEA 会为每一个 tomcat 部署的项目单独建立一份配置文件
+- 工作空间项目和 tomcat 部署的 web 项目
+  - tomcat 真正访问的是 “tomcat 部署的 web 项目”，"tomcat 部署的 web 项目"对应着"工作空间项目" 的 web 目录下的所有资源
+  - WEB-INF 目录下的资源不能被浏览器直接访问。
+- WEB-INF 目录下的资源不能被浏览器直接访问。
 
-## 3.5 Servlet继承关系
+## Servlet继承关系
 
-### 3.5.1 Servlet的体系结构	
+### Servlet的体系结构	
 ​	Servlet -- 接口
 ​		|
 ​	GenericServlet -- 抽象类
 ​		|
 ​	HttpServlet  -- 抽象类
 
-- GenericServlet：将Servlet接口中其他的方法做了默认空实现，只将service()方法作为抽象
-  - 将来定义Servlet类时，可以继承GenericServlet，实现service()方法即可
-- HttpServlet：对http协议的一种封装，简化操作
-  - 定义类，类继承于HttpServlet
-  - 覆写doGet/doPost方法
+- GenericServlet：将 Servlet 接口中其他的方法做了默认空实现，只将 service() 方法作为抽象
+  - 将来定义 Servlet 类时，可以继承 GenericServlet，实现 service() 方法即可
+- HttpServlet：对 http 协议的一种封装，简化操作
+  - 定义类，类继承于 HttpServlet
+  - 覆写 doGet/doPost 方法
 
-### 3.5.2 Servlet相关配置
+### Servlet相关配置
 
-- `urlpartten：Servlet访问路径`
+- urlpartten：Servlet 访问路径
 
-- 一个Servlet可以定义多个访问路径 ： 
+- 一个 Servlet 可以定义多个访问路径 ： 
   
 - `@WebServlet(urlPatterns={"/d4","/dd4","/ddd4"})`
   
@@ -438,7 +408,7 @@ public @interface WebServlet {
   - /xxx：路径匹配
   - /xxx/xxx:多层路径，目录结构
   - *.do：扩展名匹配
-  - **不能混合使用路径匹配和扩展名匹配。**
+  - <span style="color:red">不能混合使用路径匹配和扩展名匹配。</span>
 
   ```xml
   <!-- 合法 -->
@@ -468,6 +438,7 @@ public @interface WebServlet {
       <servlet-name>demo1</servlet-name>
       <servlet-class>cn.servlet</servlet-class>
   </servlet>
+  
   <!-- 不合法 -->
   <servlet-mapping>
       <servlet-name>demo1</servlet-name>
@@ -475,9 +446,8 @@ public @interface WebServlet {
   </servlet-mapping>
   ```
   
-  
 
-### 3.5.2 初始化资源配置
+### 初始化资源配置
 
 ```xml
 <servlet>
@@ -495,8 +465,6 @@ public @interface WebServlet {
 </servlet>
 ```
 
-
-
 ```java
 public void init(ServletConfig config){
 	super.init(config);
@@ -505,31 +473,30 @@ public void init(ServletConfig config){
 }
 ```
 
-## 3.6 Servlet配置一探究竟
+## Servlet配置一探究竟
 
-- xml配置方式测试
+- xml 配置方式测试
 
   - `/xxx`
   - `/xx/xx`
-  - `*.do` 匹配以 **.do**结尾的
+  - `*.do` 匹配以 <b>.do</b> 结尾的
   - / 不能省略
 - 注解配置方式测试
 
   - 路径写错会报错
-  - `WebServlet("/demo1")` 正确写法，不能省略/
-- ==注解和xml不能同给一个类，配置相同的名字，但是可以配置不同的名字。==**[同时书写下面的，不会报错]**
+  - `WebServlet("/demo1")` 正确写法，不能省略 /
+- 注解和 xml 不能同给一个类，配置相同的名字，但是可以配置不同的名字。[同时书写下面的，不会报错]
 
 ```java
 @WebServlet("/Servlet3")
 public class Servlet3 extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.getWriter().write("3");
-
     }
+}
 ```
 
 ```xml
@@ -544,71 +511,67 @@ public class Servlet3 extends HttpServlet {
 </servlet-mapping>
 ```
 
-----
+# Request&Response
 
-# 四、Request&Response
+## 基本原理
 
-## 4.1 基本原理
+- request 和 response 对象是由服务器创建的。
+- request 对象是来获取请求消息，而 response 对象是来设置响应消息
 
-- request和response对象是由服务器创建的。我们来使用它们
-- request对象是来获取请求消息，response对象是来设置响应消息
-
-----
-
-request对象继承体系结构：	
+request 对象继承体系结构：	
 	`ServletRequest`		--	接口
 		|	继承
 	`HttpServletRequest`	-- 接口
 		|	实现
 	`org.apache.catalina.connector.RequestFacade` 类(tomcat)
 
-----
-
-response对象继承体系结构：	
+response 对象继承体系结构：	
 	`ServletRequest`		--	接口
 		|	继承
 	`HttpServletResponse`   -- 接口
 		|	实现
 	`org.apache.catalina.connector.ResponseFacade` 类(tomcat)
 
-----
+## Request功能
 
-## 4.2 Request功能
-
-> 由web容器自动创建。每次web服务器接收到HTTP请求时，会自动创建request对象。web服务器处理HTTP请求，向客户端发送HTTP响应后，会自动销毁请求对象。保存在对象中的数据也就消失了。
+由 web 容器自动创建。每次 web 服务器接收到 HTTP 请求时，会自动创建 request 对象。web 服务器处理 HTTP 请求，向客户端发送 HTTP 响应后，会自动销毁请求对象。保存在对象中的数据也就消失了。
 
 总结：
 
-- 服务器接收到HTTP请求时创建request对象
-- 服务器发送HTTP响应结束后销毁request对象
-- request对象仅存活于一次请求转发
+- 服务器接收到 HTTP 请求时创建 request 对象
+- 服务器发送 HTTP 响应结束后销毁 request 对象
+- request 对象仅存活于一次请求转发，请求转发结束后，对象也就销毁了
 
-### 4.2.1 获取请求消息数据
+### 获取请求消息数据
 
 > 获取请求行数据
 
 - GET /day14/demo1?name=zhangsan HTTP/1.1
+- 方法
 
-- **方法**
-  - 获取请求方式 ：`String getMethod()  ` ==> GET
-  - 获取虚拟目录：`String getContextPath()`==> /day14
-  - 获取Servlet路径: `String getServletPath()`==> /demo1
-  - 获取get方式请求参数：`String getQueryString()`==> name=zhangsan
-  - 获取请求URI：/day14/demo1
-    - `String getRequestURI():`	/day14/demo1	
-    - `StringBuffer getRequestURL()`  :http://localhost/day14/demo1
-  - URL：统一资源定位符 [ 不单单定义资源，还定义了如何找资源] ： http://localhost/day14/demo1
-  - URI：统一资源标识符 [ 定位资源  ] : /day14/demo1	
-  - 获取协议及版本：`String getProtocol()`==>HTTP/1.1
-  - 获取客户机的IP地址：`String getRemoteAddr()`
+| 作用                  | 方法                                                   | 举例                                         |
+| --------------------- | ------------------------------------------------------ | -------------------------------------------- |
+| 获取请求方式          | String getMethod()                                     | GET                                          |
+| 获取虚拟目录          | String getContextPath()                                | /day14                                       |
+| 获取 Servlet 路径     | String getServletPath()                                | /demo1                                       |
+| 获取 get 方式请求参数 | String getQueryString()                                | name=zhangsan                                |
+| 获取请求 URI          | String getRequestURI()<br>StringBuffer getRequestURL() | /day14/demo1<br>http://localhost/day14/demo1 |
+| 获取协议及版本        | String getProtocol()                                   | HTTP/1.1                                     |
+| 获取客户机的 IP 地址  | String getRemoteAddr()                                 |                                              |
 
-----
+- URL：统一资源定位符 [ 不单单定义资源，还定义了如何找资源] ： http://localhost/day14/demo1
+- URI：统一资源标识符 [ 定位资源  ] : /day14/demo1	
 
 > 获取请求头数据
 
-- 方法:
-  - `String getHeader(String name):`  通过请求头的名称获取请求头的值
-  - `Enumeration<String> getHeaderNames():`  获取所有的请求头名称
+| 作用 | 方法 | 举例 |
+| ---- | ---- | ---- |
+|      |      |      |
+
+
+
+- `String getHeader(String name):`  通过请求头的名称获取请求头的值
+- `Enumeration<String> getHeaderNames():`  获取所有的请求头名称
 
 ----
 
