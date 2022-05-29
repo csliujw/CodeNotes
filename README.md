@@ -70,11 +70,7 @@
 
 - [IO模型](Netty/IO模型.md)
 - [NIO快速入门](Netty/NIO快速入门.md)
-- [Netty](Netty/Netty-00-quickstart.md)
-- [Netty-01-nio](Netty/Netty-01-nio.md)
-- [Netty-02-入门](Netty/Netty-02-入门.md)
-- [Netty-03-进阶](Netty/Netty-03-进阶.md)
-- [Netty-04-优化与源码](Netty/Netty-04-优化与源码.md)
+- [Netty](Netty/netty快速入门.md)
 
 ## ☕️框架
 
