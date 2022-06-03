@@ -4,16 +4,16 @@ JVM = <span style="color:green">**Java vritua Machine**</span>
 
 jdk中包含了jvm和“屏蔽操作系统差异的组件”
 
-- jvm各个操作系统之上是一致的
-- “屏蔽操作系统差异的组件：在各个PC上各不相同（回忆下载jdk，不同系统需要下载不同版本的jdk；**jdk不同，但是jdk提供的操作方式是一致的,屏蔽了操作系统之间的差异！JVM牛！**）
+- jvm 各个操作系统之上是一致的
+- “屏蔽操作系统差异的组件：在各个 PC 上各不相同（回忆下载 jdk，不同系统需要下载不同版本的jdk；<b>jdk 不同，但是 jdk 提供的操作方式是一致的,屏蔽了操作系统之间的差异！JVM 牛！</b>）
 
-<img src="jvm_image/1568186168727.png">
+<div align="center"><img src="jvm_image/1568186168727.png"></div>
 
 # 零零散散
 
 ## 对象内存布局
 
-HotSpot虚拟机中，对象在堆内存中的存储布局可划分为三部分：
+HotSpot 虚拟机中，对象在堆内存中的存储布局可划分为三部分：
 
 - 对象头（Header）
 - 实例数据（Instance Data）
@@ -25,22 +25,22 @@ HotSpot虚拟机中，对象在堆内存中的存储布局可划分为三部分�
 
 第一类：存储对象自身的运行时数据
 
-- 如HashCode、GC分代年龄、锁状态标志、线程持有的锁、偏向线程ID、偏向时间戳等。这部分数据在长度为32位和64位（未开启压缩指针）中分别位32个比特和64个比特，官方称之为“Mark Word”
-- 在32位的HotSpot虚拟机中，如对象未被同步锁锁定的状态下，mark word的32比特存储空间中的25比特存储HashCode，4bit存储分代年龄（最大15岁），2bit存储锁标志位，1bit固定为0.
+- 如 HashCode、GC 分代年龄、锁状态标志、线程持有的锁、偏向线程 ID、偏向时间戳等。这部分数据在长度为 32 位和 64 位（未开启压缩指针）中分别位 32 个比特和 64 个比特，官方称之为 “Mark Word”
+- 在 32 位的 HotSpot 虚拟机中，如对象未被同步锁锁定的状态下，mark word 的 32 比特存储空间中的 25 比特存储 HashCode，4bit 存储分代年龄（最大 15 岁），2bit 存储锁标志位，1bit 固定为 0.
 - 锁的标志位：
   - 01  未锁定
   - 00  轻量级锁定
   - 10  膨胀（重量级锁定）
-  - 11  GC标记
+  - 11  GC 标记
   - 01  可偏向 
 
 ## JVM堆内存相关
 
-Java堆的内存可能是规整的，也可能不是规整的。规整的堆，一般用指针碰撞式的分配方式（就是移动指针，分配合适的内存区域），不规整的就是用空闲列表法（熟悉吧！OS！）。
+Java 堆的内存可能是规整的，也可能不是规整的。规整的堆，一般用指针碰撞式的分配方式（就是移动指针，分配合适的内存区域），不规整的就是用空闲列表法（熟悉吧！OS！）。
 
-选择何种分配方式由Java堆是否规整决定。而Java堆是否规整又由所采用的垃圾收集器是否带有空间压缩整理（Compact）的能力决定。因此，当使用Serial、ParNew等带压缩整理过程的收集器时，系统采用的分配算法是指针碰撞，既简单又高效；而当使用CMS这种基于清除（Sweep）算法的收集器时，理论上[插图]就只能采用较为复杂的空闲列表来分配内存。
+选择何种分配方式由 Java 堆是否规整决定。而Java堆是否规整又由所采用的垃圾收集器是否带有空间压缩整理（Compact）的能力决定。因此，当使用 Serial、ParNew 等带压缩整理过程的收集器时，系统采用的分配算法是指针碰撞，既简单又高效；而当使用 CMS 这种基于清除（Sweep）算法的收集器时，理论上[插图]就只能采用较为复杂的空闲列表来分配内存。
 
-除如何划分可用空间之外，还有另外一个需要考虑的问题：对象创建在虚拟机中是非常频繁的行为，即使仅仅修改一个指针所指向的位置，在并发情况下也并不是线程安全的，可能出现正在给对象A分配内存，指针还没来得及修改，对象B又同时使用了原来的指针来分配内存的情况。解决这个问题有两种可选方案：一种是对分配内存空间的动作进行同步处理——实际上虚拟机是采用CAS配上失败重试的方式保证更新操作的原子性；另外一种是把内存分配的动作按照线程划分在不同的空间之中进行，即每个线程在Java堆中预先分配一小块内存，称为本地线程分配缓冲（Thread Local Allocation Buffer，TLAB），哪个线程要分配内存，就在哪个线程的本地缓冲区中分配，只有本地缓冲区用完了，分配新的缓存区时才需要同步锁定。虚拟机是否使用TLAB，可以通过-XX：+/-UseTLAB参数来设定。
+除如何划分可用空间之外，还有另外一个需要考虑的问题：对象创建在虚拟机中是非常频繁的行为，即使仅仅修改一个指针所指向的位置，在并发情况下也并不是线程安全的，可能出现正在给对象 A 分配内存，指针还没来得及修改，对象 B 又同时使用了原来的指针来分配内存的情况。解决这个问题有两种可选方案：一种是对分配内存空间的动作进行同步处理——实际上虚拟机是采用 CAS 配上失败重试的方式保证更新操作的原子性；另外一种是把内存分配的动作按照线程划分在不同的空间之中进行，即每个线程在 Java 堆中预先分配一小块内存，称为本地线程分配缓冲（Thread Local Allocation Buffer，TLAB），哪个线程要分配内存，就在哪个线程的本地缓冲区中分配，只有本地缓冲区用完了，分配新的缓存区时才需要同步锁定。虚拟机是否使用 TLAB，可以通过 -XX：+/-UseTLAB 参数来设定。
 
 # 垃圾回收算法
 
@@ -56,11 +56,11 @@ Java堆的内存可能是规整的，也可能不是规整的。规整的堆，�
 
 主流的商用程序语言（Java、C#）的内存管理用的都是可达性分析算法判断的对象是否存活。
 
-- 原理：从根结点“GC Roots”开始，根据引用关系向下搜索，搜索走过的路径称为“引用链”。如果从“GC Roots”到某一点不可达，则说明该对象不可能再被使用。
+- 原理：从根结点 “GC Roots” 开始，根据引用关系向下搜索，搜索走过的路径称为“引用链”。如果从 “GC Roots” 到某一点不可达，则说明该对象不可能再被使用。
 
     下图的 GC Roots 无法到达 obj5、6、7 所以 5 6 7 是可以被回收的~
 
-    <img src="jvm_image/jvm_gc.jpg" >
+    <div align="center"><img src="jvm_image/jvm_gc.jpg"></div>
 
 想深入的话，可能需要去看看专门讲垃圾回收算法的书籍。
 
@@ -68,13 +68,13 @@ Java堆的内存可能是规整的，也可能不是规整的。规整的堆，�
 
 方法区的 GC 性价比低，一般是不能回收到多少东西的。且方法区的回收条件很严格。
 
-**类的卸载条件相当苛刻：**
+<b>类的卸载条件相当苛刻：</b>
 
 - 该类所有的实例都被回收了，即 Java 堆中不存在该类及其任何派生子类的实例~
 - 加载该类的类加载器已经被回收，这个条件除非是经过精心设计的可替换类加载器的场景，如 OSGI、JSP 的重加载，否则通常是很难达成的！！
 - 该类对应的 java.lang.Class 对象没有在任何地方被引用，无法在任何地方通过反射访问该类的方法。
 
-<span style="color:green">**查看类加载卸载的JVM参数**</span>
+<b style="color:green">查看类加载卸载的 JVM 参数</b>
 
 ```shell
 -XX:+TraceClass-Loading 
@@ -82,15 +82,15 @@ Java堆的内存可能是规整的，也可能不是规整的。规整的堆，�
 -XX:+TraceClassLoading 可以在Product版的虚拟机中使用~
 ```
 
-在大量使用反射、动态代理、CGLib 等字节码框架，动态生成 JSP 以及 OSGI 这类频繁自定义类加载器的场景中，通常需要 Java 虚拟机具备类型卸载的能力，保证不会对方法区造成过大的内存压力。**常量池从方法区移动到了堆减轻了方法区的压力。**
+在大量使用反射、动态代理、CGLib 等字节码框架，动态生成 JSP 以及 OSGI 这类频繁自定义类加载器的场景中，通常需要 Java 虚拟机具备类型卸载的能力，保证不会对方法区造成过大的内存压力。<b>常量池从方法区移动到了堆减轻了方法区的压力。</b>
 
-## 正菜：GC算法
+## GC算法
 
 推荐阅读 Richard Jones 的《垃圾回收算法手册》2~4章的内容
 
-### 分代收集理论！
+### 分代收集理论
 
-分代收集理论也有缺陷，最新出现（或实验中）的几款垃圾收集器都展现出了面向全区域收集设计的思想，或可以支持全区域不分代的收集的工作模式（**G1 收集器**）~~
+分代收集理论也有缺陷，最新出现（或实验中）的几款垃圾收集器都展现出了面向全区域收集设计的思想，可以支持全区域不分代的收集的工作模式（<b>G1 收集器</b>）~~
 
 #### 分代假说
 
@@ -134,31 +134,25 @@ Survivor from 10%
 
 Survivor to 10%
 
-只有90%的会被使用，剩下10%做担保的~
+只有 90% 的会被使用，剩下 10% 做担保的~
 
 #### 标记-整理算法
 
 标记复制算法不适用于老年代，因为老年代中的对象，多数都会一直存活下去~
 
-**标记整理算法的原理：**标记过程仍然与“标记-清除”算法一样，但后续步骤不是直接对可回收对象进行清理，而是让所有存活的对象都向内存空间一端移动，然后直接清理掉边界以外的内存。
+<b>标记整理算法的原理：</b>标记过程仍然与“标记-清除”算法一样，但后续步骤不是直接对可回收对象进行清理，而是让所有存活的对象都向内存空间一端移动，然后直接清理掉边界以外的内存。
 
 <span style="color:green">标记-清除算法与标记-整理算法的本质差异在于前者是一种非移动式的回收算法，而后者是移动式的。是否移动回收后的存活对象是一项优缺点并存的风险决策：</span>
 
-- 在老年代移动存活对象，并更新所有引用这些对象的地方将会是一种极为负重的操作。而这种移动操作必须全程暂停用户应用程序才能进行【新生代只有极少数存活下来了，更新的量很小！！！】
+- 在老年代移动存活对象，并更新所有引用这些对象的地方将会是一种极为负重的操作。而这种移动操作必须全程暂停用户应用程序才能进行【新生代只有极少数存活下来了，更新的量很小！】
 - 不移动又容易碎片化
 - 折中，先标记清除，碎片化到忍不了了在整理！
 
 #### other
 
-`Parallel Scavenge 收集器`：关注吞吐量，基于标记-整理
+Parallel Scavenge 收集器：关注吞吐量，基于标记-整理
 
-`CMS 收集器`：关注延迟，基于标记清除-算法
-
-## 经典垃圾收集器
-
-## 低延迟垃圾收集器
-
-## 选择合适的垃圾收集器
+CMS 收集器：关注延迟，基于标记清除-算法
 
 # 虚拟机执行子系统
 
@@ -172,9 +166,9 @@ Survivor to 10%
 
   - 查找并加载类的二进制数据（class文件）
 
-  - 把硬盘上的class文件加载到jvm内存中
+  - 把硬盘上的 class 文件加载到 jvm 内存中
 
-- **连接** ：确定类与类之间的关系  ； student.setAddress( address ); 
+- <b>连接</b>：确定类与类之间的关系；student.setAddress( address ); 
 
   - 验证：*.class 正确性校验，回忆下类加载器
 
@@ -186,11 +180,10 @@ Survivor to 10%
 
     在准备阶段，JVM 中只有类，没有对象。
 
-    初始化顺序： static ->非static ->构造方法
+    初始化顺序： static ->非 static ->构造方法
 
     ```java
     public class Student{
-        
     	static int age; //在准备阶段，将age = 0 ; 在初始化阶段会重新赋值的~~
     	String name;  
     }
@@ -198,24 +191,24 @@ Survivor to 10%
     
   - 解析：把类中符号引用，转为直接引用
   
-  前期阶段，还不知道类的具体内存地址，只能使用 “com.yanqun.pojo.Student”来替代 Student 类，**“com.yanqun.pojo.Student” 就称为符号引用；**
+  前期阶段，还不知道类的具体内存地址，只能使用 “com.yanqun.pojo.Student” 来替代 Student 类，<b>“com.yanqun.pojo.Student” 就称为符号引用；</b>
   
-  在解析阶段，JVM就可以将 “com.yanqun.pojo.Student ”映射成实际的内存地址，会后就用内存地址来代替 Student，这种使用内存地址来使用类的方法称为直接引用。
+  在解析阶段，JVM 就可以将 “com.yanqun.pojo.Student” 映射成实际的内存地址，会后就用内存地址来代替 Student，这种使用内存地址来使用类的方法称为直接引用。
   
- - **初始化**：给 static 变量赋予正确的值
+ - <b>初始化</b>：给 static 变量赋予正确的值
 
     - static int num =  10 ;  在连接的准备阶段，会把 num=0，之后（初始化阶段）再将 0 修改为 10
 
- - **使用：** 对象的初始化、对象的垃圾回收、对象的销毁
+ - <b>使用</b>：对象的初始化、对象的垃圾回收、对象的销毁
 
- - **卸载：**class 的卸载条件非常严格！
+ - <b>卸载</b>：class 的卸载条件非常严格！
 
-<span style="color:green">**JVM结束生命周期的时机：**</span>
+<b style="color:green">JVM 结束生命周期的时机：</b>
 
-- **正常结束**
-- **异常结束/错误**  
-- **System.exit()**
-- **操作系统异常**
+- <b>正常结束</b>
+- <b>异常结束/错误</b>
+- <b>System.exit()</b>
+- <b>操作系统异常</b>
 
 ## 双亲委派
 
@@ -224,8 +217,7 @@ Survivor to 10%
 ```java
 package com.yanqun.parents;
 class MyClass{
-    
-    static int num1 = 100 ;
+    static int num1 = 100;
 
     static MyClass myClass = new MyClass();
     public MyClass(){
@@ -247,7 +239,6 @@ public class MyClassLoader {
     public static void main(String[] args) {
         MyClass myc =  MyClass.getMyClass() ;
         System.out.println(myc);
-
     }
 }
 ```
@@ -255,37 +246,36 @@ public class MyClassLoader {
 分析
 
 ```java
-    static int num1 = 100 ;     【 0 】-> 【100】->【200】
+    static int num1 = 100 ; //【 0 】-> 【100】->【200】
 
-    static MyClass myClass = new MyClass();【null】 ->【引用地址0x112231】
+    static MyClass myClass = new MyClass(); //【null】 ->【引用地址0x112231】
     public MyClass(){
         num1 = 200 ;
         num2 = 200 ;
     }
-    static int num2 = 100 ;  【0】->【200】->【100】
+    static int num2 = 100; // 【0】->【200】->【100】
 
-连接：static静态变量并赋默认值
-
-初始化：给static变量 赋予正确的值
+// 连接：static静态变量并赋默认值
+// 初始化：给static变量 赋予正确的值
 ```
 
 总结：在类中给静态变量的初始化值问题，一定要注意顺序问题（静态变量和构造方法的顺序问题）
 
-双亲委派：JVM自带的加载器（在 JVM 的内部所包含，C++）、用户自定义的加载器（独立于 JVM 之外的加载器）
+双亲委派：JVM 自带的加载器（在 JVM 的内部所包含，C++）、用户自定义的加载器（独立于 JVM 之外的加载器）
 
--  JVM自带的加载器
+-  JVM 自带的加载器
 
-   - 根加载器 Bootstrap   : 加载 jre\lib\rt.jar （包含了平时编写代码时 大部分jdk api）；指定加载某一个jar（ -Xbootclasspath=a.jar）
-   - 扩展类加载器，Extension：C:\Java\jdk1.8.0_101\jre\lib\ext\\\*.jar ;指定加载某一个jar(-Djava.ext.dirs= ....)
+   - 根加载器 Bootstrap：加载 jre\lib\rt.jar （包含了平时编写代码时 大部分 jdk api）；指定加载某一个 jar(-Xbootclasspath=a.jar）
+   - 扩展类加载器，Extension：C:\Java\jdk1.8.0_101\jre\lib\ext\\\*.jar；指定加载某一个 jar(-Djava.ext.dirs= ....)
    - AppClassLoader/SystemClassLoader，系统加载器（应用加载器）：加载classpath；指定加载（-Djava.class.path= 类/jar）
 
 -  用户自定义的加载器
 
-   - 都是抽象类java.lang.ClassLoader的子类
+   - 都是抽象类 java.lang.ClassLoader 的子类
 
-<img src="jvm_image/1571541215432.png">
+<div align="center"><img src="jvm_image/1571541215432.png"></div>
 
-双亲委派：当一个加载器要加载类的时候，自己先不加载，而是逐层向上交由双亲去加载；当双亲中的某一个加载器加载成功后，再向下返回成功。**如果所有的双亲和自己都无法加载，则报异常。**
+双亲委派：当一个加载器要加载类的时候，自己先不加载，而是逐层向上交由双亲去加载；当双亲中的某一个加载器加载成功后，再向下返回成功。<b>如果所有的双亲和自己都无法加载，则报异常。</b>
 
 ```java
 package com.yanqun.parents;
@@ -357,7 +347,7 @@ public class JVMParentsCL {
 */
 ```
 
-值得考究的API：
+值得考究的 API：
 
 - getResource(String name) return URL
 - getResourceAsStream(String...) return InputStream
@@ -609,11 +599,11 @@ class MyDefineCL{
 
 一般而言，启动类加载 loadClass()；
 
-**实现自定义加载器，只需要：**
+实现自定义加载器，只需要：
 
-- **继承 ClassLoader**
+- 继承 ClassLoader
 
-- **重写的 findClass()**
+- 重写的 findClass()
 
 情况一：用 APPClassLoader
 
@@ -622,15 +612,15 @@ classpath 中的 MyDefineCL.class 文件：
 1163157884
 1163157884
 
-d盘中的MyDefineCL.class文件：
+d 盘中的 MyDefineCL.class 文件：
 
 356573597
 
-说明，类加载器只会把同一个类加载一次； 同一个class文件加载后的位置
+说明，类加载器只会把同一个类加载一次； 同一个 class 文件加载后的位置
 
 结论：
 
-自定义加载器 加载.class文件的流程：
+自定义加载器 加载 .class 文件的流程：
 
 先委托 APPClassLoader 加载，APPClassLoader 会在 classpath 中寻找是否存在，如果存在则直接加载；如果不存在，才有可能交给自定义加载器加载。
 
@@ -724,7 +714,7 @@ class MyDefineCL{
 }
 ```
 
-通过以下源码可知，在双亲委派体系中，“下面”的加载器是通过parent引用 “上面”的加载器。即在双亲委派体系中，各个加载器之间不是继承关系。
+通过以下源码可知，在双亲委派体系中，“下面”的加载器是通过 parent 引用 “上面”的加载器。即在双亲委派体系中，各个加载器之间不是继承关系。
 
 ```java
 public abstract class ClassLoader {
@@ -740,7 +730,7 @@ public abstract class ClassLoader {
 }
 ```
 
-ClassLoader源码解读
+ClassLoader 源码解读
 
 ```java
 protected Class<?> loadClass(String name, boolean resolve)
@@ -783,7 +773,7 @@ protected Class<?> loadClass(String name, boolean resolve)
 }
 ```
 
-**双亲委派机制优势：** 可以防止用户自定义的类和 rt.jar 中的类重名，而造成的混乱。自定义一个 java.lang.Math (和 jdk 中 rt.jar 中的类重名)
+<b>双亲委派机制优势：</b>可以防止用户自定义的类和 rt.jar 中的类重名，而造成的混乱。自定义一个 java.lang.Math (和 jdk 中 rt.jar 中的类重名)
 
 ```java
 package java.lang;
@@ -795,11 +785,11 @@ public class Math {
 }
 ```
 
-**运行结果：**
+<b>运行结果：</b>
 
-<img src="jvm_image/1571816579201.png">
+<div align="center"><img src="jvm_image/1571816579201.png"></div>
 
-**原因：**根据双亲委派， 越上层的加载器越优先执行。最顶层的加载器是根加载器，根加载器就会加载 rt.jar 中的类。因此 rt.jar 中的 Math 会被优先加载。 即程序最终加载的是不是我们自己写的 Math，而是 jdk/rt.jar 中内置的 Math; 而内置的 Math 根本没有提供 main() 方法，因此报无法找到 main()。
+<b>原因：</b>根据双亲委派， 越上层的加载器越优先执行。最顶层的加载器是根加载器，根加载器就会加载 rt.jar 中的类。因此 rt.jar 中的 Math 会被优先加载。 即程序最终加载的是不是我们自己写的 Math，而是 jdk/rt.jar 中内置的 Math; 而内置的 Math 根本没有提供 main() 方法，因此报无法找到 main()。
 
 实验：将相关联的类 A.class 和 B.class 分别用不同的类加载器加载
 
@@ -869,8 +859,6 @@ public class TestMyClassLoader3 {
 }
 ```
 
-
-
 ```markdown
 存在继承关系
 
@@ -880,7 +868,6 @@ B.class:   classpath
 同一个AppClassLoader 会同时加载A.class和B.class
 
 -------
-
 A.class:   d:\
 B.class:   classpath
 抛出异常 IllegalAccess
@@ -925,17 +912,17 @@ java.lang.NoClassDefFoundError: com/yanqun/parents/Y
 ---
 ```
 
-<img src="jvm_image/1571824096839.png">
+<div align="center"><img src="jvm_image/1571824096839.png"></div>
 
 如果存在继承关系： 继承的双方（父类、子类）都必须是同一个加载器，否则出错；
 
-如果不存在继承关系： 子类加载器可以访问父类加载器加载的类（自定义加载器，可以访问到 系统加载器加载的Y类）；反之不行（父类加载器 不能访问子类加载器）
+如果不存在继承关系： 子类加载器可以访问父类加载器加载的类（自定义加载器，可以访问到 系统加载器加载的 Y 类）；反之不行（父类加载器 不能访问子类加载器）
 
 核心： 双亲委派
 
 如果都在同一个加载器 ，则不存在加载问题； 如果不是同一个，就需要双亲委派。
 
-如果想实现各个加载器之间的自定义依赖，可以使用ogsi规范
+如果想实现各个加载器之间的自定义依赖，可以使用 ogsi 规范
 
 <img src="jvm_image/1572660850713.png">
 

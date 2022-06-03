@@ -2269,11 +2269,12 @@ private static 返回值类型 方法名称(参数列表) {
 
 <b>接口中可定义常量, 且可省略 public static final，默认就是它，也只能是它！</b>【接口中的常量必须赋值！因为有 final 修饰！】
 
-<div align="center"><img src="img/image-20220403162153240.png">
+<div align="center"><img src="img/image-20220403162153240.png"></div>
+
 
 ```java
 public static final int num = 10;
-接口名.num调用！
+// 接口名.num调用！
 ```
 
 ### 抽象类和方法
@@ -2326,7 +2327,7 @@ public interface PureInterface {
 
 我们不用为接口的方法添加 `public abstract` 修饰符，因为默认就是 `public abstract` 修饰的，且接口中的抽象方法只能是 `public abstract` 修饰。
 
-<img src="img/image-20210827192635164.png">
+<div align="center"><img src="img/image-20210827192635164.png"></div>
 
 Java 8 之前，接口中无法提供任何实现，只能描述类应该像什么，做什么，但不能描述怎么做。而在 Java 8 中，接口稍微有些变化， <b>Java 8 允许接口包含默认方法和静态方法</b>
 
@@ -3187,7 +3188,7 @@ public class Sequence {
 // 0 1 2 3 4 5 6 7 8 9
 ```
 
-### 使用.this 和 .new
+### 使用.this 和.new
 
 <span style="color:orange">使用【外部类名.this】生成对外部类对象的引用。</span>
 
@@ -3306,7 +3307,7 @@ public class Parcel {
 }
 ```
 
-private 内部类给类的设计者提供了一种途径，通过这种方式可以完全阻止任何依赖于（具体）类型的编码，并且完全隐藏了实现的细节。都是使用接口所提供的方法，没有任何·特殊的方法·。
+private 内部类给类的设计者提供了一种途径，通过这种方式可以完全阻止任何依赖于（具体）类型的编码，并且完全隐藏了实现的细节。都是使用接口所提供的方法，没有任何·特殊的方法。
 
 ### 内部类方法和作用域
 
@@ -3349,8 +3350,8 @@ public class LocalInnerClass {
 <span style="color:blue">局部内部类访问所在方法的局部变量，那么这个局部变量必须是 final 修饰的</span>
 
 ```java
-/*这样写是可以的。因为保证了num确实是不变的，final关键字是可以省略的【java8开始】。如果class前面加了一句num = 29，那就不对了，因为num改变了。*/
 /*
+这样写是可以的。因为保证了num确实是不变的，final关键字是可以省略的【java8开始】。如果class前面加了一句num = 29，那就不对了，因为num改变了。
 为什么要这样做？
 	这是害怕类还在，局部变量缺消失了，导致局部内部类无法访问局部变量！
 */
@@ -3724,7 +3725,7 @@ Egg.Yolk()
 */
 ```
 
-既然创建了 BigEgg 的对象，那么所使用的应该是 “覆盖后” 的 Yolk 版本，但从输 出中可以看到实际情况并不是这样的。 这个例子说明，当继承了某个外部类的时候，内部类并没有发生什么特别神奇的变 化。<span style="color:orange">这两个内部类是完全独立的两个实体，各自在自己的命名空间内。</span>
+既然创建了 BigEgg 的对象，那么所使用的应该是 “覆盖后” 的 Yolk 版本，但从输 出中可以看到实际情况并不是这样的。 这个例子说明，当继承了某个外部类的时候，内部类并没有发生什么特别神奇的变化。<span style="color:orange">这两个内部类是完全独立的两个实体，各自在自己的命名空间内。</span>
 
 ### 局部内部类
 
@@ -3840,14 +3841,14 @@ public void fn2(){
 }
 ```
 
-Java8 提供的日期类**都是final修饰的**
+Java8 提供的日期类<b>都是 final 修饰的</b>
 - Instant——它代表的是时间戳
-- LocalDate——不包含具体时间的日期，比如2014-01-14。它可以用来存储生日，周年纪念日，入职日期等。
+- LocalDate——不包含具体时间的日期，比如 2014-01-14。它可以用来存储生日，周年纪念日，入职日期等。
 - LocalTime——它代表的是不含日期的时间
 - LocalDateTime——它包含了日期及时间，不过还是没有偏移信息或者说时区。
-- ZonedDateTime——这是一个包含时区的完整的日期时间，偏移量是以UTC/格林威治时间为基准的
+- ZonedDateTime——这是一个包含时区的完整的日期时间，偏移量是以 UTC/格林威治时间为基准的
 
-Date仅仅含日期。不包含具体时间，有time的才有具体的时间（精确到时分秒）
+Date 仅仅含日期。不包含具体时间，有 time 的才有具体的时间（精确到时分秒）
 
 ```java
 public void fn3(){
@@ -3877,8 +3878,8 @@ public void fn4(){
 }
 ```
 
-- 要用再查API
-- System类
+- 要用再查 API
+- System 类
 
 ```java
 @Test
@@ -3901,7 +3902,7 @@ public void fn5(){
 **回忆迭代器的元素遍历，回忆为什么迭代器遍历元素时可以进行元素移除的操作不会发生异常！**
 ```
 
-- arraycopy的使用
+- arraycopy 的使用
 
 ```java
 @Test
@@ -4024,19 +4025,21 @@ public class PrintCollection {
 
 > List 常用 API
 
-- `contains()` \=\=\=\> 对象是否在列表中
-- `indexOf()` \=\=\=\> 第一次出现的下标号，返回 -1 表示未找到
-- `lastIndexOf()`  \=\=\=\> 最后一次出现的下标号，返回 -1 表示未找到
-- `subList(5，8)` \=\=\=\> 列表切片。左闭右开，从索引5开始，切片到索引8，不包括索引8这个位置的元素。
-- `listA.containsAll(listB)` \=\=\=\> listA中是否包含listB中的所有元素，与顺序无关。
-- `Collections.sort(list)` \=\=\=\> 对集合进行排序
-- `Collections.shuffle(list)` \=\=\=\> 打乱集合
-- `listA.retainAll(listB)` \=\=\=\> 取 $A∩B$，所产生的结果行为依赖于 equals() 方法
-- `listA.set(1,xx)` \=\=\=\> 将索引 1 处的替换为 xx
-- `listA.addAll(newList)` \=\=\=\> 将新列表插入到 原始列表的中间位置
-- `isEmpty()` \=\=\=\> 判空和 `clear()` 清除元素
-- `listA.toArray()`  \=\=\=\> 将任意的 Collection 转换为数组,Object类型。
-- `listA.toArray(new Type[0])`  \=\=\=\> 将目标类型的数 组传递给这个重载版本，会生成一个指定类型的数组。如果参数数组太小而无法容纳 List 中的所有元素，则 toArray() 会 创建一个具有合适尺寸的新数组。
+| 方法                       | 说明                                                         |
+| -------------------------- | ------------------------------------------------------------ |
+| contains()                 | 对象是否在列表中                                             |
+| indexOf()                  | 第一次出现的下标号，返回 -1 表示未找到                       |
+| lastIndexOf()              | 最后一次出现的下标号，返回 -1 表示未找到                     |
+| subList(5，8)              | 列表切片。左闭右开，从索引 5 开始，切片到索引 8，不包括索引 8 这个位置的元素。 |
+| listA.containsAll(listB)   | listA 中是否包含 listB 中的所有元素，与顺序无关。            |
+| Collections.sort(list)     | 对集合进行排序                                               |
+| Collections.shuffle(list)  | 打乱集合                                                     |
+| listA.retainAll(listB)     | 取 $A∩B$，所产生的结果行为依赖于 equals() 方法               |
+| listA.set(1,xx)            | 将索引 1 处的替换为 xx                                       |
+| listA.addAll(newList)      | 将新列表插入到原始列表的中间位置                             |
+| isEmpty()/clear()          | 判空和清除元素                                               |
+| listA.toArray()            | 将任意的 Collection 转换为数组，Object 类型                  |
+| listA.toArray(new Type[0]) | 将目标类型的数组传递给这个重载版本，会生成一个指定类型的数组。如果参数数组太小而无法容纳 List 中的所有元素，<br>则 toArray() 会创建一个具有合适尺寸的新数组。 |
 
 ### 迭代器 iterators
 
@@ -4099,7 +4102,7 @@ public class ListIteratorDemo {
 <span style="color:orange">LinkedList 还添加了一些方法，使其可以被用作栈、队列或双端队列（deque）</span>
 
 -  getFirst() 和 element() 是相同的，它们都返回列表的头部（第一个元素）但不会删除它，如果 List 为空，则抛出 NoSuchElementException 异常。peek() 方法与这两个方法只是稍有差异，它在列表为空时返回 null 。 
-- removeFirst() 和 remove() 也是相同的，它们删除并返回列表的头部元素，并在列表为空时抛出 NoSuchElementException 异常。poll() 稍有差异，它在列 表为空时返回 null 。
+- removeFirst() 和 remove() 也是相同的，它们删除并返回列表的头部元素，并在列表为空时抛出 NoSuchElementException 异常。poll() 稍有差异，它在列表为空时返回 null 。
 - addFirst() 在列表的开头插入一个元素。 
 - offer() 与 add() 和 addLast() 相同。它们都在列表的尾部（末尾）添加一个元素。 
 - removeLast() 删除并返回列表的最后一个元素。
@@ -4302,8 +4305,9 @@ Map 可以返回由其键组成的 Set ，由其值组成的 Collection ，或�
 #### HashMap
 
 - 基本原理
-    - JDK 1.7 采用的是散列表的拉链法
-    - `Java1.8  ` 及之后的版本是【红黑树+散列表】。最开始是散列表的拉链法，链长度超过八是链转为红黑树。
+    - JDK1.7 采用的是散列表的拉链法
+    - JDK1.8  及之后的版本是【红黑树+散列表】。最开始是散列表的拉链法，链长度超过八是链转为红黑树。
+    - 注意，转为红黑树这种应该是特殊情况，为了防止有人恶意攻击的兜底手段。
 - `HashMap` 的 key 可以存入null，`HashTable` 的 key 不可为 null。
 
 基本操作：
@@ -4462,7 +4466,7 @@ public class PriorityQueueDemo {
 }
 ```
 
-Integer ，String 和 Character 可以与 PriorityQueue 一起使用，因为这些类已经内置了自然排序。如果想在 PriorityQueue 中使用自己的类，则必须包含额外的功能以产生自然排序，或者必须提供自己的 Comparator。
+Integer，String 和 Character 可以与 PriorityQueue 一起使用，因为这些类已经内置了自然排序。如果想在 PriorityQueue 中使用自己的类，则必须包含额外的功能以产生自然排序，或者必须提供自己的 Comparator。
 
 ### 集合与迭代器
 
@@ -4507,7 +4511,7 @@ public class ArrayIsNotIterable {
 }
 ```
 
-<span style="color:orange">尝试将数组作为一个 Iterable 参数传递会导致失败。这说明不存在任何从数组到 Iterable 的自动转换; 必须手工执行这种转换。</span>
+<span style="color:orange">尝试将数组作为一个 Iterable 参数传递会导致失败。这说明不存在任何从数组到 Iterable 的自动转换; 必须显示执行这种转换。</span>
 
 #### 适配器方法
 
@@ -4569,7 +4573,7 @@ class ReversibleArrayList<T> extends ArrayList<T> {
 
 排序默认是字典顺序，从小到大。
 
-> **Collections**
+> <b>Collections</b>
 
 ```java
 Collections.max(list);
@@ -4582,10 +4586,10 @@ Collections.replaceAll(list,"a","A"); // 所有小写a替换成大写A
 Collections.fill(list,"h"); // 全部填充为h
 ```
 
-> **Arrays**
+> <b>Arrays</b>
 
 ```java
-// 与Collections没什么区别
+// 与 Collections 没什么区别
 ```
 
 ### 比较器
@@ -4645,11 +4649,11 @@ public class myxx implements Comparator{
 - ->
 - -> 之后的内容都是方法体
 
-**[1]** 当只用一个参数，可以不需要括号 () 【特例】。
-**[2]** 正常情况使用括号 () 包裹参数。为了保持一致性，也可以使用括号 () 包裹单个参数，虽然这种情况并不常见。
-**[3]** 如果没有参数，则必须使用括号 () 表示空参数列表。
-**[4]** 对于多个参数，将参数列表放在括号 () 中。单行表达式的结果会自动成为 Lambda 表达式的返回值，在单行表达式中使用 return 关键字是非法的。
-**[5]** 如果在 Lambda 表达式中确实需要多行，则必须将这些行放在花括号中。在这种情况下，就需要使用 return。
+<b>[1]</b> 当只用一个参数，可以不需要括号 () 【特例】。
+<b>[2]</b> 正常情况使用括号 () 包裹参数。为了保持一致性，也可以使用括号 () 包裹单个参数，虽然这种情况并不常见。
+<b>[3]</b> 如果没有参数，则必须使用括号 () 表示空参数列表。
+<b>[4]</b> 对于多个参数，将参数列表放在括号 () 中。单行表达式的结果会自动成为 Lambda 表达式的返回值，在单行表达式中使用 return 关键字是非法的。
+<b>[5]</b> 如果在 Lambda 表达式中确实需要多行，则必须将这些行放在花括号中。在这种情况下，就需要使用 return。
 
 ```java
 public class LambdaExpressions {
@@ -4789,8 +4793,8 @@ class Describe {
 <b>[6]</b> 将 Describe 对象的方法引用赋值给 Callable ，它没有 show() 方法，而是 call() 方法。但是，Java 允许这种看似奇怪的赋值，因为方法引用符合 Callable 的 call() 方法的签名。 
 <b>[7]</b> 我们现在可以通过调用 call() 来调用 show()，因为 Java 将 call() 映射到 show()。 
 <b>[8]</b> 这是一个静态方法引用。 
-<b>[9]</b> 这是 [6] 的另一个版本：对已实例化对象的方法的引用，有时称为绑定方法引 用。 
-<b>[10]</b> 最后，获取静态内部类中静态方法的引用与 [8] 中通过外部类引用相似。
+<b>[9]</b> 这是 <b>[6]</b> 的另一个版本：对已实例化对象的方法的引用，有时称为绑定方法引 用。 
+<b>[10]</b> 最后，获取静态内部类中静态方法的引用与 <b>[8]</b> 中通过外部类引用相似。
 
 #### Runnable 接口
 
@@ -4981,7 +4985,7 @@ public class CtorReference {
 
 Dog 有三个构造函数，函数式接口内的 make() 方法反映了构造函数参数列表（make() 方法名称可以不同）。 
 
-注意我们如何对 [1]，[2] 和 [3] 中的每一个使用 Dog::new。这三个构造函数只有一个相同名称：`::new`，但在每种情况下赋值给不同的接口，编译器可以根据接口中的方法推断出使用哪个构造函数。 <span style="color:orange">编译器知道调用函数式方法（本例中为 make()）就相当于调用构造函数。</span>
+注意我们如何对 [1]，[2] 和 [3] 中的每一个使用 `Dog::new`。这三个构造函数只有一个相同名称：`::new`，但在每种情况下赋值给不同的接口，编译器可以根据接口中的方法推断出使用哪个构造函数。 <span style="color:orange">编译器知道调用函数式方法（本例中为 make()）就相当于调用构造函数。</span>
 
 ### 函数式接口
 
@@ -5025,9 +5029,9 @@ Java 8 引入了 java.util.function 包。它包含一组接口，这些接口�
 `Supplier<T>` 接口也被称为生产型接口，如果我们指定了接口的泛型式是什么类型，那么接口中的 get() 方法就会产生什么类型的数据供我们使用！
 
 - `Supplier<T>`：包含一个无参的方法
-- `T get（）`：获得结果
+- `T get()`：获得结果
 - 该方法不需要参数，它会按照某种实现逻辑（由 Lambda 表达式实现）返回一个数据
-- `Supplier<T` 接口也被称为生产型接口，如果我们指定了接口的泛型式是什么类型，那么接口中的 get() 方法就会产生什么类型的数据供我们使用！
+- `Supplier<T>` 接口也被称为生产型接口，如果我们指定了接口的泛型式是什么类型，那么接口中的 get() 方法就会产生什么类型的数据供我们使用！
 - 简单说来，他就是一个容器，用来存 Lambda 表达式生成的数据的。可用 get 方法得到这个生成的数据
 
 ```java
@@ -5104,47 +5108,46 @@ public class ConsumerDemo {
 
 - Predicate 常用的四个方法
 
-  - ```java
-    boolean test(T t) //对给定参数进行逻辑判断，判断表达式由Lambda实现。
-    default Predicate<T>negate(); //返回一个逻辑的否定， 对应逻辑非
-    default Predicate<T>and(Predicate other) //返回一个组合逻辑判断，对应短路与
-    default Predicate<T>or(Predicate other) //返回一个组合判断，对应短路或
-    ```
-    
+  ```java
+  boolean test(T t) //对给定参数进行逻辑判断，判断表达式由Lambda实现。
+  default Predicate<T>negate(); //返回一个逻辑的否定， 对应逻辑非
+  default Predicate<T>and(Predicate other) //返回一个组合逻辑判断，对应短路与
+  default Predicate<T>or(Predicate other) //返回一个组合判断，对应短路或
+  ```
 
 - Predicate 常用于判断参数是否满足 xx 条件
 
-```java
-public class PredicateDemo {
-    public static void main(String[] args) {
-
-        List<Integer> list = Arrays.asList(12, 234, 56, 31, 23, 54, 34);
-        // 匿名内部类
-        filterNumber(list, new Predicate<Integer>() {
-
-            @Override
-            public boolean test(Integer t) {
-                return t % 2 == 0;
-            }
-
-        });
-
-        // Lambda写法 我们只用到了predicate的test方法
-        filterNumber(list, s -> s % 2 == 0);
-    }
-
-    // 根据给定规则 过滤数据，方法时Predicate中的抽象方法
-    public static List<Integer> filterNumber(List<Integer> list, Predicate<Integer> predicate) {
-        List<Integer> arrayList = new ArrayList<>();
-        for (Integer number : list) {
-            if (predicate.test(number)) {
-                arrayList.add(number);
-            }
+    ```java
+    public class PredicateDemo {
+        public static void main(String[] args) {
+    
+            List<Integer> list = Arrays.asList(12, 234, 56, 31, 23, 54, 34);
+            // 匿名内部类
+            filterNumber(list, new Predicate<Integer>() {
+    
+                @Override
+                public boolean test(Integer t) {
+                    return t % 2 == 0;
+                }
+    
+            });
+    
+            // Lambda写法 我们只用到了predicate的test方法
+            filterNumber(list, s -> s % 2 == 0);
         }
-        return arrayList;
+    
+        // 根据给定规则 过滤数据，方法时Predicate中的抽象方法
+        public static List<Integer> filterNumber(List<Integer> list, Predicate<Integer> predicate) {
+            List<Integer> arrayList = new ArrayList<>();
+            for (Integer number : list) {
+                if (predicate.test(number)) {
+                    arrayList.add(number);
+                }
+            }
+            return arrayList;
+        }
     }
-}
-```
+    ```
 
 ##### 转换接口 Function\<T,R\>
 
@@ -5391,7 +5394,7 @@ public class ClassFunctionals {
 }
 ```
 
-##### 各式各样
+##### 其他
 
 ```java
 class AA {}
@@ -5404,10 +5407,8 @@ public class ClassFunctionals {
     static int f2(AA aa1, AA aa2) {
         return 1;
     }
-    static void f3(AA aa) {
-    }
-    static void f4(AA aa, BB bb) {
-    }
+    static void f3(AA aa) {}
+    static void f4(AA aa, BB bb) {}
     static CC f5(AA aa) {
         return new CC();
     }
@@ -7079,8 +7080,7 @@ IntSummaryStatistics{count=9, sum=45, min=1, average=5.000000, max=9}
 
 Java SE5 添加了
 
-- Queue接口
-  - `PriorityQueue`
+- Queue 接口及其实现 `PriorityQueue`
 - `ConcurrentMap` 接口及其实现 `ConcurrentHashMap`，并发编程部分的，用于多线程机制。
 - `CopyOnWriteArrayList` 和 `CopyOnWriteSet`，用于多线程 
 - `EnumSet` 和 `EnumMap`，为使用 `enum` 而设计的 Set 和 Map 的特殊实现。
@@ -7142,7 +7142,6 @@ private void ensureExplicitCapacity(int minCapacity) {
     if (minCapacity - elementData.length > 0)
         grow(minCapacity);
 }
-
 
 // 计算容量
 private static int calculateCapacity(Object[] elementData, int minCapacity) {
@@ -7211,7 +7210,7 @@ Exception in thread "main" java.util.ConcurrentModificationException
 */
 ```
 
-因为增强 for 循环（foreach 循环）本质上是隐式的 iterator，由于在删除和添加的时候会导致 modCount 发生变化，但是没有重新设置 expectedModCount，使用 list.remove() 后遍历执行 iterator.next() 时，方法检验 modCount 的值和的 expectedModCount 值，如果不相等，就会报ConcurrentModificationException。
+因为增强 for 循环（foreach 循环）本质上是隐式的 iterator，由于在删除和添加的时候会导致 modCount 发生变化，但是没有重新设置 expectedModCount，使用 list.remove() 后遍历执行 iterator.next() 时，方法检验 modCount 的值和的 expectedModCount 值，如果不相等，就会报 ConcurrentModificationException。
 
 解决办法是使用迭代器进行删除。
 
@@ -7252,8 +7251,8 @@ public void remove() {
 #### 特点总结
 
 - 可以随机访问，按照索引位置进行访问效率很高，用算法描述中的术语，效率是O(1)，简单说就是可以一步到位。
-- 除非数组已排序，否则按照内容查找元素效率比较低，具体是 O(N), N为数组内容长度，也就是说，性能与数组长度成正比。
-- 添加元素的效率还可以，重新分配和复制数组的开销被平摊了，具体来说，添加N个元素的效率为 O(N)。
+- 除非数组已排序，否则按照内容查找元素效率比较低，具体是 O(N), N 为数组内容长度，也就是说，性能与数组长度成正比。
+- 添加元素的效率还可以，重新分配和复制数组的开销被平摊了，具体来说，添加 N 个元素的效率为 O(N)。
 - 插入和删除元素的效率比较低，因为需要移动元素，具体为 O(N)。
 
 ### 剖析 LinkedList
@@ -7478,7 +7477,7 @@ public ArrayDeque(int numElements) {
 
 不是简单地分配给定的长度，而是调用了allocateElements。它主要就是在计算应该分配的数组的长度，计算逻辑如下：
 
-- 如果 numElements 小于8，就是 8。
+- 如果 numElements 小于 8，就是 8。
 - 在 numElements 大于等于8的情况下，分配的实际长度是严格大于 numElements 并且为 2 的整数次幂的最小数。比如，如果 numElements 为 10，则实际分配 16，如果 num-Elements 为 32，则为 64。
 
 2 的幂次数操作高效。
@@ -7612,10 +7611,10 @@ private <T> T[] copyElements(T[] a) {
 
 #### 特点总结
 
-- 在两端添加、删除元素的效率很高，动态扩展需要的内存分配以及数组复制开销可以被平摊，具体来说，添加N个元素的效率为O(N)。
-- 根据元素内容查找和删除的效率比较低，为O(N)。
-- 与ArrayList和LinkedList不同，没有索引位置的概念，不能根据索引位置进行操作。
-- ArrayDeque和LinkedList都实现了Deque接口，应该用哪一个呢？如果只需要Deque接口，从两端进行操作，一般而言，ArrayDeque效率更高一些，应该被优先使用；如果同时需要根据索引位置进行操作，或者经常需要在中间进行插入和删除，则应该选LinkedList
+- 在两端添加、删除元素的效率很高，动态扩展需要的内存分配以及数组复制开销可以被平摊，具体来说，添加 N 个元素的效率为 O(N)。
+- 根据元素内容查找和删除的效率比较低，为 O(N)。
+- 与 ArrayList 和 LinkedList 不同，没有索引位置的概念，不能根据索引位置进行操作。
+- ArrayDeque 和 LinkedList 都实现了 Deque 接口，应该用哪一个呢？如果只需要 Deque 接口，从两端进行操作，一般而言，ArrayDeque 效率更高一些，应该被优先使用；如果同时需要根据索引位置进行操作，或者经常需要在中间进行插入和删除，则应该选 LinkedList
 
 ### Map 接口概述
 
@@ -7687,9 +7686,7 @@ public interface Map<K,V> {
    
     boolean equals(Object o);
 
-    
     int hashCode();
-
     
     default V getOrDefault(Object key, V defaultValue) {
         V v;
@@ -7697,7 +7694,6 @@ public interface Map<K,V> {
                 ? v
                 : defaultValue;
     }
-
    
     default void forEach(BiConsumer<? super K, ? super V> action) {
         Objects.requireNonNull(action);
@@ -7749,7 +7745,6 @@ public interface Map<K,V> {
         return v;
     }
 
-   
     default boolean remove(Object key, Object value) {
         Object curValue = get(key);
         if (!Objects.equals(curValue, value) ||
@@ -7759,7 +7754,6 @@ public interface Map<K,V> {
         remove(key);
         return true;
     }
-
   
     default boolean replace(K key, V oldValue, V newValue) {
         Object curValue = get(key);
@@ -7770,7 +7764,6 @@ public interface Map<K,V> {
         put(key, newValue);
         return true;
     }
-
     
     default V replace(K key, V value) {
         V curValue;
@@ -7779,7 +7772,6 @@ public interface Map<K,V> {
         }
         return curValue;
     }
-
    
     default V computeIfAbsent(K key,
                               Function<? super K, ? extends V> mappingFunction) {
@@ -7795,7 +7787,6 @@ public interface Map<K,V> {
 
         return v;
     }
-
     
     default V computeIfPresent(K key,
                                BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
@@ -7814,7 +7805,6 @@ public interface Map<K,V> {
             return null;
         }
     }
-
 
     default V compute(K key,
                       BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
@@ -7862,7 +7852,7 @@ public interface Map<K,V> {
 
 JDK 1.7 数组+链表（散列表）
 
-JDK 1.8 数组+链表+红黑树（链表长度>=8 会树化）
+JDK 1.8 数组+链表+红黑树（链表长度 >=8 会树化）
 
 > HashMap 内部几个比较重要的实例变量如下
 
@@ -8193,10 +8183,10 @@ Java 的基本理念是 “结构不佳的代码不能运行”。
 
 #### 受检异与未受检
 
-- 未受检异常表示编程的逻辑错误，编程时应该检查以避免这些错误，比如空指针异常，如果真的出现了这些异常，程序退出也是正常的，程序员应该检查程序代码的bug而不是想办法处理这种异常。
-- 受检异常表示程序本身没问题，但由于I/O、网络、数据库等其他不可预测的错误导致的异常，调用者应该进行适当处理。
+- 未受检异常表示编程的逻辑错误，编程时应该检查以避免这些错误，比如空指针异常，如果真的出现了这些异常，程序退出也是正常的，程序员应该检查程序代码的 bug 而不是想办法处理这种异常。
+- 受检异常表示程序本身没问题，但由于 I/O、网络、数据库等其他不可预测的错误导致的异常，调用者应该进行适当处理。
 
-Java中对受检异常和未受检异常的区分是没有太大意义的，可以统一使用未受检异常来代替。
+Java 中对受检异常和未受检异常的区分是没有太大意义的，可以统一使用未受检异常来代替。
 
 ### 基本异常
 
@@ -8217,7 +8207,7 @@ throw 关键字可以与 return 关键字进行对比。return 代表正常退�
 
 > Java 异常继承体系图
 
-<img src="img/throwable.jpg">
+<div align="center"><img src="img/throwable.jpg"></div>
 
 `Throwable` 是所有异常类的父类；`Exception` 是 `Throwable` 的子类；我们经常使用的一些异常就是继承自 `Exception`。
 
@@ -8234,7 +8224,7 @@ throw 关键字可以与 return 关键字进行对比。return 代表正常退�
 
 `RuntimeException` 比较特殊，`RuntimeException` 和其他异常类似，也是运行时产生的，<span style="color:red">它表示的实际含义是未受检异常</span>（unchecked exception），Exception 的其他子类和 Exception 自身则是受检异常（checked exception）, Error 及其子类也是未受检异常。    
 
-<span style="color:red">**受检（checked）和未受检（unchecked）的区别在于Java如何处理这两种异常。对于受检异常，Java会强制要求程序员进行处理，否则会有编译错误，而对于未受检异常则没有这个要求。**</span>
+<b style="color:red">受检（checked）和未受检（unchecked）的区别在于Java如何处理这两种异常。对于受检异常，Java会强制要求程序员进行处理，否则会有编译错误，而对于未受检异常则没有这个要求。</b>
 
 > `Throwable` 常见方法
 
@@ -8248,7 +8238,7 @@ Throwable initCause(Throwable cause);
 ```
 
 - message 表示异常消息
-- <span style="color:red">**cause 触发该异常的其他异常（常用于追踪异常链）**</span>
+- <b style="color:red">cause 触发该异常的其他异常（常用于追踪异常链）</b>
 
 异常可以形成一个异常链，上层的异常由底层异常触发，cause表示底层异常。
 
@@ -8310,11 +8300,11 @@ try{
 
 > 终止模型，Java 和 C++ 支持的模型
 
-- 在这种模型中，将假设错误非常严重，以至于程序无法返回到异常发生的地 方继续执行。一旦异常被抛出，就表明错误已无法挽回，也不能回来继续执行。 
+在这种模型中，将假设错误非常严重，以至于程序无法返回到异常发生的地 方继续执行。一旦异常被抛出，就表明错误已无法挽回，也不能回来继续执行。 
 
 > 另一种称为恢复模型
 
-- 意思是异常处理程序的工作是修正错误，然后重新尝试调用 出问题的方法，并认为第二次能成功。对于恢复模型，通常希望异常被处理之后能继续 执行程序。
+意思是异常处理程序的工作是修正错误，然后重新尝试调用 出问题的方法，并认为第二次能成功。对于恢复模型，通常希望异常被处理之后能继续 执行程序。
 
 如果想要用 Java 实现类似恢复的行为，那么在遇见错误时就不能抛出异常， 而是调用方法来修正该错误。或者，把 try 块放在 while 循环里，这样就不断地进入 try 块，直到得到满意的结果。 
 
@@ -8326,11 +8316,10 @@ Java 异常体系不可能预见你将报告的所有错误， 所以有时候�
 
 > 自定义异常案例
 
-对异常来说，最重要的就是类名，程序抛出异常的时候，根据异常的类名知道是什么错误就足够了。<span style="color:green">**我们也不需要为异常提供有参构造器，切记！对异常最重要的部分是类名！**</span>
+对异常来说，最重要的就是类名，程序抛出异常的时候，根据异常的类名知道是什么错误就足够了。<b style="color:green">我们也不需要为异常提供有参构造器，切记！对异常最重要的部分是类名！</b>
 
 ```java
-public class SimpleException extends Exception {
-}
+public class SimpleException extends Exception {}
 
 class InheritingExceptions {
     public void f() throws SimpleException {
@@ -8357,8 +8346,7 @@ tij.chapter15.SimpleException
 
 ```java
 public class MyException extends Exception {
-    MyException() {
-    }
+    MyException() {}
 
     MyException(String msg) {
         super(msg); // 调用父类的构造器
@@ -8392,7 +8380,7 @@ tij.chapter15.MyException: This is MyException
 
 异常也可以结合 Java 自带的异常记录日志工具。 `java.util.logging` 工具。一般来说，会配合第三方日志框架使用，不会使用 Java 自带的。
 
-P528页
+P528 页
 
 ### 异常声明
 
@@ -8402,9 +8390,9 @@ Java 鼓励人们把方法可能会抛出的异常告知使用此方法的客户
 void f() throws TooBig,TooSmall,DivZero{}
 ```
 
-代码必须与异常说明保持一致。如果方法里的代码产生了异常却没有进行处理，编 译器会发现这个问题并提醒你：要么处理这个异常，要么就在异常说明中表明此方法将 产生异常。通过这种自顶向下强制执行的异常说明机制，Java 在编译时就可以保证一 定水平的异常正确性。
+代码必须与异常说明保持一致。如果方法里的代码产生了异常却没有进行处理，编译器会发现这个问题并提醒你：要么处理这个异常，要么就在异常说明中表明此方法将 产生异常。通过这种自顶向下强制执行的异常说明机制，Java 在编译时就可以保证一 定水平的异常正确性。
 
-不过还是有个能 “作弊” 的地方：可以声明方法将抛出异常，实际上却不抛出。编译器相信了这个声明，并强制此方法的用户像真的抛出异常那样使用这个方法。这样做的好处是，为异常先占个位子，以后就可以抛出这种异常而不用修改已有的代码。在定义抽象基类和接口时这种能力很重要，这样派生类或接口实现就能够抛出这些预先声明 的异常。 这种在编译时被强制检查的异常称为被检查的异常。
+不过还是有个能 “作弊” 的地方：可以声明方法将抛出异常，实际上却不抛出。编译器相信了这个声明，并强制此方法的用户像真的抛出异常那样使用这个方法。这样做的好处是，为异常先占个位子，以后就可以抛出这种异常而不用修改已有的代码。在定义抽象基类和接口时这种能力很重要，这样派生类或接口实现就能够抛出这些预先声明的异常。 这种在编译时被强制检查的异常称为被检查的异常。
 
 <span style="color:green">可以通过 RuntimeException 将被检查异常替换为不检查异常。</span>
 
@@ -8454,7 +8442,7 @@ public class SameHandler {
 }
 ```
 
-Java 7 引入了多重捕获机制，可以使用 “或”操作符将不同类型的异常组合起来，只需要一行 catch 语句，书写更简洁。
+Java 7 引入了多重捕获机制，可以使用“或”操作符将不同类型的异常组合起来，只需要一行 catch 语句，书写更简洁。
 
 ```java
 public class MultiCatch2 {
@@ -8475,7 +8463,7 @@ public class MultiCatch2 {
 
 #### 栈轨迹
 
-printStackTrace() 方法所提供的信息可以通过 getStackTrace() 方法来直接访问，这 个方法将返回一个由栈轨迹中的元素所构成的数组，其中每一个元素都表示栈中的一 桢。元素 0 是栈顶元素，并且是调用序列中的最后一个方法调用（这个 Throwable 被 创建和抛出之处）。数组中的最后一个元素和栈底是调用序列中的第一个方法调用。下 面的程序是一个简单的演示示例
+printStackTrace() 方法所提供的信息可以通过 getStackTrace() 方法来直接访问，这个方法将返回一个由栈轨迹中的元素所构成的数组，其中每一个元素都表示栈中的一 桢。元素 0 是栈顶元素，并且是调用序列中的最后一个方法调用（这个 Throwable 被创建和抛出之处）。数组中的最后一个元素和栈底是调用序列中的第一个方法调用。下面的程序是一个简单的演示示例
 
 ```java
 package tij.chapter15;
@@ -8547,7 +8535,6 @@ try{
 
 ```java
 try{
-    
 }catch(Exception e){
     throw (Exception)e.fillInStackTrace();
 }
@@ -8558,11 +8545,9 @@ try{
 在 Java 7 之前，如果捕捉到一个异常，重新抛出的异常类型只能与原异常完全相同。这导致代码不精确，Java 7 修复了这个问题。所以在 Java 7 之前，这无法编译：
 
 ```java
-class BaseException extends Exception {
-}
+class BaseException extends Exception {}
 
-class DerivedException extends BaseException {
-}
+class DerivedException extends BaseException {}
 
 public class PreciseRethrow {
     void catcher() throws DerivedException {
@@ -8577,7 +8562,7 @@ public class PreciseRethrow {
 
 #### 异常链（自定义类库要用）
 
-**想要在捕获一个异常后抛出另一个异常，并且希望把原始异常的信息保存下 来，这被称为异常链。**在 `JDK1.4` 以前，程序员必须自己编写代码来保存原始异常的信息。现在所有 `Throwable` 的子类在构造器中都可以接受一个 `cause`（因由）对象作为参数。这个 cause 就用来表示原始异常，这样通过<span style="color:red">**把原始异常传递给新的异常，使得即使在当前位置创建并抛出了新的异常，也能通过这个异常链追踪到异常最初发生的位置。**</span>
+<b>想要在捕获一个异常后抛出另一个异常，并且希望把原始异常的信息保存下 来，这被称为异常链。</b>在 JDK1.4 以前，程序员必须自己编写代码来保存原始异常的信息。现在所有 `Throwable` 的子类在构造器中都可以接受一个 `cause`（因由）对象作为参数。这个 cause 就用来表示原始异常，这样通过<b style="color:red">把原始异常传递给新的异常，使得即使在当前位置创建并抛出了新的异常，也能通过这个异常链追踪到异常最初发生的位置。</b>
 
 在 `Throwable` 的子类中，只有三种基本的异常类提供了带 `cause` 参数的构造器。它们是 `Error`（用于 Java 虚拟机报告系统错误）、`Exception` 以及 `RuntimeException`。如果要把其他类型的异常链接起来，应该使用 `initCause()` 方法而不是构造 器。
 
@@ -8593,7 +8578,7 @@ throw dfe;
 
 finally 内的代码不管有无异常发生，都会执行。一般用于释放资源，如 socket 连接、数据库连接、文件流等。
 
-**请注意：**无论异常是否被抛出，finally 子句总能被执行。这也为解决 Java 不允许我们回到异常抛出点这一问题，提供了一个思路。<span style="color:green">如果将 try 块放在循环里，就可以设置一种在程序执行前一定会遇到的异常状况。</span>还可以加入一个 static 类型的计数器或者别的装置，使循环在结束以前能尝试一定的次数。这将使程序的健壮性更上一个台阶。
+<b>请注意：</b>无论异常是否被抛出，finally 子句总能被执行。这也为解决 Java 不允许我们回到异常抛出点这一问题，提供了一个思路。<span style="color:green">如果将 try 块放在循环里，就可以设置一种在程序执行前一定会遇到的异常状况。</span>还可以加入一个 static 类型的计数器或者别的装置，使循环在结束以前能尝试一定的次数。这将使程序的健壮性更上一个台阶。
 
 #### 在 return 中使用 finally
 
@@ -8646,7 +8631,7 @@ Performing cleanup
 
 从输出中可以看出，从何处返回无关紧要，finally 子句永远会执行。
 
-> **finally 的语法细节**
+> <b>finally 的语法细节</b>
 
 - 如果在 try 或者 catch 语句内有 return 语句，则 return 语句在 finally 语句执行结束后才执行，但 finally 并不能改变返回值
 
@@ -8663,7 +8648,7 @@ public static int test(){
 }
 ```
 
-<span style="color:green">**字节码验证猜想：**</span>走一遍字节码流程，发现返回的是0。`return retVal` 和 `retVal` 用的不是同一个局部变量表中的值。
+<span style="color:green">字节码验证猜想：</span>走一遍字节码流程，发现返回的是 0。`return retVal` 和 `retVal` 用的不是同一个局部变量表中的值。
 
 ```shell
 stack=1, locals=3, args_size=0
@@ -8753,7 +8738,7 @@ Exception in thread "main" java.lang.RuntimeException: Hello World
 */
 ```
 
-`finally` 中抛出了 `RuntimeException`，则原异常 `ArithmeticException` 就丢失了。一般，为避免混淆，应该<span style="color:red">避免</span>在 `finally` 中使用 `return` 语句或者抛出异常，如果调用的其他代码可能抛出异常，则应该捕获异常并进行处理。
+`finally` 中抛出了 `RuntimeException`，则原异常 `ArithmeticException` 就丢失了。一<span style="color:red">般，为避免混淆，应该避免在 finally 中使用 return 语句或者抛出异常，如果调用的其他代码可能抛出异常，则应该捕获异常并进行处理。</span>
 
 ### 异常限制
 
@@ -8823,8 +8808,8 @@ public class Reporter implements AutoCloseable {
 
 #### 如何使用异常
 
-- <span style="color:red">**真正出现异常的时候，应该抛出异常，而不是返回特殊值**</span>
-- <span style="color:red">**只有在我们知道如何处理的情况下才捕获异常**</span>
+- <b style="color:red">真正出现异常的时候，应该抛出异常，而不是返回特殊值</b>
+- <b style="color:red">只有在我们知道如何处理的情况下才捕获异常</b>
 
 ```java
 static void checkBoundsBeginEnd(int begin, int end, int length) {
@@ -8839,10 +8824,10 @@ static void checkBoundsBeginEnd(int begin, int end, int length) {
 
 如果自己知道怎么处理异常，就进行处理；如果可以通过程序自动解决，就自动解决；如果异常可以被自己解决，就不需要再向上报告。
 
-如果自己不能完全解决，就应该向上报告。如果自己有额外信息可以提供，有助于分析和解决问题，就应该提供，可以以原异常为cause重新抛出一个异常。
+如果自己不能完全解决，就应该向上报告。如果自己有额外信息可以提供，有助于分析和解决问题，就应该提供，可以以原异常为 cause 重新抛出一个异常。
 
 ```java
-try{
+try{ 
     
 }catch(SomeException e){
     throw new RuntimeException(e);
@@ -9053,7 +9038,7 @@ class CountedListTest {
 
 100% 的测试覆盖率并不意味着是对测试有效性的良好测量。有可能只需要 65% 的覆盖率就可测试完我们需要的内容。 如果非要进行 100% 的覆盖，我们会浪费大量时间来生成剩余的代码，花费大量的时间在项目里添加代码。
 
-**当分析一个未知的代码库时，测试覆盖率作为一个粗略的度量是有用的。**如果覆盖率工具报告的值特别低（比如，少于百分之 40），则说明覆盖不够充分。然而，一个非常高的值也同样值得怀疑，这表明对编程领域了解不足的人迫使团队做出了武断的决定。 覆盖工具的最佳用途是发现代码库中未测试的部分。但是，不要依赖覆盖率来得到测试 质量的任何信息。
+<b>当分析一个未知的代码库时，测试覆盖率作为一个粗略的度量是有用的。</b>如果覆盖率工具报告的值特别低（比如，少于百分之 40），则说明覆盖不够充分。然而，一个非常高的值也同样值得怀疑，这表明对编程领域了解不足的人迫使团队做出了武断的决定。 覆盖工具的最佳用途是发现代码库中未测试的部分。但是，不要依赖覆盖率来得到测试 质量的任何信息。
 
 ### 前置条件
 
@@ -14294,59 +14279,59 @@ public class TableCreator {
 
 ## 第二十四章-并发编程
 
-**进程与线程的概念，看下操作系统课本。**
+进程与线程的概念，看下操作系统课本。
 
-- 多线程的实现方式
+1️⃣多线程的实现方式
 
-  - 继承 Thread 类
-  - 实现 Runnable 接口
+- 继承 Thread 类
+- 实现 Runnable 接口
 
-- 线程调度模型
+2️⃣线程调度模型
 
-  - 分时调度模型：所有线程轮流使用 CPU 使用权，平均分配每个线程占用 CPU 的时间（RR）
-  - 抢占式调度模型：优先让优先级高的线程使用 CPU，优先级相同则随机选取一个。优先级高的线程获取 CPU 的时间更多。
-  - 我记得操作系统里有一个调度模型：**找书看一下 “多级反馈队列”** **汤子瀛 P94**
+- 分时调度模型：所有线程轮流使用 CPU 使用权，平均分配每个线程占用 CPU 的时间（RR）
+- 抢占式调度模型：优先让优先级高的线程使用 CPU，优先级相同则随机选取一个。优先级高的线程获取 CPU 的时间更多。
+- 我记得操作系统里有一个调度模型：<b>找书看一下 “多级反馈队列” 汤子瀛 P94</b>
 
-- 线程优先级的设置
+3️⃣线程优先级的设置
 
-  - `getPriority()` 获得此线程的优先级
-  - `setPriority()` 更改此线程的优先级
-  - 优先级高，仅仅代表获取 `CPU` 的几率高。
+- `getPriority()` 获得此线程的优先级
+- `setPriority()` 更改此线程的优先级
+- 优先级高，仅仅代表获取 `CPU` 的几率高。
 
-- 线程控制
+4️⃣线程控制
 
-  - `sleep(long millis)`：使当前正在执行的线程暂停`millis`毫秒
-  - join()：等待这个线程死亡。`A.join(),`只有 A 这个线程执行完毕后，后面的代码/线程才会执行
-  - **`setDaemon(boolean on)`：将线程标记为守护线程，当运行的线程为守护线程是，Java虚拟机将退出【其他线程执行完毕后，如果剩下的都是守护线程，则 `jvm`不会等待守护线程执行完，会直接退出！】**
+- `sleep(long millis)`：使当前正在执行的线程暂停 `millis` 毫秒
+- join()：等待这个线程死亡。`A.join(),`只有 A 这个线程执行完毕后，后面的代码/线程才会执行
+- <b>setDaemon(boolean on)：将线程标记为守护线程，当运行的线程为守护线程是，Java 虚拟机将退出【其他线程执行完毕后，如果剩下的都是守护线程，则 jvm 不会等待守护线程执行完，会直接退出！】</b>
 
-- 线程同步
+5️⃣线程同步
 
-  - 线程同步案例
-  - 线程同步的关键字synchronized锁，volatile保证数据可见但是不保证数据的准确性【回忆os磁盘的延迟写，cache的写回法什么的】
+- 线程同步案例
+- 线程同步的关键字 synchronized 锁，volatile 保证数据可见但是不保证数据的准确性
 
-- 线程安全类 
+6️⃣线程安全类 
 
-  - `StringBuffer`【字符串的拼接，编译器会自动优化！我测试过！】
-  - Vector
-  - `Hashtable`===键值都不能为null。【Properties也是线程安全的】
+- `StringBuffer`【字符串的拼接，编译器会自动优化】
+- Vector
+- `Hashtable`===键值都不能为null。【Properties 也是线程安全的】
 
-- Lock锁 `jdk5`提供
+7️⃣Lock 锁 jdk5 提供
 
-  - `ReentrantLock()`
+- `ReentrantLock()`
 
-- `ThreadLocal`===Java线程本地存储
+8️⃣`ThreadLocal`===Java 线程本地存储
 
 ### 基本的线程机制
 
 #### 线程的运行
 
-方式一：继承Thread类
+方式一：继承 Thread 类
 
 - 为什么要重写run方法？
-  - 因为run方法是用来封装被线程执行的代码
-- run方法和start方法的区别
-  - run封装线程执行的代码，直接调用，相当于普通方法调用
-  - start，启动线程，然后由 `jvm` 调用此线程的run方法
+  - 因为 run 方法是用来封装被线程执行的代码
+- run 方法和 start 方法的区别
+  - run 封装线程执行的代码，直接调用，相当于普通方法调用
+  - start，启动线程，然后由 `jvm` 调用此线程的 run 方法
 
 ```java
 public class ThreadDemo {
@@ -14372,7 +14357,7 @@ class MyThread extends Thread{
 
 - 相比于继承 Thread，实现 Runnable 接口的优势
   - 避免了 Java 单继承的局限性【多继承可以用内部类实现】
-  - 适合多个相同程序的代码去处理同一个资源。【Thread 用静态定义资源也可以】，把线程和程序的代码、数据进行了有效分类，较好体现了面向对象的设计思想！
+  - 适合多个相同程序的代码去处理同一个资源。【Thread 用静态定义资源也可以】，把线程和程序的代码、数据进行了有效分类，较好体现了面向对象的设计思想。
     - 资源类定义对资源的操作，唤醒，等待。
     - 线程类只需要调用资源类的方法即可。
     - 线程和资源分离
@@ -14568,7 +14553,7 @@ A->>M:把1写回内存
 B->>M:把1写回内存
 ```
 
-#### 使用synchronized
+#### 使用 synchronized
 
 怎么可以保证上述操作正确的执行呢？Java 提供了关键字 synchronized 来解决资源冲突。当要执行的任务被 synchronized 保护时，它将检查锁是否可用，然后获取锁，执行代码，释放锁。如果锁不可用，它将会阻塞自己。
 
@@ -14666,23 +14651,23 @@ public class SaleTicket implements Runnable {
 }
 ```
 
-> **什么时候需要同步？**
+> <b>什么时候需要同步？</b>
 >
 > 如果你正在写一个变量，它可能接下来被另一个线程读取，或者正在读取一个上一次已经被另一个线程写过的变量，那么你必须使用同步，并且读写线程必须使用相同的监视器锁。（多线程环境下对同样的变量进行读写，那么需要考虑加锁了。）
 >
-> **锁对象，锁字节码**
+> <b>锁对象，锁字节码</b>
 >
 > public synchronized void method(){} 锁的当前对象（this）
 >
 > public static synchronized void method(){} 锁的字节码对象（ XX.class）
 >
-> **同步方法与同步代码块**
+> <b>同步方法与同步代码块</b>
 >
 > 同步方法默认用 this 或者当前类 class 对象作为锁；
 > 同步代码块可以选择以什么来加锁，比同步方法要更细颗粒度，我们可以选择只同步会发生同步问题的部分代码而不是整个方法；
 > 同步方法使用关键字 synchronized 修饰方法，而同步代码块主要是修饰需要进行同步的代码，用 synchronized（object）{代码内容}进行修饰；
 
-#### 显示的Lock锁
+#### 显示的 Lock 锁
 
 除了 synchronized 外，java.util.concurrent 类库中包含了许多其他的锁。下面的代码展示了显示 Lock 锁的基本使用
 
@@ -14817,14 +14802,13 @@ public class Sale3 {
 > - Thread.stop() 方法在结束线程时，会直接终止线程，并立即释放这个线程所持有的锁，而这些锁恰恰是用来维持对象一致性的。stop()方法过于暴力，强行把执行到一半的线程终止，可能会引起一些数据不一致的问题。
 >     - 如数组新增元素，添加了元素，但是 size 还没++，就 stop 了，数据就有问题了！
 > - interrupt 中断线程【只是设置一个中断的标记，非立即中断】
->     - <span style="color:green">在一个线程中调用另一个线程的 interrupt() 方法，即会向那个线程发出信号——线程中断状态已被设置。我们可以通过判断这个标记确定线程需不需要被中断，至于何时中断就由我们自己写代码决定了！</span>优于stop。
+>     - <span style="color:green">在一个线程中调用另一个线程的 interrupt() 方法，即会向那个线程发出信号——线程中断状态已被设置。我们可以通过判断这个标记确定线程需不需要被中断，至于何时中断就由我们自己写代码决定了！</span>优于 stop。
 
 interrupt 方法详解
 
-- **打断 sleep、wait、join  的线程会清空打断状态，打断状态会为 false**【你打断了，打断状态本该为 true，清空后就为 false 了】
-- **打断正常运行的线程，打断状态为 true**
-- **两阶段终止模式**
-    - **在线程 T1 中优雅的终止线程 T2.**
+- <b>打断 sleep、wait、join  的线程会清空打断状态，打断状态会为 false【你打断了，打断状态本该为 true，清空后就为 false 了】</b>
+- <b>打断正常运行的线程，打断状态为 true</b>
+- <b>两阶段终止模式，在线程 T1 中优雅的终止线程 T2.</b>
 - park
     - park 作用类似 sleep，打断 park 线程，不会清空打断状态（true）
     - 如果打断标记已经是 true, 则 park 会失效，
@@ -14901,7 +14885,7 @@ public class InterruptPark {
 
 当多个线程可以一起工作去解决某个问题时，如果某些部分必须在其它部分之前完成，那么就需要对线程进行协调。
 
-#### wait() notify() notifyAll()
+#### wait\notify\notifyAll
 
 调用 wait() 使得线程等待某个条件满足，线程在等待时会被挂起，当其他线程的运行使得这个条件满足时，其它线程会调用 notify() 或者 notifyAll() 来唤醒挂起的线程。它们都属于 Object 的一部分，而不属于 Thread。
 
@@ -14936,12 +14920,12 @@ public static void main(String[] args) {
 // after
 ```
 
-**wait() 和 sleep() 的区别**
+<b>wait() 和 sleep() 的区别</b>
 
 - wait() 是 Object 的方法，而 sleep() 是 Thread 的静态方法；
 - wait() 会释放锁，sleep() 不会。
 
-#### await() signal() signalAll()
+#### await\signal\signalAll
 
 java.util.concurrent 类库中提供了 Condition 类来实现线程之间的协调，可以在 Condition 上调用 await() 方法使线程等待，其它线程调用 signal() 或 signalAll() 方法唤醒等待的线程。
 
@@ -15155,7 +15139,7 @@ pool-1-thread-2捡到了AK47
 
 只允许有一个实例对象。
 
-当 Resource 对象加载的时候，静态初始化块将被调用。由 于 `JVM` 的工作方式，这种静态初始化是线程安全的，即 单例模式的线程安全性由 `JVM` 保证
+当 Resource 对象加载的时候，静态初始化块将被调用。由 于 JVM 的工作方式，这种静态初始化是线程安全的，即单例模式的线程安全性由 JVM 保证
 
 ```java
 interface Resource {
@@ -15195,9 +15179,9 @@ public class Singleton {
 
 “设计模式” 一书讨论了 23 种不同的模式，分为以下三种类别
 
-- <span style="color:green">**创建型：**</span>如何创建对象。这通常涉及隔离对象创建的细节，这样你的代码就不依赖于具体的对象的类型，因此在添加新类型的对象时不会更改。单例模式（Singleton） 被归类为创作模式
-- <span style="color:green">**构建型：**</span>设计对象以满足特定的项目约束。它们处理对象与其他对象连接的方式，以确保系统中的更改不需要更改这些连接
-- <span style="color:green">**行为型：**</span>处理程序中特定类型的操作的对象。这些封装要执行的过程，例如解释语言、实现请求、遍历序列 (如在迭代器中) 或实现算法。（观察者、访问者模式）
+- <b style="color:green">创建型：</b>如何创建对象。这通常涉及隔离对象创建的细节，这样你的代码就不依赖于具体的对象的类型，因此在添加新类型的对象时不会更改。单例模式（Singleton） 被归类为创作模式
+- <b style="color:green">构建型：</b>设计对象以满足特定的项目约束。它们处理对象与其他对象连接的方式，以确保系统中的更改不需要更改这些连接
+- <b style="color:green">行为型：</b>处理程序中特定类型的操作的对象。这些封装要执行的过程，例如解释语言、实现请求、遍历序列 (如在迭代器中) 或实现算法。（观察者、访问者模式）
 
 ### 构建应用程序框架
 
@@ -15207,18 +15191,18 @@ public class Singleton {
 
 ### 网络编程入门
 
-- 网络编程
-  - 在网络通信写一下，实现网络互连的不同计算机上，进行数据交换。
-- 网络编程三要素
-  - IP地址。为计算机指定标识（即IP地址）
-  - 端口。用于区分一台计算机的不同程序。如：A程序网络通信就用xx端口。
-  - 协议。网络通信需要遵从的通信规则【常见协议有 UDP协议和TCP协议】
+网络编程：在网络通信协议下，实现网络互连的不同计算机上，进行数据交换。
 
-### IP地址
+网络编程三要素
+- IP 地址。为计算机指定标识（即 IP 地址）
+- 端口。用于区分一台计算机的不同程序。如：A 程序网络通信就用 xx 端口。
+- 协议。网络通信需要遵从的通信规则【常见协议有 UDP 协议和 TCP 协议】
+
+### IP 地址
 
 `IP 地址分为 IPv4 和 IPv6`
 
-- IPv4 地址 4 字节 4*8=32 位
+- IPv4 地址 4 字节 4x8=32 位
 - IPv6 地址 128 位地址长度，每 16 字节一组，分成 8 组十六进制数
 
 `常见命令【windows】`
@@ -15228,7 +15212,7 @@ public class Singleton {
 
 #### InetAddress
 
-**IP 地址的获取和操作，InetAddress 表示 Internet 协议（IP）地址**
+<b>IP 地址的获取和操作，InetAddress 表示 Internet 协议（IP）地址</b>
 
 - getHostName() 获得主机名称
 - getHostAddress() 返回文本显示中的 IP 地址字符串
@@ -15252,11 +15236,11 @@ public void fn1() throws UnknownHostException {
 - 端口：设备上应用程序的唯一标识
 - 端口号：用两个字节表示的整数。范围是 0 到 65535. 其中 0 到 1023 被用于一些知名的网络服务和应用。普通程序建议使用 1024 以上的端口号，防止端口被占用启动失败！
 
-### UDP协议
+### UDP 协议
 
-**协议：计算机网络中，连接和通信的规则称之为网络通信协议**
+<b>协议：计算机网络中，连接和通信的规则称之为网络通信协议</b>
 
-####  `UDP` 协议
+####  UDP 协议
 
 - 用户数据报协议（User Datagram Protocol）
 - `UDP` 是无连接通信协议。数据传输时发送端和接收端不建立逻辑。回忆计组和计网的相关内容。发送和接受都不确认对面有没有人。`UDP` 协议资源消耗小，通信效率高，常用于音频，视频和普通数据的传输。
@@ -15291,9 +15275,9 @@ public void fn1() throws IOException {
 }
 ```
 
-**接收数据的步骤**
+<b>接收数据的步骤</b>
 
-- 创建接收端的Socket对象（DatagramSocke）
+- 创建接收端的 Socket 对象（DatagramSocke）
 - 创建一个数据包，用于接收数据
 - 调用 DatagramSocke 的方法接收数据
 - 解析数据包，把数据在控制台显示
@@ -15310,17 +15294,17 @@ public static void main(String[] args) throws Exception {
 }
 ```
 
-PS : 不记得具体的xx，就点进源码去看构造方法上面的注释。
+PS : 不记得具体的 xx，就点进源码去看构造方法上面的注释。
 
-### TCP协议
+### TCP 协议
 
-#### TCP通信原理
+#### TCP 通信原理
 
 TCP 协议是一种可靠的网络协议，它在通信的两端各建立一个 Socket 对象，从而在通信的两端形成网络虚拟链路，一旦建立了虚拟的网络链路，两端的程序就可以通过虚拟链路进行通信！
 
 <b>Java 对基于 TCP 协议的网络提供了良好的封装，使用 Socket 对象来代表两端的通信端口，并通过 Socket 产生 IO 流进行网络通信</b>
 
-#### TCP发送数据
+#### TCP 发送数据
 
 - 创建客户端的 Socket 对象（Socket）
 
@@ -15335,7 +15319,7 @@ TCP 协议是一种可靠的网络协议，它在通信的两端各建立一个 
 
   `socket.close();`
 
-#### TCP接收数据
+#### TCP 接收数据
 
 - 创建服务器端的 Socket 对象（ServerSocket） `ServerSocket(int port)` 指定端口即可
 - 监听客户端连接，返回一个 Socket 对象 `Socket.accept();`
@@ -15461,7 +15445,7 @@ public class ServerDemo {
 }
 ```
 
-### 模拟Tomcat
+### 模拟 Tomcat
 
 ```java
 package com.bbxx.tomcat;
@@ -15601,7 +15585,7 @@ public class BSDemo3 {
 
 ## 第二十七章-JDBC
 
-### 使用 C3P0
+### 使用C3P0
 
 在 src 下放配置文件 `c3p0-config.xml`
 
@@ -15646,7 +15630,7 @@ public class C3P0Demo {
 }
 ```
 
-### 使用 Druid
+### 使用Druid
 
 配置文件 druid.properties
 
@@ -15835,5 +15819,5 @@ class DataSourceUtils {
 
 ## Java平台模块系统
 
-- requires 不具备传递性，A 声明了需要 B，B 声明了需要 C 和 D，但是 A 不能使用 C 和 D。
+requires 不具备传递性，A 声明了需要 B，B 声明了需要 C 和 D，但是 A 不能使用 C 和 D。
 
