@@ -539,7 +539,7 @@ public class RedisTemplateTest {
 
 导入 SQL 文件
 
-![image-20220507205857248](C:\development\Code\note\CodeNotes\中间件\img\image-20220507205857248.png)
+<div align="center"><img src="img/image-20220507205857248.png"></div>
 
 SQL 中包含如下的表
 
@@ -556,7 +556,7 @@ SQL 中包含如下的表
 
 这是一个前后端分离的项目，用 ngnix 进行方向代理，访问 tomcat 集群。Redis 和 MySQL 也有相应的集群。 
 
-![image-20220507210207656](C:\development\Code\note\CodeNotes\中间件\img\image-20220507210207656.png)
+<div align="center"><img src="img/image-20220507210207656.png"></div>
 
 项目的访问路径是：http://localhost:8081/shop-type/list，如果可以看到数据则证明运行没有问题。
 
@@ -568,7 +568,7 @@ PS：需要修改 application.yaml 文件中的 MySQL、Redis 的地址信息。
 
 具体的流程如下。
 
-![image-20220507210751764](C:\development\Code\note\CodeNotes\中间件\img\image-20220507210751764.png)
+<div align="center"><img src="img/image-20220507210751764.png"</div>
 
 我们需要在一些操作上判断用户是否登录。一种方式是在特定的操作上加判断，另一种方式是写一个过滤器，当访问特定的 url 路径时，判断是否登录。显然，用过滤器的方式更好。我们需要把拦截器拦截到的用户信息传递到 Controller 里去，并且要保证线程安全（一条完整的 HTTP 请求对应一个线程，如果共享数据，如用同一个 ArrayList 存储，会出现并发安全问题）。我们可以使用 ThreadLocal，可以确保线程之间安全的使用自己线程中的数据。
 
@@ -592,11 +592,11 @@ session的替代方案应该满足：
 
 ### 基于Redis实现共享session登录
 
-![image-20220507215112295](C:\development\Code\note\CodeNotes\中间件\img\image-20220507215112295.png)
+<div align="center"><img src="img/image-20220507215112295.png"></div>
 
 
 
-![image-20220507215201598](C:\development\Code\note\CodeNotes\中间件\img\image-20220507215201598.png)
+<div align="center"><img src="img/image-20220507215201598.png"></div>
 
 注意，拦截器类是我们手动 new 出来放到 IOC 里面的，所以拦截器里注入 StringRedisTemplate 需要用构造函数手动给对象赋值。然后添加自定义的拦截器又是在 Configurate 类中做的， StringRedisTemplate 可以通过依赖注入实例化。
 
@@ -609,7 +609,7 @@ session的替代方案应该满足：
 
 哈希结构可以将对象中的每个字段独立存储，可以针对单个字段做 CRUD，并且内存占用更少
 
-![image-20220507215602774](C:\development\Code\note\CodeNotes\中间件\img\image-20220507215602774.png)
+<div align="center"><img src="img/image-20220507215602774.png"></div>
 
 ### 总结
 
@@ -623,7 +623,7 @@ Redis 代替 session 需要考虑的问题：
 
 拦截器的执行顺序有个先后关系，可以通过 Order 来设置。Order 的值越小，执行计划等级越高。
 
-![image-20220507215858667](C:\development\Code\note\CodeNotes\中间件\img\image-20220507215858667.png)
+<div align="center"><img src="img/image-20220507215858667.png"></div>
 
 ## 商品查询缓存
 
@@ -653,13 +653,13 @@ graph LR
 
 ### 添加Redis缓存
 
-![image-20220507220302647](C:\development\Code\note\CodeNotes\中间件\img\image-20220507220302647.png)
+<div align="center"><img src="img/image-20220507220302647.png">
 
-![image-20220507220326256](C:\development\Code\note\CodeNotes\中间件\img\image-20220507220326256.png)
+<div align="center"><img src="img/image-20220507220326256.png"></div>
 
 修改 ShopTypeController 中的 queryTypeList 方法，添加查询缓存
 
-![image-20220507220401217](C:\development\Code\note\CodeNotes\中间件\img\image-20220507220401217.png)
+<div align="center"><img src="img/image-20220507220401217.png"></div>
 
 ### 缓存更新策略
 
@@ -692,7 +692,7 @@ graph LR
 2.如何保证缓存与数据库的操作的同时成功或失败？
 
 - 单体系统，将缓存与数据库操作放在一个事务
-- 分布式系统，利用TCC等分布式事务方案
+- 分布式系统，利用 TCC 等分布式事务方案
 
 3.先操作缓存还是先操作数据库？
 
@@ -727,19 +727,21 @@ graph LR
 
 ### 缓存穿透
 
-<b>缓存穿透</b>是指客户端请求的数据在缓存中和数据库中都不存在，这样缓存永远不会生效，这些请求都会打到数据库。
+<b>缓存穿透是指客户端请求的数据在缓存中和数据库中都不存在，这样缓存永远不会生效，这些请求都会打到数据库。</b>
 
 常见的解决方案有两种：
 
-- 缓存空对象
-    - 优点：实现简单，维护方便
-    - 缺点：额外的内存消耗；可能造成短期的不一致
+1️⃣缓存空对象
 
-- 布隆过滤
-    - 优点：内存占用较少，没有多余 key
-    - 缺点：实现复杂；存在误判可能
+- 优点：实现简单，维护方便
+- 缺点：额外的内存消耗；可能造成短期的不一致
 
+2️⃣布隆过滤
 
+- 优点：内存占用较少，没有多余 key
+- 缺点：实现复杂；存在误判可能
+
+<div align="center"><img src="img/image-20220607115533210.png"></div>
 
 > 缓存穿透产生的原因是什么？
 
@@ -747,9 +749,305 @@ graph LR
 
 > 缓存穿透的解决方案有哪些？
 
+<div align="center"><img src="img/image-20220607115909900.png"></div>
+
 - 缓存 null 值：会带来额外的内存存储压力和短暂的不一致性。
 - 布隆过滤：基于布隆算法，准确性无法保证，实现复杂。
 - 增强 id 的复杂度，避免被猜测 id 规律
 - 做好数据的基础格式校验
 - 加强用户权限校验
 - <b>做好热点参数的限流</b>
+
+### 缓存雪崩
+
+缓存雪崩是指在同一时段大量的缓存 key 同时失效或者 Redis 服务宕机，导致大量请求到达数据库，带来巨大压力。
+
+<b>常见的解决方案有：</b>
+
+1️⃣给不同的 Key 的 TTL 添加随机值，比如原先设置的 20，那么我们再加一个随机的 1~10 的值
+
+2️⃣利用 Redis 集群提高服务的可用性（很严重），尽可能的避免宕机。宕机的话，可以用 redis 的哨兵机制，监控服务。搭建 Redis 服务形成主从，如果有机器 宕机（如主宕机了，会随机从一个从机器里选一个替代主）
+
+3️⃣给缓存业务添加降级限流策略
+
+4️⃣给业务添加多级缓存
+
+### 缓存穿透
+
+<span style="color:red">缓存击穿问题也叫热点 Key 问题，就是一个被高并发访问并且缓存重建业务较复杂的 key 突然失效了，无数的请求访问会在瞬间给数据库带来巨大的冲击。</span>
+
+假定有多个线程（1，2，3，4）查询到了一个失效的缓存，线程 1 发现缓存失效了，开始走重建缓存的流程。此时缓存还未重建完毕，线程 2，3，4 也发现缓存失效了，也走了重建缓存的流程（没有必要）。
+
+<div align="center"><img src="img/image-20220607145640360.png"></div>
+
+常见的解决方案有：互斥锁和逻辑过期。利用互斥锁，让其中一个线程重建缓存即可了。
+
+![image-20220607150022962](C:\development\note\CodeNotes\中间件\img\image-20220607150022962.png)
+
+互斥锁需要互相等待，1000 个线程来了，一个负责重建，其他的只能等待。如果重建时间长的话，系统性能会很差。可以为数据设置一个逻辑过期，解决等待的问题。
+
+![image-20220607150345908](C:\development\note\CodeNotes\中间件\img\image-20220607150345908.png)
+
+| 解决方案        | 优点                                         | 缺点                                         |
+| --------------- | -------------------------------------------- | -------------------------------------------- |
+| <b>互斥锁</b>   | 没有额外的内存消耗<br>保证一致性<br>实现简单 | 线程需要等待，性能受影响<br>可能有死锁风险   |
+| <b>逻辑过期</b> | 线程无需等待，性能较好                       | 不保证一致性<br>有额外的内存消耗<br>实现复杂 |
+
+> 基于互斥锁解决缓存击穿问题
+
+需求：修改根据 id 查询商铺的业务，基于互斥锁（redis 的 setnx）方式来解决缓存击穿问题。
+
+<div align="center"><img src="img/image-20220607151014185.png"></div>
+
+```java
+private boolean tryLock(String key){
+    Boolean flag = stringRedisTemplate.opsForValue().setIfAbsent(key,"1",10,TimeUnit.SECONDS);
+    return flag==null?false:true;
+}
+
+private void unlock(String key){
+    stringRedisTemplate.delete(key);
+}
+```
+
+获取锁成功后，应该再次检测 redis 缓存是否存在，做 doubleCheck，如果存在则无需重建缓存。
+
+> 基于逻辑过期方式解决缓存击穿问题
+
+需求：修改根据 id 查询商铺的业务，基于互斥锁方式来解决缓存击穿问题。
+
+![image-20220607151228929](C:\development\note\CodeNotes\中间件\img\image-20220607151228929.png)
+
+### 缓存工具封装
+
+<b>基于 StringRedisTemplate 封装一个缓存工具类，满足下列需求：</b>
+
+方法 1：将任意 Java 对象序列化为 json 并存储在 string 类型的 key 中，并且可以设置 TTL 过期时间
+
+方法 2：将任意 Java 对象序列化为 json 并存储在 string 类型的 key 中，并且可以设置逻辑过期时间，用于处理缓存击穿问题
+
+方法 3：根据指定的 key 查询缓存，并反序列化为指定类型，利用缓存空值的方式解决缓存穿透问题
+
+方法 4：根据指定的 key 查询缓存，并反序列化为指定类型，需要利用逻辑过期解决缓存击穿问题
+
+在更新缓存的时候，不知道数据库查询的具体操作，采用 lambda 由用户传入具体的操作。
+
+## 优惠券秒杀
+
+- 全局唯一 ID
+- 实现优惠券秒杀下单
+- 超卖问题
+- 一人一单
+- 分布式锁
+- Redis 优化秒杀
+- Redis 消息队列实现异步秒杀
+
+### 全局唯一 ID
+
+每个店铺都可以发布优惠券
+
+当用户抢购时，就会生成订单并保存到 tb_voucher_order 这张表中，而订单表如果使用数据库自增ID就存在一些问题：
+
+- id 的规律性太明显
+- 受单表数据量的限制
+
+全局 ID 生成器，是一种在分布式系统下用来生成全局唯一ID的工具，一般要满足下列特性：唯一性、高可用、高性能、递增性、安全性
+
+为了增加 ID 的安全性，我们不直接使用 Redis 自增的数值，而是拼接一些其它信息
+
+```mermaid
+graph
+符号位-1bit
+时间戳-31bit
+序列化-32bit
+```
+
+ID 的组成部分
+
+- 符号位：1bit，永远为 0
+- 时间戳：31bit，以秒为单位，可以使用 69 年
+- 序列号：32bit，秒内的计数器，支持每秒产生 $2^{32}$ 个不同 ID `A << COUNT_BIT | count`
+
+> 全局唯一 ID 生成策略
+
+- UUID
+- Redis 自增
+- snowflake 算法
+- 数据库自增
+
+> Redis 自增 ID 策略：
+
+- 每天一个 key，方便统计订单量
+- ID 构造是时间戳 + 计数器
+
+> 案例：生成全局唯一 ID
+
+```java
+private static final int COUNT_BIT = 32;
+public long nextId(String keyPrefix){
+    // 1.生成时间戳
+    LocalDateTime now = LocalDateTime.now();
+    long nowSecond = new.toEpochSecond(ZoneOffset.UTC);
+    long timestamp = nowSecond - BEGIN_TIMESTAMP;
+    
+    // 2.生成序列号
+    // 2.1 获取当前日期，精确到天
+    String date = now.format(DateTimeFormatter.ofPattern("yyy:MM:dd"));
+    // 2.2 自增长（不会存在空指针的，如果key不存在会自动给你重建一个，然后+1返回1给你）
+    Long count = stringRedisTemplate.opsForValue().increment("icr:"+keyPrefix+":"+date);
+    
+    // 拼接返回
+   	// 符号位 时间戳 序列化
+    // 用位运算。
+    return (timestamp<<COUNT_BIT)|count
+}
+```
+
+### 优惠券秒杀下单
+
+每个店铺都可以发布优惠券，分为平价券和特价券。平价券可以任意购买，而特价券需要秒杀抢购：
+
+tb_voucher：优惠券的基本信息，优惠金额、使用规则等
+tb_seckill_voucher：优惠券的库存、开始抢购时间，结束抢购时间。特价优惠券才需要填写这些信息
+
+下单时需要判断两点：
+
+- 秒杀是否开始或结束，如果尚未开始或已经结束则无法下单
+- 库存是否充足，不足则无法下单
+
+![image-20220607153644701](C:\development\note\CodeNotes\中间件\img\image-20220607153644701.png)
+
+### 超卖问题
+
+超卖问题是典型的多线程安全问题，针对这一问题的常见解决方案就是加锁。
+
+认为线程安全问题一定会发生，因此在操作数据之前先获取锁，确保线程串行执行。例如 Synchronized、Lock 都属于悲观锁
+
+认为线程安全问题不一定会发生，因此不加锁，只是在更新数据时去判断有没有其它线程对数据做了修改。如果没有修改则认为是安全的，自己才更新数据。如果已经被其它线程修改说明发生了安全问题，此时可以重试或异常。
+
+> 乐观锁
+
+乐观锁的关键是判断之前查询得到的数据是否有被修改过，常见的方式有两种，版本号法和 CAS。
+
+版本号法，加一个版本字段，先查下数据的库存和版本，修改时判断版本是否一致，不一致说明被改过，重新查询库存，修改库存。可以直接用库存作为版本号。直接判断版本号是否一致的话，商品卖出的成功率太低，直接判断库存是否大于零更合适。
+
+有时候只能通过数据是否变化来判断是否可以卖出，这种时候为了提高并发度可以采用分段锁的思想。将数据分为多个段，让多个线程可以并发处理。
+
+> 悲观锁
+
+加重量级锁
+
+如果觉得并发粒度不够，可以采用分段锁的思想。
+
+| 方案                                             | 优点     | 缺点               |
+| ------------------------------------------------ | -------- | ------------------ |
+| 悲观锁，添加同步锁，让线程串行执行               | 简单粗暴 | 性能一般           |
+| 乐观锁，不加锁，在更新时判断是否有其它线程在修改 | 性能好   | 存在成功率低的问题 |
+
+### 一人一单
+
+修改秒杀业务，要求同一个优惠券，一个用户只能下一单。可以直接用联合主键完成，也可以代码里写逻辑。
+
+- 查询订单
+- 判断是否存在，不存在则扣减库存，创建订单。
+
+查询订单和扣减库存这块会出现并发问题，因为查询和创建不是原子性的。在加锁的时候需要注意锁的范围和事务的范围。
+
+![image-20220607154427229](C:\development\note\CodeNotes\中间件\img\image-20220607154427229.png)
+
+```java
+@Transactional
+public Result createVoucherOrder(Long voucherId){
+    Long userId = UserHolder.getUser().getId();
+    synchronized(userId.toString().intern()){
+        // 业务代码
+    }
+    // 会出现，锁已经释放了，但是事务还没有提交。数据没有刷新到数据库中，导致其他事务查询到的还是未更新的数据，导致数据不一致。
+    // 为了避免这种问题，需要加大锁的范围
+}
+```
+
+加大锁的范围
+
+```java
+@Transactional
+public Result createVoucherOrder(Long voucherId){
+    Long userId = UserHolder.getUser().getId();
+    // 业务代码
+}
+
+// 加大锁的范围,让锁锁住事务 Spring 事务失效的集中情况
+public XX KK(){
+    // some code
+    Long userId = UserHolder.getUser().getId();
+    // Spring 的事务是通过代理对象实现的，直接调用 createVoucherOrder 是不会走代理对象的，所以我们需要改成用代理对象调用
+    synchronized(userId.toString().intern()){
+    	IVoucherOrderService proxy = AopContext.currentProxy();
+        return proxy.createVoucherOrder(userId); // createVoucherOrder 是接口 IVoucherOrderService 中的方法
+    }
+}
+```
+
+通过加锁可以解决在单机情况下的一人一单安全问题，但是在集群模式下就不行了。假定下面两个线程访问的是不同的服务器：
+
+![image-20220607154606585](C:\development\note\CodeNotes\中间件\img\image-20220607154606585.png)
+
+模拟集群模型：
+
+1.将服务启动两份，端口分别为 8081 和 8082
+
+![image-20220607203735703](C:\development\note\CodeNotes\中间件\img\image-20220607203735703.png)
+
+2.修改 nginx 的 conf 目录下的 nginx.conf 文件，配置反向代理和负载均衡。
+
+![image-20220607203729101](C:\development\note\CodeNotes\中间件\img\image-20220607203729101.png)
+
+3.jmeter 并发访问，出现并发安全问题，并未实现一人一单。
+
+分布式锁可以解决上述问题。当然也可以直接用数据库的联合主键解决一人一单的问题。
+
+### 分布式锁
+
+分布式锁是满足分布式系统或集群模式下多进程可见并且互斥的锁。
+
+分布式锁的核心是实现多进程之间互斥，而满足这一点的方式有很多，常见的有三种
+
+|        | **MySQL**                   | **Redis**                 | **Zookeeper**                    |
+| ------ | --------------------------- | ------------------------- | -------------------------------- |
+| 互斥   | 利用 mysql 本身的互斥锁机制 | 利用 setnx 这样的互斥命令 | 利用节点的唯一性和有序性实现互斥 |
+| 高可用 | 好                          | 好                        | 好                               |
+| 高性能 | 一般                        | 好                        | 一般                             |
+| 安全性 | 断开连接，自动释放锁        | 利用锁超时时间，到期释放  | 临时节点，断开连接自动释放       |
+
+> 基于 Redis 的分布式锁
+
+实现分布式锁时需要实现的两个基本方法：
+
+- 获取锁：
+
+    - 互斥，确保只能有一个线程获取锁
+
+        `setnx lock thread1`
+
+        `expire lock 10` 添加锁过期时间，避免服务器宕机引起死锁
+
+    - 非阻塞：尝试一次，成功返回 true，失败返回 false
+
+
+- 释放锁：
+
+    - 手动释放
+
+    - 超时释放：获取锁时添加一个超时时间
+
+        `del key`
+
+![image-20220607155325168](C:\development\note\CodeNotes\中间件\img\image-20220607155325168.png)
+
+```java
+public interface ILock{
+    boolean tryLock(long timeoutsec){};
+    void unlock();
+}
+```
+
