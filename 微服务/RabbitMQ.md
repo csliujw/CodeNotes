@@ -10,7 +10,7 @@
 
 - 异步通讯：就像发邮件，不需要马上回复。
 
-<img src="assets/image-20210717161939695.png">
+<div align="center"><img src="assets/image-20210717161939695.png"></div>
 
 两种方式各有优劣，打电话可以立即得到响应，但是你却不能跟多个人同时通话。发送邮件可以同时与多个人收发邮件，但是往往响应会有延迟。
 
@@ -18,13 +18,13 @@
 
 我们之前学习的 Feign 调用就属于同步方式，虽然调用可以实时得到结果，但存在下面的问题：
 
-<img src="assets/image-20210717162004285.png">
+<div align="center"><img src="assets/image-20210717162004285.png"></div>
 
-> **同步调用的优点：**
+> <b>同步调用的优点：</b>
 
 - 时效性较强，可以立即得到结果
 
-> **同步调用的问题：**
+> <b>同步调用的问题：</b>
 
 - 耦合度高
 - 性能和吞吐能力下降
@@ -33,11 +33,11 @@
 
 ### 异步通讯
 
-<span style="color:green">**异步调用可以避免上述问题，异步调用常见实现是事件驱动模型**</span>
+<span style="color:green"><b>异步调用可以避免上述问题，异步调用常见实现是事件驱动模型</b></span>
 
 以购买商品为例，用户支付后需要调用订单服务完成订单状态修改，调用物流服务，从仓库分配响应的库存并准备发货。
 
-<img src="assets\image-20211029100941563.png">
+<div align="center"><img src="assets\image-20211029100941563.png"></div>
 
 在事件驱动模型中用两种角色：<span style="color:red">一种是事件发布者，一种是事件订阅者。</span>
 
@@ -46,11 +46,11 @@
 
 为了解除事件发布者与订阅者之间的耦合，两者并不是直接通信，而是有一个中间人（Broker）。发布者发布事件到 Broker，不关心谁来订阅事件。订阅者从 Broker 订阅事件，不关心谁发来的消息。
 
-<img src="assets/image-20210422095356088.png">
+<div align="center"><img src="assets/image-20210422095356088.png"></div>
 
 Broker 是一个像数据总线一样的东西，所有的服务要接收数据和发送数据都发到这个总线上，这个总线就像协议一样，让服务间的通讯变得标准和可控。类似与一个有协议的队列，生产者向里面放数据，消费者从里面拿数据。
 
-> **好处：**
+> <b>好处：</b>
 
 - 吞吐量提升：无需等待订阅者处理完成，响应更快速
 
@@ -59,7 +59,7 @@ Broker 是一个像数据总线一样的东西，所有的服务要接收数据�
 - 耦合度极低，每个服务都可以灵活插拔，可替换
 - 流量削峰：不管发布事件的流量波动多大，都由 Broker 接收，订阅者可以按照自己的速度去处理事件
 
-> **缺点：**
+> <b>缺点：</b>
 
 - 架构复杂了，业务没有明显的流程线，不好管理
 - 需要依赖于 Broker 的可靠、安全、性能
@@ -79,7 +79,7 @@ MQ，中文是消息队列（MessageQueue），字面来看就是存放消息的
 
 几种常见 MQ 的对比：
 
-|            | **RabbitMQ**            | **ActiveMQ**                   | **RocketMQ** | **Kafka**  |
+|            | RabbitMQ<            | ActiveMQ                 | RocketMQ | Kafka  |
 | ---------- | ----------------------- | ------------------------------ | ------------ | ---------- |
 | 公司/社区  | Rabbit                  | Apache                         | 阿里         | Apache     |
 | 开发语言   | Erlang                  | Java                           | Java         | Scala&Java |
@@ -128,17 +128,17 @@ erlang 开发的 AMQP 的开源实现
 
 ### 基本流程
 
-**AMQP** 中消息的路由过程和Java开发者熟悉的 **JMS** 存在一些差别，**AMQP** 中增加了 **Exchange** 和 **Binding** 的角色。生产者把消息发布到 **Exchange** 上，消息最终到达队列并被消费者接收，而 **Binding **决定交换器的消息应该发送到那个队列。交换器不同，绑定规则不同，那么消息的结果就不一样。
+<b>AMQP</b> 中消息的路由过程和 Java 开发者熟悉的 <b>JMS</b> 存在一些差别，<b>AMQP</b> 中增加了 <b>Exchange</b> 和 <b>Binding</b> 的角色。生产者把消息发布到 <b>Exchange</b> 上，消息最终到达队列并被消费者接收，而 <b>Binding </b>决定交换器的消息应该发送到那个队列。交换器不同，绑定规则不同，那么消息的结果就不一样。
 
 ## 安装RabbitMQ
 
 安装 RabbitMQ，参考课前资料：
 
-<img src="assets/image-20210717162628635.png">
+<div align="center"><img src="assets/image-20210717162628635.png"></div>
 
 MQ的基本结构：
 
-<img src="assets/image-20210717162752376.png">
+<div align="center"><img src="assets/image-20210717162752376.png"></div>
 
 > RabbitMQ 中的一些角色：
 
@@ -152,17 +152,17 @@ MQ的基本结构：
 
 RabbitMQ 官方提供了 5 个不同的 Demo 示例，对应了不同的消息模型：
 
-<img src="assets/image-20210717163332646.png">
+<div align="center"><img src="assets/image-20210717163332646.png"></div>
 
 ## 导入Demo工程
 
 课前资料提供了一个 Demo 工程，mq-demo:
 
-<img src="assets/image-20210717163253264.png">
+<div align="center"><img src="assets/image-20210717163253264.png"></div>
 
 导入后可以看到结构如下：
 
-<img src="assets/image-20210717163604330.png">
+<div align="center"><img src="assets/image-20210717163604330.png"></div>
 
 包括三部分：
 
@@ -174,7 +174,7 @@ RabbitMQ 官方提供了 5 个不同的 Demo 示例，对应了不同的消息�
 
 简单队列模式的模型图：
 
- <img src="assets/image-20210717163434647.png">
+ <div align="center"><img src="assets/image-20210717163434647.png"></div>
 
 官方的 HelloWorld 是基于最基础的消息队列模型来实现的，只包括三个角色：
 
@@ -321,13 +321,13 @@ SpringAMQP 是基于 RabbitMQ 封装的一套模板，并且还利用 SpringBoot
 
 SpringAmqp 的官方地址：https://spring.io/projects/spring-amqp
 
-<img src="assets/image-20210717164024967.png">
+<div align="center"><img src="assets/image-20210717164024967.png"></div>
 
-<img src="assets/image-20210717164038678.png">
+<div align="center"><img src="assets/image-20210717164038678.png"></div>
 
 SpringAMQP 提供了三个功能：
 
-- **自动声明队列、交换机及其绑定关系**
+- <b>自动声明队列、交换机及其绑定关系</b>
 - 基于注解的监听器模式，异步接收消息
 - 封装了 RabbitTemplate 工具，用于发送消息 
 
@@ -426,9 +426,9 @@ public class SpringRabbitListener {
 
 ## WorkQueue
 
-Work queues，也被称为（Task queues），任务模型。简单来说就是**让多个消费者绑定到一个队列，共同消费队列中的消息**。
+Work queues，也被称为（Task queues），任务模型。简单来说就是<b>让多个消费者绑定到一个队列，共同消费队列中的消息</b>。
 
-<img src="assets/image-20210717164238910.png">
+<div align="center"><img src="assets/image-20210717164238910.png"></div>
 
 当消息处理比较耗时的时候，可能生产消息的速度会远远大于消息的消费速度。长此以往，消息就会堆积越来越多，无法及时处理。此时就可以使用 work 模型，多个消费者共同处理消息处理，速度就能大大提高了。
 
@@ -502,7 +502,7 @@ Work 模型的使用：
 
 发布订阅的模型如图：
 
-<img src="assets/image-20210717165309625.png">
+<div align="center"><img src="assets/image-20210717165309625.png"></div>
 
 可以看到，在订阅模型中，多了一个 exchange 角色，而且过程略有变化：
 
@@ -515,13 +515,13 @@ Work 模型的使用：
 - Consumer：消费者，与以前一样，订阅队列，没有变化
 - Queue：消息队列也与以前一样，接收消息、缓存消息。
 
-**Exchange（交换机）只负责转发消息，不具备存储消息的能力**，因此如果没有任何队列与 Exchange 绑定，或者没有符合路由规则的队列，那么消息会丢失！
+<b>Exchange（交换机）只负责转发消息，不具备存储消息的能力</b>，因此如果没有任何队列与 Exchange 绑定，或者没有符合路由规则的队列，那么消息会丢失！
 
 ## Fanout
 
 Fanout，英文翻译是扇出，我觉得在 MQ 中叫广播更合适。
 
-<img src="assets/image-20210717165438225.png">
+<div align="center"><img src="assets/image-20210717165438225.png"></div>
 
 在广播模式下，消息发送流程是这样的：
 
@@ -536,13 +536,13 @@ Fanout，英文翻译是扇出，我觉得在 MQ 中叫广播更合适。
 - 创建一个交换机 itcast.fanout，类型是 Fanout
 - 创建两个队列 fanout.queue1 和 fanout.queue2，绑定到交换机 itcast.fanout
 
-<img src="assets/image-20210717165509466.png">
+<div align="center"><img src="assets/image-20210717165509466.png"></div>
 
 ### 声明队列和交换机
 
 Spring 提供了一个接口 Exchange，来表示所有不同类型的交换机：
 
-<img src="assets/image-20210717165552676.png">
+<div align="center"><img src="assets/image-20210717165552676.png"></div>
 
 在 consumer 中创建一个类，声明队列和交换机：
 
@@ -643,7 +643,7 @@ public void listenFanoutQueue2(String msg) {
 
 在 Fanout 模式中，一条消息，会被所有订阅的队列都消费。但是，在某些场景下，我们希望不同的消息被不同的队列消费。这时就要用到 Direct 类型的 Exchange。
 
-<img src="assets/image-20210717170041447.png">
+<div align="center"><img src="assets/image-20210717170041447.png"></div>
 
  在Direct模型下：
 
@@ -651,7 +651,7 @@ public void listenFanoutQueue2(String msg) {
 - 消息的发送方在，向 Exchange 发送消息时，也必须指定消息的 `RoutingKey`。
 - Exchange 不再把消息交给每一个绑定的队列，而是根据消息的`Routing Key`进行判断，只有队列的`Routingkey`与消息的 `Routing key`完全一致，才会接收到消息
 
-**案例需求如下**：
+<b>案例需求如下<b>：
 
 1. 利用 @RabbitListener 声明 Exchange、Queue、RoutingKey
 
@@ -659,7 +659,7 @@ public void listenFanoutQueue2(String msg) {
 
 3. 在 publisher 中编写测试方法，向 itcast. direct 发送消息
 
-<img src="assets/image-20210717170223317.png">
+<div align="center"><img src="assets/image-20210717170223317.png"></div>
 
 ### 基于注解声明队列和交换机
 
@@ -736,7 +736,7 @@ public void testSendDirectExchange() {
 
 图示：
 
-<img src="assets/image-20210717170705380.png">
+<div align="center"><img src="assets/image-20210717170705380.png"></div>
 
 解释：
 
@@ -753,7 +753,7 @@ public void testSendDirectExchange() {
 
 3. 在 publisher 中编写测试方法，向 itcast. topic 发送消息
 
-<img src="assets/image-20210717170829229.png">
+<div align="center"><img src="assets/image-20210717170829229.png"></div>
 
 ### 消息发送
 
@@ -761,8 +761,8 @@ public void testSendDirectExchange() {
 
 ```java
 /**
-     * topicExchange
-     */
+ * topicExchange
+ */
 @Test
 public void testSendTopicExchange() {
     // 交换机名称
@@ -802,7 +802,7 @@ public void listenTopicQueue2(String msg){
 
 描述下 Direct 交换机与 Topic 交换机的差异？
 
-- Topic 交换机接收的消息 RoutingKey 必须是多个单词，以 `**.**` 分割
+- Topic 交换机接收的消息 RoutingKey 必须是多个单词，以 `*.*` 分割
 - Topic 交换机与队列绑定时的 bindingKey 可以指定通配符
 - `#`：代表0个或多个词
 - `*`：代表1个词
@@ -811,7 +811,7 @@ public void listenTopicQueue2(String msg){
 
 之前说过，Spring 会把你发送的消息序列化为字节发送给 MQ，接收消息的时候，还会把字节反序列化为 Java 对象。
 
-<img src="assets/image-20200525170410401.png">
+<div align="center"><img src="assets/image-20200525170410401.png"></div>
 
 只不过，默认情况下 Spring 采用的序列化方式是 JDK 序列化。众所周知，JDK 序列化存在下列问题：
 
@@ -841,7 +841,7 @@ public void testSendMap() throws InterruptedException {
 
 发送消息后查看控制台：
 
-<img src="assets/image-20210422232835363.png">
+<div align="center"><img src="assets/image-20210422232835363.png"></div>
 
 ### 配置JSON转换器
 

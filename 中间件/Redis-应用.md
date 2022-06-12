@@ -38,6 +38,8 @@ Redis 介绍：诞生于 2009 年，全称是 Remote Dictionary Server，远程�
 
 在 docker 中安装 redis。
 
+docker 中进入后台运行的 redis：docker exec -it ae7c /bin/bash。然后再输入 redis-cli 启动交互模式。
+
 ## 数据结构
 
 Redis 是一个 key-value 的数据库，key 一般是 String 类型，不过 value 的类型多种多样。
@@ -782,11 +784,11 @@ graph LR
 
 常见的解决方案有：互斥锁和逻辑过期。利用互斥锁，让其中一个线程重建缓存即可了。
 
-![image-20220607150022962](C:\development\note\CodeNotes\中间件\img\image-20220607150022962.png)
+<div align="center"><img src="img/image-20220607150022962.png"></div>
 
 互斥锁需要互相等待，1000 个线程来了，一个负责重建，其他的只能等待。如果重建时间长的话，系统性能会很差。可以为数据设置一个逻辑过期，解决等待的问题。
 
-![image-20220607150345908](C:\development\note\CodeNotes\中间件\img\image-20220607150345908.png)
+<div align="center"><img src="img/image-20220607150345908.png"></div>
 
 | 解决方案        | 优点                                         | 缺点                                         |
 | --------------- | -------------------------------------------- | -------------------------------------------- |
@@ -816,7 +818,7 @@ private void unlock(String key){
 
 需求：修改根据 id 查询商铺的业务，基于互斥锁方式来解决缓存击穿问题。
 
-![image-20220607151228929](C:\development\note\CodeNotes\中间件\img\image-20220607151228929.png)
+<div align="center"><img src="img/image-20220607151228929.png"></div>
 
 ### 缓存工具封装
 
@@ -915,7 +917,7 @@ tb_seckill_voucher：优惠券的库存、开始抢购时间，结束抢购时�
 - 秒杀是否开始或结束，如果尚未开始或已经结束则无法下单
 - 库存是否充足，不足则无法下单
 
-![image-20220607153644701](C:\development\note\CodeNotes\中间件\img\image-20220607153644701.png)
+<div align="center"><img src="img/image-20220607153644701.png"></div>
 
 ### 超卖问题
 
@@ -953,7 +955,7 @@ tb_seckill_voucher：优惠券的库存、开始抢购时间，结束抢购时�
 
 查询订单和扣减库存这块会出现并发问题，因为查询和创建不是原子性的。在加锁的时候需要注意锁的范围和事务的范围。
 
-![image-20220607154427229](C:\development\note\CodeNotes\中间件\img\image-20220607154427229.png)
+<div align="center"><img src="img/image-20220607154427229.png"></div>
 
 ```java
 @Transactional
@@ -990,17 +992,17 @@ public XX KK(){
 
 通过加锁可以解决在单机情况下的一人一单安全问题，但是在集群模式下就不行了。假定下面两个线程访问的是不同的服务器：
 
-![image-20220607154606585](C:\development\note\CodeNotes\中间件\img\image-20220607154606585.png)
+<div align="center"><img src="img/image-20220607154606585.png"></div>
 
 模拟集群模型：
 
 1.将服务启动两份，端口分别为 8081 和 8082
 
-![image-20220607203735703](C:\development\note\CodeNotes\中间件\img\image-20220607203735703.png)
+<div align="center"><img src="img/image-20220607203735703.png"></div>
 
 2.修改 nginx 的 conf 目录下的 nginx.conf 文件，配置反向代理和负载均衡。
 
-![image-20220607203729101](C:\development\note\CodeNotes\中间件\img\image-20220607203729101.png)
+<div align="center"><img src="img/image-20220607203729101.png"></div>
 
 3.jmeter 并发访问，出现并发安全问题，并未实现一人一单。
 
@@ -1021,9 +1023,9 @@ public XX KK(){
 
 > 基于 Redis 的分布式锁
 
-实现分布式锁时需要实现的两个基本方法：
+在代码中，我们为了实现分布式锁时定义了两个基本方法：
 
-- 获取锁：
+- 获取锁方法：
 
     - 互斥，确保只能有一个线程获取锁
 
@@ -1034,7 +1036,7 @@ public XX KK(){
     - 非阻塞：尝试一次，成功返回 true，失败返回 false
 
 
-- 释放锁：
+- 释放锁方法：
 
     - 手动释放
 
@@ -1042,12 +1044,594 @@ public XX KK(){
 
         `del key`
 
-![image-20220607155325168](C:\development\note\CodeNotes\中间件\img\image-20220607155325168.png)
+<div align="center"><img src="img/image-20220607155325168.png"></div>
 
 ```java
 public interface ILock{
+    // timeoutsec 表示锁的持有时间，过期后自动释放。
     boolean tryLock(long timeoutsec){};
     void unlock();
 }
 ```
 
+> 改进 Redis 的分布式锁
+
+需求：修改之前的分布式锁实现，满足：
+
+- 在获取锁时存入线程标示（可以用 UUID 表示）
+- 在释放锁时先获取锁中的线程标示，判断是否与当前线程标示一致
+- 如果一致则释放锁
+- 如果不一致则不释放锁
+
+### Lua 脚本
+
+Redis 提供了 Lua 脚本功能，在一个脚本中编写多条 Redis 命令，确保多条命令执行时的原子性。Lua 是一种编程语言，它的基本语法可以参考网站：https://www.runoob.com/lua/lua-tutorial.html
+这里重点介绍 Redis 提供的调用函数，语法如下：
+
+```shell
+# 执行redis命令
+redis.call('命令名称', 'key', '其它参数', ...)
+```
+
+例如，我们要执行 set name jack，则脚本是这样
+
+```shell
+# 执行 set name jack
+redis.call('set', 'name', 'jack')
+```
+
+例如，我们要先执行 set name Rose，再执行 get name，则脚本如下
+
+```shell
+# 先执行 set name jack
+redis.call('set', 'name', 'jack')
+# 再执行 get name
+local name = redis.call('get', 'name')
+# 返回
+return name
+```
+
+写好脚本以后，需要用 Redis 命令来调用脚本，调用脚本的常见命令如下
+
+<div align="center"><img src="img/image-20220611203037898.png"></div>
+
+例如，我们要执行 redis.call('set', 'name', 'jack') 这个脚本，语法如下
+
+<div align="center"><img src="img/image-20220611203428604.png"></div>
+
+如果脚本中的 key、value 不想写死，可以作为参数传递。key 类型参数会放入 KEYS 数组，其它参数会放入 ARGV 数组，在脚本中可以从 KEYS 和 ARGV 数组获取这些参数：
+
+```shell
+eval "return redis.call('set', KEYS[1],ARGV[1])" 1 name rose
+```
+
+### Lua 改进分布式锁
+
+释放锁的业务流程是这样的：
+
+- 获取锁中的线程标示
+- 判断是否与指定的标示（当前线程标示）一致
+- 如果一致则释放锁（删除）
+- 如果不一致则什么都不做
+- 如果用 Lua 脚本来表示则是这样的：
+
+```bash
+-- 这里的 KEYS[1] 就是锁的key，这里的ARGV[1] 就是当前线程标示
+-- 获取锁中的标示，判断是否与当前线程标示一致
+if (redis.call('GET', KEYS[1]) == ARGV[1]) then
+  -- 一致，则删除锁
+  return redis.call('DEL', KEYS[1])
+end
+-- 不一致，则直接返回
+return 0
+```
+
+需求：基于 Lua 脚本实现分布式锁的释放锁逻辑
+提示：RedisTemplate 调用 Lua 脚本的 API 如下：
+
+```java
+public <T> execute(RedisScript<T> script, List<K> kyes, Object... args){
+    return scriptExecutor.execute(script,keys,args);
+}
+```
+
+基于 Redis 的分布式锁实现思路：
+
+- 利用 set nx ex 获取锁，并设置过期时间，保存线程标示
+- 释放锁时先判断线程标示是否与自己一致，一致则删除锁
+
+特性：
+
+- 利用 set nx 满足互斥性
+- 利用 set ex 保证故障时锁依然能释放，避免死锁，提高安全性
+- 利用 Redis 集群保证高可用和高并发特性
+
+> 基于 setnx 实现的分布式锁存在下面的问题：
+
+- 不可重入：同一个线程无法多次获取同一把锁
+- 不可重试：获取锁只尝试一次就返回 false，没有重试机制
+- 超时释放：锁超时释放虽然可以避免死锁，但如果是业务执行耗时较长，也会导致锁释放，存在安全隐患
+- 主从一致性：如果 Redis 提供了主从集群，主从同步存在延迟，当主宕机时，如果从并同步主中的锁数据，则会出现锁实现
+
+### Redisson
+
+Redisson是一个在Redis的基础上实现的Java驻内存数据网格（In-Memory Data Grid）。它不仅提供了一系列的分布式的Java常用对象，还提供了许多分布式服务，其中就包含了各种分布式锁的实现。
+
+<div align="center"><img src="img/image-20220611222819150.png"></div>
+
+官网地址： https://redisson.org
+GitHub 地址： https://github.com/redisson/redisson
+
+> 引入依赖
+
+```xml
+<dependency>
+	<groupId>org.redisson</groupId>
+    <artifactId>redisson</artifactId>
+    <version>3.13.6</version>
+</dependency>
+```
+
+> 配置客户端
+
+```java
+@Configuration
+public class RedisConfig{
+    @Bean
+    public RedissonClient redissonClient(){
+        Config config = new Config();
+        // 添加redis地址，这里添加了单点的地址，也可以使用config.useClusterServers()添加集群地址 
+        config.useSingleServer().setAddress("redis://192.168.1.101:6379")
+            .setPassword("123");
+        return Redission.create(config);
+    }
+}
+```
+
+> 使用 Redisson 分布式锁
+
+```java
+@Resource
+private RedissonClient redissonClient;
+@Test
+void testRedisson() throws InterruptedException {
+    // 获取锁（可重入），指定锁的名称
+    RLock lock = redissonClient.getLock("anyLock");
+    // 尝试获取锁，参数分别是：获取锁的最大等待时间（期间会重试），锁自动释放时间，时间单位
+    boolean isLock = lock.tryLock(1, 10, TimeUnit.SECONDS);
+    // 判断释放获取成功
+    if(isLock){
+        try {
+            System.out.println("执行业务");
+        }finally {
+            // 释放锁
+            lock.unlock();
+        }
+    }
+}
+```
+
+> 原理
+
+<div align="center"><img src="img/image-20220611225200680.png"></div>
+
+释放锁的 lua 脚本
+
+```lua
+local key = KEYS[1]; 
+-- 锁的key
+local threadId = ARGV[1]; 
+-- 线程唯一标识
+local releaseTime = ARGV[2]; 
+-- 锁的自动释放时间
+-- 判断当前锁是否还是被自己持有
+if (redis.call('HEXISTS', key, threadId) == 0) then
+    return nil; 
+    -- 如果已经不是自己，则直接返回
+end;
+-- 是自己的锁，则重入次数-1
+local count = redis.call('HINCRBY', key, threadId, -1);
+-- 判断是否重入次数是否已经为0 
+if (count > 0) then
+    -- 大于0说明不能释放锁，重置有效期然后返回
+    redis.call('EXPIRE', key, releaseTime);
+    return nil;
+else  -- 等于0说明可以释放锁，直接删除
+    redis.call('DEL', key);
+    return nil;
+end;
+```
+
+Redisson 分布式锁原理：
+
+- 可重入：利用 hash 结构记录线程 id 和重入次数
+- 可重试：利用信号量和 PubSub 功能实现等待、唤醒，获取锁失败的重试机制
+- 超时续约：利用 watchDog，每隔一段时间（releaseTime / 3），重置超时时间
+
+<div align="center"><img src="img/image-20220611225523290.png"></div>
+
+### Redisson分布式锁主从一致问题
+
+再刷下视频
+
+1）不可重入 Redis 分布式锁：
+原理：利用 setnx 的互斥性；利用 ex 避免死锁；释放锁时判断线程标示
+缺陷：不可重入、无法重试、锁超时失效
+2）可重入的 Redis 分布式锁：
+原理：利用 hash 结构，记录线程标示和重入次数；利用 watchDog 延续锁时间；利用信号量控制锁重试等待
+缺陷：redis 宕机引起锁失效问题
+3）Redisson 的 multiLock：
+原理：多个独立的 Redis 节点，必须在所有节点都获取重入锁，才算获取锁成功
+缺陷：运维成本高、实现复杂
+
+## Redis 优化秒杀
+
+<div align="center"><h5>原始架构</h5></div>
+<div align="center"><img src="img/image-20220611230518024.png"></div>
+
+<div align="center"><h5>Redis优化后</h5></div>
+<div align="center"><img src="img/image-20220611230740275.png"></div>
+
+
+
+> 改进秒杀业务，提高并发性能
+
+- 新增秒杀优惠券的同时，将优惠券信息保存到 Redis 中
+- 基于 Lua 脚本，判断秒杀库存、一人一单，决定用户是否抢购成功
+- 如果抢购成功，将优惠券 id 和用户 id 封装后存入阻塞队列
+- 开启线程任务，不断从阻塞队列中获取信息，实现异步下单功能
+
+> 秒杀优化思路
+
+- 先利用 Redis 完成库存余量、一人一单判断，完成抢单业务
+- 再将下单业务放入阻塞队列，利用独立线程异步下单
+- 基于阻塞队列的异步秒杀存在哪些问题？
+    - 内存限制问题
+    - 数据安全问题
+
+## Redis消息队列实现异步秒杀
+
+用 RabbitMQ 这些更好
+
+消息队列（Message Queue），字面意思就是存放消息的队列。最简单的消息队列模型包括 3 个角色：
+
+- 消息队列：存储和管理消息，也被称为消息代理（Message Broker）
+- 生产者：发送消息到消息队列
+- 消费者：从消息队列获取消息并处理消息
+
+<div align="center"><img src="img/image-20220611231720897.png"></div>
+
+
+
+Redis 提供了三种不同的方式来实现消息队列：
+
+- list 结构：基于 List 结构模拟消息队列
+- PubSub：基本的点对点消息模型
+- Stream：比较完善的消息队列模型
+
+### 基于List的消息队列
+
+消息队列（Message Queue），字面意思就是存放消息的队列。而 Redis 的 list 数据结构是一个双向链表，很容易模拟出队列效果。队列是入口和出口不在一边，因此我们可以利用：LPUSH 结合 RPOP、或者  RPUSH 结合 LPOP 来实现。不过要注意的是，当队列中没有消息时 RPOP 或 LPOP 操作会返回null，并不像 JVM 的阻塞队列那样会阻塞并等待消息。因此这里应该使用 BRPOP 或者 BLPOP 来实现阻塞效果。
+
+> 基于 List 的消息队列有哪些优缺点？
+
+优点：利用 Redis 存储，不受限于 JVM 内存上限；基于 Redis 的持久化机制，数据安全性有保证；可以满足消息有序性
+
+缺点：无法避免消息丢失；只支持单消费者
+
+### 基于PubSub的消息队列
+
+PubSub（发布订阅）是 Redis2.0 版本引入的消息传递模型。顾名思义，消费者可以订阅一个或多个 channel，生产者向对应 channel 发送消息后，所有订阅者都能收到相关消息。
+
+- SUBSCRIBE channel [channel] ：订阅一个或多个频道
+- PUBLISH channel msg ：向一个频道发送消息
+- PSUBSCRIBE pattern[pattern] ：订阅与 pattern 格式匹配的所有频道
+
+<div align="center"><img src="img/image-20220611232158788.png"></div>
+
+> 基于 PubSub 的消息队列
+
+优点：采用发布订阅模型，支持多生产、多消费
+
+缺点：不支持数据持久化；无法避免消息丢失；消息堆积有上限，超出时数据丢失
+
+### 基于Stream的消息队列
+
+Stream 是 Redis 5.0 引入的一种新数据类型，可以实现一个功能非常完善的消息队列。
+
+发送消息的命令：
+
+<div align="center">
+    <img src="img/image-20220612151307548.png">
+    <img src="img/image-20220612204433469.png">
+    <img src="img/image-20220612204007529.png">
+</div>
+
+读取消息的方式之一：XREAD
+
+<div align="center"><img src="img/image-20220612204645909.png"></div>
+
+例如，使用 XREAD 读取第一个消息
+
+<div align="center"><img src="img/image-20220612204656329.png"></div>
+
+XREAD 阻塞方式，读取最新的消息
+
+<div align="center"><img src="img/image-20220612204903295.png"></div>
+
+在业务开发中，我们可以循环的调用 XREAD 阻塞方式来查询最新消息，从而实现持续监听队列的效果，伪代码如下：
+
+<div align="center"><img src="img/image-20220612204922366.png"></div>
+
+当我们指定起始 ID 为 $ 时，代表读取最新的消息，如果我们处理一条消息的过程中，又有超过 1 条以上的消息到达队列，则下次获取时也只能获取到最新的一条，会出现漏读消息的问题。
+
+> Stream 消息队列的 XREAD 命令特点
+>
+> - 消息可回溯
+> - 一个消息可以被多个消费者读取
+> - 可以阻塞读取
+> - 有消息漏读的风险
+
+### 基于Stream的消息队列-消费者组
+
+消费者组（Consumer Group）：将多个消费者划分到一个组中，监听同一个队列。具备下列特点：
+
+- 消息分流：队列中的消息会分流给组内的不同消费者，而不是重复消费，从而加快消息处理的速度
+- 消息标示：消费者组会维护一个标示，记录最后一个被处理的消息，哪怕消费者宕机重启，还会从标示之后读取消息。确保每一个消息都会被消费
+- 消息确认：消费者获取消息后，消息处于 pending 状态，并存入一个 pending-list。当处理完成后需要通过 XACK 来确认消息，标记消息为已处理，才会从 pending-list 移除。
+
+创建消费者组：
+
+```bash
+XGROUP CREATE  key groupName ID [MKSTREAM]
+```
+
+- key：队列名称
+- groupName：消费者组名称
+- ID：起始 ID 标示，$ 代表队列中最后一个消息，0 则代表队列中第一个消息
+- MKSTREAM：队列不存在时自动创建队列
+
+其他常见命令
+
+```shell
+# 删除指定的消费者组
+XGROUP DESTORY key groupName
+
+# 给指定的消费者组添加消费者
+XGROUP CREATECONSUMER key groupname consumername
+
+# 删除消费者组中的指定消费者
+XGROUP DELCONSUMER key groupname consumername
+```
+
+从消费者组读消息
+
+```shell
+XREADGROUP GROUP group consumer [COUNT count] [BLOCK milliseconds] [NOACK] STREAMS key [key ...] ID [ID ...]
+```
+
+- group：消费组名称
+- consumer：消费者名称，如果消费者不存在，会自动创建一个消费者
+- count：本次查询的最大数量
+- BLOCK milliseconds：当没有消息时最长等待时间
+- NOACK：无需手动 ACK，获取到消息后自动确认
+- STREAMS key：指定队列名称
+- ID：获取消息的起始 ID：
+    - ">"：从下一个未消费的消息开始
+    - 其它：根据指定 id 从 pending-list 中获取已消费但未确认的消息，例如 0，是从 pending-list 中的第一个消息开始
+
+消费者监听消息的基本思路：
+
+<div align="center"><img src="img/image-20220612212045478.png"></div>
+
+> Stream 消息队列 XREADGROUP 命令特点
+
+- 消息可回溯
+- 可以多消费者争抢消息，加快消费速度
+- 可以阻塞读取
+- 没有消息漏读的风险
+- 有消息确认机制，保证消息至少被消费一次
+
+### Redis 消息队列总结
+
+|                     | List                                     | PubSub             | Stream                                                 |
+| ------------------- | ---------------------------------------- | ------------------ | ------------------------------------------------------ |
+| <b>消息持久化</b>   | 支持                                     | 不支持             | 支持                                                   |
+| <b>阻塞读取</b>     | 支持                                     | 支持               | 支持                                                   |
+| <b>消息堆积处理</b> | 受限于内存空间，可以利用多消费者加快处理 | 受限于消费者缓冲区 | 受限于队列长度，可以利用消费者组提高消费速度，减少堆积 |
+| <b>消息确认机制</b> | 不支持                                   | 不支持             | 支持                                                   |
+| <b>消息回溯</b>     | 不支持                                   | 不支持             | 支持                                                   |
+
+### 案例练习
+
+基于 Redis 的 Stream 结构作为消息队列，实现异步秒杀下单
+
+1. 创建一个 Stream 类型的消息队列，名为 stream.orders
+2. 修改之前的秒杀下单 Lua 脚本，在认定有抢购资格后，直接向 stream.orders 中添加消息，内容包含 voucherId、userId、orderId
+3. 项目启动时，开启一个线程任务，尝试获取 stream.orders 中的消息，完成下单
+
+## 达人探店
+
+这部分主要练习业务。
+
+- 发布笔记
+- 点赞
+- 点赞排行
+
+### 发布笔记
+
+探店笔记类似点评网站的评价，往往是图文结合。对应的表有两个：
+
+- tb_blog：探店笔记表，包含笔记中的标题、文字、图片等
+- tb_blog_comments：其他用户对探店笔记的评价
+
+<div align="center"><img src="img/image-20220612214430543.png"></div>
+
+需要注意部分是文件上传的设置。文件上传的路径要设置好，此处需要设置为 Nginx 目录
+
+```java
+public class SystemConstants{
+    // 设置为 nginx 的目录
+    public static final String IMAGE_UPLOAD_DIR = "D:\\xx\\nginx-1.18.0\\html\\xx\imgs\\";
+    public static final String USER_NICK_NAME_PREFIX = "user_";
+    public static final int DEFAULT_PAGE_SIZE = 5;
+    public static final int MAX_PAGE_SIZE = 10;
+}
+```
+
+### 点赞
+
+需求如下：
+
+- 同一个用户只能点赞一次，再次点击则取消点赞
+- 如果当前用户已经点赞，则点赞按钮高亮显示（前端已实现，判断字段 Blog 类的 isLike 属性）
+
+实现步骤：
+
+- 给 Blog 类中添加一个 isLike 字段，标示是否被当前用户点赞
+- 修改点赞功能，利用 Redis 的 set 集合判断是否点赞过，未点赞过则点赞数 +1，已点赞过则点赞数 -1
+- 修改根据 id 查询 Blog 的业务，判断当前登录用户是否点赞过，赋值给 isLike字段
+- 修改分页查询 Blog 业务，判断当前登录用户是否点赞过，赋值给 isLike 字段
+
+### 点赞排行榜
+
+点赞排行榜/游戏排行榜 etc...
+
+需求：按照点赞时间先后排序，返回 Top5 的用户
+
+|                 | List                 | Set          | SortedSet       |
+| --------------- | -------------------- | ------------ | --------------- |
+| <b>排序方式</b> | 按添加顺序排序       | 无法排序     | 根据score值排序 |
+| <b>唯一性</b>   | 不唯一               | 唯一         | 唯一            |
+| <b>查找方式</b> | 按索引查找或首尾查找 | 根据元素查找 | 根据元素查找    |
+
+## 好友关注
+
+- 关注和取关
+- 共同关注
+- 关注推送
+
+
+
+### 关注和取关
+
+关注是 User 之间的关系，是博主与粉丝的关系，在数据库中可以用一张 tb_follow 表来标示
+
+<div align="center"><img src="img/image-20220612225906719.png"></div>
+
+### 共同关注
+
+利用 Redis 中恰当的数据结构（如 Set 集合），实现共同关注功能。在博主个人页面展示出当前用户与博主的共同好友。
+
+### 关注推送
+
+关注推送也叫做 Feed 流，直译为投喂。为用户持续的提供“沉浸式”的体验，通过无限下拉刷新获取新的信息。传统模式是用户寻找内容，而 Feed 模式是内容匹配用户
+
+```mermaid
+graph LR
+用户---->|寻找|内容
+```
+
+```mermaid
+graph LR
+内容--->|匹配|用户
+```
+
+#### Feed 流模式
+
+Feed 流产品有两种常见模式
+
+- Timeline：不做内容筛选，简单的按照内容发布时间排序，常用于好友或关注。例如朋友圈
+    - 优点：信息全面，不会有缺失。并且实现也相对简单
+    - 缺点：信息噪音较多，用户不一定感兴趣，内容获取效率低
+- 智能排序：利用智能算法屏蔽掉违规的、用户不感兴趣的内容。推送用户感兴趣信息来吸引用户
+    - 优点：投喂用户感兴趣信息，用户粘度很高，容易沉迷
+    - 缺点：如果算法不精准，可能起到反作用
+
+本例中的个人页面，是基于关注的好友来做 Feed 流，因此采用 Timeline 的模式。该模式的实现方案有三种：
+
+- 拉模式
+- 推模式
+- 推拉结合
+
+|                  | **拉模式** | **推模式**        | **推拉结合**          |
+| ---------------- | ---------- | ----------------- | --------------------- |
+| **写比例**       | 低         | 高                | 中                    |
+| **读比例**       | 高         | 低                | 中                    |
+| **用户读取延迟** | 高         | 低                | 低                    |
+| **实现难度**     | 复杂       | 简单              | 很复杂                |
+| **使用场景**     | 很少使用   | 用户量少、没有大V | 过千万的用户量，有大V |
+
+## 附件商户
+
+### GEO数据结构
+
+GEO 就是 Geolocation 的简写形式，代表地理坐标。Redis 在 3.2 版本中加入了对 GEO 的支持，允许存储地理坐标信息，帮助我们根据经纬度来检索数据。常见的命令有：
+
+- GEOADD：添加一个地理空间信息，包含：经度（longitude）、纬度（latitude）、值（member）
+- GEODIST：计算指定的两个点之间的距离并返回
+- GEOHASH：将指定 member 的坐标转为 hash 字符串形式并返回
+- GEOPOS：返回指定 member 的坐标
+- GEORADIUS：指定圆心、半径，找到该圆内包含的所有 member，并按照与圆心之间的距离排序后返回。6.2 以后已废弃
+- GEOSEARCH：在指定范围内搜索 member，并按照与指定点之间的距离排序后返回。范围可以是圆形或矩形。6.2. 新功能
+- GEOSEARCHSTORE：与 GEOSEARCH 功能一致，不过可以把结果存储到一个指定的key。 6.2. 新功能
+
+> 练习
+
+添加下面几条数据：
+
+- 北京南站（ 116.378248 39.865275 ）
+- 北京站（ 116.42803 39.903738 ）
+- 北京西站（ 116.322287 39.893729 ）
+
+计算北京西站到北京站的距离
+
+搜索天安门（ 116.397904 39.909005 ）附近10km内的所有火车站，并按照距离升序排序
+
+### 附件商户搜索
+
+假定：在首页中点击某个频道，即可看到频道下的商户。
+
+我们可以按照商户类型做分组，类型相同的商户作为同一组，以 typeId 为 key 存入同一个 GEO 集合中即可
+
+SpringDataRedis 的 2.3.9 版本并不支持 Redis 6.2 提供的 GEOSEARCH 命令，因此我们需要提示其版本，修改自己的 POM 文件，内容如下：
+
+```xml
+<dependency>    <groupId>org.springframework.boot</groupId>    <artifactId>spring-boot-starter-data-redis</artifactId>    <exclusions>        <exclusion>            <groupId>org.springframework.data</groupId>            <artifactId>spring-data-redis</artifactId>        </exclusion>        <exclusion>            <artifactId>lettuce-core</artifactId>            <groupId>io.lettuce</groupId>        </exclusion>    </exclusions></dependency><dependency>    <groupId>org.springframework.data</groupId>    <artifactId>spring-data-redis</artifactId>    <version>2.6.2</version> </dependency><dependency>    <artifactId>lettuce-core</artifactId>    <groupId>io.lettuce</groupId>    <version>6.1.6.RELEASE</version></dependency>
+```
+
+## 用户签到
+
+- BitMap 用法
+- 签到功能
+- 签到统计
+
+### BitMap用法
+
+假如我们用一张表来存储用户签到信息，其结构应该如下：
+
+<div align="center"><img src="img/image-20220612231356449.png"></div>
+
+假如有 1000 万用户，平均每人每年签到次数为 10 次，则这张表一年的数据量为 1 亿条
+
+每签到一次需要使用（8 + 8 + 1 + 1 + 3 + 1）共 22 字节的内存，一个月则最多需要 600 多字节
+
+我们按月来统计用户签到信息，签到记录为 1，未签到则记录为 0.
+
+把每一个 bit 位对应当月的每一天，形成了映射关系。用 0 和 1 标示业务状态，这种思路就称为位图（BitMap）。
+
+Redis 中是利用 string 类型数据结构实现 BitMap，因此最大上限是 512M，转换为bit则是 $2^{32}$个 bit 位。
+
+BitMap 的操作命令有：
+
+- SETBIT：向指定位置（offset）存入一个 0 或 1
+- GETBIT ：获取指定位置（offset）的 bit 值
+- BITCOUNT ：统计 BitMap 中值为 1 的 bit 位的数量
+- BITFIELD ：操作（查询、修改、自增）BitMap 中 bit 数组中的指定位置（offset）的值
+- BITFIELD_RO ：获取 BitMap 中 bit 数组，并以十进制形式返回
+- BITOP ：将多个 BitMap 的结果做位运算（与 、或、异或）
+- BITPOS ：查找 bit 数组中指定范围内第一个 0 或 1 出现的位置
+
+### 签到功能
+
+需求：实现签到接口，将当前用户当天签到信息保存到Redis中。因为BitMap底层是基于String数据结构，因此其操作也都封装在字符串相关操作中了。

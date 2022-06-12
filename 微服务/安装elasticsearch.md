@@ -16,7 +16,7 @@ docker network create es-net
 
 课前资料提供了镜像的 tar 包：
 
-<img src="assets/image-20210510165308064.png">
+<div align="center"><img src="assets/image-20210510165308064.png"></div>
 
 大家将其上传到虚拟机中，然后运行命令加载即可：
 
@@ -60,7 +60,7 @@ elasticsearch:7.12.1
 
 在浏览器中输入：http://192.168.150.101:9200 即可看到 elasticsearch 的响应结果：
 
-<img src="assets/image-20210506101053676.png">
+<div align="center"><img src="assets/image-20210506101053676.png"></div>
 
 
 
@@ -93,7 +93,7 @@ docker logs -f kibana
 
 查看运行日志，当查看到下面的日志，说明成功：
 
-<img src="assets/image-20210109105135812.png">
+<div align="center"><img src="assets/image-20210109105135812.png"></div>
 
 此时，在浏览器输入地址访问：http://192.168.150.101:5601，即可看到结果
 
@@ -101,7 +101,7 @@ docker logs -f kibana
 
 kibana 中提供了一个 DevTools 界面：
 
-<img src="assets/image-20210506102630393.png">
+<div align="center"><img src="assets/image-20210506102630393.png"></div>
 
 这个界面中可以编写 DSL 来操作 elasticsearch。并且对 DSL 语句有自动补全功能。
 
@@ -154,13 +154,13 @@ docker volume inspect es-plugins
 
 下面我们需要把课前资料中的 ik 分词器解压缩，重命名为 ik
 
-<img src="assets/image-20210506110249144.png">
+<div align="center"><img src="assets/image-20210506110249144.png"></div>
 
 ### 3）上传到es容器的插件数据卷中
 
 也就是 `/var/lib/docker/volumes/es-plugins/_data `：
 
-<img src="assets/image-20210506110704293.png">
+<div align="center"><img src="assets/image-20210506110704293.png"></div>
 
 ###  4）重启容器
 
@@ -270,7 +270,7 @@ GET /_analyze
 
 1）打开 IK 分词器 config 目录：
 
-<img src="assets/image-20210506112225508.png">
+<div align="center"><img src="assets/image-20210506112225508.png"></div>
 
 2）在 IKAnalyzer.cfg.xml 配置文件内容添加：
 
@@ -300,7 +300,7 @@ docker restart es
 docker logs -f elasticsearch
 ```
 
-<img src="assets/image-20201115230900504.png">
+<div align="center"><img src="assets/image-20201115230900504.png"></div>
 
 日志中已经成功加载 ext.dic 配置文件
 
