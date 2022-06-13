@@ -1029,9 +1029,7 @@ public XX KK(){
 
     - 互斥，确保只能有一个线程获取锁
 
-        `setnx lock thread1`
-
-        `expire lock 10` 添加锁过期时间，避免服务器宕机引起死锁
+        `setnx lock thread1`，并通过 `expire lock 10` 添加锁过期时间，避免服务器宕机引起死锁
 
     - 非阻塞：尝试一次，成功返回 true，失败返回 false
 
@@ -1039,12 +1037,8 @@ public XX KK(){
 - 释放锁方法：
 
     - 手动释放
+    - 超时释放：获取锁时添加一个超时时间 `del key`
 
-    - 超时释放：获取锁时添加一个超时时间
-
-        `del key`
-
-<div align="center"><img src="img/image-20220607155325168.png"></div>
 
 ```java
 public interface ILock{
@@ -1054,16 +1048,33 @@ public interface ILock{
 }
 ```
 
+<div align="center"><img src="img/image-20220607155325168.png"></div>
+
+上述的方案存在一个问题，如果两个线程争抢锁，线程1 抢到了，但是由于执行业务的时间太长了，致使锁超时释放。此时线程2 拿到了锁执行业务。在线程 2 执行业务的时候，线程 1 业务执行完毕了，释放了锁（释放了线程 2 加的锁），线程 3 在线程 2 为完成业务，且锁未超时的情况下拿到了锁。
+
+<div align="center"><img src="img/image-20220613171618902.png"></div>
+
+为了解决这个问题，我们需要在释放锁之前判断一下，是不是自己加的锁，是自己加的锁才要释放。
+
 > 改进 Redis 的分布式锁
 
 需求：修改之前的分布式锁实现，满足：
 
 - 在获取锁时存入线程标示（可以用 UUID 表示）
 - 在释放锁时先获取锁中的线程标示，判断是否与当前线程标示一致
-- 如果一致则释放锁
-- 如果不一致则不释放锁
+    - 如果一致则释放锁
+    - 如果不一致则不释放锁
+
+
+<span style="color:red">但是这种方案仍然存在问题</span>
+
+判断锁标识和释放锁不是原子性的，会有并发问题。线程 1 判断锁标识，发现一致，在释放锁时发送了阻塞（如 GC）。在阻塞过程中，其他服务器的线程 2 获取到了锁，并开始执行业务。在线程 2 执行业务时，线程 1 把线程 2 的锁释放了。如果有其他线程也来抢锁，是可以拿到锁的。
+
+<div align="center"><img src="img/image-20220613172756337.png"></div>
 
 ### Lua 脚本
+
+<span style="color:orange">前面的核心问题在与，判断锁和释放锁不是原子性的操作，而 Lua 脚本可以解决这种问题。</span>
 
 Redis 提供了 Lua 脚本功能，在一个脚本中编写多条 Redis 命令，确保多条命令执行时的原子性。Lua 是一种编程语言，它的基本语法可以参考网站：https://www.runoob.com/lua/lua-tutorial.html
 这里重点介绍 Redis 提供的调用函数，语法如下：
@@ -1109,13 +1120,13 @@ eval "return redis.call('set', KEYS[1],ARGV[1])" 1 name rose
 
 释放锁的业务流程是这样的：
 
-- 获取锁中的线程标示
-- 判断是否与指定的标示（当前线程标示）一致
-- 如果一致则释放锁（删除）
-- 如果不一致则什么都不做
-- 如果用 Lua 脚本来表示则是这样的：
+- 1.获取锁中的线程标示
+- 2.判断是否与指定的标示（当前线程标示）一致
+- 3.如果一致则释放锁（删除）
+- 4.如果不一致则什么都不做
+- 5.如果用 Lua 脚本来表示则是这样的：
 
-```bash
+```mysql
 -- 这里的 KEYS[1] 就是锁的key，这里的ARGV[1] 就是当前线程标示
 -- 获取锁中的标示，判断是否与当前线程标示一致
 if (redis.call('GET', KEYS[1]) == ARGV[1]) then
@@ -1130,8 +1141,32 @@ return 0
 提示：RedisTemplate 调用 Lua 脚本的 API 如下：
 
 ```java
+/**
+ script：脚本
+ keys：对应 KEYG
+ args：对应 ARGV
+*/
 public <T> execute(RedisScript<T> script, List<K> kyes, Object... args){
     return scriptExecutor.execute(script,keys,args);
+}
+```
+
+假定，我们将 lua 脚本放在 resources 根目录下
+
+```java
+private static final DefaultRedisScript<Long> UNLOCK_SCRIPT;
+statIC{
+    UNLOCK_SCRIPT = new DefaultRedisScript<>();
+	UNLOCK_SCRIPT.setLocation(new ClassPathResource("unlock.lua"));
+    UNLOCK_SCRIPT.setResultType(Long.class);
+}
+
+public static unlock(){
+    stringRedisTemplate.execute(
+    	UNLOCK_SCRIPT,
+        Collections.singletionList(KEY_PREFIX+name),
+        ID_PREFIX+Thread.currentThread().getId()
+    );
 }
 ```
 
@@ -1151,16 +1186,18 @@ public <T> execute(RedisScript<T> script, List<K> kyes, Object... args){
 - 不可重入：同一个线程无法多次获取同一把锁
 - 不可重试：获取锁只尝试一次就返回 false，没有重试机制
 - 超时释放：锁超时释放虽然可以避免死锁，但如果是业务执行耗时较长，也会导致锁释放，存在安全隐患
-- 主从一致性：如果 Redis 提供了主从集群，主从同步存在延迟，当主宕机时，如果从并同步主中的锁数据，则会出现锁实现
+- 主从一致性：如果 Redis 提供了主从集群，主从同步存在延迟，当主宕机时，如果从没有同步主中的锁数据，则会出现锁失效。
 
 ### Redisson
 
-Redisson是一个在Redis的基础上实现的Java驻内存数据网格（In-Memory Data Grid）。它不仅提供了一系列的分布式的Java常用对象，还提供了许多分布式服务，其中就包含了各种分布式锁的实现。
+Redisson 是一个在 Redis 的基础上实现的 Java 驻内存数据网格（In-Memory Data Grid）。它不仅提供了一系列的分布式的 Java 常用对象，还提供了许多分布式服务，其中就包含了各种分布式锁的实现。
 
 <div align="center"><img src="img/image-20220611222819150.png"></div>
 
 官网地址： https://redisson.org
 GitHub 地址： https://github.com/redisson/redisson
+
+为了避免 Redission 里的配置把 SpringBoot 里的覆盖了，这里就采用映入 redisson，自己配置 Redission 的方式。
 
 > 引入依赖
 
@@ -1181,7 +1218,8 @@ public class RedisConfig{
     public RedissonClient redissonClient(){
         Config config = new Config();
         // 添加redis地址，这里添加了单点的地址，也可以使用config.useClusterServers()添加集群地址 
-        config.useSingleServer().setAddress("redis://192.168.1.101:6379")
+        config.useSingleServer()
+            .setAddress("redis://192.168.1.101:6379")
             .setPassword("123");
         return Redission.create(config);
     }
@@ -1635,3 +1673,108 @@ BitMap 的操作命令有：
 ### 签到功能
 
 需求：实现签到接口，将当前用户当天签到信息保存到Redis中。因为BitMap底层是基于String数据结构，因此其操作也都封装在字符串相关操作中了。
+
+### 签到统计
+
+> 什么叫连续签到天数？
+
+从最后一次签到开始向前统计，直到遇到第一次未签到为止，计算总的签到次数，就是连续签到天数。我们可以用 redis 的 bitmap 来实现连续签到功能。
+
+<div align="center"><img src="img/image-20220613164010361.png"></div>
+
+需求：用 redis 命令实现一个月签到的功能。
+
+ ```shell
+ # 初始化签到数（设置一个数据，所有bit位初始化为0）
+ setbit count 0 0
+ 
+ # 签到（第一天就将offset=0的bit位设置为1）
+ setbit count 0 1
+ 
+ # 查看你第一天(offset=0)是否签到
+ getbit count 0
+ 
+ # 统计签到的总天数
+ bitcount count
+ 
+ # 统计指定范围内的签到天数（0字节到~0字节的签到天数，就是统计了8个bit位）
+ bitcount count 0 0
+ ```
+
+
+
+> 如何得到本月到今天为止的所有签到数据?
+
+BITFIELD key GET u[dayOfMonth] 0
+
+> 如何从后向前遍历每个 bit 位？
+
+与 1 做与运算，就能得到最后一个 bit 位。随后右移 1 位，下一个 bit 位就成为了最后一个 bit 位。
+
+## UV统计
+
+- HyperLogLog 用法
+- 实现 UV 统计
+
+### HyperLogLog用法
+
+首先我们搞懂两个概念：
+
+- UV：全称 Unique Visitor，也叫独立访客量，是指通过互联网访问、浏览这个网页的自然人。1 天内同一个用户多次访问该网站，只记录 1 次。
+- PV：全称 Page View，也叫页面访问量或点击量，用户每访问网站的一个页面，记录 1 次 PV，用户多次打开页面，则记录多次 PV。往往用来衡量网站的流量。
+
+UV 统计在服务端做会比较麻烦，因为要判断该用户是否已经统计过了，需要将统计过的用户信息保存。但是如果每个访问的用户都保存到 Redis 中，数据量会非常恐怖。
+
+Hyperloglog(HLL) 是从 Loglog 算法派生的概率算法，用于确定非常大的集合的基数，而不需要存储其所有值。相关算法原理可以参考：https://juejin.cn/post/6844903785744056333#heading-0
+
+Redis 中的 HLL 是基于 string 结构实现的，单个 HLL 的内存永远小于 16kb，内存占用低的令人发指！作为代价，其测量结果是概率性的，有小于 0.81％ 的误差。不过对于 UV 统计来说，这完全可以忽略。
+
+<div align="center"><img src="img/image-20220613170117858.png"></div>
+
+### 实现UV统计
+
+我们直接利用单元测试，向 HyperLogLog 中添加 100 万条数据，看看内存占用和统计效果如何
+
+```java
+@Test
+void testHyperLogLog() {
+    // 准备数组，装用户数据
+    String[] users = new String[1000];
+    // 数组角标
+    int index = 0;
+    for (int i = 1; i <= 1000000; i++) {
+        // 赋值
+        users[index++] = "user_" + i;
+        // 每1000条发送一次
+        if (i % 1000 == 0) {
+            index = 0;
+            stringRedisTemplate.opsForHyperLogLog().add("hll1", users);
+        }
+    }
+    // 统计数量
+    Long size = stringRedisTemplate.opsForHyperLogLog().size("hll1");
+    System.out.println("size = " + size);
+}
+```
+
+> HyperLogLog的作用
+>
+> - 做海量数据的统计工作
+> - HyperLogLog 的优点：内存占用极低；性能非常好
+> - HyperLogLog 的缺点：有一定的误差
+
+> Pipeline 导入数据
+
+如果要导入大量数据到 Redis 中，可以有多种方式：
+
+- 每次一条，for 循环写入
+- 每次多条，批量写入
+
+
+
+
+
+
+
+
+
