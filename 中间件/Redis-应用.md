@@ -1050,7 +1050,7 @@ public interface ILock{
 
 <div align="center"><img src="img/image-20220607155325168.png"></div>
 
-上述的方案存在一个问题，如果两个线程争抢锁，线程1 抢到了，但是由于执行业务的时间太长了，致使锁超时释放。此时线程2 拿到了锁执行业务。在线程 2 执行业务的时候，线程 1 业务执行完毕了，释放了锁（释放了线程 2 加的锁），线程 3 在线程 2 为完成业务，且锁未超时的情况下拿到了锁。
+上述的方案存在一个问题，如果两个线程争抢锁，线程 1 抢到了，但是由于执行业务的时间太长了，致使锁超时释放。此时线程2 拿到了锁执行业务。在线程 2 执行业务的时候，线程 1 业务执行完毕了，释放了锁（释放了线程 2 加的锁），线程 3 在线程 2 为完成业务，且锁未超时的情况下拿到了锁。
 
 <div align="center"><img src="img/image-20220613171618902.png"></div>
 
@@ -1635,7 +1635,30 @@ GEO 就是 Geolocation 的简写形式，代表地理坐标。Redis 在 3.2 版�
 SpringDataRedis 的 2.3.9 版本并不支持 Redis 6.2 提供的 GEOSEARCH 命令，因此我们需要提示其版本，修改自己的 POM 文件，内容如下：
 
 ```xml
-<dependency>    <groupId>org.springframework.boot</groupId>    <artifactId>spring-boot-starter-data-redis</artifactId>    <exclusions>        <exclusion>            <groupId>org.springframework.data</groupId>            <artifactId>spring-data-redis</artifactId>        </exclusion>        <exclusion>            <artifactId>lettuce-core</artifactId>            <groupId>io.lettuce</groupId>        </exclusion>    </exclusions></dependency><dependency>    <groupId>org.springframework.data</groupId>    <artifactId>spring-data-redis</artifactId>    <version>2.6.2</version> </dependency><dependency>    <artifactId>lettuce-core</artifactId>    <groupId>io.lettuce</groupId>    <version>6.1.6.RELEASE</version></dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
+    <exclusions>
+        <exclusion>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-redis</artifactId>
+        </exclusion>
+        <exclusion>
+            <artifactId>lettuce-core</artifactId>
+            <groupId>io.lettuce</groupId>
+        </exclusion>
+    </exclusions>
+</dependency>
+<dependency>
+    <groupId>org.springframework.data</groupId>
+    <artifactId>spring-data-redis</artifactId>
+    <version>2.6.2</version>
+</dependency>
+<dependency>
+    <artifactId>lettuce-core</artifactId>
+    <groupId>io.lettuce</groupId>
+    <version>6.1.6.RELEASE</version>
+</dependency>
 ```
 
 ## 用户签到
