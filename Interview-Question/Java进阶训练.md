@@ -12,11 +12,11 @@
 
 ### 编程语言跨平台
 
-<img src="JavaForward\image-20211119173452069.png">
+<div align="center"><img src="JavaForward/image-20211119173452069.png"></div>
 
 ### 字节码、类加载器、虚拟机
 
-<img src="JavaForward\image-20211119173641367.png">
+<div align="center"><img src="JavaForward/image-20211119173641367.png"></div>
 
 ### 字节码技术
 

@@ -14,8 +14,6 @@
 - `BeanPostProcessor` 接口的作用及实现
 - `BeanFactoryPostProcessor` 接口的作用及实现
 
----
-
 - Spring Bean 为何实现 Aware 接口
 - Spring Bean 实例化过程
 - Spring Bean 的初始化做什么的
@@ -52,7 +50,7 @@ new、反射、工厂模式、作用域。
 
 配置文件中定义的是 bean 的定义信息。
 
-<img src="img/spring/quick_start.png">
+<div align="center"><img src="img/spring/quick_start.png"></div>
 
 ## refresh
 

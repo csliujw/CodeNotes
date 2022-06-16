@@ -1193,13 +1193,13 @@ public class Demo{}
 修饰类的范围权限存在一些额外的限制
 
 - [x] 每个编译单元（文件）中只能有一个 public 类。
-    
+  
     即，只能有一个 public 修饰的类，若干个包访问权限的类。
     
     若有多个 public 修饰的会报错
     
 - [x] public 类的名称必须与含该编译单元的文件名相同（包括大小写）
-    
+  
     eg：public class DDD 的文件名也要是 DDD.java
     
 - [x] 类（外部类）权限修饰只能是 public 或 default；不能是 private 或 protected。
