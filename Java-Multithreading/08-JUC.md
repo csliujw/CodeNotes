@@ -694,13 +694,13 @@ public abstract class AbstractQueuedSynchronizer
     private static final long serialVersionUID = 7373984972572414691L;
 
     protected AbstractQueuedSynchronizer() { }
-		// 记录了锁的状态
+	// 记录了锁的状态
     static final class Node {
         static final Node SHARED = new Node();
         static final Node EXCLUSIVE = null;
         static final int CANCELLED =  1;
         static final int SIGNAL    = -1;
-					static final int CONDITION = -2;
+		static final int CONDITION = -2;
         static final int PROPAGATE = -3;
         volatile int waitStatus;
         volatile Node prev;
@@ -716,6 +716,29 @@ public abstract class AbstractQueuedSynchronizer
 
 入队就是把新的 Node 加到 tail 后面，然后对 tail 进行 CAS 操作；出队就是对 head 进行 CAS 操作，把 head 向后移一个位置。
 
+### AQS学习思路
+
+- 学习 AQS 的目的主要是理解原理、提高技术。
+- 我们先从应用层理解为什么需要 AQS ，如何使用 AQS？什么场景需要 AQS。
+
+> 为什么需要 AQS
+
+技术的产生是为了解决某些问题，而 AQS 也是为了解决一些技术问题---并发控制。
+
+ReentrantLock 和 Semaphore 都有一些类似的特点。他们都想一个闸门，每次都只允许一部分线程运行，让其他线程等待。并且可以看看自己是否会陷入等待（trylock）。前面学习的很多的并发协作类都有一些类似的功能，如果可以将这些功能抽取成一个工具类，那么那些并发协作类就可以直接使用工具类，只要关注自己内部的逻辑即可。即重用了代码，又降低了协作工具类的编写难度（复杂的逻辑封装好了，可以直接调用）。AQS 就是这个工具类。
+
+Semaphore 的内部类 Sync 继承了 AQS，CountDownLatch 也是这样，它的内部类 Sync 也继承了 AQS。虽然 Semaphore 和 CountDownLatch 的 Sync 逻辑不同，但是他们内部的很多操作都是一样的，而这些相同的操作就被封装到了 AQS 中，复用那些代码。
+
+> 如果没有 AQS？
+
+如果没有 AQS，那么每个协作工具类就需要自己实现：
+
+- 同步状态的原子性管理
+- 线程的阻塞与唤醒
+- 队列的管理
+
+如果有 AQS，我们就不用实现这些复杂的功能，只需要将这些功能根据功能需求进行组合或扩展
+
 ### 锁和同步器
 
 前面简单介绍了下 JUC 中几个锁的用法，而<span style="color:green">锁和同步器的关系</span>如下：
@@ -725,7 +748,7 @@ public abstract class AbstractQueuedSynchronizer
 
 ### 基本原理
 
-AQS 是通过内置的 FIFO 队列来完成资源获取线程的排队工作，<span style="color:red">并通过一个 int 型变量 state 表示持有锁的状态。
+AQS 是通过内置的 FIFO 队列来完成资源获取线程的排队工作，<span style="color:red">并通过一个 int 型变量 state 表示持有锁的状态。</span>
 
 J.U.C 中的不少类都与 AQS 有关的，如 ReentrantLock、CountDownLatch、ReentraantReadWriteLock、Semaphore、CyclicBarrier ...
 
@@ -748,6 +771,12 @@ abstract static class Sync extends AbstractQueuedSynchronizer {}
 
 ## AQS
 
+AQS 最核心的三个部分是：
+
+- state
+- 控制线程抢锁和配合的 FIFO 队列
+- 期望协作工具类去实现获取/释放等重要方法：这个由子类自己实现。
+
 ### 前置知识
 
 - 公平锁非公平锁
@@ -761,7 +790,7 @@ abstract static class Sync extends AbstractQueuedSynchronizer {}
 
 AQS 类图
 
-<img src="juc/AQS02.png" styyle="float:left">
+<img src="juc/AQS02.png">
 
 AQS 的 UML 图如下：
 
@@ -821,7 +850,9 @@ if (tryRelease(arg)) {
 
 ### state详解
 
-用 state 属性来表示资源的状态，具体的含义需要 AQS 的子类自行定义。state 可以通过 getState、setState、compareAndSetState 函数修改其值。
+AQS 中用 state 属性来表示资源的状态，具体的含义需要 AQS 的子类自行定义。state 可以通过 getState、setState、compareAndSetState 函数修改其值。
+
+state 是 volatile 修饰的，会被并发地修改，所以所有修改 state 的方法都需要保证线程安全，比如 getState、setState、compareAndSetState。这些操作都依赖于 j.u.c.atomic 包的支持。
 
 #### state 代表的含义
 
@@ -837,7 +868,7 @@ state 的高 16 位表示读状态，也就是获取该读锁的次数，低 16 
 
 > 对于 Semaphore 来说
 
-state 用来表示当前可用信号的个数；每 acquire 一次，state 值就减一。
+state 用来表示剩余许可证的数量；每 acquire 一次，state 值就减一。
 
 > 对于 CountDownlatch 来说
 
@@ -845,11 +876,11 @@ state 用来表示计数器当前的值；每 countDown 一次，state 值就减
 
 ### 阻塞队列
 
-对于竞争锁失败的线程，AQS 会将线程放入阻塞队列。<span style="color:red">而线程的阻塞与唤醒是通过 LockSupport 这个工具类来实现的。</span>               
+对于竞争锁失败的线程，AQS 会将线程放入阻塞队列，即这个队列是用来存放等待的线程，AQS 就是排队管理器，当多个线程争用一把锁时，必须有排队机制将那些没能拿到锁的线程串在一起。当锁释放时，锁管理器就会挑选一个合适的线程来占有这个刚刚释放的锁。<span style="color:red">而线程的阻塞与唤醒是通过 LockSupport 这个工具类来实现的。</span>               
 
 <img src="juc/AQS01.png">
 
-对于<b>独占/共享</b>方式获取锁的线程，获取失败会将失败的线程封装为类型为 <b> Node.EXCLUSIVE/Node.SHARED </b>的 Node 节点插入 AQS 队列的尾部。
+对于<b>独占/共享</b>方式获取锁的线程，获取失败会将失败的线程封装为类型为 <b>Node.EXCLUSIVE/Node.SHARED</b>的 Node 节点插入 AQS 队列的尾部。
 
 > AQS 入队操作
 
@@ -1005,6 +1036,28 @@ protected final boolean tryRelease(int releases) {
     return free; // return true，可以唤醒阻塞队列中的线程了。
 }
 ```
+
+### 获取/释放
+
+这里的获取和释放方法，是利用 AQS 的协作工具类里最重要的方法，是由写作类自己去实现的，并且含义各不相同。
+
+#### 获取方法
+
+- 获取操作会依赖 state 变量，获取不到锁的时候就会阻塞。
+- 在 Semaphore 中，获取就是 acquire 方法，作用是获取一个许可证。
+- 在 CountDownLatch 里面，获取就是 await 方法，作用是”等待，直到倒数结束“
+
+#### 释放方法
+
+- 释放操作不会阻塞
+- 在 Semaphore 中，释放就是 release 方法，作用是释放一个许可证。
+- 在 CountDownLatch 里面，获取就是 countDown 方法，作用是”倒数一次（state --）“
+
+### AQS用法
+
+- 写好一个类，思考好协作的逻辑，实现获取/释放方法
+- 内部写一个 Sync 类，继承自 AbstractQueuedSynchronizer
+- 根据是否独占来重写 tryAcquire/tryRelease 或 tryAcquireShared(int acuires) 和 tryReleaseShared(int releases) 等方法，在之前写的获取/释放方法中调用 AQS 的 acquire/release 或 Shared 方法。 
 
 ### 条件变量
 
