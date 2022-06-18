@@ -1143,7 +1143,7 @@ class JdkDynamicAopProxy {
 
 ##### 代码参考
 
-<b>org.springframework.aop.framework.autoproxy.A17_2<b>
+<b>org.springframework.aop.framework.autoproxy.A17_2</b>
 
 #### 收获💡
 
@@ -1220,7 +1220,7 @@ ih -->> -Proxy :
 
 ##### 代码参考
 
-<b>org.springframework.aop.framework.A18<b>
+<b>org.springframework.aop.framework.A18</b>
 
 #### 收获💡
 
@@ -1239,7 +1239,7 @@ ih -->> -Proxy :
 
 ##### 代码参考
 
-<b>org.springframework.aop.framework.A18_1<b>
+<b>org.springframework.aop.framework.A18_1</b>
 
 #### 收获💡
 
@@ -1280,7 +1280,7 @@ RequestMappingHandlerMapping 与 RequestMappingHandlerAdapter 俩是一对，分
 
 ##### 代码参考
 
-<b>com.itheima.a20<b> 包
+<b>com.itheima.a20</b> 包
 
 #### 收获💡
 
@@ -1300,7 +1300,7 @@ RequestMappingHandlerMapping 与 RequestMappingHandlerAdapter 俩是一对，分
 
 ##### 代码参考
 
-<b>com.itheima.a20.TokenArgumentResolver<b> ，<b>com.itheima.a20.YmlReturnValueHandler<b>
+<b>com.itheima.a20.TokenArgumentResolver<b/> ，<b>com.itheima.a20.YmlReturnValueHandler</b>
 
 #### 收获💡
 
@@ -1315,7 +1315,7 @@ RequestMappingHandlerMapping 与 RequestMappingHandlerAdapter 俩是一对，分
 
 ##### 代码参考
 
-<b>com.itheima.a21<b> 包
+<b>com.itheima.a21</b> 包
 
 #### 收获💡
 
@@ -1351,7 +1351,7 @@ RequestMappingHandlerMapping 与 RequestMappingHandlerAdapter 俩是一对，分
 
 ##### 代码参考
 
-<b>com.itheima.a22.A22<b>
+<b>com.itheima.a22.A22</b>
 
 #### 收获💡
 
@@ -1462,7 +1462,7 @@ TypeConverterDelegate --> PropertyEditorRegistry
 
 ##### 代码参考
 
-<b>com.itheima.a23<b> 包
+<b>com.itheima.a23</b> 包
 
 #### 收获💡
 
@@ -1479,7 +1479,7 @@ TypeConverterDelegate --> PropertyEditorRegistry
 
 ##### 代码参考
 
-<b>com.itheima.a23.TestServletDataBinderFactory<b>
+<b>com.itheima.a23.TestServletDataBinderFactory</b>
 
 #### 收获💡
 
@@ -1501,7 +1501,7 @@ ServletRequestDataBinderFactory 的用法和扩展点
 
 ##### 代码参考
 
-<b>com.itheima.a23.sub<b> 包
+<b>com.itheima.a23.sub</b> 包
 
 #### 收获💡
 
@@ -1514,7 +1514,7 @@ ServletRequestDataBinderFactory 的用法和扩展点
 
 #### 演示 - 准备 @InitBinder
 
-<b>准备 @InitBinder<b> 在整个 HandlerAdapter 调用过程中所处的位置
+<b>准备 @InitBinder</b> 在整个 HandlerAdapter 调用过程中所处的位置
 
 ```mermaid
 sequenceDiagram
@@ -1646,9 +1646,9 @@ container -->> -adapter:
 
 ##### 代码参考
 
-<b>com.itheima.a26<b> 包
+<b>com.itheima.a26</b> 包
 
-<b>准备 @ModelAttribute<b> 在整个 HandlerAdapter 调用过程中所处的位置
+<b>准备 @ModelAttribute</b> 在整个 HandlerAdapter 调用过程中所处的位置
 
 ```mermaid
 sequenceDiagram
@@ -1699,7 +1699,7 @@ container -->> -adapter:
 
 ##### 代码参考
 
-<b>com.itheima.a27<b> 包
+<b>com.itheima.a27</b> 包
 
 #### 收获💡
 
@@ -1719,14 +1719,13 @@ container -->> -adapter:
 2. 组合模式在 Spring 中的体现 + 1
 
 
-
 ### 28) MessageConverter
 
 #### 演示 - MessageConverter 的作用
 
 ##### 代码参考
 
-<b>com.itheima.a28.A28<b>
+<b>com.itheima.a28.A28</b>
 
 #### 收获💡
 
@@ -1746,9 +1745,9 @@ container -->> -adapter:
 
 ##### 代码参考
 
-<b>com.itheima.a29<b> 包
+<b>com.itheima.a29</b> 包
 
-<b>ResponseBodyAdvice 增强<b> 在整个 HandlerAdapter 调用过程中所处的位置
+<b>ResponseBodyAdvice 增强</b> 在整个 HandlerAdapter 调用过程中所处的位置
 
 ```mermaid
 sequenceDiagram
@@ -1796,7 +1795,7 @@ container -->> -adapter:
 
 ##### 代码参考
 
-<b>com.itheima.a30.A30<b>
+<b>com.itheima.a30.A30</b>
 
 #### 收获💡
 
@@ -1811,7 +1810,7 @@ container -->> -adapter:
 
 ##### 代码参考
 
-<b>com.itheima.a31<b> 包
+<b>com.itheima.a31</b> 包
 
 #### 收获💡
 
@@ -1839,7 +1838,7 @@ container -->> -adapter:
        * 配置了 ErrorViewResolver，根据状态码去找 View
        * 没配置或没找到，用 BeanNameViewResolver 根据一个固定为 error 的名字找到 View，即所谓的 WhitelabelErrorView
 
-> <b>*评价<b>*
+> <b>评价</b>
 >
 > * 一个错误处理搞得这么复杂，就问恶心不？
 
@@ -1866,7 +1865,6 @@ public ErrorPageRegistrarBeanPostProcessor errorPageRegistrarBeanPostProcessor()
 1. Tomcat 的错误页处理手段
 
 
-
 #### 演示2 - BasicErrorController
 
 ##### 关键代码
@@ -1890,9 +1888,7 @@ public View error() {
         ) throws Exception {
             System.out.println(model);
             response.setContentType("text/html;charset=utf-8");
-            response.getWriter().print("""
-                    <h3>服务器内部错误</h3>
-                    """);
+            response.getWriter().print("""<h3>服务器内部错误</h3>""");
         }
     };
 }
@@ -1906,7 +1902,6 @@ public ViewResolver viewResolver() {
 #### 收获💡
 
 1. Spring Boot 中 BasicErrorController 如何工作
-
 
 
 ### 33) BeanNameUrlHandlerMapping 与 SimpleControllerHandlerAdapter
@@ -2293,21 +2288,21 @@ spring.mvc.view.suffix=.jsp
 
 #### 演示 - 启动过程
 
-<b>com.itheima.a39.A39_1<b> 对应 SpringApplication 构造
+<b>com.itheima.a39.A39_1</b> 对应 SpringApplication 构造
 
-<b>com.itheima.a39.A39_2<b> 对应第1步，并演示 7 个事件
+<b>com.itheima.a39.A39_2</b> 对应第1步，并演示 7 个事件
 
-<b>com.itheima.a39.A39_3<b> 对应第2、8到12步
+<b>com.itheima.a39.A39_3</b> 对应第2、8到12步
 
-<b>org.springframework.boot.Step3<b>
+<b>org.springframework.boot.Step3</b>
 
-<b>org.springframework.boot.Step4<b>
+<b>org.springframework.boot.Step4</b>
 
-<b>org.springframework.boot.Step5<b>
+<b>org.springframework.boot.Step5</b>
 
-<b>org.springframework.boot.Step6<b>
+<b>org.springframework.boot.Step6</b>
 
-<b>org.springframework.boot.Step7<b>
+<b>org.springframework.boot.Step7</b>
 
 #### 收获💡
 
@@ -2560,7 +2555,7 @@ AutoConfiguration1,\
 AutoConfiguration2
 ```
 
-> <b>*注意<b>*
+> <b>注意</b>
 >
 > * 上述配置文件中 MyImportSelector 与 AutoConfiguration1，AutoConfiguration2 为简洁均省略了包名，自己测试时请将包名根据情况补全
 
@@ -2586,7 +2581,6 @@ static class MyImportSelector implements DeferredImportSelector {
 2. @Enable 打头的注解本质是利用了 @Import
 3. @Import 配合 DeferredImportSelector 即可实现导入，selectImports 方法的返回值即为要导入的配置类名
 4. DeferredImportSelector 的导入会在最后执行，为的是让其它配置优先解析
-
 
 
 ### 42) 条件装配底层
@@ -2634,7 +2628,6 @@ static class AutoConfiguration1 {
 1. 学习一种特殊的 if - else
 
 
-
 ## 其它
 
 ### 43) FactoryBean
@@ -2643,7 +2636,7 @@ static class AutoConfiguration1 {
 
 ##### 代码参考
 
-<b>com.itheima.a43<b> 包
+<b>com.itheima.a43</b> 包
 
 #### 收获💡
 
@@ -2654,7 +2647,6 @@ static class AutoConfiguration1 {
       * 唯有后初始化的流程会走, 也就是产品可以被代理增强
       * 单例的产品不会存储于 BeanFactory 的 singletonObjects 成员中, 而是另一个 factoryBeanObjectCache 成员中
    2. 按名字去获取时, 拿到的是产品对象, 名字前面加 & 获取的是工厂对象
-
 
 
 ### 44) @Indexed 原理
@@ -2670,12 +2662,11 @@ static class AutoConfiguration1 {
 ```
 
 
-
 #### 演示 - @Indexed
 
 ##### 代码参考
 
-<b>com.itheima.a44<b> 包
+<b>com.itheima.a44</b> 包
 
 #### 收获💡
 
@@ -2686,14 +2677,13 @@ static class AutoConfiguration1 {
 3. 解决的问题，在编译期就找到 @Component 组件，节省运行期间扫描 @Component 的时间
 
 
-
 ### 45) 代理进一步理解
 
 #### 演示 - 代理
 
 ##### 代码参考
 
-<b>com.itheima.a45<b> 包
+<b>com.itheima.a45</b> 包
 
 #### 收获💡
 
@@ -2707,7 +2697,6 @@ static class AutoConfiguration1 {
 2. static 方法、final 方法、private 方法均无法增强
 
    * 进一步理解代理增强基于方法重写
-
 
 
 ### 46) @Value 装配底层
@@ -2729,12 +2718,11 @@ static class AutoConfiguration1 {
 11. 结果仍 > 1，抛出 NoUniqueBeanDefinitionException 异常
 
 
-
 #### 演示 - @Value 装配过程
 
 ##### 代码参考
 
-<b>com.itheima.a46<b> 包
+<b>com.itheima.a46</b> 包
 
 #### 收获💡
 
@@ -2744,14 +2732,13 @@ static class AutoConfiguration1 {
 4. TypeConvert 的一项体现
 
 
-
 ### 47) @Autowired 装配底层
 
 #### 演示 - @Autowired 装配过程
 
 ##### 代码参考
 
-<b>com.itheima.a47<b> 包
+<b>com.itheima.a47</b> 包
 
 #### 收获💡
 
@@ -2776,14 +2763,13 @@ static class AutoConfiguration1 {
 11. 与成员变量名或方法参数名同名 bean 的处理
 
 
-
 ### 48) 事件监听器
 
 #### 演示 - 事件监听器
 
 ##### 代码参考
 
-<b>com.itheima.a48<b> 包
+<b>com.itheima.a48</b> 包
 
 #### 收获💡
 
@@ -2796,14 +2782,13 @@ static class AutoConfiguration1 {
    * 解析时机：在 SmartInitializingSingleton（所有单例初始化完成后），解析每个单例 bean
 
 
-
 ### 49) 事件发布器
 
 #### 演示 - 事件发布器
 
 ##### 代码参考
 
-<b>com.itheima.a49<b> 包
+<b>com.itheima.a49</b> 包
 
 #### 收获💡
 
@@ -2816,4 +2801,3 @@ static class AutoConfiguration1 {
    * 可以利用线程池进行异步发事件优化
 3. 如果发送的事件对象不是 ApplicationEvent 类型，Spring 会把它包装为 PayloadApplicationEvent 并用泛型技术解析事件对象的原始类型
    * 视频中未讲解
-

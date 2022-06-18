@@ -2,7 +2,7 @@
 
 ## 标准的 jar 包
 
-Spring Boot 可以将应用打包成一个 jar，然后通过 `java -jar jar包名` 来启动程序。
+Spring Boot 可以将应用打包成一个 jar，然后通过 `java -jar jar 包名` 来启动程序。
 
 我们先来看看，普通的 Java 项目是如何运行 Jar 包的。我们将一个普通的 Java 项目打成 Jar 包。
 

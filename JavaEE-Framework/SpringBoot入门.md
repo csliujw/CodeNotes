@@ -133,11 +133,11 @@ public class HelloController {
 
 创建工程时，切换选择 starter 服务路径，然后手工输入阿里云地址即可，地址：http://start.aliyun.com 或 https://start.aliyun.com
 
-<img src="img/boot/image-20211122163605950.png">
+<div align="center"><img src="img/boot/image-20211122163605950.png"></div>
 
 阿里为了便于自己公司开发使用，特此在依赖坐标中添加了一些阿里自主的技术，也是为了推广自己的技术吧，所以在依赖选择列表中，你有了更多的选择。此外，阿里提供的地址更符合国内开发者的使用习惯，里面有一些 SpringBoot 官网上没有给出的坐标。
 
-<img src="img/boot/image-20211122163937408.png">
+<div align="center"><img src="img/boot/image-20211122163937408.png"></div>
 
 阿里云地址默认创建的 SpringBoot 工程版本是 <font color="#ff0000"><b>2.4.1</b></font>，所以如果你想更换其他的版本，创建项目后在 pom 文件中手工修改即可，别忘了刷新一下，加载新版本信息。
 
@@ -188,11 +188,11 @@ public class CommunityApplication {
 
 SpringBoot 通过配置文件 application.properties 就可以修改默认的配置
 
-<img src="img/boot/image-20211123165428245.png">
+<div align="center"><img src="img/boot/image-20211123165428245.png"></div>
 
 将默认端口改为 80 端口。properties 格式的文件书写规范是 key=value  `如：name=itheima`
 
-<img src="img/boot/image-20211123165719091.png" />
+<div align="center"><img src="img/boot/image-20211123165719091.png"></div>
 
 ```properties
 server.port=80
@@ -369,23 +369,23 @@ server:
 
 **步骤①**：打开设置，【Files】→【Project Structure...】
 
-<img src="img/boot/image-20211126160548690.png">
+<div align="center"><img src="img/boot/image-20211126160548690.png"></div>
 
 **步骤②**：在弹出窗口中左侧选择【Facets】，右侧选中 Spring 路径下对应的模块名称，也就是你自动提示功能消失的那个模块
 
-<img src="img/boot/image-20211126160844372.png">
+<div align="center"><img src="img/boot/image-20211126160844372.png"></div>
 
 **步骤③**：点击 Customize Spring Boot 按钮，此时可以看到当前模块对应的配置文件是哪些了。如果没有你想要称为配置文件的文件格式，就有可能无法弹出提示
 
-<img src="img/boot/image-20211126160946448.png">
+<div align="center"><img src="img/boot/image-20211126160946448.png"></div>
 
 **步骤④**：选择添加配置文件，然后选中要作为配置文件的具体文件就 OK 了
 
-<img src="img/boot/image-20211126161145082.png" alt="image-20211126161145082" style="zoom:80%;" /><img src="img/boot/image-20211126161156324.png" alt="image-20211126161156324" style="zoom: 67%;" />
+<div align="center"><img src="img/boot/image-20211126161145082.png" alt="image-20211126161145082" style="zoom:80%;" /></div><div align="center"><img src="img/boot/image-20211126161156324.png" alt="image-20211126161156324" style="zoom: 67%;" /></div>
 
 到这里就做完了，其实就是 Idea 的一个小功能
 
-<img src="img/boot/image-20211126161301699.png">
+<div align="center"><img src="img/boot/image-20211126161301699.png"></div>
 
 **总结**
 
@@ -491,7 +491,7 @@ map:
 
 yaml 中保存的单个数据，可以使用 Spring 中的注解 @Value 读取单个数据，属性名引用方式：<font color="#ff0000"><b>${一级属性名.二级属性名……}</b></font>
 
-<img src="img/boot/image-20211126180433356.png" style="zoom:80%;" />
+<div align="center"><img src="img/boot/image-20211126180433356.png" style="zoom:80%;" /></div>
 
 记得使用 @Value 注解时，要将该注解写在某一个指定的 Spring 管控的 bean 的属性名上方，这样当 bean 进行初始化时候就可以读取到对应的单一数据了。
 
@@ -504,7 +504,7 @@ yaml 中保存的单个数据，可以使用 Spring 中的注解 @Value 读取�
 
 读取单一数据可以解决读取数据的问题，但是如果定义的数据量过大，这么一个一个书写肯定会累死人的，SpringBoot 提供了一个对象，能够把所有的数据都封装到这一个对象中，这个对象叫做 Environment，使用自动装配注解可以将所有的 yaml 数据封装到这个对象中
 
-<img src="img/boot/image-20211126180738569.png" style="zoom:80%;" />
+<div align="center"><img src="img/boot/image-20211126180738569.png" style="zoom:80%;" /></div>
 
 数据封装到了 Environment 对象中，获取属性时，通过 Environment 的接口操作进行，具体方法是 getProperties（String），参数填写属性名即可
 
@@ -519,11 +519,11 @@ yaml 中保存的单个数据，可以使用 Spring 中的注解 @Value 读取�
 
 首先定义一个对象，并将该对象纳入 Spring 管控的范围，也就是定义成一个 bean，然后使用注解 @ConfigurationProperties 指定该对象加载哪一组 yaml 中配置的信息。
 
-<img src="img/boot/image-20211126181126382.png" alt="image-20211126181126382" style="zoom:80%;" />
+<div align="center"><img src="img/boot/image-20211126181126382.png" alt="image-20211126181126382" style="zoom:80%;" /></div>
 
 这个 @ConfigurationProperties 必须告诉他加载的数据前缀是什么，这样指定前缀下的所有属性就封装到这个对象中。记得数据属性名要与对象的变量名一一对应啊，不然没法封装。其实以后如果你要定义一组数据自己使用，就可以先写一个对象，然后定义好属性，下面到配置中根据这个格式书写即可。
 
-<img src="img/boot/image-20211126181423432.png">
+<div align="center"><img src="img/boot/image-20211126181423432.png"></div>
 
 <font color="#f0f"><b>温馨提示</b></font>：细心的小伙伴会发现一个问题，自定义的这种数据在 yaml 文件中书写时没有弹出提示，咱们到原理篇再揭秘如何弹出提示。
 
@@ -830,7 +830,7 @@ protected AutoConfigurationEntry getAutoConfigurationEntry(AnnotationMetadata an
 }
 ```
 
-<img src="img/boot/AutoConfigurationImportSelector.png">
+<div align="center"><img src="img/boot/AutoConfigurationImportSelector.png"></div>
 
 ```java
 protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes) {
@@ -1140,7 +1140,7 @@ public class HelloController {
 
 # Web 开发基础
 
-<img src="img/boot/yuque_diagram.jpg">
+<div align="center"><img src="img/boot/yuque_diagram.jpg"></div>
 
 ## Spring MVC 自动配置概览
 
@@ -1476,7 +1476,7 @@ public class WebMvcConfig {
     - 实现了父类的 doService
     - doService 调用 doDispatch 方法
 
-<img src="img/boot/image-20211023111242760.png">
+<div align="center"><img src="img/boot/image-20211023111242760.png"></div>
 
 总结：Spring MVC 功能分析都从 org.springframework.web.servlet.DispatcherServlet ---> doDispatch() 开始
 
@@ -1553,9 +1553,9 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 
 getHandler 方法；RequestMappingHandlerMapping 中存储了所有@RequestMapping 和handler的映射规则。
 
-<img src="img/boot/image-20211023114049369.png">
+<div align="center"><img src="img/boot/image-20211023114049369.png"></div>
 
-<img src="img/boot/image-20211023114945974.png">
+<div align="center"><img src="img/boot/image-20211023114945974.png"></div>
 
 ```java
 @Nullable
@@ -1839,7 +1839,7 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
         - supports 支持那些方法
         - handle 定义了如何处理的逻辑
 
-<img src="img/boot/image-20211024200517771-16350771187701.png">
+<div align="center"><img src="img/boot/image-20211024200517771-16350771187701.png"></div>
 
 #### 执行目标方法
 
@@ -1886,7 +1886,7 @@ protected ModelAndView handleInternal(HttpServletRequest request,
 
 SpringMVC目标方法能写多少种参数类型。取决于参数解析器。
 
-<img src="img/boot/image-20211024201053219.png">
+<div align="center"><img src="img/boot/image-20211024201053219.png"></div>
 
 参数解析器
 
@@ -1906,7 +1906,7 @@ public interface HandlerMethodArgumentResolver {
 
 #### 返回值处理器
 
-<img src="img/boot/image-20211024201539502.png">
+<div align="center"><img src="img/boot/image-20211024201539502.png"></div>
 
 ### 确定目标方法每一个参数值
 
@@ -3176,11 +3176,11 @@ jdbc.password=root
 
 **步骤①**：创建模块
 
-<img src="img/boot/image-20211129092156020.png">
+<div align="center"><img src="img/boot/image-20211129092156020.png"></div>
 
 **步骤②**：勾选要使用的技术，MyBatis，由于要操作数据库，还要勾选对应数据库
 
-<img src="img/boot/image-20211129092210993.png">
+<div align="center"><img src="img/boot/image-20211129092210993.png"></div>
 
 或者手工导入对应技术的starter，和对应数据库的坐标
 
@@ -3364,7 +3364,7 @@ public interface BookDao extends BaseMapper<Book> {
 
 ​	核心在于Dao接口继承了一个BaseMapper的接口，这个接口中帮助开发者预定了若干个常用的API接口，简化了通用API接口的开发工作。
 
-<img src="img/boot/image-20211129100313919.png" alt="image-20211129100313919" style="zoom:80%;" />
+<div align="center"><img src="img/boot/image-20211129100313919.png" alt="image-20211129100313919" style="zoom:80%;" /></div>
 
 下面就可以写一个测试类进行测试了，此处省略。
 
@@ -3471,7 +3471,7 @@ spring:
 
 注意观察，配置项中，在datasource下面并不是直接配置url这些属性的，而是先配置了一个druid节点，然后再配置的url这些东西。言外之意，url这个属性是druid下面的属性，那你能想到什么？除了这4个常规配置外，还有druid专用的其他配置。通过提示功能可以打开druid相关的配置查阅
 
-<img src="img/boot/image-20211129112610729.png" alt="image-20211129112610729" style="zoom:80%;" />
+<div align="center"><img src="img/boot/image-20211129112610729.png" alt="image-20211129112610729" style="zoom:80%;" /></div>
 
 与druid相关的配置超过200条以上，这就告诉你，如果想做druid相关的配置，使用这种格式就可以了，这里就不展开描述了，太多了。
 
@@ -3491,25 +3491,25 @@ spring:
 
 **主页面**
 
-<img src="img/boot/image-20211129113447844.png">
+<div align="center"><img src="img/boot/image-20211129113447844.png"></div>
 
 **添加**
 
-<img src="img/boot/image-20211129113522459.png">
+<div align="center"><img src="img/boot/image-20211129113522459.png"></div>
 
 **删除**
 
-<img src="img/boot/image-20211129113550829.png">
+<div align="center"><img src="img/boot/image-20211129113550829.png"></div>
 
 **修改**
 
 **分页**
 
-<img src="img/boot/image-20211129113628969.png">
+<div align="center"><img src="img/boot/image-20211129113628969.png"></div>
 
 **条件查询**
 
-<img src="img/boot/image-20211129113650369.png">
+<div align="center"><img src="img/boot/image-20211129113650369.png"></div>
 
 ​	整体案例中需要采用的技术如下，先了解一下，做到哪一个说哪一个
 
@@ -3534,11 +3534,11 @@ spring:
 
 ​		对于这个案例如果按照企业开发的形式进行应该制作后台微服务，前后端分离的开发。
 
-<img src="img/boot/image-20211129114306062.png" alt="image-20211129114306062" style="zoom:80%;" />
+<div align="center"><img src="img/boot/image-20211129114306062.png" alt="image-20211129114306062" style="zoom:80%;" /></div>
 
 ​		我知道这个对初学的小伙伴要求太高了，咱们简化一下。后台做单体服务器，前端不使用前后端分离的制作了。
 
-<img src="img/boot/image-20211129114328967.png" alt="image-20211129114328967" style="zoom:80%;" />
+<div align="center"><img src="img/boot/image-20211129114328967.png" alt="image-20211129114328967" style="zoom:80%;" /></div>
 
 ​		一个服务器即充当后台服务调用，又负责前端页面展示，降低学习的门槛。
 
@@ -3827,7 +3827,7 @@ JDBC Connection [com.mysql.cj.jdbc.ConnectionImpl@6ca30b8a] will not be managed 
 
 此处设置的是日志的显示形式，当前配置的是控制台输出，当然还可以由更多的选择，根据需求切换即可
 
-<img src="img/boot/image-20211129143207295.png" alt="image-20211129143207295" style="zoom:80%;" />
+<div align="center"><img src="img/boot/image-20211129143207295.png" alt="image-20211129143207295" style="zoom:80%;" /></div>
 
 
 
@@ -4207,15 +4207,15 @@ public class BookController2 {
 
 **普通GET请求**
 
-<img src="img/boot/image-20211129152237371.png">
+<div align="center"><img src="img/boot/image-20211129152237371.png"></div>
 
 **PUT请求传递json数据，后台实用@RequestBody接收数据**
 
-<img src="img/boot/image-20211129152300177.png">
+<div align="center"><img src="img/boot/image-20211129152300177.png"></div>
 
 **GET请求传递路径变量，后台实用@PathVariable接收数据**
 
-<img src="img/boot/image-20211129152320073.png">
+<div align="center"><img src="img/boot/image-20211129152320073.png"></div>
 
 **总结**
 
@@ -4296,11 +4296,11 @@ public class R {
 
 表现层开发格式也需要转换一下
 
-<img src="img/boot/image-20211129153301262.png" alt="image-20211129153301262" style="zoom:80%;" />
+<div align="center"><img src="img/boot/image-20211129153301262.png" alt="image-20211129153301262" style="zoom:80%;" /></div>
 
-<img src="img/boot/image-20211129153319052.png" alt="image-20211129153319052" style="zoom:80%;" />
+<div align="center"><img src="img/boot/image-20211129153319052.png" alt="image-20211129153319052" style="zoom:80%;" /></div>
 
-<img src="img/boot/image-20211129153332499.png" alt="image-20211129153332499" style="zoom:80%;" />
+<div align="center"><img src="img/boot/image-20211129153332499.png" alt="image-20211129153332499" style="zoom:80%;" /></div>
 
 ​		结果这么一折腾，全格式统一，现在后端发送给前端的数据格式就统一了，免去了不少前端解析数据的烦恼。
 
@@ -4320,7 +4320,7 @@ public class R {
 
 ​		将前端人员开发的页面保存到lresources目录下的static目录中，建议执行maven的clean生命周期，避免缓存的问题出现。
 
-​	<img src="img/boot/image-20211129153831990.png"/>
+​	<div align="center"><img src="img/boot/image-20211129153831990.png"></div>
 
 ​		在进行具体的功能开发之前，先做联通性的测试，通过页面发送异步提交（axios），这一步调试通过后再进行进一步的功能开发。
 
@@ -4944,7 +4944,7 @@ java -jar 工程包名.jar
 
 打包以后执行会出现一些问题，导致程序无法正常执行，例如下面的现象
 
-<img src="img/boot/image-20211201094223991.png" alt="image-20211201094223991" style="zoom:67%;" />
+<div align="center"><img src="img/boot/image-20211201094223991.png" alt="image-20211201094223991" style="zoom:67%;" /></div>
 
 要想搞清楚这个问题就要说说.jar文件的工作机制了，知道了这个东西就知道如何避免此类问题的发生了。
 
@@ -4971,13 +4971,13 @@ java -jar 工程包名.jar
 
 先看第一个现象，文件大小不同。带有配置时打包生成的程序包大小如下：
 
-<img src="img/boot/image-20211201095610270.png" alt="image-20211201095610270" style="zoom:150%;" />
+<div align="center"><img src="img/boot/image-20211201095610270.png" alt="image-20211201095610270" style="zoom:150%;" /></div>
 
 不难看出，带有配置的程序包体积比不带配置的大了30倍。
 
 大的程序包中除了包含小的程序包中的内容，还有别的东西。都有什么呢？回到BOOT-INF目录下，打开lib目录，里面显示了很多个jar文件。
 
-​		<img src="img/boot/image-20211201102025791.png" alt="image-20211201102025791" style="zoom:50%;" />
+​		<div align="center"><img src="img/boot/image-20211201102025791.png" alt="image-20211201102025791" style="zoom:50%;" /></div>
 
 ​		仔细翻阅不难发现，这些jar文件都是我们制作这个工程时导入的坐标对应的文件。大概可以想明白了，SpringBoot程序为了让自己打包生成的程序可以独立运行，不仅将项目中自己开发的内容进行了打包，还把当前工程运行需要使用的jar包全部打包进来了。为什么这样做呢？就是为了可以独立运行。不依赖程序包外部的任何资源可以独立运行当前程序。这也是为什么大的程序包容量是小的程序包容量的30倍的主要原因。
 
@@ -5026,7 +5026,7 @@ SpringBoot打出来了包为了能够独立运行，将所有需要使用的资�
 
 再来看之前的报错信息：
 
-<img src="img/boot/image-20211201094223991.png" alt="image-20211201094223991" style="zoom:67%;" />
+<div align="center"><img src="img/boot/image-20211201094223991.png" alt="image-20211201094223991" style="zoom:67%;" /></div>
 
 由于打包时没有使用那段配置，结果打包后形成了一个普通的jar包，在MANIFEST.MF文件中也就没有了Main-Class对应的属性了，所以运行时提示找不到主清单属性，这就是报错的原因。
 
@@ -5083,7 +5083,7 @@ java –jar springboot.jar –-server.port=80 --logging.level.root=debug
 
 现在我们的程序配置受两个地方控制了，第一配置文件，第二临时属性。并且我们发现临时属性的加载优先级要高于配置文件的。那是否还有其他的配置方式呢？其实是有的，而且还不少，打开官方文档中对应的内容，就可以查看配置读取的优先顺序。地址奉上：[https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-external-config](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html)
 
-<img src="img/boot/image-20211206100859236.png" alt="image-20211206100859236" style="zoom:67%;" />
+<div align="center"><img src="img/boot/image-20211206100859236.png" alt="image-20211206100859236" style="zoom:67%;" /></div>
 
 我们可以看到，居然有14种配置的位置，而我们现在使用的是这里面的2个。第3条Config data说的就是使用配置文件，第11条Command line arguments说的就是使用命令行临时参数。而这14种配置的顺序就是SpringBoot加载配置的顺序，言外之意，命令行临时属性比配置文件的加载优先级高，所以这个列表**上面的优先级低，下面的优先级高**。其实这个东西不用背的，你就记得一点，你最终要什么效果，你自己是知道的，不管这个顺序是怎么个高低排序，开发时一定要配置成你要的顺序为准。这个顺序只是在你想不明白问题的时候帮助你分析罢了。
 
@@ -5104,7 +5104,7 @@ java –jar springboot.jar –-server.port=80 --logging.level.root=debug
 
 打开SpringBoot引导类的运行界面，在里面找到配置项。其中Program arguments对应的位置就是添加临时属性的，可以加几个试试效果。
 
-<img src="img/boot/image-20211206101947622.png" alt="image-20211206101947622" style="zoom:80%;" />
+<div align="center"><img src="img/boot/image-20211206101947622.png" alt="image-20211206101947622" style="zoom:80%;" /></div>
 
 我们运行main方法的时候，如果想使用main方法的参数，也就是下面的args参数，就是在上面这个位置添加的参数。
 
@@ -5187,15 +5187,15 @@ SpringBoot提供了配置文件和临时属性的方式来对程序进行配置�
 
 **方式一：使用临时属性设置配置文件名，注意仅仅是名称，不要带扩展名**
 
-<img src="img/boot/image-20211206105548238.png" alt="image-20211206105548238"/>
+<div align="center"><img src="img/boot/image-20211206105548238.png" alt="image-20211206105548238"/></div>
 
 **方式二：使用临时属性设置配置文件路径，这个是全路径名**
 
-<img src="img/boot/image-20211206105716450.png" alt="image-20211206105716450"/>
+<div align="center"><img src="img/boot/image-20211206105716450.png" alt="image-20211206105716450"/></div>
 
 也可以设置加载多个配置文件
 
-<img src="img/boot/image-20211206105750285.png" alt="image-20211206105750285" />
+<div align="center"><img src="img/boot/image-20211206105750285.png" alt="image-20211206105750285" /></div>
 
 使用的属性一个是spring.config.name，另一个是spring.config.location，这个一定要区别清楚。
 
@@ -5211,7 +5211,7 @@ SpringBoot提供了配置文件和临时属性的方式来对程序进行配置�
 
 什么是多环境？其实就是说你的电脑上写的程序最终要放到别人的服务器上去运行。每个计算机环境不一样，这就是多环境。常见的多环境开发主要兼顾3种环境设置，开发环境——自己用的，测试环境——自己公司用的，生产环境——甲方爸爸用的。因为这是绝对不同的三台电脑，所以环境肯定有所不同，比如连接的数据库不一样，设置的访问端口不一样等等。
 
-<img src="img/image-20211206110958819.png" alt="image-20211206110958819"/>
+<div align="center"><img src="img/image-20211206110958819.png" alt="image-20211206110958819"/></div>
 
 ### 多环境开发（yaml单一文件版）	
 
@@ -5675,7 +5675,7 @@ logging:
 
 **步骤②**：构建项目，可以使用快捷键激活此功能
 
-<img src="img/image-20220222121257218.png">
+<div align="center"><img src="img/image-20220222121257218.png"></div>
 
 对应的快捷键一定要记得 `<CTR>L+<F9>`，以上过程就实现了springboot工程的热部署。底层的工作过程如下。
 
@@ -5705,7 +5705,7 @@ logging:
 
 打开【File】，选择【settings...】,在面板左侧的菜单中找到【Compile】选项，然后勾选【Build project automatically】，意思是自动构建项目
 
-<img src="img/boot/image-20220222123543551.png">
+<div align="center"><img src="img/boot/image-20220222123543551.png"></div>
 
 自动构建项目选项勾选后
 
@@ -5713,11 +5713,11 @@ logging:
 
 使用快捷键【Ctrl】+【Alt】+【Shit】+【/】打开维护面板，选择第1项【Registry...】
 
-<img src="img/boot/image-20220222124006910.png">
+<div align="center"><img src="img/boot/image-20220222124006910.png"></div>
 
 在选项中搜索comple，然后勾选对应项即可
 
-<img src="img/boot/image-20220222124240069.png"/>
+<div align="center"><img src="img/boot/image-20220222124240069.png"></div>
 
 这样程序在运行的时候就可以进行自动构建了，实现了热部署的效果。
 
@@ -5889,7 +5889,7 @@ public class ServerConfig {
 
 最后再说一个小技巧，使用 @ConfigurationProperties 注解时，会出现一个提示信息
 
-<img src="img/boot/image-20220222145535749.png">
+<div align="center"><img src="img/boot/image-20220222145535749.png"></div>
 
 出现这个提示后只需要添加一个坐标此提醒就消失了
 
@@ -6024,11 +6024,11 @@ public class ServerConfig {
 
 Druation 常用单位如下：
 
-<img src="img/boot/image-20220222173911102.png">
+<div align="center"><img src="img/boot/image-20220222173911102.png"></div>
 
 DataSize 常用单位如下：
 
-<img src="img/boot/image-20220222174130102.png">
+<div align="center"><img src="img/boot/image-20220222174130102.png"></div>
 
 ### 校验
 
@@ -6106,7 +6106,7 @@ spring:
 
 这名开发者的生日是1月27日，所以密码就使用了0127，其实问题就出在这里了。之前在基础篇讲属性注入时，提到过类型相关的知识，在整数相关知识中有这么一句话，**支持二进制，八进制，十六进制**
 
-<img src="img/boot/image-20220222225748370.png">
+<div align="center"><img src="img/boot/image-20220222225748370.png"></div>
 
 这个问题就处在这里了，因为0127在开发者眼中是一个字符串“0127”，但是在springboot 看来，这就是一个数字，而且是一个八进制的数字。当后台使用 String 类型接收数据时，如果配置文件中配置了一个整数值，他是先按照整数进行处理，读取后再转换成字符串。巧了，0127 撞上了八进制的格式，所以最终以十进制数字 87 的结果存在了。
 
@@ -6184,7 +6184,7 @@ public class PropertiesAndArgsTest {
 
 ​		说到这里，好奇宝宝们肯定就有新问题了，如果两者共存呢？其实如果思考一下配置属性与命令行参数的加载优先级，这个结果就不言而喻了。在属性加载的优先级设定中，有明确的优先级设定顺序，还记得下面这个顺序吗？
 
-<img src="img/image-20211206100859236.png" alt="image-20211206100859236" style="zoom:67%;" />
+<div align="center"><img src="img/image-20211206100859236.png" alt="image-20211206100859236" style="zoom:67%;" /></div>
 
 ​		在这个属性加载优先级的顺序中，明确规定了命令行参数的优先级排序是11，而配置属性的优先级是3，结果不言而喻了，args属性配置优先于properties属性配置加载。
 
@@ -6265,7 +6265,7 @@ public class WebTest {
 
 ​		测试类中启动web环境时，可以指定启动的Web环境对应的端口，springboot提供了4种设置值，分别如下：
 
-<img src="img/image-20220223125453317.png" alt="image-20220223125453317" style="zoom:80%;" />
+<div align="center"><img src="img/image-20220223125453317.png" alt="image-20220223125453317" style="zoom:80%;" /></div>
 
 - MOCK：根据当前设置确认是否启动web环境，例如使用了Servlet的API就启动web环境，属于适配性的配置
 - DEFINED_PORT：使用自定义的端口作为web服务器端口
@@ -6505,7 +6505,7 @@ public class BookCase {
 
 ​		对于随机值的产生，还有一些小的限定规则，比如产生的数值性数据可以设置范围等，具体如下：
 
-<img src="img/image-20220223135454862.png" alt="image-20220223135454862" style="zoom:80%;" />
+<div align="center"><img src="img/image-20220223135454862.png" alt="image-20220223135454862" style="zoom:80%;" /></div>
 
 - ${random.int}表示随机整数
 - ${random.int(10)}表示10以内的随机数
@@ -6812,7 +6812,7 @@ datasource:
 
 ​		安装完毕后会得到如下文件，其中有两个文件对应两个命令，是启动Redis的核心命令，需要再CMD命令行模式执行。
 
-<img src="img/image-20220224091709173.png" alt="image-20220224091709173" style="zoom: 80%;" />
+<div align="center"><img src="img/image-20220224091709173.png" alt="image-20220224091709173" style="zoom: 80%;" /></div>
 
 **启动服务器**
 
@@ -6889,7 +6889,7 @@ hget a a2			#得到aa2
 
 ​		上述坐标可以在创建模块的时候通过勾选的形式进行选择，归属NoSQL分类中
 
-<img src="img/image-20220224101142220.png" alt="image-20220224101142220" style="zoom:50%;" />
+<div align="center"><img src="img/image-20220224101142220.png" alt="image-20220224101142220" style="zoom:50%;" /></div>
 
 **步骤②**：进行基础配置
 
@@ -6937,7 +6937,7 @@ class Springboot16RedisApplicationTests {
 
 ​		在操作redis时，需要先确认操作何种数据，根据数据种类得到操作接口。例如使用opsForValue()获取string类型的数据操作接口，使用opsForHash()获取hash类型的数据操作接口，剩下的就是调用对应api操作了。各种类型的数据操作接口如下：
 
-<img src="img/image-20220224103104908.png" alt="image-20220224103104908" style="zoom:80%;" />
+<div align="center"><img src="img/image-20220224103104908.png" alt="image-20220224103104908" style="zoom:80%;" /></div>
 
 **总结**
 
@@ -7062,7 +7062,7 @@ spring:
 
 ​		如果在安装的过程中出现了如下警告信息，就是告诉你，你当前的操作系统缺少了一些系统文件，这个不用担心。
 
-<img src="img/image-20220224113956882.png" alt="image-20220224113956882" style="zoom:50%;" />
+<div align="center"><img src="img/image-20220224113956882.png" alt="image-20220224113956882" style="zoom:50%;" /></div>
 
 ​		根据下列方案即可解决，在浏览器中搜索提示缺少的名称对应的文件，并下载，将下载的文件拷贝到windows安装目录的system32目录下，然后在命令行中执行regsvr32命令注册此文件。根据下载的文件名不同，执行命令前更改对应名称。
 
@@ -7090,7 +7090,7 @@ mongo --host=127.0.0.1 --port=27017
 
 ​		同类型的软件较多，本次安装的软件时Robo3t，Robot3t是一款绿色软件，无需安装，解压缩即可。解压缩完毕后进入安装目录双击robot3t.exe即可使用。
 
-<img src="img/image-20220224114911573.png" alt="image-20220224114911573" style="zoom: 33%;" />
+<div align="center"><img src="img/image-20220224114911573.png" alt="image-20220224114911573" style="zoom: 33%;" /></div>
 
 ​		打开软件首先要连接MongoDB服务器，选择【File】菜单，选择【Connect...】
 
@@ -7098,7 +7098,7 @@ mongo --host=127.0.0.1 --port=27017
 
 ​		进入连接管理界面后，选择左上角的【Create】链接，创建新的连接设置
 
-<img src="img/image-20220224115254200.png" alt="image-20220224115254200" style="zoom:80%;" />
+<div align="center"><img src="img/image-20220224115254200.png" alt="image-20220224115254200" style="zoom:80%;" /></div>
 
 ​		如果输入设置值即可连接（默认不修改即可连接本机27017端口）
 
@@ -7173,7 +7173,7 @@ db.集合名称.update(条件，{操作种类:{文档}})
 
 ​		上述坐标也可以在创建模块的时候通过勾选的形式进行选择，同样归属NoSQL分类中
 
-<img src="img/image-20220224120721626.png" alt="image-20220224120721626" style="zoom: 67%;" />
+<div align="center"><img src="img/image-20220224120721626.png" alt="image-20220224120721626" style="zoom: 67%;" /></div>
 
 **步骤②**：进行基础配置
 
@@ -7862,13 +7862,13 @@ void testSearch() throws IOException {
 
 ​		企业级应用主要作用是信息处理，当需要读取数据时，由于受限于数据库的访问效率，导致整体系统性能偏低。
 
-<img src="img/image-20220226154148303.png" alt="image-20220226154148303" style="zoom:67%;" />
+<div align="center"><img src="img/image-20220226154148303.png" alt="image-20220226154148303" style="zoom:67%;" /></div>
 
 ​															          应用程序直接与数据库打交道，访问效率低
 
 ​		为了改善上述现象，开发者通常会在应用程序与数据库之间建立一种临时的数据存储机制，该区域中的数据在内存中保存，读写速度较快，可以有效解决数据库访问效率低下的问题。这一块临时存储数据的区域就是缓存。
 
-<img src="img/image-20220226154233010.png" alt="image-20220226154233010" style="zoom:67%;" />
+<div align="center"><img src="img/image-20220226154233010.png" alt="image-20220226154233010" style="zoom:67%;" /></div>
 
  											使用缓存后，应用程序与缓存打交道，缓存与数据库打交道，数据访问效率提高
 
@@ -8200,11 +8200,11 @@ spring:
 
 ​		可执行文件只有一个memcached.exe，使用该文件可以将memcached作为系统服务启动，执行此文件时会出现报错信息，如下：
 
-<img src="img/image-20220226175141986.png" alt="image-20220226175141986" style="zoom:80%;" />
+<div align="center"><img src="img/image-20220226175141986.png" alt="image-20220226175141986" style="zoom:80%;" /></div>
 
 ​		此处出现问题的原因是注册系统服务时需要使用管理员权限，当前账号权限不足导致安装服务失败，切换管理员账号权限启动命令行
 
-<img src="img/image-20220226175302903.png" alt="image-20220226175302903" style="zoom:80%;" />
+<div align="center"><img src="img/image-20220226175302903.png" alt="image-20220226175302903" style="zoom:80%;" /></div>
 
 ​		然后再次执行安装服务的命令即可，如下：
 
@@ -8221,7 +8221,7 @@ memcached.exe -d stop		# 停止服务
 
 ​		也可以在任务管理器中进行服务状态的切换
 
-<img src="img/image-20220226175441675.png" alt="image-20220226175441675" style="zoom:67%;" />
+<div align="center"><img src="img/image-20220226175441675.png" alt="image-20220226175441675" style="zoom:67%;" /></div>
 
 **变更缓存为Memcached**
 
@@ -9238,7 +9238,7 @@ public class SendMailServiceImpl2 implements SendMailService {
     //标题
     private String subject = "测试邮件";
     //正文
-    private String context = "<img src='ABC.JPG'/><a href='https://www.itcast.cn'>点开有惊喜</a>";
+    private String context = "<div align="center"><img src='ABC.JPG'/><a href='https://www.itcast.cn'>点开有惊喜</a>";
 
     public void sendMail() {
         try {
@@ -9556,7 +9556,7 @@ http://127.0.0.1:8161/
 
 ​		web管理服务默认端口8161，访问后可以打开ActiveMQ的管理界面，如下：
 
-<img src="img/image-20220228160844972.png" alt="image-20220228160844972" style="zoom:67%;" />
+<div align="center"><img src="img/image-20220228160844972.png" alt="image-20220228160844972" style="zoom:67%;" /></div>
 
 ​		首先输入访问用户名和密码，初始化用户名和密码相同，均为：admin，成功登录后进入管理后台界面，如下：
 
@@ -9897,7 +9897,7 @@ spring:
 
 ​		下载完毕后得到exe安装文件，一键傻瓜式安装，安装完毕后会得到如下文件
 
-<img src="img/image-20220228165151524.png" alt="image-20220228165151524" style="zoom:67%;" />
+<div align="center"><img src="img/image-20220228165151524.png" alt="image-20220228165151524" style="zoom:67%;" /></div>
 
 **启动服务器**
 
@@ -9915,7 +9915,7 @@ rabbitmqctl status				# 查看服务状态
 
 ​		说明：不喜欢命令行的小伙伴可以使用任务管理器中的服务页，找到RabbitMQ服务，使用鼠标右键菜单控制服务的启停。
 
-<img src="img/image-20220228170147193.png" alt="image-20220228170147193" style="zoom:67%;" />
+<div align="center"><img src="img/image-20220228170147193.png" alt="image-20220228170147193" style="zoom:67%;" /></div>
 
 **访问web管理服务**
 
@@ -10139,7 +10139,7 @@ public class MessageListener {
 
 ​		在RocketMQ中，处理业务的服务器称为broker，生产者与消费者不是直接与broker联系的，而是通过命名服务器进行通信。broker启动后会通知命名服务器自己已经上线，这样命名服务器中就保存有所有的broker信息。当生产者与消费者需要连接broker时，通过命名服务器找到对应的处理业务的broker，因此命名服务器在整套结构中起到一个信息中心的作用。并且broker启动前必须保障命名服务器先启动。
 
-<img src="img/image-20220228175123790.png" alt="image-20220228175123790" style="zoom:80%;" />
+<div align="center"><img src="img/image-20220228175123790.png" alt="image-20220228175123790" style="zoom:80%;" /></div>
 
 **启动服务器**
 
@@ -10364,19 +10364,19 @@ public class MessageListener {
 
 ​		通过上述描述，可以看出监控很重要。那具体的监控要如何开展呢？还要从实际的程序运行角度出发。比如现在有3个服务支撑着一个程序的运行，每个服务都有自己的运行状态。
 
-<img src="img/image-20220301093704396.png" alt="image-20220301093704396" style="zoom:50%;" />
+<div align="center"><img src="img/image-20220301093704396.png" alt="image-20220301093704396" style="zoom:50%;" /></div>
 
 ​		此时被监控的信息就要在三个不同的程序中去查询并展示，但是三个服务是服务于一个程序的运行的，如果不能合并到一个平台上展示，监控工作量巨大，而且信息对称性差，要不停的在三个监控端查看数据。如果将业务放大成30个，300个，3000个呢？看来必须有一个单独的平台，将多个被监控的服务对应的监控指标信息汇总在一起，这样更利于监控工作的开展。
 
-<img src="img/image-20220301094001896.png" alt="image-20220301094001896" style="zoom:50%;" />
+<div align="center"><img src="img/image-20220301094001896.png" alt="image-20220301094001896" style="zoom:50%;" /></div>
 
 ​		新的程序专门用来监控，新的问题就出现了，是被监控程序主动上报信息还是监控程序主动获取信息？如果监控程序不能主动获取信息，这就意味着监控程序有可能看到的是很久之前被监控程序上报的信息，万一被监控程序宕机了，监控程序就无法区分究竟是好久没法信息了，还是已经下线了。所以监控程序必须具有主动发起请求获取被监控服务信息的能力。
 
-<img src="img/image-20220301094259844.png" alt="image-20220301094259844" style="zoom:50%;" />
+<div align="center"><img src="img/image-20220301094259844.png" alt="image-20220301094259844" style="zoom:50%;" /></div>
 
 ​		如果监控程序要监控服务时，主动获取对方的信息。那监控程序如何知道哪些程序被自己监控呢？不可能在监控程序中设置我监控谁，这样互联网上的所有程序岂不是都可以被监控到，这样的话信息安全将无法得到保障。合理的做法只能是在被监控程序启动时上报监控程序，告诉监控程序你可以监控我了。看来需要在被监控程序端做主动上报的操作，这就要求被监控程序中配置对应的监控程序是谁。
 
-<img src="img/image-20220301094547748.png" alt="image-20220301094547748" style="zoom:50%;" />
+<div align="center"><img src="img/image-20220301094547748.png" alt="image-20220301094547748" style="zoom:50%;" /></div>
 
 ​		被监控程序可以提供各种各样的指标数据给监控程序看，但是每一个指标都代表着公司的机密信息，并不是所有的指标都可以给任何人看的，乃至运维人员，所以对被监控指标的是否开放出来给监控系统看，也需要做详细的设定。
 
@@ -10421,7 +10421,7 @@ public class MessageListener {
 
 ​		上述过程可以通过创建项目时使用勾选的形式完成。
 
-<img src="img/image-20220301102432817.png" alt="image-20220301102432817" style="zoom:50%;" />
+<div align="center"><img src="img/image-20220301102432817.png" alt="image-20220301102432817" style="zoom:50%;" /></div>
 
 **步骤②**：在引导类上添加注解@EnableAdminServer，声明当前应用启动后作为SpringBootAdmin的服务器使用
 
@@ -10437,7 +10437,7 @@ public class Springboot25AdminServerApplication {
 
 ​		做到这里，这个服务器就开发好了，启动后就可以访问当前程序了，界面如下。
 
-<img src="img/image-20220301103028468.png" alt="image-20220301103028468" style="zoom: 50%;" />
+<div align="center"><img src="img/image-20220301103028468.png" alt="image-20220301103028468" style="zoom: 50%;" /></div>
 
 ​		由于目前没有启动任何被监控的程序，所以里面什么信息都没有。下面制作一个被监控的客户端程序。
 
@@ -10474,11 +10474,11 @@ spring:
 
 ​		做到这里，这个客户端就可以启动了。启动后再次访问服务端程序，界面如下。
 
-<img src="img/image-20220301103838079.png" alt="image-20220301103838079" style="zoom: 50%;" />
+<div align="center"><img src="img/image-20220301103838079.png" alt="image-20220301103838079" style="zoom: 50%;" /></div>
 
 ​		可以看到，当前监控了1个程序，点击进去查看详细信息。
 
-<img src="img/image-20220301103936386.png" alt="image-20220301103936386" style="zoom: 50%;" />
+<div align="center"><img src="img/image-20220301103936386.png" alt="image-20220301103936386" style="zoom: 50%;" /></div>
 
 ​		由于当前没有设置开放哪些信息给监控服务器，所以目前看不到什么有效的信息。下面需要做两组配置就可以看到信息了。
 
@@ -10508,7 +10508,7 @@ management:
 
 ​		上述配置对于初学者来说比较容易混淆。简单解释一下，到下一节再做具体的讲解。springbootadmin的客户端默认开放了13组信息给服务器，但是这些信息除了一个之外，其他的信息都不让通过HTTP请求查看。所以你看到的信息基本上就没什么内容了，只能看到一个内容，就是下面的健康信息。
 
-<img src="img/image-20220301104742563.png" alt="image-20220301104742563" style="zoom: 50%;" />
+<div align="center"><img src="img/image-20220301104742563.png" alt="image-20220301104742563" style="zoom: 50%;" /></div>
 
 ​		但是即便如此我们看到健康信息中也没什么内容，原因在于健康信息中有一些信息描述了你当前应用使用了什么技术等信息，如果无脑的对外暴露功能会有安全隐患。通过配置就可以开放所有的健康信息明细查看了。
 
@@ -10521,7 +10521,7 @@ management:
 
 ​		健康明细信息如下：
 
-<img src="img/image-20220301105116554.png" alt="image-20220301105116554" style="zoom: 50%;" />
+<div align="center"><img src="img/image-20220301105116554.png" alt="image-20220301105116554" style="zoom: 50%;" /></div>
 
 ​		目前除了健康信息，其他信息都查阅不了。原因在于其他12种信息是默认不提供给服务器通过HTTP请求查阅的，所以需要开启查阅的内容项，使用*表示查阅全部。记得带引号。
 
@@ -10534,7 +10534,7 @@ endpoints:
 
 ​		配置后再刷新服务器页面，就可以看到所有的信息了。
 
-<img src="img/image-20220301105554494.png" alt="image-20220301105554494" style="zoom: 50%;" />
+<div align="center"><img src="img/image-20220301105554494.png" alt="image-20220301105554494" style="zoom: 50%;" /></div>
 
 ​		以上界面中展示的信息量就非常大了，包含了13组信息，有性能指标监控，加载的bean列表，加载的系统属性，日志的显示控制等等。
 
@@ -10542,21 +10542,21 @@ endpoints:
 
 ​		可以通过配置客户端的方式在其他的springboot程序中添加客户端坐标，这样当前服务器就可以监控多个客户端程序了。每个客户端展示不同的监控信息。
 
-<img src="img/image-20220301110352170.png" alt="image-20220301110352170" style="zoom: 50%;" />
+<div align="center"><img src="img/image-20220301110352170.png" alt="image-20220301110352170" style="zoom: 50%;" /></div>
 
 ​		进入监控面板，如果你加载的应用具有功能，在监控面板中可以看到3组信息展示的与之前加载的空工程不一样。
 
 - 类加载面板中可以查阅到开发者自定义的类，如左图
 
-​                        <img src="img/image-20220301161246835.png" alt="image-20220301161246835" style="zoom:33%;" /><img src="img/image-20220301161949431.png" alt="image-20220301161949431" style="zoom:33%;" />
+​                        <div align="center"><img src="img/image-20220301161246835.png" alt="image-20220301161246835" style="zoom:33%;" /></div><div align="center"><img src="img/image-20220301161949431.png" alt="image-20220301161949431" style="zoom:33%;" /></div>
 
 - 映射中可以查阅到当前应用配置的所有请求
 
-​                        <img src="img/image-20220301161418791.png" alt="image-20220301161418791" style="zoom: 33%;" /><img src="img/image-20220301162008737.png" alt="image-20220301162008737" style="zoom:33%;" />
+​                        <div align="center"><img src="img/image-20220301161418791.png" alt="image-20220301161418791" style="zoom: 33%;" /></div><div align="center"><img src="img/image-20220301162008737.png" alt="image-20220301162008737" style="zoom:33%;" /></div>
 
 - 性能指标中可以查阅当前应用独有的请求路径统计数据
 
-​                        <img src="img/image-20220301161906949.png"  style="zoom: 33%;" /><img src="img/image-20220301162040670.png" style="zoom: 33%;" />
+​                        <div align="center"><img src="img/image-20220301161906949.png"  style="zoom: 33%;" /></div><div align="center"><img src="img/image-20220301162040670.png" style="zoom: 33%;" /></div>
 
 **总结**
 
@@ -10574,7 +10574,7 @@ endpoints:
 
 ​		通过查阅监控中的映射指标，可以看到当前系统中可以运行的所有请求路径，其中大部分路径以/actuator开头
 
-<img src="img/image-20220301170214076.png" alt="image-20220301170214076" style="zoom: 50%;" />
+<div align="center"><img src="img/image-20220301170214076.png" alt="image-20220301170214076" style="zoom: 50%;" /></div>
 
 ​		首先这些请求路径不是开发者自己编写的，其次这个路径代表什么含义呢？既然这个路径可以访问，就可以通过浏览器发送该请求看看究竟可以得到什么信息。
 
@@ -10697,7 +10697,7 @@ endpoints:
 
 ​		当前信息与监控面板中的数据存在着对应关系
 
-<img src="img/image-20220301171025615.png" alt="image-20220301171025615" style="zoom:50%;" />
+<div align="center"><img src="img/image-20220301171025615.png" alt="image-20220301171025615" style="zoom:50%;" /></div>
 
 ​		原来监控中显示的信息实际上是通过发送请求后得到json数据，然后展示出来。按照上述操作，可以发送更多的以/actuator开头的链接地址，获取更多的数据，这些数据汇总到一起组成了监控平台显示的所有数据。
 
@@ -10812,11 +10812,11 @@ management:
 
     配置完毕后，对应信息显示在监控平台上
 
-    <img src="img/image-20220301174133248.png" alt="image-20220301174133248" style="zoom:50%;" />
+    <div align="center"><img src="img/image-20220301174133248.png" alt="image-20220301174133248" style="zoom:50%;" /></div>
 
     也可以通过请求端点信息路径获取对应json信息
 
-    <img src="img/image-20220301174241310.png" alt="image-20220301174241310" style="zoom:50%;" />
+    <div align="center"><img src="img/image-20220301174241310.png" alt="image-20220301174241310" style="zoom:50%;" /></div>
 
 - 编程形式
 
@@ -10861,7 +10861,7 @@ public class HealthConfig extends AbstractHealthIndicator {
 
 ​		当任意一个组件状态不为UP时，整体应用对外服务状态为非UP状态。
 
-<img src="img/image-20220301174751845.png" alt="image-20220301174751845" style="zoom:50%;" />
+<div align="center"><img src="img/image-20220301174751845.png" alt="image-20220301174751845" style="zoom:50%;" /></div>
 
 **Metrics端点**
 
@@ -10890,7 +10890,7 @@ public class BookServiceImpl extends ServiceImpl<BookDao, Book> implements IBook
 
 ​		在性能指标中就出现了自定义的性能指标监控项
 
-<img src="img/image-20220301175101812.png" alt="image-20220301175101812" style="zoom:50%;" />
+<div align="center"><img src="img/image-20220301175101812.png" alt="image-20220301175101812" style="zoom:50%;" /></div>
 
 **自定义端点**
 
@@ -10913,7 +10913,7 @@ public class PayEndpoint {
 
 ​		由于此端点数据spirng boot admin无法预知该如何展示，所以通过界面无法看到此数据，通过HTTP请求路径可以获取到当前端点的信息，但是需要先开启当前端点对外功能，或者设置当前端点为默认开发的端点。
 
-<img src="img/image-20220301175355482.png" style="zoom:50%;" />
+<div align="center"><img src="img/image-20220301175355482.png" style="zoom:50%;" /></div>
 
 **总结**
 

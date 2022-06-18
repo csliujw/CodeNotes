@@ -1,6 +1,6 @@
 # SpringBoot
 
-主要看小马哥的SpringBoot
+主要看小马哥的 SpringBoot
 
 雷丰阳的作为补充：(https://www.bilibili.com/video/BV19K4y1L7MT?spm_id_from=333.788.b_765f64657363.1)
 
@@ -15,10 +15,10 @@
 
 ## 学习内容
 
-- SpringBoot如何基于Spring Framework逐步走向自动装配。
-- SpringApplication如何掌控Spring应用生命周期。
-- SpringBoot外部化配置与Spring Environment抽象之间是生命关系。
-- Spring Web MVC向Spring Reactive WebFlux过渡的真实价值和意义。
+- SpringBoot 如何基于 Spring Framework 逐步<span style="color:red">走向自动装配。</span>
+- SpringApplication 如何掌控 Spring 应用生命周期。
+- SpringBoot 外部化配置与 Spring Environment 抽象之间是生命关系。
+- Spring Web MVC 向 Spring Reactive WebFlux 过渡的真实价值和意义。
 
 ## 学习方式
 
@@ -31,16 +31,16 @@
 ## 学习收获
 
 - Spring 全栈技术和实现原理
-- Spring Boot核心技术
+- Spring Boot 核心技术
 - 微服务基础设施开发与生产实施经验
 
 ## 难精
 
-- 组件自动装配：模式注解、@Enable模块、条件装配、加载机制
-- 外部化配置：Environment抽象、生命周期、破坏性变更
-- 嵌入式容器：Servlet Web容器、Reactive Web容器
+- 组件自动装配：模式注解、@Enable 模块、条件装配、加载机制
+- 外部化配置：Environment 抽象、生命周期、破坏性变更
+- 嵌入式容器：Servlet Web 容器、Reactive Web 容器
 - Spring Boot Starter：依赖管理、装配条件、装配顺序
-- Production-Ready：健康检查、数据指标、@Endpoint管控
+- Production-Ready：健康检查、数据指标、@Endpoint 管控
 
 ## Spring Boot的特点
 
@@ -58,13 +58,13 @@
 - 缓存：Java Caching API（JSR-107）
 - WebSockets：Java API for WebSocket（JSR-356）
 - Web Services：JAX-WS（JSR-224）
-- Java管理：JMX（JSR 3）
+- Java 管理：JMX（JSR 3）
 - 消息：JMS（JSR-914）
 
 ## 主干内容
 
 - 核心特性
-- Web应用
+- Web 应用
 - 数据相关
 - 功能扩展
 - 运维管理
@@ -73,61 +73,133 @@
 
 > 场景说明
 
-- 定义用户模型，包括属性：用户ID和名称
-- 客户端发送POST请求，创建用户（Web MVC）
-- 客户端发送GET请求，获取所有用户（Web Flux）
+- 定义用户模型，包括属性：用户 ID 和名称
+- 客户端发送 POST 请求，创建用户（Web MVC）
+- 客户端发送 GET 请求，获取所有用户（Web Flux）
 
-----
+NIO 的 reactor 是<span style="color:red">同步非阻塞</span>
 
-NIO的reactor是同步非阻塞
+Web Flux 的 reactor 是<span style="color:red">异步非阻塞</span>的一个实现
 
-Web Flux的reactor是异步非阻塞的一个实现
-
-- Flux：0-n的对象
-- Mono：0-1的对象
+- Flux：0-n 的对象
+- Mono：0-1 的对象
 
 # 理解SpringBoot
 
-SpringBoot应用可以是jar可以是war。jar和war是如何启动的？如何指定那个类为引导类。
+SpringBoot 应用可以是 jar 可以是 war。jar 和 war 是如何启动的？如何指定那个类为引导类。
 
-## jar文件结构
+## 标准的 jar 包
+
+Spring Boot 可以将应用打包成一个 jar，然后通过 `java -jar jar包名` 来启动程序。
+
+我们先来看看，普通的 Java 项目是如何运行 Jar 包的。我们将一个普通的 Java 项目打成 Jar 包。
+
+```java
+// java 项目的代码如下
+package com.company;
+
+public class Main {
+
+    public static void main(String[] args) {
+        // write your code here
+        System.out.println("Hello World");
+    }
+}
+```
+
+将该项目打包成 jar 包后。jar 包中会出现两个文件夹。一个是 com(存放 class 文件)，一个是 META-INF，存放了 jar 包的一些信息。(符合 java 的标准就可以用 java -jar 执行 jar 包，Java 官方文档规定，<span style="color:red">java -jar 命令引导的具体<b>启动类</b>必须配置在 MANIFEST.MF 资源的 Main-Class 属性中。</span>)
+
+```
+# META-INF 中的文件如下
+Manifest-Version: 1.0
+Main-Class: com.company.Main
+```
+
+Main-Class 指定了，我们通过 java -jar 命令运行 jar 包的时候，它运行那个类的。此处表明，我们执行 `java -jar jar包名`是会执行 `com.company.Main` 这个类，Main 类就是程序的入口。
+
+## 命令打包成jar
+
+- 书写代码
+
+- 将代码编译成 class 文件。
+
+- 为 class 文件创建一个 `META-INF/MANIFEST.MF` 文件，文件中书写以下内容
+
+    ```tex
+    Manifest-Version: 1.0
+    Main-Class: com.company.Main
+    ```
+
+- 执行命令进行打包 `jar -cvfm hello.jar META-INF/MANIFEST.MF com`
+
+<div align="center"><img src="img/image-20220309212415113.png"></div>
+
+## SpringBoot 的 jar
+
+下面我们再来看看 Spring Boot 的 Jar 是怎么样的。我们用 maven 将一个 SpringBoot 项目打包成 jar 包，然后执行。（maven->lifecycle->package）
+
+<div align="center"><img src="img/image-20220309214245238.png"></div>
+
+我们将 jar 包解压看一下，看下 jar 包中都有些什么内容。发现里面也有 MANIFEST.MF 文件
+
+```shell
+Manifest-Version: 1.0
+Created-By: Maven JAR Plugin 3.2.2
+Build-Jdk-Spec: 11
+Implementation-Title: demo
+Implementation-Version: 0.0.1-SNAPSHOT
+Main-Class: org.springframework.boot.loader.JarLauncher
+Start-Class: com.example.demo.DemoApplication
+Spring-Boot-Version: 2.6.4
+Spring-Boot-Classes: BOOT-INF/classes/
+Spring-Boot-Lib: BOOT-INF/lib/
+Spring-Boot-Classpath-Index: BOOT-INF/classpath.idx
+Spring-Boot-Layers-Index: BOOT-INF/layers.idx
+```
 
 - BOOT-INF/classes：目录存放应用编译后的 class 文件
 - BOOT-INF/lib：存放应用依赖的 jar 包
 - META-INF/：存放应用相关元信息，如 MANIFEST.MF 文件。
 - org/：存放 SpringBoot 相关的 class 文件
-
-java -jar 命令为何可以执行 FAT JAR文件？
-
-==符合java的标准就可以用 java -jar 执行 jar 包，Java官方文档规定，java -jar 命令引导的具体启动类必须配置在 MANIFEST.MF 资源的 Main-Class 属性中。==
-
-- MANIFEST.MF 文件内容
-
-    ```bash
-    Manifest-Version: 1.0
-    Created-By: Maven Jar Plugin 3.2.0
-    Build-Jdk-Spec: 11
-    Implementation-Title: demo
-    Implementation-Version: 0.0.1-SNAPSHOT
-    Main-Class: org.springframework.boot.loader.JarLauncher
-    Start-Class: com.example.demo.DemoApplication
-    Spring-Boot-Version: 2.5.2
-    Spring-Boot-Classes: BOOT-INF/classes/
-    Spring-Boot-Lib: BOOT-INF/lib/
-    Spring-Boot-Classpath-Index: BOOT-INF/classpath.idx
-    Spring-Boot-Layers-Index: BOOT-INF/layers.idx
-    ```
-
-- **Main-Class: org.springframework.boot.loader.JarLauncher** 指定了这是jar运行
-- **Main-Class: org.springframework.boot.loader.WarLauncher** 指定了这是war运行
+- <b>Main-Class: org.springframework.boot.loader.JarLauncher</b> 指定了这是 jar 运行
+- <b>Main-Class: org.springframework.boot.loader.WarLauncher</b> 指定了这是 war 运行
 - 这两个类是 jar / war 的启动器，都是 org.springframework.boot.loader 中的类。
+- <b>Start-Class：com.example.demo.DemoApplication</b> Main-Class 运行后会加载 Start-Class 中的类
+
+我们也可以查阅下 Spring Boot 官网，看下官网是如何解释 Spring Boot 中 jar 的文件组成的：
+
+<div align="center"><img src="img/image-20220309213211254.png"></div>
+
+<div align="center"><img src="img/image-20220309213230506.png"></div>
+
+ MANIFEST.MF 中有 Main-Class 和 Start-Class 属性。Main-Class 填写一个固定的类，Start-Class 填写我们写的加了@SpringBootApplication 注解的类。
+
+我们解压 jar 包，使用 java 命令运行 `org.springframework.boot.loader.JarLauncher`。
+
+<div align="center"><img src="img/image-20220309215709632.png"></div>
+
+我们执行 `java org.springframework.boot.loader.JarLauncher` 发现，`com.example.demo.DemoApplication` 也启动了。可以推断，是 JarLauncher 加载了 DemoApplication 类。
+
+我们大致跟踪下 JarLauncher 的调用过程发现最后执行的一个方法是
+
+```java
+// MainMethodRunner 类
+public void run() throws Exception {
+    Class<?> mainClass = Class.forName(this.mainClassName, false, Thread.currentThread().getContextClassLoader());
+    Method mainMethod = mainClass.getDeclaredMethod("main", String[].class);
+    mainMethod.setAccessible(true);
+    mainMethod.invoke(null, new Object[] { this.args });
+}
+```
+
+执行的应该是 DemoApplication 的 main 方法。
 
 # 核心特性
 
 ## Spring Boot三大特性
 
-- 组件自动装配：Web MVC、Web Flux、JDBC等
-- 嵌入式Web容器：Tomcat、Jetty以及Undertow
+- 组件自动装配：Web MVC、Web Flux、JDBC 等
+- 嵌入式 Web 容器：Tomcat、Jetty以及Undertow
 - 生产准备特性：指标、健康检查、外部化配置等
 
 ## 组件自动装配
@@ -136,9 +208,35 @@ java -jar 命令为何可以执行 FAT JAR文件？
 - 配置：/META-INF/spring.factories（这个目录是相对于 Classpath 而言，META-INF 元信息；spring.factories 工厂模式，key-value 键值对的配置信息）
 - 实现：XXXAutoConfiguration
 
+> 注解知识补充
+
+注解上如果加了 @Inherited 表示这个注解是可以被继承的。被继承是什么意思呢？看下下面代码的输出就知道啥意思了。
+
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+public @interface Demo {}
+
+@Demo
+public class Father {}
+public class Son extends Father {}
+
+public class TestDemo {
+    public static void main(String[] args) {
+        Annotation[] annotations = Son.class.getAnnotations();
+        // 在 Father 上加上注解。Son 继承自 Father 且没有加上 @Demo 注解。但是我们仍可以在 Son 类上找到 @Demo 这个注解
+        // 因为 @Demo 注解被标明为 @Inherited 可继承。
+        Arrays.stream(annotations).forEach(System.out::println);
+        // @com.example.anno.Demo()
+    }
+}
+```
+
 ### quick start
 
-> 新建一个Spring Boot项目，包含Web模块。
+> 新建一个Spring Boot项目，包含 Web 模块。
 
 ```java
 // SpringBoot简介中的Demo
@@ -157,8 +255,6 @@ public class SpringbootApplication {
 
 }
 ```
-
----
 
 也可以用以下注解
 
@@ -179,7 +275,138 @@ public class SpringbootApplication {
 }
 ```
 
-查看源码可知，`@SpringBootApplication`注解是一个组合注解，包含了`@EnableAutoConfiguration`注解~
+官网关于自动配置有这样一段话。
+
+`@SpringBootApplication` annotation can be used to enable those three features, that is:
+
+- `@EnableAutoConfiguration`: enable [Spring Boot’s auto-configuration mechanism](https://docs.spring.io/spring-boot/docs/current/reference/html/using.html#using.auto-configuration)
+- `@ComponentScan`: enable `@Component` scan on the package where the application is located (see [the best practices](https://docs.spring.io/spring-boot/docs/current/reference/html/using.html#using.structuring-your-code))
+- `@SpringBootConfiguration`: enable registration of extra beans in the context or the import of additional configuration classes. An alternative to Spring’s standard `@Configuration` that aids [configuration detection](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.testing.spring-boot-applications.detecting-configuration) in your integration tests.
+
+我们来仔细看下 @SpringBootApplication 注解：它是一个复合注解，由 @SpringBootConfiguration、@EnableAutoConfiguration 和 @ComponentScan 组成。而 @SpringBootConfiguration 只是 @Configuration 的一个别名。
+
+```java
+@SpringBootConfiguration
+@EnableAutoConfiguration
+@ComponentScan(
+    excludeFilters = {@Filter(
+    type = FilterType.CUSTOM,
+    classes = {TypeExcludeFilter.class}
+), @Filter(
+    type = FilterType.CUSTOM,
+    classes = {AutoConfigurationExcludeFilter.class}
+)}
+)
+public @interface SpringBootApplication {
+    // some code
+}
+
+@Configuration
+@Indexed
+public @interface SpringBootConfiguration {
+    @AliasFor(annotation = Configuration.class)
+    boolean proxyBeanMethods() default true;
+}
+```
+
+总结：
+
+官方说 @EnableAutoConfiguration/@SpringBootApplication + @Configuration 才可以开启自动配置。我们发现 
+
+```mermaid
+graph LR
+SpringBootApplication---->SpringBootConfiguration
+SpringBootApplication---->EnableAutoConfiguration
+SpringBootConfiguration---->Configuration
+```
+
+@SpringBootApplication = @Configuration + @EnableAutoConfiguration
+
+实际上 @SpringBootApplication = @Configuration + @EnableAutoConfiguration + @ComponentScan
+
+我们在仔细看看 @SpringBootApplication 注解
+
+```java
+package org.springframework.boot.autoconfigure;
+// 省略了一些内容
+@SpringBootConfiguration
+@EnableAutoConfiguration
+@ComponentScan(excludeFilters = { @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
+		@Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
+public @interface SpringBootApplication {
+
+	@AliasFor(annotation = EnableAutoConfiguration.class)
+	Class<?>[] exclude() default {};
+
+	@AliasFor(annotation = EnableAutoConfiguration.class)
+	String[] excludeName() default {};
+
+	@AliasFor(annotation = ComponentScan.class, attribute = "basePackages")
+	String[] scanBasePackages() default {};
+
+	@AliasFor(annotation = ComponentScan.class, attribute = "basePackageClasses")
+	Class<?>[] scanBasePackageClasses() default {};
+
+	@AliasFor(annotation = ComponentScan.class, attribute = "nameGenerator")
+	Class<? extends BeanNameGenerator> nameGenerator() default BeanNameGenerator.class;
+
+	@AliasFor(annotation = Configuration.class)
+	boolean proxyBeanMethods() default true;
+}
+```
+
+我们可以注意到一个注解 @AliasFor（@AliasFor 这种注解编程模型被 Spring 称为 Spring Annotation Programming Model），这个注解是 Spring 定义的，我们可以称它为别名。比如 exclude 属性其实就是注解 @EnableAutoConfiguration 的别名。比如：
+
+```java
+@SpringBootApplication(scanBasePackages = "com.example")
+// 这个 scanBasePackages 上标注了 @AliasFor(annotation = ComponentScan.class, attribute = "basePackages")
+// 相当于 scanBasePackages 是注解 ComponentScan(basePackages="com.example") 的别名，
+// 为 scanBasePackages 赋值就是为 ComponentScan 注解赋值
+public class DemoApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
+}
+```
+
+@SpringBootApplication 也可以加载非启动类上。
+
+```java
+@SpringBootApplication
+@RestController
+public class WebConfiguration {
+    @GetMapping("index")
+    public String index() {
+        return "hello";
+    }
+}
+
+public class DemoApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(WebConfiguration.class, args);
+    }
+}
+// 程序也是可以正常运行的。
+```
+
+可以不用 @SpringBootApplication，使用 @EnableAutoConfiguration 注解也可以。我们可以推断出，SpringApplication#run 启动 SpringBoot 程序并不依赖于 @Configuration 注解。
+
+```java
+@RestController
+@EnableAutoConfiguration
+public class WebConfiguration {
+    @GetMapping("index")
+    public String index() {
+        return "hello";
+    }
+}
+
+public class DemoApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(WebConfiguration.class, args);
+    }
+}
+```
 
 ### spring.factories
 
@@ -191,148 +418,139 @@ org.springframework.boot.context.config.ConfigTreeConfigDataLocationResolver,\
 org.springframework.boot.context.config.StandardConfigDataLocationResolver
 ```
 
----
-
-让我们看看EnableAutoConfiguration的配置信息
+让我们看看 EnableAutoConfiguration 的配置信息
 
 ```shell
 # Auto Configure
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration,\
-org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
-org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration,\
-org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration,\
-org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration,\
-org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration,\
-org.springframework.boot.autoconfigure.context.ConfigurationPropertiesAutoConfiguration,\
-org.springframework.boot.autoconfigure.context.LifecycleAutoConfiguration,\
-org.springframework.boot.autoconfigure.context.MessageSourceAutoConfiguration,\
-org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration,\
-org.springframework.boot.autoconfigure.couchbase.CouchbaseAutoConfiguration,\
-org.springframework.boot.autoconfigure.dao.PersistenceExceptionTranslationAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.cassandra.CassandraDataAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.cassandra.CassandraReactiveDataAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.cassandra.CassandraReactiveRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.cassandra.CassandraRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.couchbase.CouchbaseDataAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.couchbase.CouchbaseReactiveDataAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.couchbase.CouchbaseReactiveRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.couchbase.CouchbaseRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.elasticsearch.ReactiveElasticsearchRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.elasticsearch.ReactiveElasticsearchRestClientAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.jdbc.JdbcRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.ldap.LdapRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.mongo.MongoReactiveDataAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.mongo.MongoReactiveRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.mongo.MongoRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.neo4j.Neo4jDataAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.neo4j.Neo4jReactiveDataAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.neo4j.Neo4jReactiveRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.neo4j.Neo4jRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.solr.SolrRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.r2dbc.R2dbcDataAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.r2dbc.R2dbcRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.rest.RepositoryRestMvcAutoConfiguration,\
-org.springframework.boot.autoconfigure.data.web.SpringDataWebAutoConfiguration,\
-org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration,\
-org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration,\
-org.springframework.boot.autoconfigure.freemarker.FreeMarkerAutoConfiguration,\
-org.springframework.boot.autoconfigure.groovy.template.GroovyTemplateAutoConfiguration,\
-org.springframework.boot.autoconfigure.gson.GsonAutoConfiguration,\
-org.springframework.boot.autoconfigure.h2.H2ConsoleAutoConfiguration,\
-org.springframework.boot.autoconfigure.hateoas.HypermediaAutoConfiguration,\
-org.springframework.boot.autoconfigure.hazelcast.HazelcastAutoConfiguration,\
-org.springframework.boot.autoconfigure.hazelcast.HazelcastJpaDependencyAutoConfiguration,\
-org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration,\
-org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration,\
-org.springframework.boot.autoconfigure.influx.InfluxDbAutoConfiguration,\
-org.springframework.boot.autoconfigure.info.ProjectInfoAutoConfiguration,\
-org.springframework.boot.autoconfigure.integration.IntegrationAutoConfiguration,\
-org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration,\
-org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,\
-org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration,\
-org.springframework.boot.autoconfigure.jdbc.JndiDataSourceAutoConfiguration,\
-org.springframework.boot.autoconfigure.jdbc.XADataSourceAutoConfiguration,\
-org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration,\
-org.springframework.boot.autoconfigure.jms.JmsAutoConfiguration,\
-org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration,\
-org.springframework.boot.autoconfigure.jms.JndiConnectionFactoryAutoConfiguration,\
-org.springframework.boot.autoconfigure.jms.activemq.ActiveMQAutoConfiguration,\
-org.springframework.boot.autoconfigure.jms.artemis.ArtemisAutoConfiguration,\
-org.springframework.boot.autoconfigure.jersey.JerseyAutoConfiguration,\
-org.springframework.boot.autoconfigure.jooq.JooqAutoConfiguration,\
-org.springframework.boot.autoconfigure.jsonb.JsonbAutoConfiguration,\
-org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration,\
-org.springframework.boot.autoconfigure.availability.ApplicationAvailabilityAutoConfiguration,\
-org.springframework.boot.autoconfigure.ldap.embedded.EmbeddedLdapAutoConfiguration,\
-org.springframework.boot.autoconfigure.ldap.LdapAutoConfiguration,\
-org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration,\
-org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration,\
-org.springframework.boot.autoconfigure.mail.MailSenderValidatorAutoConfiguration,\
-org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration,\
-org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration,\
-org.springframework.boot.autoconfigure.mongo.MongoReactiveAutoConfiguration,\
-org.springframework.boot.autoconfigure.mustache.MustacheAutoConfiguration,\
-org.springframework.boot.autoconfigure.neo4j.Neo4jAutoConfiguration,\
-org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration,\
-org.springframework.boot.autoconfigure.quartz.QuartzAutoConfiguration,\
-org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration,\
-org.springframework.boot.autoconfigure.r2dbc.R2dbcTransactionManagerAutoConfiguration,\
-org.springframework.boot.autoconfigure.rsocket.RSocketMessagingAutoConfiguration,\
-org.springframework.boot.autoconfigure.rsocket.RSocketRequesterAutoConfiguration,\
-org.springframework.boot.autoconfigure.rsocket.RSocketServerAutoConfiguration,\
-org.springframework.boot.autoconfigure.rsocket.RSocketStrategiesAutoConfiguration,\
-org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,\
-org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration,\
-org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration,\
-org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration,\
-org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration,\
-org.springframework.boot.autoconfigure.security.rsocket.RSocketSecurityAutoConfiguration,\
-org.springframework.boot.autoconfigure.security.saml2.Saml2RelyingPartyAutoConfiguration,\
-org.springframework.boot.autoconfigure.sendgrid.SendGridAutoConfiguration,\
-org.springframework.boot.autoconfigure.session.SessionAutoConfiguration,\
-org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration,\
-org.springframework.boot.autoconfigure.security.oauth2.client.reactive.ReactiveOAuth2ClientAutoConfiguration,\
-org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration,\
-org.springframework.boot.autoconfigure.security.oauth2.resource.reactive.ReactiveOAuth2ResourceServerAutoConfiguration,\
-org.springframework.boot.autoconfigure.solr.SolrAutoConfiguration,\
-org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration,\
-org.springframework.boot.autoconfigure.task.TaskSchedulingAutoConfiguration,\
-org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration,\
-org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration,\
-org.springframework.boot.autoconfigure.transaction.jta.JtaAutoConfiguration,\
-org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration,\
-org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration,\
-org.springframework.boot.autoconfigure.web.embedded.EmbeddedWebServerFactoryCustomizerAutoConfiguration,\
-org.springframework.boot.autoconfigure.web.reactive.HttpHandlerAutoConfiguration,\
-org.springframework.boot.autoconfigure.web.reactive.ReactiveWebServerFactoryAutoConfiguration,\
-org.springframework.boot.autoconfigure.web.reactive.WebFluxAutoConfiguration,\
-org.springframework.boot.autoconfigure.web.reactive.error.ErrorWebFluxAutoConfiguration,\
-org.springframework.boot.autoconfigure.web.reactive.function.client.ClientHttpConnectorAutoConfiguration,\
-org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration,\
-org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration,\
-org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration,\
-org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration,\
-org.springframework.boot.autoconfigure.web.servlet.HttpEncodingAutoConfiguration,\
-org.springframework.boot.autoconfigure.web.servlet.MultipartAutoConfiguration,\
-org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration,\
-org.springframework.boot.autoconfigure.websocket.reactive.WebSocketReactiveAutoConfiguration,\
-org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration,\
-org.springframework.boot.autoconfigure.websocket.servlet.WebSocketMessagingAutoConfiguration,\
+...
 org.springframework.boot.autoconfigure.webservices.WebServicesAutoConfiguration,\
 org.springframework.boot.autoconfigure.webservices.client.WebServiceTemplateAutoConfiguration
 ```
 
+### lite和full
+
+Spring 的 Bean 有两种模式，一种是 lite 模式，一种是 full 模式。在 @Configuration 下声明的 @Bean 是 full 模式的。
+
+- lite 模式：不用检查是否在容器，启动加载起来快（只注册组件，组件之中不存在依赖，就用 lite 模式）。Lite 模式的 `@Bean` 方法<b>不能声明 Bean 之间的依赖关系</b>。因此，这样的 `@Bean` 方法<b>不应该调用其他 @Bean 方法</b>。每个这样的方法实际上<b>只是一个特定 Bean 引用的工厂方法(factory-method)</b>，没有任何特殊的运行时语义。
+- full 模式：存在组件依赖关系，会检查这个组件是否在容器中。并且在运行时会给该类生成一个 CGLIB 子类放进容器，有一定的性能、时间开销（这个开销在 Spring Boot 这种拥有大量配置类的情况下是不容忽视的）因为被代理了，所以 @Bean 方法<b>不可以是 private、不可以是 final</b>
+
+1️⃣先看下 @Configuration 下 Bean 的 Full 模式
+
+```java
+@SpringBootApplication
+public class Application {
+
+    @Bean
+    public Dog getDog2() {
+        return new Dog();
+    }
+
+    public static void main(String[] args) {
+        ConfigurableApplicationContext run = SpringApplication.run(Application.class, args);
+        System.out.println(run.getBean(Application.class));
+        System.out.println(run.getBean(Dog.class));
+        // com.example.springboot.Application$$EnhancerBySpringCGLIB$$2ffa75b9@69571912
+		// com.example.springboot.Dog@325f8af9
+    }
+}
+```
+
+可以看出，CGLIB 提示并非为 @Bean 对象提供的，而是为 @Configuration 类准备的。
+
+2️⃣再看下非 @Configuration 下 Bean 的 lite 模式
+
+```java
+@EnableAutoConfiguration
+//@SpringBootApplication
+public class Application {
+
+    public static void main(String[] args) {
+        ConfigurableApplicationContext run = SpringApplication.run(Application.class, args);
+        Application bean = run.getBean(Application.class);
+        System.out.println(bean);
+        // 是 Java 裸类型，没有经过 GCLIB 增强
+        // com.example.springboot.Application@589aab6b
+    }
+}
+```
+
+> @Configuration 中的 proxyBeanMethods
+
+proxyBeanMethods 配置类是用来指定 @Bean 注解标注的方法是否使用代理。
+
+- 默认是 true 使用代理；
+- 如果设置为 false 则不使用代理。
+- 下面的代码验证了是否使用了代理
+
+1️⃣proxyBeanMethods = true
+
+```java
+public class Dog {
+    public void say(){}
+}
+```
+
+```java
+@Configuration(proxyBeanMethods = true)
+public class Config {
+    @Bean
+    public final Dog getDog() {
+        return new Dog();
+    }
+}
+```
+
+```java
+@SpringBootApplication
+public class Application {
+
+    public static void main(String[] args) {
+        ConfigurableApplicationContext run = SpringApplication.run(Application.class, args);
+        System.out.println(run.getBean("getDog"));
+        // 正常输出 com.example.springboot.Dog@100f70d6
+    }
+}
+```
+
+2️⃣proxyBeanMethods = false，其他代码一样
+
+```java
+@Configuration(proxyBeanMethods = false)
+public class Config {
+    @Bean
+    public final Dog getDog() {
+        return new Dog();
+    }
+}
+```
+
+报错 `org.springframework.beans.factory.parsing.BeanDefinitionParsingException: Configuration problem: @Bean method 'getDog' must not be private or final; change the method's modifiers to continue` <b>因为被代理了，会生成 @Configuration 类的 CGLIB 增强对象，所以该对象中的方法，即 @Bean 方法不可以是 private、不可以是 final。详细内容可以阅读下面这篇博客。</b>
+
+[Spring的@Configuration配置类-Full和Lite模式_demon7552003的博客-CSDN博客_ full 和 lite](https://blog.csdn.net/demon7552003/article/details/107988310)
+
+### 理解自动配置机制
+
+SpringBoot 自动装配底层实现和 Spring Framework 注解 @Configuration 和 @Conditional 有关。如果在 @Configuration 类上标注 @ConditionalOnClass，当且仅当目标类存在于 Class Path 下时才予以自动装配。
+
+SpringBoot 自动配置相关的核心模块位于 spring-boot-autoconfigure，里面提供了大量的内建自动装配 @Configuration 类，他们统一存放在 org.springframework.boot.autoconfigure 包或子包下。同时这些类的信息均配置在 META-INF/spring.factories 资源中，新版本 SpringBoot 可能有所变动。
+
+```shell
+# Initializers
+org.springframework.context.ApplicationContextInitializer=\
+org.springframework.boot.autoconfigure.SharedMetadataReaderFactoryContextInitializer,\
+org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportLoggingListener
+...
+```
+
+> 自定义自动装配
+
+[Core Features (spring.io)](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.developing-auto-configuration)
+
 ## 嵌入web容器
 
-- Web Servlet：Tomcat、Jetty和Undertow
+- Web Servlet：Tomcat、Jetty 和 Undertow
 - Web Reactive：Netty Web Server
 
 ## 生产准备特性
@@ -879,7 +1097,6 @@ public class SpringbootApplication {
 ```
 
 
-
 #### 失败分析
 
 - FailureAnalysisReporter
@@ -934,7 +1151,6 @@ public class SpringbootApplication {
     	// ...
     }
     ```
-
     
 
 - @Profile [能力很弱，后续会调整成Conditional]
@@ -975,8 +1191,6 @@ Spring Boot Actuator
 - HealthIndicator
 
 > 指标
-
----
 
 # 走向自动装配
 
