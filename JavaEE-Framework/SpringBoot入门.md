@@ -9,7 +9,7 @@
 - Create stand-alone Spring applications
     - 创建独立 Spring 应用
 - Embed Tomcat, Jetty or Undertow directly (no need to deploy WAR files)
-    - 内嵌web服务器
+    - 内嵌 web 服务器
 - Provide opinionated 'starter' dependencies to simplify your build configuration
     - 自动 starter 依赖，简化构建配置
 - Automatically configure Spring and 3rd party libraries whenever possible
@@ -198,25 +198,25 @@ SpringBoot 通过配置文件 application.properties 就可以修改默认的配
 server.port=80
 ```
 
-以前修改端口在 tomcat 服务器的配置文件中改，现在在 Spring Boot 专用的配置文件中改，**简化开发者配置的书写位置，集中管理。**
+以前修改端口在 tomcat 服务器的配置文件中改，现在在 Spring Boot 专用的配置文件中改，<b>简化开发者配置的书写位置，集中管理。</b>
 
 1. SpringBoot 程序可以在 application.properties 文件中进行属性配置
 2. application.properties 文件中只要输入要配置的属性关键字就可以根据提示进行设置
 3. SpringBoot 将配置信息集中在一个文件中写，不管你是服务器的配置，还是数据库的配置，总之都写在一起，逃离一个项目十几种配置文件格式的尴尬局面
 
-**总结**
+<b>总结</b>
 
-**SpringBoot默认配置文件是application.properties**
+<b>SpringBoot 默认配置文件是application.properties<b>
 
 做完了端口的配置，趁热打铁，再做几个配置，目前项目启动时会显示一些日志信息，就来改一改这里面的一些设置。
 
-**关闭运行日志图表（banner)**
+<b>关闭运行日志图表（banner)<b>
 
 ```properties
 spring.main.banner-mode=off
 ```
 
-**设置运行日志的显示级别**
+<b>设置运行日志的显示级别<b>
 
 ```properties
 logging.level.root=debug
@@ -243,7 +243,7 @@ logging.level.root=debug
 </dependency>
 ```
 
-**总结**
+<b>总结</b>
 
 1. SpringBoot 中导入对应 starter 后，提供对应配置属性
 2. 书写 SpringBoot 配置采用关键字+提示形式书写
@@ -257,7 +257,7 @@ logging.level.root=debug
 - yaml 格式
 
 
-一看到全新的文件格式，各位小伙伴肯定想，这下又要学习新的语法格式了。怎么说呢？从知识角度来说，要学，从开发角度来说，不用学。为什么呢？因为 SpringBoot 的配置在 Idea 工具下有提示啊，跟着提示走就行了。下面列举三种不同文件格式配置相同的属性范例，先了解一下。
+从知识角度来说，要学，从开发角度来说，不用学。因为 SpringBoot 的配置在 Idea 工具下有提示，跟着提示走就行了。下面列举三种不同文件格式配置相同的属性范例，先了解一下。
 
 - application.properties（properties 格式）
 
@@ -281,14 +281,14 @@ server:
 
 仔细看会发现 yml 格式和 yaml 格式除了文件名后缀不一样，格式完全一样，是这样的，yml 和 yaml 文件格式就是一模一样的，只是文件后缀不同，所以可以合并成一种格式来看。那对于这三种格式来说，以后用哪一种比较多呢？记清楚，以后基本上都是用 yml 格式的，本课程后面的所有知识都是基于 yml 格式来制作的，以后在企业开发过程中用这个格式的机会也最多，一定要重点掌握。
 
-**总结**
+<b>总结</b>
 
 1. SpringBoot 提供了 3 种配置文件的格式
     - properties（传统格式/默认格式）
-    - **yml**（主流格式）
+    - <b>yml</b>（主流格式）
     - yaml
 
-**思考**：现在我们已经知道使用三种格式都可以做配置了，万一三个都写了，按什么优先级来？
+<b>思考</b>：现在我们已经知道使用三种格式都可以做配置了，万一三个都写了，按什么优先级来？
 
 #### 配置文件优先级
 
@@ -350,16 +350,16 @@ server:
 
 我们发现不仅端口生效了，最终显示 80，同时其他两条配置也生效了，看来每个配置文件中的项都会生效，只不过如果多个配置文件中有相同类型的配置会优先级高的文件覆盖优先级的文件中的配置。如果配置项不同的话，所有的配置项都会生效。
 
-**总结**
+<b>总结</b>
 
 1. 配置文件间的加载优先级	properties（最高）>  yml  >  yaml（最低）
 2. 不同配置文件中相同配置按照加载优先级相互覆盖，不同配置文件中不同配置全部保留 
 
-#### **自动提示功能消失解决方案**
+#### 自动提示功能消失解决方案
 
-在做程序的过程中，可能有些小伙伴会基于各种各样的原因导致配置文件中没有提示，这个确实很让人头疼，所以下面给大家说一下如果自动提示功能消失了怎么解决。
+在做程序的过程中，可能会基于各种各样的原因导致配置文件中没有提示，下面说一下如果自动提示功能消失了怎么解决。
 
-先要明确一个核心，就是自动提示功能不是 SpringBoot 技术给我们提供的，是我们在 Idea 工具下编程，这个编程工具给我们提供的。明白了这一点后，再来说为什么会出现这种现象。其实这个自动提示功能消失的原因还是蛮多的，如果想解决这个问题，就要知道为什么会消失，大体原因有如下 2 种：
+自动提示功能不是 SpringBoot 技术给我们提供的，是我们在 Idea 工具下编程，这个编程工具给我们提供的。自动提示功能消失的原因还是蛮多的，如果想解决这个问题，就要知道为什么会消失，大体原因有如下 2 种：
 
 1. Idea 认为你现在写配置的文件不是个配置文件，所以拒绝给你提供提示功能
 
@@ -367,19 +367,19 @@ server:
 
     这里我们主要解决第一个现象，第二种现象到原理篇再讲解。第一种现象的解决方式如下：
 
-**步骤①**：打开设置，【Files】→【Project Structure...】
+<b>步骤①</b>：打开设置，【Files】→【Project Structure...】
 
 <div align="center"><img src="img/boot/image-20211126160548690.png"></div>
 
-**步骤②**：在弹出窗口中左侧选择【Facets】，右侧选中 Spring 路径下对应的模块名称，也就是你自动提示功能消失的那个模块
+<b>步骤②</b>：在弹出窗口中左侧选择【Facets】，右侧选中 Spring 路径下对应的模块名称，也就是你自动提示功能消失的那个模块
 
 <div align="center"><img src="img/boot/image-20211126160844372.png"></div>
 
-**步骤③**：点击 Customize Spring Boot 按钮，此时可以看到当前模块对应的配置文件是哪些了。如果没有你想要称为配置文件的文件格式，就有可能无法弹出提示
+<b>步骤③</b>：点击 Customize Spring Boot 按钮，此时可以看到当前模块对应的配置文件是哪些了。如果没有你想要称为配置文件的文件格式，就有可能无法弹出提示
 
 <div align="center"><img src="img/boot/image-20211126160946448.png"></div>
 
-**步骤④**：选择添加配置文件，然后选中要作为配置文件的具体文件就 OK 了
+<b>步骤④</b>：选择添加配置文件，然后选中要作为配置文件的具体文件就 OK 了
 
 <div align="center"><img src="img/boot/image-20211126161145082.png" alt="image-20211126161145082" style="zoom:80%;" /></div><div align="center"><img src="img/boot/image-20211126161156324.png" alt="image-20211126161156324" style="zoom: 67%;" /></div>
 
@@ -387,9 +387,9 @@ server:
 
 <div align="center"><img src="img/boot/image-20211126161301699.png"></div>
 
-**总结**
+<b>总结</b>
 
-1. 指定SpringBoot配置文件
+1. 指定 SpringBoot 配置文件
 
     - Setting → Project Structure → Facets
     - 选中对应项目/工程
@@ -410,8 +410,8 @@ YAML（YAML Ain't Markup Language），一种数据序列化格式。具有容�
     具体的语法格式要求如下：
 
 1. 大小写敏感
-2. 属性层级关系使用多行描述，**每行结尾使用冒号结束**
-3. 使用缩进表示层级关系，同层级左侧对齐，只允许使用空格（不允许使用Tab键）
+2. 属性层级关系使用多行描述，<b>每行结尾使用冒号结束</b>
+3. 使用缩进表示层级关系，同层级左侧对齐，只允许使用空格（不允许使用 Tab 键）
 4. 属性值前面添加空格（属性名与属性值之间使用冒号+空格作为分隔）
 5. #号 表示注释
 
@@ -468,7 +468,7 @@ map:
     key2: value2
 ```
 
-**总结**
+<b>总结</b>
 
 1. yaml 语法规则
     - 大小写敏感
@@ -476,10 +476,10 @@ map:
     - 使用缩进表示层级关系，同层级左侧对齐，只允许使用空格（不允许使用Tab键）
     - 属性值前面添加空格（属性名与属性值之间使用冒号+空格作为分隔）
     - `#号`表示注释
-2. 注意属性名冒号后面与数据之间有一个**空格**
+2. 注意属性名冒号后面与数据之间有一个<b>空格</b>
 3. 字面值、对象数据格式、数组数据格式
 
-**思考**
+<b>思考</b>
 
 现在我们已经知道了 yaml 具有严格的数据格式要求，并且已经可以正确的书写 yaml 文件了，那这些文件书写后其实是在定义一些数据。这些数据是给谁用的呢？大部分是 SpringBoot 框架内部使用，但是如果我们想配置一些数据自己使用，能不能用呢？答案是可以的，那如何读取 yaml 文件中的数据呢？咱们下一节再说。
 
@@ -495,7 +495,7 @@ yaml 中保存的单个数据，可以使用 Spring 中的注解 @Value 读取�
 
 记得使用 @Value 注解时，要将该注解写在某一个指定的 Spring 管控的 bean 的属性名上方，这样当 bean 进行初始化时候就可以读取到对应的单一数据了。
 
-**总结**
+<b>总结</b>
 
 1. 使用 @Value 配合 SpEL 读取单个数据
 2. 如果数据存在多层级，依次书写层级名称即可
@@ -508,7 +508,7 @@ yaml 中保存的单个数据，可以使用 Spring 中的注解 @Value 读取�
 
 数据封装到了 Environment 对象中，获取属性时，通过 Environment 的接口操作进行，具体方法是 getProperties（String），参数填写属性名即可
 
-**总结**
+<b>总结</b>
 
 1. 使用 Environment 对象封装全部配置信息
 2. 使用 @Autowired 自动装配数据到 Environment 对象中
@@ -527,14 +527,14 @@ yaml 中保存的单个数据，可以使用 Spring 中的注解 @Value 读取�
 
 <font color="#f0f"><b>温馨提示</b></font>：细心的小伙伴会发现一个问题，自定义的这种数据在 yaml 文件中书写时没有弹出提示，咱们到原理篇再揭秘如何弹出提示。
 
-**总结**
+<b>总结</b>
 
 1. 使用 @ConfigurationProperties 注解绑定配置信息到封装类中
 2. 封装类需要定义为 Spring 管理的 bean，否则无法进行属性注入
 
 #### yaml文件中的数据引用
 
-​		如果你在书写 yaml 数据时，经常出现如下现象，比如很多个文件都具有相同的目录前缀
+如果你在书写 yaml 数据时，经常出现如下现象，比如很多个文件都具有相同的目录前缀
 
 ```YAML
 center:
@@ -571,7 +571,7 @@ center:
 lesson: "Spring\tboot\nlesson"
 ```
 
-**总结**
+<b>总结</b>
 
 1. 在配置文件中可以使用${属性名}方式引用属性值
 2. 如果属性中出现特殊字符，可以使用双引号包裹起来作为字符解析
@@ -588,9 +588,9 @@ lesson: "Spring\tboot\nlesson"
     <directory>${basedir}/src/main/resources</directory>
     <filtering>true</filtering>
     <includes>
-        <include>**/application*.yml</include>
-        <include>**/application*.yaml</include>
-        <include>**/application*.properties</include>
+        <include><b>/application*.yml</include>
+        <include><b>/application*.yaml</include>
+        <include><b>/application*.properties</include>
     </includes>
 </resource>
 ```
@@ -731,11 +731,11 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 无需关注版本号，自动版本仲裁
 
 - 引入依赖默认都可以不写版本
-- 引入非版本仲裁的jar，要写版本号。
+- 引入非版本仲裁的 jar，要写版本号。
 
 可以修改默认版本号
 
-- 查看spring-boot-dependencies里面规定当前依赖的版本 用的 key。
+- 查看 spring-boot-dependencies 里面规定当前依赖的版本用的 key。
 - 在当前项目里面重写配置
 
 ```xml
@@ -749,7 +749,7 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 #### 引导加载自动配置类
 
 - @SpringBootConfiguration 表示是一个配置类
-- @ComponentScan 指定扫描哪些，Spring注解；
+- @ComponentScan 指定扫描哪些，Spring 注解；
 - @EnableAutoConfiguration，开启自动配置 
 
 ```java
@@ -958,7 +958,7 @@ public CharacterEncodingFilter characterEncodingFilter() {
 
 #### 自动配置原理
 
-以**HttpEncodingAutoConfiguration（Http编码自动配置）**为例解释自动配置原理；
+以<b>HttpEncodingAutoConfiguration（Http 编码自动配置）</b>为例解释自动配置原理；
 
 ```java
 @Configuration   //表示这是一个配置类，以前编写的配置文件一样，也可以给容器中添加组件
@@ -993,9 +993,9 @@ public class HttpEncodingAutoConfiguration {
 
 根据当前不同的条件判断，决定这个配置类是否生效？
 
-一但这个配置类生效；这个配置类就会给容器中添加各种组件；这些组件的属性是从对应的properties类中获取的，这些类里面的每一个属性又是和配置文件绑定的；
+一但这个配置类生效；这个配置类就会给容器中添加各种组件；这些组件的属性是从对应的 properties 类中获取的，这些类里面的每一个属性又是和配置文件绑定的；
 
-所有在配置文件中能配置的属性都是在xxxxProperties类中封装者‘；配置文件能配置什么就可以参照某个功能对应的这个属性类
+所有在配置文件中能配置的属性都是在 xxxxProperties 类中封装者‘；配置文件能配置什么就可以参照某个功能对应的这个属性类
 
 ```java
 @ConfigurationProperties(prefix = "spring.http.encoding")  //从配置文件中获取指定的值和bean的属性进行绑定
@@ -1006,23 +1006,23 @@ public class HttpEncodingProperties {
 
 #### 总结
 
-- SpringBoot先加载所有的自动配置类  xxxxxAutoConfiguration
-- 每个自动配置类按照条件进行生效，默认都会绑定配置文件指定的值。xxxxProperties里面拿。xxxProperties和配置文件进行了绑定
+- SpringBoot 先加载所有的自动配置类  xxxxxAutoConfiguration
+- 每个自动配置类按照条件进行生效，默认都会绑定配置文件指定的值。xxxxProperties 里面拿。xxxProperties 和配置文件进行了绑定
 
 - 生效的配置类就会给容器中装配很多组件
 - 只要容器中有这些组件，相当于这些功能就有了
 - 定制化配置
-    - 用户直接自己@Bean替换底层的组件
+    - 用户直接自己 @Bean 替换底层的组件
     - 用户去看这个组件是获取的配置文件什么值就去修改。
 
-**xxxxxAutoConfiguration ---> 把组件装配进去  --->** **组件从xxxxProperties里面拿值 ----> application.properties**
+<b>xxxxxAutoConfiguration ---> 把组件装配进去  ---></b> <b>组件从 xxxxProperties 里面拿值 ----> application.properties</b>
 
 ## 自动配置举例
 
-- 自动配好Tomcat
+- 自动配好 Tomcat
 
-    - 引入Tomcat依赖。
-    - 配置Tomcat
+    - 引入 Tomcat 依赖。
+    - 配置 Tomcat
 
 ```xml
 <dependency>
@@ -1033,21 +1033,21 @@ public class HttpEncodingProperties {
 </dependency>
 ```
 
-- 自动配好SpringMVC
+- 自动配好 SpringMVC
 
-    - 引入SpringMVC全套组件
-    - 自动配好SpringMVC常用组件（功能）
+    - 引入 SpringMVC 全套组件
+    - 自动配好 SpringMVC 常用组件（功能）
 
-- 自动配好Web常见功能，如：字符编码问题
+- 自动配好 Web 常见功能，如：字符编码问题
 
-    - SpringBoot帮我们配置好了所有web开发的常见场景
+    - SpringBoot 帮我们配置好了所有 web 开发的常见场景
 
 - 默认的包结构
 
     - 主程序所在包及其下面的所有子包里面的组件都会被默认扫描进来
     - 无需以前的包扫描配置
-    - 想要改变扫描路径，@SpringBootApplication(scanBasePackages=**"com.xx"**
-    - 或者@ComponentScan 指定扫描路径
+    - 想要改变扫描路径，@SpringBootApplication(scanBasePackages=<b>"com.xx"</b>)
+    - 或者 @ComponentScan 指定扫描路径
 
 ```java
 @SpringBootApplication
@@ -1064,16 +1064,16 @@ public class HttpEncodingProperties {
 
 - 按需加载所有自动配置项
 
-- 非常多的starter
+- 非常多的 starter
 - 引入了哪些场景这个场景的自动配置才会开启
-- SpringBoot所有的自动配置功能都在 spring-boot-autoconfigure 包里面
+- SpringBoot 所有的自动配置功能都在 spring-boot-autoconfigure 包里面
 - ......
 
 ## 开发小技巧
 
 ### Lombok
 
-简化JavaBean开发
+简化 JavaBean 开发
 
 ```xml
 <dependency>
@@ -1093,12 +1093,9 @@ public class HttpEncodingProperties {
 @ToString
 @EqualsAndHashCode
 public class User {
-
     private String name;
     private Integer age;
-
     private Pet pet;
-
     public User(String name,Integer age){
         this.name = name;
         this.age = age;
@@ -1144,14 +1141,14 @@ public class HelloController {
 
 ## Spring MVC 自动配置概览
 
-Spring Boot provides auto-configuration for Spring MVC that **works well with most applications.(大多场景我们都无需自定义配置)**
+Spring Boot provides auto-configuration for Spring MVC that <b>works well with most applications.(大多场景我们都无需自定义配置)</b>
 
 The auto-configuration adds the following features on top of Spring’s defaults:
 
 - Inclusion of `ContentNegotiatingViewResolver` and `BeanNameViewResolver` beans.
-    - 内容协商视图解析器和BeanName视图解析器
+    - 内容协商视图解析器和 BeanName 视图解析器
 - Support for serving static resources, including support for WebJars (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-static-content))).
-    - 静态资源（包括webjars）
+    - 静态资源（包括 webjars）
 - Automatic registration of `Converter`, `GenericConverter`, and `Formatter` beans.
     - 自动注册 `Converter，GenericConverter，Formatter `
 - Support for `HttpMessageConverters` (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-message-converters)).
@@ -1159,23 +1156,23 @@ The auto-configuration adds the following features on top of Spring’s defaults
 - Automatic registration of `MessageCodesResolver` (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-message-codes)).
     - 自动注册 `MessageCodesResolver` （国际化用）
 - Static `index.html` support.
-    - 静态index.html 页支持
+    - 静态 index.html 页支持
 - Custom `Favicon` support (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-favicon)).
     - 自定义 `Favicon`  
 - Automatic use of a `ConfigurableWebBindingInitializer` bean (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-web-binding-initializer)).
     - 自动使用 `ConfigurableWebBindingInitializer` ，（DataBinder 负责将请求数据绑定到 JavaBean 上）
 
-> If you want to keep those Spring Boot MVC customizations and make more [MVC customizations](https://docs.spring.io/spring/docs/5.2.9.RELEASE/spring-framework-reference/web.html#mvc) (interceptors, formatters, view controllers, and other features), you can add your own `@Configuration` class of type `WebMvcConfigurer` but **without** `@EnableWebMvc`.
+> If you want to keep those Spring Boot MVC customizations and make more [MVC customizations](https://docs.spring.io/spring/docs/5.2.9.RELEASE/spring-framework-reference/web.html#mvc) (interceptors, formatters, view controllers, and other features), you can add your own `@Configuration` class of type `WebMvcConfigurer` but <b>without</b> `@EnableWebMvc`.
 >
-> **不用@EnableWebMvc注解。使用** `@Configuration` **+** `WebMvcConfigurer` **自定义规则**
+> <b>不用@EnableWebMvc注解。使用</b> `@Configuration` <b>+</b> `WebMvcConfigurer` <b>自定义规则</b>
 
 > If you want to provide custom instances of `RequestMappingHandlerMapping`, `RequestMappingHandlerAdapter`, or `ExceptionHandlerExceptionResolver`, and still keep the Spring Boot MVC customizations, you can declare a bean of type `WebMvcRegistrations` and use it to provide custom instances of those components.
 >
-> **声明** `WebMvcRegistrations` **改变默认底层组件**
+> <b>声明</b> `WebMvcRegistrations` <b>改变默认底层组件</b>
 
 > If you want to take complete control of Spring MVC, you can add your own `@Configuration` annotated with `@EnableWebMvc`, or alternatively add your own `@Configuration`-annotated `DelegatingWebMvcConfiguration` as described in the Javadoc of `@EnableWebMvc`.
 >
-> **使用** `@EnableWebMvc+@Configuration+DelegatingWebMvcConfiguration 全面接管SpringMVC`
+> <b>使用</b> `@EnableWebMvc+@Configuration+DelegatingWebMvcConfiguration 全面接管 SpringMVC`
 
 ## 简单功能分析
 
@@ -1187,7 +1184,7 @@ The auto-configuration adds the following features on top of Spring’s defaults
 
 访问 url 为：<span style="color:green">当前项目根路径/ + 静态资源名</span>
 
-> 原理： 静态映射/**。
+> 原理： 静态映射/.
 
 请求进来，先去找 Controller 看能不能处理。不能处理的所有请求又都交给静态资源处理器。静态资源也找不到则响应 404 页面
 
@@ -1196,7 +1193,7 @@ The auto-configuration adds the following features on top of Spring’s defaults
 ```yaml
 spring:
   mvc:
-    static-path-pattern: /res/**
+    static-path-pattern: /res/<b>
 
   resources:
     static-locations: [classpath:/haha/]
@@ -1209,7 +1206,7 @@ spring:
 ```yaml
 spring:
   mvc:
-    static-path-pattern: /res/**
+    static-path-pattern: /res/<b>
 ```
 
 <span style="color:green">当前项目 + static-path-pattern + 静态资源名 = 静态资源文件夹下找（只是修改了下 url 的访问规则，资源的存放位置并没有改变）</span>
@@ -1224,24 +1221,24 @@ spring:
 
 ### 欢迎页
 
-Spring Boot supports both static and templated welcome pages. It first looks for an **index.html file in the configured static content locations.** If one is not found, it then looks for an index template. If either is found, it is automatically used as the welcome page of the application.
+Spring Boot supports both static and templated welcome pages. It first looks for an <b>index.html file in the configured static content locations.</b> If one is not found, it then looks for an index template. If either is found, it is automatically used as the welcome page of the application.
 
-- 静态资源路径下  index.html
+- 静态资源路径下 index.html
     - 可以配置静态资源路径
-    - 但是不可以配置静态资源的访问前缀。否则导致 index.html不能被默认访问
+    - 但是不可以配置静态资源的访问前缀。否则导致 index.html 不能被默认访问
 
 ```yaml
 spring:
 #  mvc:
-#    static-path-pattern: /res/**   这个会导致welcome page功能失效
+#    static-path-pattern: /res/<b>   这个会导致welcome page功能失效
   resources:
     static-locations: [classpath:/haha/]
 ```
 
 ## 静态资源配置原理
 
-- SpringBoot启动默认加载  xxxAutoConfiguration 类（自动配置类）
-- SpringMVC功能的自动配置类 WebMvcAutoConfiguration，生效
+- SpringBoot 启动默认加载  xxxAutoConfiguration 类（自动配置类）
+- SpringMVC 功能的自动配置类 WebMvcAutoConfiguration，生效
 
 ```java
 @Configuration(proxyBeanMethods = false)
@@ -1311,8 +1308,8 @@ public void addResourceHandlers(ResourceHandlerRegistry registry) {
     Duration cachePeriod = this.resourceProperties.getCache().getPeriod(); // 可以获取缓存策略
     CacheControl cacheControl = this.resourceProperties.getCache().getCachecontrol().toHttpCacheControl();
     //webjars的规则
-    if (!registry.hasMappingForPattern("/webjars/**")) {
-        customizeResourceHandlerRegistration(registry.addResourceHandler("/webjars/**")
+    if (!registry.hasMappingForPattern("/webjars/<b>")) {
+        customizeResourceHandlerRegistration(registry.addResourceHandler("/webjars/<b>")
                                              .addResourceLocations("classpath:/META-INF/resources/webjars/")
                                              .setCachePeriod(getSeconds(cachePeriod)).setCacheControl(cacheControl));
     }
@@ -1350,7 +1347,7 @@ final class WelcomePageHandlerMapping extends AbstractUrlHandlerMapping {
 
 	WelcomePageHandlerMapping(TemplateAvailabilityProviders templateAvailabilityProviders,
 			ApplicationContext applicationContext, Resource welcomePage, String staticPathPattern) {
-		if (welcomePage != null && "/**".equals(staticPathPattern)) { // 原始静态路径没改的话，就转发到 forward:index.html
+		if (welcomePage != null && "/<b>".equals(staticPathPattern)) { // 原始静态路径没改的话，就转发到 forward:index.html
 			logger.info("Adding welcome page: " + welcomePage);
 			setRootViewName("forward:index.html");
 		}
@@ -1376,13 +1373,13 @@ final class WelcomePageHandlerMapping extends AbstractUrlHandlerMapping {
 #### rest使用与原理
 
 - @xxxMapping；
-- Rest风格支持（使用**HTTP**请求方式动词来表示对资源的操作）
+- Rest 风格支持（使用 <b>HTTP</b> 请求方式动词来表示对资源的操作）
     - 以前：/getUser  获取用户    /deleteUser 删除用户   /editUser  修改用户   /saveUser  保存用户
     - 现在： /user  GET-获取用户    DELETE-删除用户    PUT-修改用户  POST-保存用户
-    - 核心Filter；HiddenHttpMethodFilter
-        - 用法： 表单method=post，隐藏域 _method=put
+    - 核心 Filter；HiddenHttpMethodFilter
+        - 用法： 表单 method=post，隐藏域 _method=put
         - Spring Boot 中手动开启，`spring.mvc.hiddenmethod.filter.enabled=true`
-    - 扩展：如何把_method 这个名字换成我们自己喜欢的
+    - 扩展：如何把 _method 这个名字换成我们自己喜欢的
 
 > 原理
 
@@ -1549,13 +1546,12 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 }
 ```
 
-----
+getHandler 方法；RequestMappingHandlerMapping 中存储了所有 @RequestMapping 和 handler 的映射规则。
 
-getHandler 方法；RequestMappingHandlerMapping 中存储了所有@RequestMapping 和handler的映射规则。
-
-<div align="center"><img src="img/boot/image-20211023114049369.png"></div>
-
-<div align="center"><img src="img/boot/image-20211023114945974.png"></div>
+<div align="center">
+    <img src="img/boot/image-20211023114049369.png">
+	<img src="img/boot/image-20211023114945974.png">
+</div>
 
 ```java
 @Nullable
@@ -1583,17 +1579,17 @@ protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Ex
 }
 ```
 
-所有的请求映射都在HandlerMapping中。
+所有的请求映射都在 HandlerMapping 中。
 
 - Spring Boot 自动配置欢迎页的 WelcomePageHandlerMapping 。访问 /能访问到 index.html；
 - Spring Boot 自动配置了默认的 RequestMappingHandlerMapping
 
-- 请求进来，挨个尝试所有的HandlerMapping看是否有请求信息。
+- 请求进来，挨个尝试所有的 HandlerMapping 看是否有请求信息。
 
-- - 如果有就找到这个请求对应的handler
+- - 如果有就找到这个请求对应的 handler
         - 如果没有就是下一个 HandlerMapping
 
-- 我们需要一些自定义的映射处理，我们也可以自己给容器中放**HandlerMapping**。自定义 **HandlerMapping**
+- 我们需要一些自定义的映射处理，我们也可以自己给容器中放 <b>HandlerMapping</b>。自定义 <b>HandlerMapping</b>
 
 ```java
 protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
@@ -1854,15 +1850,11 @@ Object returnValue = invokeForRequest(webRequest, mavContainer, providedArgs); /
 Object[] args = getMethodArgumentValues(request, mavContainer, providedArgs);
 ```
 
-
-
 ```java
-protected ModelAndView handleInternal(HttpServletRequest request,
-                                      HttpServletResponse response, HandlerMethod handlerMethod) throws Exception {
+protected ModelAndView handleInternal(HttpServletRequest request, HttpServletResponse response, HandlerMethod handlerMethod) throws Exception {
 
     ModelAndView mav;
     checkRequest(request);
-
     // Execute invokeHandlerMethod in synchronized block if required.
     if (this.synchronizeOnSession) {
         HttpSession session = request.getSession(false);
@@ -1926,14 +1918,14 @@ https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples
 
 ## 整合JDBC
 
-SpringBoot整合JDBC只要引入对应数据库的连接驱动包（如mysql的驱动），然后再properties/yaml配置文件中书写配置即可。
+SpringBoot 整合 JDBC 只要引入对应数据库的连接驱动包（如 mysql 的驱动），然后再 properties/yaml 配置文件中书写配置即可。
 
 > 依赖
 
-- springboot的jdbc api
-- mysql驱动
+- springboot 的 jdbc api
+- mysql 驱动
 
-> properties文件
+> properties 文件
 
 ```properties
 # jdbc基础配置
@@ -1943,7 +1935,7 @@ spring.datasource.url=jdbc:mysql://localhost:3306/blog
 spring.datasource.driver-class-name=com.mysql.jdbc.Driver
 ```
 
-> pom文件
+> pom 文件
 
 ```xml
 <dependencies>
@@ -1999,17 +1991,17 @@ spring.datasource.driver-class-name=com.mysql.jdbc.Driver
 
 > 概述
 
-SpringBoot整合Druid，需要导入数据库的连接驱动包（如mysql的驱动），Druid包，然后书写对应的配置文件。注意：由于数据库连接相关的配置文件是在Druid中进行设置的，所以前缀名要一致。
+SpringBoot 整合 Druid，需要导入数据库的连接驱动包（如 mysql 的驱动），Druid 包，然后书写对应的配置文件。注意：由于数据库连接相关的配置文件是在 Druid 中进行设置的，所以前缀名要一致。
 
 > 依赖
 
-- mysql驱动
+- mysql 驱动
 - springboot jdbc api
-- druid依赖
-- springboot-web依赖，用来注册servlet，filter 启用druid的控制台
+- druid 依赖
+- springboot-web 依赖，用来注册 servlet，filter 启用 druid 的控制台
 - log4j，我们使用这个日志框架进行记录
 
-> pom文件
+> pom 文件
 
 ```xml
 <dependencies>
@@ -2070,7 +2062,7 @@ SpringBoot整合Druid，需要导入数据库的连接驱动包（如mysql的驱
 </build>
 ```
 
-> properties文件
+> properties 文件
 
 ```properties
 # jdbc基础配置
@@ -2143,14 +2135,14 @@ public class DruidConfig {
 
 > 概述
 
-数据库采用MySQL，连接池采用Druid。整合方式有SQL用纯注解和SQL采用xml两个版本。
+数据库采用 MySQL，连接池采用 Druid。整合方式有 SQL 用纯注解和 SQ L采用 xml 两个版本。
 
 > 依赖
 
-- mysql驱动
+- mysql 驱动
 - springboot jdbc api
 - druid 依赖
-- springboot-web 依赖，用来注册 servlet，filter 启用druid的控制台
+- springboot-web 依赖，用来注册 servlet，filter 启用 druid 的控制台
 - log4j，我们使用这个日志框架进行记录
 - mybatis 和 Spring 的整合包
 - 其他的会自动帮我们导入的，不必担心
@@ -2222,7 +2214,7 @@ public class DruidConfig {
 </build>
 ```
 
-> properties件
+> properties 件
 
 ```properties
 # 基础的jdbc配置
@@ -2256,11 +2248,11 @@ mybatis.configuration.map-underscore-to-camel-case=true
 mybatis.type-aliases-package=com.bbxx.boot02.pojo
 ```
 
-> SQL纯注解
+> SQL 纯注解
 
-每个dao接口都加上注解 mapper 或 在启动引导类位置处用@MapperScan("扫描得包全名")
+每个 dao 接口都加上注解 mapper 或在启动引导类位置处用 @MapperScan("扫描得包全名")
 
-> SQL书写
+> SQL 书写
 
 ```java
 //指定这是一个操作数据库的mapper
@@ -2304,7 +2296,7 @@ public class MyBatisConfig {
 }
 ```
 
-> SQL xml版本
+> SQL xml 版本
 
 xml 放在那里？
 
@@ -2403,39 +2395,7 @@ public class Role {
     private Integer id;
     private String roleName;
     private String roleDesc;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getRoleName() {
-        return roleName;
-    }
-
-    public void setRoleName(String roleName) {
-        this.roleName = roleName;
-    }
-
-    public String getRoleDesc() {
-        return roleDesc;
-    }
-
-    public void setRoleDesc(String roleDesc) {
-        this.roleDesc = roleDesc;
-    }
-
-    @Override
-    public String toString() {
-        return "Role{" +
-                "id=" + id +
-                ", roleName='" + roleName + '\'' +
-                ", roleDesc='" + roleDesc + '\'' +
-                '}';
-    }
+	// 省略 setter/getter toString
 }
 ```
 
@@ -2460,9 +2420,9 @@ SpringBoot 有默认的配置，它替我们设置了有关 MVC 的一些默认�
 
 > 依赖
 
-springboot-web模块
+springboot-web 模块
 
-> pom文件
+> pom 文件
 
 ```xml
 <dependencies>
@@ -2553,9 +2513,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    /**
-     * 重写方法式 的配置
-     */
+    // 重写方法式 的配置
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         // 浏览器发送 /demo1 请求到success
@@ -2563,15 +2521,14 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addViewController("/demo2").setViewName("/success");
     }
 
-    /**
-     * 组件式 配置
-     */
+
+    // 组件式 配置
     @Bean
     public WebMvcConfigurer webMvcConfigurer() {
         WebMvcConfigurer web = new WebMvcConfigurer() {
             @Override
             public void addInterceptors(InterceptorRegistry registry) {
-                registry.addInterceptor(new LoginInterceptor()).addPathPatterns("/**").
+                registry.addInterceptor(new LoginInterceptor()).addPathPatterns("/<b>").
                         excludePathPatterns("/index.html", "/login.html","/index","/list");
             }
         };
@@ -2609,19 +2566,19 @@ public class DemoController {
 
 > 概述
 
-SpringBoot的ssm整合配置
+SpringBoot 的 ssm 整合配置
 
 > 依赖
 
-- mysql驱动
+- mysql 驱动
 - springboot jdbc api
-- druid依赖
-- springboot-web依赖，用来注册servlet，filter 启用druid的控制台
+- druid 依赖
+- springboot-web 依赖，用来注册 servlet，filter 启用 druid 的控制台
 - log4j，我们使用这个日志框架进行记录
-- mybatis和spring的整合包
+- mybatis 和 spring 的整合包
 - 其他的会自动帮我们导入的，不必担心
 
-> pom文件
+> pom 文件
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -2737,7 +2694,7 @@ SpringBoot的ssm整合配置
 </project>
 ```
 
-> properties文件
+> properties 文件
 
 ```properties
 # 禁用缓存
@@ -2771,7 +2728,7 @@ mybatis.configuration.map-underscore-to-camel-case=true
 mybatis.type-aliases-package=com.bbxx.boot02.pojo
 ```
 
-> Config代码
+> Config 代码
 
 druid
 
@@ -2855,7 +2812,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         WebMvcConfigurer web = new WebMvcConfigurer() {
             @Override
             public void addInterceptors(InterceptorRegistry registry) {
-                registry.addInterceptor(new LoginInterceptor()).addPathPatterns("/**").
+                registry.addInterceptor(new LoginInterceptor()).addPathPatterns("/<b>").
                         excludePathPatterns("/index.html", "/login.html","/index","/list");
             }
         };
@@ -2864,13 +2821,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
 }
 ```
 
-mybatis的sql文件
+mybatis 的 sql 文件
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bbxx.boot02.mapper.ArticleMapper">
-
 </mapper>
 ```
 
@@ -2963,17 +2919,17 @@ public class MyBatisTest {
 
 # 基础练习
 
-基于SpringBoot实现SSMP整合，学习如下技术的整合方式
+基于 SpringBoot 实现 SSMP 整合，学习如下技术的整合方式
 
-- 整合JUnit
-- 整合MyBatis
-- 整合MyBatis-Plus
-- 整合Druid
+- 整合 JUnit
+- 整合 MyBatis
+- 整合 MyBatis-Plus
+- 整合 Druid
 
 
 ## 整合JUnit
 
-先来看一下不使用 SpringBoot 技术时，Spring整合 JUnit 的制作方式
+先来看一下不使用 SpringBoot 技术时，Spring 整合 JUnit 的制作方式
 
 ```JAVA
 //加载spring整合junit专用的类运行器
@@ -2993,9 +2949,13 @@ public class AccountServiceTestCase {
 
 ```
 
-其中核心代码是前两个注解，第一个注解`@RunWith`是设置Spring专用的测试类运行器，简单说就是Spring程序执行程序有自己的一套独立的运行程序的方式，不能使用JUnit提供的类运行方式了，必须指定一下，但是格式是固定的，琢磨一下，<font color="#ff0000"><b>每次都指定一样的东西，这个东西写起来没有技术含量啊</b></font>，第二个注解@ContextConfiguration是用来设置Spring核心配置文件或配置类的，简单说就是加载Spring的环境你要告诉Spring具体的环境配置是在哪里写的，虽然每次加载的文件都有可能不同，但是仔细想想，如果文件名是固定的，这个貌似也是一个固定格式。既然<font color="#ff0000"><b>有可能是固定格式，那就有可能每次都写一样的东西，也是一个没有技术含量的内容书写</b></font>
+其中核心代码是前两个注解
 
-SpringBoot就抓住上述两条没有技术含量的内容书写进行开发简化，能走默认值的走默认值，能不写的就不写，具体格式如下
+1️⃣第一个注解 `@RunWith` 是设置 Spring 专用的测试类运行器，简单说就是 Spring 程序执行程序有自己的一套独立的运行程序的方式，不能使用 JUnit 提供的类运行方式了，必须指定一下，但是格式是固定的，琢磨一下，<font color="#ff0000"><b>每次都指定一样的东西，这个东西写起来没有技术含量啊</b></font>，
+
+2️⃣第二个注解 @ContextConfiguration 是用来设置 Spring 核心配置文件或配置类的，简单说就是加载 Spring 的环境你要告诉 Spring 具体的环境配置是在哪里写的，虽然每次加载的文件都有可能不同，但是仔细想想，如果文件名是固定的，这个貌似也是一个固定格式。既然<font color="#ff0000"><b>有可能是固定格式，那就有可能每次都写一样的东西，也是一个没有技术含量的内容书写</b></font>
+
+SpringBoot 就抓住上述两条没有技术含量的内容书写进行开发简化，能走默认值的走默认值，能不写的就不写，具体格式如下
 
 ```JAVA
 @SpringBootTest
@@ -3012,9 +2972,9 @@ class Springboot04JunitApplicationTests {
 }
 ```
 
-看看这次简化成什么样了，一个注解就搞定了，而且还没有参数，再体会SpringBoot整合其他技术的优势在哪里，就两个字——<font color="#ff0000"><b>简化</b></font>。使用一个注解@SpringBootTest替换了前面两个注解。至于内部是怎么回事？和之前一样，只不过都走默认值。
+看看这次简化成什么样了，一个注解就搞定了，而且还没有参数，再体会 SpringBoot 整合其他技术的优势在哪里，就两个字——<font color="#ff0000"><b>简化</b></font>。使用一个注解 @SpringBootTest 替换了前面两个注解。至于内部是怎么回事？和之前一样，只不过都走默认值。
 
-这个时候有人就问了，你加载的配置类或者配置文件是哪一个？就是我们前面启动程序使用的引导类。如果想手工指定引导类有两种方式，第一种方式使用属性的形式进行，在注解@SpringBootTest中添加classes属性指定配置类
+这个时候有人就问了，你加载的配置类或者配置文件是哪一个？就是我们前面启动程序使用的引导类。如果想手工指定引导类有两种方式，第一种方式使用属性的形式进行，在注解 @SpringBootTest 中添加 classes 属性指定配置类
 
 ```JAVA
 @SpringBootTest(classes = Springboot04JunitApplication.class)
@@ -3031,7 +2991,7 @@ class Springboot04JunitApplicationTests {
 }
 ```
 
-第二种方式回归原始配置方式，仍然使用@ContextConfiguration注解进行，效果是一样的
+第二种方式回归原始配置方式，仍然使用 @ContextConfiguration 注解进行，效果是一样的
 
 ```JAVA
 @SpringBootTest
@@ -3051,21 +3011,21 @@ class Springboot04JunitApplicationTests {
 
 <font color="#f0f"><b>温馨提示</b></font>
 
-使用SpringBoot整合JUnit需要保障导入test对应的starter，由于初始化项目时此项是默认导入的，所以此处没有提及，其实和之前学习的内容一样，用什么技术导入对应的starter即可。
+使用 SpringBoot 整合 JUnit 需要保障导入 test 对应的 starter，由于初始化项目时此项是默认导入的，所以此处没有提及，其实和之前学习的内容一样，用什么技术导入对应的 starter 即可。
 
-**总结**
+<b>总结</b>
 
-1. 导入测试对应的starter
-2. 测试类使用@SpringBootTest修饰
+1. 导入测试对应的 starter
+2. 测试类使用 @SpringBootTest 修饰
 3. 使用自动装配的形式添加要测试的对象
 4. 测试类如果存在于引导类所在包或子包中无需指定引导类
-5. 测试类如果不存在于引导类所在的包或子包中需要通过classes属性指定引导类
+5. 测试类如果不存在于引导类所在的包或子包中需要通过 classes 属性指定引导类
 
 ## 整合MyBatis
 
-整合完JUnit下面再来说一下整合MyBatis，这个技术是大部分公司都要使用的技术，务必掌握。如果对Spring整合MyBatis不熟悉的小伙伴好好复习一下，下面列举出原始整合的全部内容，以配置类的形式为例进行
+整合完 JUnit 下面再来说一下整合 MyBatis，这个技术是大部分公司都要使用的技术，务必掌握。如果对 Spring 整合 MyBatis 不熟悉的小伙伴好好复习一下，下面列举出原始整合的全部内容，以配置类的形式为例进行
 
-导入坐标，MyBatis坐标不能少，Spring整合MyBatis还有自己专用的坐标，此外Spring进行数据库操作的jdbc坐标是必须的，剩下还有mysql驱动坐标，本例中使用了Druid数据源，这个倒是可以不要
+导入坐标，MyBatis 坐标不能少，Spring 整合 MyBatis 还有自己专用的坐标，此外 Spring 进行数据库操作的 jdbc 坐标是必须的，剩下还有 mysql 驱动坐标，本例中使用了 Druid 数据源，这个倒是可以不要
 
 ```XML
 <dependencies>
@@ -3099,7 +3059,7 @@ class Springboot04JunitApplicationTests {
 </dependencies>
 ```
 
-Spring核心配置
+Spring 核心配置
 
 ```JAVA
 @Configuration
@@ -3109,7 +3069,7 @@ public class SpringConfig {
 }
 ```
 
-MyBatis要交给Spring接管的bean
+MyBatis 要交给 Spring 接管的 bean
 
 ```JAVA
 //定义mybatis专用的配置类
@@ -3137,7 +3097,7 @@ public class MyBatisConfig {
 }
 ```
 
-数据源对应的bean，此处使用Druid数据源
+数据源对应的 bean，此处使用 Druid 数据源
 
 ```JAVA
 @Configuration
@@ -3163,7 +3123,7 @@ public class JdbcConfig {
 }
 ```
 
-数据库连接信息（properties格式）
+数据库连接信息（properties 格式）
 
 ```properties
 jdbc.driver=com.mysql.jdbc.Driver
@@ -3172,17 +3132,17 @@ jdbc.username=root
 jdbc.password=root
 ```
 
-上述格式基本上是最简格式了，要写的东西还真不少。下面看看SpringBoot整合MyBaits格式
+上述格式基本上是最简格式了，要写的东西还真不少。下面看看 SpringBoot 整合 MyBaits 格式
 
-**步骤①**：创建模块
+<b>步骤①</b>：创建模块
 
 <div align="center"><img src="img/boot/image-20211129092156020.png"></div>
 
-**步骤②**：勾选要使用的技术，MyBatis，由于要操作数据库，还要勾选对应数据库
+<b>步骤②</b>：勾选要使用的技术，MyBatis，由于要操作数据库，还要勾选对应数据库
 
 <div align="center"><img src="img/boot/image-20211129092210993.png"></div>
 
-或者手工导入对应技术的starter，和对应数据库的坐标
+或者手工导入对应技术的 starter，和对应数据库的坐标
 
 ```XML
 <dependencies>
@@ -3201,7 +3161,7 @@ jdbc.password=root
 </dependencies>
 ```
 
-**步骤③**：配置数据源相关信息，没有这个信息你连接哪个数据库都不知道
+<b>步骤③</b>：配置数据源相关信息，没有这个信息你连接哪个数据库都不知道
 
 ```yaml
 #2.配置相关信息
@@ -3213,9 +3173,9 @@ spring:
     password: root
 ```
 
-​		结束了，就这么多，没了。有人就很纳闷，这就结束了？对，这就结束了，SpringBoot把配置中所有可能出现的通用配置都简化了。下面写一个MyBatis程序运行需要的Dao（或者Mapper）就可以运行了
+结束了，就这么多。SpringBoot 把配置中所有可能出现的通用配置都简化了。下面写一个 MyBatis 程序运行需要的 Dao（或者 Mapper）就可以运行了
 
-**实体类**
+<b>实体类</b>
 
 ```JAVA
 public class Book {
@@ -3226,7 +3186,7 @@ public class Book {
 }
 ```
 
-**映射接口（Dao）**
+<b>映射接口（Dao）</b>
 
 ```JAVA
 @Mapper
@@ -3236,7 +3196,7 @@ public interface BookDao {
 }
 ```
 
-**测试类**
+<b>测试类</b>
 
 ```JAVA
 @SpringBootTest
@@ -3250,9 +3210,9 @@ class Springboot05MybatisApplicationTests {
 }
 ```
 
-​		完美，开发从此变的就这么简单。再体会一下SpringBoot如何进行第三方技术整合的，是不是很优秀？具体内部的原理到原理篇再展开讲解
+Spring Boot 让开发从此变的就这么简单。
 
-​		<font color="#ff0000"><b>注意</b></font>：当前使用的SpringBoot版本是2.5.4，对应的坐标设置中Mysql驱动使用的是8x版本。使用SpringBoot2.4.3（不含）之前版本会出现一个小BUG，就是MySQL驱动升级到8以后要求强制配置时区，如果不设置会出问题。解决方案很简单，驱动url上面添加上对应设置就行了
+<font color="#ff0000"><b>注意</b></font>：当前使用的 SpringBoot 版本是 2.5.4，对应的坐标设置中 MySQL 驱动使用的是 8x 版本。使用 SpringBoot 2.4.3（不含）之前版本会出现一个小 BUG，就是 MySQL 驱动升级到 8 以后要求强制配置时区，如果不设置会出问题。解决方案很简单，驱动 url上面添加上对应设置就行了
 
 ```YAML
 #2.配置相关信息
@@ -3264,7 +3224,7 @@ spring:
     password: root
 ```
 
-​		这里设置的UTC是全球标准时间，你也可以理解为是英国时间，中国处在东八区，需要在这个基础上加上8小时，这样才能和中国地区的时间对应的，也可以修改配置为Asia/Shanghai，同样可以解决这个问题。
+这里设置的 UTC 是全球标准时间，你也可以理解为是英国时间，中国处在东八区，需要在这个基础上加上 8 小时，这样才能和中国地区的时间对应的，也可以修改配置为 Asia/Shanghai，同样可以解决这个问题。
 
 ```YAML
 #2.配置相关信息
@@ -3276,43 +3236,43 @@ spring:
     password: root
 ```
 
-​		如果不想每次都设置这个东西，也可以去修改mysql中的配置文件mysql.ini，在mysqld项中添加default-time-zone=+8:00也可以解决这个问题。其实方式方法很多，这里就说这么多吧。
+如果不想每次都设置这个东西，也可以去修改 mysql 中的配置文件 mysql.ini，在 mysqld 项中添加 default-time-zone=+8:00 也可以解决这个问题。
 
-​		此外在运行程序时还会给出一个提示，说数据库驱动过时的警告，根据提示修改配置即可，弃用**com.mysql.jdbc.Driver**，换用<font color="#ff0000"><b>com.mysql.cj.jdbc.Driver</b></font>。前面的例子中已经更换了驱动了，在此说明一下。
+此外在运行程序时还会给出一个提示，说数据库驱动过时的警告，根据提示修改配置即可，弃用<b>com.mysql.jdbc.Driver</b>，换用 <font color="#ff0000"><b>com.mysql.cj.jdbc.Driver</b></font>。前面的例子中已经更换了驱动了，在此说明一下。
 
 ```tex
 Loading class `com.mysql.jdbc.Driver'. This is deprecated. The new driver class is `com.mysql.cj.jdbc.Driver'. The driver is automatically registered via the SPI and manual loading of the driver class is generally unnecessary.
 ```
 
-**总结**
+<b>总结</b>
 
-1. 整合操作需要勾选MyBatis技术，也就是导入MyBatis对应的starter
+1. 整合操作需要勾选 MyBatis 技术，也就是导入 MyBatis 对应的 starter
 
 2. 数据库连接相关信息转换成配置
 
-3. 数据库SQL映射需要添加@Mapper被容器识别到
+3. 数据库 SQL 映射需要添加 @Mapper 被容器识别到
 
-4. MySQL 8.X驱动强制要求设置时区
+4. MySQL 8.X 驱动强制要求设置时区
 
-    - 修改url，添加serverTimezone设定
-    - 修改MySQL数据库配置
+    - 修改 url，添加 serverTimezone 设定
+    - 修改 MySQL 数据库配置
 
-5. 驱动类过时，提醒更换为com.mysql.cj.jdbc.Driver
+5. 驱动类过时，提醒更换为 com.mysql.cj.jdbc.Driver
 
 
 ## 整合MyBatis-Plus
 
-做完了两种技术的整合了，各位小伙伴要学会总结，我们做这个整合究竟哪些是核心？总结下来就两句话
+整合的核心
 
-- 导入对应技术的starter坐标
+- 导入对应技术的 starter 坐标
 
 - 根据对应技术的要求做配置
 
     虽然看起来有点虚，但是确实是这个理儿，下面趁热打铁，再换一个技术，看看是不是上面这两步。
 
-​		接下来在MyBatis的基础上再升级一下，整合MyBaitsPlus（简称MP），国人开发的技术，符合中国人开发习惯，谁用谁知道。来吧，一起做整合
+接下来在 MyBatis 的基础上再升级一下，整合 MyBaitsPlus（简称 MP），国人开发的技术，符合中国人开发习惯。
 
-**步骤①**：导入对应的starter
+<b>步骤①</b>：导入对应的 starter
 
 ```XML
 <dependency>
@@ -3322,25 +3282,25 @@ Loading class `com.mysql.jdbc.Driver'. This is deprecated. The new driver class 
 </dependency>
 ```
 
-​		关于这个坐标，此处要说明一点，之前我们看的starter都是spring-boot-starter-？？？，也就是说都是下面的格式
+关于这个坐标，此处要说明一点，之前我们看的 starter 都是 spring-boot-starter-？？？，也就是说都是下面的格式
 
 ```tex
 Spring-boot-start-***
 ```
 
-​	而MyBatis与MyBatisPlus这两个坐标的名字书写比较特殊，是第三方技术名称在前，boot和starter在后。此处简单提一下命名规范，后期原理篇会再详细讲解
+而 MyBatis 与 MyBatisPlus 这两个坐标的名字书写比较特殊，是第三方技术名称在前，boot 和 starter 在后。此处简单提一下命名规范，后期原理篇会再详细讲解
 
-| starter所属 | 命名规则                                                    | 示例                                                      |
-| ----------- | ----------------------------------------------------------- | --------------------------------------------------------- |
-| 官方提供    | spring-boot-starter-技术名称                                | spring-boot-starter-web <br/>spring-boot-starter-test     |
-| 第三方提供  | 第三方技术名称-spring-boot-starter                          | mybatis-spring-boot-starter<br/>druid-spring-boot-starter |
-| 第三方提供  | 第三方技术名称-boot-starter（第三方技术名称过长，简化命名） | mybatis-plus-boot-starter                                 |
+| starter 所属 | 命名规则                                                    | 示例                                                      |
+| ------------ | ----------------------------------------------------------- | --------------------------------------------------------- |
+| 官方提供     | spring-boot-starter-技术名称                                | spring-boot-starter-web <br/>spring-boot-starter-test     |
+| 第三方提供   | 第三方技术名称-spring-boot-starter                          | mybatis-spring-boot-starter<br/>druid-spring-boot-starter |
+| 第三方提供   | 第三方技术名称-boot-starter（第三方技术名称过长，简化命名） | mybatis-plus-boot-starter                                 |
 
 <font color="#f0f"><b>温馨提示</b></font>
 
-​		有些小伙伴在创建项目时想通过勾选的形式找到这个名字，别翻了，没有。截止目前，SpringBoot官网还未收录此坐标，而我们Idea创建模块时读取的是SpringBoot官网的Spring Initializr，所以也没有。如果换用阿里云的url创建项目可以找到对应的坐标。
+截止目前，SpringBoot 官网还未收录此坐标，而我们 Idea 创建模块时读取的是 SpringBoot 官网的 Spring Initializr，所以也没有。如果换用阿里云的 url 创建项目可以找到对应的坐标。
 
-**步骤②**：配置数据源相关信息
+<b>步骤②</b>：配置数据源相关信息
 
 ```yaml
 #2.配置相关信息
@@ -3352,17 +3312,16 @@ spring:
     password: root
 ```
 
-​	没了，就这么多，剩下的就是写MyBaitsPlus的程序了
+没了，就这么多，剩下的就是写 MyBaitsPlus 的程序了
 
-**映射接口（Dao）**
+<b>映射接口（Dao）</b>
 
 ```JAVA
 @Mapper
-public interface BookDao extends BaseMapper<Book> {
-}
+public interface BookDao extends BaseMapper<Book> {}
 ```
 
-​	核心在于Dao接口继承了一个BaseMapper的接口，这个接口中帮助开发者预定了若干个常用的API接口，简化了通用API接口的开发工作。
+核心在于 Dao 接口继承了一个 BaseMapper 的接口，这个接口中帮助开发者预定了若干个常用的 API 接口，简化了通用 API 接口的开发工作。
 
 <div align="center"><img src="img/boot/image-20211129100313919.png" alt="image-20211129100313919" style="zoom:80%;" /></div>
 
@@ -3370,7 +3329,7 @@ public interface BookDao extends BaseMapper<Book> {
 
 <font color="#f0f"><b>温馨提示</b></font>
 
-目前数据库的表名定义规则是tbl_模块名称，为了能和实体类相对应，需要做一个配置，相关知识各位小伙伴可以到MyBatisPlus课程中去学习，此处仅给出解决方案。配置application.yml文件，添加如下配置即可，设置所有表名的通用前缀名
+目前数据库的表名定义规则是tbl_模块名称，为了能和实体类相对应，需要做一个配置，相关知识各位小伙伴可以到 MyBatisPlus 课程中去学习，此处仅给出解决方案。配置 application.yml 文件，添加如下配置即可，设置所有表名的通用前缀名
 
 ```yaml
 mybatis-plus:
@@ -3379,17 +3338,17 @@ mybatis-plus:
       table-prefix: tbl_		#设置所有表的通用前缀名称为tbl_
 ```
 
-**总结**
+<b>总结</b>
 
-1. 手工添加MyBatis-Plus对应的starter
-2. 数据层接口使用BaseMapper简化开发
+1. 手工添加 MyBatis-Plus 对应的 starter
+2. 数据层接口使用 BaseMapper 简化开发
 3. 需要使用的第三方技术无法通过勾选确定时，需要手工添加坐标
 
 ## 整合Druid
 
-使用SpringBoot整合了3个技术了，发现套路基本相同，导入对应的starter，然后做配置，各位小伙伴需要一直强化这套思想。下面再整合一个技术，继续深入强化此思想。
+使用 SpringBoot 整合了 3 个技术了，发现套路基本相同，导入对应的 starter，然后做配置，我们需要一直强化这套思想。下面再整合一个技术，继续深入强化此思想。
 
-前面整合MyBatis和MyBatisPlus的时候，使用的数据源对象都是SpringBoot默认的数据源对象，下面我们手工控制一下，自己指定了一个数据源对象，Druid。
+前面整合 MyBatis 和 MyBatisPlus 的时候，使用的数据源对象都是 SpringBoot 默认的数据源对象，下面我们手工控制一下，自己指定了一个数据源对象，Druid。
 
 在没有指定数据源时，我们的配置如下：
 
@@ -3403,7 +3362,7 @@ spring:
     password: root
 ```
 
-此时虽然没有指定数据源，但是根据SpringBoot的德行，肯定帮我们选了一个它认为最好的数据源对象，这就是HiKari。通过启动日志可以查看到对应的身影。
+此时虽然没有指定数据源，但是根据 SpringBoot 的特点，肯定帮我们选了一个它认为最好的数据源对象，这就是 HiKari。通过启动日志可以查看到对应的身影。
 
 ```tex
 2021-11-29 09:39:15.202  INFO 12260 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
@@ -3411,7 +3370,7 @@ spring:
 2021-11-29 09:39:15.551  INFO 12260 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
 ```
 
-上述信息中每一行都有HiKari的身影，如果需要更换数据源，其实只需要两步即可。
+上述信息中每一行都有 HiKari 的身影，如果需要更换数据源，其实只需要两步即可。
 
 1. 导入对应的技术坐标
 
@@ -3419,7 +3378,7 @@ spring:
 
     下面就切换一下数据源对象
 
-**步骤①**：导入对应的坐标（注意，是坐标，此处不是starter）
+<b>步骤①</b>：导入对应的坐标（注意，是坐标，此处不是 starter）
 
 ```XML
 <dependencies>
@@ -3431,7 +3390,7 @@ spring:
 </dependencies>
 ```
 
-**步骤②**：修改配置，在数据源配置中有一个type属性，专用于指定数据源类型
+<b>步骤②</b>：修改配置，在数据源配置中有一个 type 属性，专用于指定数据源类型
 
 ```YAML
 spring:
@@ -3443,9 +3402,9 @@ spring:
     type: com.alibaba.druid.pool.DruidDataSource
 ```
 
-这里其实要提出一个问题的，目前的数据源配置格式是一个通用格式，不管你换什么数据源都可以用这种形式进行配置。但是新的问题又来了，如果对数据源进行个性化的配置，例如配置数据源对应的连接数量，这个时候就有新的问题了。每个数据源技术对应的配置名称都一样吗？肯定不是啊，各个厂商不可能提前商量好都写一样的名字啊，怎么办？就要使用专用的配置格式了。这个时候上面这种通用格式就不能使用了，怎么办？还能怎么办？按照SpringBoot整合其他技术的通用规则来套啊，导入对应的starter，进行相应的配置即可。
+这里其实要提出一个问题的，目前的数据源配置格式是一个通用格式，不管你换什么数据源都可以用这种形式进行配置。但是新的问题又来了，如果对数据源进行个性化的配置，例如配置数据源对应的连接数量，这个时候就有新的问题了。每个数据源技术对应的配置名称都一样吗？肯定不是啊，各个厂商不可能提前商量好都写一样的名字啊，怎么办？就要使用专用的配置格式了。这个时候上面这种通用格式就不能使用了，怎么办？还能怎么办？按照 SpringBoot 整合其他技术的通用规则来套啊，导入对应的 starter，进行相应的配置即可。
 
-**步骤①**：导入对应的starter
+<b>步骤①</b>：导入对应的 starter
 
 ```XML
 <dependencies>
@@ -3457,7 +3416,7 @@ spring:
 </dependencies>
 ```
 
-**步骤②**：修改配置
+<b>步骤②</b>：修改配置
 
 ```YAML
 spring:
@@ -3469,7 +3428,7 @@ spring:
       password: root
 ```
 
-注意观察，配置项中，在datasource下面并不是直接配置url这些属性的，而是先配置了一个druid节点，然后再配置的url这些东西。言外之意，url这个属性是druid下面的属性，那你能想到什么？除了这4个常规配置外，还有druid专用的其他配置。通过提示功能可以打开druid相关的配置查阅
+注意观察，配置项中，在 datasource 下面并不是直接配置 url 这些属性的，而是先配置了一个 druid 节点，然后再配置的 url 这些东西。言外之意，url 这个属性是 druid 下面的属性，那你能想到什么？除了这4个常规配置外，还有 druid 专用的其他配置。通过提示功能可以打开 druid 相关的配置查阅
 
 <div align="center"><img src="img/boot/image-20211129112610729.png" alt="image-20211129112610729" style="zoom:80%;" /></div>
 
@@ -3477,7 +3436,7 @@ spring:
 
 这是我们做的第4个技术的整合方案，还是那两句话：<font color="#ff0000"><b>导入对应starter，使用对应配置</b></font>。没了，SpringBoot整合其他技术就这么简单粗暴。
 
-**总结**
+<b>总结<b>
 
 1. 整合Druid需要导入Druid对应的starter
 2. 根据Druid提供的配置方式进行配置
@@ -3489,25 +3448,25 @@ spring:
 
 将所有知识贯穿起来，同时做一个小功能，体会一下。案例的最终效果
 
-**主页面**
+<b>主页面<b>
 
 <div align="center"><img src="img/boot/image-20211129113447844.png"></div>
 
-**添加**
+<b>添加<b>
 
 <div align="center"><img src="img/boot/image-20211129113522459.png"></div>
 
-**删除**
+<b>删除<b>
 
 <div align="center"><img src="img/boot/image-20211129113550829.png"></div>
 
-**修改**
+<b>修改<b>
 
-**分页**
+<b>分页<b>
 
 <div align="center"><img src="img/boot/image-20211129113628969.png"></div>
 
-**条件查询**
+<b>条件查询<b>
 
 <div align="center"><img src="img/boot/image-20211129113650369.png"></div>
 
@@ -3544,7 +3503,7 @@ spring:
 
 ​		下面我们创建一个新的模块，加载要使用的技术对应的starter，修改配置文件格式为yml格式，并把web访问端口先设置成80。
 
-**pom.xml**
+<b>pom.xml<b>
 
 ```XML
 <dependencies>
@@ -3560,7 +3519,7 @@ spring:
 </dependencies>
 ```
 
-**application.yml**
+<b>application.yml<b>
 
 ```yaml
 server:
@@ -3603,7 +3562,7 @@ INSERT INTO `tbl_book` VALUES (12, '市场营销', '直播带货：淘宝、天�
 
 根据上述表结构，制作对应的实体类
 
-**实体类**
+<b>实体类<b>
 
 ```JAVA
 public class Book {
@@ -3643,7 +3602,7 @@ public class Book {
 
 到这里实体类就做好了，是不是比不使用lombok简化好多，这种工具在Java开发中还有N多，后面遇到了能用的实用开发技术时，在不增加各位小伙伴大量的学习时间的情况下，尽量多给大家介绍一些。
 
-**总结**
+<b>总结<b>
 
 1. 实体类制作
 2. 使用lombok简化开发
@@ -3656,7 +3615,7 @@ public class Book {
 
 数据层开发本次使用MyBatisPlus技术，数据源使用前面学习的Druid，学都学了都用上。
 
-**步骤①**：导入MyBatisPlus与Druid对应的starter，当然mysql的驱动不能少
+<b>步骤①<b>：导入MyBatisPlus与Druid对应的starter，当然mysql的驱动不能少
 
 ```xml
 <dependencies>
@@ -3678,7 +3637,7 @@ public class Book {
 </dependencies>
 ```
 
-**步骤②**：配置数据库连接相关的数据源配置
+<b>步骤②<b>：配置数据库连接相关的数据源配置
 
 ```YAML
 server:
@@ -3693,7 +3652,7 @@ spring:
       password: root
 ```
 
-**步骤③**：使用MyBatisPlus的标准通用接口BaseMapper加速开发，别忘了@Mapper和泛型的指定
+<b>步骤③<b>：使用MyBatisPlus的标准通用接口BaseMapper加速开发，别忘了@Mapper和泛型的指定
 
 ```JAVA
 @Mapper
@@ -3701,7 +3660,7 @@ public interface BookDao extends BaseMapper<Book> {
 }
 ```
 
-**步骤④**：制作测试类测试结果，这个测试类制作是个好习惯，不过在企业开发中往往都为加速开发跳过此步，且行且珍惜吧
+<b>步骤④<b>：制作测试类测试结果，这个测试类制作是个好习惯，不过在企业开发中往往都为加速开发跳过此步，且行且珍惜吧
 
 ```JAVA
 package com.itheima.dao;
@@ -3831,7 +3790,7 @@ JDBC Connection [com.mysql.cj.jdbc.ConnectionImpl@6ca30b8a] will not be managed 
 
 
 
-**总结**
+<b>总结<b>
 
 1. 手工导入starter坐标（2个），mysql驱动（1个）
 
@@ -3903,7 +3862,7 @@ void testGetPage(){
 
 基础操作中有查询全部的功能，而在这个基础上只需要升级一下（PLUS）就可以得到分页操作。所以MyBatisPlus将分页操作做成了一个开关，你用分页功能就把开关开启，不用就不需要开启这个开关。而我们现在没有开启这个开关，所以分页操作是没有的。这个开关是通过MyBatisPlus的拦截器的形式存在的，其中的原理这里不分析了，有兴趣的小伙伴可以学习MyBatisPlus这门课程进行详细解读。具体设置方式如下：
 
-**定义MyBatisPlus拦截器并将其设置为Spring管控的bean**
+<b>定义MyBatisPlus拦截器并将其设置为Spring管控的bean<b>
 
 ```JAVA
 @Configuration
@@ -3919,7 +3878,7 @@ public class MPConfig {
 
 上述代码第一行是创建MyBatisPlus的拦截器栈，这个时候拦截器栈中没有具体的拦截器，第二行是初始化了分页拦截器，并添加到拦截器栈中。如果后期开发其他功能，需要添加全新的拦截器，按照第二行的格式继续add进去新的拦截器就可以了。
 
-**总结**
+<b>总结<b>
 
 1. 使用IPage封装分页数据
 2. 分页操作依赖MyBatisPlus分页拦截器实现功能
@@ -3971,7 +3930,7 @@ void testGetBy2(){
 
 其实就是个格式，没有区别。关于MyBatisPlus的基础操作就说到这里吧，如果这一块知识不太熟悉的小伙伴建议还是完整的学习一下MyBatisPlus的知识吧，这里只是蜻蜓点水的用了几个操作而已。
 
-**总结**
+<b>总结<b>
 
 1. 使用QueryWrapper对象封装查询条件
 
@@ -4120,7 +4079,7 @@ public class BookServiceTest {
 }
 ```
 
-**总结**
+<b>总结<b>
 
 1. Service接口名称定义成业务名称，并与Dao接口名称进行区分
 2. 制作测试类测试Service功能是否有效
@@ -4150,7 +4109,7 @@ public class BookServiceImpl extends ServiceImpl<BookDao, Book> implements IBook
 
 如果感觉 MyBatisPlus 提供的功能不足以支撑你的使用需要（其实是一定不能支撑的，因为需求不可能是通用的），在原始接口基础上接着定义新的API接口就行了，此处不再说太多了，就是自定义自己的操作了，但是不要和已有的API接口名冲突即可。
 
-**总结**
+<b>总结<b>
 
 1. 使用通用接口（ISerivce<T>）快速开发Service
 2. 使用通用实现类（ServiceImpl<M,T>）快速开发ServiceImpl
@@ -4205,19 +4164,19 @@ public class BookController2 {
 
 在使用Postman测试时关注提交类型，对应上即可，不然就会报405的错误码了。
 
-**普通GET请求**
+<b>普通GET请求<b>
 
 <div align="center"><img src="img/boot/image-20211129152237371.png"></div>
 
-**PUT请求传递json数据，后台实用@RequestBody接收数据**
+<b>PUT请求传递json数据，后台实用@RequestBody接收数据<b>
 
 <div align="center"><img src="img/boot/image-20211129152300177.png"></div>
 
-**GET请求传递路径变量，后台实用@PathVariable接收数据**
+<b>GET请求传递路径变量，后台实用@PathVariable接收数据<b>
 
 <div align="center"><img src="img/boot/image-20211129152320073.png"></div>
 
-**总结**
+<b>总结<b>
 
 1. 基于Restful制作表现层接口
     - 新增：POST
@@ -4234,13 +4193,13 @@ public class BookController2 {
 
 目前我们通过Postman测试后业务层接口功能是通的，但是这样的结果给到前端开发者会出现一个小问题。不同的操作结果所展示的数据格式差异化严重。
 
-**增删改操作结果**
+<b>增删改操作结果<b>
 
 ```tex
 true
 ```
 
-**查询单个数据操作结果**
+<b>查询单个数据操作结果<b>
 
 ```json
 {
@@ -4251,7 +4210,7 @@ true
 }
 ```
 
-**查询全部数据操作结果**
+<b>查询全部数据操作结果<b>
 
 ```json
 [
@@ -4270,7 +4229,7 @@ true
 ]
 ```
 
-每种不同操作返回的数据格式都不一样，而且还不知道以后还会有什么格式，这样的结果让前端人员看了是很容易让人崩溃的，必须将所有操作的操作结果数据格式统一起来，需要设计表现层返回结果的模型类，用于后端与前端进行数据格式统一，也称为**前后端数据协议**
+每种不同操作返回的数据格式都不一样，而且还不知道以后还会有什么格式，这样的结果让前端人员看了是很容易让人崩溃的，必须将所有操作的操作结果数据格式统一起来，需要设计表现层返回结果的模型类，用于后端与前端进行数据格式统一，也称为<b>前后端数据协议<b>
 
 ```JAVA
 @Data
@@ -4304,7 +4263,7 @@ public class R {
 
 ​		结果这么一折腾，全格式统一，现在后端发送给前端的数据格式就统一了，免去了不少前端解析数据的烦恼。
 
-**总结**
+<b>总结<b>
 
 1. 设计统一的返回值结果类型便于前端开发读取数据
 
@@ -4335,7 +4294,7 @@ getAll() {
 
 ​		只要后台代码能够正常工作，前端能够在日志中接收到数据，就证明前后端是通的，也就可以进行下一步的功能开发了。
 
-**总结**
+<b>总结<b>
 
 1. 单体项目中页面放置在resources/static目录下
 2. created钩子函数用于初始化页面时发起调用
@@ -4347,7 +4306,7 @@ getAll() {
 
 ​		列表功能主要操作就是加载完数据，将数据展示到页面上，此处要利用VUE的数据模型绑定，发送请求得到数据，然后页面上读取指定数据即可。
 
-​		**页面数据模型定义**
+​		<b>页面数据模型定义<b>
 
 ```js
 data:{
@@ -4369,13 +4328,13 @@ getAll() {
 
 ​		这样在页面加载时就可以获取到数据，并且由VUE将数据展示到页面上了。
 
-**总结**：将查询数据返回到页面，利用前端数据绑定进行数据展示
+<b>总结<b>：将查询数据返回到页面，利用前端数据绑定进行数据展示
 
 ##### 	F-2.添加功能
 
 ​		添加功能用于收集数据的表单是通过一个弹窗展示的，因此在添加操作前首先要进行弹窗的展示，添加后隐藏弹窗即可。因为这个弹窗一直存在，因此当页面加载时首先设置这个弹窗为不可显示状态，需要展示，切换状态即可。
 
-​		**默认状态**
+​		<b>默认状态<b>
 
 ```js
 data:{
@@ -4384,7 +4343,7 @@ data:{
 },
 ```
 
-​		**切换为显示状态**
+​		<b>切换为显示状态<b>
 
 ```JS
 //弹出添加窗口
@@ -4395,7 +4354,7 @@ handleCreate() {
 
 ​		由于每次添加数据都是使用同一个弹窗录入数据，所以每次操作的痕迹将在下一次操作时展示出来，需要在每次操作之前清理掉上次操作的痕迹。
 
-​		**定义清理数据操作**
+​		<b>定义清理数据操作<b>
 
 ```js
 //重置表单
@@ -4404,7 +4363,7 @@ resetForm() {
 },
 ```
 
-​		**切换弹窗状态时清理数据**
+​		<b>切换弹窗状态时清理数据<b>
 
 ```js
 //弹出添加窗口
@@ -4416,7 +4375,7 @@ handleCreate() {
 
 ​		至此准备工作完成，下面就要调用后台完成添加操作了。
 
-​		**添加操作**
+​		<b>添加操作<b>
 
 ```js
 //添加
@@ -4442,7 +4401,7 @@ handleAdd () {
     - 如果是false保留添加窗口，显示添加失败的消息
 3. 无论添加是否成功，页面均进行刷新，动态加载数据（对getAll操作发起调用）
 
-​		**取消添加操作**
+​		<b>取消添加操作<b>
 
 ```JS
 //取消
@@ -4452,7 +4411,7 @@ cancel(){
 },
 ```
 
-**总结**
+<b>总结<b>
 
 1. 请求方式使用POST调用后台对应操作
 2. 添加操作结束后动态刷新页面加载数据
@@ -4463,7 +4422,7 @@ cancel(){
 
 ​		模仿添加操作制作删除功能，差别之处在于删除操作仅传递一个待删除的数据id到后台即可。
 
-​		**删除操作**
+​		<b>删除操作<b>
 
 ```JS
 // 删除
@@ -4480,7 +4439,7 @@ handleDelete(row) {
 },
 ```
 
-​		**删除操作提示信息**
+​		<b>删除操作提示信息<b>
 
 ```JS
 // 删除
@@ -4506,7 +4465,7 @@ handleDelete(row) {
 }，	
 ```
 
-**总结**
+<b>总结<b>
 
 1. 请求方式使用Delete调用后台对应操作
 2. 删除操作需要传递当前行数据对应的id值到后台
@@ -4530,7 +4489,7 @@ handleDelete(row) {
 
     所以整体上来看，修改功能就是前面几个功能的大合体
 
-    **查询并展示数据**
+    <b>查询并展示数据<b>
 
 ```JS
 //弹出编辑窗口
@@ -4547,7 +4506,7 @@ handleUpdate(row) {
 },
 ```
 
-​		**修改操作**
+​		<b>修改操作<b>
 
 ```JS
 //修改
@@ -4566,7 +4525,7 @@ handleEdit() {
 },
 ```
 
-**总结**
+<b>总结<b>
 
 1. 加载要修改数据通过传递当前行数据对应的id值到后台查询数据（同删除与查询全部）
 2. 利用前端双向数据绑定将查询到的数据进行回显（同查询全部）
@@ -4660,7 +4619,7 @@ handleAdd () {
 },
 ```
 
-**总结**
+<b>总结<b>
 
 1. 使用注解@RestControllerAdvice定义SpringMVC异常处理器用来处理异常的
 2. 异常处理器必须被扫描加载，否则无法生效
@@ -4741,7 +4700,7 @@ handleCurrentChange(currentPage) {
 },
 ```
 
-**总结**
+<b>总结<b>
 
 1. 使用el分页组件
 2. 定义分页组件绑定的数据模型
@@ -4780,7 +4739,7 @@ public R getPage(@PathVariable int currentPage,@PathVariable int pageSize){
 
     页面发送请求时，两个分页数据仍然使用路径变量，其他条件采用动态拼装url参数的形式传递。
 
-    **页面封装查询条件字段**
+    <b>页面封装查询条件字段<b>
 
     ```vue
     pagination: {		
@@ -4872,7 +4831,7 @@ public R getPage(@PathVariable int currentPage,@PathVariable int pageSize){
     },
     ```
 
-**总结**
+<b>总结<b>
 
 1. 定义查询条件数据模型（当前封装到分页数据模型中）
 2. 异步调用分页功能并通过请求参数传递数据到后台
@@ -4899,7 +4858,7 @@ public R getPage(@PathVariable int currentPage,@PathVariable int pageSize){
 
 打包是指将程序转换成一个可执行的文件，所谓运行指不依赖开发环境执行打包产生的文件。上述两个操作都有对应的命令可以快速执行。
 
-### **程序打包**
+### <b>程序打包<b>
 
 SpringBoot程序是基于Maven创建的，在Maven中提供有打包的指令，叫做package。本操作可以在Idea环境下执行。
 
@@ -4909,7 +4868,7 @@ mvn package
 
 打包后会产生一个与工程名类似的jar文件，其名称是由模块名+版本号+.jar组成的。
 
-### **程序运行**
+### <b>程序运行<b>
 
 程序包打好以后，就可以直接执行了。在程序包所在路径下，执行指令。
 
@@ -4934,7 +4893,7 @@ java -jar 工程包名.jar
 </build>
 ```
 
-**总结**
+<b>总结<b>
 
 1. SpringBoot工程可以基于java环境下独立运行jar文件启动服务
 2. SpringBoot工程执行mvn命令package进行打包
@@ -5032,7 +4991,7 @@ SpringBoot打出来了包为了能够独立运行，将所有需要使用的资�
 
 上述内容搞清楚对我们编程意义并不大，但是对各位小伙伴理清楚SpringBoot工程独立运行的机制是有帮助的。其实整体过程主要是带着大家分析，如果以后遇到了类似的问题，多给自己提问，多问一个为什么，兴趣自己就可以独立解决问题了。
 
-**总结**：spring-boot-maven-plugin插件用于将当前程序打包成一个可以独立运行的程序包
+<b>总结<b>：spring-boot-maven-plugin插件用于将当前程序打包成一个可以独立运行的程序包
 
 ### 命令行启动常见问题及解决方案
 
@@ -5079,19 +5038,19 @@ java –jar springboot.jar –-server.port=80
 java –jar springboot.jar –-server.port=80 --logging.level.root=debug
 ```
 
-#### **属性加载优先级**
+#### <b>属性加载优先级<b>
 
 现在我们的程序配置受两个地方控制了，第一配置文件，第二临时属性。并且我们发现临时属性的加载优先级要高于配置文件的。那是否还有其他的配置方式呢？其实是有的，而且还不少，打开官方文档中对应的内容，就可以查看配置读取的优先顺序。地址奉上：[https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-external-config](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html)
 
 <div align="center"><img src="img/boot/image-20211206100859236.png" alt="image-20211206100859236" style="zoom:67%;" /></div>
 
-我们可以看到，居然有14种配置的位置，而我们现在使用的是这里面的2个。第3条Config data说的就是使用配置文件，第11条Command line arguments说的就是使用命令行临时参数。而这14种配置的顺序就是SpringBoot加载配置的顺序，言外之意，命令行临时属性比配置文件的加载优先级高，所以这个列表**上面的优先级低，下面的优先级高**。其实这个东西不用背的，你就记得一点，你最终要什么效果，你自己是知道的，不管这个顺序是怎么个高低排序，开发时一定要配置成你要的顺序为准。这个顺序只是在你想不明白问题的时候帮助你分析罢了。
+我们可以看到，居然有14种配置的位置，而我们现在使用的是这里面的2个。第3条Config data说的就是使用配置文件，第11条Command line arguments说的就是使用命令行临时参数。而这14种配置的顺序就是SpringBoot加载配置的顺序，言外之意，命令行临时属性比配置文件的加载优先级高，所以这个列表<b>上面的优先级低，下面的优先级高<b>。其实这个东西不用背的，你就记得一点，你最终要什么效果，你自己是知道的，不管这个顺序是怎么个高低排序，开发时一定要配置成你要的顺序为准。这个顺序只是在你想不明白问题的时候帮助你分析罢了。
 
 比如你现在加载了一个user.name属性。结果你发现出来的结果和你想的不一样，那肯定是别的优先级比你高的属性覆盖你的配置属性了，那你就可以看着这个顺序挨个排查。哪个位置有可能覆盖了你的属性。
 
 在yaml中配置了user.name属性值，然后读取出来的时候居然不是自己的配置值，因为在系统属性中有一个属性叫做user.name，两个相互冲突了。而系统属性的加载优先顺序在上面这个列表中是5号，高于3号，所以SpringBoot最终会加载系统配置属性user.name。
 
-**总结**
+<b>总结<b>
 
 1. 使用jar命令启动SpringBoot工程时可以使用临时属性替换配置文件中的属性
 2. 临时属性添加方式：java –jar 工程名.jar –-属性名=值
@@ -5139,9 +5098,9 @@ public static void main(String[] args) {
 }
 ```
 
-**总结**：启动SpringBoot程序时，可以选择是否使用命令行属性为SpringBoot程序传递启动属性
+<b>总结<b>：启动SpringBoot程序时，可以选择是否使用命令行属性为SpringBoot程序传递启动属性
 
-**思考**：现在使用临时属性可以在启动项目前临时更改配置了，如果需要变更的属性偏多，如何处理？
+<b>思考<b>：现在使用临时属性可以在启动项目前临时更改配置了，如果需要变更的属性偏多，如何处理？
 
 ### 配置文件分类
 
@@ -5154,10 +5113,10 @@ SpringBoot提供了配置文件和临时属性的方式来对程序进行配置�
 
 其实上述4种文件是提供给你了4种配置文件书写的位置，功能都是一样的，都是做配置的，就是优先级顺序不一样。上面4个文件的加载优先顺序为
 
-- 1、file ：config/application.yml **【最高】**
+- 1、file ：config/application.yml <b>【最高】<b>
 - 2、file ：application.yml
 - 3、classpath：config/application.yml
-- 4、classpath：application.yml  **【最低】**
+- 4、classpath：application.yml  <b>【最低】<b>
 
 那为什么设计这种多种呢？说一个最典型的应用吧。
 
@@ -5167,7 +5126,7 @@ SpringBoot提供了配置文件和临时属性的方式来对程序进行配置�
 
 解决方案很简单，用上面的3这个级别的配置文件就可以快速解决这个问题，再写一个配置就行了。两个配置文件共存，因为config目录中的配置加载优先级比你的高，所以配置项如果和级别4里面的内容相同就覆盖了。级别1和2什么时候使用呢？程序打包以后就要用这个级别了，管你程序里面配置写的是什么？我的级别高，可以轻松覆盖你，就不用考虑这些配置冲突的问题了。
 
-**总结**
+<b>总结<b>
 
 配置文件分为4种
 
@@ -5185,11 +5144,11 @@ SpringBoot提供了配置文件和临时属性的方式来对程序进行配置�
 
 自定义配置文件方式有如下两种：
 
-**方式一：使用临时属性设置配置文件名，注意仅仅是名称，不要带扩展名**
+<b>方式一：使用临时属性设置配置文件名，注意仅仅是名称，不要带扩展名<b>
 
 <div align="center"><img src="img/boot/image-20211206105548238.png" alt="image-20211206105548238"/></div>
 
-**方式二：使用临时属性设置配置文件路径，这个是全路径名**
+<b>方式二：使用临时属性设置配置文件路径，这个是全路径名<b>
 
 <div align="center"><img src="img/boot/image-20211206105716450.png" alt="image-20211206105716450"/></div>
 
@@ -5201,7 +5160,7 @@ SpringBoot提供了配置文件和临时属性的方式来对程序进行配置�
 
 <font color="#f0f"><b>温馨提示</b></font>：我们现在研究的都是SpringBoot单体项目，就是单服务器版本。其实企业开发现在更多的是使用基于SpringCloud技术的多服务器项目。这种配置方式和我们现在学习的完全不一样，所有的服务器将不再设置自己的配置文件，而是通过配置中心获取配置，动态加载配置信息。集中管理更为方便。
 
-**总结**
+<b>总结<b>
 
 1. 配置文件可以修改名称，通过启动参数设定
 2. 配置文件可以修改路径，通过启动参数设定
@@ -5296,7 +5255,7 @@ spring:
         	on-profile: pro
 ```
 
-**总结**
+<b>总结<b>
 
 1. 多环境开发需要设置若干种常用环境，例如开发、生产、测试环境
 2. yaml格式中设置多环境使用---区分环境设置边界
@@ -5307,7 +5266,7 @@ spring:
 
 将所有的配置都放在一个配置文件中，尤其是每一个配置应用场景都不一样，这显然不合理，于是就有了将一个配置文件拆分成多个配置文件的想法。拆分后，每个配置文件中写自己的配置，主配置文件中写清楚用哪一个配置文件就好了。
 
-**主配置文件**
+<b>主配置文件<b>
 
 ```yaml
 spring:
@@ -5315,7 +5274,7 @@ spring:
 		active: pro		# 启动pro(active: pro 选择的配置文件的名称是 application-pro.yml)
 ```
 
-**环境配置文件**
+<b>环境配置文件<b>
 
 ```yaml
 server:
@@ -5324,14 +5283,14 @@ server:
 
 环境配置文件因为每一个都是配置自己的项，所以连名字都不用写里面了。那问题是如何区分这是哪一组配置呢？使用文件名区分。
 
-**application-pro.yaml**
+<b>application-pro.yaml<b>
 
 ```yaml
 server:
 	port: 80
 ```
 
-**application-dev.yaml**
+<b>application-dev.yaml<b>
 
 ```yaml
 server:
@@ -5345,7 +5304,7 @@ server:
 - 主配置文件中设置公共配置（全局）
 - 环境分类配置文件中常用于设置冲突属性（局部）
 
-**总结**
+<b>总结<b>
 
 1. 可以使用独立配置文件定义环境属性
 
@@ -5356,21 +5315,21 @@ server:
 
 SpringBoot最早期提供的配置文件格式是properties格式的，这种格式的多环境配置也了解一下吧。
 
-**主配置文件**
+<b>主配置文件<b>
 
 ```properties
 spring.profiles.active=pro
 ```
 
-**环境配置文件**
+<b>环境配置文件<b>
 
-**application-pro.properties**
+<b>application-pro.properties<b>
 
 ```properties
 server.port=80
 ```
 
-**application-dev.properties**
+<b>application-dev.properties<b>
 
 ```properties
 server.port=81
@@ -5378,19 +5337,19 @@ server.port=81
 
 文件的命名规则为：application-环境名.properties。
 
-**总结**：properties文件多环境配置仅支持多文件格式
+<b>总结<b>：properties文件多环境配置仅支持多文件格式
 
 ### 多环境开发独立配置文件书写技巧
 
 作为程序员在搞配置的时候往往处于一种分久必合合久必分的局面。开始先写一起，后来为了方便维护就拆分。对于多环境开发也是如此，下面给大家说一下如何基于多环境开发做配置独立管理，务必掌握。
 
-**准备工作**：将所有的配置根据功能对配置文件中的信息进行拆分，并制作成独立的配置文件，命名规则如下
+<b>准备工作<b>：将所有的配置根据功能对配置文件中的信息进行拆分，并制作成独立的配置文件，命名规则如下
 
 - application-devDB.yml
 - application-devRedis.yml
 - application-devMVC.yml
 
-**使用**：使用include属性在激活指定环境的情况下，同时对多个环境进行加载使其生效，多个环境间使用逗号分隔
+<b>使用<b>：使用include属性在激活指定环境的情况下，同时对多个环境进行加载使其生效，多个环境间使用逗号分隔
 
 ```yaml
 spring:
@@ -5401,9 +5360,9 @@ spring:
 
 比较一下，现在相当于加载dev配置时，再加载对应的3组配置，从结构上就很清晰，用了什么，对应的名称是什么
 
-**注意**：当主环境dev与其他环境有相同属性时，主环境属性生效；其他环境中有相同属性时，最后加载的环境属性生效
+<b>注意<b>：当主环境dev与其他环境有相同属性时，主环境属性生效；其他环境中有相同属性时，最后加载的环境属性生效
 
-**改良**：但是上面的设置也有一个问题，比如我要切换dev环境为pro时，include也要修改。因为include属性只能使用一次，这就比较麻烦了。SpringBoot从2.4版开始使用group属性替代include属性，降低了配置书写量。简单说就是我先写好，你爱用哪个用哪个。
+<b>改良<b>：但是上面的设置也有一个问题，比如我要切换dev环境为pro时，include也要修改。因为include属性只能使用一次，这就比较麻烦了。SpringBoot从2.4版开始使用group属性替代include属性，降低了配置书写量。简单说就是我先写好，你爱用哪个用哪个。
 
 ```yaml
 spring:
@@ -5417,7 +5376,7 @@ spring:
 
 现在再来看，如果切换dev到pro，只需要改一下是不是就结束了？完美！
 
-**总结**：<span style="color:red">**多环境开发使用group属性设置配置文件分组，便于线上维护管理**</span>
+<b>总结<b>：<span style="color:red"><b>多环境开发使用group属性设置配置文件分组，便于线上维护管理<b></span>
 
 ### 多环境开发控制
 
@@ -5430,7 +5389,7 @@ maven是做什么的？项目构建管理的，最终生成代码包的，Spring
 - 先在 maven 环境中设置用什么具体的环境
 - 在 SpringBoot 中读取 maven 设置的环境即可
 
-**maven中设置多环境（使用属性方式区分环境）**
+<b>maven中设置多环境（使用属性方式区分环境）<b>
 
 ```xml
 <profiles>
@@ -5452,7 +5411,7 @@ maven是做什么的？项目构建管理的，最终生成代码包的，Spring
 </profiles>
 ```
 
-**SpringBoot中读取maven设置值**
+<b>SpringBoot中读取maven设置值<b>
 
 ```yaml
 spring:
@@ -5462,7 +5421,7 @@ spring:
 
 上面的@属性名@就是读取maven中配置的属性值的语法格式。
 
-**总结**
+<b>总结<b>
 
 1. 当Maven与SpringBoot同时对多环境进行控制时，以Mavn为主，SpringBoot使用@..@占位符读取Maven对应的配置属性值
 2. 基于SpringBoot读取Maven配置属性的前提下，如果在Idea下测试工程时pom.xml每次更新需要手动compile方可生效
@@ -5480,7 +5439,7 @@ spring:
 
 日志的使用格式非常固定，直接上操作步骤：
 
-**步骤①**：添加日志记录操作
+<b>步骤①<b>：添加日志记录操作
 
 ```JAVA
 @RestController
@@ -5501,7 +5460,7 @@ public class BookController extends BaseClass{
 
 上述代码中log对象就是用来记录日志的对象，下面的log.debug，log.info这些操作就是写日志的API了。
 
-**步骤②**：设置日志输出级别
+<b>步骤②<b>：设置日志输出级别
 
 日志设置好以后可以根据设置选择哪些参与记录。这里是根据日志的级别来设置的。日志的级别分为6种，分别是：
 
@@ -5534,7 +5493,7 @@ logging:
 
 还可以再设置更细粒度的控制
 
-**步骤③**：<span style="color:red">**设置日志组，控制指定包对应的日志输出级别，也可以直接控制指定包对应的日志输出级别，推荐使用**</span>
+<b>步骤③<b>：<span style="color:red"><b>设置日志组，控制指定包对应的日志输出级别，也可以直接控制指定包对应的日志输出级别，推荐使用<b></span>
 
 ```yaml
 logging:
@@ -5554,7 +5513,7 @@ logging:
 
 说白了就是总体设置一下，每个包设置一下，如果感觉设置的麻烦，就先把包分个组，对组设置，没了，就这些。
 
-**总结**
+<b>总结<b>
 
 1. 日志用于记录开发调试与运维过程消息
 2. 日志的级别共6种，通常使用4种即可，分别是DEBUG，INFO,WARN,ERROR
@@ -5583,7 +5542,7 @@ public class BookController extends BaseClass{
 }
 ```
 
-**总结**：基于lombok提供的 `@Slf4j` 注解为类快速添加日志对象
+<b>总结<b>：基于lombok提供的 `@Slf4j` 注解为类快速添加日志对象
 
 ### 日志输出格式控制
 
@@ -5602,7 +5561,7 @@ logging:
     	console: "%d %clr(%p) --- [%16t] %clr(%-40.40c){cyan} : %m %n"
 ```
 
-**总结**：日志输出格式设置规则 `%d:日期`；`%m:消息`；`%n:换行`；`%clr:彩色`；`[%16t]:线程，占16位`；`%c:类名，-40是左对齐，.40是控制内容的截取`；`{cyan}:青色`
+<b>总结<b>：日志输出格式设置规则 `%d:日期`；`%m:消息`；`%n:换行`；`%clr:彩色`；`[%16t]:线程，占16位`；`%c:类名，-40是左对齐，.40是控制内容的截取`；`{cyan}:青色`
 
 ### 日志文件
 
@@ -5630,7 +5589,7 @@ logging:
 
 以上格式是基于logback日志技术设置每日日志文件的设置格式，要求容量到达3KB以后就转存信息到第二个文件中。文件命名规则中的%d标识日期，%i是一个递增变量，用于区分日志文件。
 
-**总结**：日志记录到文件、日志文件格式设置
+<b>总结<b>：日志记录到文件、日志文件格式设置
 
 # 开发实用篇
 
@@ -5647,15 +5606,15 @@ logging:
 
 热部署的功能是如何实现的呢？这就要分两种情况来说了，非 springboot 工程和springboot 工程的热部署实现方式完全不一样。先说一下原始的非 springboot 项目是如何实现热部署的。
 
-**非springboot项目热部署实现原理**
+<b>非springboot项目热部署实现原理<b>
 
-开发非 springboot 项目时，我们要制作一个 web 工程并通过 tomcat 启动，通常需要先安装 tomcat 服务器到磁盘中，开发的程序配置发布到安装的 tomcat 服务器上。如果想实现热部署的效果，这种情况其实有两种做法，一种是在 tomcat 服务器的配置文件中进行配置，这种做法与你使用什么 IDE 工具无关，不管你使用 eclipse 还是 idea 都行。还有一种做法是通过 IDE 工具进行配置，比如在 idea 工具中进行设置，这种形式需要依赖 IDE 工具，每款 IDE 工具不同，对应的配置也不太一样。**但是核心思想是一样的，就是使用服务器去监控其中加载的应用，发现产生了变化就重新加载一次。**
+开发非 springboot 项目时，我们要制作一个 web 工程并通过 tomcat 启动，通常需要先安装 tomcat 服务器到磁盘中，开发的程序配置发布到安装的 tomcat 服务器上。如果想实现热部署的效果，这种情况其实有两种做法，一种是在 tomcat 服务器的配置文件中进行配置，这种做法与你使用什么 IDE 工具无关，不管你使用 eclipse 还是 idea 都行。还有一种做法是通过 IDE 工具进行配置，比如在 idea 工具中进行设置，这种形式需要依赖 IDE 工具，每款 IDE 工具不同，对应的配置也不太一样。<b>但是核心思想是一样的，就是使用服务器去监控其中加载的应用，发现产生了变化就重新加载一次。<b>
 
 上面所说的非 springboot 项目实现热部署看上去是一个非常简单的过程，几乎每个小伙伴都能自己写出来。如果你不会写，我给你个最简单的思路，但是实际设计要比这复杂一些。例如启动一个定时任务，任务启动时记录每个文件的大小，以后每5秒比对一下每个文件的大小是否有改变，或者是否有新文件。如果没有改变，放行，如果有改变，刷新当前记录的文件信息，然后重新启动服务器，这就可以实现热部署了。当然，这个过程肯定不能这么做，比如我把一个打印输出的字符串 "abc" 改成 "cba"，比对大小是没有变化的，但是内容缺实变了，所以这么做肯定不行，只是给大家打个比方，而且重启服务器这就是冷启动了，不能算热部署，领会精神吧。
 
 看上去这个过程也没多复杂，在 springboot 项目中难道还有其他的弯弯绕吗？还真有。
 
-**springboot项目热部署实现原理**
+<b>springboot项目热部署实现原理<b>
 
 基于 springboot 开发的 web 工程其实有一个显著的特征，就是tomcat服务器内置了，还记得内嵌服务器吗？服务器是以一个对象的形式在 spring 容器中运行的。本来我们期望于 tomcat 服务器加载程序后由 tomcat 服务器盯着程序，你变化后我就重新启动重新加载，但是现在 tomcat 和我们的程序是平级的了，都是 spring 容器中的组件，这下就麻烦了，缺乏了一个直接的管理权，那该怎么做呢？简单，再搞一个程序X在 spring 容器中盯着你原始开发的程序A不就行了吗？确实，搞一个盯着程序A的程序X就行了，如果你自己开发的程序A变化了，那么程序X就命令 tomcat 容器重新加载程序A就OK了。并且这样做有一个好处，spring 容器中东西不用全部重新加载一遍，只需要重新加载你开发的程序那一部分就可以了，这下效率又高了，挺好。
 
@@ -5663,7 +5622,7 @@ logging:
 
 ### 手动启动热部署
 
-**步骤①**：导入开发者工具对应的坐标
+<b>步骤①<b>：导入开发者工具对应的坐标
 
 ```XML
 <dependency>
@@ -5673,13 +5632,13 @@ logging:
 </dependency>
 ```
 
-**步骤②**：构建项目，可以使用快捷键激活此功能
+<b>步骤②<b>：构建项目，可以使用快捷键激活此功能
 
 <div align="center"><img src="img/image-20220222121257218.png"></div>
 
 对应的快捷键一定要记得 `<CTR>L+<F9>`，以上过程就实现了springboot工程的热部署。底层的工作过程如下。
 
-**重启与重载**
+<b>重启与重载<b>
 
 一个springboot项目在运行时实际上是分两个过程进行的，根据加载的东西不同，划分成base类加载器与restart类加载器。
 
@@ -5688,12 +5647,12 @@ logging:
 
 当springboot项目启动时，base类加载器执行，加载jar包中的信息后，restart类加载器执行，加载开发者制作的内容。当执行构建项目后，由于jar中的信息不会变化，因此base类加载器无需再次执行，所以仅仅运行restart类加载即可，也就是将开发者自己制作的内容重新加载就行了，这就完成了一次热部署的过程，也可以说热部署的过程实际上是重新加载restart类加载器中的信息。
 
-**总结**
+<b>总结<b>
 
 1. 使用开发者工具可以为当前项目开启热部署功能
 2. 使用构建项目操作对工程进行热部署
 
-**思考**
+<b>思考<b>
 
 上述过程每次进行热部署都需要开发者手工操作，不管是点击按钮还是快捷键都需要开发者手工执行。这种操作的应用场景主要是在开发调试期，并且调试的代码处于不同的文件中，比如服务器启动了，我需要改4个文件中的内容，然后重启，等4个文件都改完了再执行热部署，使用一个快捷键就OK了。但是如果现在开发者要修改的内容就只有一个文件中的少量代码，这个时候代码修改完毕如果能够让程序自己执行热部署功能，就可以减少开发者的操作，也就是自动进行热部署，能这么做吗？是可以的。咱们下一节再说。
 
@@ -5701,7 +5660,7 @@ logging:
 
 自动热部署其实就是设计一个开关，打开这个开关后，IDE工具就可以自动热部署。因此这个操作和IDE工具有关，以下以idea为例设置idea中启动热部署
 
-**步骤①**：设置自动构建项目
+<b>步骤①<b>：设置自动构建项目
 
 打开【File】，选择【settings...】,在面板左侧的菜单中找到【Compile】选项，然后勾选【Build project automatically】，意思是自动构建项目
 
@@ -5709,7 +5668,7 @@ logging:
 
 自动构建项目选项勾选后
 
-**步骤②**：允许在程序运行时进行自动构建
+<b>步骤②<b>：允许在程序运行时进行自动构建
 
 使用快捷键【Ctrl】+【Alt】+【Shit】+【/】打开维护面板，选择第1项【Registry...】
 
@@ -5723,12 +5682,12 @@ logging:
 
 <font color="#ff0000"><b>关注</b></font>：如果你每敲一个字母，服务器就重新构建一次，这未免有点太频繁了，所以idea设置当 idea 工具失去焦点 5 秒后进行热部署。其实就是你从 idea 工具中切换到其他工具时进行热部署，比如改完程序需要到浏览器上去调试，这个时候 idea 就自动进行热部署操作。
 
-**总结**
+<b>总结<b>
 
 1. 自动热部署要开启自动构建项目
 2. 自动热部署要开启在程序运行时自动构建项目
 
-**思考**
+<b>思考<b>
 
 现在已经实现了热部署了，但是到企业开发的时候你会发现，为了便于管理，在你的程序目录中除了有代码，还有可能有文档，如果你修改了一下文档，这个时候会进行热部署吗？不管是否进行热部署，这个过程我们需要自己控制才比较合理，那这个东西能控制吗？咱们下一节再说。
 
@@ -5750,14 +5709,14 @@ spring:
   devtools:
     restart:
       # 设置不参与热部署的文件或文件夹
-      exclude: static/**,public/**,config/application.yml
+      exclude: static/<b>,public/<b>,config/application.yml
 ```
 
-**总结**
+<b>总结<b>
 
 1. 通过配置可以修改不参与热部署的文件或目录
 
-**思考**
+<b>思考<b>
 
 热部署功能是一个典型的开发阶段使用的功能，到了线上环境运行程序时，这个功能就没有意义了。能否关闭热部署功能呢？咱们下一节再说。
 
@@ -5786,7 +5745,7 @@ public class SSMPApplication {
 
 其实上述担心略微有点多余，因为线上环境的维护是不可能出现修改代码的操作的，这么做唯一的作用是降低资源消耗，毕竟那双盯着你项目是不是产生变化的眼睛只要闭上了，就不具有热部署功能了，这个开关的作用就是禁用对应功能。
 
-**总结**
+<b>总结<b>
 
 1. 通过配置可以关闭热部署功能降低线上程序的资源消耗
 
@@ -5830,9 +5789,9 @@ public class ServerConfig {
 
 这样加载对应bean的时候就可以直接加载配置属性值了。但是目前我们学的都是给自定义的bean使用这种形式加载属性值，如果是第三方的 bean 呢？能不能用这种形式加载属性值呢？为什么会提出这个疑问？原因就在于当前 @ConfigurationProperties 注解是写在类定义的上方，而第三方开发的 bean 源代码不是你自己书写的，你也不可能到源代码中去添加 @ConfigurationProperties 注解，这种问题该怎么解决呢？下面就来说说这个问题。
 
-**使用 @ConfigurationProperties 注解其实可以为第三方 bean 加载属性**，格式特殊一点而已。
+<b>使用 @ConfigurationProperties 注解其实可以为第三方 bean 加载属性<b>，格式特殊一点而已。
 
-**步骤①**：使用 @Bean 注解定义第三方 bean
+<b>步骤①<b>：使用 @Bean 注解定义第三方 bean
 
 ```JAVA
 @Bean
@@ -5842,14 +5801,14 @@ public DruidDataSource datasource(){
 }
 ```
 
-**步骤②**：在 yml 中定义要绑定的属性，注意 datasource 此时全小写
+<b>步骤②<b>：在 yml 中定义要绑定的属性，注意 datasource 此时全小写
 
 ```YAML
 datasource:
   driverClassName: com.mysql.jdbc.Driver
 ```
 
-**步骤③**：使用 @ConfigurationProperties 注解为第三方 bean 进行属性绑定，注意前缀是全小写的 datasource
+<b>步骤③<b>：使用 @ConfigurationProperties 注解为第三方 bean 进行属性绑定，注意前缀是全小写的 datasource
 
 ```JAVA
 @Bean
@@ -5860,11 +5819,11 @@ public DruidDataSource datasource(){
 }
 ```
 
-操作方式完全一样，只不过 @ConfigurationProperties 注解不仅能添加到类上，还可以添加到方法上，**添加到类上是为 spring 容器管理的当前类的对象绑定属性，添加到方法上是为 spring 容器管理的当前方法的返回值对象绑定属性**，其实本质上都一样。
+操作方式完全一样，只不过 @ConfigurationProperties 注解不仅能添加到类上，还可以添加到方法上，<b>添加到类上是为 spring 容器管理的当前类的对象绑定属性，添加到方法上是为 spring 容器管理的当前方法的返回值对象绑定属性<b>，其实本质上都一样。
 
 做到这其实就出现了一个新的问题，目前我们定义 bean 不是通过类注解定义就是通过@Bean 定义，使用 @ConfigurationProperties 注解可以为 bean 进行属性绑定，那在一个业务系统中，哪些 bean 通过注解 @ConfigurationProperties 去绑定属性了呢？因为这个注解不仅可以写在类上，还可以写在方法上，所以找起来就比较麻烦了。为了解决这个问题，spring 给我们提供了一个全新的注解，专门标注使用@ConfigurationProperties 注解绑定属性的 bean 是哪些。这个注解叫做@EnableConfigurationProperties。具体如何使用呢？
 
-**步骤①**：在配置类上开启 @EnableConfigurationProperties 注解，并标注要使用@ConfigurationProperties 注解绑定属性的类
+<b>步骤①<b>：在配置类上开启 @EnableConfigurationProperties 注解，并标注要使用@ConfigurationProperties 注解绑定属性的类
 
 ```java
 @SpringBootApplication
@@ -5873,7 +5832,7 @@ public class Springboot13ConfigurationApplication {
 }
 ```
 
-**步骤②**：在对应的类上直接使用@ConfigurationProperties进行属性绑定
+<b>步骤②<b>：在对应的类上直接使用@ConfigurationProperties进行属性绑定
 
 ```JAVA
 @Data
@@ -5885,7 +5844,7 @@ public class ServerConfig {
 }
 ```
 
-有人感觉这没区别啊？注意观察，现在绑定属性的 ServerConfig 类并没有声明@Component 注解。**当使用 @EnableConfigurationProperties 注解时，spring 会默认将其标注的类（注解中的参数）定义为 bean**，因此无需再次声明@Component注解了。
+有人感觉这没区别啊？注意观察，现在绑定属性的 ServerConfig 类并没有声明@Component 注解。<b>当使用 @EnableConfigurationProperties 注解时，spring 会默认将其标注的类（注解中的参数）定义为 bean<b>，因此无需再次声明@Component注解了。
 
 最后再说一个小技巧，使用 @ConfigurationProperties 注解时，会出现一个提示信息
 
@@ -5900,7 +5859,7 @@ public class ServerConfig {
 </dependency>
 ```
 
-**总结**
+<b>总结<b>
 
 1. 使用 @ConfigurationProperties 可以为使用 @Bean 声明的第三方 bean 绑定属性
 2. 当使用 @EnableConfigurationProperties 声明进行属性绑定的bean后，无需使用@Component 注解再次进行bean声明
@@ -5978,11 +5937,11 @@ Action:
 Modify 'dataSource' so that it conforms to the canonical names requirements.
 ```
 
-其中 Reason 描述了报错的原因，规范的名称应该是烤肉串(kebab)模式(case)，即使用-分隔，使用小写字母数字作为标准字符，且必须以字母开头。然后再看我们写的名称dataSource，就不满足上述要求。闹了半天，**在书写前缀时，这个词不是随意支持的，必须使用上述标准**。
+其中 Reason 描述了报错的原因，规范的名称应该是烤肉串(kebab)模式(case)，即使用-分隔，使用小写字母数字作为标准字符，且必须以字母开头。然后再看我们写的名称dataSource，就不满足上述要求。闹了半天，<b>在书写前缀时，这个词不是随意支持的，必须使用上述标准<b>。
 
 最后说一句，以上规则仅针对 springboot 中 @ConfigurationProperties 注解进行属性绑定时有效，对 @Value 注解进行属性映射无效。有人就说，那我不用你不就行了？不用，你小看 springboot 的推广能力了，到原理篇我们看源码时，你会发现内部全是这玩意儿。
 
-**总结**
+<b>总结<b>
 
 1. @ConfigurationProperties绑定属性时支持属性名宽松绑定，这个宽松体现在属性名的命名规则上
 2. @Value注解不支持松散绑定规则
@@ -6016,9 +5975,9 @@ public class ServerConfig {
 
 ```
 
-**Duration**：表示时间间隔，可以通过@DurationUnit注解描述时间单位，例如上例中描述的单位为小时（ChronoUnit.HOURS）
+<b>Duration<b>：表示时间间隔，可以通过@DurationUnit注解描述时间单位，例如上例中描述的单位为小时（ChronoUnit.HOURS）
 
-**DataSize**：表示存储空间，可以通过@DataSizeUnit注解描述存储空间单位，例如上例中描述的单位为MB（DataUnit.MEGABYTES）
+<b>DataSize<b>：表示存储空间，可以通过@DataSizeUnit注解描述存储空间单位，例如上例中描述的单位为MB（DataUnit.MEGABYTES）
 
 ​		使用上述两个单位就可以有效避免因沟通不同步或文档不健全导致的信息不对称问题，从根本上解决了问题，避免产生误读。
 
@@ -6036,7 +5995,7 @@ DataSize 常用单位如下：
 
 SpringBoot给出了强大的数据校验功能，可以有效的避免此类问题的发生。在JAVAEE的JSR303规范中给出了具体的数据校验标准，开发者可以根据自己的需要选择对应的校验框架，此处使用 Hibernate 提供的校验框架来作为实现进行数据校验。书写应用格式非常固定，话不多说，直接上步骤
 
-**步骤①**：开启校验框架
+<b>步骤①<b>：开启校验框架
 
 ```xml
 <!--1.导入JSR303规范-->
@@ -6051,7 +6010,7 @@ SpringBoot给出了强大的数据校验功能，可以有效的避免此类问�
 </dependency>
 ```
 
-**步骤②**：在需要开启校验功能的类上使用注解@Validated开启校验功能
+<b>步骤②<b>：在需要开启校验功能的类上使用注解@Validated开启校验功能
 
 ```java
 @Component
@@ -6063,7 +6022,7 @@ public class ServerConfig {
 }
 ```
 
-**步骤③**：对具体的字段设置校验规则
+<b>步骤③<b>：对具体的字段设置校验规则
 
 ```JAVA
 @Component
@@ -6081,7 +6040,7 @@ public class ServerConfig {
 
 通过设置数据格式校验，就可以有效避免非法数据加载，其实使用起来还是挺轻松的，基本上就是一个格式。
 
-**总结**
+<b>总结<b>
 
 1.开启Bean属性校验功能一共3步：导入JSR303与Hibernate校验框架坐标、使用@Validated注解启用校验功能、使用具体校验规则规范数据校验格式
 
@@ -6104,7 +6063,7 @@ spring:
     password: 0127
 ```
 
-这名开发者的生日是1月27日，所以密码就使用了0127，其实问题就出在这里了。之前在基础篇讲属性注入时，提到过类型相关的知识，在整数相关知识中有这么一句话，**支持二进制，八进制，十六进制**
+这名开发者的生日是1月27日，所以密码就使用了0127，其实问题就出在这里了。之前在基础篇讲属性注入时，提到过类型相关的知识，在整数相关知识中有这么一句话，<b>支持二进制，八进制，十六进制<b>
 
 <div align="center"><img src="img/boot/image-20220222225748370.png"></div>
 
@@ -6112,7 +6071,7 @@ spring:
 
 这里提两个注意点，第一，字符串标准书写加上引号包裹，养成习惯，第二，遇到0开头的数据多注意吧。
 
-**总结**
+<b>总结<b>
 
 yaml 文件中对于数字的定义支持进制书写格式，如需使用字符串请使用引号明确标注。
 
@@ -6140,7 +6099,7 @@ env:
 
 这个时候我们能不能每次测试的时候都去修改源码 application.yml 中的配置进行测试呢？显然是不行的。每次测试前改过来，每次测试后改回去，这太麻烦了。于是我们就想，需要在测试环境中创建一组临时属性，去覆盖我们源码中设定的属性，这样测试用例就相当于是一个独立的环境，能够独立测试，这样就方便多了。
 
-**临时属性**
+<b>临时属性<b>
 
 springboot 已经为我们开发者早就想好了这种问题该如何解决，并且提供了对应的功能入口。在测试用例程序中，可以通过对注解@SpringBootTest添加属性来模拟临时属性，具体如下：
 
@@ -6161,7 +6120,7 @@ public class PropertiesAndArgsTest {
 
 使用注解@SpringBootTest的properties属性就可以为当前测试用例添加临时的属性，覆盖源码配置文件中对应的属性值进行测试。
 
-**临时参数**
+<b>临时参数<b>
 
 除了上述这种情况，在前面讲解使用命令行启动springboot程序时讲过，通过命令行参数也可以设置属性值。而且线上启动程序时，通常都会添加一些专用的配置信息。作为运维人员他们才不懂java，更不懂这些配置的信息具体格式该怎么写，那如果我们作为开发者提供了对应的书写内容后，能否提前测试一下这些配置信息是否有效呢？当时是可以的，还是通过注解@SpringBootTest的另一个属性来进行设定。
 
@@ -6190,11 +6149,11 @@ public class PropertiesAndArgsTest {
 
 ​		到这里我们就掌握了如果在测试用例中去模拟临时属性的设定。
 
-**总结**
+<b>总结<b>
 
 1. 加载测试临时属性可以通过注解@SpringBootTest的properties和args属性进行设定，此设定应用范围仅适用于当前测试用例
 
-**思考**
+<b>思考<b>
 
 ​		应用于测试环境的临时属性解决了，如果想在测试的时候临时加载一些bean能不做呢？也就是说我测试时，想搞一些独立的bean出来，专门应用于测试环境，能否实现呢？咱们下一节再讲。
 
@@ -6206,7 +6165,7 @@ public class PropertiesAndArgsTest {
 
 ​		学习过Spring的知识，我们都知道，其实一个spring环境中可以设置若干个配置文件或配置类，若干个配置信息可以同时生效。现在我们的需求就是在测试环境中再添加一个配置类，然后启动测试环境时，生效此配置就行了。其实做法和spring环境中加载多个配置信息的方式完全一样。具体操作步骤如下：
 
-**步骤①**：在测试包test中创建专用的测试环境配置类
+<b>步骤①<b>：在测试包test中创建专用的测试环境配置类
 
 ```java
 @Configuration
@@ -6220,7 +6179,7 @@ public class MsgConfig {
 
 ​		上述配置仅用于演示当前实验效果，实际开发可不能这么注入String类型的数据
 
-**步骤②**：在启动测试环境时，导入测试环境专用的配置类，使用@Import注解即可实现
+<b>步骤②<b>：在启动测试环境时，导入测试环境专用的配置类，使用@Import注解即可实现
 
 ```java
 @SpringBootTest
@@ -6239,11 +6198,11 @@ public class ConfigurationTest {
 
 ​		到这里就通过@Import属性实现了基于开发环境的配置基础上，对配置进行测试环境的追加操作，实现了1+1的配置环境效果。这样我们就可以实现每一个不同的测试用例加载不同的bean的效果，丰富测试用例的编写，同时不影响开发环境的配置。
 
-**总结**
+<b>总结<b>
 
 1. 定义测试环境专用的配置类，然后通过@Import注解在具体的测试中导入临时的配置，例如测试用例，方便测试过程，且上述配置不影响其他的测试类环境
 
-**思考**
+<b>思考<b>
 
 ​		当前我们已经可以实现业务层和数据层的测试，并且通过临时配置，控制每个测试用例加载不同的测试数据。但是实际企业开发不仅要保障业务层与数据层的功能安全有效，也要保障表现层的功能正常。但是我们目的对表现层的测试都是通过postman手工测试的，并没有在打包过程中体现表现层功能被测试通过。能否在测试用例中对表现层进行功能测试呢？还真可以，咱们下一节再讲。
 
@@ -6253,7 +6212,7 @@ public class ConfigurationTest {
 
 ​		在测试中对表现层功能进行测试需要一个基础和一个功能。所谓的一个基础是运行测试程序时，必须启动web环境，不然没法测试web功能。一个功能是必须在测试程序中具备发送web请求的能力，不然无法实现web功能的测试。所以在测试用例中测试表现层接口这项工作就转换成了两件事，一，如何在测试类中启动web测试，二，如何在测试类中发送web请求。下面一件事一件事进行，先说第一个
 
-**测试类中启动web环境**
+<b>测试类中启动web环境<b>
 
 ​		每一个springboot的测试类上方都会标准@SpringBootTest注解，而注解带有一个属性，叫做webEnvironment。通过该属性就可以设置在测试用例中启动web环境，具体如下：
 
@@ -6276,11 +6235,11 @@ public class WebTest {
 
 ​		测试环境中的web环境已经搭建好了，下面就可以来解决第二个问题了，如何在程序代码中发送web请求。
 
-**测试类中发送请求**
+<b>测试类中发送请求<b>
 
 ​		对于测试类中发送请求，其实java的API就提供对应的功能，只不过平时各位小伙伴接触的比较少，所以较为陌生。springboot为了便于开发者进行对应的功能开发，对其又进行了包装，简化了开发步骤，具体操作如下：
 
-**步骤①**：在测试类中开启web虚拟调用功能，通过注解@AutoConfigureMockMvc实现此功能的开启
+<b>步骤①<b>：在测试类中开启web虚拟调用功能，通过注解@AutoConfigureMockMvc实现此功能的开启
 
 ```java
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -6290,7 +6249,7 @@ public class WebTest {
 }
 ```
 
-**步骤②**：定义发起虚拟调用的对象MockMVC，通过自动装配的形式初始化对象
+<b>步骤②<b>：定义发起虚拟调用的对象MockMVC，通过自动装配的形式初始化对象
 
 ```java
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -6304,7 +6263,7 @@ public class WebTest {
 }
 ```
 
-**步骤③**：创建一个虚拟请求对象，封装请求的路径，并使用MockMVC对象发送对应请求
+<b>步骤③<b>：创建一个虚拟请求对象，封装请求的路径，并使用MockMVC对象发送对应请求
 
 ```java
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -6325,18 +6284,18 @@ public class WebTest {
 
 ​		执行测试程序，现在就可以正常的发送/books对应的请求了，注意访问路径不要写http://localhost:8080/books，因为前面的服务器IP地址和端口使用的是当前虚拟的web环境，无需指定，仅指定请求的具体路径即可。
 
-**总结**
+<b>总结<b>
 
 1. 在测试类中测试web层接口要保障测试类启动时启动web容器，使用@SpringBootTest注解的webEnvironment属性可以虚拟web环境用于测试
 2. 为测试方法注入MockMvc对象，通过MockMvc对象可以发送虚拟请求，模拟web请求调用过程
 
-**思考**
+<b>思考<b>
 
 ​		目前已经成功的发送了请求，但是还没有起到测试的效果，测试过程必须出现预计值与真实值的比对结果才能确认测试结果是否通过，虚拟请求中能对哪些请求结果进行比对呢？咱们下一节再讲。
 
 
 
-**web环境请求结果比对**
+<b>web环境请求结果比对<b>
 
 ​		上一节已经在测试用例中成功的模拟出了web环境，并成功的发送了web请求，本节就来解决发送请求后如何比对发送结果的问题。其实发完请求得到的信息只有一种，就是响应对象。至于响应对象中包含什么，就可以比对什么。常见的比对内容如下：
 
@@ -6427,7 +6386,7 @@ void testGetById(@Autowired MockMvc mvc) throws Exception {
 }
 ```
 
-**总结**
+<b>总结<b>
 
 1. web虚拟调用可以对本地虚拟请求的返回响应信息进行比对，分为响应头信息比对、响应体信息比对、响应状态信息比对
 
@@ -6461,12 +6420,12 @@ public class DaoTest {
 
 ​		如果开发者想提交事务，也可以，再添加一个@RollBack的注解，设置回滚状态为false即可正常提交事务，是不是很方便？springboot在辅助开发者日常工作这一块展现出了惊人的能力，实在太贴心了。
 
-**总结**
+<b>总结<b>
 
 1. 在springboot的测试类中通过添加注解@Transactional来阻止测试用例提交事务
 2. 通过注解@Rollback控制springboot测试类执行结果是否提交事务，需要配合注解@Transactional使用
 
-**思考**
+<b>思考<b>
 
 ​		当前测试程序已经近乎完美了，但是由于测试用例中书写的测试数据属于固定数据，往往失去了测试的意义，开发者可以针对测试用例进行针对性开发，这样就有可能出现测试用例不能完美呈现业务逻辑代码是否真实有效的达成业务目标的现象，解决方案其实很容易想，测试用例的数据只要随机产生就可以了，能实现吗？咱们下一节再讲。
 
@@ -6512,7 +6471,7 @@ public class BookCase {
 - ${random.int(10,20)}表示10到20的随机数
 - 其中()可以是任意字符，例如[]，!!均可
 
-**总结**
+<b>总结<b>
 
 1. 使用随机数据可以替换测试用例中书写的固定数据，提高测试用例中的测试数据有效性
 
@@ -6614,7 +6573,7 @@ spring:
 
 ​		如果不想使用hikari数据源，使用tomcat的数据源或者DBCP配置格式也是一样的。学习到这里，以后我们做数据层时，数据源对象的选择就不再是单一的使用druid数据源技术了，可以根据需要自行选择。
 
-**总结**
+<b>总结<b>
 
 1. springboot技术提供了3种内置的数据源技术，分别是Hikari、tomcat内置数据源、DBCP
 
@@ -6626,7 +6585,7 @@ spring:
 
 ​		这个技术其实就是回归到jdbc最原始的编程形式来进行数据层的开发，下面直接上操作步骤：
 
-**步骤①**：导入jdbc对应的坐标，记得是starter
+<b>步骤①<b>：导入jdbc对应的坐标，记得是starter
 
 ```xml
 <dependency>
@@ -6635,7 +6594,7 @@ spring:
 </dependency
 ```
 
-**步骤②**：自动装配JdbcTemplate对象
+<b>步骤②<b>：自动装配JdbcTemplate对象
 
 ```java
 @SpringBootTest
@@ -6646,7 +6605,7 @@ class Springboot15SqlApplicationTests {
 }
 ```
 
-**步骤③**：使用JdbcTemplate实现查询操作（非实体类封装数据的查询操作）
+<b>步骤③<b>：使用JdbcTemplate实现查询操作（非实体类封装数据的查询操作）
 
 ```java
 @Test
@@ -6657,7 +6616,7 @@ void testJdbcTemplate(@Autowired JdbcTemplate jdbcTemplate){
 }
 ```
 
-**步骤④**：使用JdbcTemplate实现查询操作（实体类封装数据的查询操作）
+<b>步骤④<b>：使用JdbcTemplate实现查询操作（实体类封装数据的查询操作）
 
 ```java
 @Test
@@ -6680,7 +6639,7 @@ void testJdbcTemplate(@Autowired JdbcTemplate jdbcTemplate){
 }
 ```
 
-**步骤⑤**：使用JdbcTemplate实现增删改操作
+<b>步骤⑤<b>：使用JdbcTemplate实现增删改操作
 
 ```java
 @Test
@@ -6701,7 +6660,7 @@ spring:
       fetch-size: -1      # 缓存行数
 ```
 
-**总结**
+<b>总结<b>
 
 1. SpringBoot内置JdbcTemplate持久化解决方案
 2. 使用JdbcTemplate需要导入spring-boot-starter-jdbc的坐标
@@ -6724,7 +6683,7 @@ spring:
 
 ​		下面以H2数据库为例讲解如何使用这些内嵌数据库，操作步骤也非常简单，简单才好用嘛
 
-**步骤①**：导入H2数据库对应的坐标，一共2个
+<b>步骤①<b>：导入H2数据库对应的坐标，一共2个
 
 ```xml
 <dependency>
@@ -6737,7 +6696,7 @@ spring:
 </dependency>
 ```
 
-**步骤②**：将工程设置为web工程，启动工程时启动H2数据库
+<b>步骤②<b>：将工程设置为web工程，启动工程时启动H2数据库
 
 ```xml
 <dependency>
@@ -6746,7 +6705,7 @@ spring:
 </dependency>
 ```
 
-**步骤③**：通过配置开启H2数据库控制台访问程序，也可以使用其他的数据库连接软件操作
+<b>步骤③<b>：通过配置开启H2数据库控制台访问程序，也可以使用其他的数据库连接软件操作
 
 ```yaml
 spring:
@@ -6767,13 +6726,13 @@ datasource:
     password: 123456
 ```
 
-**步骤④**：使用JdbcTemplate或MyBatisPlus技术操作数据库
+<b>步骤④<b>：使用JdbcTemplate或MyBatisPlus技术操作数据库
 
 （略）
 
 ​		其实我们只是换了一个数据库而已，其他的东西都不受影响。一个重要提醒，别忘了，上线时，把内存级数据库关闭，采用MySQL数据库作为数据持久化方案，关闭方式就是设置enabled属性为false即可。
 
-**总结**
+<b>总结<b>
 
 1. H2内嵌式数据库启动方式，添加坐标，添加配置
 2. H2数据库线上运行时请务必关闭
@@ -6814,7 +6773,7 @@ datasource:
 
 <div align="center"><img src="img/image-20220224091709173.png" alt="image-20220224091709173" style="zoom: 80%;" /></div>
 
-**启动服务器**
+<b>启动服务器<b>
 
 ```CMD
 redis-server.exe redis.windows.conf
@@ -6822,7 +6781,7 @@ redis-server.exe redis.windows.conf
 
 ​		初学者无需调整服务器对外服务端口，默认6379。
 
-**启动客户端**
+<b>启动客户端<b>
 
 ```CMD
 redis-cli.exe
@@ -6878,7 +6837,7 @@ hget a a2			#得到aa2
 
 ​		下面就开始springboot整合redis，操作步骤如下：
 
-**步骤①**：导入springboot整合redis的starter坐标
+<b>步骤①<b>：导入springboot整合redis的starter坐标
 
 ```xml
 <dependency>
@@ -6891,7 +6850,7 @@ hget a a2			#得到aa2
 
 <div align="center"><img src="img/image-20220224101142220.png" alt="image-20220224101142220" style="zoom:50%;" /></div>
 
-**步骤②**：进行基础配置
+<b>步骤②<b>：进行基础配置
 
 ```yaml
 spring:
@@ -6902,7 +6861,7 @@ spring:
 
 ​		操作redis，最基本的信息就是操作哪一台redis服务器，所以服务器地址属于基础配置信息，不可缺少。但是即便你不配置，目前也是可以用的。因为以上两组信息都有默认配置，刚好就是上述配置值。
 
-**步骤③**：使用springboot整合redis的专用客户端接口操作，此处使用的是RedisTemplate
+<b>步骤③<b>：使用springboot整合redis的专用客户端接口操作，此处使用的是RedisTemplate
 
 ```java
 @SpringBootTest
@@ -6939,7 +6898,7 @@ class Springboot16RedisApplicationTests {
 
 <div align="center"><img src="img/image-20220224103104908.png" alt="image-20220224103104908" style="zoom:80%;" /></div>
 
-**总结**
+<b>总结<b>
 
 1. springboot整合redis步骤
     1. 导入springboot整合redis的starter坐标
@@ -6948,7 +6907,7 @@ class Springboot16RedisApplicationTests {
 
 
 
-**StringRedisTemplate**
+<b>StringRedisTemplate<b>
 
 ​		由于redis内部不提供java对象的存储格式，因此当操作的数据以对象的形式存在时，会进行转码，转换成字符串格式后进行操作。为了方便开发者使用基于字符串为数据的操作，springboot整合redis时提供了专用的API接口StringRedisTemplate，你可以理解为这是RedisTemplate的一种指定数据泛型的操作API。
 
@@ -6968,11 +6927,11 @@ public class StringRedisTemplateTest {
 
 
 
-**redis客户端选择**
+<b>redis客户端选择<b>
 
  		springboot整合redis技术提供了多种客户端兼容模式，默认提供的是lettucs客户端技术，也可以根据需要切换成指定客户端技术，例如jedis客户端技术，切换成jedis客户端技术操作步骤如下：
 
-**步骤①**：导入jedis坐标
+<b>步骤①<b>：导入jedis坐标
 
 ```xml
 <dependency>
@@ -6983,7 +6942,7 @@ public class StringRedisTemplateTest {
 
 ​		jedis坐标受springboot管理，无需提供版本号
 
-**步骤②**：配置客户端技术类型，设置为jedis
+<b>步骤②<b>：配置客户端技术类型，设置为jedis
 
 ```yaml
 spring:
@@ -6993,7 +6952,7 @@ spring:
     client-type: jedis
 ```
 
-**步骤③**：根据需要设置对应的配置
+<b>步骤③<b>：根据需要设置对应的配置
 
 ```yaml
 spring:
@@ -7009,12 +6968,12 @@ spring:
         max-active: 16
 ```
 
-**lettcus与jedis区别**
+<b>lettcus与jedis区别<b>
 
 - jedis连接Redis服务器是直连模式，当多线程模式下使用jedis会存在线程安全问题，解决方案可以通过配置连接池使每个连接专用，这样整体性能就大受影响
 - lettcus基于Netty框架进行与Redis服务器连接，底层设计中采用StatefulRedisConnection。 StatefulRedisConnection自身是线程安全的，可以保障并发访问安全问题，所以一个连接可以被多线程复用。当然lettcus也支持多连接实例一起工作
 
-**总结**
+<b>总结<b>
 
 1. springboot整合redis提供了StringRedisTemplate对象，以字符串的数据格式操作redis
 2. 如果需要切换redis客户端实现技术，可以通过配置的形式进行
@@ -7070,7 +7029,7 @@ spring:
 regsvr32 vcruntime140_1.dll
 ```
 
-**启动服务器**
+<b>启动服务器<b>
 
 ```CMD
 mongod --dbpath=..\data\db
@@ -7078,7 +7037,7 @@ mongod --dbpath=..\data\db
 
 ​		启动服务器时需要指定数据存储位置，通过参数--dbpath进行设置，可以根据需要自行设置数据存储路径。默认服务端口27017。
 
-**启动客户端**
+<b>启动客户端<b>
 
 ```CMD
 mongo --host=127.0.0.1 --port=27017
@@ -7162,7 +7121,7 @@ db.集合名称.update(条件，{操作种类:{文档}})
 
 ​		下面就开始springboot整合MongoDB，操作步骤如下：
 
-**步骤①**：导入springboot整合MongoDB的starter坐标
+<b>步骤①<b>：导入springboot整合MongoDB的starter坐标
 
 ```xml
 <dependency>
@@ -7175,7 +7134,7 @@ db.集合名称.update(条件，{操作种类:{文档}})
 
 <div align="center"><img src="img/image-20220224120721626.png" alt="image-20220224120721626" style="zoom: 67%;" /></div>
 
-**步骤②**：进行基础配置
+<b>步骤②<b>：进行基础配置
 
 ```yaml
 spring:
@@ -7186,7 +7145,7 @@ spring:
 
 ​		操作MongoDB需要的配置与操作redis一样，最基本的信息都是操作哪一台服务器，区别就是连接的服务器IP地址和端口不同，书写格式不同而已。
 
-**步骤③**：使用springboot整合MongoDB的专用客户端接口MongoTemplate来进行操作
+<b>步骤③<b>：使用springboot整合MongoDB的专用客户端接口MongoTemplate来进行操作
 
 ```java
 @SpringBootTest
@@ -7212,7 +7171,7 @@ class Springboot17MongodbApplicationTests {
 
 ​		整合工作到这里就做完了，感觉既熟悉也陌生。熟悉的是这个套路，三板斧，就这三招，导坐标做配置用API操作，陌生的是这个技术，里面具体的操作API可能会不熟悉，有关springboot整合MongoDB我们就讲到这里。有兴趣可以继续学习MongoDB的操作，然后再来这里通过编程的形式操作MongoDB。
 
-**总结**
+<b>总结<b>
 
 1. springboot整合MongoDB步骤
     1. 导入springboot整合MongoDB的starter坐标
@@ -7253,7 +7212,7 @@ class Springboot17MongodbApplicationTests {
 
 3. 当进行查询时，如果输入“人民”作为查询条件，可以通过上述表格数据进行比对，得到id值1,2，然后根据id值就可以得到查询的结果数据了。
 
-​		上述过程中分词结果关键字内容每一个都不相同，作用有点类似于数据库中的索引，是用来加速数据查询的。但是数据库中的索引是对某一个字段进行添加索引，而这里的分词结果关键字不是一个完整的字段值，只是一个字段中的其中的一部分内容。并且索引使用时是根据索引内容查找整条数据，全文搜索中的分词结果关键字查询后得到的并不是整条的数据，而是数据的id，要想获得具体数据还要再次查询，因此这里为这种分词结果关键字起了一个全新的名称，叫做**倒排索引**。
+​		上述过程中分词结果关键字内容每一个都不相同，作用有点类似于数据库中的索引，是用来加速数据查询的。但是数据库中的索引是对某一个字段进行添加索引，而这里的分词结果关键字不是一个完整的字段值，只是一个字段中的其中的一部分内容。并且索引使用时是根据索引内容查找整条数据，全文搜索中的分词结果关键字查询后得到的并不是整条的数据，而是数据的id，要想获得具体数据还要再次查询，因此这里为这种分词结果关键字起了一个全新的名称，叫做<b>倒排索引<b>。
 
 ​		通过上述内容的学习，发现使用ES其实准备工作还是挺多的，必须先建立文档的倒排索引，然后才能继续使用。快速了解一下ES的工作原理，下面直接开始我们的学习，老规矩，先安装，再操作，最后说整合。
 
@@ -7275,7 +7234,7 @@ class Springboot17MongodbApplicationTests {
 - modules目录：包含ES软件中所有的功能模块，也是一个一个的jar包。和jar目录不同，jar目录是ES运行期间依赖的jar包，modules是ES软件自己的功能jar包
 - plugins目录：包含ES软件安装的插件，默认为空
 
-**启动服务器**
+<b>启动服务器<b>
 
 ```CMD
 elasticsearch.bat
@@ -7285,7 +7244,7 @@ elasticsearch.bat
 
 ```CMD
 {
-  "name" : "CZBK-**********",
+  "name" : "CZBK-<b><b><b><b><b>",
   "cluster_name" : "elasticsearch",
   "cluster_uuid" : "j137DSswTPG8U4Yb-0T1Mg",
   "version" : {
@@ -7612,7 +7571,7 @@ elasticsearch.bat
 
 ​		下面就开始springboot整合ES，操作步骤如下：
 
-**步骤①**：导入springboot整合ES的starter坐标
+<b>步骤①<b>：导入springboot整合ES的starter坐标
 
 ```xml
 <dependency>
@@ -7621,7 +7580,7 @@ elasticsearch.bat
 </dependency>
 ```
 
-**步骤②**：进行基础配置
+<b>步骤②<b>：进行基础配置
 
 ```yaml
 spring:
@@ -7632,7 +7591,7 @@ spring:
 
 ​		配置ES服务器地址，端口9200
 
-**步骤③**：使用springboot整合ES的专用客户端接口ElasticsearchRestTemplate来进行操作
+<b>步骤③<b>：使用springboot整合ES的专用客户端接口ElasticsearchRestTemplate来进行操作
 
 ```java
 @SpringBootTest
@@ -7646,7 +7605,7 @@ class Springboot18EsApplicationTests {
 
 ​		下面使用高级别客户端方式进行springboot整合ES，操作步骤如下：
 
-**步骤①**：导入springboot整合ES高级别客户端的坐标，此种形式目前没有对应的starter
+<b>步骤①<b>：导入springboot整合ES高级别客户端的坐标，此种形式目前没有对应的starter
 
 ```xml
 <dependency>
@@ -7655,7 +7614,7 @@ class Springboot18EsApplicationTests {
 </dependency>
 ```
 
-**步骤②**：使用编程的形式设置连接的ES服务器，并获取客户端对象
+<b>步骤②<b>：使用编程的形式设置连接的ES服务器，并获取客户端对象
 
 ```java
 @SpringBootTest
@@ -7674,7 +7633,7 @@ class Springboot18EsApplicationTests {
 
 ​		配置ES服务器地址与端口9200，记得客户端使用完毕需要手工关闭。由于当前客户端是手工维护的，因此不能通过自动装配的形式加载对象。
 
-**步骤③**：使用客户端对象操作ES，例如创建索引
+<b>步骤③<b>：使用客户端对象操作ES，例如创建索引
 
 ```java
 @SpringBootTest
@@ -7725,7 +7684,7 @@ class Springboot18EsApplicationTests {
 
 ​		现在的书写简化了很多，也更合理。下面使用上述模式将所有的ES操作执行一遍，测试结果
 
-**创建索引（IK分词器）**：
+<b>创建索引（IK分词器）<b>：
 
 ```java
 @Test
@@ -7765,7 +7724,7 @@ void testCreateIndexByIK() throws IOException {
 
 ​		IK分词器是通过请求参数的形式进行设置的，设置请求参数使用request对象中的source方法进行设置，至于参数是什么，取决于你的操作种类。当请求中需要参数时，均可使用当前形式进行参数设置。	
 
-**添加文档**：
+<b>添加文档<b>：
 
 ```java
 @Test
@@ -7781,7 +7740,7 @@ void testCreateDoc() throws IOException {
 
 ​		添加文档使用的请求对象是IndexRequest，与创建索引使用的请求对象不同。	
 
-**批量添加文档**：
+<b>批量添加文档<b>：
 
 ```java
 @Test
@@ -7801,7 +7760,7 @@ void testCreateDocAll() throws IOException {
 
 ​		批量做时，先创建一个BulkRequest的对象，可以将该对象理解为是一个保存request对象的容器，将所有的请求都初始化好后，添加到BulkRequest对象中，再使用BulkRequest对象的bulk方法，一次性执行完毕。
 
-**按id查询文档**：
+<b>按id查询文档<b>：
 
 ```java
 @Test
@@ -7816,7 +7775,7 @@ void testGet() throws IOException {
 
 ​		根据id查询文档使用的请求对象是GetRequest。
 
-**按条件查询文档**：
+<b>按条件查询文档<b>：
 
 ```java
 @Test
@@ -7843,7 +7802,7 @@ void testSearch() throws IOException {
 
 ​		springboot整合ES的操作到这里就说完了，与前期进行springboot整合redis和mongodb的差别还是蛮大的，主要原始就是我们没有使用springboot整合ES的客户端对象。至于操作，由于ES操作种类过多，所以显得操作略微有点复杂。有关springboot整合ES就先学习到这里吧。
 
-**总结**
+<b>总结<b>
 
 1. springboot整合ES步骤
     1. 导入springboot整合ES的High Level Client坐标
@@ -7880,7 +7839,7 @@ void testSearch() throws IOException {
 
 ​		springboot技术提供有内置的缓存解决方案，可以帮助开发者快速开启缓存技术，并使用缓存技术进行数据的快速操作，例如读取缓存数据和写入数据到缓存。
 
-**步骤①**：导入springboot提供的缓存技术对应的starter
+<b>步骤①<b>：导入springboot提供的缓存技术对应的starter
 
 ```xml
 <dependency>
@@ -7889,7 +7848,7 @@ void testSearch() throws IOException {
 </dependency>
 ```
 
-**步骤②**：启用缓存，在引导类上方标注注解@EnableCaching配置springboot程序中可以使用缓存
+<b>步骤②<b>：启用缓存，在引导类上方标注注解@EnableCaching配置springboot程序中可以使用缓存
 
 ```java
 @SpringBootApplication
@@ -7902,7 +7861,7 @@ public class Springboot19CacheApplication {
 }
 ```
 
-**步骤③**：设置操作的数据是否使用缓存
+<b>步骤③<b>：设置操作的数据是否使用缓存
 
 ```java
 @Service
@@ -7934,7 +7893,7 @@ public class BookServiceImpl implements BookService {
 
 ​		为了描述上述操作，我们制作两个表现层接口，一个用来模拟发送短信的过程，其实就是根据用户提供的手机号生成一个验证码，然后放入缓存，另一个用来模拟验证码校验的过程，其实就是使用传入的手机号和验证码进行匹配，并返回最终匹配结果。下面直接制作本案例的模拟代码，先以上例中springboot提供的内置缓存技术来完成当前案例的制作。
 
-**步骤①**：导入springboot提供的缓存技术对应的starter
+<b>步骤①<b>：导入springboot提供的缓存技术对应的starter
 
 ```xml
 <dependency>
@@ -7943,7 +7902,7 @@ public class BookServiceImpl implements BookService {
 </dependency>
 ```
 
-**步骤②**：启用缓存，在引导类上方标注注解@EnableCaching配置springboot程序中可以使用缓存
+<b>步骤②<b>：启用缓存，在引导类上方标注注解@EnableCaching配置springboot程序中可以使用缓存
 
 ```java
 @SpringBootApplication
@@ -7956,7 +7915,7 @@ public class Springboot19CacheApplication {
 }
 ```
 
-**步骤③**：定义验证码对应的实体类，封装手机号与验证码两个属性
+<b>步骤③<b>：定义验证码对应的实体类，封装手机号与验证码两个属性
 
 ```java
 @Data
@@ -7966,7 +7925,7 @@ public class SMSCode {
 }
 ```
 
-**步骤④**：定义验证码功能的业务层接口与实现类
+<b>步骤④<b>：定义验证码功能的业务层接口与实现类
 
 ```java
 public interface SMSCodeService {
@@ -7998,7 +7957,7 @@ public class SMSCodeServiceImpl implements SMSCodeService {
 
 ​		对于校验验证码的功能建议放入工具类中进行。
 
-**步骤⑤**：定义验证码的生成策略与根据手机号读取验证码的功能
+<b>步骤⑤<b>：定义验证码的生成策略与根据手机号读取验证码的功能
 
 ```java
 @Component
@@ -8025,7 +7984,7 @@ public class CodeUtils {
 }
 ```
 
-**步骤⑥**：定义验证码功能的web层接口，一个方法用于提供手机号获取验证码，一个方法用于提供手机号和验证码进行校验
+<b>步骤⑥<b>：定义验证码功能的web层接口，一个方法用于提供手机号获取验证码，一个方法用于提供手机号和验证码进行校验
 
 ```java
 @RestController
@@ -8053,7 +8012,7 @@ public class SMSCodeController {
 
 ​		手机验证码的案例已经完成了，下面就开始springboot整合各种各样的缓存技术，第一个整合Ehcache技术。Ehcache是一种缓存技术，使用springboot整合Ehcache其实就是变更一下缓存技术的实现方式，话不多说，直接开整
 
-**步骤①**：导入Ehcache的坐标
+<b>步骤①<b>：导入Ehcache的坐标
 
 ```xml
 <dependency>
@@ -8064,7 +8023,7 @@ public class SMSCodeController {
 
 ​		此处为什么不是导入Ehcache的starter，而是导入技术坐标呢？其实springboot整合缓存技术做的是通用格式，不管你整合哪种缓存技术，只是实现变化了，操作方式一样。这也体现出springboot技术的优点，统一同类技术的整合方式。
 
-**步骤②**：配置缓存技术实现使用Ehcache
+<b>步骤②<b>：配置缓存技术实现使用Ehcache
 
 ```yaml
 spring:
@@ -8128,7 +8087,7 @@ public String sendCodeToSMS(String tele) {
 
 ​		到这里springboot整合Ehcache就做完了，可以发现一点，原始代码没有任何修改，仅仅是加了一组配置就可以变更缓存供应商了，这也是springboot提供了统一的缓存操作接口的优势，变更实现并不影响原始代码的书写。
 
-**总结**
+<b>总结<b>
 
 1. springboot使用Ehcache作为缓存实现需要导入Ehcache的坐标
 2. 修改设置，配置缓存供应商为ehcache，并提供对应的缓存配置文件
@@ -8141,7 +8100,7 @@ public String sendCodeToSMS(String tele) {
 
 ​		比对使用Ehcache的过程，加坐标，改缓存实现类型为ehcache，做Ehcache的配置。如果还成redis做缓存呢？一模一样，加坐标，改缓存实现类型为redis，做redis的配置。差别之处只有一点，redis的配置可以在yml文件中直接进行配置，无需制作独立的配置文件。
 
-**步骤①**：导入redis的坐标
+<b>步骤①<b>：导入redis的坐标
 
 ```xml
 <dependency>
@@ -8150,7 +8109,7 @@ public String sendCodeToSMS(String tele) {
 </dependency>
 ```
 
-**步骤②**：配置缓存技术实现使用redis
+<b>步骤②<b>：配置缓存技术实现使用redis
 
 ```yaml
 spring:
@@ -8177,7 +8136,7 @@ spring:
       time-to-live: 10s
 ```
 
-**总结**
+<b>总结<b>
 
 1. springboot使用redis作为缓存实现需要导入redis的坐标
 2. 修改设置，配置缓存供应商为redis，并提供对应的缓存配置
@@ -8190,7 +8149,7 @@ spring:
 
 ​		按照之前的套路，其实变更缓存并不繁琐，但是springboot并没有支持使用memcached作为其缓存解决方案，也就是说在type属性中没有memcached的配置选项，这里就需要更变一下处理方式了。在整合之前先安装memcached。
 
-**安装**
+<b>安装<b>
 
 ​		windows版安装包下载地址：https://www.runoob.com/memcached/window-install-memcached.html
 
@@ -8223,13 +8182,13 @@ memcached.exe -d stop		# 停止服务
 
 <div align="center"><img src="img/image-20220226175441675.png" alt="image-20220226175441675" style="zoom:67%;" /></div>
 
-**变更缓存为Memcached**
+<b>变更缓存为Memcached<b>
 
 ​		由于memcached未被springboot收录为缓存解决方案，因此使用memcached需要通过手工硬编码的方式来使用，于是前面的套路都不适用了，需要自己写了。
 
 ​		memcached目前提供有三种客户端技术，分别是Memcached Client for Java、SpyMemcached和Xmemcached，其中性能指标各方面最好的客户端是Xmemcached，本次整合就使用这个作为客户端实现技术了。下面开始使用Xmemcached
 
-**步骤①**：导入xmemcached的坐标
+<b>步骤①<b>：导入xmemcached的坐标
 
 ```xml
 <dependency>
@@ -8239,7 +8198,7 @@ memcached.exe -d stop		# 停止服务
 </dependency>
 ```
 
-**步骤②**：配置memcached，制作memcached的配置类
+<b>步骤②<b>：配置memcached，制作memcached的配置类
 
 ```java
 @Configuration
@@ -8255,7 +8214,7 @@ public class XMemcachedConfig {
 
 ​		memcached默认对外服务端口11211。
 
-**步骤③**：使用xmemcached客户端操作缓存，注入MemcachedClient对象
+<b>步骤③<b>：使用xmemcached客户端操作缓存，注入MemcachedClient对象
 
 ```java
 @Service
@@ -8291,7 +8250,7 @@ public class SMSCodeServiceImpl implements SMSCodeService {
 
 ​		上述代码中对于服务器的配置使用硬编码写死到了代码中，将此数据提取出来，做成独立的配置属性。
 
-**定义配置属性**
+<b>定义配置属性<b>
 
 ​		以下过程采用前期学习的属性配置方式进行，当前操作有助于理解原理篇中的很多知识。
 
@@ -8335,14 +8294,14 @@ public class XMemcachedConfig {
 }
 ```
 
-**总结**
+<b>总结<b>
 
 1. memcached安装后需要启动对应服务才可以对外提供缓存功能，安装memcached服务需要基于windows系统管理员权限
 2. 由于springboot没有提供对memcached的缓存整合方案，需要采用手工编码的形式创建xmemcached客户端操作缓存
 3. 导入xmemcached坐标后，创建memcached配置类，注册MemcachedClient对应的bean，用于操作缓存
 4. 初始化MemcachedClient对象所需要使用的属性可以通过自定义配置属性类的形式加载
 
-**思考**
+<b>思考<b>
 
 ​		到这里已经完成了三种缓存的整合，其中redis和mongodb需要安装独立的服务器，连接时需要输入对应的服务器地址，这种是远程缓存，Ehcache是一个典型的内存级缓存，因为它什么也不用安装，启动后导入jar包就有缓存功能了。这个时候就要问了，能不能这两种缓存一起用呢？咱们下节再说。
 
@@ -8367,7 +8326,7 @@ public class XMemcachedConfig {
 
 ##### 纯远程方案
 
-**步骤①**：导入springboot整合jetcache对应的坐标starter，当前坐标默认使用的远程方案是redis
+<b>步骤①<b>：导入springboot整合jetcache对应的坐标starter，当前坐标默认使用的远程方案是redis
 
 ```xml
 <dependency>
@@ -8377,7 +8336,7 @@ public class XMemcachedConfig {
 </dependency>
 ```
 
-**步骤②**：远程方案基本配置
+<b>步骤②<b>：远程方案基本配置
 
 ```yaml
 jetcache:
@@ -8392,7 +8351,7 @@ jetcache:
 
 ​		其中poolConfig是必配项，否则会报错
 
-**步骤③**：启用缓存，在引导类上方标注注解@EnableCreateCacheAnnotation配置springboot程序中可以使用注解的形式创建缓存
+<b>步骤③<b>：启用缓存，在引导类上方标注注解@EnableCreateCacheAnnotation配置springboot程序中可以使用注解的形式创建缓存
 
 ```java
 @SpringBootApplication
@@ -8405,7 +8364,7 @@ public class Springboot20JetCacheApplication {
 }
 ```
 
-**步骤④**：创建缓存对象Cache，并使用注解@CreateCache标记当前缓存的信息，然后使用Cache对象的API操作缓存，put写缓存，get读缓存。
+<b>步骤④<b>：创建缓存对象Cache，并使用注解@CreateCache标记当前缓存的信息，然后使用Cache对象的API操作缓存，put写缓存，get读缓存。
 
 ```java
 @Service
@@ -8478,7 +8437,7 @@ public class SMSCodeServiceImpl implements SMSCodeService {
 
 ​		远程方案中，配置中使用remote表示远程，换成local就是本地，只不过类型不一样而已。
 
-**步骤①**：导入springboot整合jetcache对应的坐标starter
+<b>步骤①<b>：导入springboot整合jetcache对应的坐标starter
 
 ```xml
 <dependency>
@@ -8488,7 +8447,7 @@ public class SMSCodeServiceImpl implements SMSCodeService {
 </dependency>
 ```
 
-**步骤②**：本地缓存基本配置
+<b>步骤②<b>：本地缓存基本配置
 
 ```yaml
 jetcache:
@@ -8500,7 +8459,7 @@ jetcache:
 
 ​		为了加速数据获取时key的匹配速度，jetcache要求指定key的类型转换器。简单说就是，如果你给了一个Object作为key的话，我先用key的类型转换器给转换成字符串，然后再保存。等到获取数据时，仍然是先使用给定的Object转换成字符串，然后根据字符串匹配。由于jetcache是阿里的技术，这里推荐key的类型转换器使用阿里的fastjson。
 
-**步骤③**：启用缓存
+<b>步骤③<b>：启用缓存
 
 ```java
 @SpringBootApplication
@@ -8513,7 +8472,7 @@ public class Springboot20JetCacheApplication {
 }
 ```
 
-**步骤④**：创建缓存对象Cache时，标注当前使用本地缓存
+<b>步骤④<b>：创建缓存对象Cache时，标注当前使用本地缓存
 
 ```java
 @Service
@@ -8587,11 +8546,11 @@ public class SMSCodeServiceImpl implements SMSCodeService {
 
 ​		以上方案仅支持手工控制缓存，但是springcache方案中的方法缓存特别好用，给一个方法添加一个注解，方法就会自动使用缓存。jetcache也提供了对应的功能，即方法缓存。
 
-**方法缓存**
+<b>方法缓存<b>
 
 ​		jetcache提供了方法缓存方案，只不过名称变更了而已。在对应的操作接口上方使用注解@Cached即可
 
-**步骤①**：导入springboot整合jetcache对应的坐标starter
+<b>步骤①<b>：导入springboot整合jetcache对应的坐标starter
 
 ```xml
 <dependency>
@@ -8601,7 +8560,7 @@ public class SMSCodeServiceImpl implements SMSCodeService {
 </dependency>
 ```
 
-**步骤②**：配置缓存
+<b>步骤②<b>：配置缓存
 
 ```yaml
 jetcache:
@@ -8641,7 +8600,7 @@ public class Book implements Serializable {
 }
 ```
 
-**步骤③**：启用缓存时开启方法缓存功能，并配置basePackages，说明在哪些包中开启方法缓存
+<b>步骤③<b>：启用缓存时开启方法缓存功能，并配置basePackages，说明在哪些包中开启方法缓存
 
 ```java
 @SpringBootApplication
@@ -8656,7 +8615,7 @@ public class Springboot20JetCacheApplication {
 }
 ```
 
-**步骤④**：使用注解@Cached标注当前方法使用缓存
+<b>步骤④<b>：使用注解@Cached标注当前方法使用缓存
 
 ```java
 @Service
@@ -8676,7 +8635,7 @@ public class BookServiceImpl implements BookService {
 
 ​		由于远程方案中redis保存的数据可以被多个客户端共享，这就存在了数据同步问题。jetcache提供了3个注解解决此问题，分别在更新、删除操作时同步缓存数据，和读取缓存时定时刷新数据
 
-**更新缓存**
+<b>更新缓存<b>
 
 ```JAVA
 @CacheUpdate(name="book_",key="#book.id",value="#book")
@@ -8685,7 +8644,7 @@ public boolean update(Book book) {
 }
 ```
 
-**删除缓存**
+<b>删除缓存<b>
 
 ```JAVA
 @CacheInvalidate(name="book_",key = "#id")
@@ -8694,7 +8653,7 @@ public boolean delete(Integer id) {
 }
 ```
 
-**定时刷新缓存**
+<b>定时刷新缓存<b>
 
 ```JAVA
 @Cached(name="book_",key="#id",expire = 3600,cacheType = CacheType.REMOTE)
@@ -8723,7 +8682,7 @@ book_    |   0.66| 75.86%|    29|     22|      0|        0|          28.0|      
 ---------+-------+-------+------+-------+-------+---------+--------------+--------------
 ```
 
-**总结**
+<b>总结<b>
 
 1. jetcache是一个类似于springcache的缓存解决方案，自身不具有缓存功能，它提供有本地缓存与远程缓存多级共同使用的缓存解决方案
 2. jetcache提供的缓存解决方案受限于目前支持的方案，本地缓存支持两种，远程缓存支持两种
@@ -8731,7 +8690,7 @@ book_    |   0.66| 75.86%|    29|     22|      0|        0|          28.0|      
 4. jetcache提供方法缓存，并提供了对应的缓存更新与刷新功能
 5. jetcache提供有简单的缓存信息命中报表方便开发者即时监控缓存数据命中情况
 
-**思考**
+<b>思考<b>
 
 ​		jetcache解决了前期使用缓存方案单一的问题，但是仍然不能灵活的选择缓存进行搭配使用，是否存在一种技术可以灵活的搭配各种各样的缓存使用呢？有，咱们下一节再讲。
 
@@ -8739,7 +8698,7 @@ book_    |   0.66| 75.86%|    29|     22|      0|        0|          28.0|      
 
 ​		jetcache可以在限定范围内构建多级缓存，但是灵活性不足，不能随意搭配缓存，本节介绍一种可以随意搭配缓存解决方案的缓存整合框架，j2cache。下面就来讲解如何使用这种缓存框架，以Ehcache与redis整合为例：
 
-**步骤①**：导入j2cache、redis、ehcache坐标
+<b>步骤①<b>：导入j2cache、redis、ehcache坐标
 
 ```xml
 <dependency>
@@ -8760,7 +8719,7 @@ book_    |   0.66| 75.86%|    29|     22|      0|        0|          28.0|      
 
 ​		j2cache的starter中默认包含了redis坐标，官方推荐使用redis作为二级缓存，因此此处无需导入redis坐标
 
-**步骤②**：配置一级与二级缓存，并配置一二级缓存间数据传递方式，配置书写在名称为j2cache.properties的文件中。如果使用ehcache还需要单独添加ehcache的配置文件
+<b>步骤②<b>：配置一级与二级缓存，并配置一二级缓存间数据传递方式，配置书写在名称为j2cache.properties的文件中。如果使用ehcache还需要单独添加ehcache的配置文件
 
 ```yaml
 # 1级缓存
@@ -8780,7 +8739,7 @@ j2cache.broadcast = net.oschina.j2cache.cache.support.redis.SpringRedisPubSubPol
 
 ​		一级与二级缓存最重要的一个配置就是两者之间的数据沟通方式，此类配置也不是随意配置的，并且不同的缓存解决方案提供的数据沟通方式差异化很大，需要查询官方文档进行设置。
 
-**步骤③**：使用缓存
+<b>步骤③<b>：使用缓存
 
 ```java
 @Service
@@ -9012,7 +8971,7 @@ memcached.opTimeout = 100
 memcached.sanitizeKeys = false
 ```
 
-**总结**
+<b>总结<b>
 
 1. j2cache是一个缓存框架，自身不具有缓存功能，它提供多种缓存整合在一起使用的方案
 2. j2cache需要通过复杂的配置设置各级缓存，以及缓存之间数据交换的方式
@@ -9035,7 +8994,7 @@ memcached.sanitizeKeys = false
 
 ​		简单说就是你定时干什么事情，这就是工作，工作不可能就是一个简单的方法，还要设置一些明细信息。工作啥时候执行，设置一个调度器，可以简单理解成设置一个工作执行的时间。工作和调度都是独立定义的，它们两个怎么配合到一起呢？用触发器。完了，就这么多。下面开始springboot整合Quartz。
 
-**步骤①**：导入springboot整合Quartz的starter
+<b>步骤①<b>：导入springboot整合Quartz的starter
 
 ```xml
 <dependency>
@@ -9044,7 +9003,7 @@ memcached.sanitizeKeys = false
 </dependency>
 ```
 
-**步骤②**：定义任务Bean，按照Quartz的开发规范制作，继承QuartzJobBean
+<b>步骤②<b>：定义任务Bean，按照Quartz的开发规范制作，继承QuartzJobBean
 
 ```java
 public class MyQuartz extends QuartzJobBean {
@@ -9055,7 +9014,7 @@ public class MyQuartz extends QuartzJobBean {
 }
 ```
 
-**步骤③**：创建Quartz配置类，定义工作明细（JobDetail）与触发器的（Trigger）bean
+<b>步骤③<b>：创建Quartz配置类，定义工作明细（JobDetail）与触发器的（Trigger）bean
 
 ```java
 @Configuration
@@ -9078,13 +9037,13 @@ public class QuartzConfig {
 
 ​		触发器需要绑定任务，使用forJob()操作传入绑定的工作明细对象。此处可以为工作明细设置名称然后使用名称绑定，也可以直接调用对应方法绑定。触发器中最核心的规则是执行时间，此处使用调度器定义执行时间，执行时间描述方式使用的是cron表达式。有关cron表达式的规则，各位小伙伴可以去参看相关课程学习，略微复杂，而且格式不能乱设置，不是写个格式就能用的，写不好就会出现冲突问题。
 
-**总结**
+<b>总结<b>
 
 1. springboot整合Quartz就是将Quartz对应的核心对象交给spring容器管理，包含两个对象，JobDetail和Trigger对象
 2. JobDetail对象描述的是工作的执行信息，需要绑定一个QuartzJobBean类型的对象
 3. Trigger对象定义了一个触发器，需要为其指定绑定的JobDetail是哪个，同时要设置执行周期调度器
 
-**思考**
+<b>思考<b>
 
 ​		上面的操作看上去不多，但是Quartz将其中的对象划分粒度过细，导致开发的时候有点繁琐，spring针对上述规则进行了简化，开发了自己的任务管理组件——Task，如何用呢？咱们下节再说。
 
@@ -9094,7 +9053,7 @@ public class QuartzConfig {
 
 ​		spring根据定时任务的特征，将定时任务的开发简化到了极致。怎么说呢？要做定时任务总要告诉容器有这功能吧，然后定时执行什么任务直接告诉对应的bean什么时间执行就行了，就这么简单，一起来看怎么做
 
-**步骤①**：开启定时任务功能，在引导类上开启定时任务功能的开关，使用注解@EnableScheduling
+<b>步骤①<b>：开启定时任务功能，在引导类上开启定时任务功能的开关，使用注解@EnableScheduling
 
 ```java
 @SpringBootApplication
@@ -9107,7 +9066,7 @@ public class Springboot22TaskApplication {
 }
 ```
 
-**步骤②**：定义Bean，在对应要定时执行的操作上方，使用注解@Scheduled定义执行的时间，执行时间的描述方式还是cron表达式
+<b>步骤②<b>：定义Bean，在对应要定时执行的操作上方，使用注解@Scheduled定义执行的时间，执行时间的描述方式还是cron表达式
 
 ```java
 @Component
@@ -9135,7 +9094,7 @@ spring:
           await-termination-period: 10s	# 调度线程关闭前最大等待时间，确保最后一定关闭
 ```
 
-**总结**
+<b>总结<b>
 
 1. spring task需要使用注解@EnableScheduling开启定时任务功能
 
@@ -9149,8 +9108,8 @@ spring:
 
 ​		学习邮件发送之前先了解3个概念，这些概念规范了邮件操作过程中的标准。
 
-- SMTP（Simple Mail Transfer Protocol）：简单邮件传输协议，用于**发送**电子邮件的传输协议
-- POP3（Post Office Protocol - Version 3）：用于**接收**电子邮件的标准协议
+- SMTP（Simple Mail Transfer Protocol）：简单邮件传输协议，用于<b>发送<b>电子邮件的传输协议
+- POP3（Post Office Protocol - Version 3）：用于<b>接收<b>电子邮件的标准协议
 - IMAP（Internet Mail Access Protocol）：互联网消息协议，是POP3的替代协议
 
 ​		简单说就是SMPT是发邮件的标准，POP3是收邮件的标准，IMAP是对POP3的升级。我们制作程序中操作邮件，通常是发邮件，所以SMTP是使用的重点，收邮件大部分都是通过邮件客户端完成，所以开发收邮件的代码极少。除非你要读取邮件内容，然后解析，做邮件功能的统一处理。例如HR的邮箱收到求职者的简历，可以读取后统一处理。但是为什么不制作独立的投递简历的系统呢？所以说，好奇怪的需求，因为要想收邮件就要规范发邮件的人的书写格式，这个未免有点强人所难，并且极易收到外部攻击，你不可能使用白名单来收邮件。如果能使用白名单来收邮件然后解析邮件，还不如开发个系统给白名单中的人专用呢，更安全，总之就是鸡肋了。下面就开始学习springboot如何整合javamail发送邮件。
@@ -9159,7 +9118,7 @@ spring:
 
 #### 发送简单邮件
 
-**步骤①**：导入springboot整合javamail的starter
+<b>步骤①<b>：导入springboot整合javamail的starter
 
 ```xml
 <dependency>
@@ -9168,7 +9127,7 @@ spring:
 </dependency>
 ```
 
-**步骤②**：配置邮箱的登录信息
+<b>步骤②<b>：配置邮箱的登录信息
 
 ```yaml
 spring:
@@ -9186,7 +9145,7 @@ spring:
 
 ![image-20220228111251036](img/image-20220228111251036.png)
 
-**步骤③**：使用JavaMailSender接口发送邮件
+<b>步骤③<b>：使用JavaMailSender接口发送邮件
 
 ```java
 @Service
@@ -9223,7 +9182,7 @@ public class SendMailServiceImpl implements SendMailService {
 
 ​		发送简单邮件仅需要提供对应的4个基本信息就可以了，如果想发送复杂的邮件，需要更换邮件对象。使用MimeMessage可以发送特殊的邮件。
 
-**发送网页正文邮件**
+<b>发送网页正文邮件<b>
 
 ```JAVA
 @Service
@@ -9257,7 +9216,7 @@ public class SendMailServiceImpl2 implements SendMailService {
 }
 ```
 
-**发送带有附件的邮件**
+<b>发送带有附件的邮件<b>
 
 ```JAVA
 @Service
@@ -9298,7 +9257,7 @@ public class SendMailServiceImpl2 implements SendMailService {
 }
 ```
 
-**总结**
+<b>总结<b>
 
 1. springboot整合javamail其实就是简化了发送邮件的客户端对象JavaMailSender的初始化过程，通过配置的形式加载信息简化开发过程
 
@@ -9338,17 +9297,17 @@ public class SendMailServiceImpl2 implements SendMailService {
 
 ​		JMS（Java Message Service）,这是一个规范，作用等同于JDBC规范，提供了与消息服务相关的API接口。
 
-**JMS消息模型**
+<b>JMS消息模型<b>
 
-​		JMS规范中规范了消息有两种模型。分别是**点对点模型**和**发布订阅模型**。
+​		JMS规范中规范了消息有两种模型。分别是<b>点对点模型<b>和<b>发布订阅模型<b>。
 
-​		**点对点模型**：peer-2-peer，生产者会将消息发送到一个保存消息的容器中，通常使用队列模型，使用队列保存消息。一个队列的消息只能被一个消费者消费，或未被及时消费导致超时。这种模型下，生产者和消费者是一对一绑定的。
+​		<b>点对点模型<b>：peer-2-peer，生产者会将消息发送到一个保存消息的容器中，通常使用队列模型，使用队列保存消息。一个队列的消息只能被一个消费者消费，或未被及时消费导致超时。这种模型下，生产者和消费者是一对一绑定的。
 
-​		**发布订阅模型**：publish-subscribe，生产者将消息发送到一个保存消息的容器中，也是使用队列模型来保存。但是消息可以被多个消费者消费，生产者和消费者完全独立，相互不需要感知对方的存在。
+​		<b>发布订阅模型<b>：publish-subscribe，生产者将消息发送到一个保存消息的容器中，也是使用队列模型来保存。但是消息可以被多个消费者消费，生产者和消费者完全独立，相互不需要感知对方的存在。
 
 ​		以上这种分类是从消息的生产和消费过程来进行区分，针对消息所包含的信息不同，还可以进行不同类别的划分。
 
-**JMS消息种类**
+<b>JMS消息种类<b>
 
 ​		根据消息中包含的数据种类划分，可以将消息划分成6种消息。
 
@@ -9370,17 +9329,17 @@ public class SendMailServiceImpl2 implements SendMailService {
 ​		单从上面的说明中其实可以明确感知到，AMQP的出现解决的是消息传递时使用的消息种类的问题，化繁为简，但是其并没有完全推翻JMS的操作API，所以说AMQP仅仅是一种协议，规范了数据传输的格式而已。
 
 ​		AMQP（advanced message queuing protocol）：一种协议（高级消息队列协议，也是消息代理规范），规范了网络交换的数据格式，兼容JMS操作。
-**优点**
+<b>优点<b>
 
 ​		具有跨平台性，服务器供应商，生产者，消费者可以使用不同的语言来实现
 
-**JMS消息种类**
+<b>JMS消息种类<b>
 
 ​		AMQP消息种类：byte[]
 
 ​		AMQP在JMS的消息模型基础上又进行了进一步的扩展，除了点对点和发布订阅的模型，开发了几种全新的消息模型，适应各种各样的消息发送。
 
-**AMQP消息模型**
+<b>AMQP消息模型<b>
 
 - direct exchange
 - fanout exchange
@@ -9414,9 +9373,9 @@ public class SendMailServiceImpl2 implements SendMailService {
 
     由于不涉及数据读写，仅开发业务层与表现层，其中短信处理的业务代码独立开发，代码如下：
 
-**订单业务**
+<b>订单业务<b>
 
-​		**业务层接口**
+​		<b>业务层接口<b>
 
 ```JAVA
 public interface OrderService {
@@ -9426,7 +9385,7 @@ public interface OrderService {
 
 ​		模拟传入订单id，执行下订单业务，参数为虚拟设定，实际应为订单对应的实体类
 
-​		**业务层实现**
+​		<b>业务层实现<b>
 
 ```JAVA
 @Service
@@ -9448,7 +9407,7 @@ public class OrderServiceImpl implements OrderService {
 
 ​		业务层转调短信处理的服务MessageService
 
-​		**表现层服务**
+​		<b>表现层服务<b>
 
 ```JAVA
 @RestController
@@ -9467,9 +9426,9 @@ public class OrderController {
 
 ​		表现层对外开发接口，传入订单id即可（模拟）
 
-**短信处理业务**
+<b>短信处理业务<b>
 
-​		**业务层接口**
+​		<b>业务层接口<b>
 
 ```JAVA
 public interface MessageService {
@@ -9480,7 +9439,7 @@ public interface MessageService {
 
 ​		短信处理业务层接口提供两个操作，发送要处理的订单id到消息中间件，另一个操作目前暂且设计成处理消息，实际消息的处理过程不应该是手动执行，应该是自动执行，到具体实现时再进行设计
 
-​		**业务层实现**
+​		<b>业务层实现<b>
 
 ```JAVA
 @Service
@@ -9504,7 +9463,7 @@ public class MessageServiceImpl implements MessageService {
 
 ​		短信处理业务层实现中使用集合先模拟消息队列，观察效果
 
-​		**表现层服务**
+​		<b>表现层服务<b>
 
 ```JAVA
 @RestController
@@ -9538,7 +9497,7 @@ public class MessageController {
 
 ![image-20220228160001620](img/image-20220228160001620.png)
 
-**启动服务器**
+<b>启动服务器<b>
 
 ```CMD
 activemq.bat
@@ -9546,7 +9505,7 @@ activemq.bat
 
 ​		运行bin目录下的win32或win64目录下的activemq.bat命令即可，根据自己的操作系统选择即可，默认对外服务端口61616。
 
-**访问web管理服务**
+<b>访问web管理服务<b>
 
 ​		ActiveMQ启动后会启动一个Web控制台服务，可以通过该服务管理ActiveMQ。
 
@@ -9564,7 +9523,7 @@ http://127.0.0.1:8161/
 
 ​		看到上述界面视为启动ActiveMQ服务成功。
 
-**启动失败**
+<b>启动失败<b>
 
 ​		在ActiveMQ启动时要占用多个端口，以下为正常启动信息：
 
@@ -9789,7 +9748,7 @@ wrapper  | <-- Wrapper Stopped
 
 ​		做了这么多springboot整合第三方技术，已经摸到门路了，加坐标，做配置，调接口，直接开工
 
-**步骤①**：导入springboot整合ActiveMQ的starter
+<b>步骤①<b>：导入springboot整合ActiveMQ的starter
 
 ```xml
 <dependency>
@@ -9798,7 +9757,7 @@ wrapper  | <-- Wrapper Stopped
 </dependency>
 ```
 
-**步骤②**：配置ActiveMQ的服务器地址
+<b>步骤②<b>：配置ActiveMQ的服务器地址
 
 ```yaml
 spring:
@@ -9806,7 +9765,7 @@ spring:
     broker-url: tcp://localhost:61616
 ```
 
-**步骤③**：使用JmsMessagingTemplate操作ActiveMQ
+<b>步骤③<b>：使用JmsMessagingTemplate操作ActiveMQ
 
 ```java
 @Service
@@ -9833,7 +9792,7 @@ public class MessageServiceActivemqImpl implements MessageService {
 
 ​		接收消息需要先将消息接收到，然后再转换成指定的数据类型，所以是receiveAndConvert，接收消息除了提供读取的位置，还要给出转换后的数据的具体类型。
 
-**步骤④**：使用消息监听器在服务器启动后，监听指定位置，当消息出现后，立即消费消息
+<b>步骤④<b>：使用消息监听器在服务器启动后，监听指定位置，当消息出现后，立即消费消息
 
 ```JAVA
 @Component
@@ -9851,7 +9810,7 @@ public class MessageListener {
 
 ​		如果当前消息队列处理完还需要继续向下传递当前消息到另一个队列中使用注解@SendTo即可，这样即可构造连续执行的顺序消息队列。
 
-**步骤⑤**：切换消息模型由点对点模型到发布订阅模型，修改jms配置即可
+<b>步骤⑤<b>：切换消息模型由点对点模型到发布订阅模型，修改jms配置即可
 
 ```yaml
 spring:
@@ -9863,7 +9822,7 @@ spring:
 
 ​		pub-sub-domain默认值为false，即点对点模型，修改为true后就是发布订阅模型。
 
-**总结**
+<b>总结<b>
 
 1. springboot整合ActiveMQ提供了JmsMessagingTemplate对象作为客户端操作消息队列
 2. 操作ActiveMQ需要配置ActiveMQ服务器地址，默认端口61616
@@ -9876,7 +9835,7 @@ spring:
 
 ​		RabbitMQ是MQ产品中的目前较为流行的产品之一，它遵从AMQP协议。RabbitMQ的底层实现语言使用的是Erlang，所以安装RabbitMQ需要先安装Erlang。
 
-**Erlang安装**
+<b>Erlang安装<b>
 
 ​		windows版安装包下载地址：[https](https://www.erlang.org/downloads)[://www.erlang.org/downloads](https://www.erlang.org/downloads)
 
@@ -9899,7 +9858,7 @@ spring:
 
 <div align="center"><img src="img/image-20220228165151524.png" alt="image-20220228165151524" style="zoom:67%;" /></div>
 
-**启动服务器**
+<b>启动服务器<b>
 
 ```CMD
 rabbitmq-service.bat start		# 启动服务
@@ -9917,7 +9876,7 @@ rabbitmqctl status				# 查看服务状态
 
 <div align="center"><img src="img/image-20220228170147193.png" alt="image-20220228170147193" style="zoom:67%;" /></div>
 
-**访问web管理服务**
+<b>访问web管理服务<b>
 
 ​		RabbitMQ也提供有web控制台服务，但是此功能是一个插件，需要先启用才可以使用。
 
@@ -9944,7 +9903,7 @@ http://localhost:15672
 
 ​		RabbitMQ满足AMQP协议，因此不同的消息模型对应的制作不同，先使用最简单的direct模型开发。
 
-**步骤①**：导入springboot整合amqp的starter，amqp协议默认实现为rabbitmq方案
+<b>步骤①<b>：导入springboot整合amqp的starter，amqp协议默认实现为rabbitmq方案
 
 ```xml
 <dependency>
@@ -9953,7 +9912,7 @@ http://localhost:15672
 </dependency>
 ```
 
-**步骤②**：配置RabbitMQ的服务器地址
+<b>步骤②<b>：配置RabbitMQ的服务器地址
 
 ```yaml
 spring:
@@ -9962,7 +9921,7 @@ spring:
     port: 5672
 ```
 
-**步骤③**：初始化直连模式系统设置
+<b>步骤③<b>：初始化直连模式系统设置
 
 ​		由于RabbitMQ不同模型要使用不同的交换机，因此需要先初始化RabbitMQ相关的对象，例如队列，交换机等
 
@@ -9994,7 +9953,7 @@ public class RabbitConfigDirect {
 
 ​		队列Queue与直连交换机DirectExchange创建后，还需要绑定他们之间的关系Binding，这样就可以通过交换机操作对应队列。
 
-**步骤④**：使用AmqpTemplate操作RabbitMQ
+<b>步骤④<b>：使用AmqpTemplate操作RabbitMQ
 
 ```java
 @Service
@@ -10012,7 +9971,7 @@ public class MessageServiceRabbitmqDirectImpl implements MessageService {
 
 ​		amqp协议中的操作API接口名称看上去和jms规范的操作API接口很相似，但是传递参数差异很大。
 
-**步骤⑤**：使用消息监听器在服务器启动后，监听指定位置，当消息出现后，立即消费消息
+<b>步骤⑤<b>：使用消息监听器在服务器启动后，监听指定位置，当消息出现后，立即消费消息
 
 ```JAVA
 @Component
@@ -10028,11 +9987,11 @@ public class MessageListener {
 
 ##### 整合(topic模型)
 
-**步骤①**：同上
+<b>步骤①<b>：同上
 
-**步骤②**：同上
+<b>步骤②<b>：同上
 
-**步骤③**：初始化主题模式系统设置
+<b>步骤③<b>：初始化主题模式系统设置
 
 ```JAVA
 @Configuration
@@ -10062,7 +10021,7 @@ public class RabbitConfigTopic {
 
 ​		主题模式支持routingKey匹配模式，*表示匹配一个单词，#表示匹配任意内容，这样就可以通过主题交换机将消息分发到不同的队列中，详细内容请参看RabbitMQ系列课程。	
 
-| **匹配键**        | **topic.\*.\*** | **topic.#** |
+| <b>匹配键<b>        | <b>topic.\*.\<b>* | <b>topic.#<b> |
 | ----------------- | --------------- | ----------- |
 | topic.order.id    | true            | true        |
 | order.topic.id    | false           | false       |
@@ -10072,7 +10031,7 @@ public class RabbitConfigTopic {
 | topic.id          | false           | true        |
 | topic.order       | false           | true        |
 
-**步骤④**：使用AmqpTemplate操作RabbitMQ
+<b>步骤④<b>：使用AmqpTemplate操作RabbitMQ
 
 ```java
 @Service
@@ -10090,7 +10049,7 @@ public class MessageServiceRabbitmqTopicImpl implements MessageService {
 
 ​		发送消息后，根据当前提供的routingKey与绑定交换机时设定的routingKey进行匹配，规则匹配成功消息才会进入到对应的队列中。
 
-**步骤⑤**：使用消息监听器在服务器启动后，监听指定队列
+<b>步骤⑤<b>：使用消息监听器在服务器启动后，监听指定队列
 
 ```JAVA
 @Component
@@ -10108,7 +10067,7 @@ public class MessageListener {
 
 ​		使用注解@RabbitListener定义当前方法监听RabbitMQ中指定名称的消息队列。
 
-**总结**
+<b>总结<b>
 
 1. springboot整合RabbitMQ提供了AmqpTemplate对象作为客户端操作消息队列
 2. 操作ActiveMQ需要配置ActiveMQ服务器地址，默认端口5672
@@ -10135,13 +10094,13 @@ public class MessageListener {
 
 ​		关于NAMESRV_ADDR对于初学者来说建议配置此项，也可以通过命令设置对应值，操作略显繁琐，建议配置。系统学习RocketMQ知识后即可灵活控制该项。
 
-**RocketMQ工作模式**
+<b>RocketMQ工作模式<b>
 
 ​		在RocketMQ中，处理业务的服务器称为broker，生产者与消费者不是直接与broker联系的，而是通过命名服务器进行通信。broker启动后会通知命名服务器自己已经上线，这样命名服务器中就保存有所有的broker信息。当生产者与消费者需要连接broker时，通过命名服务器找到对应的处理业务的broker，因此命名服务器在整套结构中起到一个信息中心的作用。并且broker启动前必须保障命名服务器先启动。
 
 <div align="center"><img src="img/image-20220228175123790.png" alt="image-20220228175123790" style="zoom:80%;" /></div>
 
-**启动服务器**
+<b>启动服务器<b>
 
 ```CMD
 mqnamesrv		# 启动命名服务器
@@ -10152,7 +10111,7 @@ mqbroker		# 启动broker
 
 ​		运行bin目录下的mqbroker命令即可启动broker服务器，如果环境变量中没有设置NAMESRV_ADDR则需要在运行mqbroker指令前通过set指令设置NAMESRV_ADDR的值，并且每次开启均需要设置此项。
 
-**测试服务器启动状态**
+<b>测试服务器启动状态<b>
 
 ​		RocketMQ提供有一套测试服务器功能的测试程序，运行bin目录下的tools命令即可使用。
 
@@ -10163,7 +10122,7 @@ tools org.apache.rocketmq.example.quickstart.Consumer		# 消费消息
 
 ##### 整合（异步消息）
 
-**步骤①**：导入springboot整合RocketMQ的starter，此坐标不由springboot维护版本
+<b>步骤①<b>：导入springboot整合RocketMQ的starter，此坐标不由springboot维护版本
 
 ```xml
 <dependency>
@@ -10173,7 +10132,7 @@ tools org.apache.rocketmq.example.quickstart.Consumer		# 消费消息
 </dependency>
 ```
 
-**步骤②**：配置RocketMQ的服务器地址
+<b>步骤②<b>：配置RocketMQ的服务器地址
 
 ```yaml
 rocketmq:
@@ -10184,7 +10143,7 @@ rocketmq:
 
 ​		设置默认的生产者消费者所属组group。
 
-**步骤③**：使用RocketMQTemplate操作RocketMQ
+<b>步骤③<b>：使用RocketMQTemplate操作RocketMQ
 
 ```java
 @Service
@@ -10213,7 +10172,7 @@ public class MessageServiceRocketmqImpl implements MessageService {
 
 ​		使用asyncSend方法发送异步消息。
 
-**步骤④**：使用消息监听器在服务器启动后，监听指定位置，当消息出现后，立即消费消息
+<b>步骤④<b>：使用消息监听器在服务器启动后，监听指定位置，当消息出现后，立即消费消息
 
 ```JAVA
 @Component
@@ -10230,7 +10189,7 @@ public class MessageListener implements RocketMQListener<String> {
 
 ​		使用注解@RocketMQMessageListener定义当前类监听RabbitMQ中指定组、指定名称的消息队列。
 
-**总结**
+<b>总结<b>
 
 1. springboot整合RocketMQ使用RocketMQTemplate对象作为客户端操作消息队列
 2. 操作RocketMQ需要配置RocketMQ服务器地址，默认端口9876
@@ -10250,7 +10209,7 @@ public class MessageListener implements RocketMQListener<String> {
 
 ​		建议使用windows版2.8.1版本。
 
-**启动服务器**
+<b>启动服务器<b>
 
 ​		kafka服务器的功能相当于RocketMQ中的broker，kafka运行还需要一个类似于命名服务器的服务。在kafka安装目录中自带一个类似于命名服务器的工具，叫做zookeeper，它的作用是注册中心，相关知识请到对应课程中学习。
 
@@ -10263,7 +10222,7 @@ kafka-server-start.bat ..\..\config\server.properties				# 启动kafka
 
 ​		运行bin目录下的windows目录下的kafka-server-start命令即可启动kafka服务器，默认对外服务端口9092。
 
-**创建主题**
+<b>创建主题<b>
 
 ​		和之前操作其他MQ产品相似，kakfa也是基于主题操作，操作之前需要先初始化topic。
 
@@ -10276,7 +10235,7 @@ kafka-topics.bat --zookeeper 127.0.0.1:2181 --list
 kafka-topics.bat --delete --zookeeper localhost:2181 --topic itheima
 ```
 
-**测试服务器启动状态**
+<b>测试服务器启动状态<b>
 
 ​		Kafka提供有一套测试服务器功能的测试程序，运行bin目录下的windows目录下的命令即可使用。
 
@@ -10287,7 +10246,7 @@ kafka-console-consumer.bat --bootstrap-server localhost:9092 --topic itheima --f
 
 ##### 整合
 
-**步骤①**：导入springboot整合Kafka的starter，此坐标由springboot维护版本
+<b>步骤①<b>：导入springboot整合Kafka的starter，此坐标由springboot维护版本
 
 ```xml
 <dependency>
@@ -10296,7 +10255,7 @@ kafka-console-consumer.bat --bootstrap-server localhost:9092 --topic itheima --f
 </dependency>
 ```
 
-**步骤②**：配置Kafka的服务器地址
+<b>步骤②<b>：配置Kafka的服务器地址
 
 ```yaml
 spring:
@@ -10308,7 +10267,7 @@ spring:
 
 ​		设置默认的生产者消费者所属组id。
 
-**步骤③**：使用KafkaTemplate操作Kafka
+<b>步骤③<b>：使用KafkaTemplate操作Kafka
 
 ```java
 @Service
@@ -10326,7 +10285,7 @@ public class MessageServiceKafkaImpl implements MessageService {
 
 ​		使用send方法发送消息，需要传入topic名称。
 
-**步骤④**：使用消息监听器在服务器启动后，监听指定位置，当消息出现后，立即消费消息
+<b>步骤④<b>：使用消息监听器在服务器启动后，监听指定位置，当消息出现后，立即消费消息
 
 ```JAVA
 @Component
@@ -10340,7 +10299,7 @@ public class MessageListener {
 
 ​		使用注解@KafkaListener定义当前方法监听Kafka中指定topic的消息，接收到的消息封装在对象ConsumerRecord中，获取数据从ConsumerRecord对象中获取即可。
 
-**总结**
+<b>总结<b>
 
 1. springboot整合Kafka使用KafkaTemplate对象作为客户端操作消息队列
 
@@ -10360,7 +10319,7 @@ public class MessageListener {
 
 ### 监控的意义
 
-​		对于现代的互联网程序来说，规模越来越大，功能越来越复杂，还要追求更好的客户体验，因此要监控的信息量也就比较大了。由于现在的互联网程序大部分都是基于微服务的程序，一个程序的运行需要若干个服务来保障，因此第一个要监控的指标就是服务是否正常运行，也就是**监控服务状态是否处理宕机状态**。一旦发现某个服务宕机了，必须马上给出对应的解决方案，避免整体应用功能受影响。其次，由于互联网程序服务的客户量是巨大的，当客户的请求在短时间内集中达到服务器后，就会出现各种程序运行指标的波动。比如内存占用严重，请求无法及时响应处理等，这就是第二个要监控的重要指标，**监控服务运行指标**。虽然软件是对外提供用户的访问需求，完成对应功能的，但是后台的运行是否平稳，是否出现了不影响客户使用的功能隐患，这些也是要密切监控的，此时就需要在不停机的情况下，监控系统运行情况，日志是一个不错的手段。如果在众多日志中找到开发者或运维人员所关注的日志信息，简单快速有效的过滤出要看的日志也是监控系统需要考虑的问题，这就是第三个要监控的指标，**监控程序运行日志**。虽然我们期望程序一直平稳运行，但是由于突发情况的出现，例如服务器被攻击、服务器内存溢出等情况造成了服务器宕机，此时当前服务不能满足使用需要，就要将其重启甚至关闭，如果快速控制服务器的启停也是程序运行过程中不可回避的问题，这就是第四个监控项，**管理服务状态**。以上这些仅仅是从大的方面来思考监控这个问题，还有很多的细节点，例如上线了一个新功能，定时提醒用户续费，这种功能不是上线后马上就运行的，但是当前功能是否真的启动，如果快速的查询到这个功能已经开启，这也是监控中要解决的问题，等等。看来监控真的是一项非常重要的工作。
+​		对于现代的互联网程序来说，规模越来越大，功能越来越复杂，还要追求更好的客户体验，因此要监控的信息量也就比较大了。由于现在的互联网程序大部分都是基于微服务的程序，一个程序的运行需要若干个服务来保障，因此第一个要监控的指标就是服务是否正常运行，也就是<b>监控服务状态是否处理宕机状态<b>。一旦发现某个服务宕机了，必须马上给出对应的解决方案，避免整体应用功能受影响。其次，由于互联网程序服务的客户量是巨大的，当客户的请求在短时间内集中达到服务器后，就会出现各种程序运行指标的波动。比如内存占用严重，请求无法及时响应处理等，这就是第二个要监控的重要指标，<b>监控服务运行指标<b>。虽然软件是对外提供用户的访问需求，完成对应功能的，但是后台的运行是否平稳，是否出现了不影响客户使用的功能隐患，这些也是要密切监控的，此时就需要在不停机的情况下，监控系统运行情况，日志是一个不错的手段。如果在众多日志中找到开发者或运维人员所关注的日志信息，简单快速有效的过滤出要看的日志也是监控系统需要考虑的问题，这就是第三个要监控的指标，<b>监控程序运行日志<b>。虽然我们期望程序一直平稳运行，但是由于突发情况的出现，例如服务器被攻击、服务器内存溢出等情况造成了服务器宕机，此时当前服务不能满足使用需要，就要将其重启甚至关闭，如果快速控制服务器的启停也是程序运行过程中不可回避的问题，这就是第四个监控项，<b>管理服务状态<b>。以上这些仅仅是从大的方面来思考监控这个问题，还有很多的细节点，例如上线了一个新功能，定时提醒用户续费，这种功能不是上线后马上就运行的，但是当前功能是否真的启动，如果快速的查询到这个功能已经开启，这也是监控中要解决的问题，等等。看来监控真的是一项非常重要的工作。
 
 ​		通过上述描述，可以看出监控很重要。那具体的监控要如何开展呢？还要从实际的程序运行角度出发。比如现在有3个服务支撑着一个程序的运行，每个服务都有自己的运行状态。
 
@@ -10382,13 +10341,13 @@ public class MessageListener {
 
 ​		以上描述的整个过程就是一个监控系统的基本流程。
 
-**总结**
+<b>总结<b>
 
 1. 监控是一个非常重要的工作，是保障程序正常运行的基础手段
 2. 监控的过程通过一个监控程序进行，它汇总所有被监控的程序的信息集中统一展示
 3. 被监控程序需要主动上报自己被监控，同时要设置哪些指标被监控
 
-**思考**
+<b>思考<b>
 
 ​		下面就要开始做监控了，新的问题就来了，监控程序怎么做呢？难道要自己写吗？肯定是不现实的，如何进行监控，咱们下节再讲。
 
@@ -10396,15 +10355,15 @@ public class MessageListener {
 
 ### 可视化监控平台
 
-​		springboot抽取了大部分监控系统的常用指标，提出了监控的总思想。然后就有好心的同志根据监控的总思想，制作了一个通用性很强的监控系统，因为是基于springboot监控的核心思想制作的，所以这个程序被命名为**Spring Boot Admin**。
+​		springboot抽取了大部分监控系统的常用指标，提出了监控的总思想。然后就有好心的同志根据监控的总思想，制作了一个通用性很强的监控系统，因为是基于springboot监控的核心思想制作的，所以这个程序被命名为<b>Spring Boot Admin<b>。
 
 ​		Spring Boot Admin，这是一个开源社区项目，用于管理和监控SpringBoot应用程序。这个项目中包含有客户端和服务端两部分，而监控平台指的就是服务端。我们做的程序如果需要被监控，将我们做的程序制作成客户端，然后配置服务端地址后，服务端就可以通过HTTP请求的方式从客户端获取对应的信息，并通过UI界面展示对应信息。
 
 ​		下面就来开发这套监控程序，先制作服务端，其实服务端可以理解为是一个web程序，收到一些信息后展示这些信息。
 
-**服务端开发**
+<b>服务端开发<b>
 
-**步骤①**：导入springboot admin对应的starter，版本与当前使用的springboot版本保持一致，并将其配置成web工程
+<b>步骤①<b>：导入springboot admin对应的starter，版本与当前使用的springboot版本保持一致，并将其配置成web工程
 
 ```xml
 <dependency>
@@ -10423,7 +10382,7 @@ public class MessageListener {
 
 <div align="center"><img src="img/image-20220301102432817.png" alt="image-20220301102432817" style="zoom:50%;" /></div>
 
-**步骤②**：在引导类上添加注解@EnableAdminServer，声明当前应用启动后作为SpringBootAdmin的服务器使用
+<b>步骤②<b>：在引导类上添加注解@EnableAdminServer，声明当前应用启动后作为SpringBootAdmin的服务器使用
 
 ```java
 @SpringBootApplication
@@ -10441,11 +10400,11 @@ public class Springboot25AdminServerApplication {
 
 ​		由于目前没有启动任何被监控的程序，所以里面什么信息都没有。下面制作一个被监控的客户端程序。
 
-**客户端开发**
+<b>客户端开发<b>
 
 ​		客户端程序开发其实和服务端开发思路基本相似，多了一些配置而已。
 
-**步骤①**：导入springboot admin对应的starter，版本与当前使用的springboot版本保持一致，并将其配置成web工程
+<b>步骤①<b>：导入springboot admin对应的starter，版本与当前使用的springboot版本保持一致，并将其配置成web工程
 
 ```xml
 <dependency>
@@ -10462,7 +10421,7 @@ public class Springboot25AdminServerApplication {
 
 ​		上述过程也可以通过创建项目时使用勾选的形式完成，不过一定要小心，端口配置成不一样的，否则会冲突。
 
-**步骤②**：设置当前客户端将信息上传到哪个服务器上，通过yml文件配置
+<b>步骤②<b>：设置当前客户端将信息上传到哪个服务器上，通过yml文件配置
 
 ```yaml
 spring:
@@ -10538,7 +10497,7 @@ endpoints:
 
 ​		以上界面中展示的信息量就非常大了，包含了13组信息，有性能指标监控，加载的bean列表，加载的系统属性，日志的显示控制等等。
 
-**配置多个客户端**
+<b>配置多个客户端<b>
 
 ​		可以通过配置客户端的方式在其他的springboot程序中添加客户端坐标，这样当前服务器就可以监控多个客户端程序了。每个客户端展示不同的监控信息。
 
@@ -10558,13 +10517,13 @@ endpoints:
 
 ​                        <div align="center"><img src="img/image-20220301161906949.png"  style="zoom: 33%;" /></div><div align="center"><img src="img/image-20220301162040670.png" style="zoom: 33%;" /></div>
 
-**总结**
+<b>总结<b>
 
 1. 开发监控服务端需要导入坐标，然后在引导类上添加注解@EnableAdminServer，并将其配置成web程序即可
 2. 开发被监控的客户端需要导入坐标，然后配置服务端服务器地址，并做开放指标的设定即可
 3. 在监控平台中可以查阅到各种各样被监控的指标，前提是客户端开放了被监控的指标
 
-**思考**
+<b>思考<b>
 
 ​		之前说过，服务端要想监控客户端，需要主动的获取到对应信息并展示出来。但是目前我们并没有在客户端开发任何新的功能，但是服务端确可以获取监控信息，谁帮我们做的这些功能呢？咱们下一节再讲。
 
@@ -10707,7 +10666,7 @@ endpoints:
 
 ​		这个actuator是什么呢？这就是本节要讲的核心内容，监控的端点。
 
-​		Actuator，可以称为端点，描述了一组监控信息，SpringBootAdmin提供了多个内置端点，通过访问端点就可以获取对应的监控信息，也可以根据需要自定义端点信息。通过发送请求路劲**/actuator**可以访问应用所有端点信息，如果端点中还有明细信息可以发送请求**/actuator/端点名称**来获取详细信息。以下列出了所有端点信息说明：
+​		Actuator，可以称为端点，描述了一组监控信息，SpringBootAdmin提供了多个内置端点，通过访问端点就可以获取对应的监控信息，也可以根据需要自定义端点信息。通过发送请求路劲<b>/actuator<b>可以访问应用所有端点信息，如果端点中还有明细信息可以发送请求<b>/actuator/端点名称<b>来获取详细信息。以下列出了所有端点信息说明：
 
 | ID               | 描述                                                         | 默认启用 |
 | ---------------- | ------------------------------------------------------------ | -------- |
@@ -10780,7 +10739,7 @@ management:
     enabled-by-default: true
 ```
 
-**总结**
+<b>总结<b>
 
 1. 被监控客户端通过添加actuator的坐标可以对外提供被访问的端点功能
 
@@ -10794,7 +10753,7 @@ management:
 
 ​		端点描述了被监控的信息，除了系统默认的指标，还可以自行添加显示的指标，下面就通过3种不同的端点的指标自定义方式来学习端点信息的二次开发。
 
-**INFO端点**
+<b>INFO端点<b>
 
 ​		info端点描述了当前应用的基本信息，可以通过两种形式快速配置info端点的信息
 
@@ -10835,7 +10794,7 @@ management:
     }
     ```
 
-**Health端点**
+<b>Health端点<b>
 
 ​		health端点描述当前应用的运行健康指标，即应用的运行是否成功。通过编程的形式可以扩展指标信息。
 
@@ -10863,7 +10822,7 @@ public class HealthConfig extends AbstractHealthIndicator {
 
 <div align="center"><img src="img/image-20220301174751845.png" alt="image-20220301174751845" style="zoom:50%;" /></div>
 
-**Metrics端点**
+<b>Metrics端点<b>
 
 ​		metrics端点描述了性能指标，除了系统自带的监控性能指标，还可以自定义性能指标。
 
@@ -10892,7 +10851,7 @@ public class BookServiceImpl extends ServiceImpl<BookDao, Book> implements IBook
 
 <div align="center"><img src="img/image-20220301175101812.png" alt="image-20220301175101812" style="zoom:50%;" /></div>
 
-**自定义端点**
+<b>自定义端点<b>
 
 ​		可以根据业务需要自定义端点，方便业务监控
 
@@ -10915,7 +10874,7 @@ public class PayEndpoint {
 
 <div align="center"><img src="img/image-20220301175355482.png" style="zoom:50%;" /></div>
 
-**总结**
+<b>总结<b>
 
 1. 端点的指标可以自定义，但是每种不同的指标根据其功能不同，自定义方式不同
 2. info端点通过配置和编程的方式都可以添加端点指标

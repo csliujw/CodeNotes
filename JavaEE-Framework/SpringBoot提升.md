@@ -30,7 +30,7 @@
 
 ## 学习收获
 
-- Spring 全栈技术和实现原理
+- Spring 全栈技术和实现原理8
 - Spring Boot 核心技术
 - 微服务基础设施开发与生产实施经验
 
@@ -555,687 +555,264 @@ org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportLoggingL
 
 ## 生产准备特性
 
+什么叫生产准备特性？
+
+> Spring Boot includes a number of additional features to help you monitor and manage your application when you push it to production. You can choose to manage and monitor your application by using HTTP endpoints or with JMX. Auditing, health, and metrics gathering can also be automatically applied to your application.
+>
+> Spring Boot 包括许多附加功能，可帮助您在将应用程序推送到生产环境时对其<b>进行监视和管理</b>。您可以选择使用 <b>HTTP Endpoints 或使用 JMX 来管理和监视应用程序</b>。审核、运行状况和指标收集也可以自动应用于应用程序。
+>
+> 简而言之：Spring Boot Actuator 用于监控和管理 Spring 应用，可通过 HTTPEndpoint 或 JMX Bean 与其交互。
+
 - 指标：/actuator/metrics
 - 健康检查：/actuator/health
 - 外部化配置：/actuator/configprops 修改应用行为
 
-# Web应用
+### Spring Boot Actuator Endpoints
 
-## 传统Servlet应用概述
-
-- Servlet组件：Servlet、Filter、Listener（传统的三大组件）
-- Servlet注册：Servlet注解、Spring Bean、RegistrationBean（如何把Servlet注册进来）
-  - 我们允许把Servlet注册成一个Spring Bean加载运行。
-  - RegistrationBean
-- 异步非阻塞：异步Servlet、非阻塞Servlet
-
-`依赖`
+要使用 Actuator 需要手动引入依赖：
 
 ```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
-</dependency>
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+</dependencies>
 ```
 
-## Servlet组件
+其中，常用的 Endpoints 如下：
 
-- Servlet
+| ID           | 描述                                                         |
+| ------------ | ------------------------------------------------------------ |
+| `beans`      | 显示当前 Spring 应用上下文的 Spring Bean 完整列表            |
+| `conditions` | 显示当前应用所有配置类和自动装配类的条件评估结果（包含匹配的和非匹配的） |
+| `env`        | 暴露 Spring ConfigurableEnvironment 中的 PropertySource 属性 |
+| `health`     | 显示应用的健康信息                                           |
+| `info`       | 显示任意的应用信息                                           |
 
-  - 实现
+仅有 health 和 info 为默认保留的 Web Endpoints。如果需要暴露其他的 Endpoints（即通过 web 访问查阅相关信息），则可以增加 `management.endpoints.web.exposure.include=*` 的配置属性到 application.properties 或启动参数中。
 
-    ```java
-    @WebServlet(urlPatterns = {"/my/servlet"})
-    public class MyServlet extends HttpServlet {
-        @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-            resp.getWriter().write("Hello");
-        }
-    }
-    ```
+<div align="center">
+    <img src="img/boot/image-20220619152217897.png">
+    <img src="img/boot/image-20220619152419163.png">
+    <img src="img/boot/image-20220619152612113.png">
+</div>
 
-  - URL映射
+### 理解外部化配置
 
-    ```java
-    @WebServlet(urlPatterns = {"/my/servlet"})
-    ```
+内部化配置是在代码内部进行控制，如指定当前使用什么参数。而外部化配置是可以在外部指定配置参数的。相同的应用代码可以根据所处的环境，差别化的使用外部的配置来源。如中间件，中间件的功能性组件时可以配置化的，如端口、线程池规模、连接时间等。
 
-  - 注册
+既然是外部化配置，那么配置信息自然是来自外部的，如 Properties 文件，YAML 文件，环境变量或命令行参数等。
 
-    ```java
-    @SpringBootApplication
-    @ServletComponentScan(basePackages = {"com.example.demo.web.servlet"})
-    public class SpringbootApplication {
-    
-        public static void main(String[] args) {
-            SpringApplication.run(SpringbootApplication.class, args);
-        }
-    
-    }
-    ```
+> Spring 中相关的处理有
 
-- Filter
+- Bean 的 @Value 注入
+- Spring Environment 读取
+- @ConfigurationProperties 绑定到结构化对象
+- @PropertySource
 
-- Listener
-
-## Servlet注册
-
-### Servlet注释
-
-> Servlet注解方式配置
-
-- @ServleComponentScan+
-  - @WebServlet
-  - @WebFilter
-  - @WebListener
-
-### Spring Bean
-
-> Spring Bean方式配置
-
-- @Bean+
-  - Servlet
-  - Filter
-  - Listener
-
-### RegistrationBean
-
->RegistrationBean方式配置
-
-- ServletRegistrationBean
-- FilterRegistrationBean
-- ServletListenerRegistrationBean
-
-## 异步非阻塞
-
-### 异步Servlet
-
-- javax.servlet.ServletRequest#startAsync()
-- javax.servlet.AsyncContext
-
-### 非阻塞Servlet
-
-- javax.servlet.ServletInputStream#setReadListener
-  - javax.servlet.ReadListener
-- javax.servlet.ServletOutputStream#setWriteListener
-  - javax.servlet.WriteListener
-
-> 异步调用代码示例
-
-```java
-//  asyncSupported = true 设置为支持异步。默认是false！
-@WebServlet(urlPatterns = {"/my/async"}, asyncSupported = true)
-public class AsyncServlet extends HttpServlet {
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        resp.setContentType("text/html");
-        AsyncContext asyncContext = req.startAsync();
-        asyncContext.start(() -> {
-            try {
-                PrintWriter writer = resp.getWriter();
-                for (int i = 0; i < 100; i++) {
-                    TimeUnit.SECONDS.sleep(1);
-                    writer.write("Hello I am asyncContext");
-                    writer.flush();
-                }
-                // 执行完毕后在告知 异步调用完成奥~
-                asyncContext.complete();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-    }
-}
-```
-
-## Spring Web MVC应用
-
-- Web MVC视图：模板引擎、内容协商、异常处理
-- Web MVC REST：资源服务、资源跨域、服务发现
-- Web MVC核心：核心架构、处理流程、核心组件
-
-### Web MVC视图
-
-- ViewResolver
-
-- View
-
-> ViewResolver
-
-```java
-public interface ViewResolver {
-
-	/**
-	 * Resolve the given view by name.
-	 * <p>Note: To allow for ViewResolver chaining, a ViewResolver should
-	 * return {@code null} if a view with the given name is not defined in it.
-	 * However, this is not required: Some ViewResolvers will always attempt
-	 * to build View objects with the given name, unable to return {@code null}
-	 * (rather throwing an exception when View creation failed).
-	 * @param viewName name of the view to resolve
-	 * @param locale the Locale in which to resolve the view.
-	 * ViewResolvers that support internationalization should respect this.
-	 * @return the View object, or {@code null} if not found
-	 * (optional, to allow for ViewResolver chaining)
-	 * @throws Exception if the view cannot be resolved
-	 * (typically in case of problems creating an actual View object)
-	 */
-	@Nullable
-	View resolveViewName(String viewName, Locale locale) throws Exception;
-
-}
-```
-
-
-
-#### 模板引擎
-
-- Thymeleaf
-- Freemarker
-- JSP
-
-每种模板引擎对应不同的Resolver实现。如果有多种模板引擎怎么办？使用内容协商。
-
-#### 内容协商
-
-- ContentNegotiationConfigurer
-- ContentNegotiationStrategy
-- ContentNegotiationViewResolver
-
-内容协商帮助你选择最合适的进行匹配。
-
-#### 异常处理
-
-- @ExceptionHandler
-- HandlerExceptionResolver
-  - ExceptionHandlerExceptionResolver
-- BasicErrorController（SpringBoot）
-
-### Web MVC REST
-
-#### 资源服务
-
-- @RequestMapping
-  - @GetMapping
-- @ResponseBody
-- @RequestBody
-
-#### 资源跨域
-
-- CrossOrigin：[这个是注解驱动方式]
-- WebMvcConfigurer#addCrosMappings [这个是接口编程方式]
-- 传统解决方案
-  - IFrame
-  - JSONP
-
-####  服务发现
-
-- HATEOS
-
-### Web MVC核心
-
-#### 核心架构
-
-#### 处理流程
-
-#### 核心组件
-
-- DispatcherServlet [前端控制器，本质也是一个Servlet] -- 把请求转发到不同的Controller中去
-- HandlerMapping [处理器映射器]
-- HandlerAdapter [把方法转化为内部的实现]
-- ViewResolver []
-- ...
-
-## Spring Web Flux应用
-
-Spring 5 开始支持的新特性。对Servlet的补充。
-
-- Reactor基础：Java Lambda（实现的）、Mono（核心接口）、Flux（核心接口）
-- Web Flux核心：Web MVC注解[兼容]、函数式声明、异步非阻塞
-- 使用场景：Web Flux优势和限制
-
-提升系统吞吐量，吞吐量≠快
-
-### Reactor基础
-
-#### Java Lambda
-
-#### Mono
-
-#### Flux
-
-### Web Flux核心
-
-#### Web MVC核心
-
-- `@Controller`
-- `@RequestMapping`
-- `@ResponseBody`
-- `@RequestBody`
-- ...
-
-#### 函数式声明
-
-- `RouterFunction` [通过路由的方式表达函数~]
-
-#### 异步非阻塞
-
-- Servlet 3.1+
-- Netty Reactor
-
-### 使用场景
-
-#### 页面渲染
-
-#### REST应用
-
-#### 性能测试
-
-[Results from Spring 5 Webflux Performance Tests - Ippon Technologies](https://blog.ippon.tech/spring-5-webflux-performance-tests/)
-
-## Web Server应用
-
-不喜欢用tomcat，或不得不用Jetty，这时候需要做一些切换。
-
-- 切换 Web Server
-- 自定义 Servlet Web Server
-- 自定义 Reactive Web Server
-
-### 切换Web Server
-
-#### 切换其他Servlet容器
-
-- tomcat->jetty
-
-  ```xml
-  <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-      <exclusions>
-          <exclusion>
-              <groupId>org.springframework.boot</groupId>
-              <artifactId>spring-boot-starter-tomcat</artifactId>
-          </exclusion>
-      </exclusions>
-  </dependency>
-  <!-- 切换为jetty -->
-  <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-jetty</artifactId>
-  </dependency>
-  ```
-
-#### 替换Servlet容器
-
-- WebFlux
-
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-webflux</artifactId>
-</dependency>
-```
-
-WebFlux的优先级是低于传统Servlet容器的。所以我们需要注释掉传统的web容器！
-
-```xml
-<!-- 把这个注释掉 -->
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
-</dependency>
-```
-
-这样我们写的Servlet的内容就失效了，需要注释掉。不然项目无法正常启动。
-
-项目启动后可以看到
-
-```shell
-2021-05-02 18:19:29.823  INFO 13668 --- [  restartedMain] com.example.demo.SpringbootApplication   : No active profile set, falling back to default profiles: default
-2021-05-02 18:19:29.870  INFO 13668 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
-2021-05-02 18:19:29.871  INFO 13668 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
-2021-05-02 18:19:30.767  INFO 13668 --- [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
-2021-05-02 18:19:31.860  INFO 13668 --- [  restartedMain] o.s.b.web.embedded.netty.NettyWebServer  : Netty started on port 8080
-2021-05-02 18:19:31.873  INFO 13668 --- [  restartedMain] com.example.demo.SpringbootApplication   : Started SpringbootApplication in 2.325 seconds (JVM running for 3.442)
-```
-
-### 自定义Servlet Web Server
-
-- WebServerFactoryCustomizer [SpringBoot 2.0新增]
-
-  ```java
-  
-  /**
-   * Strategy interface for customizing {@link WebServerFactory web server factories}. Any
-   * beans of this type will get a callback with the server factory before the server itself
-   * is started, so you can set the port, address, error pages etc.
-   * <p>
-   * Beware: calls to this interface are usually made from a
-   * {@link WebServerFactoryCustomizerBeanPostProcessor} which is a
-   * {@link BeanPostProcessor} (so called very early in the ApplicationContext lifecycle).
-   * It might be safer to lookup dependencies lazily in the enclosing BeanFactory rather
-   * than injecting them with {@code @Autowired}.
-   *
-   * @param <T> the configurable web server factory
-   * @author Phillip Webb
-   * @author Dave Syer
-   * @author Brian Clozel
-   * @since 2.0.0
-   * @see WebServerFactoryCustomizerBeanPostProcessor
-   */
-  @FunctionalInterface
-  public interface WebServerFactoryCustomizer<T extends WebServerFactory> {
-  
-  	/**
-  	 * Customize the specified {@link WebServerFactory}.
-  	 * @param factory the web server factory to customize
-  	 */
-  	void customize(T factory);
-  
-  }
-  ```
-
-他有很多实现类。包括Reactive的、Tomcat的、Netty的
-
-### 自定义 Reactive Web Server
-
-- ReactiveWebServerFactoryCustomizer
-
-  ```java
-  public class ReactiveWebServerFactoryCustomizer
-  		implements WebServerFactoryCustomizer<ConfigurableReactiveWebServerFactory>, Ordered {
-  
-  	private final ServerProperties serverProperties;
-  
-  	public ReactiveWebServerFactoryCustomizer(ServerProperties serverProperties) {
-  		this.serverProperties = serverProperties;
-  	}
-  
-  	@Override
-  	public int getOrder() {
-  		return 0;
-  	}
-  
-  	@Override
-  	public void customize(ConfigurableReactiveWebServerFactory factory) {
-  		PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
-  		map.from(this.serverProperties::getPort).to(factory::setPort);
-  		map.from(this.serverProperties::getAddress).to(factory::setAddress);
-  		map.from(this.serverProperties::getSsl).to(factory::setSsl);
-  		map.from(this.serverProperties::getCompression).to(factory::setCompression);
-  		map.from(this.serverProperties::getHttp2).to(factory::setHttp2);
-  		map.from(this.serverProperties.getShutdown()).to(factory::setShutdown);
-  	}
-  
-  }
-  ```
-
-# 数据相关
-
-## 关系型数据库
-
-- JDBC：数据源，JdbcTemplate、自动装配 [关注这三个方面]
-- JPA：实体映射关系、实体操作、自动装配
-- 事务：Spring事务抽象、JDBC事务处理、自动装配
-
-### JDBC
-
-> 依赖
-
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-jdbc</artifactId>
-    <version>2.4.2</version>
-</dependency>
-```
-
-> 数据源
-
-- javax.sql.DataSource
-
-JdbcTemplate
-
-> 自动装配
-
-- DataSourceAutoConfiguration
-
-### JPA
-
-> 依赖
-
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-data-jpa</artifactId>
-    <version>2.4.2</version>
-</dependency>
-```
-
-> 实体映射关系
-
-- @javax.persistence.OneToOne
-- @javax.persistence.OneToMany
-
-- @javax.persistence.ManyToOne
-- @javax.persistence.ManyToMany
-
-> 实体操作
-
-- javax.persistence.EntityManager
-
-> 自动装配
-
-- HibernateJpaAutoConfiguration
-
-  ```java
-  @Configuration(proxyBeanMethods = false)
-  @ConditionalOnClass({ LocalContainerEntityManagerFactoryBean.class, EntityManager.class, SessionImplementor.class })
-  @EnableConfigurationProperties(JpaProperties.class)
-  @AutoConfigureAfter({ DataSourceAutoConfiguration.class }) // 数据源配置完成后再执行
-  @Import(HibernateJpaConfiguration.class)
-  public class HibernateJpaAutoConfiguration {
-  
-  }
-  ```
-
-### 事务（Transaction）
-
-> 依赖
-
-```xml
-<dependency>
-    <groupId>org.springframework</groupId>
-    <artifactId>spring-tx</artifactId>
-</dependency>
-```
-
->Spring事务抽象
-
-- PlatformTransactionManager
-
-  ```java
-  public interface PlatformTransactionManager extends TransactionManager {
-      TransactionStatus getTransaction(@Nullable TransactionDefinition var1) throws TransactionException;
-  
-      void commit(TransactionStatus var1) throws TransactionException;
-  
-      void rollback(TransactionStatus var1) throws TransactionException;
-  }
-  ```
-
-  
-
->JDBC事务处理
-
-- DataSourceTransactionManager
-
->自动装配
-
-- TransactionAutoConfiguration
-
-# 功能扩展
-
-## Spring Boot应用
-
-- SpringApplication：失败分析、应用特性、事件监听等。
-- Spring Boot配置：外部化配置、Profile、配置属性
-- Spring Boot Starter：Starter开发、最佳实践
-
-### SpringApplication
-
-```java
-@SpringBootApplication
-public class SpringbootApplication {
-
-    public static void main(String[] args) {
-        // 为什么要传两个参数，不传会出现什么问题。
-        SpringApplication.run(SpringbootApplication.class, args);
-    }
-
-}
-```
-
-
-#### 失败分析
-
-- FailureAnalysisReporter
-
-  ```java
-  @FunctionalInterface
-  public interface FailureAnalysisReporter {
-  
-  	/**
-  	 * Reports the given {@code failureAnalysis} to the user.
-  	 * @param analysis the analysis
-  	 */
-  	void report(FailureAnalysis analysis);
-  
-  }
-  ```
-
-#### 应用特性
-
-- `SpringApplication` Fluent API
-
-  ```java
-  @SpringBootApplication
-  public class SpringbootApplication {
-  
-      public static void main(String[] args) {
-  //        SpringApplication.run(SpringbootApplication.class, args);
-          new SpringApplicationBuilder(SpringbootApplication.class)
-  //                .web(WebApplicationType.NONE) 设置了这个 就不会以web应用启动了
-                  .properties("a=b")
-                  .run(args);
-      }
-  
-  }
-  ```
-
-### Spring Boot配置
-
-- 外部化配置
-
-  - `ConfigurationProperty` [Since:2.0.0]
-
-    ```java
-    public final class ConfigurationProperty implements OriginProvider, Comparable<ConfigurationProperty> {
-    
-    	private final ConfigurationPropertyName name;
-    
-    	private final Object value;
-    
-        // 跟踪配置从哪里来
-    	private final Origin origin;
-    	// ...
-    }
-    ```
-    
-
-- @Profile [能力很弱，后续会调整成Conditional]
-
-- 配置属性
-
-  - PropertySource [Spring的]
-
-## Spring Boot Starter
-
-# 运维管理
-
-Spring Boot Actuator
-
-- 通过端点管理各类Web和JMX Endpoints
-- 健康检查：Health、HealthIndicator
-- 指标：内建Metrics、自定义Metrics
-
-## Spring Boot Actuator
-
-> 依赖
-
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-actuator</artifactId>
-</dependency>
-```
-
-> 端点
-
-- Web Endpoint
-- JMX Endpoint
-
-> 健康检查
-
-- Health
-- HealthIndicator
-
-> 指标
+Spring Boot 的 application.properties 就是一个典型的外部化配置文件。里面的值可以通过命令行的方式进行覆盖。
 
 # 走向自动装配
 
+## 注解驱动发展史
+
+### Spring Framework 1.x
+
+在 Spring Framework 1.2.0 版本开始支持注解，在框架层面支持了 @ManagedResource 和 @Transactional 等注解。但被注解的 Bean 仍然需要使用 xml 进行装配。
+
+### Spring Framework 2.x
+
+Spring Framework 2.0 添加了新的注解，如 Bean 相关的 @Required、数据相关的 @Repository 以及 AOP 相关的 @Aspect，同时也提升了 XML 的扩展能力。
+
+> Spring Framework 2.5，引入了一些骨架式的 Annotation
+
+- 依赖注入 Annotation：@Autowired
+- 依赖查找 Annotation：@Qualifier
+- 组件声明 Annotation：@Component、@Service
+- 支持 JSR-250：@Resource 注入，JSR-250 生命周期回调注解 @PostConstruct 和 @PreDestroy
+- Spring MVC Annotation：@Controller、@RequestMapping 以及 @ModelAttribute 等
+
+### Spring Framework 3.x
+
+Spring Framework 3.0 提升了 Spring 模式注解的“派生”层次，并且引入了配置类注解 @Configuration 替换 XML 配置方式。但是 Spring Framework 3.0 没有引入替换 XML 元素 `<context:component-scan>` 的注解，而是采用过渡方案➡️@ImportResource 和 @Import。
+
+@ImportResource 允许导入遗留的 XML 配置文件。
+
+@Import 允许导入一个或多个类作为 Spring Bean，且这些类无需标注 Spring 模式注解，如 @Service。通常标注了 @ImportResource 和 @Import 的类需要再标注 @Configuration 注解。
+
+3.0 还引入了 AnnotationConfigurationApplicationContext 来读取解析注解配置类，来替代原先的 ClassPathXmlApplicationContext。
+
+> Spring Framework 3.0，引入的注解和类
+
+- @ImportResource 和 @Import
+- AnnotationConfigurationApplicationContext 
+- @Bean 替代 xml 元素 bean
+- @DependsOn 替代 xml 属性 `<bean dependso-n="">`
+- @Lazy 替代 xml 属性 `<bean lazy-init="true|false">`
+- @Primary 替代 xml 属性 `<bean primary="true|false">`
+
+>Spring Framework 3.1，标志性注解
+
+- @ComponentScan 替代 `<context:component-scan>`
+- 抽象出了一套全新并统一的配置属性 API，包括配置属性存储接口 Environment，以及配置属性源抽象 PropertySources，这两个核心 API 奠定了 Spring Boot 外部化配置的基础。
+- 增加了 “@Enable 模块驱动”的特性，将相同职责的功能组件以模块化的方式配置，简化了 Spring Bean 配置。典型的有 @EnableWebMvc。该注解被 @Configuration 标注后，RequestMappingHandlerMapping、RequestMappingHandlerAdapter 以及 HandlerExceptionResolver 等 Bean 会被装配。
+
+> Spring Framework 3.x Web 提升
+
+- 请求处理注解 @RequestHeader、@CookieValue 和 @RequestPart 使得 MVC @Controller 类不必直接使用 Servlet API。
+- Spring Framework 3.0 还开辟了 REST 开发的开发路线。@PathVariable 便于 REST 动态路径的开发，
+- @RequestBody 能够直接反序列化请求内容。
+- @ResponseBody 可以将方法返回对象序列化为 REST 主体内容，
+- @ResponseStatus 可以补充 HTTP 响应的状态信息
+
+### Spring Framework 4.x
+
+- 引入条件化注解 @Conditional，通过与自定义 Condition 实现配合，弥补了之前版本条计化装配的短板。
+
+- 重新声明 @Profile，通过 @conditional 实现。
+
+- Spring Boot 的所有 @ConditionalOn* 注解均基于 @Conditional 派生。
+
+    ```java
+    public abstract class SpringBootCondition implements Condition{
+        // some code...
+    }
+    ```
+
+- Java 8 @Repeatable 使注解可以重复标注在一个类上，Spring 的注解也因此可以重复标注。如，将 @PropertySource 提升为可重复标注的注解。
+
+- Spring Framework 4.2 新增了时间监听注解 @EventListener，作为 ApplicationListener 接口编程的第二选择。
+
+- Spring Framework 4.3 引入了 @ComponentScans（对 @ComponentScan 注解的提升）；引入 @GetMapping 作为 @RequestMapping 的派生注解；同时利用 @AliasFor 实现了不同注解直接的属性方法别名；
+
+    ```java
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    @RequestMapping(method = RequestMethod.GET)
+    public @interface GetMapping {
+    
+    	/**
+    	 * Alias for {@link RequestMapping#name}.
+    	 */
+    	@AliasFor(annotation = RequestMapping.class)
+    	String name() default "";
+    
+    	@AliasFor(annotation = RequestMapping.class)
+    	String[] produces() default {};
+    }
+    ```
+
+- @RestController、@RestControllerAdvice（@RestController AOP 拦截通知）、@CrossOrigin
+
+### Spring Framework 5.x
+
+- 5.0 引入了 @Indexed 注解，为 Spring 模式注解添加索引，提升应用启动性能。使用 @Indexed 需要引入依赖 [Core Technologies (spring.io)](https://docs.spring.io/spring-framework/docs/current/reference/html/core.html#beans-scanning-index)
+
+- 5.2 在 @Configuration 中引入了 proxyBeanMethods。
+
+    Specify whether @Bean methods should get proxied in order to enforce bean lifecycle behavior, e.g. to return shared singleton bean instances even in case of direct @Bean method calls in user code. This feature requires method interception, implemented through a runtime-generated CGLIB subclass which comes with limitations such as the configuration class and its methods not being allowed to declare final.
+
+    The default is true, allowing for 'inter-bean references' via direct method calls within the configuration class as well as for external calls to this configuration's @Bean methods, e.g. from another configuration class. If this is not needed since each of this particular configuration's @Bean methods is self-contained and designed as a plain factory method for container use, switch this flag to false in order to avoid CGLIB subclass processing.
+
+    Turning off bean method interception effectively processes @Bean methods individually like when declared on non-@Configuration classes, a.k.a. "@Bean Lite Mode" (see @Bean's javadoc). It is therefore behaviorally equivalent to removing the @Configuration stereotype.
+
+### 如何得到注解上的注解
+
+```java
+@Target(value = {ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Inherited
+@interface One {
+}
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@One
+@interface Two {}
+
+@Two
+class A {}
+
+/**
+ * 如何获取注解上的注解？
+ * 1.检测方法上有那些注解。
+ * 2.用注解.class.getAnnotations 来获取注解上的注解（注解本质上就是一个继承了 Annotation 的接口）
+ */
+public class TestAnnotation {
+    /**
+     * 需求：得到 @Two 上的 @One。
+     */
+    public static void main(String[] args) throws NoSuchMethodException {
+        Two annotationsByType = A.class.getAnnotationsByType(Two.class)[0];
+        Class<? extends Annotation> aClass = annotationsByType.annotationType();
+        One annotation = aClass.getAnnotation(One.class);
+        System.out.println(annotation == null); // false
+    }
+}
+```
+
+```java
+public class TestAnnotation {
+    @Two
+    public void t() {}
+    /**
+     * 需求：解析注解，统计 @One 和 @Two 注解的数量。@Two 注解上的 @One 注解也算一次。
+     */
+    public static void main(String[] args) throws NoSuchMethodException {
+        Method t = TestAnnotation.class.getMethod("t");
+        Two annotation = t.getAnnotation(Two.class);
+        One annotation1 = annotation.annotationType().getAnnotation(One.class);
+        System.out.println(annotation1 == null); // false
+    }
+}
+```
+
+
+
 ## Spring Framework手动配置
 
-- 定义：一种用于声明在`应用`中扮演“组件”角色的注解
-- 举例：@Component、@Service、@Configuration[标注这是一个配置]
+- 定义：一种用于声明在应用中扮演“组件”角色的注解
+- 举例：@Component、@Service、@Configuration [标注这是一个配置]
 - 装配：`<context:component=scan>` 或 @ComponentScan
 
 ### Spring @Enable模块装配
 
-Spring Framework 3.1开始支持“@Enable模块驱动”。所谓“模块”是具备相同领域的功能组件集合。组合所形成一个独立的单元。比如Web MVC模块、AspectJ模块、Caching（缓存）模块、JMX（Java管理扩展）模块、Async（异步处理）模块等。
+Spring Framework 3.1 开始支持 “@Enable 模块驱动”。所谓“模块”是具备相同领域的功能组件集合。组合所形成一个独立的单元。比如 Web MVC 模块、AspectJ 模块、Caching（缓存）模块、JMX（Java 管理扩展）模块、Async（异步处理）模块等。
 
 - 定义：具备相同领域的功能组件集合，组合所形成一个独立的单元
-- 举例：@EnableWevMvc、@EnableAutoConfiguration等
+- 举例：@EnableWevMvc、@EnableAutoConfiguration 等
 - 实现：注解方式、编程方式
 
-> @Enable注解模块举例
+> @Enable 注解模块举例
 
-| 框架实现         | @Enable注解模块                | 激活模块           |
-| ---------------- | ------------------------------ | ------------------ |
-| Spring Framework | @EnableMvc                     | Web MVC模块        |
-|                  | @EnableTransactionManagement   | 事务管理模块       |
-|                  | @EnableCaching                 | Caching模块        |
-|                  | @EnableMBeanExport             | JMX模块            |
-|                  | @EnableAsnyc                   | 异步处理模块       |
-|                  | EnableWebFlux                  | Web Flux模块       |
-|                  | @EnableAspectJAutoProxy        | AspectJ 代理模块   |
-|                  |                                |                    |
-| Spring Boot      | @EnableAutoConfiguration       | 自动装配模块       |
-|                  | @EnableManagementContext       | Actuator管理模块   |
-|                  | @EnableConfigurationProperties | 配置属性绑定模块   |
-|                  | @EnableOAuth2Sso               | OAuth2单点登录模块 |
-|                  |                                |                    |
-| Spring Cloud     | @EnableEurekaServer            | Eureka服务模块     |
-|                  | @EnableConfigServer            | 配置服务模块       |
-|                  | @EnableFeignClients            | Feign客户端模块    |
-|                  | @EnableZuulProxy               | 服务网关Zuul模块   |
-|                  | @EnableCircuitBreaker          | 服务熔断模块       |
+| 框架实现         | @Enable注解模块                | 激活模块            |
+| ---------------- | ------------------------------ | ------------------- |
+| Spring Framework | @EnableMvc                     | Web MVC 模块        |
+|                  | @EnableTransactionManagement   | 事务管理模块        |
+|                  | @EnableCaching                 | Caching 模块        |
+|                  | @EnableMBeanExport             | JMX 模块            |
+|                  | @EnableAsnyc                   | 异步处理模块        |
+|                  | EnableWebFlux                  | Web Flux 模块       |
+|                  | @EnableAspectJAutoProxy        | AspectJ 代理模块    |
+|                  |                                |                     |
+| Spring Boot      | @EnableAutoConfiguration       | 自动装配模块        |
+|                  | @EnableManagementContext       | Actuator 管理模块   |
+|                  | @EnableConfigurationProperties | 配置属性绑定模块    |
+|                  | @EnableOAuth2Sso               | OAuth2 单点登录模块 |
+|                  |                                |                     |
+| Spring Cloud     | @EnableEurekaServer            | Eureka 服务模块     |
+|                  | @EnableConfigServer            | 配置服务模块        |
+|                  | @EnableFeignClients            | Feign 客户端模块    |
+|                  | @EnableZuulProxy               | 服务网关 Zuul 模块  |
+|                  | @EnableCircuitBreaker          | 服务熔断模块        |
 
 ### Spring 条件装配
 
-从Spring Framework 3.1开始，允许在Bean装配时增加前置条件判断。
+从 Spring Framework 3.1 开始，允许在 Bean 装配时增加前置条件判断。
 
-- 定义：Bean装配的前置判断
+- 定义：Bean 装配的前置判断
 - 举例：@Profile、@Conditional
 - 实现：注解方式、编程方式
 
@@ -1248,25 +825,34 @@ Spring Framework 3.1开始支持“@Enable模块驱动”。所谓“模块”�
 
 ## Spring 模式注解装配
 
+- 元注解
+- Spring 模式注解
+- Spring 组合注解
+- Spring 注解属性别名和覆盖
+
+### 元注解
+
+元注解就是一个能声明在其他注解上的注解，如果一个注解标注在其他注解上，那么他就是元注解。
+
 ### 模式注解
 
-模式注解是一种用于声明在应用中扮演“组件”角色的注解。如Spring Framework中的`@Repository`标注在任何类上，用于扮演仓储角色的模式注解。
+模式注解是一种用于声明在应用中扮演“组件”角色的注解。如 Spring Framework 中的 `@Repository` 标注在任何类上，用于扮演仓储角色的模式注解。
 
-`@Component`作为一种由Spring容器托管的通用模式组件，任何被`@Component`标注的组件均为组件扫描的候选对象。类似地，凡是被`@Component`元标注（meta-annotated）的注解，如`@Service`，当任何组件标注它时，也被视作组件扫描的候选对象。
+`@Component` 作为一种由 Spring 容器托管的通用模式组件，任何被 `@Component` 标注的组件均为组件扫描的候选对象。类似地，凡是被 `@Component` 元标注（meta-annotated）的注解，如 `@Service`，当任何组件标注它时，也被视作组件扫描的候选对象。
 
-### 模式注解举例
+#### 模式注解举例
 
-| Spring Framework注解 | 场景说明          | 起始版本 |
-| -------------------- | ----------------- | -------- |
-| @Repository          | 数据仓储模式注解  | 2.0      |
-| @Component           | 通用组件模式注解  | 2.5      |
-| @Service             | 服务模式注解      | 2.5      |
-| @Controller          | Web控制器模式注解 | 2.5      |
-| @Configuration       | 配置类模式注解    | 3.0      |
+| Spring Framework注解 | 场景说明           | 起始版本 |
+| -------------------- | ------------------ | -------- |
+| @Repository          | 数据仓储模式注解   | 2.0      |
+| @Component           | 通用组件模式注解   | 2.5      |
+| @Service             | 服务模式注解       | 2.5      |
+| @Controller          | Web 控制器模式注解 | 2.5      |
+| @Configuration       | 配置类模式注解     | 3.0      |
 
-### 装配方式
+#### 装配方式
 
-> `<context:component-scan>`方式
+> `<context:component-scan>` 方式
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1283,18 +869,16 @@ Spring Framework 3.1开始支持“@Enable模块驱动”。所谓“模块”�
 </beans>
 ```
 
-> @ComponentScan方式
+> @ComponentScan 方式
 
 ```java
 @ComponentScan(basePackages = "com.example.demo")
-public class SpringConfig {
-}
-
+public class SpringConfig {}
 ```
 
-### 自定义模式注解
+#### 自定义模式注解
 
-@Component“派生性”
+@Component “派生性”：@Component➡️@Repository➡️FirstLevelRepository
 
 ```java
 @Target({ElementType.TYPE})
@@ -1304,28 +888,115 @@ public class SpringConfig {
 public @interface FirstLevelRepository {
     String value() default "";
 }
-
 ```
 
-- @Component
-  - @Repository
-    - FirstLevelRepository
-
-@Component“层次性”
+@Component “层次性”：@Component➡️@Repository➡️FirstLevelRepository➡️SecondLevelRepository
 
 ```java
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @FirstLevelRepository(value = "secondLevelRepository")
-public @interface SecondLevelRepository {
+public @interface SecondLevelRepository {}
+```
+
+@FirstLevelRepository 和 @SecondLevelRepository 作为 @Component 的派生注解，具备的语义和 @Component 一致，都会作为组件被注册到 Spring IoC 容器中。
+
+#### Spring 注解派生原理
+
+> @Component 的派生注解是如何被 Spring 探查到的呢？
+
+是通过 ClassPathBeanDefinitionScanner 和 AnnotationTypeFilter 实现的。
+
+ClassPathBeanDefinitionScanner 中的 scan 调用 doScan 扫描注解
+
+```java
+public int scan(String... basePackages) {
+    int beanCountAtScanStart = this.registry.getBeanDefinitionCount();
+    doScan(basePackages);
+    // Register annotation config processors, if necessary.
+    if (this.includeAnnotationConfig) {
+        AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry);
+    }
+    return (this.registry.getBeanDefinitionCount() - beanCountAtScanStart);
+}
+
+protected Set<BeanDefinitionHolder> doScan(String... basePackages) {
+    Assert.notEmpty(basePackages, "At least one base package must be specified");
+    Set<BeanDefinitionHolder> beanDefinitions = new LinkedHashSet<>();
+    for (String basePackage : basePackages) {
+        // 找到候选的组件，是否是候选组件有 excludeFilters 和 includeFilters 字段决定。
+        Set<BeanDefinition> candidates = findCandidateComponents(basePackage);
+        // ... 封装成 bean 定义信息
+    }
+    return beanDefinitions;
+}
+
+private Set<BeanDefinition> scanCandidateComponents(String basePackage) {
+    Set<BeanDefinition> candidates = new LinkedHashSet<>();
+    // 省略了非常多代码
+    try {
+        MetadataReader metadataReader = getMetadataReaderFactory().getMetadataReader(resource);
+        if (isCandidateComponent(metadataReader)) {}
+    }
+}
+
+protected boolean isCandidateComponent(MetadataReader metadataReader) throws IOException {
+    for (TypeFilter tf : this.excludeFilters) {
+        if (tf.match(metadataReader, getMetadataReaderFactory())) {
+            return false;
+        }
+    }
+    for (TypeFilter tf : this.includeFilters) {
+        if (tf.match(metadataReader, getMetadataReaderFactory())) {
+            return isConditionMatch(metadataReader);
+        }
+    }
+    return false;
 }
 ```
 
-- @Component
-  - @Repository
-    - FirstLevelRepository
-      - SecondLevelRepository
+#### 多层次@Component派生性
+
+@SpringBootApplication
+
+​	|--@SpringBootConfiguration
+
+​		|--@Configuration
+
+​			|--@Component
+
+注：Spring 2.5 不支持多层次派生性，多层次派生性是从 4.0 开始支持的。
+
+多层次派生的原理：AnnotationAttributesReadingVisitor#recursivelyCollectMetaAnnotations 方法。递归查找元注解。
+
+```java
+private void recursivelyCollectMetaAnnotations(Set<Annotation> visited, Annotation annotation) {
+    Class<? extends Annotation> annotationType = annotation.annotationType();
+    String annotationName = annotationType.getName();
+    if (!AnnotationUtils.isInJavaLangAnnotationPackage(annotationName) && visited.add(annotation)) {
+        try {
+            // Only do attribute scanning for public annotations; we'd run into
+            // IllegalAccessExceptions otherwise, and we don't want to mess with
+            // accessibility in a SecurityManager environment.
+            if (Modifier.isPublic(annotationType.getModifiers())) {
+                this.attributesMap.add(annotationName,
+                                       AnnotationUtils.getAnnotationAttributes(annotation, false, true));
+            }
+            for (Annotation metaMetaAnnotation : annotationType.getAnnotations()) {
+                recursivelyCollectMetaAnnotations(visited, metaMetaAnnotation);
+            }
+        }
+        catch (Throwable ex) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Failed to introspect meta-annotations on " + annotation + ": " + ex);
+            }
+        }
+    }
+}
+```
+
+
 
 ## Spring@Enable模块装配
 
@@ -1340,11 +1011,8 @@ public @interface SecondLevelRepository {
 @Target(ElementType.TYPE)
 @Documented
 @Import(DelegatingWebMvcConfiguration.class)
-public @interface EnableWebMvc {
-}
+public @interface EnableWebMvc {}
 ```
-
-----
 
 ```java
 public class WebMvcConfigurationSupport implements ApplicationContextAware, ServletContextAware {
@@ -1396,8 +1064,6 @@ public @interface EnableCaching {
 
 }
 ```
-
-----
 
 ```java
 public class CachingConfigurationSelector extends AdviceModeImportSelector<EnableCaching> {
@@ -1470,8 +1136,6 @@ public class CachingConfigurationSelector extends AdviceModeImportSelector<Enabl
 }
 ```
 
----
-
 ```java
 public interface ImportSelector {
 
@@ -1510,16 +1174,16 @@ public interface ImportSelector {
 
 @EnableServer
 
-HelloWorldImportSelector->HelloWorldConfiguration->HelloWorld
+HelloWorldImportSelector➡️HelloWorldConfiguration➡️HelloWorld
 
-- HelloWorldImportSelector自定义一个类，实现ImportSelector接口
-- HelloWorldConfiguration是一个配置类，用于获取Bean-HelloWorld
-- HelloWorld是一个字符串类
-- 定义注解EnableHelloWorld
+- HelloWorldImportSelector 自定义一个类，实现 ImportSelector 接口
+- HelloWorldConfiguration 是一个配置类，用于获取 Bean-HelloWorld
+- HelloWorld 是一个字符串类
+- 定义注解 EnableHelloWorld
 
 >HelloWorldImportSelector类
 
-实现ImportSelector接口。自定义ImportSelector可以在里面书写一些配置逻辑，满足则配置，不满足就不配置，写法灵活~
+实现 ImportSelector 接口。自定义 ImportSelector 可以在里面书写一些配置逻辑，满足则配置，不满足就不配置，写法灵活~
 
 ```java
 /**
@@ -1591,7 +1255,7 @@ public class EnableHelloWorldApplication {
 
 `@Profile`
 
-Spring Framework 4.0后Profile采用的Condition进行实现的。
+Spring Framework 4.0 后 Profile 采用的 Condition 进行实现的。
 
 #### 编程方式
 
@@ -1623,8 +1287,6 @@ public @interface ConditionalOnClass {
 }
 ```
 
----
-
 ```java
 @FunctionalInterface
 public interface Condition {
@@ -1648,11 +1310,11 @@ public interface Condition {
 
 计算服务，多整数求和
 
-`@Prifile("Java7")：for循环实现`
+`@Prifile("Java7")：for 循环实现`
 
-`@Prifile("Java8")：lambda实现`
+`@Prifile("Java8")：lambda 实现`
 
-`启动类设置好Prifiles属性`
+`启动类设置好 Prifiles 属性`
 
 ```java
 public interface Calculate {
@@ -1684,8 +1346,6 @@ public class Java8Calculate implements Calculate {
 }
 ```
 
----
-
 ```java
 @ComponentScan(basePackages = "com.example.demo")
 public class ProfileApplication {
@@ -1703,9 +1363,9 @@ public class ProfileApplication {
 
 #### 基于编程方式
 
-自定义注解`@ConditionalOnProperty`判断Spring应用上下文xx配置是否存在/匹配
+自定义注解 `@ConditionalOnProperty` 判断 Spring 应用上下文 xx 配置是否存在/匹配
 
-Condition实现类`OnSystemPropertyCondition`定义条件，符合条件则触发，不符合则不触发
+Condition 实现类 `OnSystemPropertyCondition` 定义条件，符合条件则触发，不符合则不触发
 
 ```java
 /**
@@ -1724,8 +1384,6 @@ public @interface ConditionalOnSystemProperty {
 }
 ```
 
-----
-
 ```java
 public class OnSystemPropertyCondition implements Condition {
 
@@ -1740,8 +1398,6 @@ public class OnSystemPropertyCondition implements Condition {
     }
 }
 ```
-
----
 
 ```java
 @SpringBootApplication(scanBasePackages = "com.example.demo")
@@ -1777,27 +1433,25 @@ WebMvcAutoConfiguration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE + 10)
 @AutoConfigureAfter({ DispatcherServletAutoConfiguration.class, TaskExecutionAutoConfiguration.class,
 		ValidationAutoConfiguration.class })
-public class WebMvcAutoConfiguration {
-    
-}
+public class WebMvcAutoConfiguration {}
 ```
 
-- 定义：基于约定大于配置的原则，实现Spring组件自动装配的目的。
-- 装配：模式注解、@Enable模块、条件装配、工厂加载机制
+- 定义：基于约定大于配置的原则，实现 Spring 组件自动装配的目的。
+- 装配：模式注解、@Enable 模块、条件装配、工厂加载机制
 - 实现：激活自动装配、实现自动装配、配置自动装配的实现
 
 ### 底层装配技术
 
 - Spring 模式注解装配
-- Spring `@Enable`模块装配
+- Spring `@Enable` 模块装配
 - Spring 条件装配
 - Spring 工厂加载机制
-  - 实现类：`SpringFactoriesLoader`
-  - 配置资源：`META-INF/spring.factories`
+    - 实现类：`SpringFactoriesLoader`
+    - 配置资源：`META-INF/spring.factories`
 
 ### 自动装配举例
 
-参考`META-INF/spring.factories`
+参考 `META-INF/spring.factories`
 
 ### 实现方法
 
@@ -1809,70 +1463,692 @@ public class WebMvcAutoConfiguration {
 
 ### 自定义自动装配
 
-- 我们自定义的HelloWorldAutoConfig，有条件判断注解，条件判断为True
-  - 条件判断：name == key
-  - 模式注解：`@Configuration`
-  - `@Enable`模块：`@EnableHelloWorld` 会加载-->`HelloWorldImportSelector`会加载-->`HelloWorldConfig`-->最终生成一个bean
-
----
+- 我们自定义的 HelloWorldAutoConfig，有条件判断注解，条件判断为 True
+    - 条件判断：name == key
+    - 模式注解：`@Configuration`
+    - `@Enable` 模块：`@EnableHelloWorld` 会加载➡️`HelloWorldImportSelector`会加载➡️`HelloWorldConfig`➡️最终生成一个 bean
 
 > 自定义自动装配流程如下：
 
 - 自定义一个`HelloWorldAutoConfiguration`配置类。
 
-- 在`resources`下新建`META-INF`目录，在`META-INF`目录下创建文件`spring.factories`,在该目录下配置自动装配信息
+- 在 `resources` 下新建 `META-INF` 目录，在 `META-INF` 目录下创建文件 `spring.factories`，在该目录下配置自动装配信息
 
-  ```properties
-  # Auto Configure
-  org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  com.example.demo.config.HelloWorldAutoConfiguration
-  ```
+    ```properties
+    # Auto Configure
+    org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+    com.example.demo.config.HelloWorldAutoConfiguration
+    ```
 
 - 这样一个最简单的自动装配就完成啦！
-- 如果想要更复杂的配置，可以加Condition判断，自定义的@EnableXX等等~
 
-----
+- 如果想要更复杂的配置，可以加 Condition 判断，自定义的 @EnableXX 等等~
 
-> 一个自定义自动装配的Demo
+> 一个自定义自动装配的 Demo
 
-- 配置类
+配置类
+
+```java
+@Configuration
+public class HelloWorldAutoConfiguration {
+    @Bean
+    public Object getObj() {
+        return new Object();
+    }
+}
+```
+
+resource/META-INF/spring.factories
+
+```properties
+# Auto Configure
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.example.demo.config.HelloWorldAutoConfiguration
+```
+
+运行
+
+```java
+/**
+ * {@link EnableAutoConfiguration}
+ * 自动装配
+ */
+@EnableAutoConfiguration
+public class EnableAutoConfigurationApplication {
+    public static void main(String[] args) {
+        ConfigurableApplicationContext context = new SpringApplicationBuilder(EnableAutoConfigurationApplication.class)
+                .web(WebApplicationType.NONE)
+                .run(args);
+        System.out.println(context.getBean("getObj", Object.class));
+        context.close();
+    }
+}
+```
+
+# Web应用
+
+## 传统Servlet应用概述
+
+- Servlet 组件：Servlet、Filter、Listener（传统的三大组件）
+- Servlet 注册：Servlet 注解、Spring Bean、RegistrationBean（如何把 Servlet 注册进来）
+  - 我们允许把 Servlet 注册成一个 Spring Bean 加载运行。
+  - RegistrationBean
+- 异步非阻塞：异步 Servlet、非阻塞 Servlet
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+```
+
+## Servlet组件
+
+### Servlet
+
+实现
+
+```java
+@WebServlet(urlPatterns = {"/my/servlet"})
+public class MyServlet extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.getWriter().write("Hello");
+    }
+}
+```
+
+URL映射
+
+```java
+@WebServlet(urlPatterns = {"/my/servlet"})
+```
+
+注册
+
+```java
+@SpringBootApplication
+@ServletComponentScan(basePackages = {"com.example.demo.web.servlet"})
+public class SpringbootApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SpringbootApplication.class, args);
+    }
+
+}
+```
+
+### Filter
+
+### Listener
+
+## Servlet注册
+
+### Servlet注释
+
+> Servlet 注解方式配置
+
+- @ServleComponentScan+
+  - @WebServlet
+  - @WebFilter
+  - @WebListener
+
+### Spring Bean
+
+> Spring Bean 方式配置
+
+- @Bean+
+  - Servlet
+  - Filter
+  - Listener
+
+### RegistrationBean
+
+>RegistrationBean 方式配置
+
+- ServletRegistrationBean
+- FilterRegistrationBean
+- ServletListenerRegistrationBean
+
+## 异步非阻塞
+
+### 异步Servlet
+
+- javax.servlet.ServletRequest#startAsync()
+- javax.servlet.AsyncContext
+
+### 非阻塞Servlet
+
+- javax.servlet.ServletInputStream#setReadListener
+  - javax.servlet.ReadListener
+- javax.servlet.ServletOutputStream#setWriteListener
+  - javax.servlet.WriteListener
+
+> 异步调用代码示例
+
+```java
+//  asyncSupported = true 设置为支持异步。默认是false！
+@WebServlet(urlPatterns = {"/my/async"}, asyncSupported = true)
+public class AsyncServlet extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
+        resp.setContentType("text/html");
+        AsyncContext asyncContext = req.startAsync();
+        asyncContext.start(() -> {
+            try {
+                PrintWriter writer = resp.getWriter();
+                for (int i = 0; i < 100; i++) {
+                    TimeUnit.SECONDS.sleep(1);
+                    writer.write("Hello I am asyncContext");
+                    writer.flush();
+                }
+                // 执行完毕后在告知 异步调用完成奥~
+                asyncContext.complete();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+}
+```
+
+## Spring Web MVC应用
+
+- Web MVC 视图：模板引擎、内容协商、异常处理
+- Web MVC REST：资源服务、资源跨域、服务发现
+- Web MVC 核心：核心架构、处理流程、核心组件
+
+### Web MVC视图
+
+- ViewResolver
+
+- View
+
+> ViewResolver
+
+```java
+public interface ViewResolver {
+
+	/**
+	 * Resolve the given view by name.
+	 * <p>Note: To allow for ViewResolver chaining, a ViewResolver should
+	 * return {@code null} if a view with the given name is not defined in it.
+	 * However, this is not required: Some ViewResolvers will always attempt
+	 * to build View objects with the given name, unable to return {@code null}
+	 * (rather throwing an exception when View creation failed).
+	 * @param viewName name of the view to resolve
+	 * @param locale the Locale in which to resolve the view.
+	 * ViewResolvers that support internationalization should respect this.
+	 * @return the View object, or {@code null} if not found
+	 * (optional, to allow for ViewResolver chaining)
+	 * @throws Exception if the view cannot be resolved
+	 * (typically in case of problems creating an actual View object)
+	 */
+	@Nullable
+	View resolveViewName(String viewName, Locale locale) throws Exception;
+
+}
+```
+
+#### 模板引擎
+
+- Thymeleaf
+- Freemarker
+- JSP
+
+每种模板引擎对应不同的 Resolver 实现。如果有多种模板引擎怎么办？使用内容协商。
+
+#### 内容协商
+
+- ContentNegotiationConfigurer
+- ContentNegotiationStrategy
+- ContentNegotiationViewResolver
+
+内容协商帮助你选择最合适的进行匹配。
+
+#### 异常处理
+
+- @ExceptionHandler
+- HandlerExceptionResolver
+  - ExceptionHandlerExceptionResolver
+- BasicErrorController（SpringBoot）
+
+### Web MVC REST
+
+#### 资源服务
+
+- @RequestMapping
+  - @GetMapping
+- @ResponseBody
+- @RequestBody
+
+#### 资源跨域
+
+- CrossOrigin：[这个是注解驱动方式]
+- WebMvcConfigurer#addCrosMappings [这个是接口编程方式]
+- 传统解决方案
+  - IFrame
+  - JSONP
+
+####  服务发现
+
+- HATEOS
+
+### Web MVC核心
+
+#### 核心架构
+
+#### 处理流程
+
+#### 核心组件
+
+- DispatcherServlet [前端控制器，本质也是一个 Servlet] -- 把请求转发到不同的 Controller 中去
+- HandlerMapping [处理器映射器]
+- HandlerAdapter [把方法转化为内部的实现]
+- ViewResolver []
+- ...
+
+## Spring Web Flux应用
+
+Spring 5 开始支持的新特性。对 Servlet 的补充。
+
+- Reactor 基础：Java Lambda（实现的）、Mono（核心接口）、Flux（核心接口）
+- Web Flux 核心：Web MVC 注解[兼容]、函数式声明、异步非阻塞
+- 使用场景：Web Flux 优势和限制
+
+提升系统吞吐量，吞吐量≠快
+
+### Reactor基础
+
+#### Java Lambda
+
+#### Mono
+
+#### Flux
+
+### Web Flux核心
+
+#### Web MVC核心
+
+- `@Controller`
+- `@RequestMapping`
+- `@ResponseBody`
+- `@RequestBody`
+- ...
+
+#### 函数式声明
+
+- `RouterFunction` [通过路由的方式表达函数~]
+
+#### 异步非阻塞
+
+- Servlet 3.1+
+- Netty Reactor
+
+### 使用场景
+
+#### 页面渲染
+
+#### REST应用
+
+#### 性能测试
+
+[Results from Spring 5 Webflux Performance Tests - Ippon Technologies](https://blog.ippon.tech/spring-5-webflux-performance-tests/)
+
+## Web Server应用
+
+不喜欢用 tomcat，或不得不用 Jetty，这时候需要做一些切换。
+
+- 切换 Web Server
+- 自定义 Servlet Web Server
+- 自定义 Reactive Web Server
+
+### 切换Web Server
+
+#### 切换其他Servlet容器
+
+tomcat➡️jetty
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+    <exclusions>
+        <exclusion>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+<!-- 切换为jetty -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-jetty</artifactId>
+</dependency>
+```
+
+#### 替换Servlet容器
+
+WebFlux
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-webflux</artifactId>
+</dependency>
+```
+
+WebFlux 的优先级是低于传统 Servlet 容器的。所以我们需要注释掉传统的 web 容器！
+
+```xml
+<!-- 把这个注释掉 -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+```
+
+这样我们写的 Servlet 的内容就失效了，需要注释掉。不然项目无法正常启动。
+
+项目启动后可以看到
+
+```shell
+2021-05-02 18:19:29.823  INFO 13668 --- [  restartedMain] com.example.demo.SpringbootApplication   : No active profile set, falling back to default profiles: default
+2021-05-02 18:19:29.870  INFO 13668 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2021-05-02 18:19:29.871  INFO 13668 --- [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2021-05-02 18:19:30.767  INFO 13668 --- [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2021-05-02 18:19:31.860  INFO 13668 --- [  restartedMain] o.s.b.web.embedded.netty.NettyWebServer  : Netty started on port 8080
+2021-05-02 18:19:31.873  INFO 13668 --- [  restartedMain] com.example.demo.SpringbootApplication   : Started SpringbootApplication in 2.325 seconds (JVM running for 3.442)
+```
+
+### 自定义Servlet Web Server
+
+WebServerFactoryCustomizer [SpringBoot 2.0新增]
+
+```java
+/**
+ * Strategy interface for customizing {@link WebServerFactory web server factories}. Any
+ * beans of this type will get a callback with the server factory before the server itself
+ * is started, so you can set the port, address, error pages etc.
+ * <p>
+ * Beware: calls to this interface are usually made from a
+ * {@link WebServerFactoryCustomizerBeanPostProcessor} which is a
+ * {@link BeanPostProcessor} (so called very early in the ApplicationContext lifecycle).
+ * It might be safer to lookup dependencies lazily in the enclosing BeanFactory rather
+ * than injecting them with {@code @Autowired}.
+ *
+ * @param <T> the configurable web server factory
+ * @author Phillip Webb
+ * @author Dave Syer
+ * @author Brian Clozel
+ * @since 2.0.0
+ * @see WebServerFactoryCustomizerBeanPostProcessor
+ */
+@FunctionalInterface
+public interface WebServerFactoryCustomizer<T extends WebServerFactory> {
+
+	/**
+	 * Customize the specified {@link WebServerFactory}.
+	 * @param factory the web server factory to customize
+	 */
+	void customize(T factory);
+}
+```
+
+他有很多实现类。包括 Reactive 的、Tomcat 的、Netty 的
+
+### 自定义 Reactive Web Server
+
+ReactiveWebServerFactoryCustomizer
+
+```java
+public class ReactiveWebServerFactoryCustomizer
+		implements WebServerFactoryCustomizer<ConfigurableReactiveWebServerFactory>, Ordered {
+
+	private final ServerProperties serverProperties;
+
+	public ReactiveWebServerFactoryCustomizer(ServerProperties serverProperties) {
+		this.serverProperties = serverProperties;
+	}
+
+	@Override
+	public int getOrder() {
+		return 0;
+	}
+
+	@Override
+	public void customize(ConfigurableReactiveWebServerFactory factory) {
+		PropertyMapper map = PropertyMapper.get().alwaysApplyingWhenNonNull();
+		map.from(this.serverProperties::getPort).to(factory::setPort);
+		map.from(this.serverProperties::getAddress).to(factory::setAddress);
+		map.from(this.serverProperties::getSsl).to(factory::setSsl);
+		map.from(this.serverProperties::getCompression).to(factory::setCompression);
+		map.from(this.serverProperties::getHttp2).to(factory::setHttp2);
+		map.from(this.serverProperties.getShutdown()).to(factory::setShutdown);
+	}
+
+}
+```
+
+# 数据相关
+
+## 关系型数据库
+
+- JDBC：数据源，JdbcTemplate、自动装配 [关注这三个方面]
+- JPA：实体映射关系、实体操作、自动装配
+- 事务：Spring 事务抽象、JDBC 事务处理、自动装配
+
+### JDBC
+
+> 依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-jdbc</artifactId>
+    <version>2.4.2</version>
+</dependency>
+```
+
+> 数据源
+
+- javax.sql.DataSource
+
+JdbcTemplate
+
+> 自动装配
+
+- DataSourceAutoConfiguration
+
+### JPA
+
+> 依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+    <version>2.4.2</version>
+</dependency>
+```
+
+> 实体映射关系
+
+- @javax.persistence.OneToOne
+- @javax.persistence.OneToMany
+
+- @javax.persistence.ManyToOne
+- @javax.persistence.ManyToMany
+
+> 实体操作
+
+javax.persistence.EntityManager
+
+> 自动装配
+
+HibernateJpaAutoConfiguration
+
+```java
+@Configuration(proxyBeanMethods = false)
+@ConditionalOnClass({ LocalContainerEntityManagerFactoryBean.class, EntityManager.class, SessionImplementor.class })
+@EnableConfigurationProperties(JpaProperties.class)
+@AutoConfigureAfter({ DataSourceAutoConfiguration.class }) // 数据源配置完成后再执行
+@Import(HibernateJpaConfiguration.class)
+public class HibernateJpaAutoConfiguration {
+
+}
+```
+
+### 事务（Transaction）
+
+> 依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-tx</artifactId>
+</dependency>
+```
+
+>Spring 事务抽象
+
+PlatformTransactionManager
+
+```java
+public interface PlatformTransactionManager extends TransactionManager {
+    TransactionStatus getTransaction(@Nullable TransactionDefinition var1) throws TransactionException;
+
+    void commit(TransactionStatus var1) throws TransactionException;
+
+    void rollback(TransactionStatus var1) throws TransactionException;
+}
+```
+
+>JDBC 事务处理
+
+- DataSourceTransactionManager
+
+>自动装配
+
+- TransactionAutoConfiguration
+
+# 功能扩展
+
+## Spring Boot应用
+
+- SpringApplication：失败分析、应用特性、事件监听等。
+- Spring Boot 配置：外部化配置、Profile、配置属性
+- Spring Boot Starter：Starter 开发、最佳实践
+
+### SpringApplication
+
+```java
+@SpringBootApplication
+public class SpringbootApplication {
+
+    public static void main(String[] args) {
+        // 为什么要传两个参数，不传会出现什么问题。
+        SpringApplication.run(SpringbootApplication.class, args);
+    }
+
+}
+```
+
+
+#### 失败分析
+
+FailureAnalysisReporter
+
+```java
+@FunctionalInterface
+public interface FailureAnalysisReporter {
+
+	/**
+	 * Reports the given {@code failureAnalysis} to the user.
+	 * @param analysis the analysis
+	 */
+	void report(FailureAnalysis analysis);
+
+}
+```
+
+#### 应用特性
+
+`SpringApplication` Fluent API
+
+```java
+@SpringBootApplication
+public class SpringbootApplication {
+
+    public static void main(String[] args) {
+//        SpringApplication.run(SpringbootApplication.class, args);
+        new SpringApplicationBuilder(SpringbootApplication.class)
+//                .web(WebApplicationType.NONE) 设置了这个 就不会以web应用启动了
+                .properties("a=b")
+                .run(args);
+    }
+
+}
+```
+
+### Spring Boot配置
+
+外部化配置
+
+- `ConfigurationProperty` [Since:2.0.0]
 
   ```java
-  @Configuration
-  public class HelloWorldAutoConfiguration {
-      @Bean
-      public Object getObj() {
-          return new Object();
-      }
+  public final class ConfigurationProperty implements OriginProvider, Comparable<ConfigurationProperty> {
+  
+  	private final ConfigurationPropertyName name;
+  
+  	private final Object value;
+  
+      // 跟踪配置从哪里来
+  	private final Origin origin;
+  	// ...
   }
   ```
+  
 
-- resource/META-INF/spring.factories
+- @Profile [能力很弱，后续会调整成 Conditional]
 
-  ```properties
-  # Auto Configure
-  org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  com.example.demo.config.HelloWorldAutoConfiguration
-  ```
+- 配置属性
 
-- 运行
+  - PropertySource [Spring的]
 
-  ```java
-  /**
-   * {@link EnableAutoConfiguration}
-   * 自动装配
-   */
-  @EnableAutoConfiguration
-  public class EnableAutoConfigurationApplication {
-      public static void main(String[] args) {
-          ConfigurableApplicationContext context = new SpringApplicationBuilder(EnableAutoConfigurationApplication.class)
-                  .web(WebApplicationType.NONE)
-                  .run(args);
-          System.out.println(context.getBean("getObj", Object.class));
-          context.close();
-      }
-  }
-  ```
+## Spring Boot Starter
+
+# 运维管理
+
+Spring Boot Actuator
+
+- 通过端点管理各类 Web 和 JMX Endpoints
+- 健康检查：Health、HealthIndicator
+- 指标：内建 Metrics、自定义 Metrics
+
+## Spring Boot Actuator
+
+> 依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+
+> 端点
+
+- Web Endpoint
+- JMX Endpoint
+
+> 健康检查
+
+- Health
+- HealthIndicator
+
+> 指标
 
 # Web MVC核心
 
@@ -1884,7 +2160,7 @@ public class WebMvcAutoConfiguration {
 
 ### 基础架构：Servlet
 
-Web Browser 发送HTTP请求给Web Server  --> Web Server 服务把请求转发到Servlet容器中。--> Servlet容器进行一系列操作。
+Web Browser 发送 HTTP 请求给 Web Server➡️Web Server 服务把请求转发到 Servlet 容器中。➡️Servlet 容器进行一系列操作。
 
 ### Servlet特点
 
@@ -1902,7 +2178,7 @@ Web Browser 发送HTTP请求给Web Server  --> Web Server 服务把请求转发�
 
 > 核心架构：前端控制器（Front Controller）
 
-<img src="img/boot/FCMainClass.gif">
+<div align="center"><img src="img/boot/FCMainClass.gif"></div>
 
 - 资源：[Core J2EE Patterns](http://www.corej2eepatterns.com/FrontController.htm)
 - 实现：Spring Web MVC DispatcherServlet
