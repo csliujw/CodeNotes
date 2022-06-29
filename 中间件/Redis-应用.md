@@ -1,4 +1,4 @@
-# Redis快速回顾
+# 快速回顾
 
 [黑马程序员Redis入门到实战教程，全面透析redis底层原理+redis分布式锁+企业解决方案+redis实战_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1cr4y1671t?p=24)
 
@@ -524,7 +524,7 @@ public class RedisTemplateTest {
 }
 ```
 
-# Redis场景实战
+# 场景实战
 
 [黑马程序员Redis入门到实战教程，全面透析redis底层原理+redis分布式锁+企业解决方案+redis实战_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1cr4y1671t?p=24)
 
@@ -1549,8 +1549,6 @@ public class SystemConstants{
 - 共同关注
 - 关注推送
 
-
-
 ### 关注和取关
 
 关注是 User 之间的关系，是博主与粉丝的关系，在数据库中可以用一张 tb_follow 表来标示
@@ -1575,7 +1573,7 @@ graph LR
 内容--->|匹配|用户
 ```
 
-#### Feed 流模式
+#### Feed 流的模式
 
 Feed 流产品有两种常见模式
 
@@ -1586,19 +1584,100 @@ Feed 流产品有两种常见模式
     - 优点：投喂用户感兴趣信息，用户粘度很高，容易沉迷
     - 缺点：如果算法不精准，可能起到反作用
 
-本例中的个人页面，是基于关注的好友来做 Feed 流，因此采用 Timeline 的模式。该模式的实现方案有三种：
+<b style="color:orange">本例中的个人页面，是基于关注的好友来做 Feed 流，因此采用 Timeline 的模式。该模式的实现方案有三种：</b>
 
-- 拉模式
-- 推模式
-- 推拉结合
+- 拉模式：带上时间戳，按时间戳排序显示消息。假定 p4 关注了p1 和 p2，因此 p4 会把关注人的消息拉去到自己的收件箱。收件箱读完后就清理掉，因此比较节省内存（只保存一份消息）。但是每次读取的时候都重新去拉起消息做排序，比较耗时。如果关注的人多，这个耗时就更久了。
 
-|                  | **拉模式** | **推模式**        | **推拉结合**          |
-| ---------------- | ---------- | ----------------- | --------------------- |
-| **写比例**       | 低         | 高                | 中                    |
-| **读比例**       | 高         | 低                | 中                    |
-| **用户读取延迟** | 高         | 低                | 低                    |
-| **实现难度**     | 复杂       | 简单              | 很复杂                |
-| **使用场景**     | 很少使用   | 用户量少、没有大V | 过千万的用户量，有大V |
+    ```mermaid
+    graph LR
+    p1-->发件箱1[发件箱 msg-16666]
+    p2-->发件箱2[发件箱 msg-16667]
+    p3-->发件箱3[发件箱 msg-16668]
+    p4---|手动拉取|收件箱4[msg-16666/16667]
+    ```
+
+- 推模式：主动把消息推送到粉丝的收件箱。内存占用比较大，每个消息好发送给好多人。
+
+    ```mermaid
+    graph LR
+    张三-->|主动推送|粉丝1-->收件箱1[收件箱: msg-1666]
+    李四-->|主动推送|粉丝2-->收件箱2[收件箱: msg-1669]
+    ```
+
+- 推拉结合：普通人粉丝少，用推模式。大 V 活跃粉丝人少，可以用推模式，人少，内存耗费不是很高，速度也快；普通粉丝人少，不适合用推模式，采用拉模式。
+
+|                  | **拉模式** | **推模式**                             | **推拉结合**           |
+| ---------------- | ---------- | -------------------------------------- | ---------------------- |
+| **写比例**       | 低         | 高                                     | 中                     |
+| **读比例**       | 高         | 低                                     | 中                     |
+| **用户读取延迟** | 高         | 低                                     | 低                     |
+| **实现难度**     | 复杂       | 简单                                   | 很复杂                 |
+| **使用场景**     | 很少使用   | 用户量少、没有大 V（用户量在千万以下） | 过千万的用户量，有大 V |
+
+#### 案例
+
+基于推模式实现关注推送功能
+
+① 修改探店笔记的业务，在保存 blog 到数据库的同时，推送到粉丝的收件箱
+
+② 收件箱满足可以根据时间戳排序（List、Sorted），必须用 Redis 的数据结构实现
+
+③ 查询收件箱数据时，可以实现分页查询
+
+Feed 流中的数据会不断更新，所以数据的角标也在变化，因此不能采用传统的分页模式。可以采用滚动分页的模式：每次记录当前查询的最后一条记录，下一页就从最后一条记录开始查询。
+
+<div align="center"><img src="img/image-20220627124355521.png"></div>
+
+部分代码
+
+```java
+/**
+保存笔记
+查询笔记作者所有粉丝
+推送笔记 id 给粉丝
+返回 id
+主要是推送的代码
+*/
+for(Follow follow : follows){
+    Long userId = follow.getUserId();
+    String key = "feed:"+userId;
+    stringRedisTemplate.opsForZSet().add(key,blog.getId().toString(),System.currentTimeMillis());
+}
+```
+
+拉取代码逻辑
+
+```java
+/**
+zreverangebyscore z1 5 0 withscores limit 1 3
+滚动分页查询参数
+max：当前时间戳 | 上一次查询的最小时间戳
+min：0
+offset：0 | 在上一次的结果中，与最小值一样的元素个数
+count：3
+*/
+public Result queryBlogOfFollow(Long max,Integer offset){
+    Long userId = xxx;
+    String key = "feed:"+userId;
+    Set<ZSetOperations.TypedTuple<String>> typedTuples = stringRedisTemplate.opsForZSet()
+        .reverseRangeByScoreWithScores(key,0,max,offset,2);
+    //...
+    // 解析数据
+    long minTime = 0;
+    int os = 1;
+    for(ZSetOperations.TypedTule<String> tuple : typedTuples){
+        ids.add(Long.valueOf(tuple.getValue()));
+        long time = tuple.getScore().longValue();
+        if(time == minTime){
+            os++;
+        }else{
+            minTime = time;
+            os = 1;
+        }
+    }
+    // 返回数据
+}
+```
 
 ## 附件商户
 
@@ -1612,7 +1691,7 @@ GEO 就是 Geolocation 的简写形式，代表地理坐标。Redis 在 3.2 版�
 - GEOPOS：返回指定 member 的坐标
 - GEORADIUS：指定圆心、半径，找到该圆内包含的所有 member，并按照与圆心之间的距离排序后返回。6.2 以后已废弃
 - GEOSEARCH：在指定范围内搜索 member，并按照与指定点之间的距离排序后返回。范围可以是圆形或矩形。6.2. 新功能
-- GEOSEARCHSTORE：与 GEOSEARCH 功能一致，不过可以把结果存储到一个指定的key。 6.2. 新功能
+- GEOSEARCHSTORE：与 GEOSEARCH 功能一致，不过可以把结果存储到一个指定的 key。 6.2. 新功能
 
 > 练习
 
@@ -1624,13 +1703,30 @@ GEO 就是 Geolocation 的简写形式，代表地理坐标。Redis 在 3.2 版�
 
 计算北京西站到北京站的距离
 
-搜索天安门（ 116.397904 39.909005 ）附近10km内的所有火车站，并按照距离升序排序
+搜索天安门（ 116.397904 39.909005 ）附近 10km 内的所有火车站，并按照距离升序排序
+
+```bash
+geoadd g1 116.378248 39.865275 bjn 116.42803 39.903738  116.322287 39.893729 bjz bjx
+
+geodist g1 bjn bjx
+
+geosearch g1 fromlonlat 116.397904 39.909005 byradius 10 km withdist # 默认是升序的
+"""
+123
+"""
+```
 
 ### 附件商户搜索
 
 假定：在首页中点击某个频道，即可看到频道下的商户。
 
 我们可以按照商户类型做分组，类型相同的商户作为同一组，以 typeId 为 key 存入同一个 GEO 集合中即可
+
+| key           | value | score |
+| ------------- | ----- | ----- |
+| shop:geo:food | xxx   | xxx   |
+|               | xxx   | xxx   |
+| shop:geo:tax  | qqq   | www   |
 
 SpringDataRedis 的 2.3.9 版本并不支持 Redis 6.2 提供的 GEOSEARCH 命令，因此我们需要提示其版本，修改自己的 POM 文件，内容如下：
 
@@ -1724,8 +1820,6 @@ BitMap 的操作命令有：
  bitcount count 0 0
  ```
 
-
-
 > 如何得到本月到今天为止的所有签到数据?
 
 BITFIELD key GET u[dayOfMonth] 0
@@ -1776,7 +1870,7 @@ void testHyperLogLog() {
     }
     // 统计数量
     Long size = stringRedisTemplate.opsForHyperLogLog().size("hll1");
-    System.out.println("size = " + size);
+    System.out.println("size = " + size); // 997593
 }
 ```
 
@@ -1793,11 +1887,19 @@ void testHyperLogLog() {
 - 每次一条，for 循环写入
 - 每次多条，批量写入
 
+# 分布式缓存
 
+单点 Redis 的问题：
 
+- 数据丢失问题，服务器重启可能会丢失数据；Redis 数据持久化可以解决该问题
+- 并发能力问题，单节点的 Redis 无法满足高并发场景；搭建主从集群，实现读写分离
+- 故障回复问题，如果 Redis 宕机，则服务不可用，需要一种自动的故障恢复手段；利用 Redis 哨兵，实现健康检测和自动恢复
+- 存储能力问题，Redis 基于内存，单节点的存储难以满足海里数据需求；搭建分片集群，利用插槽机制实现动态扩容
 
+## Redis的持久化
 
-
+- RDB 持久化
+- AOF 持久化
 
 
 

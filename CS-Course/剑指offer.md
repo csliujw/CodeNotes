@@ -128,7 +128,7 @@ int main(){
 
 n 个物品，容量为 v 的背包。每个物品有两个属性，体积 $v_i$ 和价值 $w_i$ 每个物品最多只能用一次。选出的物品的总价值要最大，问最大值是多少。
 
-<img src="img/image-20220501205520428.png">
+<div align="center"><img src="img/image-20220501205520428.png"></div>
 
 - DP
   - 状态表示 f(i,j)
@@ -167,7 +167,7 @@ int main(){
 
 每个物品有无限个。（枚举第 i 组物品，选几个）
 
-<img src="img/image-20220501212957456.png">
+<div align="center"><img src="<img src="img/image-20220501212957456.png"></div>
 
 朴素版解法
 
@@ -270,7 +270,8 @@ int main(){
 
 每个物品有 $s_i$ 个，每个物品的价值都不一样。
 
-<img src="img/image-20220503192339430.png">
+<div align="center"><img src="img/image-20220503192339430.png"></div>
+
 $$
 f[i][j] = max(f[i-1][j-v[i]*k]+w[i]*k)
 $$
@@ -382,11 +383,9 @@ int main(){
 
 PS：如果状态用的是上一层的状态就从大到小枚举体积，如果是用的本层的，就从小到大枚举体积。
 
-<img src="img\image-20220503201251613.png">
 
 
-
-<img src="img\image-20220503201532911.png">
+<div align="center"><img src="img/image-20220503201532911.png"></div>
 
 ```cpp
 #include <iostream>
@@ -429,7 +428,7 @@ int main(){
 
 [剑指 Offer II 100. 三角形中最小路径之和 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/IlPe0q/)
 
-<img src="img\image-20220503204221665.png">
+<div align="center"><img src="img/image-20220503204221665.png"></div>
 
 如果下标涉及到 i-1，i 最好是从 1 开始。
 
@@ -445,7 +444,7 @@ $DP 时间复杂度 = 状态数量 * 转移的计算量$
 解释：最长递增子序列是 [2,3,7,101]，因此长度为 4 。
 ```
 
-<img src="img\image-20220503210054574.png">
+<div align="center"><img src="img/image-20220503210054574.png"></div>
 
 ```java
 class Solution {
@@ -480,7 +479,7 @@ class Solution {
 解释：最长公共子序列是 "ace" ，它的长度为 3 。
 ```
 
-<img src="img/image-20220503220015363.png">
+<div align="center"><img src="img/image-20220503220015363.png"></div>
 
 ```java
 class Solution {
@@ -1281,7 +1280,7 @@ class Solution {
 - 如何求指定区域的面积呢？比如求 $arr[1][1]~arr[3][4]$ 的面积？
   - 小学数学题。A-B+C+D。具体请看下图。
 
-<img src="https://pic.leetcode-cn.com/1614650837-SAIiWg-1.png" width="50%">
+<div align="center"><img src="https://pic.leetcode-cn.com/1614650837-SAIiWg-1.png" width="50%"></div>
 
 <img src="https://pic.leetcode-cn.com/1614650906-cznQhe-image.png" width="50%">
 
@@ -1666,7 +1665,7 @@ public List<Integer> findAnagrams(String s, String p) {
 
 给定一个链表，删除链表的倒数第 `n` 个结点，并且返回链表的头结点
 
-<img src="https://assets.leetcode.com/uploads/2020/10/03/remove_ex1.jpg">
+<div align="center"><img src="https://assets.leetcode.com/uploads/2020/10/03/remove_ex1.jpg"></div>
 
 ```shell
 输入：head = [1,2,3,4,5], n = 2
@@ -1675,7 +1674,7 @@ public List<Integer> findAnagrams(String s, String p) {
 
 #### 解题思路
 
-设置一个哑节点（方便删除第一个node）+快慢指针。具体块指针多走几步，举个例子算下就知道了。
+设置一个哑节点（方便删除第一个 node）+快慢指针。具体块指针多走几步，举个例子算下就知道了。
 
 #### 代码
 
@@ -1720,7 +1719,7 @@ class Solution {
 
 说明：不允许修改给定的链表
 
-<img src="https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/12/07/circularlinkedlist.png">
+<div align="center"><img src="https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/12/07/circularlinkedlist.png"></div>
 
 ```shell
 输入：head = [3,2,0,-4], pos = 1
@@ -1950,7 +1949,7 @@ class Solution {
 
 > 解题思路
 
-<img src="https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/10/12/multilevellinkedlist.png">
+<div align="center"><img src="https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/10/12/multilevellinkedlist.png"></div>
 
 <img src="https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/10/12/multilevellinkedlistflattened.png">
 
@@ -1959,7 +1958,7 @@ class Solution {
 - 搞清楚展平规则后就是想怎么做了。
 - 可以看出，这是一个递归的结构。展平 3 的子链表。如果 3 的子链表有子链表，那就先展平 3 子链表的子链表。
 
-<img src="https://assets.leetcode-cn.com/solution-static/jianzhi_II_028/1.png">
+<div align="center"><img src="https://assets.leetcode-cn.com/solution-static/jianzhi_II_028/1.png"></div>
 
 ```java
 /*
@@ -2275,8 +2274,6 @@ class LRUCache {
     }
 }
 ```
-
-
 
 ### 有效的变位词
 
@@ -2750,7 +2747,7 @@ public class Offer042RecentCounter {
 
 给你二叉树的根节点 `root` ，返回其节点值的<b>层序遍历</b> 。 （即逐层地，从左到右访问所有节点）。
 
-<img src="https://assets.leetcode.com/uploads/2021/02/19/tree1.jpg">
+<div align="center"><img src="https://assets.leetcode.com/uploads/2021/02/19/tree1.jpg"></div>
 
 二叉树的广度优先搜索即二叉树的层序遍历。可利用队列完成。
 
@@ -2920,7 +2917,7 @@ public class Offer044LargestValues {
 
 假设二叉树中至少有一个节点。
 
- <img src="https://assets.leetcode.com/uploads/2020/12/14/tree2.jpg">
+<div align="center"><img src="https://assets.leetcode.com/uploads/2020/12/14/tree2.jpg"></div>
 
 ```shell
 输入: [1,2,3,4,null,5,6,null,null,7]
@@ -2959,7 +2956,7 @@ public class Offer045FindBottomLeftValue {
 
 给定一个二叉树的<b>根节点</b> `root`，想象自己站在它的右侧，按照从顶部到底部的顺序，返回从右侧所能看到的节点值。
 
-<img src="https://assets.leetcode.com/uploads/2021/02/14/tree.jpg">
+<div align="center"><img src="https://assets.leetcode.com/uploads/2021/02/14/tree.jpg"></div>
 
 ```shell
 输入: [1,2,3,null,5,null,4]
@@ -3140,7 +3137,7 @@ public void posOrder(Node head) {
 输出: [1,1,0,1,1,null,1]
 解释: 
 
-<img src="https://s3-lc-upload.s3.amazonaws.com/uploads/2018/04/05/1028.png">
+<div align="center"><img src="https://s3-lc-upload.s3.amazonaws.com/uploads/2018/04/05/1028.png"></div>
 
 #### 解题思路
 
@@ -3247,7 +3244,7 @@ public class Codec {
 
 叶节点是指没有子节点的节点
 
-<img src="https://assets.leetcode.com/uploads/2021/02/19/num2tree.jpg">
+<div align="center"><img src="https://assets.leetcode.com/uploads/2021/02/19/num2tree.jpg"></div>
 
 
 
@@ -3368,7 +3365,7 @@ class Solution {
 
 注意: 合并过程必须从两个树的根节点开始。
 
-<img src="https://assets.leetcode.com/uploads/2021/02/05/merge.jpg">
+<div align="center"><img src="https://assets.leetcode.com/uploads/2021/02/05/merge.jpg"></div>
 
 #### 解题思路
 
@@ -4899,7 +4896,7 @@ class CQueue {
 
 例如，在下面的 3×4 的矩阵中包含单词 "ABCCED"（单词中的字母已标出）。
 
-<img src="https://assets.leetcode.com/uploads/2020/11/04/word2.jpg">
+<div align="center"><img src="https://assets.leetcode.com/uploads/2020/11/04/word2.jpg"></div>
 
 ### 解题思路
 
@@ -5265,7 +5262,7 @@ class Solution {
 
 叶子节点是指没有子节点的节点
 
-<img src="https://assets.leetcode.com/uploads/2021/01/18/pathsumii1.jpg">
+<div align="center"><img src="https://assets.leetcode.com/uploads/2021/01/18/pathsumii1.jpg"></div>
 
 ```
 输入：root = [5,4,8,11,null,13,4,7,2,null,null,5,1], targetSum = 22
@@ -5343,13 +5340,13 @@ class Solution {
 
  以下面的二叉搜索树为例：
 
-<img src="https://assets.leetcode.com/uploads/2018/10/12/bstdlloriginalbst.png">
+<div align="center"><img src="https://assets.leetcode.com/uploads/2018/10/12/bstdlloriginalbst.png"></div>
 
 我们希望将这个二叉搜索树转化为双向循环链表。链表中的每个节点都有一个前驱和后继指针。对于双向循环链表，第一个节点的前驱是最后一个节点，最后一个节点的后继是第一个节点。
 
 下图展示了上面的二叉搜索树转化成的链表。“head” 表示指向链表中有最小元素的节点。
 
-<img src="https://assets.leetcode.com/uploads/2018/10/12/bstdllreturndll.png">
+<div align="center"><img src="https://assets.leetcode.com/uploads/2018/10/12/bstdllreturndll.png"></div>
 
 ### 解题思路
 
@@ -6106,7 +6103,7 @@ class Solution {
 
 给定一个二叉树, 找到该树中两个指定节点的最近公共祖先。例如，给定如下二叉树: root = [3,5,1,6,2,0,8,null,null,7,4]
 
-<img src="https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/12/15/binarytree.png">
+<div align="center"><img src="https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/12/15/binarytree.png"></div>
 
 ```
 输入: root = [3,5,1,6,2,0,8,null,null,7,4], p = 5, q = 1
@@ -6159,17 +6156,17 @@ class Solution {
 - 遍历时若发现 array[pre]>array[next] 说明旋转数组的被旋转部分的起始找到了，就是最小的那个元素
 - [x] 二分查找 left mid right
 - 我们把数组分为A B两部分。A部分的值都大于B部分的值
-- **我们采用二分查找，==当mid.val>left.val是left=mid+1==。**
+- 我们采用二分查找，当 mid.val>left.val 是 left=mid+1。
     - 此时mid肯定是A部分的【因为mid.val>left.val】
     - 但是mid+1不一定，所以需要与right.val比较，如果恰好小于则说明要找的元素就是mid+1.val。【因为mid+1是第一个不满足条件的】
 - **如果mid.val<left.val。**
     - 说明找到了B部分的元素，此时right=mid【不取mid-1是因为怕mid正好是要找的元素】
     - 然后继续在left和mid中查找。
-- **==当left和right相邻时，计算中位数，mid还是指向left。==**
+- 当left和right相邻时，计算中位数，mid还是指向left。
     - left.val不小于mid.val
     - right.val不大于mid.val
     - left++。left==right,元素找到。
-- **对于若A B两部分出现了重复的元素，如 ==[1 1 1 0 1 1]==** 
+- 对于若A B两部分出现了重复的元素，如 [1 1 1 0 1 1] 
     - left.val = 1 ; mid.val = 1 ; right.val = 1;
     - 我们无法进行二分查找，因为不知道mid是在A部分还是在B部分
     - 此时只能进行顺序查找，移动left【这样也和前面移动left统一起来了】
@@ -6732,7 +6729,7 @@ public class _796_RotateString {
 
 给定一个 N 叉树，返回其节点值的*层序遍历*。（即从左到右，逐层遍历）。树的序列化输入是用层序遍历，每组子节点都由 null 值分隔（参见示例）。
 
-<img src="https://assets.leetcode.com/uploads/2018/10/12/narytreeexample.png">
+<div align="center"><img src="https://assets.leetcode.com/uploads/2018/10/12/narytreeexample.png"></div>
 
 ```
 输入：root = [1,null,3,2,4,null,5,6]
@@ -7400,7 +7397,7 @@ class Solution {
 
 返回所有三个投影的总面积。
 
-<img src="https://s3-lc-upload.s3.amazonaws.com/uploads/2018/08/02/shadow.png">
+<div align="center"><img src="https://s3-lc-upload.s3.amazonaws.com/uploads/2018/08/02/shadow.png"></div>
 
 ```
 输入：[[1,2],[3,4]]
@@ -7574,7 +7571,7 @@ class Solution {
 - 二维前缀和数组中的每一个格子记录的是「以当前位置为右下角的区域和(即，【0，0】~【i，j】这个矩形区域的和)」
 - 如何求指定区域的面积呢？比如求 $arr[1][1]~arr[3][4]$ 的面积？小学数学题。A-B+C+D。具体请看下图。
 
-<img src="https://pic.leetcode-cn.com/1614650837-SAIiWg-1.png" width="50%">
+<div align="center"><img src="https://pic.leetcode-cn.com/1614650837-SAIiWg-1.png" width="50%"></div>
 
 <img src="https://pic.leetcode-cn.com/1614650906-cznQhe-image.png" width="50%">
 
@@ -8238,11 +8235,11 @@ class Solution {
 
 <b>迭代</b>：看下 leetcode 题解。可以每次把 root 入队两次，每次取两个结点并比较它们的值。队列中每两个连续的结点应该是相等的，而且它们的子树互为镜像。然后将两个结点的左右子结点按相反的顺序插入队列中。当队列为空时，或者我们检测到树不对称（即从队列中取出两个不相等的连续结点）时，该算法结束。
 
-<img src="https://pic.leetcode-cn.com/45a663b08efaa14193d63ef63ae3d1d130807467d13707f584906ad3af4adc36-1.gif">
+<div align="center"><img src="https://pic.leetcode-cn.com/45a663b08efaa14193d63ef63ae3d1d130807467d13707f584906ad3af4adc36-1.gif"></div>
 
 <b>递归</b>：定义一种和二叉树前序遍历对称的遍历方式，然后比较这两个遍历方式每次遍历的 node 的 val 是否相同。
 
-<img src="https://pic.leetcode-cn.com/2449af8862537df2cbbc45a07764415c1a10769677c822fa271ea7447c8fa128-2.gif">
+<div align="center"><img src="https://pic.leetcode-cn.com/2449af8862537df2cbbc45a07764415c1a10769677c822fa271ea7447c8fa128-2.gif"></div>
 
 ### 代码
 
@@ -8353,7 +8350,7 @@ class Solution {
 
 给你二叉树的根节点 `root` ，返回其节点值的<b>锯齿形层序遍历</b> 。（即先从左往右，再从右往左进行下一层遍历，以此类推，层与层之间交替进行）。
 
-<img src="https://assets.leetcode.com/uploads/2021/02/19/tree1.jpg">
+<div align="center"><img src="https://assets.leetcode.com/uploads/2021/02/19/tree1.jpg"></div>
 
 ```
 输入：root = [3,9,20,null,null,15,7]

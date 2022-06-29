@@ -1,6 +1,6 @@
 # 快速入门
 
-## SpringBoot介绍
+## Spring Boot介绍
 
 能快速创建出生产级别的 Spring 应用
 
@@ -27,7 +27,7 @@ Spring Boot 是整合 Spring 技术栈的一站式框架，是简化 Spring 技�
 
 - 封装太深，内部原理复杂，不易精通
 
-## 创建SpringBoot项目
+## 创建Spring Boot项目
 
 ### IDEA 创建项目
 
@@ -135,21 +135,21 @@ public class HelloController {
 
 <div align="center"><img src="img/boot/image-20211122163605950.png"></div>
 
-阿里为了便于自己公司开发使用，特此在依赖坐标中添加了一些阿里自主的技术，也是为了推广自己的技术吧，所以在依赖选择列表中，你有了更多的选择。此外，阿里提供的地址更符合国内开发者的使用习惯，里面有一些 SpringBoot 官网上没有给出的坐标。
+阿里为了便于自己公司开发使用，特此在依赖坐标中添加了一些阿里自主的技术，也是为了推广自己的技术吧，所以在依赖选择列表中，你有了更多的选择。此外，阿里提供的地址更符合国内开发者的使用习惯，里面有一些 Spring Boot 官网上没有给出的坐标。
 
 <div align="center"><img src="img/boot/image-20211122163937408.png"></div>
 
-阿里云地址默认创建的 SpringBoot 工程版本是 <font color="#ff0000"><b>2.4.1</b></font>，所以如果你想更换其他的版本，创建项目后在 pom 文件中手工修改即可，别忘了刷新一下，加载新版本信息。
+阿里云地址默认创建的 Spring Boot 工程版本是 <font color="#ff0000"><b>2.4.1</b></font>，所以如果你想更换其他的版本，创建项目后在 pom 文件中手工修改即可，别忘了刷新一下，加载新版本信息。
 
-<font color="#ff0000"><b>注意</b></font>：阿里云提供的工程创建地址初始化完毕后和使用 SpringBoot 官网创建出来的工程略有区别，主要是在配置文件的形式上有区别,这个信息在 SpringBoot 程序的执行流程时讲解。
+<font color="#ff0000"><b>注意</b></font>：阿里云提供的工程创建地址初始化完毕后和使用 Spring Boot 官网创建出来的工程略有区别，主要是在配置文件的形式上有区别,这个信息在 Spring Boot 程序的执行流程时讲解。
 
 ### 目录结构说明
 
-> SpringBoot 目录解析
+> Spring Boot 目录解析
 
 - resources 文件夹中目录结构
     - static：保存静态资源；js css img
-    - templates：保存页面资源；SpringBoot 默认不支持 jsp
+    - templates：保存页面资源；Spring Boot 默认不支持 jsp
     - mybatis 的配置文件之类的需要放在 resources 文件夹下面。resources 是资源的根路径。就把 resources 当成编译后的 classes 文件夹吧。
 
 resources下的文件最终都会被部署到 classpath 文件下
@@ -169,7 +169,7 @@ public class CommunityApplication {
 }
 ```
 
-热部署( IDEA 进行 SpringBoot 热部署失败的原因是，IDEA 默认情况下不会自动编译，需要对 IDEA 进行自动编译的设置)
+热部署( IDEA 进行 Spring Boot 热部署失败的原因是，IDEA 默认情况下不会自动编译，需要对 IDEA 进行自动编译的设置)
 - Settings --> Compiler
 - Ctrl + Shift + Alt + / -->选择 Registry--> compiler.automake.allow.when.app.running ✔
 
@@ -186,7 +186,7 @@ public class CommunityApplication {
 
 ### 属性配置
 
-SpringBoot 通过配置文件 application.properties 就可以修改默认的配置
+Spring Boot 通过配置文件 application.properties 就可以修改默认的配置
 
 <div align="center"><img src="img/boot/image-20211123165428245.png"></div>
 
@@ -200,9 +200,9 @@ server.port=80
 
 以前修改端口在 tomcat 服务器的配置文件中改，现在在 Spring Boot 专用的配置文件中改，<b>简化开发者配置的书写位置，集中管理。</b>
 
-1. SpringBoot 程序可以在 application.properties 文件中进行属性配置
+1. Spring Boot 程序可以在 application.properties 文件中进行属性配置
 2. application.properties 文件中只要输入要配置的属性关键字就可以根据提示进行设置
-3. SpringBoot 将配置信息集中在一个文件中写，不管你是服务器的配置，还是数据库的配置，总之都写在一起，逃离一个项目十几种配置文件格式的尴尬局面
+3. Spring Boot 将配置信息集中在一个文件中写，不管你是服务器的配置，还是数据库的配置，总之都写在一起，逃离一个项目十几种配置文件格式的尴尬局面
 
 <b>总结</b>
 
@@ -226,13 +226,13 @@ logging.level.root=debug
 
 我们现在配置了 3 个信息，但是又有新的问题了。这个配置是随便写的吗？什么都能配？有没有一个东西显示所有能配置的项呢？此外这个配置和什么东西有关呢？会不会因为我写了什么东西以后才可以写什么配置呢？比如我现在没有写数据库相关的东西，能否配置数据呢？一个一个来，先说第一个问题，都能配置什么。
 
-打开 SpringBoot 的官网，找到 SpringBoot 官方文档，打开查看附录中的 Application Properties 就可以获取到对应的配置项了，网址奉上：https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#application-properties
+打开 Spring Boot 的官网，找到 Spring Boot 官方文档，打开查看附录中的 Application Properties 就可以获取到对应的配置项了，网址奉上：https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#application-properties
 
 能写什么的问题解决了，再来说第二个问题，这个配置项和什么有关。在pom中注释掉导入的 spring-boot-starter-web，然后刷新工程，你会发现配置的提示消失了。闹了半天是设定使用了什么技术才能做什么配置。也合理，不然没有使用对应技术，配了也是白配。
 
 <font color="#f0f"><b>温馨提示</b></font>
 
-所有的 starter 中都会依赖下面这个 starter，叫做 spring-boot-starter。这个 starter 是所有的 SpringBoot 的 starter 的基础依赖，里面定义了 SpringBoot 相关的基础配置，关于这个 starter 我们到开发应用篇和原理篇中再深入讲解。
+所有的 starter 中都会依赖下面这个 starter，叫做 spring-boot-starter。这个 starter 是所有的 Spring Boot 的 starter 的基础依赖，里面定义了 Spring Boot 相关的基础配置，关于这个 starter 我们到开发应用篇和原理篇中再深入讲解。
 
 ```xml
 <dependency>
@@ -245,19 +245,19 @@ logging.level.root=debug
 
 <b>总结</b>
 
-1. SpringBoot 中导入对应 starter 后，提供对应配置属性
-2. 书写 SpringBoot 配置采用关键字+提示形式书写
+1. Spring Boot 中导入对应 starter 后，提供对应配置属性
+2. 书写 Spring Boot 配置采用关键字+提示形式书写
 
 ### 配置文件分类
 
-现在已经能够进行 SpringBoot 相关的配置了，但是 properties 格式的配置写起来总是觉得看着不舒服，所以就期望存在一种书写起来更简便的配置格式提供给开发者使用。有吗？还真有，SpringBoot 除了支持 properties 格式的配置文件，还支持另外两种格式的配置文件。三种配置文件格式分别如下:
+现在已经能够进行 Spring Boot 相关的配置了，但是 properties 格式的配置写起来总是觉得看着不舒服，所以就期望存在一种书写起来更简便的配置格式提供给开发者使用。有吗？还真有，Spring Boot 除了支持 properties 格式的配置文件，还支持另外两种格式的配置文件。三种配置文件格式分别如下:
 
 - properties 格式
 - yml 格式
 - yaml 格式
 
 
-从知识角度来说，要学，从开发角度来说，不用学。因为 SpringBoot 的配置在 Idea 工具下有提示，跟着提示走就行了。下面列举三种不同文件格式配置相同的属性范例，先了解一下。
+从知识角度来说，要学，从开发角度来说，不用学。因为 Spring Boot 的配置在 Idea 工具下有提示，跟着提示走就行了。下面列举三种不同文件格式配置相同的属性范例，先了解一下。
 
 - application.properties（properties 格式）
 
@@ -283,7 +283,7 @@ server:
 
 <b>总结</b>
 
-1. SpringBoot 提供了 3 种配置文件的格式
+1. Spring Boot 提供了 3 种配置文件的格式
     - properties（传统格式/默认格式）
     - <b>yml</b>（主流格式）
     - yaml
@@ -359,7 +359,7 @@ server:
 
 在做程序的过程中，可能会基于各种各样的原因导致配置文件中没有提示，下面说一下如果自动提示功能消失了怎么解决。
 
-自动提示功能不是 SpringBoot 技术给我们提供的，是我们在 Idea 工具下编程，这个编程工具给我们提供的。自动提示功能消失的原因还是蛮多的，如果想解决这个问题，就要知道为什么会消失，大体原因有如下 2 种：
+自动提示功能不是 Spring Boot 技术给我们提供的，是我们在 Idea 工具下编程，这个编程工具给我们提供的。自动提示功能消失的原因还是蛮多的，如果想解决这个问题，就要知道为什么会消失，大体原因有如下 2 种：
 
 1. Idea 认为你现在写配置的文件不是个配置文件，所以拒绝给你提供提示功能
 
@@ -389,7 +389,7 @@ server:
 
 <b>总结</b>
 
-1. 指定 SpringBoot 配置文件
+1. 指定 Spring Boot 配置文件
 
     - Setting → Project Structure → Facets
     - 选中对应项目/工程
@@ -399,7 +399,7 @@ server:
 
 ### yaml文件
 
-SpringBoot 的配置以后主要使用 yml 结尾的这种文件格式，并且在书写时可以通过提示的形式加载正确的格式。但是这种文件还是有严格的书写格式要求的。下面就来说一下具体的语法格式。
+Spring Boot 的配置以后主要使用 yml 结尾的这种文件格式，并且在书写时可以通过提示的形式加载正确的格式。但是这种文件还是有严格的书写格式要求的。下面就来说一下具体的语法格式。
 
 YAML（YAML Ain't Markup Language），一种数据序列化格式。具有容易阅读、容易与脚本语言交互、以数据为核心，重数据轻格式的特点。常见的文件扩展名有两种：
 
@@ -481,7 +481,7 @@ map:
 
 <b>思考</b>
 
-现在我们已经知道了 yaml 具有严格的数据格式要求，并且已经可以正确的书写 yaml 文件了，那这些文件书写后其实是在定义一些数据。这些数据是给谁用的呢？大部分是 SpringBoot 框架内部使用，但是如果我们想配置一些数据自己使用，能不能用呢？答案是可以的，那如何读取 yaml 文件中的数据呢？咱们下一节再说。
+现在我们已经知道了 yaml 具有严格的数据格式要求，并且已经可以正确的书写 yaml 文件了，那这些文件书写后其实是在定义一些数据。这些数据是给谁用的呢？大部分是 Spring Boot 框架内部使用，但是如果我们想配置一些数据自己使用，能不能用呢？答案是可以的，那如何读取 yaml 文件中的数据呢？咱们下一节再说。
 
 ### yaml数据读取
 
@@ -502,7 +502,7 @@ yaml 中保存的单个数据，可以使用 Spring 中的注解 @Value 读取�
 
 #### 读取全部数据
 
-读取单一数据可以解决读取数据的问题，但是如果定义的数据量过大，这么一个一个书写肯定会累死人的，SpringBoot 提供了一个对象，能够把所有的数据都封装到这一个对象中，这个对象叫做 Environment，使用自动装配注解可以将所有的 yaml 数据封装到这个对象中
+读取单一数据可以解决读取数据的问题，但是如果定义的数据量过大，这么一个一个书写肯定会累死人的，Spring Boot 提供了一个对象，能够把所有的数据都封装到这一个对象中，这个对象叫做 Environment，使用自动装配注解可以将所有的 yaml 数据封装到这个对象中
 
 <div align="center"><img src="img/boot/image-20211126180738569.png" style="zoom:80%;" /></div>
 
@@ -515,7 +515,7 @@ yaml 中保存的单个数据，可以使用 Spring 中的注解 @Value 读取�
 
 #### 读取对象数据
 
-单一数据读取书写比较繁琐，全数据读取封装的太厉害了，每次拿数据还要一个一个的 getProperties(), 总之用起来都不是很舒服。由于 Java 是一个面向对象的语言，很多情况下，我们会将一组数据封装成一个对象。SpringBoot 也提供了可以将一组yaml 对象数据封装一个 Java 对象的操作
+单一数据读取书写比较繁琐，全数据读取封装的太厉害了，每次拿数据还要一个一个的 getProperties(), 总之用起来都不是很舒服。由于 Java 是一个面向对象的语言，很多情况下，我们会将一组数据封装成一个对象。Spring Boot 也提供了可以将一组yaml 对象数据封装一个 Java 对象的操作
 
 首先定义一个对象，并将该对象纳入 Spring 管控的范围，也就是定义成一个 bean，然后使用注解 @ConfigurationProperties 指定该对象加载哪一组 yaml 中配置的信息。
 
@@ -714,7 +714,7 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 
 - 见到很多 spring-boot-starter-* ： *就某种场景
 - 只要引入starter，这个场景的所有常规需要的依赖我们都自动引入
-- SpringBoot所有支持的场景
+- Spring Boot所有支持的场景
     https://docs.spring.io/spring-boot/docs/current/reference/html/using-spring-boot.html#using-boot-starter
 - 见到的  *-spring-boot-starter： 第三方为我们提供的简化开发的场景启动器。
 - 所有场景启动器最底层的依赖
@@ -947,7 +947,7 @@ public MultipartResolver multipartResolver(MultipartResolver resolver) {
 // 给容器中加入了文件上传解析器；
 ```
 
-SpringBoot 默认会在底层配好所有的组件。但是如果用户自己配置了以用户的优先
+Spring Boot 默认会在底层配好所有的组件。但是如果用户自己配置了以用户的优先
 
 ```java
 @Bean
@@ -972,7 +972,7 @@ public CharacterEncodingFilter characterEncodingFilter() {
 //即使我们配置文件中不配置pring.http.encoding.enabled=true，也是默认生效的；
 public class HttpEncodingAutoConfiguration {
   
-  	//他已经和SpringBoot的配置文件映射了
+  	//他已经和Spring Boot的配置文件映射了
   	private final HttpEncodingProperties properties;
   
    //只有一个有参构造器的情况下，参数的值就会从容器中拿
@@ -1006,7 +1006,7 @@ public class HttpEncodingProperties {
 
 #### 总结
 
-- SpringBoot 先加载所有的自动配置类  xxxxxAutoConfiguration
+- Spring Boot 先加载所有的自动配置类  xxxxxAutoConfiguration
 - 每个自动配置类按照条件进行生效，默认都会绑定配置文件指定的值。xxxxProperties 里面拿。xxxProperties 和配置文件进行了绑定
 
 - 生效的配置类就会给容器中装配很多组件
@@ -1040,7 +1040,7 @@ public class HttpEncodingProperties {
 
 - 自动配好 Web 常见功能，如：字符编码问题
 
-    - SpringBoot 帮我们配置好了所有 web 开发的常见场景
+    - Spring Boot 帮我们配置好了所有 web 开发的常见场景
 
 - 默认的包结构
 
@@ -1066,7 +1066,7 @@ public class HttpEncodingProperties {
 
 - 非常多的 starter
 - 引入了哪些场景这个场景的自动配置才会开启
-- SpringBoot 所有的自动配置功能都在 spring-boot-autoconfigure 包里面
+- Spring Boot 所有的自动配置功能都在 spring-boot-autoconfigure 包里面
 - ......
 
 ## 开发小技巧
@@ -1237,7 +1237,7 @@ spring:
 
 ## 静态资源配置原理
 
-- SpringBoot 启动默认加载  xxxAutoConfiguration 类（自动配置类）
+- Spring Boot 启动默认加载  xxxAutoConfiguration 类（自动配置类）
 - SpringMVC 功能的自动配置类 WebMvcAutoConfiguration，生效
 
 ```java
@@ -1661,7 +1661,7 @@ public class ParameterTestController {
 
 
     //1、语法： 请求路径：/cars/sell;low=34;brand=byd,audi,yd
-    //2、SpringBoot默认是禁用了矩阵变量的功能
+    //2、Spring Boot默认是禁用了矩阵变量的功能
     //      手动开启：原理。对于路径的处理。UrlPathHelper进行解析。
     //              removeSemicolonContent（移除分号内容）支持矩阵变量的
     //3、矩阵变量必须有url路径变量才能被解析
@@ -1918,11 +1918,11 @@ https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples
 
 ## 整合JDBC
 
-SpringBoot 整合 JDBC 只要引入对应数据库的连接驱动包（如 mysql 的驱动），然后再 properties/yaml 配置文件中书写配置即可。
+Spring Boot 整合 JDBC 只要引入对应数据库的连接驱动包（如 mysql 的驱动），然后再 properties/yaml 配置文件中书写配置即可。
 
 > 依赖
 
-- springboot 的 jdbc api
+- Spring Boot 的 jdbc api
 - mysql 驱动
 
 > properties 文件
@@ -1991,14 +1991,14 @@ spring.datasource.driver-class-name=com.mysql.jdbc.Driver
 
 > 概述
 
-SpringBoot 整合 Druid，需要导入数据库的连接驱动包（如 mysql 的驱动），Druid 包，然后书写对应的配置文件。注意：由于数据库连接相关的配置文件是在 Druid 中进行设置的，所以前缀名要一致。
+Spring Boot 整合 Druid，需要导入数据库的连接驱动包（如 mysql 的驱动），Druid 包，然后书写对应的配置文件。注意：由于数据库连接相关的配置文件是在 Druid 中进行设置的，所以前缀名要一致。
 
 > 依赖
 
 - mysql 驱动
-- springboot jdbc api
+- Spring Boot jdbc api
 - druid 依赖
-- springboot-web 依赖，用来注册 servlet，filter 启用 druid 的控制台
+- Spring Boot-web 依赖，用来注册 servlet，filter 启用 druid 的控制台
 - log4j，我们使用这个日志框架进行记录
 
 > pom 文件
@@ -2140,9 +2140,9 @@ public class DruidConfig {
 > 依赖
 
 - mysql 驱动
-- springboot jdbc api
+- Spring Boot jdbc api
 - druid 依赖
-- springboot-web 依赖，用来注册 servlet，filter 启用 druid 的控制台
+- Spring Boot-web 依赖，用来注册 servlet，filter 启用 druid 的控制台
 - log4j，我们使用这个日志框架进行记录
 - mybatis 和 Spring 的整合包
 - 其他的会自动帮我们导入的，不必担心
@@ -2416,11 +2416,11 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
 
 > 概述
 
-SpringBoot 有默认的配置，它替我们设置了有关 MVC 的一些默认配置。我们可以不使用这些默认配置，全面接管相关配置（全部由我们自行定义），也可以只修改必要的部分，其他的仍采用 Spring Boot 为我们提供的默认配置。一般是不采用全面接管。
+Spring Boot 有默认的配置，它替我们设置了有关 MVC 的一些默认配置。我们可以不使用这些默认配置，全面接管相关配置（全部由我们自行定义），也可以只修改必要的部分，其他的仍采用 Spring Boot 为我们提供的默认配置。一般是不采用全面接管。
 
 > 依赖
 
-springboot-web 模块
+Spring Boot-web 模块
 
 > pom 文件
 
@@ -2431,7 +2431,7 @@ springboot-web 模块
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
-    <!-- thymeleaf springboot默认的模板引擎，顺带一起导入了。高版本boot，写这个即可，其他的不用写-->
+    <!-- thymeleaf Spring Boot默认的模板引擎，顺带一起导入了。高版本boot，写这个即可，其他的不用写-->
     <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-thymeleaf</artifactId>
@@ -2566,14 +2566,14 @@ public class DemoController {
 
 > 概述
 
-SpringBoot 的 ssm 整合配置
+Spring Boot 的 ssm 整合配置
 
 > 依赖
 
 - mysql 驱动
-- springboot jdbc api
+- Spring Boot jdbc api
 - druid 依赖
-- springboot-web 依赖，用来注册 servlet，filter 启用 druid 的控制台
+- Spring Boot-web 依赖，用来注册 servlet，filter 启用 druid 的控制台
 - log4j，我们使用这个日志框架进行记录
 - mybatis 和 spring 的整合包
 - 其他的会自动帮我们导入的，不必担心
@@ -2919,7 +2919,7 @@ public class MyBatisTest {
 
 # 基础练习
 
-基于 SpringBoot 实现 SSMP 整合，学习如下技术的整合方式
+基于 Spring Boot 实现 SSMP 整合，学习如下技术的整合方式
 
 - 整合 JUnit
 - 整合 MyBatis
@@ -2929,7 +2929,7 @@ public class MyBatisTest {
 
 ## 整合JUnit
 
-先来看一下不使用 SpringBoot 技术时，Spring 整合 JUnit 的制作方式
+先来看一下不使用 Spring Boot 技术时，Spring 整合 JUnit 的制作方式
 
 ```JAVA
 //加载spring整合junit专用的类运行器
@@ -2955,11 +2955,11 @@ public class AccountServiceTestCase {
 
 2️⃣第二个注解 @ContextConfiguration 是用来设置 Spring 核心配置文件或配置类的，简单说就是加载 Spring 的环境你要告诉 Spring 具体的环境配置是在哪里写的，虽然每次加载的文件都有可能不同，但是仔细想想，如果文件名是固定的，这个貌似也是一个固定格式。既然<font color="#ff0000"><b>有可能是固定格式，那就有可能每次都写一样的东西，也是一个没有技术含量的内容书写</b></font>
 
-SpringBoot 就抓住上述两条没有技术含量的内容书写进行开发简化，能走默认值的走默认值，能不写的就不写，具体格式如下
+Spring Boot 就抓住上述两条没有技术含量的内容书写进行开发简化，能走默认值的走默认值，能不写的就不写，具体格式如下
 
 ```JAVA
 @SpringBootTest
-class Springboot04JunitApplicationTests {
+class Spring Boot04JunitApplicationTests {
     //注入你要测试的对象
     @Autowired
     private BookDao bookDao;
@@ -2972,13 +2972,13 @@ class Springboot04JunitApplicationTests {
 }
 ```
 
-看看这次简化成什么样了，一个注解就搞定了，而且还没有参数，再体会 SpringBoot 整合其他技术的优势在哪里，就两个字——<font color="#ff0000"><b>简化</b></font>。使用一个注解 @SpringBootTest 替换了前面两个注解。至于内部是怎么回事？和之前一样，只不过都走默认值。
+看看这次简化成什么样了，一个注解就搞定了，而且还没有参数，再体会 Spring Boot 整合其他技术的优势在哪里，就两个字——<font color="#ff0000"><b>简化</b></font>。使用一个注解 @SpringBootTest 替换了前面两个注解。至于内部是怎么回事？和之前一样，只不过都走默认值。
 
 这个时候有人就问了，你加载的配置类或者配置文件是哪一个？就是我们前面启动程序使用的引导类。如果想手工指定引导类有两种方式，第一种方式使用属性的形式进行，在注解 @SpringBootTest 中添加 classes 属性指定配置类
 
 ```JAVA
-@SpringBootTest(classes = Springboot04JunitApplication.class)
-class Springboot04JunitApplicationTests {
+@SpringBootTest(classes = Spring Boot04JunitApplication.class)
+class Spring Boot04JunitApplicationTests {
     //注入你要测试的对象
     @Autowired
     private BookDao bookDao;
@@ -2995,8 +2995,8 @@ class Springboot04JunitApplicationTests {
 
 ```JAVA
 @SpringBootTest
-@ContextConfiguration(classes = Springboot04JunitApplication.class)
-class Springboot04JunitApplicationTests {
+@ContextConfiguration(classes = Spring Boot04JunitApplication.class)
+class Spring Boot04JunitApplicationTests {
     //注入你要测试的对象
     @Autowired
     private BookDao bookDao;
@@ -3011,7 +3011,7 @@ class Springboot04JunitApplicationTests {
 
 <font color="#f0f"><b>温馨提示</b></font>
 
-使用 SpringBoot 整合 JUnit 需要保障导入 test 对应的 starter，由于初始化项目时此项是默认导入的，所以此处没有提及，其实和之前学习的内容一样，用什么技术导入对应的 starter 即可。
+使用 Spring Boot 整合 JUnit 需要保障导入 test 对应的 starter，由于初始化项目时此项是默认导入的，所以此处没有提及，其实和之前学习的内容一样，用什么技术导入对应的 starter 即可。
 
 <b>总结</b>
 
@@ -3132,7 +3132,7 @@ jdbc.username=root
 jdbc.password=root
 ```
 
-上述格式基本上是最简格式了，要写的东西还真不少。下面看看 SpringBoot 整合 MyBaits 格式
+上述格式基本上是最简格式了，要写的东西还真不少。下面看看 Spring Boot 整合 MyBaits 格式
 
 <b>步骤①</b>：创建模块
 
@@ -3173,7 +3173,7 @@ spring:
     password: root
 ```
 
-结束了，就这么多。SpringBoot 把配置中所有可能出现的通用配置都简化了。下面写一个 MyBatis 程序运行需要的 Dao（或者 Mapper）就可以运行了
+结束了，就这么多。Spring Boot 把配置中所有可能出现的通用配置都简化了。下面写一个 MyBatis 程序运行需要的 Dao（或者 Mapper）就可以运行了
 
 <b>实体类</b>
 
@@ -3200,7 +3200,7 @@ public interface BookDao {
 
 ```JAVA
 @SpringBootTest
-class Springboot05MybatisApplicationTests {
+class Spring Boot05MybatisApplicationTests {
     @Autowired
     private BookDao bookDao;
     @Test
@@ -3212,7 +3212,7 @@ class Springboot05MybatisApplicationTests {
 
 Spring Boot 让开发从此变的就这么简单。
 
-<font color="#ff0000"><b>注意</b></font>：当前使用的 SpringBoot 版本是 2.5.4，对应的坐标设置中 MySQL 驱动使用的是 8x 版本。使用 SpringBoot 2.4.3（不含）之前版本会出现一个小 BUG，就是 MySQL 驱动升级到 8 以后要求强制配置时区，如果不设置会出问题。解决方案很简单，驱动 url上面添加上对应设置就行了
+<font color="#ff0000"><b>注意</b></font>：当前使用的 Spring Boot 版本是 2.5.4，对应的坐标设置中 MySQL 驱动使用的是 8x 版本。使用 Spring Boot 2.4.3（不含）之前版本会出现一个小 BUG，就是 MySQL 驱动升级到 8 以后要求强制配置时区，如果不设置会出问题。解决方案很简单，驱动 url上面添加上对应设置就行了
 
 ```YAML
 #2.配置相关信息
@@ -3298,7 +3298,7 @@ Spring-boot-start-***
 
 <font color="#f0f"><b>温馨提示</b></font>
 
-截止目前，SpringBoot 官网还未收录此坐标，而我们 Idea 创建模块时读取的是 SpringBoot 官网的 Spring Initializr，所以也没有。如果换用阿里云的 url 创建项目可以找到对应的坐标。
+截止目前，Spring Boot 官网还未收录此坐标，而我们 Idea 创建模块时读取的是 Spring Boot 官网的 Spring Initializr，所以也没有。如果换用阿里云的 url 创建项目可以找到对应的坐标。
 
 <b>步骤②</b>：配置数据源相关信息
 
@@ -3346,9 +3346,9 @@ mybatis-plus:
 
 ## 整合Druid
 
-使用 SpringBoot 整合了 3 个技术了，发现套路基本相同，导入对应的 starter，然后做配置，我们需要一直强化这套思想。下面再整合一个技术，继续深入强化此思想。
+使用 Spring Boot 整合了 3 个技术了，发现套路基本相同，导入对应的 starter，然后做配置，我们需要一直强化这套思想。下面再整合一个技术，继续深入强化此思想。
 
-前面整合 MyBatis 和 MyBatisPlus 的时候，使用的数据源对象都是 SpringBoot 默认的数据源对象，下面我们手工控制一下，自己指定了一个数据源对象，Druid。
+前面整合 MyBatis 和 MyBatisPlus 的时候，使用的数据源对象都是 Spring Boot 默认的数据源对象，下面我们手工控制一下，自己指定了一个数据源对象，Druid。
 
 在没有指定数据源时，我们的配置如下：
 
@@ -3362,7 +3362,7 @@ spring:
     password: root
 ```
 
-此时虽然没有指定数据源，但是根据 SpringBoot 的特点，肯定帮我们选了一个它认为最好的数据源对象，这就是 HiKari。通过启动日志可以查看到对应的身影。
+此时虽然没有指定数据源，但是根据 Spring Boot 的特点，肯定帮我们选了一个它认为最好的数据源对象，这就是 HiKari。通过启动日志可以查看到对应的身影。
 
 ```tex
 2021-11-29 09:39:15.202  INFO 12260 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
@@ -3402,7 +3402,7 @@ spring:
     type: com.alibaba.druid.pool.DruidDataSource
 ```
 
-这里其实要提出一个问题的，目前的数据源配置格式是一个通用格式，不管你换什么数据源都可以用这种形式进行配置。但是新的问题又来了，如果对数据源进行个性化的配置，例如配置数据源对应的连接数量，这个时候就有新的问题了。每个数据源技术对应的配置名称都一样吗？肯定不是啊，各个厂商不可能提前商量好都写一样的名字啊，怎么办？就要使用专用的配置格式了。这个时候上面这种通用格式就不能使用了，怎么办？还能怎么办？按照 SpringBoot 整合其他技术的通用规则来套啊，导入对应的 starter，进行相应的配置即可。
+这里其实要提出一个问题的，目前的数据源配置格式是一个通用格式，不管你换什么数据源都可以用这种形式进行配置。但是新的问题又来了，如果对数据源进行个性化的配置，例如配置数据源对应的连接数量，这个时候就有新的问题了。每个数据源技术对应的配置名称都一样吗？肯定不是啊，各个厂商不可能提前商量好都写一样的名字啊，怎么办？就要使用专用的配置格式了。这个时候上面这种通用格式就不能使用了，怎么办？还能怎么办？按照 Spring Boot 整合其他技术的通用规则来套啊，导入对应的 starter，进行相应的配置即可。
 
 <b>步骤①</b>：导入对应的 starter
 
@@ -3434,7 +3434,7 @@ spring:
 
 与druid相关的配置超过200条以上，这就告诉你，如果想做druid相关的配置，使用这种格式就可以了，这里就不展开描述了，太多了。
 
-这是我们做的第4个技术的整合方案，还是那两句话：<font color="#ff0000"><b>导入对应starter，使用对应配置</b></font>。没了，SpringBoot整合其他技术就这么简单粗暴。
+这是我们做的第4个技术的整合方案，还是那两句话：<font color="#ff0000"><b>导入对应starter，使用对应配置</b></font>。没了，Spring Boot整合其他技术就这么简单粗暴。
 
 <b>总结<b>
 
@@ -3575,7 +3575,7 @@ public class Book {
 
 实体类的开发可以自动通过工具手工生成get/set方法，然后覆盖toString()方法，方便调试，等等。不过这一套操作书写很繁琐，有对应的工具可以帮助我们简化开发，介绍一个小工具，lombok。
 
-Lombok，一个Java类库，提供了一组注解，简化POJO实体类开发，SpringBoot目前默认集成了lombok技术，并提供了对应的版本控制，所以只需要提供对应的坐标即可，在pom.xml中添加lombok的坐标。
+Lombok，一个Java类库，提供了一组注解，简化POJO实体类开发，Spring Boot目前默认集成了lombok技术，并提供了对应的版本控制，所以只需要提供对应的坐标即可，在pom.xml中添加lombok的坐标。
 
 ```XML
 <dependencies>
@@ -3606,7 +3606,7 @@ public class Book {
 
 1. 实体类制作
 2. 使用lombok简化开发
-    - 导入lombok无需指定版本，由SpringBoot提供版本
+    - 导入lombok无需指定版本，由Spring Boot提供版本
     - @Data注解
 
 
@@ -3743,7 +3743,7 @@ mybatis-plus:
 
 在进行数据层测试的时候，因为基础的 CRUD 操作均由 MyBatisPlus 给我们提供了，所以就出现了一个局面，开发者不需要书写 SQL 语句了，这样程序运行的时候总有一种感觉，一切的一切都是黑盒的，作为开发者我们啥也不知道就完了。如果程序正常运行还好，如果报错了，这个时候就很崩溃，你甚至都不知道从何下手，因为传递参数、封装 SQL 语句这些操作完全不是你开发出来的，所以查看执行期运行的SQL 语句就成为当务之急。
 
-SpringBoot整合MyBatisPlus的时候充分考虑到了这点，通过配置的形式就可以查阅执行期SQL语句，配置如下
+Spring Boot整合MyBatisPlus的时候充分考虑到了这点，通过配置的形式就可以查阅执行期SQL语句，配置如下
 
 ```YAML
 mybatis-plus:
@@ -4118,7 +4118,7 @@ public class BookServiceImpl extends ServiceImpl<BookDao, Book> implements IBook
 
 #### 6.表现层开发
 
-终于做到表现层了，做了这么多都是基础工作。其实你现在回头看看，哪里还有什么SpringBoot的影子？前面1,2步就搞完了。继续完成表现层制作吧，咱们表现层的开发使用基于Restful的表现层接口开发，功能测试通过Postman工具进行。
+终于做到表现层了，做了这么多都是基础工作。其实你现在回头看看，哪里还有什么Spring Boot的影子？前面1,2步就搞完了。继续完成表现层制作吧，咱们表现层的开发使用基于Restful的表现层接口开发，功能测试通过Postman工具进行。
 
 表现层接口如下:
 
@@ -4844,7 +4844,7 @@ public R getPage(@PathVariable int currentPage,@PathVariable int pageSize){
 
 运维实用篇的定位是玩转配置，为开发实用篇中做各种技术的整合做好准备工作。与开发实用篇相比，运维实用篇的内容显得略微单薄，并且有部分知识模块在运维实用篇和开发实用篇中都要讲一部分，这些内容都后置到开发实用篇中了。运维实用篇中都包含的内容：
 
-- SpringBoot程序的打包与运行
+- Spring Boot程序的打包与运行
 - 配置高级
 - 多环境开发
 - 日志
@@ -4860,7 +4860,7 @@ public R getPage(@PathVariable int currentPage,@PathVariable int pageSize){
 
 ### <b>程序打包<b>
 
-SpringBoot程序是基于Maven创建的，在Maven中提供有打包的指令，叫做package。本操作可以在Idea环境下执行。
+Spring Boot程序是基于Maven创建的，在Maven中提供有打包的指令，叫做package。本操作可以在Idea环境下执行。
 
 ```JAVA
 mvn package
@@ -4880,7 +4880,7 @@ java -jar 工程包名.jar
 
 <font color="#ff0000"><b>特别关注</b></font>：如果你的计算机中没有安装java的jdk环境，是无法正确执行上述操作的，因为程序执行使用的是java指令。
 
-<font color="#ff0000"><b>特别关注</b></font>：在使用向导创建SpringBoot工程时，pom.xml文件中会有如下配置，这一段配置千万不能删除，否则打包后无法正常执行程序。
+<font color="#ff0000"><b>特别关注</b></font>：在使用向导创建Spring Boot工程时，pom.xml文件中会有如下配置，这一段配置千万不能删除，否则打包后无法正常执行程序。
 
 ```XML
 <build>
@@ -4895,8 +4895,8 @@ java -jar 工程包名.jar
 
 <b>总结<b>
 
-1. SpringBoot工程可以基于java环境下独立运行jar文件启动服务
-2. SpringBoot工程执行mvn命令package进行打包
+1. Spring Boot工程可以基于java环境下独立运行jar文件启动服务
+2. Spring Boot工程执行mvn命令package进行打包
 3. 执行jar命令：java –jar 工程名.jar
 
 ### 打包失败处理
@@ -4907,9 +4907,9 @@ java -jar 工程包名.jar
 
 要想搞清楚这个问题就要说说.jar文件的工作机制了，知道了这个东西就知道如何避免此类问题的发生了。
 
-搞java开发平时会接触很多jar包，比如mysql的驱动jar包，而上面我们打包程序后得到的也是一个jar文件。这个时候如果你使用上面的java -jar指令去执行mysql的驱动jar包就会出现上述不可执行的现象，而我们的SpringBoot项目为什么能执行呢？其实是因为打包方式不一样。
+搞java开发平时会接触很多jar包，比如mysql的驱动jar包，而上面我们打包程序后得到的也是一个jar文件。这个时候如果你使用上面的java -jar指令去执行mysql的驱动jar包就会出现上述不可执行的现象，而我们的Spring Boot项目为什么能执行呢？其实是因为打包方式不一样。
 
-在SpringBoot工程的pom.xml中有下面这组配置，这组配置决定了打包出来的程序包是否可以执行。
+在Spring Boot工程的pom.xml中有下面这组配置，这组配置决定了打包出来的程序包是否可以执行。
 
 ```XML
 <build>
@@ -4938,7 +4938,7 @@ java -jar 工程包名.jar
 
 ​		<div align="center"><img src="img/boot/image-20211201102025791.png" alt="image-20211201102025791" style="zoom:50%;" /></div>
 
-​		仔细翻阅不难发现，这些jar文件都是我们制作这个工程时导入的坐标对应的文件。大概可以想明白了，SpringBoot程序为了让自己打包生成的程序可以独立运行，不仅将项目中自己开发的内容进行了打包，还把当前工程运行需要使用的jar包全部打包进来了。为什么这样做呢？就是为了可以独立运行。不依赖程序包外部的任何资源可以独立运行当前程序。这也是为什么大的程序包容量是小的程序包容量的30倍的主要原因。
+​		仔细翻阅不难发现，这些jar文件都是我们制作这个工程时导入的坐标对应的文件。大概可以想明白了，Spring Boot程序为了让自己打包生成的程序可以独立运行，不仅将项目中自己开发的内容进行了打包，还把当前工程运行需要使用的jar包全部打包进来了。为什么这样做呢？就是为了可以独立运行。不依赖程序包外部的任何资源可以独立运行当前程序。这也是为什么大的程序包容量是小的程序包容量的30倍的主要原因。
 
 再看看大程序包还有什么不同之处，在最外层目录包含一个org目录，进入此目录，目录名是org\springframework\boot\loader，在里面可以找到一个<font color="#ff0000"><b>JarLauncher.class</b></font>的文件，先记得这个文件。再看这套目录名，明显是一个Spring的目录名，为什么要把Spring框架的东西打包到这个程序包中呢？不清楚。
 
@@ -4971,17 +4971,17 @@ Created-By: Maven Jar Plugin 3.2.0
 Main-Class: org.springframework.boot.loader.JarLauncher
 ```
 
-大文件中明显比小文件中多了几行信息，其中最后一行信息是Main-Class: org.springframework.boot.loader.<font color="#ff0000"><b>JarLauncher</b></font>。这句话什么意思呢？如果使用java -jar执行此程序包，将执行Main-Class属性配置的类，这个类恰巧就是前面看到的那个文件。原来SpringBoot打包程序中出现Spring框架的东西是为这里服务的。而这个org.springframework.boot.loader.<font color="#ff0000"><b>JarLauncher</b></font>类内部要查找Start-Class属性中配置的类，并执行对应的类。这个属性在当前配置中也存在，对应的就是我们的引导类类名。
+大文件中明显比小文件中多了几行信息，其中最后一行信息是Main-Class: org.springframework.boot.loader.<font color="#ff0000"><b>JarLauncher</b></font>。这句话什么意思呢？如果使用java -jar执行此程序包，将执行Main-Class属性配置的类，这个类恰巧就是前面看到的那个文件。原来Spring Boot打包程序中出现Spring框架的东西是为这里服务的。而这个org.springframework.boot.loader.<font color="#ff0000"><b>JarLauncher</b></font>类内部要查找Start-Class属性中配置的类，并执行对应的类。这个属性在当前配置中也存在，对应的就是我们的引导类类名。
 
 现在这组设定的作用就搞清楚了
 
-1. SpringBoot程序添加配置后会打出一个特殊的包，包含Spring框架部分功能，原始工程内容，原始工程依赖的jar包
+1. Spring Boot程序添加配置后会打出一个特殊的包，包含Spring框架部分功能，原始工程内容，原始工程依赖的jar包
 2. 首先读取MANIFEST.MF文件中的Main-Class属性，用来标记执行java -jar命令后运行的类
 3. JarLauncher类执行时会找到Start-Class属性，也就是启动类类名
 4. 运行启动类时会运行当前工程的内容
 5. 运行当前工程时会使用依赖的jar包，从lib目录中查找
 
-SpringBoot打出来了包为了能够独立运行，将所有需要使用的资源全部都添加到了这个包里。这就是为什么这个jar包能独立运行的原因。
+Spring Boot打出来了包为了能够独立运行，将所有需要使用的资源全部都添加到了这个包里。这就是为什么这个jar包能独立运行的原因。
 
 再来看之前的报错信息：
 
@@ -4989,13 +4989,13 @@ SpringBoot打出来了包为了能够独立运行，将所有需要使用的资�
 
 由于打包时没有使用那段配置，结果打包后形成了一个普通的jar包，在MANIFEST.MF文件中也就没有了Main-Class对应的属性了，所以运行时提示找不到主清单属性，这就是报错的原因。
 
-上述内容搞清楚对我们编程意义并不大，但是对各位小伙伴理清楚SpringBoot工程独立运行的机制是有帮助的。其实整体过程主要是带着大家分析，如果以后遇到了类似的问题，多给自己提问，多问一个为什么，兴趣自己就可以独立解决问题了。
+上述内容搞清楚对我们编程意义并不大，但是对各位小伙伴理清楚Spring Boot工程独立运行的机制是有帮助的。其实整体过程主要是带着大家分析，如果以后遇到了类似的问题，多给自己提问，多问一个为什么，兴趣自己就可以独立解决问题了。
 
 <b>总结<b>：spring-boot-maven-plugin插件用于将当前程序打包成一个可以独立运行的程序包
 
 ### 命令行启动常见问题及解决方案
 
-在DOS环境下启动SpringBoot工程时，可能会遇到端口占用的问题。
+在DOS环境下启动Spring Boot工程时，可能会遇到端口占用的问题。
 
 ```JAVA
 # 查询端口
@@ -5027,7 +5027,7 @@ taskkill -f -t -im "进程名称"
 ![image-20211206095113771](img/boot/image-20211206095113771.png)             ![image-20211206095524343](img/boot/image-20211206095524343.png)             ![image-20211206095101581](img/boot/image-20211206095101581.png)
 
 ```shell
-java –jar springboot.jar –-server.port=80
+java –jar Spring Boot.jar –-server.port=80
 ```
 
 在命令输入完毕后，空一格，然后输入两个-号。下面按照属性名=属性值的形式添加对应参数就可以了。当属性存在多级名称时，中间使用点分隔，和properties文件中的属性格式完全相同。
@@ -5035,7 +5035,7 @@ java –jar springboot.jar –-server.port=80
 如果你发现要修改的属性不止一个，可以按照上述格式继续写，属性与属性之间使用空格分隔。
 
 ```shell
-java –jar springboot.jar –-server.port=80 --logging.level.root=debug
+java –jar Spring Boot.jar –-server.port=80 --logging.level.root=debug
 ```
 
 #### <b>属性加载优先级<b>
@@ -5044,15 +5044,15 @@ java –jar springboot.jar –-server.port=80 --logging.level.root=debug
 
 <div align="center"><img src="img/boot/image-20211206100859236.png" alt="image-20211206100859236" style="zoom:67%;" /></div>
 
-我们可以看到，居然有14种配置的位置，而我们现在使用的是这里面的2个。第3条Config data说的就是使用配置文件，第11条Command line arguments说的就是使用命令行临时参数。而这14种配置的顺序就是SpringBoot加载配置的顺序，言外之意，命令行临时属性比配置文件的加载优先级高，所以这个列表<b>上面的优先级低，下面的优先级高<b>。其实这个东西不用背的，你就记得一点，你最终要什么效果，你自己是知道的，不管这个顺序是怎么个高低排序，开发时一定要配置成你要的顺序为准。这个顺序只是在你想不明白问题的时候帮助你分析罢了。
+我们可以看到，居然有14种配置的位置，而我们现在使用的是这里面的2个。第3条Config data说的就是使用配置文件，第11条Command line arguments说的就是使用命令行临时参数。而这14种配置的顺序就是Spring Boot加载配置的顺序，言外之意，命令行临时属性比配置文件的加载优先级高，所以这个列表<b>上面的优先级低，下面的优先级高<b>。其实这个东西不用背的，你就记得一点，你最终要什么效果，你自己是知道的，不管这个顺序是怎么个高低排序，开发时一定要配置成你要的顺序为准。这个顺序只是在你想不明白问题的时候帮助你分析罢了。
 
 比如你现在加载了一个user.name属性。结果你发现出来的结果和你想的不一样，那肯定是别的优先级比你高的属性覆盖你的配置属性了，那你就可以看着这个顺序挨个排查。哪个位置有可能覆盖了你的属性。
 
-在yaml中配置了user.name属性值，然后读取出来的时候居然不是自己的配置值，因为在系统属性中有一个属性叫做user.name，两个相互冲突了。而系统属性的加载优先顺序在上面这个列表中是5号，高于3号，所以SpringBoot最终会加载系统配置属性user.name。
+在yaml中配置了user.name属性值，然后读取出来的时候居然不是自己的配置值，因为在系统属性中有一个属性叫做user.name，两个相互冲突了。而系统属性的加载优先顺序在上面这个列表中是5号，高于3号，所以Spring Boot最终会加载系统配置属性user.name。
 
 <b>总结<b>
 
-1. 使用jar命令启动SpringBoot工程时可以使用临时属性替换配置文件中的属性
+1. 使用jar命令启动Spring Boot工程时可以使用临时属性替换配置文件中的属性
 2. 临时属性添加方式：java –jar 工程名.jar –-属性名=值
 3. 多个临时属性之间使用空格分隔
 4. 临时属性必须是当前boot工程支持的属性，否则设置无效
@@ -5061,7 +5061,7 @@ java –jar springboot.jar –-server.port=80 --logging.level.root=debug
 
 开发环境中如何使用临时属性，其实就是Idea界面下如何操作了。
 
-打开SpringBoot引导类的运行界面，在里面找到配置项。其中Program arguments对应的位置就是添加临时属性的，可以加几个试试效果。
+打开Spring Boot引导类的运行界面，在里面找到配置项。其中Program arguments对应的位置就是添加临时属性的，可以加几个试试效果。
 
 <div align="center"><img src="img/boot/image-20211206101947622.png" alt="image-20211206101947622" style="zoom:80%;" /></div>
 
@@ -5080,7 +5080,7 @@ public static void main(String[] args) {
 }
 ```
 
-这个args参数居然传递给了run方法，看来在Idea中配置的临时参数就是通过这个位置传递到我们的程序中的。言外之意，这里如果不用这个args是不是就断开了外部传递临时属性的入口呢？是这样的，我们可以使用下面的调用方式，这样外部临时属性就无法进入到SpringBoot程序中了。
+这个args参数居然传递给了run方法，看来在Idea中配置的临时参数就是通过这个位置传递到我们的程序中的。言外之意，这里如果不用这个args是不是就断开了外部传递临时属性的入口呢？是这样的，我们可以使用下面的调用方式，这样外部临时属性就无法进入到Spring Boot程序中了。
 
 ```JAVA
 public static void main(String[] args) {
@@ -5098,13 +5098,13 @@ public static void main(String[] args) {
 }
 ```
 
-<b>总结<b>：启动SpringBoot程序时，可以选择是否使用命令行属性为SpringBoot程序传递启动属性
+<b>总结<b>：启动Spring Boot程序时，可以选择是否使用命令行属性为Spring Boot程序传递启动属性
 
 <b>思考<b>：现在使用临时属性可以在启动项目前临时更改配置了，如果需要变更的属性偏多，如何处理？
 
 ### 配置文件分类
 
-SpringBoot提供了配置文件和临时属性的方式来对程序进行配置。前面一直说的是临时属性，这一节要说说配置文件了。其实这个配置文件我们一直在使用，只不过我们用的是SpringBoot提供的4级配置文件中的其中一个级别。4个级别分别是：
+Spring Boot提供了配置文件和临时属性的方式来对程序进行配置。前面一直说的是临时属性，这一节要说说配置文件了。其实这个配置文件我们一直在使用，只不过我们用的是Spring Boot提供的4级配置文件中的其中一个级别。4个级别分别是：
 
 - 类路径下配置文件（一直使用的是这个，也就是resources目录中的application.yml文件）
 - 类路径下config目录下配置文件
@@ -5158,7 +5158,7 @@ SpringBoot提供了配置文件和临时属性的方式来对程序进行配置�
 
 使用的属性一个是spring.config.name，另一个是spring.config.location，这个一定要区别清楚。
 
-<font color="#f0f"><b>温馨提示</b></font>：我们现在研究的都是SpringBoot单体项目，就是单服务器版本。其实企业开发现在更多的是使用基于SpringCloud技术的多服务器项目。这种配置方式和我们现在学习的完全不一样，所有的服务器将不再设置自己的配置文件，而是通过配置中心获取配置，动态加载配置信息。集中管理更为方便。
+<font color="#f0f"><b>温馨提示</b></font>：我们现在研究的都是Spring Boot单体项目，就是单服务器版本。其实企业开发现在更多的是使用基于SpringCloud技术的多服务器项目。这种配置方式和我们现在学习的完全不一样，所有的服务器将不再设置自己的配置文件，而是通过配置中心获取配置，动态加载配置信息。集中管理更为方便。
 
 <b>总结<b>
 
@@ -5313,7 +5313,7 @@ server:
 
 ### 多环境开发（properties多文件版）
 
-SpringBoot最早期提供的配置文件格式是properties格式的，这种格式的多环境配置也了解一下吧。
+Spring Boot最早期提供的配置文件格式是properties格式的，这种格式的多环境配置也了解一下吧。
 
 <b>主配置文件<b>
 
@@ -5362,7 +5362,7 @@ spring:
 
 <b>注意<b>：当主环境dev与其他环境有相同属性时，主环境属性生效；其他环境中有相同属性时，最后加载的环境属性生效
 
-<b>改良<b>：但是上面的设置也有一个问题，比如我要切换dev环境为pro时，include也要修改。因为include属性只能使用一次，这就比较麻烦了。SpringBoot从2.4版开始使用group属性替代include属性，降低了配置书写量。简单说就是我先写好，你爱用哪个用哪个。
+<b>改良<b>：但是上面的设置也有一个问题，比如我要切换dev环境为pro时，include也要修改。因为include属性只能使用一次，这就比较麻烦了。Spring Boot从2.4版开始使用group属性替代include属性，降低了配置书写量。简单说就是我先写好，你爱用哪个用哪个。
 
 ```yaml
 spring:
@@ -5387,7 +5387,7 @@ spring:
 maven是做什么的？项目构建管理的，最终生成代码包的，Spring Boot 是干什么的？简化开发的。简化，又不是其主导作用。最终还是要靠 maven 来管理整个工程，所以 Spring Boot 应该听 maven的。整个确认后下面就好做了。大体思想如下：
 
 - 先在 maven 环境中设置用什么具体的环境
-- 在 SpringBoot 中读取 maven 设置的环境即可
+- 在 Spring Boot 中读取 maven 设置的环境即可
 
 <b>maven中设置多环境（使用属性方式区分环境）<b>
 
@@ -5423,8 +5423,8 @@ spring:
 
 <b>总结<b>
 
-1. 当Maven与SpringBoot同时对多环境进行控制时，以Mavn为主，SpringBoot使用@..@占位符读取Maven对应的配置属性值
-2. 基于SpringBoot读取Maven配置属性的前提下，如果在Idea下测试工程时pom.xml每次更新需要手动compile方可生效
+1. 当Maven与Spring Boot同时对多环境进行控制时，以Mavn为主，Spring Boot使用@..@占位符读取Maven对应的配置属性值
+2. 基于Spring Boot读取Maven配置属性的前提下，如果在Idea下测试工程时pom.xml每次更新需要手动compile方可生效
 
 ## 日志
 
@@ -5453,7 +5453,7 @@ public class BookController extends BaseClass{
         log.info("info...");
         log.warn("warn...");
         log.error("error...");
-        return "springboot is running...2";
+        return "Spring Boot is running...2";
     }
 }
 ```
@@ -5546,12 +5546,12 @@ public class BookController extends BaseClass{
 
 ### 日志输出格式控制
 
-日志已经能够记录了，但是目前记录的格式是SpringBoot给我们提供的，如果想自定义控制就需要自己设置了。先分析一下当前日志的记录格式。
+日志已经能够记录了，但是目前记录的格式是Spring Boot给我们提供的，如果想自定义控制就需要自己设置了。先分析一下当前日志的记录格式。
 
 ![image-20211206123431222](img/boot/image-20211206123431222.png)
 
 - PID：进程ID，用于表明当前操作所处的进程，当多服务同时记录日志时，该值可用于协助程序员调试程序 
-- 所属类/接口名：当前显示信息为SpringBoot重写后的信息，名称过长时，简化包名书写为首字母，甚至直接删除
+- 所属类/接口名：当前显示信息为Spring Boot重写后的信息，名称过长时，简化包名书写为首字母，甚至直接删除
 
 对于单条日志信息来说，日期，触发位置，记录信息是最核心的信息。级别用于做筛选过滤，PID与线程名用于做精准分析。了解这些信息后就可以 DIY 日志格式了。本课程不做详细的研究，有兴趣的小伙伴可以学习相关的知识。下面给出课程中模拟的官方日志模板的书写格式，便于大家学习。
 
@@ -5604,21 +5604,21 @@ logging:
 
 什么是热部署？简单说就是你程序改了，不用重启，服务器会自己悄悄的把更新后的程序给重新加载一遍，这就是热部署。
 
-热部署的功能是如何实现的呢？这就要分两种情况来说了，非 springboot 工程和springboot 工程的热部署实现方式完全不一样。先说一下原始的非 springboot 项目是如何实现热部署的。
+热部署的功能是如何实现的呢？这就要分两种情况来说了，非 Spring Boot 工程和Spring Boot 工程的热部署实现方式完全不一样。先说一下原始的非 Spring Boot 项目是如何实现热部署的。
 
-<b>非springboot项目热部署实现原理<b>
+<b>非Spring Boot项目热部署实现原理<b>
 
-开发非 springboot 项目时，我们要制作一个 web 工程并通过 tomcat 启动，通常需要先安装 tomcat 服务器到磁盘中，开发的程序配置发布到安装的 tomcat 服务器上。如果想实现热部署的效果，这种情况其实有两种做法，一种是在 tomcat 服务器的配置文件中进行配置，这种做法与你使用什么 IDE 工具无关，不管你使用 eclipse 还是 idea 都行。还有一种做法是通过 IDE 工具进行配置，比如在 idea 工具中进行设置，这种形式需要依赖 IDE 工具，每款 IDE 工具不同，对应的配置也不太一样。<b>但是核心思想是一样的，就是使用服务器去监控其中加载的应用，发现产生了变化就重新加载一次。<b>
+开发非 Spring Boot 项目时，我们要制作一个 web 工程并通过 tomcat 启动，通常需要先安装 tomcat 服务器到磁盘中，开发的程序配置发布到安装的 tomcat 服务器上。如果想实现热部署的效果，这种情况其实有两种做法，一种是在 tomcat 服务器的配置文件中进行配置，这种做法与你使用什么 IDE 工具无关，不管你使用 eclipse 还是 idea 都行。还有一种做法是通过 IDE 工具进行配置，比如在 idea 工具中进行设置，这种形式需要依赖 IDE 工具，每款 IDE 工具不同，对应的配置也不太一样。<b>但是核心思想是一样的，就是使用服务器去监控其中加载的应用，发现产生了变化就重新加载一次。<b>
 
-上面所说的非 springboot 项目实现热部署看上去是一个非常简单的过程，几乎每个小伙伴都能自己写出来。如果你不会写，我给你个最简单的思路，但是实际设计要比这复杂一些。例如启动一个定时任务，任务启动时记录每个文件的大小，以后每5秒比对一下每个文件的大小是否有改变，或者是否有新文件。如果没有改变，放行，如果有改变，刷新当前记录的文件信息，然后重新启动服务器，这就可以实现热部署了。当然，这个过程肯定不能这么做，比如我把一个打印输出的字符串 "abc" 改成 "cba"，比对大小是没有变化的，但是内容缺实变了，所以这么做肯定不行，只是给大家打个比方，而且重启服务器这就是冷启动了，不能算热部署，领会精神吧。
+上面所说的非 Spring Boot 项目实现热部署看上去是一个非常简单的过程，几乎每个小伙伴都能自己写出来。如果你不会写，我给你个最简单的思路，但是实际设计要比这复杂一些。例如启动一个定时任务，任务启动时记录每个文件的大小，以后每5秒比对一下每个文件的大小是否有改变，或者是否有新文件。如果没有改变，放行，如果有改变，刷新当前记录的文件信息，然后重新启动服务器，这就可以实现热部署了。当然，这个过程肯定不能这么做，比如我把一个打印输出的字符串 "abc" 改成 "cba"，比对大小是没有变化的，但是内容缺实变了，所以这么做肯定不行，只是给大家打个比方，而且重启服务器这就是冷启动了，不能算热部署，领会精神吧。
 
-看上去这个过程也没多复杂，在 springboot 项目中难道还有其他的弯弯绕吗？还真有。
+看上去这个过程也没多复杂，在 Spring Boot 项目中难道还有其他的弯弯绕吗？还真有。
 
 <b>springboot项目热部署实现原理<b>
 
-基于 springboot 开发的 web 工程其实有一个显著的特征，就是tomcat服务器内置了，还记得内嵌服务器吗？服务器是以一个对象的形式在 spring 容器中运行的。本来我们期望于 tomcat 服务器加载程序后由 tomcat 服务器盯着程序，你变化后我就重新启动重新加载，但是现在 tomcat 和我们的程序是平级的了，都是 spring 容器中的组件，这下就麻烦了，缺乏了一个直接的管理权，那该怎么做呢？简单，再搞一个程序X在 spring 容器中盯着你原始开发的程序A不就行了吗？确实，搞一个盯着程序A的程序X就行了，如果你自己开发的程序A变化了，那么程序X就命令 tomcat 容器重新加载程序A就OK了。并且这样做有一个好处，spring 容器中东西不用全部重新加载一遍，只需要重新加载你开发的程序那一部分就可以了，这下效率又高了，挺好。
+基于 Spring Boot 开发的 web 工程其实有一个显著的特征，就是tomcat服务器内置了，还记得内嵌服务器吗？服务器是以一个对象的形式在 spring 容器中运行的。本来我们期望于 tomcat 服务器加载程序后由 tomcat 服务器盯着程序，你变化后我就重新启动重新加载，但是现在 tomcat 和我们的程序是平级的了，都是 spring 容器中的组件，这下就麻烦了，缺乏了一个直接的管理权，那该怎么做呢？简单，再搞一个程序X在 spring 容器中盯着你原始开发的程序A不就行了吗？确实，搞一个盯着程序A的程序X就行了，如果你自己开发的程序A变化了，那么程序X就命令 tomcat 容器重新加载程序A就OK了。并且这样做有一个好处，spring 容器中东西不用全部重新加载一遍，只需要重新加载你开发的程序那一部分就可以了，这下效率又高了，挺好。
 
-下面就说说，怎么搞出来这么一个程序X，肯定不是我们自己手写了，springboot 早就做好了，搞一个坐标导入进去就行了。
+下面就说说，怎么搞出来这么一个程序X，肯定不是我们自己手写了，Spring Boot 早就做好了，搞一个坐标导入进去就行了。
 
 ### 手动启动热部署
 
@@ -5636,16 +5636,16 @@ logging:
 
 <div align="center"><img src="img/image-20220222121257218.png"></div>
 
-对应的快捷键一定要记得 `<CTR>L+<F9>`，以上过程就实现了springboot工程的热部署。底层的工作过程如下。
+对应的快捷键一定要记得 `<CTR>L+<F9>`，以上过程就实现了Spring Boot工程的热部署。底层的工作过程如下。
 
 <b>重启与重载<b>
 
-一个springboot项目在运行时实际上是分两个过程进行的，根据加载的东西不同，划分成base类加载器与restart类加载器。
+一个Spring Boot项目在运行时实际上是分两个过程进行的，根据加载的东西不同，划分成base类加载器与restart类加载器。
 
 - base类加载器：用来加载jar包中的类，jar包中的类和配置文件由于不会发生变化，因此不管加载多少次，加载的内容不会发生变化
 - restart类加载器：用来加载开发者自己开发的类、配置文件、页面等信息，这一类文件受开发者影响
 
-当springboot项目启动时，base类加载器执行，加载jar包中的信息后，restart类加载器执行，加载开发者制作的内容。当执行构建项目后，由于jar中的信息不会变化，因此base类加载器无需再次执行，所以仅仅运行restart类加载即可，也就是将开发者自己制作的内容重新加载就行了，这就完成了一次热部署的过程，也可以说热部署的过程实际上是重新加载restart类加载器中的信息。
+当Spring Boot项目启动时，base类加载器执行，加载jar包中的信息后，restart类加载器执行，加载开发者制作的内容。当执行构建项目后，由于jar中的信息不会变化，因此base类加载器无需再次执行，所以仅仅运行restart类加载即可，也就是将开发者自己制作的内容重新加载就行了，这就完成了一次热部署的过程，也可以说热部署的过程实际上是重新加载restart类加载器中的信息。
 
 <b>总结<b>
 
@@ -5828,7 +5828,7 @@ public DruidDataSource datasource(){
 ```java
 @SpringBootApplication
 @EnableConfigurationProperties(ServerConfig.class)
-public class Springboot13ConfigurationApplication {
+public class Spring Boot13ConfigurationApplication {
 }
 ```
 
@@ -5897,9 +5897,9 @@ Action:
 Modify 'dataSource' so that it conforms to the canonical names requirements.
 ```
 
-为什么会出现这种问题，这就要来说一说 springboot 进行属性绑定时的一个重要知识点了，有关属性名称的宽松绑定，也可以称为宽松绑定。
+为什么会出现这种问题，这就要来说一说 Spring Boot 进行属性绑定时的一个重要知识点了，有关属性名称的宽松绑定，也可以称为宽松绑定。
 
-什么是宽松绑定？实际上是 springboot 进行编程时人性化设计的一种体现，即配置文件中的命名格式与变量名的命名格式可以进行格式上的最大化兼容。兼容到什么程度呢？几乎主流的命名格式都支持，例如：
+什么是宽松绑定？实际上是 Spring Boot 进行编程时人性化设计的一种体现，即配置文件中的命名格式与变量名的命名格式可以进行格式上的最大化兼容。兼容到什么程度呢？几乎主流的命名格式都支持，例如：
 
 在 ServerConfig 中的 ipAddress 属性名
 
@@ -5922,7 +5922,7 @@ servers:
   IP_ADDRESS: 192.168.0.2      # 常量模式
 ```
 
-也可以说，以上4种模式最终都可以匹配到 ipAddress 这个属性名。因为在进行匹配时，配置中的名称要去掉中划线和下划线后，忽略大小写的情况下去与 java 代码中的属性名进行忽略大小写的等值匹配，以上4种命名去掉下划线中划线忽略大小写后都是一个词ipaddress，java代码中的属性名忽略大小写后也是ipaddress，这样就可以进行等值匹配了，这就是为什么这4种格式都能匹配成功的原因。不过springboot官方推荐使用烤肉串模式，也就是中划线模式。
+也可以说，以上4种模式最终都可以匹配到 ipAddress 这个属性名。因为在进行匹配时，配置中的名称要去掉中划线和下划线后，忽略大小写的情况下去与 java 代码中的属性名进行忽略大小写的等值匹配，以上4种命名去掉下划线中划线忽略大小写后都是一个词ipaddress，java代码中的属性名忽略大小写后也是ipaddress，这样就可以进行等值匹配了，这就是为什么这4种格式都能匹配成功的原因。不过Spring Boot官方推荐使用烤肉串模式，也就是中划线模式。
 
 到这里我们掌握了一个知识点，就是命名的规范问题。再来看开始出现的编程错误信息
 
@@ -5939,7 +5939,7 @@ Modify 'dataSource' so that it conforms to the canonical names requirements.
 
 其中 Reason 描述了报错的原因，规范的名称应该是烤肉串(kebab)模式(case)，即使用-分隔，使用小写字母数字作为标准字符，且必须以字母开头。然后再看我们写的名称dataSource，就不满足上述要求。闹了半天，<b>在书写前缀时，这个词不是随意支持的，必须使用上述标准<b>。
 
-最后说一句，以上规则仅针对 springboot 中 @ConfigurationProperties 注解进行属性绑定时有效，对 @Value 注解进行属性映射无效。有人就说，那我不用你不就行了？不用，你小看 springboot 的推广能力了，到原理篇我们看源码时，你会发现内部全是这玩意儿。
+最后说一句，以上规则仅针对 Spring Boot 中 @ConfigurationProperties 注解进行属性绑定时有效，对 @Value 注解进行属性映射无效。有人就说，那我不用你不就行了？不用，你小看 Spring Boot 的推广能力了，到原理篇我们看源码时，你会发现内部全是这玩意儿。
 
 <b>总结<b>
 
@@ -5960,7 +5960,7 @@ servers:
 
 ​		但是每个人都这个值的理解会产生不同，比如线上服务器完成一次主从备份，配置超时时间240，这个240如果单位是秒就是超时时间4分钟，如果单位是分钟就是超时时间4小时。面对一次线上服务器的主从备份，设置4分钟，简直是开玩笑，别说拷贝过程，备份之前的压缩过程4分钟也搞不定，这个时候问题就来了，怎么解决这个误会？
 
-​		除了加强约定之外，springboot充分利用了JDK8中提供的全新的用来表示计量单位的新数据类型，从根本上解决这个问题。以下模型类中添加了两个JDK8中新增的类，分别是Duration和DataSize
+​		除了加强约定之外，Spring Boot充分利用了JDK8中提供的全新的用来表示计量单位的新数据类型，从根本上解决这个问题。以下模型类中添加了两个JDK8中新增的类，分别是Duration和DataSize
 
 ```JAVA
 @Component
@@ -5993,7 +5993,7 @@ DataSize 常用单位如下：
 
 目前我们在进行属性绑定时可以通过松散绑定规则在书写时放飞自我了，但是在书写时由于无法感知模型类中的数据类型，就会出现类型不匹配的问题，比如代码中需要int类型，配置中给了非法的数值，例如写一个“a"，这种数据肯定无法有效的绑定，还会引发错误。		
 
-SpringBoot给出了强大的数据校验功能，可以有效的避免此类问题的发生。在JAVAEE的JSR303规范中给出了具体的数据校验标准，开发者可以根据自己的需要选择对应的校验框架，此处使用 Hibernate 提供的校验框架来作为实现进行数据校验。书写应用格式非常固定，话不多说，直接上步骤
+Spring Boot给出了强大的数据校验功能，可以有效的避免此类问题的发生。在JAVAEE的JSR303规范中给出了具体的数据校验标准，开发者可以根据自己的需要选择对应的校验框架，此处使用 Hibernate 提供的校验框架来作为实现进行数据校验。书写应用格式非常固定，话不多说，直接上步骤
 
 <b>步骤①<b>：开启校验框架
 
@@ -6067,7 +6067,7 @@ spring:
 
 <div align="center"><img src="img/boot/image-20220222225748370.png"></div>
 
-这个问题就处在这里了，因为0127在开发者眼中是一个字符串“0127”，但是在springboot 看来，这就是一个数字，而且是一个八进制的数字。当后台使用 String 类型接收数据时，如果配置文件中配置了一个整数值，他是先按照整数进行处理，读取后再转换成字符串。巧了，0127 撞上了八进制的格式，所以最终以十进制数字 87 的结果存在了。
+这个问题就处在这里了，因为0127在开发者眼中是一个字符串“0127”，但是在Spring Boot 看来，这就是一个数字，而且是一个八进制的数字。当后台使用 String 类型接收数据时，如果配置文件中配置了一个整数值，他是先按照整数进行处理，读取后再转换成字符串。巧了，0127 撞上了八进制的格式，所以最终以十进制数字 87 的结果存在了。
 
 这里提两个注意点，第一，字符串标准书写加上引号包裹，养成习惯，第二，遇到0开头的数据多注意吧。
 
@@ -6101,7 +6101,7 @@ env:
 
 <b>临时属性<b>
 
-springboot 已经为我们开发者早就想好了这种问题该如何解决，并且提供了对应的功能入口。在测试用例程序中，可以通过对注解@SpringBootTest添加属性来模拟临时属性，具体如下：
+Spring Boot 已经为我们开发者早就想好了这种问题该如何解决，并且提供了对应的功能入口。在测试用例程序中，可以通过对注解@SpringBootTest添加属性来模拟临时属性，具体如下：
 
 ```JAVA
 //properties属性可以为当前测试用例添加临时的属性配置
@@ -6122,7 +6122,7 @@ public class PropertiesAndArgsTest {
 
 <b>临时参数<b>
 
-除了上述这种情况，在前面讲解使用命令行启动springboot程序时讲过，通过命令行参数也可以设置属性值。而且线上启动程序时，通常都会添加一些专用的配置信息。作为运维人员他们才不懂java，更不懂这些配置的信息具体格式该怎么写，那如果我们作为开发者提供了对应的书写内容后，能否提前测试一下这些配置信息是否有效呢？当时是可以的，还是通过注解@SpringBootTest的另一个属性来进行设定。
+除了上述这种情况，在前面讲解使用命令行启动Spring Boot程序时讲过，通过命令行参数也可以设置属性值。而且线上启动程序时，通常都会添加一些专用的配置信息。作为运维人员他们才不懂java，更不懂这些配置的信息具体格式该怎么写，那如果我们作为开发者提供了对应的书写内容后，能否提前测试一下这些配置信息是否有效呢？当时是可以的，还是通过注解@SpringBootTest的另一个属性来进行设定。
 
 ```JAVA
 //args属性可以为当前测试用例添加临时的命令行参数
@@ -6214,7 +6214,7 @@ public class ConfigurationTest {
 
 <b>测试类中启动web环境<b>
 
-​		每一个springboot的测试类上方都会标准@SpringBootTest注解，而注解带有一个属性，叫做webEnvironment。通过该属性就可以设置在测试用例中启动web环境，具体如下：
+​		每一个Spring Boot的测试类上方都会标准@SpringBootTest注解，而注解带有一个属性，叫做webEnvironment。通过该属性就可以设置在测试用例中启动web环境，具体如下：
 
 ```JAVA
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -6222,7 +6222,7 @@ public class WebTest {
 }
 ```
 
-​		测试类中启动web环境时，可以指定启动的Web环境对应的端口，springboot提供了4种设置值，分别如下：
+​		测试类中启动web环境时，可以指定启动的Web环境对应的端口，Spring Boot提供了4种设置值，分别如下：
 
 <div align="center"><img src="img/image-20220223125453317.png" alt="image-20220223125453317" style="zoom:80%;" /></div>
 
@@ -6237,7 +6237,7 @@ public class WebTest {
 
 <b>测试类中发送请求<b>
 
-​		对于测试类中发送请求，其实java的API就提供对应的功能，只不过平时各位小伙伴接触的比较少，所以较为陌生。springboot为了便于开发者进行对应的功能开发，对其又进行了包装，简化了开发步骤，具体操作如下：
+​		对于测试类中发送请求，其实java的API就提供对应的功能，只不过平时各位小伙伴接触的比较少，所以较为陌生。Spring Boot为了便于开发者进行对应的功能开发，对其又进行了包装，简化了开发步骤，具体操作如下：
 
 <b>步骤①<b>：在测试类中开启web虚拟调用功能，通过注解@AutoConfigureMockMvc实现此功能的开启
 
@@ -6326,7 +6326,7 @@ public class WebTest {
         //设定预期值 与真实值进行比较，成功测试通过，失败测试失败
         //定义本次调用的预期值
         ContentResultMatchers content = MockMvcResultMatchers.content();
-        ResultMatcher result = content.string("springboot2");
+        ResultMatcher result = content.string("Spring Boot2");
         //添加预计值到本次调用过程中进行匹配
         action.andExpect(result);
     }
@@ -6342,7 +6342,7 @@ public class WebTest {
         //设定预期值 与真实值进行比较，成功测试通过，失败测试失败
         //定义本次调用的预期值
         ContentResultMatchers content = MockMvcResultMatchers.content();
-        ResultMatcher result = content.json("{\"id\":1,\"name\":\"springboot2\",\"type\":\"springboot\"}");
+        ResultMatcher result = content.json("{\"id\":1,\"name\":\"Spring Boot2\",\"type\":\"Spring Boot\"}");
         //添加预计值到本次调用过程中进行匹配
         action.andExpect(result);
     }
@@ -6381,7 +6381,7 @@ void testGetById(@Autowired MockMvc mvc) throws Exception {
     action.andExpect(contentType);
 
     ContentResultMatchers content = MockMvcResultMatchers.content();
-    ResultMatcher result = content.json("{\"id\":1,\"name\":\"springboot\",\"type\":\"springboot\"}");
+    ResultMatcher result = content.json("{\"id\":1,\"name\":\"Spring Boot\",\"type\":\"Spring Boot\"}");
     action.andExpect(result);
 }
 ```
@@ -6396,7 +6396,7 @@ void testGetById(@Autowired MockMvc mvc) throws Exception {
 
 ​		当前我们的测试程序可以完美的进行表现层、业务层、数据层接口对应的功能测试了，但是测试用例开发完成后，在打包的阶段由于test生命周期属于必须被运行的生命周期，如果跳过会给系统带来极高的安全隐患，所以测试用例必须执行。但是新的问题就呈现了，测试用例如果测试时产生了事务提交就会在测试过程中对数据库数据产生影响，进而产生垃圾数据。这个过程不是我们希望发生的，作为开发者测试用例该运行运行，但是过程中产生的数据不要在我的系统中留痕，这样该如何处理呢？
 
-​		springboot早就为开发者想到了这个问题，并且针对此问题给出了最简解决方案，在原始测试用例中添加注解@Transactional即可实现当前测试用例的事务不提交。当程序运行后，只要注解@Transactional出现的位置存在注解@SpringBootTest，springboot就会认为这是一个测试程序，无需提交事务，所以也就可以避免事务的提交。
+​		Spring Boot早就为开发者想到了这个问题，并且针对此问题给出了最简解决方案，在原始测试用例中添加注解@Transactional即可实现当前测试用例的事务不提交。当程序运行后，只要注解@Transactional出现的位置存在注解@SpringBootTest，Spring Boot就会认为这是一个测试程序，无需提交事务，所以也就可以避免事务的提交。
 
 ```JAVA
 @SpringBootTest
@@ -6409,21 +6409,21 @@ public class DaoTest {
     @Test
     void testSave(){
         Book book = new Book();
-        book.setName("springboot3");
-        book.setType("springboot3");
-        book.setDescription("springboot3");
+        book.setName("Spring Boot3");
+        book.setType("Spring Boot3");
+        book.setDescription("Spring Boot3");
 
         bookService.save(book);
     }
 }
 ```
 
-​		如果开发者想提交事务，也可以，再添加一个@RollBack的注解，设置回滚状态为false即可正常提交事务，是不是很方便？springboot在辅助开发者日常工作这一块展现出了惊人的能力，实在太贴心了。
+​		如果开发者想提交事务，也可以，再添加一个@RollBack的注解，设置回滚状态为false即可正常提交事务，是不是很方便？Spring Boot在辅助开发者日常工作这一块展现出了惊人的能力，实在太贴心了。
 
 <b>总结<b>
 
-1. 在springboot的测试类中通过添加注解@Transactional来阻止测试用例提交事务
-2. 通过注解@Rollback控制springboot测试类执行结果是否提交事务，需要配合注解@Transactional使用
+1. 在Spring Boot的测试类中通过添加注解@Transactional来阻止测试用例提交事务
+2. 通过注解@Rollback控制Spring Boot测试类执行结果是否提交事务，需要配合注解@Transactional使用
 
 <b>思考<b>
 
@@ -6433,7 +6433,7 @@ public class DaoTest {
 
 ### 测试用例数据设定
 
-​		对于测试用例的数据固定书写肯定是不合理的，springboot提供了在配置中使用随机值的机制，确保每次运行程序加载的数据都是随机的。具体如下：
+​		对于测试用例的数据固定书写肯定是不合理的，Spring Boot提供了在配置中使用随机值的机制，确保每次运行程序加载的数据都是随机的。具体如下：
 
 ```yaml
 testcase:
@@ -6479,7 +6479,7 @@ public class BookCase {
 
 ## 数据层解决方案
 
-​		开发实用篇前三章基本上是开胃菜，从第四章开始，开发实用篇进入到了噩梦难度了，从这里开始，不再是单纯的在springboot内部搞事情了，要涉及到很多相关知识。本章节主要内容都是和数据存储与读取相关，前期学习的知识与数据层有关的技术基本上都围绕在数据库这个层面上，所以本章要讲的第一个大的分支就是SQL解决方案相关的内容，除此之外，数据的来源还可以是非SQL技术相关的数据操作，因此第二部分围绕着NOSQL解决方案讲解。至于什么是NOSQL解决方案，讲到了再说吧。下面就从SQL解决方案说起。
+​		开发实用篇前三章基本上是开胃菜，从第四章开始，开发实用篇进入到了噩梦难度了，从这里开始，不再是单纯的在Spring Boot内部搞事情了，要涉及到很多相关知识。本章节主要内容都是和数据存储与读取相关，前期学习的知识与数据层有关的技术基本上都围绕在数据库这个层面上，所以本章要讲的第一个大的分支就是SQL解决方案相关的内容，除此之外，数据的来源还可以是非SQL技术相关的数据操作，因此第二部分围绕着NOSQL解决方案讲解。至于什么是NOSQL解决方案，讲到了再说吧。下面就从SQL解决方案说起。
 
 ### SQL
 
@@ -6507,23 +6507,23 @@ INFO 31820 --- [           main] com.zaxxer.hikari.HikariDataSource       : Hika
 INFO 31820 --- [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
 ```
 
-​		虽然没有DruidDataSource相关的信息了，但是我们发现日志中有HikariDataSource这个信息，就算不懂这是个什么技术，看名字也能看出来，以DataSource结尾的名称，这一定是一个数据源技术。我们又没有手工添加这个技术，这个技术哪里来的呢？这就是这一节要讲的知识，springboot内嵌数据源。
+​		虽然没有DruidDataSource相关的信息了，但是我们发现日志中有HikariDataSource这个信息，就算不懂这是个什么技术，看名字也能看出来，以DataSource结尾的名称，这一定是一个数据源技术。我们又没有手工添加这个技术，这个技术哪里来的呢？这就是这一节要讲的知识，Spring Boot内嵌数据源。
 
-​		数据层技术是每一个企业级应用程序都会用到的，而其中必定会进行数据库连接的管理。springboot根据开发者的习惯出发，开发者提供了数据源技术，就用你提供的，开发者没有提供，那总不能手工管理一个一个的数据库连接对象啊，怎么办？我给你一个默认的就好了，这样省心又省事，大家都方便。
+​		数据层技术是每一个企业级应用程序都会用到的，而其中必定会进行数据库连接的管理。Spring Boot根据开发者的习惯出发，开发者提供了数据源技术，就用你提供的，开发者没有提供，那总不能手工管理一个一个的数据库连接对象啊，怎么办？我给你一个默认的就好了，这样省心又省事，大家都方便。
 
-​		springboot提供了3款内嵌数据源技术，分别如下：
+​		Spring Boot提供了3款内嵌数据源技术，分别如下：
 
 - HikariCP
 - Tomcat提供DataSource
 - Commons DBCP
 
-​		第一种，HikartCP，这是springboot官方推荐的数据源技术，作为默认内置数据源使用。啥意思？你不配置数据源，那就用这个。
+​		第一种，HikartCP，这是Spring Boot官方推荐的数据源技术，作为默认内置数据源使用。啥意思？你不配置数据源，那就用这个。
 
 ​		第二种，Tomcat提供的DataSource，如果不想用HikartCP，并且使用tomcat作为web服务器进行web程序的开发，使用这个。为什么是Tomcat，不是其他web服务器呢？因为web技术导入starter后，默认使用内嵌tomcat，既然都是默认使用的技术了，那就一用到底，数据源也用它的。有人就提出怎么才能不使用HikartCP用tomcat提供的默认数据源对象呢？把HikartCP技术的坐标排除掉就OK了。
 
 ​		第三种，DBCP，这个使用的条件就更苛刻了，既不使用HikartCP也不使用tomcat的DataSource时，默认给你用这个。
 
-​		springboot这心操的，也是稀碎啊，就怕你自己管不好连接对象，给你一顿推荐，真是开发界的最强辅助。既然都给你奶上了，那就受用吧，怎么配置使用这些东西呢？之前我们配置druid时使用druid的starter对应的配置如下：
+​		Spring Boot这心操的，也是稀碎啊，就怕你自己管不好连接对象，给你一顿推荐，真是开发界的最强辅助。既然都给你奶上了，那就受用吧，怎么配置使用这些东西呢？之前我们配置druid时使用druid的starter对应的配置如下：
 
 ```YAML
 spring:
@@ -6575,13 +6575,13 @@ spring:
 
 <b>总结<b>
 
-1. springboot技术提供了3种内置的数据源技术，分别是Hikari、tomcat内置数据源、DBCP
+1. Spring Boot技术提供了3种内置的数据源技术，分别是Hikari、tomcat内置数据源、DBCP
 
 
 
 #### 持久化技术
 
-​		说完数据源解决方案，再来说一下持久化解决方案。springboot充分发挥其最强辅助的特征，给开发者提供了一套现成的数据层技术，叫做JdbcTemplate。其实这个技术不能说是springboot提供的，因为不使用springboot技术，一样能使用它，谁提供的呢？spring技术提供的，所以在springboot技术范畴中，这个技术也是存在的，毕竟springboot技术是加速spring程序开发而创建的。
+​		说完数据源解决方案，再来说一下持久化解决方案。Spring Boot充分发挥其最强辅助的特征，给开发者提供了一套现成的数据层技术，叫做JdbcTemplate。其实这个技术不能说是Spring Boot提供的，因为不使用Spring Boot技术，一样能使用它，谁提供的呢？spring技术提供的，所以在Spring Boot技术范畴中，这个技术也是存在的，毕竟Spring Boot技术是加速spring程序开发而创建的。
 
 ​		这个技术其实就是回归到jdbc最原始的编程形式来进行数据层的开发，下面直接上操作步骤：
 
@@ -6598,7 +6598,7 @@ spring:
 
 ```java
 @SpringBootTest
-class Springboot15SqlApplicationTests {
+class Spring Boot15SqlApplicationTests {
     @Test
     void testJdbcTemplate(@Autowired JdbcTemplate jdbcTemplate){
     }
@@ -6644,7 +6644,7 @@ void testJdbcTemplate(@Autowired JdbcTemplate jdbcTemplate){
 ```java
 @Test
 void testJdbcTemplateSave(@Autowired JdbcTemplate jdbcTemplate){
-    String sql = "insert into tbl_book values(3,'springboot1','springboot2','springboot3')";
+    String sql = "insert into tbl_book values(3,'Spring Boot1','Spring Boot2','Spring Boot3')";
     jdbcTemplate.update(sql);
 }
 ```
@@ -6662,16 +6662,16 @@ spring:
 
 <b>总结<b>
 
-1. SpringBoot内置JdbcTemplate持久化解决方案
+1. Spring Boot内置JdbcTemplate持久化解决方案
 2. 使用JdbcTemplate需要导入spring-boot-starter-jdbc的坐标
 
 
 
 #### 数据库技术
 
-​		截止到目前，springboot给开发者提供了内置的数据源解决方案和持久化解决方案，在数据层解决方案三件套中还剩下一个数据库，莫非springboot也提供有内置的解决方案？还真有，还不是一个，三个，这一节就来说说内置的数据库解决方案。
+​		截止到目前，Spring Boot给开发者提供了内置的数据源解决方案和持久化解决方案，在数据层解决方案三件套中还剩下一个数据库，莫非Spring Boot也提供有内置的解决方案？还真有，还不是一个，三个，这一节就来说说内置的数据库解决方案。
 
-​		springboot提供了3款内置的数据库，分别是
+​		Spring Boot提供了3款内置的数据库，分别是
 
 - H2
 - HSQL
@@ -6751,7 +6751,7 @@ datasource:
 
 ### NoSQL
 
-​		SQL数据层解决方案说完了，下面来说收NoSQL数据层解决方案。这个NoSQL是什么意思呢？从字面来看，No表示否定，NoSQL就是非关系型数据库解决方案，意思就是数据该存存该取取，只是这些数据不放在关系型数据库中了，那放在哪里？自然是一些能够存储数据的其他相关技术中了，比如Redis等。本节讲解的内容就是springboot如何整合这些技术，在springboot官方文档中提供了10种相关技术的整合方案，我们将讲解国内市场上最流行的几款NoSQL数据库整合方案，分别是Redis、MongoDB、ES。
+​		SQL数据层解决方案说完了，下面来说收NoSQL数据层解决方案。这个NoSQL是什么意思呢？从字面来看，No表示否定，NoSQL就是非关系型数据库解决方案，意思就是数据该存存该取取，只是这些数据不放在关系型数据库中了，那放在哪里？自然是一些能够存储数据的其他相关技术中了，比如Redis等。本节讲解的内容就是Spring Boot如何整合这些技术，在Spring Boot官方文档中提供了10种相关技术的整合方案，我们将讲解国内市场上最流行的几款NoSQL数据库整合方案，分别是Redis、MongoDB、ES。
 
 ​		因为每个小伙伴学习这门课程的时候起点不同，为了便于各位学习者更好的学习，每种技术在讲解整合前都会先讲一下安装和基本使用，然后再讲整合。如果对某个技术比较熟悉的小伙伴可以直接跳过安装的学习过程，直接看整合方案即可。此外上述这些技术最佳使用方案都是在Linux服务器上部署，但是考虑到各位小伙伴的学习起点差异过大，所以下面的课程都是以Windows平台作为安装基础讲解，如果想看Linux版软件安装，可以再找到对应技术的学习文档查阅学习。
 
@@ -6825,7 +6825,7 @@ hget a a2			#得到aa2
 
 ##### 整合
 
-​		在进行整合之前先梳理一下整合的思想，springboot整合任何技术其实就是在springboot中使用对应技术的API。如果两个技术没有交集，就不存在整合的概念了。所谓整合其实就是使用springboot技术去管理其他技术，几个问题是躲不掉的。
+​		在进行整合之前先梳理一下整合的思想，Spring Boot整合任何技术其实就是在Spring Boot中使用对应技术的API。如果两个技术没有交集，就不存在整合的概念了。所谓整合其实就是使用Spring Boot技术去管理其他技术，几个问题是躲不掉的。
 
 ​		第一，需要先导入对应技术的坐标，而整合之后，这些坐标都有了一些变化
 
@@ -6833,11 +6833,11 @@ hget a a2			#得到aa2
 
 ​		第三，没有整合之前操作如果是模式A的话，整合之后如果没有给开发者带来一些便捷操作，那整合将毫无意义，所以整合后操作肯定要简化一些，那对应的操作方式自然也有所不同
 
-​		按照上面的三个问题去思考springboot整合所有技术是一种通用思想，在整合的过程中会逐步摸索出整合的套路，而且适用性非常强，经过若干种技术的整合后基本上可以总结出一套固定思维。
+​		按照上面的三个问题去思考Spring Boot整合所有技术是一种通用思想，在整合的过程中会逐步摸索出整合的套路，而且适用性非常强，经过若干种技术的整合后基本上可以总结出一套固定思维。
 
-​		下面就开始springboot整合redis，操作步骤如下：
+​		下面就开始Spring Boot整合redis，操作步骤如下：
 
-<b>步骤①<b>：导入springboot整合redis的starter坐标
+<b>步骤①<b>：导入Spring Boot整合redis的starter坐标
 
 ```xml
 <dependency>
@@ -6861,11 +6861,11 @@ spring:
 
 ​		操作redis，最基本的信息就是操作哪一台redis服务器，所以服务器地址属于基础配置信息，不可缺少。但是即便你不配置，目前也是可以用的。因为以上两组信息都有默认配置，刚好就是上述配置值。
 
-<b>步骤③<b>：使用springboot整合redis的专用客户端接口操作，此处使用的是RedisTemplate
+<b>步骤③<b>：使用Spring Boot整合redis的专用客户端接口操作，此处使用的是RedisTemplate
 
 ```java
 @SpringBootTest
-class Springboot16RedisApplicationTests {
+class Spring Boot16RedisApplicationTests {
     @Autowired
     private RedisTemplate redisTemplate;
     @Test
@@ -6900,16 +6900,16 @@ class Springboot16RedisApplicationTests {
 
 <b>总结<b>
 
-1. springboot整合redis步骤
-    1. 导入springboot整合redis的starter坐标
+1. Spring Boot整合redis步骤
+    1. 导入Spring Boot整合redis的starter坐标
     2. 进行基础配置
-    3. 使用springboot整合redis的专用客户端接口RedisTemplate操作
+    3. 使用Spring Boot整合redis的专用客户端接口RedisTemplate操作
 
 
 
 <b>StringRedisTemplate<b>
 
-​		由于redis内部不提供java对象的存储格式，因此当操作的数据以对象的形式存在时，会进行转码，转换成字符串格式后进行操作。为了方便开发者使用基于字符串为数据的操作，springboot整合redis时提供了专用的API接口StringRedisTemplate，你可以理解为这是RedisTemplate的一种指定数据泛型的操作API。
+​		由于redis内部不提供java对象的存储格式，因此当操作的数据以对象的形式存在时，会进行转码，转换成字符串格式后进行操作。为了方便开发者使用基于字符串为数据的操作，Spring Boot整合redis时提供了专用的API接口StringRedisTemplate，你可以理解为这是RedisTemplate的一种指定数据泛型的操作API。
 
 ```JAVA
 @SpringBootTest
@@ -6929,7 +6929,7 @@ public class StringRedisTemplateTest {
 
 <b>redis客户端选择<b>
 
- 		springboot整合redis技术提供了多种客户端兼容模式，默认提供的是lettucs客户端技术，也可以根据需要切换成指定客户端技术，例如jedis客户端技术，切换成jedis客户端技术操作步骤如下：
+ 		Spring Boot整合redis技术提供了多种客户端兼容模式，默认提供的是lettucs客户端技术，也可以根据需要切换成指定客户端技术，例如jedis客户端技术，切换成jedis客户端技术操作步骤如下：
 
 <b>步骤①<b>：导入jedis坐标
 
@@ -6940,7 +6940,7 @@ public class StringRedisTemplateTest {
 </dependency>
 ```
 
-​		jedis坐标受springboot管理，无需提供版本号
+​		jedis坐标受Spring Boot管理，无需提供版本号
 
 <b>步骤②<b>：配置客户端技术类型，设置为jedis
 
@@ -6975,14 +6975,14 @@ spring:
 
 <b>总结<b>
 
-1. springboot整合redis提供了StringRedisTemplate对象，以字符串的数据格式操作redis
+1. Spring Boot整合redis提供了StringRedisTemplate对象，以字符串的数据格式操作redis
 2. 如果需要切换redis客户端实现技术，可以通过配置的形式进行
 
 
 
 #### 整合MongoDB
 
-​		使用Redis技术可以有效的提高数据访问速度，但是由于Redis的数据格式单一性，无法操作结构化数据，当操作对象型的数据时，Redis就显得捉襟见肘。在保障访问速度的情况下，如果想操作结构化数据，看来Redis无法满足要求了，此时需要使用全新的数据存储结束来解决此问题，本节讲解springboot如何整合MongoDB技术。
+​		使用Redis技术可以有效的提高数据访问速度，但是由于Redis的数据格式单一性，无法操作结构化数据，当操作对象型的数据时，Redis就显得捉襟见肘。在保障访问速度的情况下，如果想操作结构化数据，看来Redis无法满足要求了，此时需要使用全新的数据存储结束来解决此问题，本节讲解Spring Boot如何整合MongoDB技术。
 
 ​		MongoDB是一个开源、高性能、无模式的文档型数据库，它是NoSQL数据库产品中的一种，是最像关系型数据库的非关系型数据库。
 
@@ -7111,7 +7111,7 @@ db.集合名称.update(条件，{操作种类:{文档}})
 
 ##### 整合
 
-​		使用springboot整合MongDB该如何进行呢？其实springboot为什么使用的开发者这么多，就是因为他的套路几乎完全一样。导入坐标，做配置，使用API接口操作。整合Redis如此，整合MongoDB同样如此。
+​		使用Spring Boot整合MongDB该如何进行呢？其实Spring Boot为什么使用的开发者这么多，就是因为他的套路几乎完全一样。导入坐标，做配置，使用API接口操作。整合Redis如此，整合MongoDB同样如此。
 
 ​		第一，先导入对应技术的整合starter坐标
 
@@ -7119,9 +7119,9 @@ db.集合名称.update(条件，{操作种类:{文档}})
 
 ​		第三，使用提供的API操作即可
 
-​		下面就开始springboot整合MongoDB，操作步骤如下：
+​		下面就开始Spring Boot整合MongoDB，操作步骤如下：
 
-<b>步骤①<b>：导入springboot整合MongoDB的starter坐标
+<b>步骤①<b>：导入Spring Boot整合MongoDB的starter坐标
 
 ```xml
 <dependency>
@@ -7145,20 +7145,20 @@ spring:
 
 ​		操作MongoDB需要的配置与操作redis一样，最基本的信息都是操作哪一台服务器，区别就是连接的服务器IP地址和端口不同，书写格式不同而已。
 
-<b>步骤③<b>：使用springboot整合MongoDB的专用客户端接口MongoTemplate来进行操作
+<b>步骤③<b>：使用Spring Boot整合MongoDB的专用客户端接口MongoTemplate来进行操作
 
 ```java
 @SpringBootTest
-class Springboot17MongodbApplicationTests {
+class Spring Boot17MongodbApplicationTests {
     @Autowired
     private MongoTemplate mongoTemplate;
     @Test
     void contextLoads() {
         Book book = new Book();
         book.setId(2);
-        book.setName("springboot2");
-        book.setType("springboot2");
-        book.setDescription("springboot2");
+        book.setName("Spring Boot2");
+        book.setType("Spring Boot2");
+        book.setDescription("Spring Boot2");
         mongoTemplate.save(book);
     }
     @Test
@@ -7169,14 +7169,14 @@ class Springboot17MongodbApplicationTests {
 }
 ```
 
-​		整合工作到这里就做完了，感觉既熟悉也陌生。熟悉的是这个套路，三板斧，就这三招，导坐标做配置用API操作，陌生的是这个技术，里面具体的操作API可能会不熟悉，有关springboot整合MongoDB我们就讲到这里。有兴趣可以继续学习MongoDB的操作，然后再来这里通过编程的形式操作MongoDB。
+​		整合工作到这里就做完了，感觉既熟悉也陌生。熟悉的是这个套路，三板斧，就这三招，导坐标做配置用API操作，陌生的是这个技术，里面具体的操作API可能会不熟悉，有关Spring Boot整合MongoDB我们就讲到这里。有兴趣可以继续学习MongoDB的操作，然后再来这里通过编程的形式操作MongoDB。
 
 <b>总结<b>
 
-1. springboot整合MongoDB步骤
-    1. 导入springboot整合MongoDB的starter坐标
+1. Spring Boot整合MongoDB步骤
+    1. 导入Spring Boot整合MongoDB的starter坐标
     2. 进行基础配置
-    3. 使用springboot整合MongoDB的专用客户端接口MongoTemplate操作
+    3. 使用Spring Boot整合MongoDB的专用客户端接口MongoTemplate操作
 
 
 
@@ -7514,9 +7514,9 @@ elasticsearch.bat
     
     文档通过请求参数传递，数据格式json
     {
-        "name":"springboot",
-        "type":"springboot",
-        "description":"springboot"
+        "name":"Spring Boot",
+        "type":"Spring Boot",
+        "description":"Spring Boot"
     }  
     ```
 
@@ -7546,9 +7546,9 @@ elasticsearch.bat
     
     文档通过请求参数传递，数据格式json
     {
-        "name":"springboot",
-        "type":"springboot",
-        "description":"springboot"
+        "name":"Spring Boot",
+        "type":"Spring Boot",
+        "description":"Spring Boot"
     }
     ```
 
@@ -7560,18 +7560,18 @@ elasticsearch.bat
     文档通过请求参数传递，数据格式json
     {			
         "doc":{						#部分更新并不是对原始文档进行更新，而是对原始文档对象中的doc属性中的指定属性更新
-            "name":"springboot"		#仅更新提供的属性值，未提供的属性值不参与更新操作
+            "name":"Spring Boot"		#仅更新提供的属性值，未提供的属性值不参与更新操作
         }
     }
     ```
 
 ##### 整合
 
-​		使用springboot整合ES该如何进行呢？老规矩，导入坐标，做配置，使用API接口操作。整合Redis如此，整合MongoDB如此，整合ES依然如此。太没有新意了，其实不是没有新意，这就是springboot的强大之处，所有东西都做成相同规则，对开发者来说非常友好。
+​		使用Spring Boot整合ES该如何进行呢？老规矩，导入坐标，做配置，使用API接口操作。整合Redis如此，整合MongoDB如此，整合ES依然如此。太没有新意了，其实不是没有新意，这就是Spring Boot的强大之处，所有东西都做成相同规则，对开发者来说非常友好。
 
-​		下面就开始springboot整合ES，操作步骤如下：
+​		下面就开始Spring Boot整合ES，操作步骤如下：
 
-<b>步骤①<b>：导入springboot整合ES的starter坐标
+<b>步骤①<b>：导入Spring Boot整合ES的starter坐标
 
 ```xml
 <dependency>
@@ -7591,21 +7591,21 @@ spring:
 
 ​		配置ES服务器地址，端口9200
 
-<b>步骤③<b>：使用springboot整合ES的专用客户端接口ElasticsearchRestTemplate来进行操作
+<b>步骤③<b>：使用Spring Boot整合ES的专用客户端接口ElasticsearchRestTemplate来进行操作
 
 ```java
 @SpringBootTest
-class Springboot18EsApplicationTests {
+class Spring Boot18EsApplicationTests {
     @Autowired
     private ElasticsearchRestTemplate template;
 }
 ```
 
-​		上述操作形式是ES早期的操作方式，使用的客户端被称为Low Level Client，这种客户端操作方式性能方面略显不足，于是ES开发了全新的客户端操作方式，称为High Level Client。高级别客户端与ES版本同步更新，但是springboot最初整合ES的时候使用的是低级别客户端，所以企业开发需要更换成高级别的客户端模式。
+​		上述操作形式是ES早期的操作方式，使用的客户端被称为Low Level Client，这种客户端操作方式性能方面略显不足，于是ES开发了全新的客户端操作方式，称为High Level Client。高级别客户端与ES版本同步更新，但是Spring Boot最初整合ES的时候使用的是低级别客户端，所以企业开发需要更换成高级别的客户端模式。
 
-​		下面使用高级别客户端方式进行springboot整合ES，操作步骤如下：
+​		下面使用高级别客户端方式进行Spring Boot整合ES，操作步骤如下：
 
-<b>步骤①<b>：导入springboot整合ES高级别客户端的坐标，此种形式目前没有对应的starter
+<b>步骤①<b>：导入Spring Boot整合ES高级别客户端的坐标，此种形式目前没有对应的starter
 
 ```xml
 <dependency>
@@ -7618,7 +7618,7 @@ class Springboot18EsApplicationTests {
 
 ```java
 @SpringBootTest
-class Springboot18EsApplicationTests {
+class Spring Boot18EsApplicationTests {
     private RestHighLevelClient client;
       @Test
       void testCreateClient() throws IOException {
@@ -7637,7 +7637,7 @@ class Springboot18EsApplicationTests {
 
 ```java
 @SpringBootTest
-class Springboot18EsApplicationTests {
+class Spring Boot18EsApplicationTests {
     private RestHighLevelClient client;
       @Test
       void testCreateIndex() throws IOException {
@@ -7659,7 +7659,7 @@ class Springboot18EsApplicationTests {
 
 ```JAVA
 @SpringBootTest
-class Springboot18EsApplicationTests {
+class Spring Boot18EsApplicationTests {
     @BeforeEach		//在测试类中每个操作运行前运行的方法
     void setUp() {
         HttpHost host = HttpHost.create("http://localhost:9200");
@@ -7800,12 +7800,12 @@ void testSearch() throws IOException {
 
 ​		按条件查询文档使用的请求对象是SearchRequest，查询时调用SearchRequest对象的termQuery方法，需要给出查询属性名，此处支持使用合并字段，也就是前面定义索引属性时添加的all属性。
 
-​		springboot整合ES的操作到这里就说完了，与前期进行springboot整合redis和mongodb的差别还是蛮大的，主要原始就是我们没有使用springboot整合ES的客户端对象。至于操作，由于ES操作种类过多，所以显得操作略微有点复杂。有关springboot整合ES就先学习到这里吧。
+​		Spring Boot整合ES的操作到这里就说完了，与前期进行Spring Boot整合redis和mongodb的差别还是蛮大的，主要原始就是我们没有使用Spring Boot整合ES的客户端对象。至于操作，由于ES操作种类过多，所以显得操作略微有点复杂。有关Spring Boot整合ES就先学习到这里吧。
 
 <b>总结<b>
 
-1. springboot整合ES步骤
-    1. 导入springboot整合ES的High Level Client坐标
+1. Spring Boot整合ES步骤
+    1. 导入Spring Boot整合ES的High Level Client坐标
     2. 手工管理客户端对象，包括初始化和关闭操作
     3. 使用High Level Client根据操作的种类不同，选择不同的Request对象完成对应操作
 
@@ -7813,9 +7813,9 @@ void testSearch() throws IOException {
 
 ## 整合第三方技术
 
-​		通过第四章的学习，我们领略到了springboot在整合第三方技术时强大的一致性，在第五章中我们要使用springboot继续整合各种各样的第三方技术，通过本章的学习，可以将之前学习的springboot整合第三方技术的思想贯彻到底，还是那三板斧。导坐标、做配置、调API。
+​		通过第四章的学习，我们领略到了Spring Boot在整合第三方技术时强大的一致性，在第五章中我们要使用Spring Boot继续整合各种各样的第三方技术，通过本章的学习，可以将之前学习的Spring Boot整合第三方技术的思想贯彻到底，还是那三板斧。导坐标、做配置、调API。
 
-​		springboot能够整合的技术实在是太多了，可以说是万物皆可整。本章将从企业级开发中常用的一些技术作为出发点，对各种各样的技术进行整合。
+​		Spring Boot能够整合的技术实在是太多了，可以说是万物皆可整。本章将从企业级开发中常用的一些技术作为出发点，对各种各样的技术进行整合。
 
 ### 缓存
 
@@ -7831,15 +7831,15 @@ void testSearch() throws IOException {
 
  											使用缓存后，应用程序与缓存打交道，缓存与数据库打交道，数据访问效率提高
 
-​		缓存是什么？缓存是一种介于数据永久存储介质与应用程序之间的数据临时存储介质，使用缓存可以有效的减少低速数据读取过程的次数（例如磁盘IO），提高系统性能。此外缓存不仅可以用于提高永久性存储介质的数据读取效率，还可以提供临时的数据存储空间。而springboot提供了对市面上几乎所有的缓存技术进行整合的方案，下面就一起开启springboot整合缓存之旅。
+​		缓存是什么？缓存是一种介于数据永久存储介质与应用程序之间的数据临时存储介质，使用缓存可以有效的减少低速数据读取过程的次数（例如磁盘IO），提高系统性能。此外缓存不仅可以用于提高永久性存储介质的数据读取效率，还可以提供临时的数据存储空间。而Spring Boot提供了对市面上几乎所有的缓存技术进行整合的方案，下面就一起开启Spring Boot整合缓存之旅。
 
 
 
-#### SpringBoot内置缓存解决方案
+#### Spring Boot内置缓存解决方案
 
-​		springboot技术提供有内置的缓存解决方案，可以帮助开发者快速开启缓存技术，并使用缓存技术进行数据的快速操作，例如读取缓存数据和写入数据到缓存。
+​		Spring Boot技术提供有内置的缓存解决方案，可以帮助开发者快速开启缓存技术，并使用缓存技术进行数据的快速操作，例如读取缓存数据和写入数据到缓存。
 
-<b>步骤①<b>：导入springboot提供的缓存技术对应的starter
+<b>步骤①<b>：导入Spring Boot提供的缓存技术对应的starter
 
 ```xml
 <dependency>
@@ -7848,15 +7848,15 @@ void testSearch() throws IOException {
 </dependency>
 ```
 
-<b>步骤②<b>：启用缓存，在引导类上方标注注解@EnableCaching配置springboot程序中可以使用缓存
+<b>步骤②<b>：启用缓存，在引导类上方标注注解@EnableCaching配置Spring Boot程序中可以使用缓存
 
 ```java
 @SpringBootApplication
 //开启缓存功能
 @EnableCaching
-public class Springboot19CacheApplication {
+public class Spring Boot19CacheApplication {
     public static void main(String[] args) {
-        SpringApplication.run(Springboot19CacheApplication.class, args);
+        SpringApplication.run(Spring Boot19CacheApplication.class, args);
     }
 }
 ```
@@ -7891,9 +7891,9 @@ public class BookServiceImpl implements BookService {
 - 输入手机号获取验证码，组织文档以短信形式发送给用户（页面模拟）
 - 输入手机号和验证码验证结果
 
-​		为了描述上述操作，我们制作两个表现层接口，一个用来模拟发送短信的过程，其实就是根据用户提供的手机号生成一个验证码，然后放入缓存，另一个用来模拟验证码校验的过程，其实就是使用传入的手机号和验证码进行匹配，并返回最终匹配结果。下面直接制作本案例的模拟代码，先以上例中springboot提供的内置缓存技术来完成当前案例的制作。
+​		为了描述上述操作，我们制作两个表现层接口，一个用来模拟发送短信的过程，其实就是根据用户提供的手机号生成一个验证码，然后放入缓存，另一个用来模拟验证码校验的过程，其实就是使用传入的手机号和验证码进行匹配，并返回最终匹配结果。下面直接制作本案例的模拟代码，先以上例中Spring Boot提供的内置缓存技术来完成当前案例的制作。
 
-<b>步骤①<b>：导入springboot提供的缓存技术对应的starter
+<b>步骤①<b>：导入Spring Boot提供的缓存技术对应的starter
 
 ```xml
 <dependency>
@@ -7902,15 +7902,15 @@ public class BookServiceImpl implements BookService {
 </dependency>
 ```
 
-<b>步骤②<b>：启用缓存，在引导类上方标注注解@EnableCaching配置springboot程序中可以使用缓存
+<b>步骤②<b>：启用缓存，在引导类上方标注注解@EnableCaching配置Spring Boot程序中可以使用缓存
 
 ```java
 @SpringBootApplication
 //开启缓存功能
 @EnableCaching
-public class Springboot19CacheApplication {
+public class Spring Boot19CacheApplication {
     public static void main(String[] args) {
-        SpringApplication.run(Springboot19CacheApplication.class, args);
+        SpringApplication.run(Spring Boot19CacheApplication.class, args);
     }
 }
 ```
@@ -8008,9 +8008,9 @@ public class SMSCodeController {
 
 
 
-#### SpringBoot整合Ehcache缓存
+#### Spring Boot整合Ehcache缓存
 
-​		手机验证码的案例已经完成了，下面就开始springboot整合各种各样的缓存技术，第一个整合Ehcache技术。Ehcache是一种缓存技术，使用springboot整合Ehcache其实就是变更一下缓存技术的实现方式，话不多说，直接开整
+​		手机验证码的案例已经完成了，下面就开始Spring Boot整合各种各样的缓存技术，第一个整合Ehcache技术。Ehcache是一种缓存技术，使用Spring Boot整合Ehcache其实就是变更一下缓存技术的实现方式，话不多说，直接开整
 
 <b>步骤①<b>：导入Ehcache的坐标
 
@@ -8021,7 +8021,7 @@ public class SMSCodeController {
 </dependency>
 ```
 
-​		此处为什么不是导入Ehcache的starter，而是导入技术坐标呢？其实springboot整合缓存技术做的是通用格式，不管你整合哪种缓存技术，只是实现变化了，操作方式一样。这也体现出springboot技术的优点，统一同类技术的整合方式。
+​		此处为什么不是导入Ehcache的starter，而是导入技术坐标呢？其实Spring Boot整合缓存技术做的是通用格式，不管你整合哪种缓存技术，只是实现变化了，操作方式一样。这也体现出Spring Boot技术的优点，统一同类技术的整合方式。
 
 <b>步骤②<b>：配置缓存技术实现使用Ehcache
 
@@ -8033,7 +8033,7 @@ spring:
       config: ehcache.xml
 ```
 
-​		配置缓存的类型type为ehcache，此处需要说明一下，当前springboot可以整合的缓存技术中包含有ehcach，所以可以这样书写。其实这个type不可以随便写的，不是随便写一个名称就可以整合的。
+​		配置缓存的类型type为ehcache，此处需要说明一下，当前Spring Boot可以整合的缓存技术中包含有ehcach，所以可以这样书写。其实这个type不可以随便写的，不是随便写一个名称就可以整合的。
 
 ​		由于ehcache的配置有独立的配置文件格式，因此还需要指定ehcache的配置文件，以便于读取相应配置
 
@@ -8085,18 +8085,18 @@ public String sendCodeToSMS(String tele) {
 
 ​		这个设定需要保障ehcache中有一个缓存空间名称叫做smsCode的配置，前后要统一。在企业开发过程中，通过设置不同名称的cache来设定不同的缓存策略，应用于不同的缓存数据。
 
-​		到这里springboot整合Ehcache就做完了，可以发现一点，原始代码没有任何修改，仅仅是加了一组配置就可以变更缓存供应商了，这也是springboot提供了统一的缓存操作接口的优势，变更实现并不影响原始代码的书写。
+​		到这里Spring Boot整合Ehcache就做完了，可以发现一点，原始代码没有任何修改，仅仅是加了一组配置就可以变更缓存供应商了，这也是Spring Boot提供了统一的缓存操作接口的优势，变更实现并不影响原始代码的书写。
 
 <b>总结<b>
 
-1. springboot使用Ehcache作为缓存实现需要导入Ehcache的坐标
+1. Spring Boot使用Ehcache作为缓存实现需要导入Ehcache的坐标
 2. 修改设置，配置缓存供应商为ehcache，并提供对应的缓存配置文件
 
 ​		
 
-#### SpringBoot整合Redis缓存
+#### Spring Boot整合Redis缓存
 
-​		上节使用Ehcache替换了springboot内置的缓存技术，其实springboot支持的缓存技术还很多，下面使用redis技术作为缓存解决方案来实现手机验证码案例。
+​		上节使用Ehcache替换了Spring Boot内置的缓存技术，其实Spring Boot支持的缓存技术还很多，下面使用redis技术作为缓存解决方案来实现手机验证码案例。
 
 ​		比对使用Ehcache的过程，加坐标，改缓存实现类型为ehcache，做Ehcache的配置。如果还成redis做缓存呢？一模一样，加坐标，改缓存实现类型为redis，做redis的配置。差别之处只有一点，redis的配置可以在yml文件中直接进行配置，无需制作独立的配置文件。
 
@@ -8138,16 +8138,16 @@ spring:
 
 <b>总结<b>
 
-1. springboot使用redis作为缓存实现需要导入redis的坐标
+1. Spring Boot使用redis作为缓存实现需要导入redis的坐标
 2. 修改设置，配置缓存供应商为redis，并提供对应的缓存配置
 
 
 
-#### SpringBoot整合Memcached缓存
+#### Spring Boot整合Memcached缓存
 
-​		目前我们已经掌握了3种缓存解决方案的配置形式，分别是springboot内置缓存，ehcache和redis，本节研究一下国内比较流行的一款缓存memcached。
+​		目前我们已经掌握了3种缓存解决方案的配置形式，分别是Spring Boot内置缓存，ehcache和redis，本节研究一下国内比较流行的一款缓存memcached。
 
-​		按照之前的套路，其实变更缓存并不繁琐，但是springboot并没有支持使用memcached作为其缓存解决方案，也就是说在type属性中没有memcached的配置选项，这里就需要更变一下处理方式了。在整合之前先安装memcached。
+​		按照之前的套路，其实变更缓存并不繁琐，但是Spring Boot并没有支持使用memcached作为其缓存解决方案，也就是说在type属性中没有memcached的配置选项，这里就需要更变一下处理方式了。在整合之前先安装memcached。
 
 <b>安装<b>
 
@@ -8184,7 +8184,7 @@ memcached.exe -d stop		# 停止服务
 
 <b>变更缓存为Memcached<b>
 
-​		由于memcached未被springboot收录为缓存解决方案，因此使用memcached需要通过手工硬编码的方式来使用，于是前面的套路都不适用了，需要自己写了。
+​		由于memcached未被Spring Boot收录为缓存解决方案，因此使用memcached需要通过手工硬编码的方式来使用，于是前面的套路都不适用了，需要自己写了。
 
 ​		memcached目前提供有三种客户端技术，分别是Memcached Client for Java、SpyMemcached和Xmemcached，其中性能指标各方面最好的客户端是Xmemcached，本次整合就使用这个作为客户端实现技术了。下面开始使用Xmemcached
 
@@ -8297,7 +8297,7 @@ public class XMemcachedConfig {
 <b>总结<b>
 
 1. memcached安装后需要启动对应服务才可以对外提供缓存功能，安装memcached服务需要基于windows系统管理员权限
-2. 由于springboot没有提供对memcached的缓存整合方案，需要采用手工编码的形式创建xmemcached客户端操作缓存
+2. 由于Spring Boot没有提供对memcached的缓存整合方案，需要采用手工编码的形式创建xmemcached客户端操作缓存
 3. 导入xmemcached坐标后，创建memcached配置类，注册MemcachedClient对应的bean，用于操作缓存
 4. 初始化MemcachedClient对象所需要使用的属性可以通过自定义配置属性类的形式加载
 
@@ -8307,11 +8307,11 @@ public class XMemcachedConfig {
 
 
 
-#### SpringBoot整合jetcache缓存
+#### Spring Boot整合jetcache缓存
 
-​		目前我们使用的缓存都是要么A要么B，能不能AB一起用呢？这一节就解决这个问题。springboot针对缓存的整合仅仅停留在用缓存上面，如果缓存自身不支持同时支持AB一起用，springboot也没办法，所以要想解决AB缓存一起用的问题，就必须找一款缓存能够支持AB两种缓存一起用，有这种缓存吗？还真有，阿里出品，jetcache。
+​		目前我们使用的缓存都是要么A要么B，能不能AB一起用呢？这一节就解决这个问题。Spring Boot针对缓存的整合仅仅停留在用缓存上面，如果缓存自身不支持同时支持AB一起用，Spring Boot也没办法，所以要想解决AB缓存一起用的问题，就必须找一款缓存能够支持AB两种缓存一起用，有这种缓存吗？还真有，阿里出品，jetcache。
 
-​		jetcache严格意义上来说，并不是一个缓存解决方案，只能说他算是一个缓存框架，然后把别的缓存放到jetcache中管理，这样就可以支持AB缓存一起用了。并且jetcache参考了springboot整合缓存的思想，整体技术使用方式和springboot的缓存解决方案思想非常类似。下面咱们就先把jetcache用起来，然后再说它里面的一些小的功能。
+​		jetcache严格意义上来说，并不是一个缓存解决方案，只能说他算是一个缓存框架，然后把别的缓存放到jetcache中管理，这样就可以支持AB缓存一起用了。并且jetcache参考了Spring Boot整合缓存的思想，整体技术使用方式和Spring Boot的缓存解决方案思想非常类似。下面咱们就先把jetcache用起来，然后再说它里面的一些小的功能。
 
 ​		做之前要先明确一下，jetcache并不是随便拿两个缓存都能拼到一起去的。目前jetcache支持的缓存方案本地缓存支持两种，远程缓存支持两种，分别如下：
 
@@ -8326,7 +8326,7 @@ public class XMemcachedConfig {
 
 ##### 纯远程方案
 
-<b>步骤①<b>：导入springboot整合jetcache对应的坐标starter，当前坐标默认使用的远程方案是redis
+<b>步骤①<b>：导入Spring Boot整合jetcache对应的坐标starter，当前坐标默认使用的远程方案是redis
 
 ```xml
 <dependency>
@@ -8351,15 +8351,15 @@ jetcache:
 
 ​		其中poolConfig是必配项，否则会报错
 
-<b>步骤③<b>：启用缓存，在引导类上方标注注解@EnableCreateCacheAnnotation配置springboot程序中可以使用注解的形式创建缓存
+<b>步骤③<b>：启用缓存，在引导类上方标注注解@EnableCreateCacheAnnotation配置Spring Boot程序中可以使用注解的形式创建缓存
 
 ```java
 @SpringBootApplication
 //jetcache启用缓存的主开关
 @EnableCreateCacheAnnotation
-public class Springboot20JetCacheApplication {
+public class Spring Boot20JetCacheApplication {
     public static void main(String[] args) {
-        SpringApplication.run(Springboot20JetCacheApplication.class, args);
+        SpringApplication.run(Spring Boot20JetCacheApplication.class, args);
     }
 }
 ```
@@ -8437,7 +8437,7 @@ public class SMSCodeServiceImpl implements SMSCodeService {
 
 ​		远程方案中，配置中使用remote表示远程，换成local就是本地，只不过类型不一样而已。
 
-<b>步骤①<b>：导入springboot整合jetcache对应的坐标starter
+<b>步骤①<b>：导入Spring Boot整合jetcache对应的坐标starter
 
 ```xml
 <dependency>
@@ -8465,9 +8465,9 @@ jetcache:
 @SpringBootApplication
 //jetcache启用缓存的主开关
 @EnableCreateCacheAnnotation
-public class Springboot20JetCacheApplication {
+public class Spring Boot20JetCacheApplication {
     public static void main(String[] args) {
-        SpringApplication.run(Springboot20JetCacheApplication.class, args);
+        SpringApplication.run(Spring Boot20JetCacheApplication.class, args);
     }
 }
 ```
@@ -8550,7 +8550,7 @@ public class SMSCodeServiceImpl implements SMSCodeService {
 
 ​		jetcache提供了方法缓存方案，只不过名称变更了而已。在对应的操作接口上方使用注解@Cached即可
 
-<b>步骤①<b>：导入springboot整合jetcache对应的坐标starter
+<b>步骤①<b>：导入Spring Boot整合jetcache对应的坐标starter
 
 ```xml
 <dependency>
@@ -8608,9 +8608,9 @@ public class Book implements Serializable {
 @EnableCreateCacheAnnotation
 //开启方法注解缓存
 @EnableMethodCache(basePackages = "com.itheima")
-public class Springboot20JetCacheApplication {
+public class Spring Boot20JetCacheApplication {
     public static void main(String[] args) {
-        SpringApplication.run(Springboot20JetCacheApplication.class, args);
+        SpringApplication.run(Spring Boot20JetCacheApplication.class, args);
     }
 }
 ```
@@ -8694,7 +8694,7 @@ book_    |   0.66| 75.86%|    29|     22|      0|        0|          28.0|      
 
 ​		jetcache解决了前期使用缓存方案单一的问题，但是仍然不能灵活的选择缓存进行搭配使用，是否存在一种技术可以灵活的搭配各种各样的缓存使用呢？有，咱们下一节再讲。
 
-#### SpringBoot整合j2cache缓存
+#### Spring Boot整合j2cache缓存
 
 ​		jetcache可以在限定范围内构建多级缓存，但是灵活性不足，不能随意搭配缓存，本节介绍一种可以随意搭配缓存解决方案的缓存整合框架，j2cache。下面就来讲解如何使用这种缓存框架，以Ehcache与redis整合为例：
 
@@ -8981,20 +8981,20 @@ memcached.sanitizeKeys = false
 
 ### 任务
 
-​		springboot整合第三方技术第二部分我们来说说任务系统，其实这里说的任务系统指的是定时任务。定时任务是企业级开发中必不可少的组成部分，诸如长周期业务数据的计算，例如年度报表，诸如系统脏数据的处理，再比如系统性能监控报告，还有抢购类活动的商品上架，这些都离不开定时任务。本节将介绍两种不同的定时任务技术。
+​		Spring Boot整合第三方技术第二部分我们来说说任务系统，其实这里说的任务系统指的是定时任务。定时任务是企业级开发中必不可少的组成部分，诸如长周期业务数据的计算，例如年度报表，诸如系统脏数据的处理，再比如系统性能监控报告，还有抢购类活动的商品上架，这些都离不开定时任务。本节将介绍两种不同的定时任务技术。
 
 #### Quartz
 
-​		Quartz技术是一个比较成熟的定时任务框架，怎么说呢？有点繁琐，用过的都知道，配置略微复杂。springboot对其进行整合后，简化了一系列的配置，将很多配置采用默认设置，这样开发阶段就简化了很多。再学习springboot整合Quartz前先普及几个Quartz的概念。
+​		Quartz技术是一个比较成熟的定时任务框架，怎么说呢？有点繁琐，用过的都知道，配置略微复杂。Spring Boot对其进行整合后，简化了一系列的配置，将很多配置采用默认设置，这样开发阶段就简化了很多。再学习Spring Boot整合Quartz前先普及几个Quartz的概念。
 
 - 工作（Job）：用于定义具体执行的工作
 - 工作明细（JobDetail）：用于描述定时工作相关的信息
 - 触发器（Trigger）：描述了工作明细与调度器的对应关系
 - 调度器（Scheduler）：用于描述触发工作的执行规则，通常使用cron表达式定义规则
 
-​		简单说就是你定时干什么事情，这就是工作，工作不可能就是一个简单的方法，还要设置一些明细信息。工作啥时候执行，设置一个调度器，可以简单理解成设置一个工作执行的时间。工作和调度都是独立定义的，它们两个怎么配合到一起呢？用触发器。完了，就这么多。下面开始springboot整合Quartz。
+​		简单说就是你定时干什么事情，这就是工作，工作不可能就是一个简单的方法，还要设置一些明细信息。工作啥时候执行，设置一个调度器，可以简单理解成设置一个工作执行的时间。工作和调度都是独立定义的，它们两个怎么配合到一起呢？用触发器。完了，就这么多。下面开始Spring Boot整合Quartz。
 
-<b>步骤①<b>：导入springboot整合Quartz的starter
+<b>步骤①<b>：导入Spring Boot整合Quartz的starter
 
 ```xml
 <dependency>
@@ -9039,7 +9039,7 @@ public class QuartzConfig {
 
 <b>总结<b>
 
-1. springboot整合Quartz就是将Quartz对应的核心对象交给spring容器管理，包含两个对象，JobDetail和Trigger对象
+1. Spring Boot整合Quartz就是将Quartz对应的核心对象交给spring容器管理，包含两个对象，JobDetail和Trigger对象
 2. JobDetail对象描述的是工作的执行信息，需要绑定一个QuartzJobBean类型的对象
 3. Trigger对象定义了一个触发器，需要为其指定绑定的JobDetail是哪个，同时要设置执行周期调度器
 
@@ -9059,9 +9059,9 @@ public class QuartzConfig {
 @SpringBootApplication
 //开启定时任务功能
 @EnableScheduling
-public class Springboot22TaskApplication {
+public class Spring Boot22TaskApplication {
     public static void main(String[] args) {
-        SpringApplication.run(Springboot22TaskApplication.class, args);
+        SpringApplication.run(Spring Boot22TaskApplication.class, args);
     }
 }
 ```
@@ -9104,7 +9104,7 @@ spring:
 
 ### 邮件
 
-​		springboot整合第三方技术第三部分我们来说说邮件系统，发邮件是java程序的基本操作，springboot整合javamail其实就是简化开发。不熟悉邮件的小伙伴可以先学习完javamail的基础操作，再来看这一部分内容才能感触到springboot整合javamail究竟简化了哪些操作。简化的多码？其实不多，差别不大，只是还个格式而已。
+​		Spring Boot整合第三方技术第三部分我们来说说邮件系统，发邮件是java程序的基本操作，Spring Boot整合javamail其实就是简化开发。不熟悉邮件的小伙伴可以先学习完javamail的基础操作，再来看这一部分内容才能感触到Spring Boot整合javamail究竟简化了哪些操作。简化的多码？其实不多，差别不大，只是还个格式而已。
 
 ​		学习邮件发送之前先了解3个概念，这些概念规范了邮件操作过程中的标准。
 
@@ -9112,13 +9112,13 @@ spring:
 - POP3（Post Office Protocol - Version 3）：用于<b>接收<b>电子邮件的标准协议
 - IMAP（Internet Mail Access Protocol）：互联网消息协议，是POP3的替代协议
 
-​		简单说就是SMPT是发邮件的标准，POP3是收邮件的标准，IMAP是对POP3的升级。我们制作程序中操作邮件，通常是发邮件，所以SMTP是使用的重点，收邮件大部分都是通过邮件客户端完成，所以开发收邮件的代码极少。除非你要读取邮件内容，然后解析，做邮件功能的统一处理。例如HR的邮箱收到求职者的简历，可以读取后统一处理。但是为什么不制作独立的投递简历的系统呢？所以说，好奇怪的需求，因为要想收邮件就要规范发邮件的人的书写格式，这个未免有点强人所难，并且极易收到外部攻击，你不可能使用白名单来收邮件。如果能使用白名单来收邮件然后解析邮件，还不如开发个系统给白名单中的人专用呢，更安全，总之就是鸡肋了。下面就开始学习springboot如何整合javamail发送邮件。
+​		简单说就是SMPT是发邮件的标准，POP3是收邮件的标准，IMAP是对POP3的升级。我们制作程序中操作邮件，通常是发邮件，所以SMTP是使用的重点，收邮件大部分都是通过邮件客户端完成，所以开发收邮件的代码极少。除非你要读取邮件内容，然后解析，做邮件功能的统一处理。例如HR的邮箱收到求职者的简历，可以读取后统一处理。但是为什么不制作独立的投递简历的系统呢？所以说，好奇怪的需求，因为要想收邮件就要规范发邮件的人的书写格式，这个未免有点强人所难，并且极易收到外部攻击，你不可能使用白名单来收邮件。如果能使用白名单来收邮件然后解析邮件，还不如开发个系统给白名单中的人专用呢，更安全，总之就是鸡肋了。下面就开始学习Spring Boot如何整合javamail发送邮件。
 
 
 
 #### 发送简单邮件
 
-<b>步骤①<b>：导入springboot整合javamail的starter
+<b>步骤①<b>：导入Spring Boot整合javamail的starter
 
 ```xml
 <dependency>
@@ -9259,13 +9259,13 @@ public class SendMailServiceImpl2 implements SendMailService {
 
 <b>总结<b>
 
-1. springboot整合javamail其实就是简化了发送邮件的客户端对象JavaMailSender的初始化过程，通过配置的形式加载信息简化开发过程
+1. Spring Boot整合javamail其实就是简化了发送邮件的客户端对象JavaMailSender的初始化过程，通过配置的形式加载信息简化开发过程
 
     
 
 ### 消息
 
-​		springboot整合第三方技术最后一部分我们来说说消息中间件，首先先介绍一下消息的应用。
+​		Spring Boot整合第三方技术最后一部分我们来说说消息中间件，首先先介绍一下消息的应用。
 
 #### 消息的概念
 
@@ -9359,7 +9359,7 @@ public class SendMailServiceImpl2 implements SendMailService {
 
 ​		Kafka，一种高吞吐量的分布式发布订阅消息系统，提供实时消息功能。Kafka技术并不是作为消息中间件为主要功能的产品，但是其拥有发布订阅的工作模式，也可以充当消息中间件来使用，而且目前企业级开发中其身影也不少见。
 
-​		本节内容讲围绕着上述内容中的几种实现方案讲解springboot整合各种各样的消息中间件。由于各种消息中间件必须先安装再使用，下面的内容采用Windows系统安装，降低各位学习者的学习难度，基本套路和之前学习NoSQL解决方案一样，先安装再整合。
+​		本节内容讲围绕着上述内容中的几种实现方案讲解Spring Boot整合各种各样的消息中间件。由于各种消息中间件必须先安装再使用，下面的内容采用Windows系统安装，降低各位学习者的学习难度，基本套路和之前学习NoSQL解决方案一样，先安装再整合。
 
 #### 购物订单发送手机短信案例
 
@@ -9483,7 +9483,7 @@ public class MessageController {
 
 ​		短信处理表现层接口暂且开发出一个处理消息的入口，但是此业务是对应业务层中设计的模拟接口，实际业务不需要设计此接口。
 
-​		下面开启springboot整合各种各样的消息中间件，从严格满足JMS规范的ActiveMQ开始
+​		下面开启Spring Boot整合各种各样的消息中间件，从严格满足JMS规范的ActiveMQ开始
 
 #### 整合ActiveMQ
 
@@ -9746,9 +9746,9 @@ wrapper  | <-- Wrapper Stopped
 
 ##### 整合
 
-​		做了这么多springboot整合第三方技术，已经摸到门路了，加坐标，做配置，调接口，直接开工
+​		做了这么多Spring Boot整合第三方技术，已经摸到门路了，加坐标，做配置，调接口，直接开工
 
-<b>步骤①<b>：导入springboot整合ActiveMQ的starter
+<b>步骤①<b>：导入Spring Boot整合ActiveMQ的starter
 
 ```xml
 <dependency>
@@ -9824,7 +9824,7 @@ spring:
 
 <b>总结<b>
 
-1. springboot整合ActiveMQ提供了JmsMessagingTemplate对象作为客户端操作消息队列
+1. Spring Boot整合ActiveMQ提供了JmsMessagingTemplate对象作为客户端操作消息队列
 2. 操作ActiveMQ需要配置ActiveMQ服务器地址，默认端口61616
 3. 企业开发时通常使用监听器来处理消息队列中的消息，设置监听器使用注解@JmsListener
 4. 配置jms的pub-sub-domain属性可以在点对点模型和发布订阅模型间切换消息模型
@@ -9903,7 +9903,7 @@ http://localhost:15672
 
 ​		RabbitMQ满足AMQP协议，因此不同的消息模型对应的制作不同，先使用最简单的direct模型开发。
 
-<b>步骤①<b>：导入springboot整合amqp的starter，amqp协议默认实现为rabbitmq方案
+<b>步骤①<b>：导入Spring Boot整合amqp的starter，amqp协议默认实现为rabbitmq方案
 
 ```xml
 <dependency>
@@ -10069,7 +10069,7 @@ public class MessageListener {
 
 <b>总结<b>
 
-1. springboot整合RabbitMQ提供了AmqpTemplate对象作为客户端操作消息队列
+1. Spring Boot整合RabbitMQ提供了AmqpTemplate对象作为客户端操作消息队列
 2. 操作ActiveMQ需要配置ActiveMQ服务器地址，默认端口5672
 3. 企业开发时通常使用监听器来处理消息队列中的消息，设置监听器使用注解@RabbitListener
 4. RabbitMQ有5种消息模型，使用的队列相同，但是交换机不同。交换机不同，对应的消息进入的策略也不同
@@ -10122,7 +10122,7 @@ tools org.apache.rocketmq.example.quickstart.Consumer		# 消费消息
 
 ##### 整合（异步消息）
 
-<b>步骤①<b>：导入springboot整合RocketMQ的starter，此坐标不由springboot维护版本
+<b>步骤①<b>：导入Spring Boot整合RocketMQ的starter，此坐标不由Spring Boot维护版本
 
 ```xml
 <dependency>
@@ -10191,7 +10191,7 @@ public class MessageListener implements RocketMQListener<String> {
 
 <b>总结<b>
 
-1. springboot整合RocketMQ使用RocketMQTemplate对象作为客户端操作消息队列
+1. Spring Boot整合RocketMQ使用RocketMQTemplate对象作为客户端操作消息队列
 2. 操作RocketMQ需要配置RocketMQ服务器地址，默认端口9876
 3. 企业开发时通常使用监听器来处理消息队列中的消息，设置监听器使用注解@RocketMQMessageListener
 
@@ -10246,7 +10246,7 @@ kafka-console-consumer.bat --bootstrap-server localhost:9092 --topic itheima --f
 
 ##### 整合
 
-<b>步骤①<b>：导入springboot整合Kafka的starter，此坐标由springboot维护版本
+<b>步骤①<b>：导入Spring Boot整合Kafka的starter，此坐标由Spring Boot维护版本
 
 ```xml
 <dependency>
@@ -10301,7 +10301,7 @@ public class MessageListener {
 
 <b>总结<b>
 
-1. springboot整合Kafka使用KafkaTemplate对象作为客户端操作消息队列
+1. Spring Boot整合Kafka使用KafkaTemplate对象作为客户端操作消息队列
 
 2. 操作Kafka需要配置Kafka服务器地址，默认端口9092
 
@@ -10315,7 +10315,7 @@ public class MessageListener {
 
 ​		什么是监控？就是通过软件的方式展示另一个软件的运行情况，运行的情况则通过各种各样的指标数据反馈给监控人员。例如网络是否顺畅、服务器是否在运行、程序的功能是否能够整百分百运行成功，内存是否够用，等等等等。
 
-​		本章要讲解的监控就是对软件的运行情况进行监督，但是springboot程序与非springboot程序的差异还是很大的，为了方便监控软件的开发，springboot提供了一套功能接口，为开发者加速开发过程。
+​		本章要讲解的监控就是对软件的运行情况进行监督，但是Spring Boot程序与非Spring Boot程序的差异还是很大的，为了方便监控软件的开发，Spring Boot提供了一套功能接口，为开发者加速开发过程。
 
 ### 监控的意义
 
@@ -10355,15 +10355,15 @@ public class MessageListener {
 
 ### 可视化监控平台
 
-​		springboot抽取了大部分监控系统的常用指标，提出了监控的总思想。然后就有好心的同志根据监控的总思想，制作了一个通用性很强的监控系统，因为是基于springboot监控的核心思想制作的，所以这个程序被命名为<b>Spring Boot Admin<b>。
+​		Spring Boot抽取了大部分监控系统的常用指标，提出了监控的总思想。然后就有好心的同志根据监控的总思想，制作了一个通用性很强的监控系统，因为是基于Spring Boot监控的核心思想制作的，所以这个程序被命名为<b>Spring Boot Admin<b>。
 
-​		Spring Boot Admin，这是一个开源社区项目，用于管理和监控SpringBoot应用程序。这个项目中包含有客户端和服务端两部分，而监控平台指的就是服务端。我们做的程序如果需要被监控，将我们做的程序制作成客户端，然后配置服务端地址后，服务端就可以通过HTTP请求的方式从客户端获取对应的信息，并通过UI界面展示对应信息。
+​		Spring Boot Admin，这是一个开源社区项目，用于管理和监控Spring Boot应用程序。这个项目中包含有客户端和服务端两部分，而监控平台指的就是服务端。我们做的程序如果需要被监控，将我们做的程序制作成客户端，然后配置服务端地址后，服务端就可以通过HTTP请求的方式从客户端获取对应的信息，并通过UI界面展示对应信息。
 
 ​		下面就来开发这套监控程序，先制作服务端，其实服务端可以理解为是一个web程序，收到一些信息后展示这些信息。
 
 <b>服务端开发<b>
 
-<b>步骤①<b>：导入springboot admin对应的starter，版本与当前使用的springboot版本保持一致，并将其配置成web工程
+<b>步骤①<b>：导入Spring Boot admin对应的starter，版本与当前使用的Spring Boot版本保持一致，并将其配置成web工程
 
 ```xml
 <dependency>
@@ -10387,9 +10387,9 @@ public class MessageListener {
 ```java
 @SpringBootApplication
 @EnableAdminServer
-public class Springboot25AdminServerApplication {
+public class Spring Boot25AdminServerApplication {
     public static void main(String[] args) {
-        SpringApplication.run(Springboot25AdminServerApplication.class, args);
+        SpringApplication.run(Spring Boot25AdminServerApplication.class, args);
     }
 }
 ```
@@ -10404,7 +10404,7 @@ public class Springboot25AdminServerApplication {
 
 ​		客户端程序开发其实和服务端开发思路基本相似，多了一些配置而已。
 
-<b>步骤①<b>：导入springboot admin对应的starter，版本与当前使用的springboot版本保持一致，并将其配置成web工程
+<b>步骤①<b>：导入Spring Boot admin对应的starter，版本与当前使用的Spring Boot版本保持一致，并将其配置成web工程
 
 ```xml
 <dependency>
@@ -10499,7 +10499,7 @@ endpoints:
 
 <b>配置多个客户端<b>
 
-​		可以通过配置客户端的方式在其他的springboot程序中添加客户端坐标，这样当前服务器就可以监控多个客户端程序了。每个客户端展示不同的监控信息。
+​		可以通过配置客户端的方式在其他的Spring Boot程序中添加客户端坐标，这样当前服务器就可以监控多个客户端程序了。每个客户端展示不同的监控信息。
 
 <div align="center"><img src="img/image-20220301110352170.png" alt="image-20220301110352170" style="zoom: 50%;" /></div>
 
@@ -10660,7 +10660,7 @@ endpoints:
 
 ​		原来监控中显示的信息实际上是通过发送请求后得到json数据，然后展示出来。按照上述操作，可以发送更多的以/actuator开头的链接地址，获取更多的数据，这些数据汇总到一起组成了监控平台显示的所有数据。
 
-​		到这里我们得到了一个核心信息，监控平台中显示的信息实际上是通过对被监控的应用发送请求得到的。那这些请求谁开发的呢？打开被监控应用的pom文件，其中导入了springboot admin的对应的client，在这个资源中导入了一个名称叫做actuator的包。被监控的应用之所以可以对外提供上述请求路径，就是因为添加了这个包。
+​		到这里我们得到了一个核心信息，监控平台中显示的信息实际上是通过对被监控的应用发送请求得到的。那这些请求谁开发的呢？打开被监控应用的pom文件，其中导入了Spring Boot admin的对应的client，在这个资源中导入了一个名称叫做actuator的包。被监控的应用之所以可以对外提供上述请求路径，就是因为添加了这个包。
 
 ![image-20220301171437817](img/image-20220301171437817.png)
 
@@ -10705,7 +10705,7 @@ management:
       enabled: true				# 是否开放
 ```
 
-​		为了方便开发者快速配置端点，springboot admin设置了13个较为常用的端点作为默认开放的端点，如果需要控制默认开放的端点的开放状态，可以通过配置设置，如下：
+​		为了方便开发者快速配置端点，Spring Boot admin设置了13个较为常用的端点作为默认开放的端点，如果需要控制默认开放的端点的开放状态，可以通过配置设置，如下：
 
 ```YAML
 management:

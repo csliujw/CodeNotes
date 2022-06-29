@@ -1,23 +1,23 @@
-# SpringBoot
+# Spring Boot
 
-主要看小马哥的 SpringBoot
+主要看小马哥的 Spring Boot
 
 雷丰阳的作为补充：(https://www.bilibili.com/video/BV19K4y1L7MT?spm_id_from=333.788.b_765f64657363.1)
 
-## SpringBoot 2.0介绍
+## Spring Boot 2.0介绍
 
 - 编程语言：Java 8+、Kotlin
 - 底层框架：Spring Framwork 5.0.x
-- 全新特性：Web Flux， 对Spring MVC的补充。
+- 全新特性：Web Flux， 对 Spring MVC 的补充。
   - 函数编程：Java 8 Lambda
   - 响应式编程：Reactive Streams
   - 异步编程：Servlet 3.1 或 Asyc NIO
 
 ## 学习内容
 
-- SpringBoot 如何基于 Spring Framework 逐步<span style="color:red">走向自动装配。</span>
+- Spring Boot 如何基于 Spring Framework 逐步<span style="color:red">走向自动装配。</span>
 - SpringApplication 如何掌控 Spring 应用生命周期。
-- SpringBoot 外部化配置与 Spring Environment 抽象之间是生命关系。
+- Spring Boot 外部化配置与 Spring Environment 抽象之间是生命关系。
 - Spring Web MVC 向 Spring Reactive WebFlux 过渡的真实价值和意义。
 
 ## 学习方式
@@ -30,7 +30,7 @@
 
 ## 学习收获
 
-- Spring 全栈技术和实现原理8
+- Spring 全栈技术和实现原理
 - Spring Boot 核心技术
 - 微服务基础设施开发与生产实施经验
 
@@ -84,9 +84,9 @@ Web Flux 的 reactor 是<span style="color:red">异步非阻塞</span>的一个�
 - Flux：0-n 的对象
 - Mono：0-1 的对象
 
-# 理解SpringBoot
+# 理解Spring Boot
 
-SpringBoot 应用可以是 jar 可以是 war。jar 和 war 是如何启动的？如何指定那个类为引导类。
+Spring Boot 应用可以是 jar 可以是 war。jar 和 war 是如何启动的？如何指定那个类为引导类。
 
 ## 标准的 jar 包
 
@@ -134,9 +134,9 @@ Main-Class 指定了，我们通过 java -jar 命令运行 jar 包的时候，�
 
 <div align="center"><img src="img/image-20220309212415113.png"></div>
 
-## SpringBoot 的 jar
+## Spring Boot 的 jar
 
-下面我们再来看看 Spring Boot 的 Jar 是怎么样的。我们用 maven 将一个 SpringBoot 项目打包成 jar 包，然后执行。（maven->lifecycle->package）
+下面我们再来看看 Spring Boot 的 Jar 是怎么样的。我们用 maven 将一个 Spring Boot 项目打包成 jar 包，然后执行。（maven->lifecycle->package）
 
 <div align="center"><img src="img/image-20220309214245238.png"></div>
 
@@ -160,7 +160,7 @@ Spring-Boot-Layers-Index: BOOT-INF/layers.idx
 - BOOT-INF/classes：目录存放应用编译后的 class 文件
 - BOOT-INF/lib：存放应用依赖的 jar 包
 - META-INF/：存放应用相关元信息，如 MANIFEST.MF 文件。
-- org/：存放 SpringBoot 相关的 class 文件
+- org/：存放 Spring Boot 相关的 class 文件
 - <b>Main-Class: org.springframework.boot.loader.JarLauncher</b> 指定了这是 jar 运行
 - <b>Main-Class: org.springframework.boot.loader.WarLauncher</b> 指定了这是 war 运行
 - 这两个类是 jar / war 的启动器，都是 org.springframework.boot.loader 中的类。
@@ -239,7 +239,7 @@ public class TestDemo {
 > 新建一个Spring Boot项目，包含 Web 模块。
 
 ```java
-// SpringBoot简介中的Demo
+// Spring Boot简介中的Demo
 @RestController
 @EnableAutoConfiguration
 public class SpringbootApplication {
@@ -389,7 +389,7 @@ public class DemoApplication {
 // 程序也是可以正常运行的。
 ```
 
-可以不用 @SpringBootApplication，使用 @EnableAutoConfiguration 注解也可以。我们可以推断出，SpringApplication#run 启动 SpringBoot 程序并不依赖于 @Configuration 注解。
+可以不用 @SpringBootApplication，使用 @EnableAutoConfiguration 注解也可以。我们可以推断出，SpringApplication#run 启动 Spring Boot 程序并不依赖于 @Configuration 注解。
 
 ```java
 @RestController
@@ -451,8 +451,8 @@ public class Application {
         ConfigurableApplicationContext run = SpringApplication.run(Application.class, args);
         System.out.println(run.getBean(Application.class));
         System.out.println(run.getBean(Dog.class));
-        // com.example.springboot.Application$$EnhancerBySpringCGLIB$$2ffa75b9@69571912
-		// com.example.springboot.Dog@325f8af9
+        // com.example.Spring Boot.Application$$EnhancerBySpringCGLIB$$2ffa75b9@69571912
+		// com.example.Spring Boot.Dog@325f8af9
     }
 }
 ```
@@ -471,7 +471,7 @@ public class Application {
         Application bean = run.getBean(Application.class);
         System.out.println(bean);
         // 是 Java 裸类型，没有经过 GCLIB 增强
-        // com.example.springboot.Application@589aab6b
+        // com.example.Spring Boot.Application@589aab6b
     }
 }
 ```
@@ -509,7 +509,7 @@ public class Application {
     public static void main(String[] args) {
         ConfigurableApplicationContext run = SpringApplication.run(Application.class, args);
         System.out.println(run.getBean("getDog"));
-        // 正常输出 com.example.springboot.Dog@100f70d6
+        // 正常输出 com.example.Spring Boot.Dog@100f70d6
     }
 }
 ```
@@ -532,9 +532,9 @@ public class Config {
 
 ### 理解自动配置机制
 
-SpringBoot 自动装配底层实现和 Spring Framework 注解 @Configuration 和 @Conditional 有关。如果在 @Configuration 类上标注 @ConditionalOnClass，当且仅当目标类存在于 Class Path 下时才予以自动装配。
+Spring Boot 自动装配底层实现和 Spring Framework 注解 @Configuration 和 @Conditional 有关。如果在 @Configuration 类上标注 @ConditionalOnClass，当且仅当目标类存在于 Class Path 下时才予以自动装配。
 
-SpringBoot 自动配置相关的核心模块位于 spring-boot-autoconfigure，里面提供了大量的内建自动装配 @Configuration 类，他们统一存放在 org.springframework.boot.autoconfigure 包或子包下。同时这些类的信息均配置在 META-INF/spring.factories 资源中，新版本 SpringBoot 可能有所变动。
+Spring Boot 自动配置相关的核心模块位于 spring-boot-autoconfigure，里面提供了大量的内建自动装配 @Configuration 类，他们统一存放在 org.springframework.boot.autoconfigure 包或子包下。同时这些类的信息均配置在 META-INF/spring.factories 资源中，新版本 Spring Boot 可能有所变动。
 
 ```shell
 # Initializers
@@ -996,11 +996,11 @@ private void recursivelyCollectMetaAnnotations(Set<Annotation> visited, Annotati
 }
 ```
 
-
-
 ## Spring@Enable模块装配
 
-### 模块举例@Enable注解
+Spring 中 “@Enable 模块装配”中“模块”的含义：具备相同领域的功能组件集合。如 Web MVC 模块，AspectJ 代理模块。
+
+### @Enable注解
 
 ### 实现方式
 
@@ -1711,7 +1711,7 @@ public interface ViewResolver {
 - @ExceptionHandler
 - HandlerExceptionResolver
   - ExceptionHandlerExceptionResolver
-- BasicErrorController（SpringBoot）
+- BasicErrorController（Spring Boot）
 
 ### Web MVC REST
 
@@ -2110,7 +2110,6 @@ public class SpringbootApplication {
   }
   ```
   
-
 - @Profile [能力很弱，后续会调整成 Conditional]
 
 - 配置属性
@@ -2257,7 +2256,7 @@ public class Hello{
 </plugin>
 ```
 
-**小提示**：SpringBoot spring-boot-starter-parent 中的 spring-boot-dependencies 有定义各个包需要的版本！
+**小提示**：Spring Boot spring-boot-starter-parent 中的 spring-boot-dependencies 有定义各个包需要的版本！
 
 `maven命令 [打包]：mvn -Dmaven.test.skpi -u clean package`
 
@@ -2463,7 +2462,7 @@ public class DefaultAnnotationConfigDispatcherServletInitializer extends Abstrac
 
 ## 简化Web MVC
 
-SpringBoot时代的简化
+Spring Boot时代的简化
 
 - 完全自动装配
 - 装配条件
