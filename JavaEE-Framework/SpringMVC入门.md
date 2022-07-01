@@ -1506,7 +1506,7 @@ debug 发现，有三种类别的 handlerMappings（Spring 5.x），使用的是
 
 最后返回的handler的值是 被打上注解，要执行的方法的：<span style="color:red">全类名#方法名</span>
 
-<div aligen="center"><img src="img/mvc/getHandler_02.png"></div>
+<div align="center"><img src="img/mvc/getHandler_02.png"></div>
 
 我们再回过头来看看 this.handlerMappings 中 RequestMappingHandlerMapping 的成员变量
 
@@ -3609,7 +3609,7 @@ Spring 容器是作为父容器的，SpringMVC 容器是作为子容器的。子
 
 ②DispatcherServlet 收到请求调用 HandlerMapping 处理器映射器。
 
-③处理器映射器找到具体的处理器(可以根据xml配置、注解进行查找)，生成处理器对象及处理器拦截器(如果有则生成)一并返回给 DispatcherServlet。
+③处理器映射器找到具体的处理器(可以根据 xml 配置、注解进行查找)，生成处理器对象及处理器拦截器(如果有则生成)一并返回给 DispatcherServlet。
 
 ④DispatcherServlet 调用 HandlerAdapter 处理器适配器。
 
@@ -3800,7 +3800,7 @@ public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherS
 <Connector connectionTimeout="20000" port="8080" protocol="HTTP/1.1" redirectPort="8443"/>
 ```
 
-在 Connector 中加上<b>URIEncoding="UTF-8"</b>
+在 Connector 中加上 <b>URIEncoding="UTF-8"</b>
 
 ```xml
 <Connector URIEncoding="UTF-8" connectionTimeout="20000" port="8080" protocol="HTTP/1.1" redirectPort="8443"/>
@@ -3810,7 +3810,7 @@ public class MyWebServletInitializer extends AbstractAnnotationConfigDispatcherS
 
 ### 响应乱码
 
-> 方式一，在@RequestMapping中加上，<b>produces="text/html;charset=utf-8"</b>
+> 方式一，在 @RequestMapping 中加上，<b>produces="text/html;charset=utf-8"</b>
 
 ```java
 @ResponseBody

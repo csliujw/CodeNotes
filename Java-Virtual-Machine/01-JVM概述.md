@@ -1,6 +1,6 @@
 # JVM概述
 
-参考视频：[**解密JVM【黑马程序员出品】**](https://www.bilibili.com/video/BV1yE411Z7AP)
+参考视频：[<b>解密 JVM 【黑马程序员出品】</b>](https://www.bilibili.com/video/BV1yE411Z7AP)
 
 参考书籍：深入理解Java虚拟机、Java虚拟机规范（Java8）
 

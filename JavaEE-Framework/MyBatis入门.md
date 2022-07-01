@@ -237,7 +237,7 @@ public interface UserMapper {
 }
 ```
 
-<div align="center"><img src="img/image-20220515171601297.png"></div>
+<div align="center"><img src="img/ibatis/image-20220515171601297.png"></div>
 
 ### 集成Druid
 

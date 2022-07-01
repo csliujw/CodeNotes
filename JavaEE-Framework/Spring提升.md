@@ -256,7 +256,7 @@ IOC 的启动过程包含三大部分
     - BeanDefinition 是 POJO 对象在 IOC 容器中的抽象。
 - 向 IOC 容器注册 BeanDefinition：通过调用 BeanDefinitionRegistry 接口实现。
     - 会将 BeanDefinition 注册到一个 HashMap 中。
-- Bean 定义的1载入和依赖注入是两个独立的过程。依赖注入一般发生在应用第一次通过 getBean 向容器索取 Bean 的时候。也可以通过配置修改为初始化的时候就完成依赖注入。
+- Bean 定义的载入和依赖注入是两个独立的过程。依赖注入一般发生在应用第一次通过 getBean 向容器索取 Bean 的时候。也可以通过配置修改为初始化的时候就完成依赖注入。
 
 ## BeanDefinition 的  Resource 定位
 

@@ -132,13 +132,13 @@ Main-Class 指定了，我们通过 java -jar 命令运行 jar 包的时候，�
 
 - 执行命令进行打包 `jar -cvfm hello.jar META-INF/MANIFEST.MF com`
 
-<div align="center"><img src="img/image-20220309212415113.png"></div>
+<div align="center"><img src="img/boot/image-20220309212415113.png"></div>
 
 ## Spring Boot 的 jar
 
 下面我们再来看看 Spring Boot 的 Jar 是怎么样的。我们用 maven 将一个 Spring Boot 项目打包成 jar 包，然后执行。（maven->lifecycle->package）
 
-<div align="center"><img src="img/image-20220309214245238.png"></div>
+<div align="center"><img src="img/boot/image-20220309214245238.png"></div>
 
 我们将 jar 包解压看一下，看下 jar 包中都有些什么内容。发现里面也有 MANIFEST.MF 文件
 
@@ -168,15 +168,15 @@ Spring-Boot-Layers-Index: BOOT-INF/layers.idx
 
 我们也可以查阅下 Spring Boot 官网，看下官网是如何解释 Spring Boot 中 jar 的文件组成的：
 
-<div align="center"><img src="img/image-20220309213211254.png"></div>
+<div align="center"><img src="img/boot/image-20220309213211254.png"></div>
 
-<div align="center"><img src="img/image-20220309213230506.png"></div>
+<div align="center"><img src="img/boot/image-20220309213230506.png"></div>
 
  MANIFEST.MF 中有 Main-Class 和 Start-Class 属性。Main-Class 填写一个固定的类，Start-Class 填写我们写的加了@SpringBootApplication 注解的类。
 
 我们解压 jar 包，使用 java 命令运行 `org.springframework.boot.loader.JarLauncher`。
 
-<div align="center"><img src="img/image-20220309215709632.png"></div>
+<div align="center"><img src="img/boot/image-20220309215709632.png"></div>
 
 我们执行 `java org.springframework.boot.loader.JarLauncher` 发现，`com.example.demo.DemoApplication` 也启动了。可以推断，是 JarLauncher 加载了 DemoApplication 类。
 
@@ -2215,7 +2215,7 @@ public class Hello{
 </bean>
 ```
 
-- 部署 DispatcherServlet [在web.xml中配置]
+- 部署 DispatcherServlet [在 web.xml 中配置]
 
 ```xml
 <servlet>
@@ -2256,13 +2256,13 @@ public class Hello{
 </plugin>
 ```
 
-**小提示**：Spring Boot spring-boot-starter-parent 中的 spring-boot-dependencies 有定义各个包需要的版本！
+<b>小提示</b>：Spring Boot spring-boot-starter-parent 中的 spring-boot-dependencies 有定义各个包需要的版本！
 
 `maven命令 [打包]：mvn -Dmaven.test.skpi -u clean package`
 
 ### 重新认识
 
-Spring Framework时代的重新认识。
+Spring Framework 时代的重新认识。
 
 - Web MVC 核心组件
 - Web MVC 注解驱动
@@ -2283,21 +2283,21 @@ Spring Framework时代的重新认识。
 
 | Bean type                                                    | Explanation                                                  |
 | :----------------------------------------------------------- | :----------------------------------------------------------- |
-| `HandlerMapping`                                             | 映射请求（Request）到处理器（Handler）加上器关联的拦截器（HandlerInterceptor）列表，其映射关系基于不同的`HandlerMapping`实现的一些标注细节。其中两种主要`HandlerMapping`实现，RequestMappingHandlerMapping支持标注`@RequestMapping`的方法，`SimpleUrlHandlerMapping`维护精确的URI路径与处理器的映射。 |
-| `HandlerAdapter`                                             | ‎帮助`DispatcherServlet`调用请求处理器（Handler），无需关注其中实际的调用细节。比如，调用注解实现的`Controller`需要解析其关联的注解。`HandlerAdapter`的主要目的是为了屏蔽与`DispatcherServlet`之间的诸多细节。 |
-| [`HandlerExceptionResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-exceptionhandlers) | 解析异常，可能策略是将异常处理映射到其他处理器（Handlers）、或到某个HTML错误页面，或者其他。 |
-| [`ViewResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-viewresolver) | 从处理器（Handler）返回字符类型的逻辑视图名称解析出实际的View对象，该对象将渲染后的内容输出到HTTP响应中。 |
-| [`LocaleResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-localeresolver), [LocaleContextResolver](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-timezone) | 从客户端解析出Locale，为其实现国际化视图。                   |
-| [`MultipartResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-multipart) | 解析多部分请求（如Web浏览器文件上传）的抽象实现。            |
+| `HandlerMapping`                                             | 映射请求（Request）到处理器（Handler）加上器关联的拦截器（HandlerInterceptor）列表，其映射关系基于不同的 `HandlerMapping` 实现的一些标注细节。其中两种主要 `HandlerMapping` 实现，RequestMappingHandlerMapping支持标注 `@RequestMapping` 的方法，`SimpleUrlHandlerMapping` 维护精确的 URI 路径与处理器的映射。 |
+| `HandlerAdapter`                                             | ‎帮助 `DispatcherServlet` 调用请求处理器（Handler），无需关注其中实际的调用细节。比如，调用注解实现的 `Controller` 需要解析其关联的注解。`HandlerAdapter` 的主要目的是为了屏蔽与 `DispatcherServlet` 之间的诸多细节。 |
+| [`HandlerExceptionResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-exceptionhandlers) | 解析异常，可能策略是将异常处理映射到其他处理器（Handlers）、或到某个 HTML 错误页面，或者其他。 |
+| [`ViewResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-viewresolver) | 从处理器（Handler）返回字符类型的逻辑视图名称解析出实际的 View 对象，该对象将渲染后的内容输出到 HTTP 响应中。 |
+| [`LocaleResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-localeresolver), [LocaleContextResolver](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-timezone) | 从客户端解析出 Locale，为其实现国际化视图。                  |
+| [`MultipartResolver`](https://docs.spring.io/spring-framework/docs/current/reference/html/web.html#mvc-multipart) | 解析多部分请求（如 Web 浏览器文件上传）的抽象实现。          |
 
-Spring Web MVC的运行流程参看MVC相关笔记。
+Spring Web MVC 的运行流程参看 MVC 相关笔记。
 
 #### Web MVC注解驱动
 
 > 基本配置步骤：具体看我的MVC笔记奥
 
-- 注解配置：@Configuration（Spring范式注解）
-- 组件激活：@EnableWebMvc（Spring模块装配）
+- 注解配置：@Configuration（Spring 范式注解）
+- 组件激活：@EnableWebMvc（Spring 模块装配）
 - 自定义组件：WebMvcConfigurer（Spring Bean）
 
 > 常用注解
@@ -2308,20 +2308,20 @@ Spring Web MVC的运行流程参看MVC相关笔记。
 - 校验参数：@Valid、@Validated
 - 注解处理：@ExceptionHandler
 - 切面通知：@ControllerAdvice
-  - @Component的专门化，用于声明@ExceptionHandler、@InitBinder或@ModelAttribute方法的类，以便在多个@Controller类之间共享。
-  - 结合@ModelAttribute注解使用。具体看MVC相关笔记。
-    - 印象中，@ModelAttribute修饰的方法数据会放在ModelAndView里。
+  - @Component 的专门化，用于声明 @ExceptionHandler、@InitBinder 或 @ModelAttribute 方法的类，以便在多个 @Controller 类之间共享。
+  - 结合 @ModelAttribute 注解使用。具体看 MVC 相关笔记。
+    - 印象中，@ModelAttribute 修饰的方法数据会放在 ModelAndView 里。
 
 #### Web MVC自动装配
 
 - Servlet 依赖 3.0+
 - Servlet SPI：ServletContainerInitializer
-- Spring适配：SpringServletContainerInitializer
+- Spring 适配：SpringServletContainerInitializer
 - Spring SPI：WebApplicationInitializer
 - 编程驱动：AbstractDispatcherServletInitializer
 - 注解驱动：AbstractAnnotationConfigDispatcherServletInitializer
 
-Servlet 3.1 规范：Servlet启动的时候，onStartup方法会被回调。什么意思呢？看看SPI接口。
+Servlet 3.1 规范：Servlet 启动的时候，onStartup 方法会被回调。什么意思呢？看看 SPI 接口。
 
 ```java
 public interface ServletContainerInitializer {
@@ -2330,9 +2330,7 @@ public interface ServletContainerInitializer {
 }
 ```
 
-----
-
-SpringServletcontainerInitializer实现了这个接口
+SpringServletcontainerInitializer 实现了这个接口
 
 ```java
 // 筛选器 实现了WebApplicationInitializer的类才会被调用onStartup方法
@@ -2404,15 +2402,15 @@ public class SpringServletContainerInitializer implements ServletContainerInitia
 }
 ```
 
-@HandlesTypes的解释<a href="https://www.cnblogs.com/hello-shf/p/10926271.html">相关博客</a>
+@HandlesTypes 的解释<a href="https://www.cnblogs.com/hello-shf/p/10926271.html">相关博客</a>
 
-　　简单来说，当实现了Servlet3.0规范的容器（比如tomcat7及以上版本）启动时，通过SPI扩展机制自动扫描所有已添加的jar包下的META-INF/services/javax.servlet.ServletContainerInitializer中指定的全路径的类，并实例化该类，然后回调META-INF/services/javax.servlet.ServletContainerInitializer文件中指定的ServletContainerInitializer的实现类的onStartup方法。 如果该类存在@HandlesTypes注解，并且在@HandlesTypes注解中指定了我们感兴趣的类，所有实现了这个类的onStartup方法将会被调用。
+简单来说，当实现了 Servlet3.0 规范的容器（比如 tomcat7 及以上版本）启动时，通过 SPI 扩展机制自动扫描所有已添加的jar包下的META-INF/services/javax.servlet.ServletContainerInitializer 中指定的全路径的类，并实例化该类，然后回调 META-INF/services/javax.servlet.ServletContainerInitializer 文件中指定的 ServletContainerInitializer 的实现类的 onStartup 方法。 如果该类存在 @HandlesTypes 注解，并且在 @HandlesTypes 注解中指定了我们感兴趣的类，所有实现了这个类的 onStartup 方法将会被调用。
 
-　　再直白一点来说，存在web.xml的时候，Servlet容器会根据web.xml中的配置初始化我们的jar包（也可以说web.xml是我们的jar包和Servlet联系的中介）。而在Servlet3.0容器初始化时会调用jar包META-INF/services/javax.servlet.ServletContainerInitializer中指定的类的实现（javax.servlet.ServletContainerInitializer中的实现替代了web.xml的作用，而所谓的在@HandlesTypes注解中指定的感兴趣的类，可以理解为具体实现了web.xml的功能，当然也可以有其他的用途）
+再直白一点来说，存在 web.xml 的时候，Servlet 容器会根据 web.xml 中的配置初始化我们的 jar 包（也可以说 web.xml 是我们的 jar 包和 Servlet 联系的中介）。而在 Servlet3.0 容器初始化时会调用 jar 包 META-INF/services/javax.servlet.ServletContainerInitializer 中指定的类的实现（javax.servlet.ServletContainerInitializer 中的实现替代了 web.xml 的作用，而所谓的在 @HandlesTypes 注解中指定的感兴趣的类，可以理解为具体实现了 web.xml 的功能，当然也可以有其他的用途）
 
 ##### Servlet SPI
 
-配合@HandlesType
+配合 @HandlesType
 
 ##### Spring适配
 
@@ -2433,11 +2431,8 @@ SpringServletContainerInitializer
  * DispatcherServlet配置类，配置扫描web（Controller类）包
  */
 @ComponentScan(basePackages = "com.example.demo.controller")
-public class DispatcherServletConfiguration {
-}
+public class DispatcherServletConfiguration {}
 ```
-
-----
 
 ```java
 public class DefaultAnnotationConfigDispatcherServletInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
@@ -2456,13 +2451,12 @@ public class DefaultAnnotationConfigDispatcherServletInitializer extends Abstrac
     protected String[] getServletMappings() {
         return new String[0];
     }
-
 }
 ```
 
 ## 简化Web MVC
 
-Spring Boot时代的简化
+Spring Boot 时代的简化
 
 - 完全自动装配
 - 装配条件
@@ -2471,8 +2465,8 @@ Spring Boot时代的简化
 ### 完全自动装配
 
 - DispatcherServlet：DispatcherServletAutoConfiguration
-- 替换@EnableWebMvc：WebMvcAutoConfiguration
-- Servlet容器：ServletWebServerFactoryAutoConfiguration（通过Spring Bean的方式运行）
+- 替换 @EnableWebMvc：WebMvcAutoConfiguration
+- Servlet 容器：ServletWebServerFactoryAutoConfiguration（通过 Spring Bean 的方式运行）
 
 把这几个类的源码看一下。
 
@@ -2484,16 +2478,12 @@ Spring Boot时代的简化
 
 ### 装配条件
 
-- Web类型：Servlet
-- API依赖：Servlet、Spring Web MVC
-- Bean依赖：WebMvcConfigurationSupport
+- Web 类型：Servlet
+- API 依赖：Servlet、Spring Web MVC
+- Bean 依赖：WebMvcConfigurationSupport
 
 ### 外部化配置
 
-- Web MVC配置：WebMvcProperties
+- Web MVC 配置：WebMvcProperties
 - 资源配置：ResourceProperties
-
-
-
-
 

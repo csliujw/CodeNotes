@@ -27,7 +27,7 @@
 
 Ctrl + Alt + U 显示类图的继承关系
 
-<div align="center"><img src="img/image-20220325235132737.png"></div>
+<div align="center"><img src="img/spring-senior/image-20220325235132737.png"></div>
 
 #### 收获💡
 
@@ -190,19 +190,19 @@ graph LR
 可用 --> 销毁
 ```
 
-<b>创建前后的增强<b>
+<b>创建前后的增强</b>
 
 * postProcessBeforeInstantiation
   * 这里返回的对象若不为 null 会替换掉原本的 bean，并且仅会走 postProcessAfterInitialization 流程
 * postProcessAfterInstantiation
   * 这里如果返回 false 会跳过依赖注入阶段
 
-<b>依赖注入前的增强<b>
+<b>依赖注入前的增强</b>
 
 * postProcessProperties
   * 如 @Autowired、@Value、@Resource 
 
-<b>初始化前后的增强<b>
+<b>初始化前后的增强</b>
 
 * postProcessBeforeInitialization
   * 这里返回的对象会替换掉原本的 bean
@@ -211,7 +211,7 @@ graph LR
   * 这里返回的对象会替换掉原本的 bean
   * 如代理增强
 
-<b>销毁之前的增强<b>
+<b>销毁之前的增强</b>
 
 * postProcessBeforeDestruction
   * 如 @PreDestroy 
@@ -643,7 +643,7 @@ public class E {
 }
 ```
 
-> <b>*注意<b>*
+> <b>注意</b>
 >
 > * @Lazy 加在也可以加在成员变量上，但加在 set 方法上的目的是可以观察输出，加在成员变量上就不行了
 > * @Autowired 加在 set 方法的目的类似
@@ -761,7 +761,7 @@ proxy after...
 
 #### 收获💡
 
-* jdk 动态代理要求目标<b>必须<b>实现接口，生成的代理类实现相同接口，因此代理与目标之间是平级兄弟关系
+* jdk 动态代理要求目标<b>必须</b>实现接口，生成的代理类实现相同接口，因此代理与目标之间是平级兄弟关系
 
 #### 演示2 - cglib 代理
 
@@ -1257,7 +1257,7 @@ MethodInvocation 的编程技巧在实现拦截器、过滤器时能用上
 
 ##### 代码参考
 
-<b>org.springframework.aop.framework.autoproxy.A19<b>
+<b>org.springframework.aop.framework.autoproxy.A19</b>
 
 #### 收获💡
 
@@ -1300,7 +1300,7 @@ RequestMappingHandlerMapping 与 RequestMappingHandlerAdapter 俩是一对，分
 
 ##### 代码参考
 
-<b>com.itheima.a20.TokenArgumentResolver<b/> ，<b>com.itheima.a20.YmlReturnValueHandler</b>
+<b>com.itheima.a20.TokenArgumentResolver</b> ，<b>com.itheima.a20.YmlReturnValueHandler</b>
 
 #### 收获💡
 
