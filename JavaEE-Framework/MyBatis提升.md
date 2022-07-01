@@ -1,4 +1,4 @@
-# MyBatis源码 Qiuck Start
+# MyBatis源码Qiuck Start
 
 ## MyBatis 执行体系
 

@@ -1,25 +1,49 @@
 # 快速入门
 
-## Spring Boot介绍
+## 注解补充
 
-能快速创建出生产级别的 Spring 应用
+@Inherited 元注解，被该元注解修饰的注解，如果父类上有被 @Inherited 修饰的注解，那么子类可以继承到这个注解。
+
+```java
+import java.lang.annotation.*;
+
+@Inherited
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Demo {}
+```
+
+```java
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+
+// 测试子类继承注解
+public class ExtendAnnotation {
+    public static void main(String[] args) {
+        Annotation[] annotations =
+                Son.class.getAnnotations();
+        Arrays.stream(annotations).forEach(System.out::println);
+        // @com.ex.anno.Demo() 子类继承到了父类的注解 @Demo
+    }
+}
+
+@Demo
+class Father{}
+class Son extends Father{}
+```
+
+## 介绍
+
+Spring Boot 是整合 Spring 技术栈的一站式框架，是简化 Spring 技术栈的快速开发脚手架。，能快速创建出生产级别的 Spring 应用
 
 > 优点
 
-- Create stand-alone Spring applications
-    - 创建独立 Spring 应用
-- Embed Tomcat, Jetty or Undertow directly (no need to deploy WAR files)
-    - 内嵌 web 服务器
-- Provide opinionated 'starter' dependencies to simplify your build configuration
-    - 自动 starter 依赖，简化构建配置
-- Automatically configure Spring and 3rd party libraries whenever possible
-    - 自动配置 Spring 以及第三方功能
-- Provide production-ready features such as metrics, health checks, and externalized configuration
-    - 提供生产级别的监控、健康检查及外部化配置
-- Absolutely no code generation and no requirement for XML configuration
-    - 无代码生成、无需编写 XML
-
-Spring Boot 是整合 Spring 技术栈的一站式框架，是简化 Spring 技术栈的快速开发脚手架。
+- Create stand-alone Spring applications 【创建独立 Spring 应用】
+- Embed Tomcat, Jetty or Undertow directly (no need to deploy WAR files)【内嵌 web 服务器】
+- Provide opinionated 'starter' dependencies to simplify your build configuration【自动 starter 依赖，简化构建配置】
+- Automatically configure Spring and 3rd party libraries whenever possible【自动配置 Spring 以及第三方功能】
+- Provide production-ready features such as metrics, health checks, and externalized configuration【提供生产级别的监控、健康检查及外部化配置】
+- Absolutely no code generation and no requirement for XML configuration【无代码生成、无需编写 XML】
 
 > 缺点
 
@@ -27,7 +51,7 @@ Spring Boot 是整合 Spring 技术栈的一站式框架，是简化 Spring 技�
 
 - 封装太深，内部原理复杂，不易精通
 
-## 创建Spring Boot项目
+## 创建项目
 
 ### IDEA 创建项目
 
@@ -52,14 +76,11 @@ Spring Boot 是整合 Spring 技术栈的一站式框架，是简化 Spring 技�
 编写一个主程序；启动 Spring Boot 应用
 
 ```java
-/**
- *  @SpringBootApplication 来标注一个主程序类，说明这是一个Spring Boot应用
- */
+// @SpringBootApplication 来标注一个主程序类，说明这是一个Spring Boot应用
 @SpringBootApplication
 public class HelloWorldMainApplication {
 
     public static void main(String[] args) {
-
         // Spring应用启动起来
         SpringApplication.run(HelloWorldMainApplication.class,args);
     }
@@ -69,10 +90,8 @@ public class HelloWorldMainApplication {
 编写相关的 Controller、Service
 
 ```java
-@Controller
+@RestController // @RestController = @Controller + @ResponseBody 
 public class HelloController {
-
-    @ResponseBody
     @RequestMapping("/hello")
     public String hello(){
         return "Hello World!";
@@ -108,7 +127,7 @@ public class HelloController {
 
 > 官方骨架创建遇到的问题
 
-- 有时候 IDEA 创建项目总是出错，于是直接取官网选好依赖，下载过来，导入到 IDEA 中。
+- 有时候 IDEA 创建项目总是出错，我们可以直接去官网选好依赖，下载过来，导入到 IDEA 中。
 
 - 导入后用 maven 的 Reload All Maven Projects 导入所有的依赖，导入后发现下面这个配置文件报错。
 
@@ -122,11 +141,11 @@ public class HelloController {
 加个对应的版本号就可以了
 
 ```xml
-  <plugin>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-maven-plugin</artifactId>
-      <version>2.4.2</version>
-  </plugin>  
+<plugin>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-maven-plugin</artifactId>
+    <version>2.4.2</version>
+</plugin>  
 ```
 
 ### 阿里云镜像创建
@@ -135,13 +154,13 @@ public class HelloController {
 
 <div align="center"><img src="img/boot/image-20211122163605950.png"></div>
 
-阿里为了便于自己公司开发使用，特此在依赖坐标中添加了一些阿里自主的技术，也是为了推广自己的技术吧，所以在依赖选择列表中，你有了更多的选择。此外，阿里提供的地址更符合国内开发者的使用习惯，里面有一些 Spring Boot 官网上没有给出的坐标。
+阿里为了便于自己公司开发使用，特此在依赖坐标中添加了一些阿里自主的技术，所以在依赖选择列表中，我们有了更多的选择。此外，阿里提供的地址更符合国内开发者的使用习惯，里面有一些 Spring Boot 官网上没有给出的坐标。
 
 <div align="center"><img src="img/boot/image-20211122163937408.png"></div>
 
 阿里云地址默认创建的 Spring Boot 工程版本是 <font color="#ff0000"><b>2.4.1</b></font>，所以如果你想更换其他的版本，创建项目后在 pom 文件中手工修改即可，别忘了刷新一下，加载新版本信息。
 
-<font color="#ff0000"><b>注意</b></font>：阿里云提供的工程创建地址初始化完毕后和使用 Spring Boot 官网创建出来的工程略有区别，主要是在配置文件的形式上有区别,这个信息在 Spring Boot 程序的执行流程时讲解。
+<font color="#ff0000"><b>注意</b></font>：阿里云提供的工程创建地址初始化完毕后和使用 Spring Boot 官网创建出来的工程略有区别，主要是在配置文件的形式上有区别，这个信息在 Spring Boot 程序的执行流程时讲解。
 
 ### 目录结构说明
 
@@ -150,9 +169,7 @@ public class HelloController {
 - resources 文件夹中目录结构
     - static：保存静态资源；js css img
     - templates：保存页面资源；Spring Boot 默认不支持 jsp
-    - mybatis 的配置文件之类的需要放在 resources 文件夹下面。resources 是资源的根路径。就把 resources 当成编译后的 classes 文件夹吧。
-
-resources下的文件最终都会被部署到 classpath 文件下
+    - mybatis 的配置文件之类的需要放在 resources 文件夹下面。resources 是资源的根路径。可以把 resources 当成编译后的 classes 文件夹。resources 下的文件最终都会被部署到 classpath 文件下
 
 ### 启动类&热部署设置
 
@@ -198,7 +215,7 @@ Spring Boot 通过配置文件 application.properties 就可以修改默认的�
 server.port=80
 ```
 
-以前修改端口在 tomcat 服务器的配置文件中改，现在在 Spring Boot 专用的配置文件中改，<b>简化开发者配置的书写位置，集中管理。</b>
+以前需要在 tomcat 服务器的配置文件中修改端口号，现在可以在 Spring Boot 专用的配置文件中改，<b>简化开发者配置的书写位置，集中管理。</b>
 
 1. Spring Boot 程序可以在 application.properties 文件中进行属性配置
 2. application.properties 文件中只要输入要配置的属性关键字就可以根据提示进行设置
@@ -206,17 +223,17 @@ server.port=80
 
 <b>总结</b>
 
-<b>SpringBoot 默认配置文件是application.properties<b>
+<b>Spring Boot 默认配置文件是 application.properties</b>
 
 做完了端口的配置，趁热打铁，再做几个配置，目前项目启动时会显示一些日志信息，就来改一改这里面的一些设置。
 
-<b>关闭运行日志图表（banner)<b>
+<b>关闭运行日志图表（banner)</b>
 
 ```properties
 spring.main.banner-mode=off
 ```
 
-<b>设置运行日志的显示级别<b>
+<b>设置运行日志的显示级别</b>
 
 ```properties
 logging.level.root=debug
@@ -226,13 +243,13 @@ logging.level.root=debug
 
 我们现在配置了 3 个信息，但是又有新的问题了。这个配置是随便写的吗？什么都能配？有没有一个东西显示所有能配置的项呢？此外这个配置和什么东西有关呢？会不会因为我写了什么东西以后才可以写什么配置呢？比如我现在没有写数据库相关的东西，能否配置数据呢？一个一个来，先说第一个问题，都能配置什么。
 
-打开 Spring Boot 的官网，找到 Spring Boot 官方文档，打开查看附录中的 Application Properties 就可以获取到对应的配置项了，网址奉上：https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#application-properties
+打开 Spring Boot 的官网，找到 Spring Boot 官方文档，打开查看附录中的 Application Properties 就可以获取到对应的配置项了：https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#application-properties
 
-能写什么的问题解决了，再来说第二个问题，这个配置项和什么有关。在pom中注释掉导入的 spring-boot-starter-web，然后刷新工程，你会发现配置的提示消失了。闹了半天是设定使用了什么技术才能做什么配置。也合理，不然没有使用对应技术，配了也是白配。
+能写什么的问题解决了，再来说第二个问题，这个配置项和什么有关。在 pom 中注释掉导入的 spring-boot-starter-web，然后刷新工程，你会发现配置的提示消失了。设定使用了什么技术才能做什么配置。
 
 <font color="#f0f"><b>温馨提示</b></font>
 
-所有的 starter 中都会依赖下面这个 starter，叫做 spring-boot-starter。这个 starter 是所有的 Spring Boot 的 starter 的基础依赖，里面定义了 Spring Boot 相关的基础配置，关于这个 starter 我们到开发应用篇和原理篇中再深入讲解。
+所有的 starter 中都会依赖下面这个 starter，叫做 spring-boot-starter。这个 starter 是所有的 Spring Boot 的 starter 的基础依赖，里面定义了 Spring Boot 相关的基础配置，关于这个 starter 深入理解请看原理篇。
 
 ```xml
 <dependency>
@@ -250,14 +267,14 @@ logging.level.root=debug
 
 ### 配置文件分类
 
-现在已经能够进行 Spring Boot 相关的配置了，但是 properties 格式的配置写起来总是觉得看着不舒服，所以就期望存在一种书写起来更简便的配置格式提供给开发者使用。有吗？还真有，Spring Boot 除了支持 properties 格式的配置文件，还支持另外两种格式的配置文件。三种配置文件格式分别如下:
+Spring Boot 除了支持 properties 格式的配置文件，还支持另外两种格式的配置文件。三种配置文件格式分别如下:
 
 - properties 格式
 - yml 格式
 - yaml 格式
 
 
-从知识角度来说，要学，从开发角度来说，不用学。因为 Spring Boot 的配置在 Idea 工具下有提示，跟着提示走就行了。下面列举三种不同文件格式配置相同的属性范例，先了解一下。
+从知识角度来说，要学，从开发角度来说，不用学。因为 Spring Boot 的配置在 Idea 工具下有提示，跟着提示走就行了。下面列举三种不同文件格式配置相同的属性范例，了解即可。
 
 - application.properties（properties 格式）
 
@@ -279,7 +296,7 @@ server:
   port: 82
 ```
 
-仔细看会发现 yml 格式和 yaml 格式除了文件名后缀不一样，格式完全一样，是这样的，yml 和 yaml 文件格式就是一模一样的，只是文件后缀不同，所以可以合并成一种格式来看。那对于这三种格式来说，以后用哪一种比较多呢？记清楚，以后基本上都是用 yml 格式的，本课程后面的所有知识都是基于 yml 格式来制作的，以后在企业开发过程中用这个格式的机会也最多，一定要重点掌握。
+yml 格式和 yaml 格式只是文件名后缀不一样，格式完全一样。<b style="color:orange">基本上都是用 yml 格式，要重点掌握。</b>
 
 <b>总结</b>
 
@@ -288,11 +305,11 @@ server:
     - <b>yml</b>（主流格式）
     - yaml
 
-<b>思考</b>：现在我们已经知道使用三种格式都可以做配置了，万一三个都写了，按什么优先级来？
+<b>思考</b>：如果三种格式的文件都写了，按什么优先级来？
 
 #### 配置文件优先级
 
-其实三个文件如果共存的话，谁生效说的就是配置文件加载的优先级别。先说一点，虽然以后这种情况很少出现，但是这个知识还是可以学习一下的。我们就让三个配置文件书写同样的信息，比如都配置端口，然后我们让每个文件配置的端口号都不一样，最后启动程序后看启动端口是多少就知道谁的加载优先级比较高了。
+三个文件共存出现的情况很少，但是这个知识还是可以学习一下。我们在三个配置文件书写同样的信息，比如都配置端口，然后我们让每个文件配置的端口号都不一样，最后启动程序后看启动端口是多少就知道谁的加载优先级比较高了。
 
 - application.properties（properties 格式）
 
@@ -348,7 +365,7 @@ server:
   port: 82
 ```
 
-我们发现不仅端口生效了，最终显示 80，同时其他两条配置也生效了，看来每个配置文件中的项都会生效，只不过如果多个配置文件中有相同类型的配置会优先级高的文件覆盖优先级的文件中的配置。如果配置项不同的话，所有的配置项都会生效。
+我们发现不仅端口生效了，最终显示 80，同时其他两条配置也生效了，<b style="color:orange">看来每个配置文件中的项都会生效，只不过如果多个配置文件中有相同类型的配置会优先级高的文件覆盖优先级的文件中的配置。如果配置项不同的话，所有的配置项都会生效。</b>
 
 <b>总结</b>
 
@@ -356,8 +373,6 @@ server:
 2. 不同配置文件中相同配置按照加载优先级相互覆盖，不同配置文件中不同配置全部保留 
 
 #### 自动提示功能消失解决方案
-
-在做程序的过程中，可能会基于各种各样的原因导致配置文件中没有提示，下面说一下如果自动提示功能消失了怎么解决。
 
 自动提示功能不是 Spring Boot 技术给我们提供的，是我们在 Idea 工具下编程，这个编程工具给我们提供的。自动提示功能消失的原因还是蛮多的，如果想解决这个问题，就要知道为什么会消失，大体原因有如下 2 种：
 
@@ -404,10 +419,9 @@ Spring Boot 的配置以后主要使用 yml 结尾的这种文件格式，并且
 YAML（YAML Ain't Markup Language），一种数据序列化格式。具有容易阅读、容易与脚本语言交互、以数据为核心，重数据轻格式的特点。常见的文件扩展名有两种：
 
 - .yml 格式（主流）
-
 - .yaml 格式
 
-    具体的语法格式要求如下：
+具体的语法格式要求如下：
 
 1. 大小写敏感
 2. 属性层级关系使用多行描述，<b>每行结尾使用冒号结束</b>
@@ -415,7 +429,7 @@ YAML（YAML Ain't Markup Language），一种数据序列化格式。具有容�
 4. 属性值前面添加空格（属性名与属性值之间使用冒号+空格作为分隔）
 5. #号 表示注释
 
-上述规则不要死记硬背，按照书写习惯慢慢适应，并且在Idea下由于具有提示功能，慢慢适应着写格式就行了。核心的一条规则要记住，<font color="#ff0000"><b>数据前面要加空格与冒号隔开</b></font>。
+上述规则不要死记硬背，按照书写习惯慢慢适应，并且在 Idea 下由于具有提示功能，慢慢适应着写格式就行了。核心的一条规则要记住，<font color="#ff0000"><b>数据前面要加空格与冒号隔开</b></font>。
 
 下面列出常见的数据书写格式，熟悉一下
 
@@ -481,7 +495,7 @@ map:
 
 <b>思考</b>
 
-现在我们已经知道了 yaml 具有严格的数据格式要求，并且已经可以正确的书写 yaml 文件了，那这些文件书写后其实是在定义一些数据。这些数据是给谁用的呢？大部分是 Spring Boot 框架内部使用，但是如果我们想配置一些数据自己使用，能不能用呢？答案是可以的，那如何读取 yaml 文件中的数据呢？咱们下一节再说。
+现在我们已经知道了 yaml 具有严格的数据格式要求，并且已经可以正确的书写 yaml 文件了，那这些文件书写后其实是在定义一些数据。这些数据是给谁用的呢？大部分是 Spring Boot 框架内部使用，但是如果我们想配置一些数据自己使用，能不能用呢？答案是可以的，那如何读取 yaml 文件中的数据呢？
 
 ### yaml数据读取
 
@@ -489,7 +503,7 @@ map:
 
 #### 读取单一数据
 
-yaml 中保存的单个数据，可以使用 Spring 中的注解 @Value 读取单个数据，属性名引用方式：<font color="#ff0000"><b>${一级属性名.二级属性名……}</b></font>
+<span style="color:orange">yaml 中保存的单个数据，可以使用 Spring 中的注解 @Value 读取单个数据</span>，属性名引用方式：<font color="#ff0000"><b>${一级属性名.二级属性名……}</b></font>
 
 <div align="center"><img src="img/boot/image-20211126180433356.png" style="zoom:80%;" /></div>
 
@@ -502,11 +516,11 @@ yaml 中保存的单个数据，可以使用 Spring 中的注解 @Value 读取�
 
 #### 读取全部数据
 
-读取单一数据可以解决读取数据的问题，但是如果定义的数据量过大，这么一个一个书写肯定会累死人的，Spring Boot 提供了一个对象，能够把所有的数据都封装到这一个对象中，这个对象叫做 Environment，使用自动装配注解可以将所有的 yaml 数据封装到这个对象中
+读取单一数据可以解决读取数据的问题，但是如果定义的数据量过大 @Value 就过于麻烦。Spring Boot 提供了一个对象，能够把所有的数据都封装到这一个对象中，这个对象叫做 Environment，使用自动装配注解可以将所有的 yaml 数据封装到这个对象中
 
 <div align="center"><img src="img/boot/image-20211126180738569.png" style="zoom:80%;" /></div>
 
-数据封装到了 Environment 对象中，获取属性时，通过 Environment 的接口操作进行，具体方法是 getProperties（String），参数填写属性名即可
+数据封装到了 Environment 对象中，获取属性时，通过 Environment 的接口操作进行，具体方法是 getProperties(String)，参数填写属性名即可
 
 <b>总结</b>
 
@@ -515,17 +529,17 @@ yaml 中保存的单个数据，可以使用 Spring 中的注解 @Value 读取�
 
 #### 读取对象数据
 
-单一数据读取书写比较繁琐，全数据读取封装的太厉害了，每次拿数据还要一个一个的 getProperties(), 总之用起来都不是很舒服。由于 Java 是一个面向对象的语言，很多情况下，我们会将一组数据封装成一个对象。Spring Boot 也提供了可以将一组yaml 对象数据封装一个 Java 对象的操作
+单一数据读取书写比较繁琐，全数据读取封装的太厉害了，每次拿数据还要一个一个的 getProperties(), 总之用起来都不是很舒服。由于 Java 是一个面向对象的语言，很多情况下，我们会将一组数据封装成一个对象。<span style="color:orange">Spring Boot 也提供了可以将一组 yaml 对象数据封装一个 Java 对象的操作。</span>
 
 首先定义一个对象，并将该对象纳入 Spring 管控的范围，也就是定义成一个 bean，然后使用注解 @ConfigurationProperties 指定该对象加载哪一组 yaml 中配置的信息。
 
 <div align="center"><img src="img/boot/image-20211126181126382.png" alt="image-20211126181126382" style="zoom:80%;" /></div>
 
-这个 @ConfigurationProperties 必须告诉他加载的数据前缀是什么，这样指定前缀下的所有属性就封装到这个对象中。记得数据属性名要与对象的变量名一一对应啊，不然没法封装。其实以后如果你要定义一组数据自己使用，就可以先写一个对象，然后定义好属性，下面到配置中根据这个格式书写即可。
+<span style="color:orange">这个 @ConfigurationProperties 必须告诉他加载的数据前缀是什么，这样指定前缀下的所有属性就封装到这个对象中。</span>记得数据属性名要与对象的变量名一一对应，不然没法封装。其实以后如果你要定义一组数据自己使用，就可以先写一个对象，然后定义好属性，下面到配置中根据这个格式书写即可。
 
 <div align="center"><img src="img/boot/image-20211126181423432.png"></div>
 
-<font color="#f0f"><b>温馨提示</b></font>：细心的小伙伴会发现一个问题，自定义的这种数据在 yaml 文件中书写时没有弹出提示，咱们到原理篇再揭秘如何弹出提示。
+<font color="#f0f"><b>温馨提示</b></font>：自定义的这种数据在 yaml 文件中书写时没有弹出提示，在原理篇再揭秘如何弹出提示。
 
 <b>总结</b>
 
@@ -573,10 +587,10 @@ lesson: "Spring\tboot\nlesson"
 
 <b>总结</b>
 
-1. 在配置文件中可以使用${属性名}方式引用属性值
+1. 在配置文件中可以使用 `${属性名}` 方式引用属性值
 2. 如果属性中出现特殊字符，可以使用双引号包裹起来作为字符解析
 
-## 配置信息的加载顺序
+### 配置信息的加载顺序
 
 - 先加载 yml
 - 再加载 yaml
@@ -595,35 +609,34 @@ lesson: "Spring\tboot\nlesson"
 </resource>
 ```
 
-# 自动配置原理
+# 基本原理
 
 ## 概述
 
 Spring Boot 父项目做依赖管理，配置了常用的三方 jar 的版本。
 
-Spring Boot 注解的层次关系，从最开始指定启动类那个 `@SpringBootApplication` 开始.
+Spring Boot 注解的层次关系如下，以指定启动类注解 `@SpringBootApplication` 为例：
 
 `@SpringBootApplication` 上有这些注解
 
 - `@SpringBootConfiguration`
-    - @Configuration,不就是Spring的那个注解吗？就是指定了他是配置类！！
+    - @Configuration, 不就是 Spring 的那个注解吗。加上这个注解就是指定它是一个配置类
 - `@EnableAutoConfiguration`，开启自动配置
     - `@AutoConfigurationPackage`
-    - `@Import(AutoConfigurationImportSelector.class)`，Import的作用是当前配置文件引入其他配置类
+    - `@Import(AutoConfigurationImportSelector.class)`，Import 的作用是当前配置文件引入其他配置类
     - `AutoConfigurationImportSelector` 这个类很重要。单独拎出来讲！
-- `@ComponentScan`，组件扫描。有这个注解的，会以加了这个注解的类所在的包为基础路径，进行类的扫描。`@SpringBootApplication` 类上打了`@ComponentScan` 注解，相当于 `@SpringBootApplication` 也有这个扫描的功能。
+- `@ComponentScan`，组件扫描。有这个注解的，会以该注解标注的类所在的包为基础路径，进行类的扫描。`@SpringBootApplication` 类上打了 `@ComponentScan` 注解，相当于 `@SpringBootApplication` 也有这个扫描的功能。
 
 ```java
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Inherited
+@Inherited // 该注解表明注解是否会被子类继承，缺省情况是不继承的。 当注解在声明时，使用了@Inherited注解，则该注解会被使用了该注解的类的子类所继承。
 @SpringBootConfiguration
 @EnableAutoConfiguration
 @ComponentScan(excludeFilters = { @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
       @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
-public @interface SpringBootApplication {
-}
+public @interface SpringBootApplication {}
 ```
 
 ```java
@@ -633,8 +646,7 @@ public @interface SpringBootApplication {
 @Inherited
 @AutoConfigurationPackage
 @Import(AutoConfigurationImportSelector.class)
-public @interface EnableAutoConfiguration {
-}
+public @interface EnableAutoConfiguration {}
 ```
 
 ```java
@@ -673,7 +685,7 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
             getBeanClassLoader());
         // META-INF/spring.factories  一般这个META-INF是当前类所在的那个jar包的META-INF下
         // 我们去看META-INF下的这个类org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration,\
-      // 找这个类的注解 @EnableConfigurationProperties(ServerProperties.class)
+        // 找这个类的注解 @EnableConfigurationProperties(ServerProperties.class)
         // 点进这个类 ServerProperties
         // 定位到 @ConfigurationProperties(prefix = "server", ignoreUnknownFields = true)
         // public class ServerProperties { }
@@ -682,11 +694,10 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
             + "are using a custom packaging, make sure that file is correct.");
       return configurations;
    }
-
 }
 ```
 
-## 特点
+## 原理
 
 > 依赖管理
 
@@ -713,10 +724,10 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 开发导入 starter 场景启动器
 
 - 见到很多 spring-boot-starter-* ： *就某种场景
-- 只要引入starter，这个场景的所有常规需要的依赖我们都自动引入
-- Spring Boot所有支持的场景
+- 只要引入 starter，这个场景的所有常规需要的依赖 Spring Boot 都会自动引入
+- Spring Boot 所有支持的场景
     https://docs.spring.io/spring-boot/docs/current/reference/html/using-spring-boot.html#using-boot-starter
-- 见到的  *-spring-boot-starter： 第三方为我们提供的简化开发的场景启动器。
+- 见到的  *-spring-boot-starter：第三方为我们提供的简化开发的场景启动器。
 - 所有场景启动器最底层的依赖
 
 ```xml
@@ -744,7 +755,181 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 </properties>
 ```
 
+### 自动配置流程
+
+1️⃣SpringBoot 启动的时候加载主配置类，开启了自动配置功能 @EnableAutoConfifiguration
+
+2️⃣<b>@EnableAutoConfifiguration 的作用：</b>
+
+- 利用 EnableAutoConfifigurationImportSelector 给容器中导入一些组件？
+
+- 可以查看 selectImports() 方法的内容；
+
+- List confifigurations = getCandidateConfifigurations(annotationMetadata, attributes); 获取候选的配置
+
+    ```shell
+    SpringFactoriesLoader.loadFactoryNames() 
+    扫描所有jar包类路径下 META-INF/spring.factories
+    把扫描到的这些文件的内容包装成properties对象 
+    从properties中获取到EnableAutoConfiguration.class类（类名）对应的值，然后 把他们添加在容器中
+    ```
+
+<b>将类路径下 META-INF/spring.factories 里面配置的所有 EnableAutoConfifiguration 的值加入到了容器中；</b>
+
+```shell
+# Auto Configure 
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\ 
+org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoCo nfiguration,\ 
+org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\ 
+org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration,\
+org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration,\
+org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration,\
+```
+
+每一个这样的 xxxAutoConfifiguration 类都是容器中的一个组件，都加入到容器中；用他们来做自动配置； 
+
+3️⃣每一个自动配置类进行自动配置功能；
+
+4️⃣以 <b>HttpEncodingAutoConfifiguration</b> (HTTP 编码自动配置）为例解释自动配置原理；
+
+```java
+// 表示这是一个配置类，以前编写的配置文件一样，也可以给容器中添加组件 
+@AutoConfiguration 
+
+// 启动指定类的 ConfigurationProperties 功能；
+// 将配置文件中对应的值和 HttpEncodingProperties 绑定起来；
+// 并把 HttpEncodingProperties 加入到 ioc 容器中
+@EnableConfigurationProperties(HttpEncodingProperties.class) 
+
+// Spring 底层 @Conditional 注解（Spring 注解版），
+// 根据不同的条件，如果满足指定的条件，整个配置类里面的配置就会生效； 
+// 判断当前应用是否是 web 应用，如果是，当前配置类生效
+@ConditionalOnWebApplication
+
+// 判断当前项目有没有这个类 CharacterEncodingFilter；SpringMVC 中进行乱码解决的过滤器；
+@ConditionalOnClass(CharacterEncodingFilter.class)
+
+// 判断配置文件中是否存在某个配置 spring.http.encoding.enabled；
+// 如果不存在，判断也是成立的 
+// 即使我们配置文件中不配置 spring.http.encoding.enabled=true，也是默认生效的；
+@ConditionalOnProperty(prefix = "spring.http.encoding", value = "enabled", matchIfMissing = true)
+public class HttpEncodingAutoConfiguration {
+    
+    // 它已经和 SpringBoot 的配置文件映射了
+    private final Encoding properties;
+
+    // 只有一个有参构造的情况下，参数的值就会从容器中拿
+    public HttpEncodingAutoConfiguration(ServerProperties properties) {
+        this.properties = properties.getServlet().getEncoding();
+    }
+
+    @Bean //给容器中添加一个组件，这个组件的某些值需要从properties中获取
+    @ConditionalOnMissingBean //判断容器没有这个组件？
+    public CharacterEncodingFilter characterEncodingFilter() {
+        CharacterEncodingFilter filter = new OrderedCharacterEncodingFilter();
+        filter.setEncoding(this.properties.getCharset().name());
+        filter.setForceRequestEncoding(this.properties.shouldForce(org.springframework.boot.web.servlet.server.Encoding.Type.REQUEST));
+        filter.setForceResponseEncoding(this.properties.shouldForce(org.springframework.boot.web.servlet.server.Encoding.Type.RESPONSE));
+        return filter;
+    }
+
+    @Bean
+    public HttpEncodingAutoConfiguration.LocaleCharsetMappingsCustomizer localeCharsetMappingsCustomizer() {
+        return new HttpEncodingAutoConfiguration.LocaleCharsetMappingsCustomizer(this.properties);
+    }
+
+    static class LocaleCharsetMappingsCustomizer implements WebServerFactoryCustomizer<ConfigurableServletWebServerFactory>, Ordered {
+        private final Encoding properties;
+
+        LocaleCharsetMappingsCustomizer(Encoding properties) {
+            this.properties = properties;
+        }
+
+        public void customize(ConfigurableServletWebServerFactory factory) {
+            if (this.properties.getMapping() != null) {
+                factory.setLocaleCharsetMappings(this.properties.getMapping());
+            }
+        }
+
+        public int getOrder() {
+            return 0;
+        }
+    }
+}
+```
+
+根据当前不同的条件判断，决定这个配置类是否生效。一但这个配置类生效；这个配置类就会给容器中添加各种组件；这些组件的属性是从对应的 properties 类中获取的，这些类里面的每一个属性又是和配置文件绑定的；
+
+5️⃣<b style="color:red">所有在配置文件中能配置的属性都封装在 xxxxProperties 类中；配置文件能配置什么就可以参照某个功能对应的属性类</b>
+
+```java
+@ConfigurationProperties(prefix = "spring.http.encoding") 
+//从配置文件中获取指 定的值和bean的属性进行绑定 
+public class HttpEncodingProperties { 
+    public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+}
+```
+
+<b>精髓：</b>
+
+- Spring Boot 启动会加载大量的自动配置类
+- 我们看我们需要的功能有没有 Spring Boot 默认写好的自动配置类；
+- 我们再来看这个自动配置类中到底配置了哪些组件；（只要我们要用的组件有，我们就不需要再来配置了）
+- 给容器中自动配置类添加组件的时候，会从 properties 类中获取某些属性。我们就可以在配置
+
+xxxxAutoConfifigurartion：自动配置类；
+
+给容器中添加组件
+
+xxxxProperties：封装配置文件中相关属性；
+
+> 细节
+
+<b>@Conditional 派生注解（Spring 注解版原生的 @Conditional 作用）</b>
+
+作用：必须是 @Conditional 指定的条件成立，才给容器中添加组件，配置配里面的所有内容才生效；
+
+| @Conditional扩展注解            | 作用（判断是否满足当前指定条件）                |
+| ------------------------------- | ----------------------------------------------- |
+| @ConditionalOnJava              | 系统的 Java 版本是否符合要求                    |
+| @ConditionalOnBean              | 容器中存在指定 Bean                             |
+| @ConditionalOnMissingBean       | 容器中不存在指定 Bean；                         |
+| @ConditionalOnExpression        | 满足 SpEL 表达式指定                            |
+| @ConditionalOnClass             | 系统中有指定的类                                |
+| @ConditionalOnMissingClass      | 系统中没有指定的类                              |
+| @ConditionalOnSingleCandidate   | 容器中只有一个指定的 Bean，或者这个 Bean 是首选 |
+| @ConditionalOnProperty          | Bean 系统中指定的属性是否有指定的值             |
+| @ConditionalOnResource          | 类路径下是否存在指定资源文件                    |
+| @ConditionalOnWebApplication    | 当前是 web 环境                                 |
+| @ConditionalOnNotWebApplication | 当前不是 web 环境                               |
+| @ConditionalOnJndi              | JNDI 存在指定项                                 |
+
+<b>自动配置类必须在一定的条件下才能生效；</b>我们怎么知道哪些自动配置类生效；
+
+<b>可以通过启用 debug=true 属性</b>；来让控制台打印自动配置报告，这样我们就可以很方便的知道哪些自动配置类生效；
+
+```
+========================= 
+AUTO-CONFIGURATION REPORT 
+=========================
+
+Positive matches:（自动配置类启用的）
+------------------------------------
+	DispatcherServletAutoConfiguration matched:
+	- @ConditionalOnClass found required class 'org.springframework.web.servlet.DispatcherServlet';
+
+Negative matches:（没有启动，没有匹配成功的自动配置类）
+------------------------------------
+	ActiveMQAutoConfiguration:
+		Did not match:
+			- @ConditionalOnClass did not find required classes
+'javax.jms.ConnectionFactory',
+'org.apache.activemq.ActiveMQConnectionFactory' (OnClassCondition)
+```
+
 ### 自动配置原理
+
+[Spring Boot Reference Guide](https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/reference/htmlsingle/#common-application-properties)
 
 #### 引导加载自动配置类
 
@@ -770,8 +955,7 @@ public @interface SpringBootApplication{
 ```java
 @AutoConfigurationPackage
 @Import(AutoConfigurationImportSelector.class)
-public @interface EnableAutoConfiguration {
-}
+public @interface EnableAutoConfiguration {}
 ```
 
 @AutoConfigurationPackage
@@ -795,7 +979,6 @@ static class Registrar implements ImportBeanDefinitionRegistrar, DeterminableImp
     public Set<Object> determineImports(AnnotationMetadata metadata) {
         return Collections.singleton(new PackageImports(metadata));
     }
-
 }
 ```
 
@@ -899,7 +1082,7 @@ public class AopAutoConfiguration {
 
 #### 修改默认配置
 
-配置文件中是否存在 spring.aop 的配置，如果存在 spring.aop.auto ，且值为 true，就失效。即便没有配，也认为配置了。
+配置文件中是否存在 spring.aop 的配置，如果存在 spring.aop.auto，且值为 true，就失效。即便没有配，也认为配置了。
 
 ```java
 @Configuration(proxyBeanMethods = false)
@@ -907,15 +1090,13 @@ public class AopAutoConfiguration {
 public class AopAutoConfiguration {
     	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnClass(Advice.class) // 存在 Advice.class 才失效
-	static class AspectJAutoProxyingConfiguration {
-	}
+	static class AspectJAutoProxyingConfiguration {}
 
 	@Configuration(proxyBeanMethods = false)
 	@ConditionalOnMissingClass("org.aspectj.weaver.Advice") // 系统里没有这个类才生效。
 	@ConditionalOnProperty(prefix = "spring.aop", name = "proxy-target-class", havingValue = "true",
 			matchIfMissing = true)
 	static class ClassProxyingConfiguration {
-
 		@Bean
 		static BeanFactoryPostProcessor forceAutoProxyCreatorToUseClassProxying() {
 			return (beanFactory) -> {
@@ -926,7 +1107,6 @@ public class AopAutoConfiguration {
 				}
 			};
 		}
-
 	}
 
 }
@@ -953,54 +1133,6 @@ Spring Boot 默认会在底层配好所有的组件。但是如果用户自己�
 @Bean
 @ConditionalOnMissingBean
 public CharacterEncodingFilter characterEncodingFilter() {
-}
-```
-
-#### 自动配置原理
-
-以<b>HttpEncodingAutoConfiguration（Http 编码自动配置）</b>为例解释自动配置原理；
-
-```java
-@Configuration   //表示这是一个配置类，以前编写的配置文件一样，也可以给容器中添加组件
-@EnableConfigurationProperties(HttpEncodingProperties.class)  //启动指定类的ConfigurationProperties功能；将配置文件中对应的值和HttpEncodingProperties绑定起来；并把HttpEncodingProperties加入到ioc容器中
-
-@ConditionalOnWebApplication //Spring底层@Conditional注解（Spring注解版），根据不同的条件，如果满足指定的条件，整个配置类里面的配置就会生效；    判断当前应用是否是web应用，如果是，当前配置类生效
-
-@ConditionalOnClass(CharacterEncodingFilter.class)  //判断当前项目有没有这个类CharacterEncodingFilter；SpringMVC中进行乱码解决的过滤器；
-
-@ConditionalOnProperty(prefix = "spring.http.encoding", value = "enabled", matchIfMissing = true)  //判断配置文件中是否存在某个配置  spring.http.encoding.enabled；如果不存在，判断也是成立的
-//即使我们配置文件中不配置pring.http.encoding.enabled=true，也是默认生效的；
-public class HttpEncodingAutoConfiguration {
-  
-  	//他已经和Spring Boot的配置文件映射了
-  	private final HttpEncodingProperties properties;
-  
-   //只有一个有参构造器的情况下，参数的值就会从容器中拿
-  	public HttpEncodingAutoConfiguration(HttpEncodingProperties properties) {
-		this.properties = properties;
-	}
-  
-    @Bean   //给容器中添加一个组件，这个组件的某些值需要从properties中获取
-	@ConditionalOnMissingBean(CharacterEncodingFilter.class) //判断容器没有这个组件？
-	public CharacterEncodingFilter characterEncodingFilter() {
-		CharacterEncodingFilter filter = new OrderedCharacterEncodingFilter();
-		filter.setEncoding(this.properties.getCharset().name());
-		filter.setForceRequestEncoding(this.properties.shouldForce(Type.REQUEST));
-		filter.setForceResponseEncoding(this.properties.shouldForce(Type.RESPONSE));
-		return filter;
-	}
-```
-
-根据当前不同的条件判断，决定这个配置类是否生效？
-
-一但这个配置类生效；这个配置类就会给容器中添加各种组件；这些组件的属性是从对应的 properties 类中获取的，这些类里面的每一个属性又是和配置文件绑定的；
-
-所有在配置文件中能配置的属性都是在 xxxxProperties 类中封装者‘；配置文件能配置什么就可以参照某个功能对应的这个属性类
-
-```java
-@ConfigurationProperties(prefix = "spring.http.encoding")  //从配置文件中获取指定的值和bean的属性进行绑定
-public class HttpEncodingProperties {
-   public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 }
 ```
 
@@ -1033,14 +1165,14 @@ public class HttpEncodingProperties {
 </dependency>
 ```
 
-- 自动配好 SpringMVC
+- 自动配好 Spring MVC
 
-    - 引入 SpringMVC 全套组件
-    - 自动配好 SpringMVC 常用组件（功能）
+    - 引入 Spring MVC 全套组件
+    - 自动配好 Spring MVC 常用组件（功能）
 
 - 自动配好 Web 常见功能，如：字符编码问题
 
-    - Spring Boot 帮我们配置好了所有 web 开发的常见场景
+    - Spring Boot 帮我们配置好了所有 Web 开发的常见场景
 
 - 默认的包结构
 
@@ -1139,7 +1271,7 @@ public class HelloController {
 
 <div align="center"><img src="img/boot/yuque_diagram.jpg"></div>
 
-## Spring MVC 自动配置概览
+## 自动配置概览
 
 Spring Boot provides auto-configuration for Spring MVC that <b>works well with most applications.(大多场景我们都无需自定义配置)</b>
 
@@ -1147,20 +1279,19 @@ The auto-configuration adds the following features on top of Spring’s defaults
 
 - Inclusion of `ContentNegotiatingViewResolver` and `BeanNameViewResolver` beans.
     - 内容协商视图解析器和 BeanName 视图解析器
-- Support for serving static resources, including support for WebJars (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-static-content))).
-    - 静态资源（包括 webjars）
+    - 自动配置了 ViewResolver（视图解析器：根据方法的返回值得到视图对象（View），视图对象决定如何渲染（转发、重定向））
+    - ContentNegotiatingViewResolver：组合所有的视图解析器的；
+    - 如何定制：我们可以自己给容器中添加一个视图解析器；自动的将其组合进来；
+- Support for serving static resources, including support for WebJars (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-static-content))).【静态资源（包括 webjars）】
 - Automatic registration of `Converter`, `GenericConverter`, and `Formatter` beans.
     - 自动注册 `Converter，GenericConverter，Formatter `
-- Support for `HttpMessageConverters` (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-message-converters)).
-    - 支持 `HttpMessageConverters` （后来我们配合内容协商理解原理）
-- Automatic registration of `MessageCodesResolver` (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-message-codes)).
-    - 自动注册 `MessageCodesResolver` （国际化用）
-- Static `index.html` support.
-    - 静态 index.html 页支持
-- Custom `Favicon` support (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-favicon)).
-    - 自定义 `Favicon`  
-- Automatic use of a `ConfigurableWebBindingInitializer` bean (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-web-binding-initializer)).
-    - 自动使用 `ConfigurableWebBindingInitializer` ，（DataBinder 负责将请求数据绑定到 JavaBean 上）
+    - Converter：转换器； public String hello(User user)：类型转换使用Converter
+    - Formatter 格式化器； 2017.12.17===Date；
+- Support for `HttpMessageConverters` (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-message-converters)).【支持 `HttpMessageConverters` （后来我们配合内容协商理解原理）】
+- Automatic registration of `MessageCodesResolver` (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-message-codes)).【自动注册 `MessageCodesResolver` （国际化用）】
+- Static `index.html` support.【静态 index.html 页支持】
+- Custom `Favicon` support (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-favicon)).【自定义 `Favicon`  】
+- Automatic use of a `ConfigurableWebBindingInitializer` bean (covered [later in this document](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-spring-mvc-web-binding-initializer)).【自动使用 `ConfigurableWebBindingInitializer` ，（DataBinder 负责将请求数据绑定到 JavaBean 上）】
 
 > If you want to keep those Spring Boot MVC customizations and make more [MVC customizations](https://docs.spring.io/spring/docs/5.2.9.RELEASE/spring-framework-reference/web.html#mvc) (interceptors, formatters, view controllers, and other features), you can add your own `@Configuration` class of type `WebMvcConfigurer` but <b>without</b> `@EnableWebMvc`.
 >
@@ -1193,8 +1324,7 @@ The auto-configuration adds the following features on top of Spring’s defaults
 ```yaml
 spring:
   mvc:
-    static-path-pattern: /res/<b>
-
+    static-path-pattern: /res/** # 改变资源的 url 映射路径，从 项目根目录/资源名 ==> 项目根目录/res/资源名
   resources:
     static-locations: [classpath:/haha/]
 ```
@@ -1206,7 +1336,7 @@ spring:
 ```yaml
 spring:
   mvc:
-    static-path-pattern: /res/<b>
+    static-path-pattern: /res/**
 ```
 
 <span style="color:green">当前项目 + static-path-pattern + 静态资源名 = 静态资源文件夹下找（只是修改了下 url 的访问规则，资源的存放位置并没有改变）</span>
@@ -1230,7 +1360,7 @@ Spring Boot supports both static and templated welcome pages. It first looks for
 ```yaml
 spring:
 #  mvc:
-#    static-path-pattern: /res/<b>   这个会导致welcome page功能失效
+#    static-path-pattern: /res/*   这个会导致welcome page功能失效
   resources:
     static-locations: [classpath:/haha/]
 ```
@@ -1238,7 +1368,7 @@ spring:
 ## 静态资源配置原理
 
 - Spring Boot 启动默认加载  xxxAutoConfiguration 类（自动配置类）
-- SpringMVC 功能的自动配置类 WebMvcAutoConfiguration，生效
+- Spring MVC 功能的自动配置类 WebMvcAutoConfiguration，生效
 
 ```java
 @Configuration(proxyBeanMethods = false)
@@ -1286,7 +1416,6 @@ public static class WebMvcAutoConfigurationAdapter implements WebMvcConfigurer {
         this.servletRegistrations = servletRegistrations;
         this.mvcProperties.checkConfiguration();
     }
-
 }
 ```
 
@@ -1308,13 +1437,12 @@ public void addResourceHandlers(ResourceHandlerRegistry registry) {
     Duration cachePeriod = this.resourceProperties.getCache().getPeriod(); // 可以获取缓存策略
     CacheControl cacheControl = this.resourceProperties.getCache().getCachecontrol().toHttpCacheControl();
     //webjars的规则
-    if (!registry.hasMappingForPattern("/webjars/<b>")) {
-        customizeResourceHandlerRegistration(registry.addResourceHandler("/webjars/<b>")
+    if (!registry.hasMappingForPattern("/webjars/**")) {
+        customizeResourceHandlerRegistration(registry.addResourceHandler("/webjars/**")
                                              .addResourceLocations("classpath:/META-INF/resources/webjars/")
                                              .setCachePeriod(getSeconds(cachePeriod)).setCacheControl(cacheControl));
     }
 
-    //
     String staticPathPattern = this.mvcProperties.getStaticPathPattern();
     if (!registry.hasMappingForPattern(staticPathPattern)) {
         customizeResourceHandlerRegistration(registry.addResourceHandler(staticPathPattern) // staticPathPattern 静态资源路径，有默认值
@@ -1347,7 +1475,7 @@ final class WelcomePageHandlerMapping extends AbstractUrlHandlerMapping {
 
 	WelcomePageHandlerMapping(TemplateAvailabilityProviders templateAvailabilityProviders,
 			ApplicationContext applicationContext, Resource welcomePage, String staticPathPattern) {
-		if (welcomePage != null && "/<b>".equals(staticPathPattern)) { // 原始静态路径没改的话，就转发到 forward:index.html
+		if (welcomePage != null && "/**".equals(staticPathPattern)) { // 原始静态路径没改的话，就转发到 forward:index.html
 			logger.info("Adding welcome page: " + welcomePage);
 			setRootViewName("forward:index.html");
 		}
@@ -1370,7 +1498,7 @@ final class WelcomePageHandlerMapping extends AbstractUrlHandlerMapping {
 
 ### 请求映射
 
-#### rest使用与原理
+#### Rest 使用与原理
 
 - @xxxMapping；
 - Rest 风格支持（使用 <b>HTTP</b> 请求方式动词来表示对资源的操作）
@@ -1410,7 +1538,7 @@ public OrderedHiddenHttpMethodFilter hiddenHttpMethodFilter() {
 }
 ```
 
-Rest 原理（表单提交需要使用 Rest的时候，debug 看 HiddenHttpMethodFilter 的 doFilter 方法；如果是自己实现，也可以考虑用 Filter 对请求进行拦截，判断，然后选择对应的 Controller 方法）
+Rest 原理（表单提交需要使用 Rest 的时候，debug 看 HiddenHttpMethodFilter 的 doFilter 方法；如果是自己实现，也可以考虑用 Filter 对请求进行拦截，判断，然后选择对应的 Controller 方法）
 
 - 表单提交会带上 \_method=PUT
 - 请求过来被 HiddenHttpMethodFilter 拦截
@@ -1434,7 +1562,6 @@ protected void doFilterInternal(HttpServletRequest request, HttpServletResponse 
             }
         }
     }
-
     filterChain.doFilter((ServletRequest)requestToUse, response);
 }
 ```
@@ -1620,8 +1747,6 @@ protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Ex
 ```java
 @RestController
 public class ParameterTestController {
-
-
     //  car/2/owner/zhangsan
     @GetMapping("/car/{id}/owner/{username}")
     public Map<String,Object> getCar(@PathVariable("id") Integer id,
@@ -1634,8 +1759,6 @@ public class ParameterTestController {
                                      @RequestParam Map<String,String> params,
                                      @CookieValue("_ga") String _ga,
                                      @CookieValue("_ga") Cookie cookie){
-
-
         Map<String,Object> map = new HashMap<>();
 
 //        map.put("id",id);
@@ -1651,14 +1774,12 @@ public class ParameterTestController {
         return map;
     }
 
-
     @PostMapping("/save")
     public Map postMethod(@RequestBody String content){
         Map<String,Object> map = new HashMap<>();
         map.put("content",content);
         return map;
     }
-
 
     //1、语法： 请求路径：/cars/sell;low=34;brand=byd,audi,yd
     //2、Spring Boot默认是禁用了矩阵变量的功能
@@ -1678,7 +1799,6 @@ public class ParameterTestController {
     }
 
     // /boss/1;age=20/2;age=10
-
     @GetMapping("/boss/{bossId}/{empId}")
     public Map boss(@MatrixVariable(value = "age",pathVar = "bossId") Integer bossAge,
                     @MatrixVariable(value = "age",pathVar = "empId") Integer empAge){
@@ -1687,7 +1807,6 @@ public class ParameterTestController {
         map.put("bossAge",bossAge);
         map.put("empAge",empAge);
         return map;
-
     }
 }
 ```
@@ -1817,14 +1936,6 @@ protected void doDispatch(HttpServletRequest request, HttpServletResponse respon
 }
 ```
 
-#### Servlet API
-
-#### 复杂参数
-
-#### 自定义对象参数
-
-### POJO
-
 ### 参数处理原理
 
 #### HandlerAdapter
@@ -1876,7 +1987,7 @@ protected ModelAndView handleInternal(HttpServletRequest request, HttpServletRes
 
 确定将要执行的目标方法的每一个参数的值是什么;
 
-SpringMVC目标方法能写多少种参数类型。取决于参数解析器。
+Spring MVC 目标方法能写多少种参数类型。取决于参数解析器。
 
 <div align="center"><img src="img/boot/image-20211024201053219.png"></div>
 
@@ -1892,7 +2003,6 @@ public interface HandlerMethodArgumentResolver {
 	@Nullable
 	Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer,
 			NativeWebRequest webRequest, @Nullable WebDataBinderFactory binderFactory) throws Exception;
-
 }
 ```
 
@@ -1900,17 +2010,66 @@ public interface HandlerMethodArgumentResolver {
 
 <div align="center"><img src="img/boot/image-20211024201539502.png"></div>
 
-### 确定目标方法每一个参数值
+详细内容参考 Spring MVC 相关笔记。
 
-#### 解析器
+## 扩展 MVC
 
-#### 解析参数
+编写一个配置类（@Configuration），是 WebMvcConfigurerAdapter 类型；注意！不能标注 <b>@EnableWebMvc</b>;
 
-#### 自定义类型参数
+既保留了所有的自动配置，也能用我们扩展的配置；
 
-### 目标方法执行完成
+```java
+// 使用WebMvcConfigurerAdapter可以来扩展SpringMVC的功能
+// WebMvcAutoConfiguration是SpringMVC的自动配置类
+@Configuration 
+public class MyMvcConfig extends WebMvcConfigurerAdapter {
+    @Override 
+    public void addViewControllers(ViewControllerRegistry registry) { 
+        // super.addViewControllers(registry); 
+        //浏览器发送 /xx 请求来到 success 
+        registry.addViewController("/atguigu").setViewName("success"); 
+    }
+}
+```
 
-### 处理派发结果
+> 全面接管 Spring MVC
+
+Spring Boot 对 Spring MVC 的自动配置不需要了，所有都是我们自己配置；所有的 Spring MVC 的自动配置都失效了。
+
+<span style="color:orange">我们需要在配置类中添加 @EnableWebMvc 即可；</span>
+
+```java
+@Configuration 
+@EnableWebMvc
+public class MyMvcConfig extends WebMvcConfigurerAdapter {
+    @Override 
+    public void addViewControllers(ViewControllerRegistry registry) { 
+        // super.addViewControllers(registry); 
+        //浏览器发送 /xx 请求来到 success 
+        registry.addViewController("/atguigu").setViewName("success"); 
+    }
+}
+```
+
+为什么加了 @EnableWebMvc 注解自动配置就失效了？
+
+```java
+// @EnableWebMvc 
+@Import(DelegatingWebMvcConfiguration.class) 
+public @interface EnableWebMvc {}
+// 而 DelegatingWebMvcConfiguration 继承了 WebMvcConfigurationSupport
+
+@Configuration 
+@ConditionalOnWebApplication 
+@ConditionalOnClass({ Servlet.class, DispatcherServlet.class, 
+                     WebMvcConfigurerAdapter.class }) 
+//容器中没有这个组件的时候，这个自动配置类才生效 
+@ConditionalOnMissingBean(WebMvcConfigurationSupport.class) 
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE + 10) 
+@AutoConfigureAfter({ DispatcherServletAutoConfiguration.class, 
+                     ValidationAutoConfiguration.class }) 
+public class WebMvcAutoConfiguration {}
+```
 
 # 基本框架整合
 
@@ -2106,7 +2265,6 @@ public class DruidConfig {
     @Bean
     // 注册servlet管理druid
     public ServletRegistrationBean tatViewServlet() {
-        
         // 注册那个servlet 管理那些url请求
         ServletRegistrationBean bean = new ServletRegistrationBean(new StatViewServlet(), "/druid/*");
         Map<String, String> init = new HashMap();
@@ -2120,7 +2278,6 @@ public class DruidConfig {
     @Bean
     // 注册过滤器
     public FilterRegistrationBean webStatFilter() {
-        
         FilterRegistrationBean bean = new FilterRegistrationBean(new WebStatFilter());
         Map<String, String> init = new HashMap();
         init.put("exclusions", "*.js,*.css,/druid/*");
@@ -2132,6 +2289,8 @@ public class DruidConfig {
 ```
 
 ## 整合 MyBatis
+
+http://www.mybatis.org/spring-boot-starter/mybatis-spring-boot-autoconfifigure/
 
 > 概述
 
@@ -2214,7 +2373,7 @@ public class DruidConfig {
 </build>
 ```
 
-> properties 件
+> properties 文件
 
 ```properties
 # 基础的jdbc配置
@@ -2250,7 +2409,7 @@ mybatis.type-aliases-package=com.bbxx.boot02.pojo
 
 > SQL 纯注解
 
-每个 dao 接口都加上注解 mapper 或在启动引导类位置处用 @MapperScan("扫描得包全名")
+每个 dao 接口都加上注解 mapper 或在启动引导类位置处用 @MapperScan("扫描的包全名")
 
 > SQL 书写
 
@@ -2276,9 +2435,7 @@ public interface DepartmentMapper {
 
 ### 开启驼峰命名
 
-也可以在配置文件中开启
-
-`mybatis.configuration.map-underscore-to-camel-case=true`
+也可以在配置文件中开启：`mybatis.configuration.map-underscore-to-camel-case=true`
 
 ```java
 @org.springframework.context.annotation.Configuration
@@ -2298,7 +2455,7 @@ public class MyBatisConfig {
 
 > SQL xml 版本
 
-xml 放在那里？
+xml 放在那里？放在 resources 目录下，路径和 Mapper 接口的路径要一致。比如 MapperXX 在 com.xx.dao 那么对应的 xml 文件就应该放在 resources/com/xx/dao 下。
 
 ```java
 // 接口
@@ -2326,7 +2483,6 @@ public class ArticleController {
     public List<Article> selectAll() {
         return mapper.queryAll();
     }
-
 }
 ```
 
@@ -2497,12 +2653,10 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
-
     }
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-
     }
 }
 ```
@@ -2520,7 +2674,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addViewController("/demo1").setViewName("/success");
         registry.addViewController("/demo2").setViewName("/success");
     }
-
 
     // 组件式 配置
     @Bean
@@ -2558,7 +2711,6 @@ public class DemoController {
     public List<Person> success(HashMap<String, Object> maps) {
         return list;
     }
-
 }
 ```
 
@@ -2566,7 +2718,7 @@ public class DemoController {
 
 > 概述
 
-Spring Boot 的 ssm 整合配置
+Spring Boot 的 SSM 整合配置
 
 > 依赖
 
@@ -2785,12 +2937,10 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
-
     }
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-
     }
 }
 
@@ -2972,12 +3122,12 @@ class Spring Boot04JunitApplicationTests {
 }
 ```
 
-看看这次简化成什么样了，一个注解就搞定了，而且还没有参数，再体会 Spring Boot 整合其他技术的优势在哪里，就两个字——<font color="#ff0000"><b>简化</b></font>。使用一个注解 @SpringBootTest 替换了前面两个注解。至于内部是怎么回事？和之前一样，只不过都走默认值。
+这次简化，一个注解就搞定了，而且还没有参数，Spring Boot 整合其他技术的优势就在两个字——<font color="#ff0000"><b>简化</b></font>。使用一个注解 @SpringBootTest 替换了前面两个注解。其内部和之前一样，只不过都走默认值。
 
-这个时候有人就问了，你加载的配置类或者配置文件是哪一个？就是我们前面启动程序使用的引导类。如果想手工指定引导类有两种方式，第一种方式使用属性的形式进行，在注解 @SpringBootTest 中添加 classes 属性指定配置类
+代码加载的配置类或者配置文件是哪一个？就是我们前面启动程序使用的引导类。如果想手工指定引导类有两种方式，第一种方式使用属性的形式进行，在注解 @SpringBootTest 中添加 classes 属性指定配置类
 
 ```JAVA
-@SpringBootTest(classes = Spring Boot04JunitApplication.class)
+@SpringBootTest(classes = SpringBoot04JunitApplication.class)
 class Spring Boot04JunitApplicationTests {
     //注入你要测试的对象
     @Autowired
@@ -3023,9 +3173,9 @@ class Spring Boot04JunitApplicationTests {
 
 ## 整合MyBatis
 
-整合完 JUnit 下面再来说一下整合 MyBatis，这个技术是大部分公司都要使用的技术，务必掌握。如果对 Spring 整合 MyBatis 不熟悉的小伙伴好好复习一下，下面列举出原始整合的全部内容，以配置类的形式为例进行
+整合完 JUnit 下面再来说一下整合 MyBatis，下面列举出原始整合的全部内容，以配置类的形式为例进行
 
-导入坐标，MyBatis 坐标不能少，Spring 整合 MyBatis 还有自己专用的坐标，此外 Spring 进行数据库操作的 jdbc 坐标是必须的，剩下还有 mysql 驱动坐标，本例中使用了 Druid 数据源，这个倒是可以不要
+导入 MyBatis 坐标，Spring 整合 MyBatis 还有自己专用的坐标，此外 Spring 进行数据库操作的 jdbc 坐标是必须的，剩下还有 mysql 驱动坐标，本例中使用的 Druid 数据源可以不要
 
 ```XML
 <dependencies>
@@ -3210,8 +3360,6 @@ class Spring Boot05MybatisApplicationTests {
 }
 ```
 
-Spring Boot 让开发从此变的就这么简单。
-
 <font color="#ff0000"><b>注意</b></font>：当前使用的 Spring Boot 版本是 2.5.4，对应的坐标设置中 MySQL 驱动使用的是 8x 版本。使用 Spring Boot 2.4.3（不含）之前版本会出现一个小 BUG，就是 MySQL 驱动升级到 8 以后要求强制配置时区，如果不设置会出问题。解决方案很简单，驱动 url上面添加上对应设置就行了
 
 ```YAML
@@ -3241,7 +3389,9 @@ spring:
 此外在运行程序时还会给出一个提示，说数据库驱动过时的警告，根据提示修改配置即可，弃用<b>com.mysql.jdbc.Driver</b>，换用 <font color="#ff0000"><b>com.mysql.cj.jdbc.Driver</b></font>。前面的例子中已经更换了驱动了，在此说明一下。
 
 ```tex
-Loading class `com.mysql.jdbc.Driver'. This is deprecated. The new driver class is `com.mysql.cj.jdbc.Driver'. The driver is automatically registered via the SPI and manual loading of the driver class is generally unnecessary.
+Loading class `com.mysql.jdbc.Driver'. 
+This is deprecated. The new driver class is `com.mysql.cj.jdbc.Driver'. 
+The driver is automatically registered via the SPI and manual loading of the driver class is generally unnecessary.
 ```
 
 <b>总结</b>
@@ -3428,56 +3578,56 @@ spring:
       password: root
 ```
 
-注意观察，配置项中，在 datasource 下面并不是直接配置 url 这些属性的，而是先配置了一个 druid 节点，然后再配置的 url 这些东西。言外之意，url 这个属性是 druid 下面的属性，那你能想到什么？除了这4个常规配置外，还有 druid 专用的其他配置。通过提示功能可以打开 druid 相关的配置查阅
+注意观察，配置项中，在 datasource 下面并不是直接配置 url 这些属性的，而是先配置了一个 druid 节点，然后再配置的 url 这些东西。言外之意，url 这个属性是 druid 下面的属性，那你能想到什么？除了这 4 个常规配置外，还有 druid 专用的其他配置。通过提示功能可以打开 druid 相关的配置查阅
 
 <div align="center"><img src="img/boot/image-20211129112610729.png" alt="image-20211129112610729" style="zoom:80%;" /></div>
 
-与druid相关的配置超过200条以上，这就告诉你，如果想做druid相关的配置，使用这种格式就可以了，这里就不展开描述了，太多了。
+与 druid 相关的配置超过 200 条以上，这就告诉你，如果想做 druid 相关的配置，使用这种格式就可以了，这里就不展开描述了，太多了。
 
-这是我们做的第4个技术的整合方案，还是那两句话：<font color="#ff0000"><b>导入对应starter，使用对应配置</b></font>。没了，Spring Boot整合其他技术就这么简单粗暴。
+这是我们做的第 4 个技术的整合方案，还是那两句话：<font color="#ff0000"><b>导入对应 starter，使用对应配置</b></font>。没了，Spring Boot 整合其他技术就这么简单粗暴。
 
-<b>总结<b>
+<b>总结</b>
 
-1. 整合Druid需要导入Druid对应的starter
-2. 根据Druid提供的配置方式进行配置
+1. 整合 Druid 需要导入 Druid 对应的 starter
+2. 根据 Druid 提供的配置方式进行配置
 3. 整合第三方技术通用方式
-    - 导入对应的starter
+    - 导入对应的 starter
     - 根据提供的配置格式，配置非默认值对应的配置项
 
 ## SSMP整合综合案例
 
-将所有知识贯穿起来，同时做一个小功能，体会一下。案例的最终效果
+将所有知识贯穿起来，同时做一个小功能
 
-<b>主页面<b>
+<b>主页面</b>
 
 <div align="center"><img src="img/boot/image-20211129113447844.png"></div>
 
-<b>添加<b>
+<b>添加</b>
 
 <div align="center"><img src="img/boot/image-20211129113522459.png"></div>
 
-<b>删除<b>
+<b>删除</b>
 
 <div align="center"><img src="img/boot/image-20211129113550829.png"></div>
 
-<b>修改<b>
+<b>修改</b>
 
-<b>分页<b>
+<b>分页</b>
 
 <div align="center"><img src="img/boot/image-20211129113628969.png"></div>
 
-<b>条件查询<b>
+<b>条件查询</b>
 
 <div align="center"><img src="img/boot/image-20211129113650369.png"></div>
 
-​	整体案例中需要采用的技术如下，先了解一下，做到哪一个说哪一个
+整体案例中需要采用的技术如下
 
-1. 实体类开发————使用Lombok快速制作实体类
-2. Dao开发————整合MyBatisPlus，制作数据层测试
-3. Service开发————基于MyBatisPlus进行增量开发，制作业务层测试类
-4. Controller开发————基于Restful开发，使用PostMan测试接口功能
-5. Controller开发————前后端开发协议制作
-6. 页面开发————基于VUE+ElementUI制作，前后端联调，页面数据处理，页面消息处理
+1. 实体类开发————使用 Lombok 快速制作实体类
+2. Dao 开发————整合 MyBatisPlus，制作数据层测试
+3. Service 开发————基于 MyBatisPlus 进行增量开发，制作业务层测试类
+4. Controller 开发————基于 Restful 开发，使用 PostMan 测试接口功能
+5. Controller 开发————前后端开发协议制作
+6. 页面开发————基于 VUE+ElementUI 制作，前后端联调，页面数据处理，页面消息处理
     - 列表
     - 新增
     - 修改
@@ -3485,9 +3635,7 @@ spring:
     - 分页
     - 查询
 7. 项目异常处理
-8. 按条件查询————页面功能调整、Controller修正功能、Service修正功能
-
-​		可以看的出来，东西还是很多的，希望通过这个案例，各位小伙伴能够完成基础开发的技能训练。整体开发过程采用做一层测一层的形式进行，过程完整，战线较长，希望各位能跟紧进度，完成这个小案例的制作。
+8. 按条件查询————页面功能调整、Controller 修正功能、Service 修正功能
 
 #### 0.模块创建
 
@@ -3499,11 +3647,11 @@ spring:
 
 <div align="center"><img src="img/boot/image-20211129114328967.png" alt="image-20211129114328967" style="zoom:80%;" /></div>
 
-​		一个服务器即充当后台服务调用，又负责前端页面展示，降低学习的门槛。
+一个服务器即充当后台服务调用，又负责前端页面展示，降低学习的门槛。
 
-​		下面我们创建一个新的模块，加载要使用的技术对应的starter，修改配置文件格式为yml格式，并把web访问端口先设置成80。
+下面我们创建一个新的模块，加载要使用的技术对应的 starter，修改配置文件格式为 yml 格式，并把 web 访问端口先设置成 80。
 
-<b>pom.xml<b>
+<b>pom.xml</b>
 
 ```XML
 <dependencies>
@@ -3519,7 +3667,7 @@ spring:
 </dependencies>
 ```
 
-<b>application.yml<b>
+<b>application.yml</b>
 
 ```yaml
 server:
@@ -3528,7 +3676,7 @@ server:
 
 #### 1.实体类开发
 
-​		本案例对应的模块表结构如下：
+本案例对应的模块表结构如下：
 
 ```mysql
 -- ----------------------------
@@ -3562,7 +3710,7 @@ INSERT INTO `tbl_book` VALUES (12, '市场营销', '直播带货：淘宝、天�
 
 根据上述表结构，制作对应的实体类
 
-<b>实体类<b>
+<b>实体类</b>
 
 ```JAVA
 public class Book {
@@ -3573,9 +3721,9 @@ public class Book {
 }
 ```
 
-实体类的开发可以自动通过工具手工生成get/set方法，然后覆盖toString()方法，方便调试，等等。不过这一套操作书写很繁琐，有对应的工具可以帮助我们简化开发，介绍一个小工具，lombok。
+实体类的开发可以自动通过工具手工生成 get/set 方法，然后覆盖 toString() 方法，方便调试，等等。不过这一套操作书写很繁琐，有对应的工具可以帮助我们简化开发，介绍一个小工具，lombok。
 
-Lombok，一个Java类库，提供了一组注解，简化POJO实体类开发，Spring Boot目前默认集成了lombok技术，并提供了对应的版本控制，所以只需要提供对应的坐标即可，在pom.xml中添加lombok的坐标。
+Lombok，一个 Java 类库，提供了一组注解，简化 POJO 实体类开发，Spring Boot 目前默认集成了 lombok 技术，并提供了对应的版本控制，所以只需要提供对应的坐标即可，在 pom.xml 中添加 lombok 的坐标。
 
 ```XML
 <dependencies>
@@ -3587,7 +3735,7 @@ Lombok，一个Java类库，提供了一组注解，简化POJO实体类开发，
 </dependencies>
 ```
 
-使用lombok可以通过一个注解@Data完成一个实体类对应的getter，setter，toString，equals，hashCode等操作的快速添加
+使用 lombok 可以通过一个注解 @Data 完成一个实体类对应的 getter，setter，toString，equals，hashCode 等操作的快速添加
 
 ```JAVA
 import lombok.Data;
@@ -3600,22 +3748,18 @@ public class Book {
 }
 ```
 
-到这里实体类就做好了，是不是比不使用lombok简化好多，这种工具在Java开发中还有N多，后面遇到了能用的实用开发技术时，在不增加各位小伙伴大量的学习时间的情况下，尽量多给大家介绍一些。
-
-<b>总结<b>
+<b>总结</b>
 
 1. 实体类制作
-2. 使用lombok简化开发
-    - 导入lombok无需指定版本，由Spring Boot提供版本
-    - @Data注解
-
-
+2. 使用 lombok 简化开发
+    - 导入 lombok 无需指定版本，由 Spring Boot 提供版本
+    - @Data 注解
 
 #### 2.数据层开发——基础CRUD
 
-数据层开发本次使用MyBatisPlus技术，数据源使用前面学习的Druid，学都学了都用上。
+数据层开发本次使用 MyBatisPlus 技术，数据源使用前面学习的 Druid，学都学了都用上。
 
-<b>步骤①<b>：导入MyBatisPlus与Druid对应的starter，当然mysql的驱动不能少
+<b>步骤①</b>：导入 MyBatisPlus 与 Druid 对应的 starter，当然 mysql 的驱动不能少
 
 ```xml
 <dependencies>
@@ -3637,7 +3781,7 @@ public class Book {
 </dependencies>
 ```
 
-<b>步骤②<b>：配置数据库连接相关的数据源配置
+<b>步骤②</b>：配置数据库连接相关的数据源配置
 
 ```YAML
 server:
@@ -3652,15 +3796,14 @@ spring:
       password: root
 ```
 
-<b>步骤③<b>：使用MyBatisPlus的标准通用接口BaseMapper加速开发，别忘了@Mapper和泛型的指定
+<b>步骤③</b>：使用 MyBatisPlus 的标准通用接口 BaseMapper 加速开发，别忘了 @Mapper 和泛型的指定
 
 ```JAVA
 @Mapper
-public interface BookDao extends BaseMapper<Book> {
-}
+public interface BookDao extends BaseMapper<Book> {}
 ```
 
-<b>步骤④<b>：制作测试类测试结果，这个测试类制作是个好习惯，不过在企业开发中往往都为加速开发跳过此步，且行且珍惜吧
+<b>步骤④</b>：制作测试类测试结果
 
 ```JAVA
 package com.itheima.dao;
@@ -3718,7 +3861,7 @@ public class BookDaoTestCase {
 
 <font color="#f0f"><b>温馨提示</b></font>
 
-MyBatisPlus 技术默认的主键生成策略为雪花算法，生成的主键ID长度较大，和目前的数据库设定规则不相符，需要配置一下使MyBatisPlus使用数据库的主键生成策略，方式嘛还是老一套，做配置。在application.yml中添加对应配置即可，具体如下
+MyBatisPlus 技术默认的主键生成策略为雪花算法，生成的主键 ID 长度较大，和目前的数据库设定规则不相符，需要配置一下使 MyBatisPlus 使用数据库的主键生成策略。在 application.yml 中添加对应配置即可，具体如下
 
 ```yaml
 server:
@@ -3741,9 +3884,9 @@ mybatis-plus:
 
 ##### 查看MyBatisPlus运行日志
 
-在进行数据层测试的时候，因为基础的 CRUD 操作均由 MyBatisPlus 给我们提供了，所以就出现了一个局面，开发者不需要书写 SQL 语句了，这样程序运行的时候总有一种感觉，一切的一切都是黑盒的，作为开发者我们啥也不知道就完了。如果程序正常运行还好，如果报错了，这个时候就很崩溃，你甚至都不知道从何下手，因为传递参数、封装 SQL 语句这些操作完全不是你开发出来的，所以查看执行期运行的SQL 语句就成为当务之急。
+在进行数据层测试的时候，因为基础的 CRUD 操作均由 MyBatisPlus 给我们提供了，所以就出现了一个局面，开发者不需要书写 SQL 语句了，这样程序运行的时候总有一种感觉，一切的一切都是黑盒的，作为开发者我们啥也不知道就完了。如果程序正常运行还好，如果报错了，这个时候就很崩溃，你甚至都不知道从何下手，因为传递参数、封装 SQL 语句这些操作完全不是你开发出来的，所以查看执行期运行的 SQL 语句就成为当务之急。
 
-Spring Boot整合MyBatisPlus的时候充分考虑到了这点，通过配置的形式就可以查阅执行期SQL语句，配置如下
+Spring Boot 整合 MyBatisPlus 的时候充分考虑到了这点，通过配置的形式就可以查阅执行期 SQL 语句，配置如下
 
 ```YAML
 mybatis-plus:
@@ -3755,7 +3898,7 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 ```
 
-再来看运行结果，此时就显示了运行期执行SQL的情况。
+再来看运行结果，此时就显示了运行期执行 SQL 的情况。
 
 ```tex
 Creating a new SqlSession
@@ -3782,33 +3925,28 @@ JDBC Connection [com.mysql.cj.jdbc.ConnectionImpl@6ca30b8a] will not be managed 
 <==      Total: 15
 ```
 
-其中清晰的标注了当前执行的SQL语句是什么，携带了什么参数，对应的执行结果是什么，所有信息应有尽有。
-
-此处设置的是日志的显示形式，当前配置的是控制台输出，当然还可以由更多的选择，根据需求切换即可
+其中清晰的标注了当前执行的 SQL 语句是什么，携带了什么参数，对应的执行结果是什么，所有信息应有尽有。此处设置的是日志的显示形式，当前配置的是控制台输出，当然还可以由更多的选择，根据需求切换即可
 
 <div align="center"><img src="img/boot/image-20211129143207295.png" alt="image-20211129143207295" style="zoom:80%;" /></div>
 
+<b>总结</b>
 
+1. 手工导入 starter 坐标（2个），mysql 驱动（1个）
 
-<b>总结<b>
+2. 配置数据源与 MyBatisPlus 对应的配置
 
-1. 手工导入starter坐标（2个），mysql驱动（1个）
+3. 开发 Dao 接口（继承 BaseMapper）
 
-2. 配置数据源与MyBatisPlus对应的配置
+4. 制作测试类测试 Dao 功能是否有效
 
-3. 开发Dao接口（继承BaseMapper）
+5. 使用配置方式开启日志，设置日志输出方式为标准输出即可查阅 SQL 执行日志
 
-4. 制作测试类测试Dao功能是否有效
-
-5. 使用配置方式开启日志，设置日志输出方式为标准输出即可查阅SQL执行日志
-
-    
 
 #### 3.数据层开发——分页功能制作
 
-前面仅仅是使用了MyBatisPlus提供的基础CRUD功能，实际上MyBatisPlus给我们提供了几乎所有的基础操作，这一节说一下如何实现数据库端的分页操作。
+前面仅仅是使用了 MyBatisPlus 提供的基础 CRUD 功能，实际上 MyBatisPlus 给我们提供了几乎所有的基础操作，这一节说一下如何实现数据库端的分页操作。
 
-MyBatisPlus提供的分页操作API如下：
+MyBatisPlus 提供的分页操作 API 如下：
 
 ```JAVA
 @Test
@@ -3823,25 +3961,25 @@ void testGetPage(){
 }
 ```
 
-其中selectPage方法需要传入一个封装分页数据的对象，可以通过new的形式创建这个对象，当然这个对象也是MyBatisPlus提供的，别选错包了。创建此对象时需要指定两个分页的基本数据
+其中 selectPage 方法需要传入一个封装分页数据的对象，可以通过 new 的形式创建这个对象，当然这个对象也是 MyBatisPlus 提供的，别选错包了。创建此对象时需要指定两个分页的基本数据
 
 - 当前显示第几页
 - 每页显示几条数据
 
 
-可以通过创建Page对象时利用构造方法初始化这两个数据。
+可以通过创建 Page 对象时利用构造方法初始化这两个数据。
 
 ```JAVA
 IPage page = new Page(2,5);
 ```
 
-将该对象传入到查询方法selectPage后，可以得到查询结果，但是我们会发现当前操作查询结果返回值仍然是一个IPage对象，这又是怎么回事？
+将该对象传入到查询方法 selectPage 后，可以得到查询结果，但是我们会发现当前操作查询结果返回值仍然是一个 IPage 对象
 
 ```JAVA
 IPage page = bookDao.selectPage(page, null);
 ```
 
-原来这个IPage对象中封装了若干个数据，而查询的结果作为IPage对象封装的一个数据存在的，可以理解为查询结果得到后，又塞到了这个IPage对象中，其实还是为了高度的封装，一个IPage描述了分页所有的信息。下面5个操作就是IPage对象中封装的所有信息了。
+IPage 对象中封装了若干个数据，而查询的结果作为 IPage 对象封装的一个数据存在的，可以理解为查询结果得到后，又塞到了这个 IPage 对象中，其实还是为了高度的封装，一个 IPage 描述了分页所有的信息。下面 5 个操作就是 IPage 对象中封装的所有信息了。
 
 ```JAVA
 @Test
@@ -5434,12 +5572,26 @@ spring:
     - 记录应用报错信息（错误堆栈）
     - 记录运维过程数据（扩容、宕机、报警……）
 
+市面上的日志框架有很多：JUL、JCL、Jboss-logging、logback、log4j、log4j2、slf4j....
+
+| 日志门面（日志的抽象层）                             | 日志实现                       |
+| ---------------------------------------------------- | ------------------------------ |
+| JCL（Jakarta Commons Logging） SLF4j（Simple Logging | Log4j JUL（java.util.logging） |
+
+左边选一个门面（抽象层）、右边来选一个实现；
+
+日志门面： SLF4J；
+
+日志实现：Logback；
+
+SpringBoot：底层是 Spring 框架，Spring 框架默认是用 JCL；SpringBoot 选用SLF4j 和 logback； 
+
 
 ### 代码中使用日志工具记录日志
 
 日志的使用格式非常固定，直接上操作步骤：
 
-<b>步骤①<b>：添加日志记录操作
+<b>步骤①</b>：添加日志记录操作
 
 ```JAVA
 @RestController
@@ -5458,20 +5610,20 @@ public class BookController extends BaseClass{
 }
 ```
 
-上述代码中log对象就是用来记录日志的对象，下面的log.debug，log.info这些操作就是写日志的API了。
+上述代码中 log 对象就是用来记录日志的对象，下面的 log.debug，log.info 这些操作就是写日志的 API了。
 
-<b>步骤②<b>：设置日志输出级别
+<b>步骤②</b>：设置日志输出级别
 
-日志设置好以后可以根据设置选择哪些参与记录。这里是根据日志的级别来设置的。日志的级别分为6种，分别是：
+日志设置好以后可以根据设置选择哪些参与记录。这里是根据日志的级别来设置的。日志的级别分为 6 种，分别是：
 
 - TRACE：运行堆栈信息，使用率低
 - DEBUG：程序员调试代码使用
 - INFO：记录运维过程数据
 - WARN：记录运维过程报警数据
 - ERROR：记录错误堆栈信息
-- FATAL：灾难信息，合并计入ERROR
+- FATAL：灾难信息，合并计入 ERROR
 
-一般情况下，开发时候使用DEBUG，上线后使用INFO，运维信息记录使用 WARN 即可。下面就设置一下日志级别：
+一般情况下，开发时候使用 DEBUG，上线后使用 INFO，运维信息记录使用 WARN 即可。下面就设置一下日志级别：
 
 ```yaml
 # 开启debug模式，输出调试信息，常用于检查系统运行状况
@@ -5493,7 +5645,7 @@ logging:
 
 还可以再设置更细粒度的控制
 
-<b>步骤③<b>：<span style="color:red"><b>设置日志组，控制指定包对应的日志输出级别，也可以直接控制指定包对应的日志输出级别，推荐使用<b></span>
+<b>步骤③</b>：<span style="color:red"><b>设置日志组，控制指定包对应的日志输出级别，也可以直接控制指定包对应的日志输出级别，推荐使用</b></span>
 
 ```yaml
 logging:
@@ -5513,10 +5665,10 @@ logging:
 
 说白了就是总体设置一下，每个包设置一下，如果感觉设置的麻烦，就先把包分个组，对组设置，没了，就这些。
 
-<b>总结<b>
+<b>总结</b>
 
 1. 日志用于记录开发调试与运维过程消息
-2. 日志的级别共6种，通常使用4种即可，分别是DEBUG，INFO,WARN,ERROR
+2. 日志的级别共 6 种，通常使用 4 种即可，分别是 DEBUG，INFO，WARN，ERROR
 3. 可以通过日志组或代码包的形式进行日志显示级别的控制
 
 ### 优化日志对象创建代码
@@ -5542,18 +5694,18 @@ public class BookController extends BaseClass{
 }
 ```
 
-<b>总结<b>：基于lombok提供的 `@Slf4j` 注解为类快速添加日志对象
+<b>总结</b>：基于lombok提供的 `@Slf4j` 注解为类快速添加日志对象
 
 ### 日志输出格式控制
 
-日志已经能够记录了，但是目前记录的格式是Spring Boot给我们提供的，如果想自定义控制就需要自己设置了。先分析一下当前日志的记录格式。
+日志已经能够记录了，但是目前记录的格式是 Spring Boot 给我们提供的，如果想自定义控制就需要自己设置了。先分析一下当前日志的记录格式。
 
 ![image-20211206123431222](img/boot/image-20211206123431222.png)
 
-- PID：进程ID，用于表明当前操作所处的进程，当多服务同时记录日志时，该值可用于协助程序员调试程序 
-- 所属类/接口名：当前显示信息为Spring Boot重写后的信息，名称过长时，简化包名书写为首字母，甚至直接删除
+- PID：进程 ID，用于表明当前操作所处的进程，当多服务同时记录日志时，该值可用于协助程序员调试程序 
+- 所属类/接口名：当前显示信息为 Spring Boot 重写后的信息，名称过长时，简化包名书写为首字母，甚至直接删除
 
-对于单条日志信息来说，日期，触发位置，记录信息是最核心的信息。级别用于做筛选过滤，PID与线程名用于做精准分析。了解这些信息后就可以 DIY 日志格式了。本课程不做详细的研究，有兴趣的小伙伴可以学习相关的知识。下面给出课程中模拟的官方日志模板的书写格式，便于大家学习。
+对于单条日志信息来说，日期，触发位置，记录信息是最核心的信息。级别用于做筛选过滤，PID 与线程名用于做精准分析。了解这些信息后就可以 DIY 日志格式了。本课程不做详细的研究，有兴趣的小伙伴可以学习相关的知识。下面给出课程中模拟的官方日志模板的书写格式，便于大家学习。
 
 ```yaml
 logging:
@@ -5561,7 +5713,17 @@ logging:
     	console: "%d %clr(%p) --- [%16t] %clr(%-40.40c){cyan} : %m %n"
 ```
 
-<b>总结<b>：日志输出格式设置规则 `%d:日期`；`%m:消息`；`%n:换行`；`%clr:彩色`；`[%16t]:线程，占16位`；`%c:类名，-40是左对齐，.40是控制内容的截取`；`{cyan}:青色`
+<b>总结</b>：日志输出格式设置规则 `%d:日期`；`%m:消息`；`%n:换行`；`%clr:彩色`；`[%16t]:线程，占16位`；`%c:类名，-40是左对齐，.40是控制内容的截取`；`{cyan}:青色`
+
+| 格式 | 描述   |
+| ---- | ------ |
+| %d   | 日期   |
+| %m   | 消息   |
+| %n   | 换行   |
+| %clr | 彩色   |
+| %t   | 线程   |
+| %c   | 类名   |
+| -40  | 左对齐 |
 
 ### 日志文件
 
@@ -5587,9 +5749,91 @@ logging:
             file-name-pattern: server.%d{yyyy-MM-dd}.%i.log
 ```
 
-以上格式是基于logback日志技术设置每日日志文件的设置格式，要求容量到达3KB以后就转存信息到第二个文件中。文件命名规则中的%d标识日期，%i是一个递增变量，用于区分日志文件。
+以上格式是基于 logback 日志技术设置每日日志文件的设置格式，要求容量到达 3KB 以后就转存信息到第二个文件中。文件命名规则中的 %d 标识日期，%i 是一个递增变量，用于区分日志文件。
 
-<b>总结<b>：日志记录到文件、日志文件格式设置
+<b>总结</b>：日志记录到文件、日志文件格式设置
+
+| logging.file | logging.path | Example  | Description                        |
+| ------------ | ------------ | -------- | ---------------------------------- |
+| （none）     | （none）     |          | 只在控制台输出                     |
+| 指定文件名   | （none）     | my.log   | 输出日志到 my.log 文件             |
+| （none）     | 指定目录     | /var/log | 输出到指定目录的 spring.log 文件中 |
+
+### 指定配置
+
+给类路径下放上每个日志框架自己的配置文件即可；Spring Boot 就不使用他默认配置的了
+
+| Logging System          | Customization                                                |
+| ----------------------- | ------------------------------------------------------------ |
+| Logback                 | logback-spring.xml , logback-spring.groovy , logback.xml or logback.groovy |
+| Log4j2                  | log4j2-spring.xml or log4j2.xml                              |
+| JDK (Java Util Logging) | logging.properties                                           |
+
+logback.xml：直接就被日志框架识别了；
+
+<b>logback-spring.xml</b>：日志框架就不直接加载日志的配置项，由SpringBoot解析日志配置，可以使用
+
+SpringBoot 的高级 Profifile 功能
+
+```xml
+<springProfile name="staging"> 
+    <!-- configuration to be enabled when the "staging" profile is active --> 
+    可以指定某段配置只在某个环境下生效 
+</springProfile>
+```
+
+### 遗留问题
+
+a（slf4j+logback）: Spring（commons-logging）、Hibernate（jboss-logging）、MyBatis、xxxx 统一日志记录，即使是别的框架和我一起统一使用 slf4j 进行输出？
+
+如何让系统中所有的日志都统一到 slf4j？
+
+1、将系统中其他日志框架先排除出去；
+
+2、用中间包来替换原有的日志框架；
+
+3、我们导入 slf4j 其他的实现
+
+```xml
+<!-- Spring 日志包 -->
+<dependency> 
+    <groupId>org.springframework.boot</groupId> 
+    <artifactId>spring-boot-starter-logging</artifactId> 
+</dependency>
+```
+
+1）、Spring Boot 底层也是使用 slf4j+logback 的方式进行日志记录
+
+2）、Spring Boot 也把其他的日志都替换成了 slf4j； 
+
+3）、中间替换包？
+
+```java
+@SuppressWarnings("rawtypes") 
+public abstract class LogFactory {
+    static String UNSUPPORTED_OPERATION_IN_JCL_OVER_SLF4J = "http://www.slf4j.org/codes.html#unsupported_operation_in_jcl_over_slf4j";
+    static LogFactory logFactory = new SLF4JLogFactory(); 
+}
+```
+
+如果我们要引入其他框架？一定要把这个框架的默认日志依赖移除掉？
+
+Spring 框架用的是 commons-logging；
+
+```xml
+<dependency>
+	<groupId>org.springframework</groupId>
+    <artifactId>spring-core</artifactId>
+    <exclusions>
+    	<exclusion>
+        	<groupId>commons-logging</groupId>
+    		<artifactId>commons-logging</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+```
+
+SpringBoot 能自动适配所有的日志，而且底层使用 slf4j+logback 的方式记录日志，引入其他框架的时候，只需要把这个框架依赖的日志框架排除掉即可
 
 # 开发实用篇
 
