@@ -1,5 +1,15 @@
 # Linux基本命令
 
+快速删除大量文件：
+
+```shell
+rsync --delete-before -avH --force -r  /tmp/empty/ 2ruralbaseconsistance_consine4/
+```
+
+- /tmp/empty/  是人为创建的一个空目录
+- 2ruralbaseconsistance_consine4/ 是需要删除的目录
+- 删除速度不 rm -rf 快
+
 ## 后台运行程序
 
 如果想让一个程序在后台运行，只要在执行命令的末尾加上一个&符号就可以了。但是这种方式不是很保险，有些程序当你登出终端后它就会停止。
@@ -109,9 +119,9 @@ sudo nohup java Demo > ./out.txt # 修改重定向的位置。把输出的内容
 nohup java Demo & > ./out.txt # 加上 & 直接在后台运行，不在终端显示。
 ```
 
-- jobs -l：列出当前在后台执行的命令
-- fg N：将命令进程号码为N的命令进程放到前台执行，同 %N
-- bg N：将命令进程号码为N的命令进程放到后台执行，同 %N，%N 是通过jobs 命令查到的后台正在执行的命令的序号，不是pid
+- jobs -l：列出当前在后台执行的命令；或者直接用 jobs 命令
+- fg N：将命令进程号码为 N 的命令进程放到前台执行，同 %N
+- bg N：将命令进程号码为 N 的命令进程放到后台执行，同 %N，%N 是通过 jobs 命令查到的后台正在执行的命令的序号，不是 pid
 
 ## 文件和目录操作
 

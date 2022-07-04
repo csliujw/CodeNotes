@@ -51,8 +51,7 @@
   --note-border: #aaaa33;
 
   /*****************************/
-
-  --font-family: 'Roboto', sans-serif;
+  --font-family: "Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --code-font-family: 'Source Code Pro';
   --monospace: 'Source Code Pro';
 }
@@ -68,17 +67,17 @@ body {
   font-family: var(--font-family);
   font-weight: 400;
   color: #3b454e;
-  line-height: 1.6rem;
+  line-height: 1.5rem;
   height: 98%;
 }
 
 #write {
-	font-size: 0.95rem;
-	max-width: 95%;
-	margin: 5px;
-	padding: 30px;
-	padding-bottom: 100px;
-	width: 98%;
+    font-size: 0.95rem;
+    max-width: 100%;
+    margin: 0px;
+    padding: 45px;
+    padding-bottom: 50px;
+    width: 100%;
 }
 
 #write > ul:first-child,
@@ -89,7 +88,7 @@ body {
 a {
   color: var(--primary-color);
   text-decoration: none !important;
-  transition-duration: 0.2s;
+  transition-duration: 0.1s;
   transition-property: color;
 }
 
@@ -110,6 +109,8 @@ h6 {
   position: relative;
   color: var(--heading-text-color);
   cursor: text;
+  color: #639dcf;
+  border-bottom: solid 2px var(--borders);
 }
 
 h1:hover a.anchor,
@@ -152,52 +153,52 @@ h6 code {
 }
 
 h1 {
-  font-size: 1.9rem;
+  font-size: 1.7rem;
   font-weight: 700;
-  line-height: 1.5;
-  margin-top: 3rem;
-  margin-bottom: 0.8rem;
+  line-height: 1.4;
+  margin-top: 2.3rem;
+  margin-bottom: 0.7rem;
   padding-bottom: 0.2rem;
-  border-bottom: solid 1px var(--borders);
+  border-bottom: solid 2px var(--borders);
 }
 
 h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  line-height: 1.5;
-  margin-top: 2.5rem;
-  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  margin-top: 2rem;
+  margin-bottom: 0.7rem;
 }
 
 h3 {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 700;
-  line-height: 1.5;
-  margin-top: 2rem;
-  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  margin-top: 1.8rem;
+  margin-bottom: 0.7rem;
 }
 
 h4 {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  line-height: 1.5;
-  margin-top: 1.5rem;
+  line-height: 1.4;
+  margin-top: 1.2rem;
   margin-bottom: 0.5rem;
 }
 
 h5 {
-  font-size: 0.9rem;
+  font-size: 1.0rem;
   font-weight: 700;
-  line-height: 1.5;
-  margin-top: 1.3rem;
+  line-height: 1.4;
+  margin-top: 1.2rem;
   margin-bottom: 0.5rem;
 }
 
 h6 {
-  font-size: 0.9rem;
+  font-size: 1.0rem;
   font-weight: 500;
-  line-height: 1.5;
-  margin-top: 1.3rem;
+  line-height: 1.4;
+  margin-top: 1.2rem;
   margin-bottom: 0.5rem;
   opacity: 0.75;
 }
@@ -273,7 +274,7 @@ blockquote,
 ul,
 ol,
 dl {
-  margin: 0.5rem 0rem 1.5rem 0rem;
+  margin: 0.7rem 0rem 0.5rem 0rem;
 }
 
 li > ol,
@@ -330,7 +331,7 @@ blockquote {
   background-color: var(--boxes);
   border-left: 4px solid var(--primary-color);
   border-radius: 0.3rem;
-  padding: 1rem;
+  padding: 0.8rem;
 }
 
 blockquote blockquote {
@@ -663,16 +664,17 @@ tt {
   padding: 0.5rem;
   font-size: 0.8rem;
 }
-
+	
 code {
-  padding: 0.2rem 0.4rem;
-  background-color: var(--borders);
-  font-size: 0.9rem;
-  border-radius: 0.2rem;
+  color:#d63200;
+  padding: 0.15rem 0.15rem;
+  font-size: 1rem;
+  background-color: #efedf5;
+  border-radius: 0.15rem;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
-
+	
 .md-fences .CodeMirror div.CodeMirror-cursor,
 #typora-source div.CodeMirror-cursor {
   border-left: solid 1px white;
@@ -683,7 +685,7 @@ code {
   margin-top: 0.5rem;
   padding-top: 8px;
   padding-bottom: 6px;
-  background-color: var(--codeboxes);
+  background-color: #151027;
 }
 
 #typora-source {
@@ -1216,15 +1218,15 @@ footer.ty-footer {
 
 #typora-sidebar .file-tree-node {
   padding: 0rem;
-  font-weight: 500;
-  font-size: 0.9rem;
+  font-weight: 465;
+  font-size: 0.8rem;
   margin-left: 0.8rem;
 }
 
 #typora-sidebar .file-tree-node .file-node-content {
   padding: 0rem;
-  line-height: 2.2rem;
-  height: 2.2rem;
+  line-height: 1.8rem;
+  height: 1.6rem;
   background: none;
   margin-bottom: 0px;
 }
@@ -1235,11 +1237,11 @@ footer.ty-footer {
 }
 
 #typora-sidebar .file-tree-node .file-node-icon {
-  margin-right: 0.5rem;
+  margin-right: 0.2rem;
 }
 
 #typora-sidebar .file-tree-node .file-node-icon.fa-file-text-o {
-  margin-top: 0.33rem;
+  margin-top: 0.36rem;
 }
 
 #typora-sidebar .file-tree-node .file-node-icon.fa-folder {

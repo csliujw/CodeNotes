@@ -58,7 +58,7 @@ interface Operation {
     String op();
 }
 
-//  漂亮的枚举代码，虽然看起来长，复杂，但是拓展性特别强！
+// 漂亮的枚举代码，虽然看起来长，复杂，但是拓展性特别强！
 // 下面就是见证奇迹的时刻，优雅地用枚举替代if else。
 public enum RoleOperation implements Operation {
     ADMIN_POWER() {
@@ -129,7 +129,7 @@ public class SomeFunc {
 
     @Test
     public void func4() {
-        // RED 和 BLUE比较， RED小于BLUE 返回负数 ；equals返回0；大于返回 正数
+        // RED 和 BLUE 比较， RED 小于 BLUE 返回负数 ；equals 返回 0；大于返回 正数
         System.out.println(Color.RED.compareTo(Color.BLUE)); // -1
         System.out.println(Color.RED.compareTo(Color.GREEN));// -2
     }
@@ -241,60 +241,58 @@ Java 反射机制主要提供了以下这几个功能：
 
 #### 几个重要的类
 
-> **Class 类**
+> <b>Class 类</b>
 
-每定义一个`java` `class` 实体都会产生一个Class对象。我们编写一个类，编译完成后，在生成的 `.class`文件中，就会产生一个Class对象，这个Class对象用于表示这个类的类型信息。Class中没有公共构造器，即Class对象不能被实例化。
+每定义一个`java` `class` 实体都会产生一个 Class 对象。我们编写一个类，编译完成后，在生成的 `.class` 文件中，就会产生一个 Class 对象，这个 Class 对象用于表示这个类的类型信息。Class 中没有公共构造器，即 Class 对象不能被实例化。
 
-> **Field类**
+> <b>Field 类</b>
 
-Field类提供类或接口中单独字段的信息，以及对单独字段的动态访问。
+Field 类提供类或接口中单独字段的信息，以及对单独字段的动态访问。
 
-> **Method类**
+> <b>Method 类</b>
 
 ```java
 invoke(Object obj, Object... args)
 ```
 
-> **`ClassLoader`类**
+> <b>ClassLoader 类</b>
 
-**<span style="color:green">ClassLoader类加载器！类加载器用来把类（class）装载进JVM的。ClassLoader使用的双亲委派模型来搜索加载类的，这个模型也就是双亲委派模型。</span>**
+<b style="color:green">ClassLoader 类加载器！类加载器用来把类（class）装载进 JVM 的。ClassLoader 使用的双亲委派模型来搜索加载类的，这个模型也就是双亲委派模型。</b>
 
-**`ClassLoader`的类继承图如下：**
+<b>`ClassLoader` 的类继承图如下：</b>
 
-<img src="img/classLoader.png">
+<div align="center"><img src="img/classLoader.png"></div>
 
-### 4.3 动态代理
+### 动态代理
 
-#### 4.3.1 作用
+#### 作用
 
 运行时，动态创建一组指定的接口的实现类对象！（在运行时，创建实现了指定的一组接口的对象）
 
 动态代理对比其他方法增强方式
 
-<img src="img/proxy.png">
+<div align="center"><img src="img/proxy.png"></div>
 
-#### 4.3.2 基本Demo
+#### 基本Demo
 
 ```java
-interface A{    
-}
-interface B{
-}
+interface A{}
+interface B{}
 Object o = 方法(new Class[]{ A.class, B.class })
-o 它实现了A和B两个接口！
+// o 它实现了A 和 B 两个接口！
 ```
 
 ```java
 Object proxyObject = Proxy.newProxyInstance(ClassLoader classLoader, Class[] interfaces, InvocationHandler h);
 ```
 
-- 方法的作用：动态创建实现了interfaces数组中所有指定接口的实现类对象！
+- 方法的作用：动态创建实现了interfaces 数组中所有指定接口的实现类对象！
 - `ClassLoader`：类加载器！
-  - 它是用来加载器的，把.class文件加载到内存，形成Class对象！
+  - 它是用来加载器的，把 .class 文件加载到内存，形成 Class 对象！
 - `Class[ ] interfaces`：指定要实现的接口们。
-- `InvocationHandler`：代理对象的所有方法（个别不执行，一般`nativate`方法不会执行，但是`hashCode`却会执行，好奇怪）都会调用`InvocationHadnler`的`invoke()`方法
+- `InvocationHandler`：代理对象的所有方法（个别不执行，一般 `nativate` 方法不会执行，但是 `hashCode` 却会执行，好奇怪）都会调用 `InvocationHadnler` 的`invoke()`方法
 - 动态代理的作用
-  - 最终是学习`AOP`（面向切面编程），它与装饰者模式有点相似，它比装饰者模式更灵活（潜在含义，动态代理更难！）
+  - 最终是学习 `AOP`（面向切面编程），它与装饰者模式有点相似，它比装饰者模式更灵活（动态代理更难）
 
 **动态代理基本Demo**
 
@@ -349,24 +347,24 @@ public class ProxyDemo1 {
 }
 ```
 
-#### 4.3.3 invoke解释
+#### invoke解释
 
 ```java
 public Object invoke(Object proxy, Method method, Object[] args)
 ```
 
-**这个invoke什么时候被调用？**
+<b>这个 invoke 什么时候被调用？</b>
 
 - 在调用代理对象所实现接口中的方法时被调用！
 
-**参数解释**
+<b>参数解释</b>
 
 - `Object proxy`：当前对象，即代理对象！在调用谁的方法！
 - `Method method`：当前被调用的方法（目标方法）
 - `Object [ ] args`：实参
 - 返回的是方法的返回值。
 
-<img src="img/invoke_explain.png">
+<div align="center"><img src="img/invoke_explain.png"></div>
 
 ----
 
@@ -393,9 +391,9 @@ public class ProxyDemo2 {
 }
 ```
 
-### 4.4 模拟`AOP`
+### 模拟`AOP`
 
-`Spring AOP`，感受一下什么叫增强内容可变！
+`Spring AOP`，感受一下什么叫增强内容可变
 
 - `ProxyFactory` 代理工厂
 - `IBeforeAdvice` 前置通知接口【方法执行前调用前置】
@@ -405,45 +403,44 @@ public class ProxyDemo2 {
 
 ## 第五章 注解
 
-**注解也叫元数据**。是一种代码级别的说明，JDK1.5 引入的特性，与类，接口，枚举是在同一层次。**可声明在包，类，字段，方法，局部变量，方法参数等的前面**，对这些元素进行说明。
+<b>注解也叫元数据</b>。是一种代码级别的说明，JDK1.5 引入的特性，与类，接口，枚举是在同一层次。<b>可声明在包，类，字段，方法，局部变量，方法参数等的前面</b>，下面对这些元素进行说明。
 
-**作用分类：**
+<b>作用分类：</b>
 
 1.代码分析，通过代码里标识的元数据对代码进行分析【结合反射技术】
 
 2.编译检查，通过代码里标识的元数据让编译器能够实现机泵的编译检查【Override】
 
-3.编写文档，通过代码里标识的元数据生成文档【生成文档doc文档】
+3.编写文档，通过代码里标识的元数据生成文档【生成文档 doc 文档】
 
-### 5.1 内置注解
+### 内置注解
 
 - `Override`：检测被标注的是否继承自父类
 - `Deprecated`：表示方法过时
 - `SuppressWarnings`：压制警告
-  - 一般传递参数all
+  - 一般传递参数 all
 
-### 5.2 自定义注解
+### 自定义注解
 
-> **元注解`public @interface annotationName{}`**
+> <b>元注解`public @interface annotationName{}`</b>
 
 反编译发现，本质就是一个接口。
 
 ```java
 import java.lang.annotation.Annotation;
 
-public interface Annotation extends Annotation {
-}
+public interface Annotation extends Annotation {}
 ```
 
-#### 5.2.1 属性的返回值
+#### 属性的返回值
 
 基本数据类型、String、枚举、注解、及以上类型的数组
 
-#### 5.2.2 赋值问题
+#### 赋值问题
 
-设置默认值`String sex() default "1";`
+设置默认值 `String sex() default "1";`
 
-使用注解，数组类型的赋值 `str={xx,xx,xx}`，若数组中只有一个，大括号可省略。回忆Spring中注解
+使用注解，数组类型的赋值 `str={xx,xx,xx}`，若数组中只有一个，大括号可省略。回忆 Spring 中的注解
 
 ```
 * 基本数据类型
@@ -453,26 +450,26 @@ public interface Annotation extends Annotation {
 		* 以上类型的数组
 ```
 
-### 5.3 元注解
+### 元注解
 
-> **用于描述注解的注解**
+> <b>用于描述注解的注解</b>
 
 `@Target`：描述注解的位置
 
-- `ElementType`取值
+- `ElementType` 取值
   - TYPE：可以作用于类上
   - METHOD：可以作用于方法上
   - FIELD：可以作用于成员变量上
 
 `@Retention`：描述注解是被保留的阶段
 
-`@Retention(RetentionPolicy.RUNTIME)`：当前被描述的注解，会保留到class字节码文件中，并被`JVM`读取到
+`@Retention(RetentionPolicy.RUNTIME)`：当前被描述的注解，会保留到 class 字节码文件中，并被 JVM 读取到
 
-`@Documented`：描述注解是否被抽取到api文档中
+`@Documented`：描述注解是否被抽取到 API 文档中
 
 `@Inherited`：描述注解是否被子类继承
 
-### 5.4 注解的解析
+### 注解的解析
 
 ```java
 @Target(ElementType.TYPE)
@@ -503,22 +500,22 @@ public class RefelectDemo {
 
 ## 第六章 类加载器
 
-### 6.1 分类
+### 分类
 
-`ClassLoad`分类
+`ClassLoad` 分类
 
-- 引导 类加载器----->负责加载类库 rt中的jar 【最高，Bootstrap】
-- 扩展 类加载器----->负责加载扩展jar包  ext下的都是扩展jar
-- 系统 类加载器----->应用下的类，包含开发人员写的类和三方jar包【最低】
+- 引导 类加载器----->负责加载类库 rt 中的 jar 【最高，Bootstrap】
+- 扩展 类加载器----->负责加载扩展 jar 包  ext 下的都是扩展 jar
+- 系统 类加载器----->应用下的类，包含开发人员写的类和三方 jar 包【最低】
 
-`ClassLoad`有个双亲委派模型，会先问父   类加载器/上级类加载器，向上级委托，没有就自己加载，没找到就抛出`ClassNotFound`。永远不会出现类库中的类被系统加载器加载，应用下的类被引导加载。
+`ClassLoad` 有个双亲委派模型，会先问父   类加载器/上级类加载器，向上级委托，没有就自己加载，没找到就抛出 `ClassNotFound`。永远不会出现类库中的类被系统加载器加载，应用下的类被引导加载。
 
 委托父加载器加载，父可以加载就让父加载。父无法加载时再自己加载。
 
-- 可避免类的重复加载，父类加载器已经加载了该类时，就没必要子`ClassLoader`再加载一次了/
-- 考虑到安全因素，`java`核心`api`中定义类型不会被随意替换。
+- 可避免类的重复加载，父类加载器已经加载了该类时，就没必要子 `ClassLoader` 再加载一次了
+- 考虑到安全因素，`java` 核心 `api` 中定义类型不会被随意替换。
 
-### 6.2 类加载的顺序
+### 类加载的顺序
 
 ```java
 class MyApp{
@@ -537,29 +534,29 @@ class String{ // 引导加载， String类，类库中的
 
 其实还得分线程，每个线程都有一个当前的类加载器来负责加载类。
 
-### 6.3 流程
+### 流程
 
-基础阶段 **了解**，中级阶段 **熟悉**，高级阶段，**不清楚**。
+基础阶段 <b>了解</b>，中级阶段 <b>熟悉</b>，高级阶段，<b>不清楚</b>。
 
-继承`ClassLoader`类完成自定义类加载器。自定义类加载器一般是为了加载网络上的类，class在网络中传输，为了安全，那么class需要加密，需要自定义类加载器来加载（对class做解密工作）
+继承 `ClassLoader` 类完成自定义类加载器。自定义类加载器一般是为了加载网络上的类，class 在网络中传输，为了安全，那么 class 需要加密，需要自定义类加载器来加载（对 class 做解密工作）
 
-`ClassLoader`加载类都是通过`loadClass()`方法来完成的。`loadClass()`方法的工作流程如下：
+`ClassLoader` 加载类都是通过 `loadClass()` 方法来完成的。`loadClass() `方法的工作流程如下：
 
-- 调用==findLoadedClass()==方法查看该类是否已经被加载过了，如果该类没有加载过，那么这个方法返回null。
-- 判断`findLoadedClass()`返回的是否为null,如果不是null那么直接返回，可避免同一个类被加载两次。
-- 如果`findLoadedClass()`返回的是null, 那么就启动代理模式（委托机制），即调用上级的`loadClass()`方法，获取上级的方法是`getParent()`，当然上级可能还有上级，这个动作就一直向上走；（==双亲委派机制==，tomcat破坏了双亲委派模型）
-- 如果`getParent().loadClass()`返回的不是null，这说明上级加载成功了，那么就加载结果；
-- 如果上级返回的是null，说明需要自己出手，`loadClass()`方法会调用本类的`findClass()`方法来加载类
-- 这说明我们只需要重写`ClassLoader`的`findClass()`方法，这就可以了！如果重写了`loadClass()`方法覆盖了代理模式！
+- 调用 `findLoadedClass()` 方法查看该类是否已经被加载过了，如果该类没有加载过，那么这个方法返回 null。
+- 判断 `findLoadedClass()` 返回的是否为 null,如果不是 null 那么直接返回，可避免同一个类被加载两次。
+- 如果 `findLoadedClass()` 返回的是 null, 那么就启动代理模式（委托机制），即调用上级的 `loadClass()` 方法，获取上级的方法是 `getParent()`，当然上级可能还有上级，这个动作就一直向上走；（双亲委派机制，tomcat 破坏了双亲委派模型）
+- 如果 `getParent().loadClass()` 返回的不是 null，这说明上级加载成功了，那么就加载结果；
+- 如果上级返回的是 null，说明需要自己出手，`loadClass() `方法会调用本类的 `findClass()` 方法来加载类
+- 这说明我们只需要重写 `ClassLoader` 的 `findClass()` 方法，这就可以了！如果重写了 `loadClass()` 方法覆盖了代理模式！
 
-我们要自定义一个类加载器，只需要继承`ClassLoader`类。然后重写它的`findClass()`方法即可。在`findClass()`中我们需要完成如下的工作！
+我们要自定义一个类加载器，只需要继承 `ClassLoader` 类。然后重写它的 `findClass()` 方法即可。在 `findClass()` 中我们需要完成如下的工作！
 
-- 找到class文件，把它加载到一个byte[]中
-- 调用`defineClass()`方法，把byte[]传递给这个方法即可
+- 找到 class 文件，把它加载到一个 byte[] 中
+- 调用 `defineClass()` 方法，把 byte[] 传递给这个方法即可
 
-### 6.4 自定义类加载器
+### 自定义类加载器
 
->**文件类加载器**
+><b>文件类加载器</b>
 
 ```java
 public class MyClassLoader extends ClassLoader {
@@ -594,9 +591,9 @@ public class MyClassLoader extends ClassLoader {
 }
 ```
 
-热部署，越过双亲委派，就是不用`loadClass` 用`findClass`
+热部署，越过双亲委派，就是不用 `loadClass` 用 `findClass`
 
-> **复杂例子**
+> <b>复杂例子</b>
 
 ```java
 package org.example.classloader;
@@ -615,8 +612,7 @@ public class ClassLoaderDemo extends ClassLoader {
     // 类加载器的地盘，指明加载那个地方的class文件
     private String classpath;
 
-    public ClassLoaderDemo() {
-    }
+    public ClassLoaderDemo() {}
 
     public ClassLoaderDemo(String classpath) {
         this.classpath = classpath;
@@ -649,7 +645,6 @@ public class ClassLoaderDemo extends ClassLoader {
         String result = (String) loaderSay.invoke(null);
         System.out.println(result);
     }
-
 
     // 重写这个方法即可
     @Override
@@ -690,22 +685,22 @@ public class ClassLoaderDemo extends ClassLoader {
 }
 ```
 
-### 6.5 Tomcat类加载器
+### Tomcat类加载器
 
-tomcat提供了两种类加载器。
+tomcat 提供了两种类加载器。
 
-**第一种 服务器类加载器**
+<b>第一种 服务器类加载器</b>
 
-- ${CATALINA-HOME}\lib\，tomcat类加载器，它负责加载下面的类
+- ${CATALINA-HOME}\lib\，tomcat 类加载器，它负责加载下面的类
 
-**第二种 应用类加载器**
+<b>第二种 应用类加载器</b>
 
 - ${CONTEXT}\WEB-INF\lib  
 - ${CONTEXT}\WEB-INF\classes
 
-**总结**
+<b>总结</b>
 
-tomcat破坏了双亲委派模型
+tomcat 破坏了双亲委派模型
 
 引导
 
@@ -717,15 +712,15 @@ tomcat破坏了双亲委派模型
 
 应用类加载器：先自己动手，然后再去委托
 
-<img src="img/tomcat_classLoader.png">
+<div align="center"><img src="img/tomcat_classLoader.png"></div>
 
 ## 第七章 并发
 
-### 7.1 注意
+### 注意
 
-> **不要调用Thread类或Runnable对象的run方法**。直接调用run方法会在同一个线程中执行----不会启动新的线程。调用`Thread.start()`方法会创建一个执行run方法的新线程。
+<b>不要调用 Thread 类或 Runnable 对象的 run 方法</b>。直接调用 run 方法会在同一个线程中执行----不会启动新的线程。调用 `Thread.start()` 方法会创建一个执行 run 方法的新线程。
 
-> **线程的六种状态**
+> <b>线程的六种状态</b>
 
 - New：新建
 - Runnable：可运行【可能在运行 或 准备运行】
@@ -746,40 +741,36 @@ public enum State {
 }
 ```
 
-- **lock和unlock，unlock要放在finally中，确保锁可以被释放。**
+- <b>lock 和 unlock，unlock 要放在 finally 中，确保锁可以被释放。</b>
 
-- **可重入锁，获得锁的方法（代码）可以调用持有相同锁的方法**
+- <b>可重入锁，获得锁的方法（代码）可以调用持有相同锁的方法。</b>
 
-> **`ReentrantLock()`**
+> <b>`ReentrantLock()`</b>
 
 - 公平锁和非公平锁。
 - 公平锁倾向于选择等待时间长的线程，这种策略可能严重影响性能。
 - 一般选择非公平锁。
 
-> <span style="color:green">**Condition，用`ReentrantLock()`的实例对象获得Condition对象**</span>
+> <b style="color:green">Condition，用 `ReentrantLock()` 的实例对象获得 Condition 对象</b>
 
-- `await()` 将该线程放在这个条件的等待集中，<span style="color:green">**并放弃锁！**</span>
+- `await()` 将该线程放在这个条件的等待集中，<span style="color:orange">并放弃锁！</span>
 - `singalAll()` 激活等待这个条件的所有线程，把他们从等待集中移出，让他们重新成为可运行的线程！
 - `singal()` 从该条件的等待集中随机选取一个从等待集中移出，让他们重新成为可运行的线程！
-- <span style="color:green">**用if做条件判断不合适，存在虚假唤醒的问题，用while。【`JDK`注释中有说明】**</span>
+- <span style="color:orange">用 if 做条件判断不合适，存在虚假唤醒的问题，用 while。【JDK 注释中有说明】</span>
 
-> **synchronized**
+线程就是一个单独的资源类，没有任何附属的操作
 
-> **线程就是一个单独的资源类，没有任何附属的操作。**
+> <b>线程局部变量 `ThreadLocal`</b>
 
-> **线程局部变量 `ThreadLocal`**
-
-- `ThreadLocal.withInitial()`为函数式编程提供的方法
-
-**Unsafe类啊！**
+- `ThreadLocal.withInitial()` 为函数式编程提供的方法
 
 ## 第八章 网络编程
 
-采用windows的`telent`工具作为客户端进行发起连接。
+采用 windows 的 `telent` 工具作为客户端进行发起连接。
 
-### 8.1 入门
+### 入门
 
-> **Client**
+> <b>Client</b>
 
 ```java
 /**
@@ -824,7 +815,7 @@ public class SocketTest {
 }
 ```
 
-> **Server**
+> <b>Server</b>
 
 ```java
 public class EchoServer {
@@ -860,17 +851,15 @@ public class EchoServer {
 }
 ```
 
----
-
 ## 第九章 Servlet3.0
 
 - 注解
 - 文件上传
-- 异步处理 需要 `asyncSupported=true`，有过滤器的话，过滤器也要设置`asyncSupported = true`
+- 异步处理 需要 `asyncSupported=true`，有过滤器的话，过滤器也要设置 `asyncSupported = true`
 
-使用型特性就是在保护你的Java职业生涯。
+使用型特性就是在保护你的 Java 职业生涯。
 
-### 9.1 注解替代`xml`
+### 注解替代`xml`
 
 ```java
 @WebServlet("/index.do")
@@ -896,7 +885,7 @@ public class IndexServlet extends HttpServlet {
 }
 ```
 
-### 9.2 异步响应
+### 异步响应
 
 异步响应如果不设置编码格式 可能会导致异步失败（有乱码，异步可能会失败；主要是告诉它响应文本是什么。）测试了一下，的确是设置好响应文本即可。
 
@@ -910,7 +899,7 @@ public class IndexServlet extends HttpServlet {
  错误的原因就是过滤器没有设置  asyncSupported = true
 ```
 
-**代码案例**
+<b>代码案例</b>
 
 ```java
 @WebServlet(urlPatterns = "/async", asyncSupported = true)
@@ -955,9 +944,9 @@ public class AsyncServlet extends HttpServlet {
 }
 ```
 
-### 9.3 文件上传
+### 文件上传
 
-> **几个重要的API**
+> <b>几个重要的 API</b>
 
 ```java
 - request.getPart("file_name") // 获得文件对象Part
@@ -969,7 +958,7 @@ public class AsyncServlet extends HttpServlet {
 获取文件输入流后，在用输出流 存入磁盘。
 ```
 
-**文件上传的简单Demo**
+<b>文件上传的简单 Demo</b>
 
 文件上传用绝对路径【公司】
 
@@ -1019,89 +1008,79 @@ public class FileUpload extends HttpServlet {
 
 ### 基本概念
 
-class文件通过**类加载器**装载至JVM中的。为了防止内存中存放在多份同样的字节码，使用了双亲委派机制（它不会自己去尝试加载类，而是把请求委托给父加载器去完成，依次向上，避免重复加载字节码）
+class 文件通过<b>类加载器</b>装载至 JVM 中的。为了防止内存中存放在多份同样的字节码，使用了双亲委派机制（它不会自己去尝试加载类，而是把请求委托给父加载器去完成，依次向上，避免重复加载字节码）
 
-JDK中的本地方法类一般由根加载器（Bootstrap loader）装载；JDK中内部实现的扩展类一般由扩展加载器（ExtClassLoader）实现装载；而程序中的类文件则由系统加载器（AppClassLoader）实现装载。
+JDK 中的本地方法类一般由根加载器（Bootstrap loader）装载；JDK 中内部实现的扩展类一般由扩展加载器（ExtClassLoader）实现装载；而程序中的类文件则由系统加载器（AppClassLoader）实现装载。
 
-<img src="img/ClassLoader.jpg">
+<div align="center"><img src="img/ClassLoader.jpg"></div>
 
 ### 打破双亲委派机制
 
 只要加载类的时候，不是从 App ClassLoader --> Ext ClassLoader --> BootStrap ClassLoader 这个顺序查找，就是打破了双亲委派机制。
 
-加载class核心的方法在LoaderClass类的loadClass方法上（双亲委派机制的核心实现），只要我们定义个 ClassLoader，重写 loadClass 方法（不按照往上开始寻找类加载器），那就算是打破双亲委派机制了。
+加载 class 核心的方法在 LoaderClass 类的 loadClass 方法上（双亲委派机制的核心实现），只要我们定义个 ClassLoader，重写 loadClass 方法（不按照往上开始寻找类加载器），那就算是打破双亲委派机制了。
 
-> **Tomcat打破双亲委派机制**
+> <b>Tomcat 打破双亲委派机制</b>
 
-我们部署传统javaweb项目是，把war包放到tomcat的webapp下，这意味着一个tomcat可以运行多个web应用程序；
+我们部署传统 JavaWeb 项目是，把 war 包放到 tomcat 的 webapp 下，这意味着一个 tomcat 可以运行多个 web 应用程序；
 
-----
+假设有两个 Web 应用程序，它们都有一个类，叫做 User，并且它们的类全限定名都一样，如都是 `com.yyy.User`，但是他们的具体实现是不一样的。那么 tomcat 如何保证它们是不会冲突的？<span style="color:orange">tomcat 为每个 Web 应用创建一个类加载实例（WebAppClassLoader），该加载器重写了 loadClass 方法，优先加载当前应用目录下的类，如果当前找不到了，才一层一层往上找，这样就做到了 Web 应用层级的隔离。</span>
 
-假设有两个Web应用程序，它们都有一个类，叫做User，并且它们的类全限定名都一样，如都是 `com.yyy.User`，但是他们的具体实现是不一样的。那么tomcat如何保证它们是不会冲突的？**tomcat为每个Web应用创建一个类加载实例（WebAppClassLoader），该加载器重写了 loadClass 方法，优先加载当前应用目录下的类，如果当前找不到了，才一层一层往上找**，这样就做到了Web应用层级的隔离。
+并不是 Web 应用程序下的所有依赖都需要隔离的，比如 Redis 就可以 Web 应用之间共享（有需要的话），因为如果版本相同，没必要每个 Web 应用程序都独自加载一份。具体做法是：Tomcat 在 WebAppClassLoader 上加了个父类加载器 （Shared ClassLoader），<span style="color:orange">如果 WebAppClassLoader（加载指定目录下的类） 自身没有加载到某个类，就委托 SharedClassLoader 去加载（把需要应用程序之间需要共享的类放到一个共享目录下，Share ClassLoader 读共享目录的类即可）。</span>
 
-----
+为了隔绝 Web 应用程序与 Tomcat 本身的类，又有类加载器（CatalinaClassLoader）来装载 Tomcat 本身的依赖。如果 Tomcat 本身的依赖和 Web 应用还需要共享，那么还有类加载器（CommonClassLoader）来装载而达到共享。各个类加载器的加载目录可以到 Tomcat 的 catalina.properties 配置文件上查看。
 
-并不是Web应用程序下的所有依赖都需要隔离的，比如 Redis 就可以 Web 应用之间共享（有需要的话），因为如果版本相同，没必要每个Web应用程序都独自加载一份。具体做法是：Tomcat 在 WebAppClassLoader 上加了个父类加载器 （Shared ClassLoader），**如果 WebAppClassLoader（加载指定目录下的类） 自身没有加载到某个类，就委托 SharedClassLoader 去加载（把需要应用程序之间需要共享的类放到一个共享目录下，Share ClassLoader 读共享目录的类即可**）。
+> JDBC 破坏了双亲委派？
 
-为了隔绝Web应用程序与Tomcat本身的类，又有类加载器（CatalinaClassLoader）来装载 Tomcat 本身的依赖。如果 Tomcat 本身的依赖和 Web 应用还需要共享，那么还有类加载器（CommonClassLoader）来装载而达到共享。各个类加载器的加载目录可以到 Tomcat 的 catalina.properties 配置文件上查看。
+JDBC 定义了接口，具体实现类由各个厂商进行实现。
 
-----
+类加载的规则如下：如果一个类由类加载器 A 加载，那么这个类的依赖类也是由相同的类加载器加载。
 
-> Tomcat的类加载结构图
-
-<img src="img/Tomcat_ClassLoader.jpg">
-
-> JDBC破坏了双亲委派？
-
-JDBC定义了接口，具体实现类由各个厂商进行实现。
-
-类加载的规则如下：如果一个类由类加载器A加载，那么这个类的依赖类也是由相同的类加载器加载。
-
-使用JDBC的时候，是使用 DriverManager 进而获取 Connection，DriverManager 在 java.sql 包下，显然是由 BootStrap 类加载器进行装载。当我们使用 DriverManager.getConnection() 时，得到的一定是厂商实现的类，**但 BootStrap ClassLoader 无法加载到各个厂商实现的类**，因为这些实现类没在 java 包中。DriverManager 的解决方案时 在 DriverManager 初始化的时候， 得到**线程上下文加载器**，去获取 Connection 的时候，是使用线程上下文加载器去加载 Connection 的，**而这里的线程上下文加载器实际上还是 App ClassLoader**，所以在获取 Connection 的时候，还是先找 Ext ClassLoader 和 BootStrap ClassLoader，只不过这两加载器肯定加载不到的，最终会由App ClassLoader进行加载！
+使用 JDBC 的时候，是使用 DriverManager 进而获取 Connection，DriverManager 在 java.sql 包下，显然是由 BootStrap 类加载器进行装载。当我们使用 DriverManager.getConnection() 时，得到的一定是厂商实现的类，<span style="color:orange">但 BootStrap ClassLoader 无法加载到各个厂商实现的类，因为这些实现类没在 java 包中。DriverManager 的解决方案是在 DriverManager 初始化的时候， 得到线程上下文加载器，去获取 Connection 的时候，是使用线程上下文加载器去加载 Connection 的，而这里的线程上下文加载器实际上还是 App ClassLoader，所以在获取 Connection 的时候，还是先找 Ext ClassLoader 和 BootStrap ClassLoader，只不过这两加载器肯定加载不到的，最终会由 App ClassLoader 进行加载！</span>
 
 有人觉得本应由 BootStrao ClassLoader 进行加载的 却改成 线程上下文加载器加载 就觉得破坏了。
 
-有人觉得虽然改成了线程上下文加载器 但是依旧遵守 依次往上找父类加载器进行加载，都找不到时才由自己加载，认为**原则**上时没变的。
+有人觉得虽然改成了线程上下文加载器 但是依旧遵守 依次往上找父类加载器进行加载，都找不到时才由自己加载，认为原则上是没变的。
 
 不重要好吧！理解为什么重要！
 
 ### 小结
 
-**前置知识**：JDK中默认类加载器有三个：AppClassLoader、Ext ClassLoader、BootStrap ClassLoader。AppClassLoader的父加载器为Ext ClassLoader、Ext ClassLoader的父加载器为BootStrap ClassLoader。这里的父子关系并不是通过继承实现的，而是组合。
+<b>前置知识</b>：JDK 中默认类加载器有三个：AppClassLoader、Ext ClassLoader、BootStrap ClassLoader。AppClassLoader 的父加载器为 Ext ClassLoader、Ext ClassLoader 的父加载器为 BootStrap ClassLoader。这里的父子关系并不是通过继承实现的，而是组合。
 
-**什么是双亲委派机制**：加载器在加载过程中，先把类交由父类加载器进行加载，父类加载器没找到才由自身加载。
+<b>什么是双亲委派机制</b>：加载器在加载过程中，先把类交由父类加载器进行加载，父类加载器没找到才由自身加载。
 
-**双亲委派机制目的**：为了防止内存中存在多份同样的字节码（安全）
+<b>双亲委派机制目的</b>：为了防止内存中存在多份同样的字节码（安全）
 
-**类加载规则**：如果一个类由类加载器A加载，那么这个类的依赖类也是由「相同的类加载器」加载。
+<b>类加载规则</b>：如果一个类由类加载器A加载，那么这个类的依赖类也是由「相同的类加载器」加载。
 
-**如何打破双亲委派机制**：自定义ClassLoader，重写loadClass方法（只要不依次往上交给父加载器进行加载，就算是打破双亲委派机制）
+<b>如何打破双亲委派机制</b>：自定义 ClassLoader，重写 loadClass 方法（只要不依次往上交给父加载器进行加载，就算是打破双亲委派机制）
 
-**打破双亲委派机制案例**：Tomcat
+<b>打破双亲委派机制案例</b>：Tomcat
 
-1. 为了Web应用程序类之间隔离，为每个应用程序创建WebAppClassLoader类加载器
-2. 为了Web应用程序类之间共享，把ShareClassLoader作为WebAppClassLoader的父类加载器，如果WebAppClassLoader加载器找不到，则尝试用ShareClassLoader进行加载
-3. 为了Tomcat本身与Web应用程序类隔离，用CatalinaClassLoader类加载器进行隔离，CatalinaClassLoader加载Tomcat本身的类
-4. 为了Tomcat与Web应用程序类共享，用CommonClassLoader作为CatalinaClassLoader和ShareClassLoader的父类加载器
-5. ShareClassLoader、CatalinaClassLoader、CommonClassLoader的目录可以在Tomcat的catalina.properties进行配置
+1. 为了 Web 应用程序类之间隔离，为每个应用程序创建 WebAppClassLoader 类加载器
+2. 为了 Web 应用程序类之间共享，把 ShareClassLoader 作为 WebAppClassLoader 的父类加载器，如果 WebAppClassLoader 加载器找不到，则尝试用 ShareClassLoader 进行加载
+3. 为了 Tomcat 本身与 Web 应用程序类隔离，用 CatalinaClassLoader 类加载器进行隔离，CatalinaClassLoader 加载 Tomcat 本身的类
+4. 为了 Tomcat 与 Web 应用程序类共享，用 CommonClassLoader 作为 CatalinaClassLoader 和 ShareClassLoader 的父类加载器
+5. ShareClassLoader、CatalinaClassLoader、CommonClassLoader 的目录可以在 Tomcat 的 catalina.properties 进行配置
 
-**线程上下文加载器**：由于类加载的规则，很可能导致父加载器加载时依赖子加载器的类，导致无法加载成功（BootStrap ClassLoader无法加载第三方库的类），所以存在「线程上下文加载器」来进行加载。
+<b>线程上下文加载器</b>：由于类加载的规则，很可能导致父加载器加载时依赖子加载器的类，导致无法加载成功（BootStrap ClassLoader 无法加载第三方库的类），所以存在「线程上下文加载器」来进行加载。
 
 ## 第十一章 Java内存模型
 
-> Java内存模型概述
+> Java 内存模型概述
 
-Java的内存模型 Java Memory Model，简称JMM，本身是一种抽象的概念，实际上并不存在，它描述的是一组规则或规范，通过这组规范定义了程序中各个变量（包括实例字段，静态字段和构成数组对象的元素）的访问方式
+Java 的内存模型 Java Memory Model，简称 JMM，本身是一种抽象的概念，实际上并不存在，它描述的是一组规则或规范，通过这组规范定义了程序中各个变量（包括实例字段，静态字段和构成数组对象的元素）的访问方式
 
-JMM关于同步的规定：
+JMM 关于同步的规定：
 
 - 线程解锁前，必须把共享变量的值刷新回主内存
 - 线程加锁前，必须读取主内存的最新值，到自己的工作内存
 - 加锁和解锁是同一把锁
 
->Java内存模型三大特性
+>Java 内存模型三大特性
 
-JMM的三大特性，volatile只保证了两个，即可见性和有序性，不满足原子性
+JMM 的三大特性，volatile 只保证了两个，即可见性和有序性，不满足原子性
 
 - 可见性
 - 原子性
@@ -1111,37 +1090,37 @@ JMM的三大特性，volatile只保证了两个，即可见性和有序性，不
 
 #### 背景
 
-多核计算机，每个核心都会有高速缓存。高速缓存的为了解决CPU与内存（主存）直接的速度差异，L1，L2缓存一般是【每个核心独占】一份的。L3缓存一般是多核共享的。
+多核计算机，每个核心都会有高速缓存。高速缓存的为了解决 CPU 与内存（主存）直接的速度差异，L1，L2 缓存一般是【每个核心独占】一份的。L3 缓存一般是多核共享的。
 
-为了让CPU提高运算效率，处理器可能会对代码进行【乱序执行】，即指令重排序，可以会议下计算机组成原理的流水线执行。
+为了让 CPU 提高运算效率，处理器可能会对代码进行【乱序执行】，即指令重排序，可以会议下计算机组成原理的流水线执行。
 
-计算机中的一些操作往往是非原子性的，如 i++ 在执行的时候需要多个指令才能完成 i++ 这个操作。在单线程下，是不会存在什么问题的，因为单线程意味着无法并发。且在单线程下，编译器 /runtime/ 处理器 必须遵守 as-if-serial 语义，即它们不会对数据**依赖关系的操作**做重排序
+计算机中的一些操作往往是非原子性的，如 i++ 在执行的时候需要多个指令才能完成 i++ 这个操作。在单线程下，是不会存在什么问题的，因为单线程意味着无法并发。且在单线程下，编译器 /runtime/ 处理器 必须遵守 as-if-serial 语义，即它们不会对数据<b>依赖关系的操作</b>做重排序
 
 > 缓存数据不一致
 
-多个线程同时修改 【共享变量】，CPU核心下的高速缓存是 【不共享】的，多个 cache 与内存直接的数据同部如何进行的？
+多个线程同时修改 【共享变量】，CPU 核心下的高速缓存是 【不共享】的，多个 cache 与内存直接的数据同部如何进行的？
 
 - 锁总线，锁数据传输
-- 缓存一致性协议（如MESI协议，M（Modified）E（Exclusive）S（Share）I（Invalid））
+- 缓存一致性协议（如 MESI 协议，M（Modified）E（Exclusive）S（Share）I（Invalid））
 - 锁总线开销太大了，一般是用缓存一致性协议，没办法的时候才会用锁总线。
 
 #### MESI协议
 
-MESI协议，M（Modified）E（Exclusive）S（Share）I（Invalid）
+MESI 协议，M（Modified）E（Exclusive）S（Share）I（Invalid）
 
-缓存一致性协议锁的是==缓存行==进行加锁。**缓存行是高速缓存存储的最小单位。**
+缓存一致性协议锁的是缓存行进行加锁。<b>缓存行是高速缓存存储的最小单位。</b>
 
-> MESI原理（计组那块的知识）
+> MESI 原理（计组那块的知识）
 
 当每个 CPU 读取共享变量之前，会先识别数据的对象状态（修改、共享、独占、无效）。
 
-==独占==：说明 CPU 将要得到的变量数据是最新的，没有被其他 CPU 同时读取。
+<b style="color:orange">独占</b>：说明 CPU 将要得到的变量数据是最新的，没有被其他 CPU 同时读取。
 
-==共享==：说明 CPU 将要得到的变量数据还是最新的，有其他 CPU 在读取，但是还没被修改。
+<b style="color:orange">共享</b>：说明 CPU 将要得到的变量数据还是最新的，有其他 CPU 在读取，但是还没被修改。
 
-==修改==：说明当前 CPU 正在修改该变量的值，同时会向其他 CPU 发送该数据状态为 invalid（无效）的通知，得到其他 CPU 响应后（其他 CPU 将数据状态从共享（share）变成invilid（无效）），会当前 CPU 将高速缓存的数据写到主存，并把自己的状态从 modify 变成 exclusive。如果 CPU 发现数据是 invilid 则需要从主存重新读取最新的数据。
+<b style="color:orange">修改</b>：说明当前 CPU 正在修改该变量的值，同时会向其他 CPU 发送该数据状态为 invalid（无效）的通知，得到其他 CPU 响应后（其他 CPU 将数据状态从共享（share）变成invilid（无效）），会当前 CPU 将高速缓存的数据写到主存，并把自己的状态从 modify 变成 exclusive。如果 CPU 发现数据是 invilid 则需要从主存重新读取最新的数据。
 
-MESI 协议做的就是判判断**对象状态**， 根据对象状态来采取不同的策略。在某个 CPU 在对数据进行修改时，需要**同步**通知其他 CPU ，表示这个数据被我修改了，你们不能用了。**对比锁总线，MESI协议的“锁粒度”更小，性能更高**。
+<span style="color:orange">MESI 协议做的就是判判断对象状态， 根据对象状态来采取不同的策略。在某个 CPU 在对数据进行修改时，需要同步通知其他 CPU ，表示这个数据被我修改了，你们不能用了。对比锁总线，MESI协议的“锁粒度”更小，性能更高。</span>
 
 > CPU 优化
 
@@ -1153,11 +1132,11 @@ MESI 协议做的就是判判断**对象状态**， 根据对象状态来采取�
 
 > CPU 乱序执行
 
-如果是不同核心的CPU读它们共享的高速缓存，还是可能出现读旧值的问题。CPU1 修改了A值，把修改后值写到 store buffer 并通知CPU2 对该值 进行 invalid 操作，而 CPU2 可能还没收到 invalid 通知，就去做其他操作了，导致 CPU2 读到的还是旧值。这称之为 CPU 乱序执行。为了解决乱序问题，引出了**内存屏障**
+如果是不同核心的 CPU 读它们共享的高速缓存，还是可能出现读旧值的问题。CPU1 修改了 A 值，把修改后值写到 store buffer 并通知 CPU2 对该值进行 invalid 操作，而 CPU2 可能还没收到 invalid 通知，就去做其他操作了，导致 CPU2 读到的还是旧值。这称之为 CPU 乱序执行。为了解决乱序问题，引出了<b>内存屏障</b>
 
 > 内存屏障
 
-内存屏障实际上是为了解决**异步优化**导致 **CPU乱序执行/缓存不及时可见** 的问题，解决方案就是把**异步优化禁用**了。
+内存屏障实际上是为了解决异步优化导致 <b>CPU 乱序执行/缓存不及时可见</b> 的问题，解决方案就是把异步优化禁用了。
 
 内存屏障可分为：
 
@@ -1167,45 +1146,45 @@ MESI 协议做的就是判判断**对象状态**， 根据对象状态来采取�
 
 屏障：操作数据时，往数据插入一条“特殊的指令”。只要遇见这条指令，那前面的操作都得【完成】。
 
-==写屏障==：CPU当发现写屏障指令时，会把该指令**之前**存在于 store Buffer 所有写指令**刷入高速缓存**。通过这种方式就**可以让CPU修改的数据可以马上暴露给其他 CPU**，达到写操作可见性的效果。
+<b style="color:orange">写屏障</b>：CPU当发现写屏障指令时，会把该指令<b>之前存在于 store Buffer 所有写指令刷入高速缓存</b>。通过这种方式就<b>可以让 CPU 修改的数据可以马上暴露给其他 CPU</b>，达到写操作可见性的效果。
 
-==读屏障==：CPU 当发现读屏障指令时，会把该指令之前存在于 invalid queue 所有的指令都处理掉，通过这种方式就**可以确保当前CPU的缓存状态是准确的**，达到读操作一定是读取最新的效果。
+<b style="color:orange">读屏障</b>：CPU 当发现读屏障指令时，会把该指令之前存在于 invalid queue 所有的指令都处理掉，通过这种方式就<b>可以确保当前 CPU 的缓存状态是准确的</b>，达到读操作一定是读取最新的效果。
 
-深入Linux内核架构一书中，读、写屏障的解释：
+深入 Linux 内核架构一书中，读、写屏障的解释：
 
-- ==读屏障==：是读访问内存屏障。它保证 在屏障之后发出的任何读取操作执行之前，屏障之前发出的所有读取操作都已经完成。（**屏障内的所有操作完成了！然后才会执行屏障后的操作！**）
-- ==写屏障==：是写访问内存屏障。它保证 在屏障之后发出的任何写操作执行之前，屏障之前发出的所有写操作都已经完成。
+- <b style="color:orange">读屏障</b>：是读访问内存屏障。它保证 在屏障之后发出的任何读取操作执行之前，屏障之前发出的所有读取操作都已经完成。（屏障内的所有操作完成了！然后才会执行屏障后的操作！）
+- <b style="color:orange">写屏障</b>：是写访问内存屏障。它保证 在屏障之后发出的任何写操作执行之前，屏障之前发出的所有写操作都已经完成。
 - 编译器在屏障之前发出的读写请求完 成之前，不会处理屏障之后的任何读写请求
 
 #### Java内存模型
 
-由于不同 CPU 架构的缓存体系不一样，缓存一致性协议不一样、重排序的策略不一样、所提供的内存屏障指令也有差异，为了简化 Java 开发人员的工作，==Java 封装了一套规范：Java内存模型==
+由于不同 CPU 架构的缓存体系不一样，缓存一致性协议不一样、重排序的策略不一样、所提供的内存屏障指令也有差异，为了简化 Java 开发人员的工作，Java 封装了一套规范：Java 内存模型
 
-Java内存模型希望屏蔽各种硬件和操作系统的访问差异，保证了Java程序在各种平台下对内存的访问都能得到一致的效果。目的是解决多线程存在的原子性、可见性（缓存一致性）以及有序性的问题。
+Java 内存模型希望屏蔽各种硬件和操作系统的访问差异，保证了 Java 程序在各种平台下对内存的访问都能得到一致的效果。目的是解决多线程存在的原子性、可见性（缓存一致性）以及有序性的问题。
 
 #### 小结
 
 - 并发问题产生的三大根源是「可见性」「有序性」「原子性」
 
-- 可见性：CPU架构下存在高速缓存，每个核心下的L1/L2高速缓存不共享（不可见）
+- 可见性：CPU 架构下存在高速缓存，每个核心下的 L1/L2 高速缓存不共享（不可见）
 
 - 有序性：主要有三部分可能导致打破（编译器和处理器可以在不改变「单线程」程序语义的情况下，可以对代码语句顺序进行调整重新排序
 
 - - 编译器优化导致重排序（编译器重排）
-    - 指令集并行重排序（CPU原生重排）
-    - 内存系统重排序（CPU架构下很可能有store buffer /invalid queue 缓冲区，这种「异步」很可能会导致指令重排）
+    - 指令集并行重排序（CPU 原生重排）
+    - 内存系统重排序（CPU 架构下很可能有 store buffer/invalid queue 缓冲区，这种「异步」很可能会导致指令重排）
 
-- 原子性：Java的一条语句往往需要多条 CPU 指令完成(i++)，由于操作系统的线程切换很可能导致 i++ 操作未完成，其他线程“中途”操作了共享变量  i ，导致最终结果并非我们所期待的。
+- 原子性：Java 的一条语句往往需要多条 CPU 指令完成 (i++)，由于操作系统的线程切换很可能导致 i++ 操作未完成，其他线程“中途”操作了共享变量 i ，导致最终结果并非我们所期待的。
 
-- 在CPU层级下，为了解决「缓存一致性」问题，有相关的“锁”来保证，比如“总线锁”和“缓存锁”。
+- 在 CPU 层级下，为了解决「缓存一致性」问题，有相关的“锁”来保证，比如“总线锁”和“缓存锁”。
 
-- - 总线锁是锁总线，对共享变量的修改在相同的时刻只允许一个CPU操作。
-    - 缓存锁是锁缓存行(cache line)，其中比较出名的是MESI协议，对缓存行标记状态，通过“同步通知”的方式，来实现(缓存行)数据的可见性和有序性
-    - 但“同步通知”会影响性能，所以会有内存缓冲区(store buffer/invalid queue)来实现「异步」进而提高CPU的工作效率
+- - 总线锁是锁总线，对共享变量的修改在相同的时刻只允许一个 CPU 操作。
+    - 缓存锁是锁缓存行 (cache line)，其中比较出名的是 MESI 协议，对缓存行标记状态，通过“同步通知”的方式，来实现(缓存行)数据的可见性和有序性
+    - 但“同步通知”会影响性能，所以会有内存缓冲区 (store buffer/invalid queue) 来实现「异步」进而提高 CPU 的工作效率
     - 引入了内存缓冲区后，又会存在「可见性」和「有序性」的问题，平日大多数情况下是可以享受「异步」带来的好处的，但少数情况下，需要强「可见性」和「有序性」，只能"禁用"缓存的优化。
-    - “禁用”缓存优化在CPU层面下有「内存屏障」，读屏障/写屏障/全能屏障，本质上是插入一条"屏障指令"，使得缓冲区(store buffer/invalid queue)在屏障指令之前的操作均已被处理，进而达到 读写 在CPU层面上是可见和有序的。
+    - “禁用”缓存优化在 CPU 层面下有「内存屏障」，读屏障/写屏障/全能屏障，本质上是插入一条"屏障指令"，使得缓冲区 (store buffer/invalid queue) 在屏障指令之前的操作均已被处理，进而达到读写在 CPU 层面上是可见和有序的。
 
-- 不同的CPU实现的架构不一样，Java为了屏蔽硬件和操作系统访问内存的各种差异，提出了「Java内存模型」的规范，保证了Java程序在各种平台下对内存的访问都能得到一致效果。
+- 不同的 CPU 实现的架构不一样，Java 为了屏蔽硬件和操作系统访问内存的各种差异，提出了「Java 内存模型」的规范，保证了 Java 程序在各种平台下对内存的访问都能得到一致效果。
 
 ### 从源码到执行
 
@@ -1213,42 +1192,42 @@ Java内存模型希望屏蔽各种硬件和操作系统的访问差异，保证�
 
 编译--->加载--->解释--->执行
 
-- 编译：将源码文件编译成JVM可解释的class文件。会对程序做语法分析、语义分析、注解处理等操作，最后才生成字节码文件。
-  - 典型的处理有：泛型擦出，Java的泛型擦出就是在 编译 阶段执行的。
-- 加载：将编译后的class文件加载到JVM中。
+- 编译：将源码文件编译成 JVM 可解释的 class 文件。会对程序做语法分析、语义分析、注解处理等操作，最后才生成字节码文件。
+  - 典型的处理有：泛型擦出，Java 的泛型擦出就是在 编译 阶段执行的。
+- 加载：将编译后的 class 文件加载到 JVM 中。
   - 加载步骤：装载--->连接--->初始化
 
 #### 加载
 
 > 装载
 
-- **装载时机**：为了节省内存的开销，不会一次把所有的类都装载到JVM，而是等到 有需要 的时候才进行装载。（如new 反射）
-- **装载发生**：class文件是通过 类加载器 加载到 JVM中，为防止内存中出现多分相同的字节码，使用了双亲委派机制（不会自己去尝试加载这个类，而是把请求委托给父加载器去完成，依次向上）
-- **装载规则**：JDK中的本地犯法类一般由根加载器（Bootstrao loader）装载，JDK中内部实现的扩展类一般由扩展加载器（ExtClassLoader）实现装载，而程序中的类文件则由系统加载器（AppClassLoader）实现装载。
+- <b>装载时机</b>：为了节省内存的开销，不会一次把所有的类都装载到 JVM，而是等到 有需要 的时候才进行装载。（如 new 反射）
+- <b>装载发生</b>：class 文件是通过 类加载器 加载到 JVM 中，为防止内存中出现多分相同的字节码，使用了双亲委派机制（不会自己去尝试加载这个类，而是把请求委托给父加载器去完成，依次向上）
+- <b>装载规则</b>：JDK 中的本地犯法类一般由根加载器（Bootstrao loader）装载，JDK 中内部实现的扩展类一般由扩展加载器（ExtClassLoader）实现装载，而程序中的类文件则由系统加载器（AppClassLoader）实现装载。
 
-查找并加载类的二进制数据，在JVM堆中创建一个java.lang.Class类的对象，并将类相关的信息存储在JVM方法区中。
+查找并加载类的二进制数据，在 JVM 堆中创建一个 java.lang.Class 类的对象，并将类相关的信息存储在 JVM 方法区中。
 
-装载后，class文件就装载到了JVM中，并创建出了对应的Class对象和类信息，并这Class对象和类信息存储到了方法区中。
+装载后，class 文件就装载到了 JVM 中，并创建出了对应的 Class 对象和类信息，并这 Class 对象和类信息存储到了方法区中。
 
 > 连接
 
-对class的信息进行验证、为类变量分配内存空间并对其赋默认值。
+对 class 的信息进行验证、为类变量分配内存空间并对其赋默认值。
 
 连接的细化步骤为：验证--->准备--->解析
 
-- 验证：验证类是否符合 Java 规范 和 JVM 规范。
+- 验证：验证类是否符合 Java 规范和 JVM 规范。
 - 准备：为类的静态变量分配内存，初始化为系统的初始值。
-- 解析：将**符号引用**转为直接引用的过程。（什么是符号引用？）
+- 解析：将<b>符号引用</b>转为直接引用的过程。（什么是符号引用？）
 
-通过连接，对class信息做了校验并分配了内存空间和默认值。
+通过连接，对 class 信息做了校验并分配了内存空间和默认值。
 
 > 初始化
 
 为类的静态变量赋予正确的初始值。
 
-过程：收集 class 的静态变量、静态代码块、静态方法至clinit() 方法，随后从上往下开始执行（clinit()方法？）
+过程：收集 class 的静态变量、静态代码块、静态方法至 clinit() 方法，随后从上往下开始执行
 
-如果 **实例化对象** 则会调用方法对实例变量进行初始化，并执行对应的构造方法内的代码。（==这块感觉写到有问题，查查资料==）
+如果 <b>实例化对象</b> 则会调用方法对实例变量进行初始化，并执行对应的构造方法内的代码。（先系统默认初始化，再执行构造方法初始化）
 
 #### 解释
 
@@ -1259,16 +1238,14 @@ Java内存模型希望屏蔽各种硬件和操作系统的访问差异，保证�
 - 解释器
 - JIT
 
-JVM对热点代码做编译，非热点代码直接进行解释。运行频繁的数据会被解释为热点代码。
-
-热点代码使用热点探测来检测是否为热点代码。热点探测一般两种方式：
+JVM 对热点代码做编译，非热点代码直接进行解释。运行频繁的数据会被解释为热点代码。热点代码使用热点探测来检测是否为热点代码。热点探测一般两种方式：
 
 - 计数器 
 - 抽样
 
-HotSpot使用的是 计数器 的方式进行探测，为每个方法准备了两类计数器：方法调用计数器和回边计数器。这两个计数器都有一个确定的阈值，当计数器超过阈值溢出了，就会触发JIT编译。即时编译器把热点方法的指令码保存起来，下次执行的时候就无需重复的进行解释，直接执行缓存的机器语言。
+HotSpot 使用的是计数器的方式进行探测，为每个方法准备了两类计数器：方法调用计数器和回边计数器。这两个计数器都有一个确定的阈值，当计数器超过阈值溢出了，就会触发 JIT 编译。即时编译器把热点方法的指令码保存起来，下次执行的时候就无需重复的进行解释，直接执行缓存的机器语言。
 
-**执行次数大于100万次的代码会被编译成热点代码**
+执行次数大于 100 万次（好像是 1w 次）的代码会被编译成热点代码
 
 #### 执行
 
@@ -1276,20 +1253,19 @@ HotSpot使用的是 计数器 的方式进行探测，为每个方法准备了�
 
 #### 小结
 
-- Java跨平台因为有JVM屏蔽了底层操作系统
-
-- Java源码到执行的过程，从JVM的角度看可以总结为四个步骤：编译->加载->解释->执行
-
-- - 「编译」经过 语法分析、语义分析、注解处理 最后才生成会class文件
-    - 「加载」又可以细分步骤为：装载->连接->初始化。装载则把class文件装载至JVM，连接则校验class信息、分配内存空间及赋默认值，初始化则为变量赋值为正确的初始值。连接里又可以细化为：验证、准备、解析
-    - 「解释」则是把字节码转换成操作系统可识别的执行指令，在JVM中会有字节码解释器和即时编译器。在解释时会对代码进行分析，查看是否为「热点代码」，如果为「热点代码」则触发JIT编译，下次执行时就无需重复进行解释，提高解释速度
+- Java 跨平台因为有 JVM 屏蔽了底层操作系统
+- Java 源码到执行的过程，从 JVM 的角度看可以总结为四个步骤：编译->加载->解释->执行
+- - 「编译」经过 语法分析、语义分析、注解处理 最后才生成会 class 文件
+    - 「加载」又可以细分步骤为：装载->连接->初始化。装载则把 class 文件装载至 JVM，连接则校验 class 信息、分配内存空间及赋默认值，初始化则为变量赋值为正确的初始值。连接里又可以细化为：验证、准备、解析
+    - 「解释」则是把字节码转换成操作系统可识别的执行指令，在 JVM 中会有字节码解释器和即时编译器。在解释时会对代码进行分析，查看是否为「热点代码」，如果为「热点代码」则触发 JIT 编译，下次执行时就无需重复进行解释，提高解释速度
     - 「执行」调用系统的硬件执行最终的程序指令
 
-  <img src="img/From_Java2Class.jpg">
+
+<div align="center"><img src="img/From_Java2Class.jpg"></div>
 
 ### Java内存模型
 
-ava内存模型希望屏蔽各种硬件和操作系统的访问差异，保证了Java程序在各种平台下对内存的访问都能得到一致的效果。目的是解决多线程存在的原子性、可见性（缓存一致性）以及有序性的问题。==Java 内存模型时一种规范，JVM会实现这种规范。==
+Java 内存模型希望屏蔽各种硬件和操作系统的访问差异，保证了 Java 程序在各种平台下对内存的访问都能得到一致的效果。目的是解决多线程存在的原子性、可见性（缓存一致性）以及有序性的问题。Java 内存模型时一种规范，JVM会实现这种规范。
 
 > 主要内容概述
 
@@ -1301,30 +1277,30 @@ ava内存模型希望屏蔽各种硬件和操作系统的访问差异，保证�
 
 Java 内存模型定义了：Java 线程对内存数据进行交互的规范。
 
-线程之间的 共享变量 存储在 主内存 中，每个线程都有自己私有的 本地内存，本地内存 存储了该线程以 读\写 共享变量的副本。
+线程之间的共享变量存储在主内中，每个线程都有自己私有的本地内存，本地内存存储了该线程以读\写共享变量的副本。
 
 本地内存是 Java 内存模型的抽象概念，并不是真实存在的。
 
-<img src="img/JMM.jpg">
+<div align="center"><img src="img/JMM.jpg"></div>
 
-Java 内存模型规定了：线程对变量的所有操作都必须在 **本地内存** 进行，**不能直接读写主内存** 的变量。
+Java 内存模型规定了：线程对变量的所有操作都必须在<b>本地内存</b>进行，<b>不能直接读写主内存</b>的变量。
 
-Java内存模型定义了 8 种 操作来完成 变量如何从主内存到本地内存，以及变量如何从本地内存到主内存。分别是 read/load/use/assign/store/writer/lock/unlock操作。
+Java 内存模型定义了 8 种操作来完成 变量如何从主内存到本地内存，以及变量如何从本地内存到主内存。分别是 read/load/use/assign/store/writer/lock/unlock 操作。
 
-<img src="img/eight_op.jpg">
+<div align="center"><img src="img/eight_op.jpg"></div>
 
 > happen-before
 
-happen-before也是一套规则。目的是阐述“操作之间”的内存“可见性”。在happen-before规则下，我们写的代码只要前一个操作的结果对后续操作是可见的，是不会发生重排序的。
+happen-before 也是一套规则。目的是阐述“操作之间”的内存“可见性”。在 happen-before 规则下，我们写的代码只要前一个操作的结果对后续操作是可见的，是不会发生重排序的。
 
 > volatile
 
 - 有序性
 - 可见性
 
-在volatile前后加了内存屏障，使得编译器和CPU无法进行重排序，并且写 volatile 变量对其他线程可见。
+在 volatile 前后加了内存屏障，使得编译器和 CPU 无法进行重排序，并且写 volatile 变量对其他线程可见。
 
-在汇编层面，是通过 lock 前缀指令来实现的（**实现什么？没讲清楚，黄俊说的是实现的内存屏障？**），而不是各种 fence 指令（因为大部分平台都支持 lock 指令，而 fence 指令 是 x86 平台的）
+在汇编层面，是通过 lock 前缀指令来实现的（<b>实现的内存屏障？</b>），而不是各种 fence 指令（因为大部分平台都支持 lock 指令，而 fence 指令 是 x86 平台的）
 
 ```cpp
 // 内存屏障的实现
@@ -1335,91 +1311,87 @@ happen-before也是一套规则。目的是阐述“操作之间”的内存“�
 #endif // AMD64
 ```
 
-lock指令能保证：禁止 CPU 和 编译器 的重排序（保证了有序性）、保证 CPU 写核心的指令可以立即生效且其他核心的缓存数据失效（保证了可见性）
+lock 指令能保证：禁止 CPU 和编译器的重排序（保证了有序性）、保证 CPU 写核心的指令可以立即生效且其他核心的缓存数据失效（保证了可见性）
 
 ## 第十二章 JVM内存结构
 
 ### 概述
 
-JVM的内存结构，往往指的就是 JVM 定义的 运行时数据区域。
+JVM 的内存结构，往往指的就是 JVM 定义的运行时数据区域。
 
-==JVM内存结构分为5块：==方法区、堆、程序计数器、虚拟机栈、本地方法栈。=
+JVM 内存结构分为 5 块：方法区、堆、程序计数器、虚拟机栈、本地方法栈。
 
-<img src="img/JVM_Memory.jpg">
+<div align="center"><img src="img/JVM_Memory.jpg" width="60%"></div>
 
 ### 程序计数器
 
 一块较小的内存空间，当前线程所执行字节码的行号指示器，字节码解释器工作时就是通过改变这个计数器的值来选取下一条需要执行的字节码指令。程序计数器时程序控制流的指示器，分支、循环、跳转、异常处理、线程回复等基础功能都依赖于程序计数器完成。
 
-可以理解为计算机组成原理中的程序计数器。指向下一条需要执行的指令。**如果线程正在执行的是一个 Java 方法，这个计数器记录的是正在执行的虚拟机字节码指令的地址**；**如果正在执行的是本地方法，这个计数器值则应为空。**
+可以理解为计算机组成原理中的程序计数器。指向下一条需要执行的指令。<b>如果线程正在执行的是一个 Java 方法，这个计数器记录的是正在执行的虚拟机字节码指令的地址；如果正在执行的是本地方法，这个计数器值则应为空。</b>
 
 每个线程都需要一个独立的程序计数器，各条线程之间计数器互不影响，独立存储。程序计数器这块区域为线程私有，是线程安全的。
 
 ### 虚拟机栈
 
-描述的是 Java 方法执行的线程内存模型。每一条 Java 虚拟机线程都有自己私有的 Java 虚拟机栈，这个栈与线程同时创建，**每次方法调用都会创建一个 栈帧**。
+描述的是 Java 方法执行的线程内存模型。每一条 Java 虚拟机线程都有自己私有的 Java 虚拟机栈，这个栈与线程同时创建，<b>每次方法调用都会创建一个 栈帧。</b>
 
-==每个栈帧会包含几块内容：局部变量表、操作时栈、动态连接和返回地址==
+每个栈帧会包含几块内容：局部变量表、操作时栈、动态连接和返回地址
 
 Java 虚拟机栈的作用与传统语言中的栈非常类似，用于存储局部变量与一些尚未算好的结果。
 
-<img src="img/JVM_Stack.jpg">
+<div align="center"><img src="img/JVM_Stack.jpg" width="40%"></div>
 
 ### 本地方法栈
 
-与虚拟机栈所发挥的作用是非常相似的，其区别只是虚拟机栈为虚拟机执行 Java 方法（也就是字节码）服务，而本地方法栈则是为虚拟机使用到本地方法服务。
-
-==HotSpot VM 直接把虚拟机栈和本地方法栈合二为一了。==
+与虚拟机栈所发挥的作用是非常相似的，其区别只是虚拟机栈为虚拟机执行 Java 方法（也就是字节码）服务，而本地方法栈则是为虚拟机使用到本地方法服务。HotSpot VM 直接把虚拟机栈和本地方法栈合二为一了。
 
 ### 方法区
 
-> **Java虚拟机规范中的解释：**
+> <b>Java 虚拟机规范中的解释</b>
 
-方法区是可供各个线程共享的运行时内存区域。**存储了每一个类的结构信息，如：运行时常量池、字段和方法数据、构造函数和普通方法的字节码内容，还包括一些在类、实例、接口初始化时用到的特殊方法。**虚拟机可以自行选在在不在方法区实现垃圾回收算法。
+方法区是可供各个线程共享的运行时内存区域。存储了每一个类的结构信息，如：运行时常量池、字段和方法数据、构造函数和普通方法的字节码内容，还包括一些在类、实例、接口初始化时用到的特殊方法。虚拟机可以自行选在在不在方法区实现垃圾回收算法。
 
-> **HotSpot虚拟机**
+> <b>HotSpot 虚拟机</b>
 
-在HotSpot虚拟机，会常常提到 **永久代** 这个词。==HotSpot虚拟在 JDK8前 用 **永久代**实现了**方法区**==，而很多其他厂商的虚拟机其实是没有永久代的概念的。Java 虚拟机把方法区描述为堆的一个逻辑部分，但是它有一个别名叫作“非堆”，目的是为了与 Java 堆区分开来。
+在 HotSpot 虚拟机，会常常提到永久代这个词。HotSpot 虚拟在 JDK8 前用永久代实现了方法区，而很多其他厂商的虚拟机其实是没有永久代的概念的。Java 虚拟机把方法区描述为堆的一个逻辑部分，但是它有一个别名叫作“非堆”，目的是为了与 Java 堆区分开来。
 
-采用 **永久代** 实现 **方法区** 这种设计导致了 Java 应用 更容易遇到内存溢出的问题（永久代有 -XX:MaxPermSize 的上限，即使不设置也有默认大小，而J9 和 JRockit 只要没有触碰到进程可用内存的上限，如32位系统位4GB，就不会出现问题。）在JDK6 的时候 HotSpot 开发团队就有放弃永久代，逐步改为本地内存来实现方法区的计划了。
+采用永久代实现方法区这种设计导致了 Java 应用更容易遇到内存溢出的问题（永久代有 -XX:MaxPermSize 的上限，即使不设置也有默认大小，而 J9 和 JRockit 只要没有触碰到进程可用内存的上限，如 32 位系统位 4GB，就不会出现问题。）在 JDK6 的时候 HotSpot 开发团队就有放弃永久代，逐步改为本地内存来实现方法区的计划了。
 
 方法区主要用来存放已被虚拟机加载的“类相关信息”：包括类信息、常量池。
 
 - 类信息：类的版本、字段、方法、接口和父类等信息
-- 常量池：静态常量池 和 运行时常量池（这块不熟悉）
+- 常量池：静态常量池和运行时常量池（这块不熟悉）
 
 常量池：
 
-- 静态常量池：存储的是 **字面量** 以及 **符号引用** 等信息，静态常量池也包括了我们说的 **字符串常量池**
-- 运行时常量池：存储的是 **类加载** 时生成的 **直接引用** 等信息
+- 静态常量池：存储的是字面量以及符号引用等信息，静态常量池也包括了我们说的字符串常量池
+- 运行时常量池：存储的是类加载时生成的直接引用等信息
 
-但自从在 **JDK7** 以后，就已经把 **运行时常量池** 和 **静态常量池** 转移到了 **堆** 内存中进行存储。**到了JDK 8，终于完全废弃了永久代的概念，改用与 JRockit、J9 一样在本地内存中实现的元空间（Meta-space）来代替，把 JDK 7 中永久代还剩余的内容（主要是类型信息）全部移到元空间中。**对于 **物理分区** 来说 **运行时常量池** 和 **静态常量池** 就属于堆。==（逻辑分区和物理实际存储的位置是不一样的）==
+但自从在 JDK7 以后，就已经把运行时常量池和静态常量池转移到了堆内存中进行存储。到了JDK 8，终于完全废弃了永久代的概念，改用与 JRockit、J9 一样在本地内存中实现的元空间（Meta-space）来代替，把 JDK7 中永久代还剩余的内容（主要是类型信息）全部移到元空间中。对于物理分区来说运行时常量池和静态常量池就属于堆。（逻辑分区和物理实际存储的位置是不一样的）
 
-元空间存储不在虚拟机中，而是使用本地内存，JVM 不会再出现方法区的内存溢出，以往永久代经常因为内存不够用导致OOM异常。
+元空间存储不在虚拟机中，而是使用本地内存，JVM 不会再出现方法区的内存溢出，以往永久代经常因为内存不够用导致 OOM 异常。
 
-<img src="img/Method_Area.jpg">
+<div align="center"><img src="img/Method_Area.jpg" width="40%"></div>
 
-> **小结**
+<b>小结</b>
 
-HotSpot VM：HotSpot VM JDK7 以前永久代实现的方法区。JDK7 以前常量池在永久代（方法区）中，永久代容易OOM，JDK7 把常量池从 永久代（方法区） 移动到了 JVM 堆中。 ==JDK8开始，不在用永久代实现方法区了，而是用元空间实现方法区，永久代中剩余的内容（主要是类型信息）被移到了元空间。==
+HotSpot VM：HotSpot VM JDK7 以前永久代实现的方法区。JDK7 以前常量池在永久代（方法区）中，永久代容易 OOM，JDK7 把常量池从永久代（方法区） 移动到了 JVM 堆中。 JDK8 开始，不在用永久代实现方法区了，而是用元空间实现方法区，永久代中剩余的内容（主要是类型信息）被移到了元空间。
 
 ### 堆
 
-Java堆是被所有线程共享的一块内存区域，在虚拟机启动时创建。此内存区域的唯一目的就是存放对象实例，Java世界里“几乎”所有的对象实例都在这里分配内存。
+Java 堆是被所有线程共享的一块内存区域，在虚拟机启动时创建。此内存区域的唯一目的就是存放对象实例，Java 世界里“几乎”所有的对象实例都在这里分配内存。
 
-堆涉及到了垃圾回收。以往的垃圾回收多数是基于“经典分代”来设计，需要新生代、老年代收集器搭配才能工作；HotSpot里面也出现了不采用分代设计的新垃圾收集器。现在以传统的 分代 思想介绍下堆的划分。
+堆涉及到了垃圾回收。以往的垃圾回收多数是基于“经典分代”来设计，需要新生代、老年代收集器搭配才能工作；HotSpot 里面也出现了不采用分代设计的新垃圾收集器。现在以传统的分代思想介绍下堆的划分。
 
-**堆**被划分为新时代和老年代，新时代又被进一步划分为Eden和Survivor区，Surivivor由From Survivor和To Survivor组成。
+堆被划分为新时代和老年代，新时代又被进一步划分为 Eden 和 Survivor 区，Surivivor 由 From Survivor 和 To Survivor 组成。
 
-<img src="img/Heap_Split.jpg">
+<div align="center"><img src="img/Heap_Split.jpg" width="60%"></div>
 
-**一般情况下 Eden：from：to = 8：1：1**
+一般情况下 Eden：from：to = 8：1：1
 
 ### 小结
 
-**JVM内存结构组成**：JVM内存结构又称为「运行时数据区域」。主要有五部分组成：虚拟机栈、本地方法栈、程序计数器、方法区和堆。其中方法区和堆是线程共享的。虚拟机栈、本地方法栈以及程序计数器是线程隔离的。
-
-
+JVM 内存结构组成：JVM 内存结构又称为「运行时数据区域」。主要有五部分组成：虚拟机栈、本地方法栈、程序计数器、方法区和堆。其中方法区和堆是线程共享的。虚拟机栈、本地方法栈以及程序计数器是线程隔离的。
 
 
 

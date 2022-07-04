@@ -4,23 +4,23 @@
 
 ### Java虚拟机
 
-- JVM：Java虚拟机。Java代码是运行在虚拟机上的。
-- 跨平台：代码运行在虚拟机上，不同版的OS（linux，windows，mac）对应不同的虚拟机。虚拟机本身不具备跨平台功能，每个OS下都有不同版本的虚拟机。【可理解为，各个OS下的虚拟机都是采用一套编码指令集，JVM是面向操作系统的，它负责把Class字节码解释成系统所能识别的指令并执行，同时也负责程序运行时内存的管理】
+- JVM：Java 虚拟机。Java 代码是运行在虚拟机上的。
+- 跨平台：代码运行在虚拟机上，不同版的 OS（linux，windows，mac）对应不同的虚拟机。虚拟机本身不具备跨平台功能，每个 OS 下都有不同版本的虚拟机。【可理解为，各个 OS 下的虚拟机都是采用一套编码指令集，JVM 是面向操作系统的，它负责把 Class 字节码解释成系统所能识别的指令并执行，同时也负责程序运行时内存的管理】
 
 ### JRE和JDK
 
-- JRE (Java Runtime Environment):Java程序的运行时环境，包含JVM和运行时所需要的核心类库
-- JDK(Java Development Kit):是Java程序开发的工具包，包含JRE和开发人员使用的工具。
-- 运行Java程序有jre就行，开发Java程序需要JDK。
-- Windows会把%CC% CC当作变量进行翻译
+- JRE (Java Runtime Environment):Java 程序的运行时环境，包含 JVM 和运行时所需要的核心类库
+- JDK(Java Development Kit):是 Java 程序开发的工具包，包含 JRE 和开发人员使用的工具。
+- 运行 Java 程序有 jre就行，开发 Java 程序需要 JDK。
+- Windows 会把 %CC% CC 当作变量进行翻译
 
 ## 第三章 入门程序
 
 ### 程序开发步骤说明
 
 - 编写、编译、运行
-- Java源程序-->Java字节码文件-->JVM运行
-- Javac.exe 编译器 处理后 Java文件变成字节码文件
+- Java 源程序-->Java 字节码文件-->JVM 运行
+- Javac.exe 编译器 处理后 Java 文件变成字节码文件
 - Java.exe 解释器 解释字节码的内容
 
 ## 第四章 常量
@@ -32,7 +32,7 @@
   - 浮点数常量：直接写上数字的，有小数点。
   - 字符常量：用单引号引起来的 ‘A’，不能是空字符‘’。
   - 布尔常量：只有两种取值。true，false
-  - 空常量：null，代表没有任何数据。不能直接用来打印。syso(null)是错的。
+  - 空常量：null，代表没有任何数据。不能直接用来打印。syso(null) 是错的。
 
 ## 第五章 变量&数据类型
 
@@ -41,32 +41,32 @@
 #### 基本数据类型
 
 - 整数
-  - byte  1个字节
-  - short 2个字节
-  - int   4个字节
-  - long  8个字节
+  - byte  1 个字节
+  - short 2 个字节
+  - int   4 个字节
+  - long  8 个字节
 - 浮点数
-  - float     4个字节
-  - double    8个字节
+  - float     4 个字节
+  - double    8 个字节
 - 字符型
-  - char      2个字节
+  - char      2 个字节
 - 布尔型
-  - boolean   1个字节
+  - boolean   1 个字节
 
->**Java中默认类型：整型是int，浮点类型是double**
->想要精确的数字不推荐用double，用BigDemical吧。
+><b>Java 中默认类型：整型是 int，浮点类型是 double</b>
+>想要精确的数字不推荐用 double，用 BigDemical 吧。
 
 #### 引用数据类型
 
-> **字符串，数组，类，接口，Lambda**
+> <b>字符串，数组，类，接口，Lambda</b>
 
 注意事项：
 
 - 字符串不是基本数据类型
 - 浮点数可能是一个近似值
-- 数据范围与字节数不一定相关。如float数据范围比long更大，但float是4字节，long是8字节
-- 浮点数默认是double，如果一定要用float，需要加上一个后缀F(推荐大写)
-- 如果是整数，默认为int，如果一定要用long，需要加上一个后缀L(推荐大写)
+- 数据范围与字节数不一定相关。如 float 数据范围比 long 更大，但 float 是 4 字节，long 是 8 字节
+- 浮点数默认是 double，如果一定要用 float，需要加上一个后缀 F(推荐大写)
+- 如果是整数，默认为 int，如果一定要用 long，需要加上一个后缀 L(推荐大写)
 
 ### 变量
 
@@ -76,8 +76,8 @@
 ### 强制数据类型转换
 
 - 强制类型转换一般不推荐使用，因为可能发生精度损失
-- byte，short，char这三种数据类型可发生数学运算。
-- byte，short，char在运算时都会被首先提升为int类型，然后再计算。
+- byte，short，char 这三种数据类型可发生数学运算。
+- byte，short，char 在运算时都会被首先提升为 int 类型，然后再计算。
 
 ```java
 byte num1 = 40;
@@ -132,7 +132,7 @@ public class Demo {
 }
 ```
 
-静态内部类加载时机的测试。遇到new、getstatic、putstatic或invokestatic 这四条字节码指令执行的时候，如果类没有进行过初始化，则需要先触发其初始化。
+静态内部类加载时机的测试。遇到 new、getstatic、putstatic 或 invokestatic 这四条字节码指令执行的时候，如果类没有进行过初始化，则需要先触发其初始化。
 
 ```java
 public class Demo {
@@ -167,12 +167,12 @@ public class Demo {
 
 - 三元运算符：需要三个数据才可以进行的运算符。
 
-  - 变量名称 = 条件判断?表达式A : 表达式B;
+  - 变量名称 = 条件判断?表达式 A : 表达式 B;
   - int max = a > b ? a : b;
 
 - 拓展
 
-  - 对于byte/short/char三种类型来说，如果右侧赋值的数值没有超过范围，那么java编译器会自动隐含地为我们补上一个(byte)(short)(char).
+  - 对于 byte/short/char 三种类型来说，如果右侧赋值的数值没有超过范围，那么 java 编译器会自动隐含地为我们补上一个 (byte)(short)(char).
 
   ```
   short = 5 + 8;(都要是常量才行)
@@ -204,10 +204,10 @@ public class Demo {
 }
 ```
 
-- 多个case后面的数值不可以重复
-- switch后面小括号中只能是下列数据类型
+- 多个 case 后面的数值不可以重复
+- switch 后面小括号中只能是下列数据类型
   - 基本数据类型 byte/short/char/int
-  - 引用数据类型 String字符串、enum枚举
+  - 引用数据类型 String 字符串、enum 枚举
 
 > Java 7 之前想用 String 判断的话
 
@@ -253,6 +253,8 @@ public class StringSwitch {
 
 > switch 中可以用 String 的原理
 
+调用字符串的 hashCode 方法，switch 中先比较 hashCode 的值，hashCode 的值一致再比较字符串的值。
+
 ```java
 public class TestSwitch {
     public static void main(String[] args) {
@@ -269,8 +271,7 @@ public class TestSwitch {
 }
 // 反编译后的代码
 public class TestSwitch {
-    public TestSwitch() {
-    }
+    public TestSwitch() {}
 
     public static void main(String[] args) {
         String str = "dd";
@@ -295,7 +296,6 @@ public class TestSwitch {
         default:
             System.out.println("over!");
         }
-
     }
 }
 ```
@@ -379,27 +379,23 @@ break 跳出一层循环，continue 开启下一次循环。IDEA 点击关键字
 
 方法重载 Overload 
 
-- ==方法重载== ：指在同一个类中，允许存在一个以上的同名方法，只要它们的参数列表不同即可，与修饰符和返回值类型无关。
+- <b>方法重载</b>：指在同一个类中，允许存在一个以上的同名方法，只要它们的参数列表不同即可，与修饰符和返回值类型无关。
 - 参数列表：个数不同，数据类型不同，顺序不同。
-- 重载方法调用：JVM通过方法的参数列表，调用不同的方法。
+- 重载方法调用：JVM 通过方法的参数列表，调用不同的方法。
 
 ```java
 以下参数顺序不一样也是重载！
-public static void test(int a, short b){
-
-}
-public static void test(short b,int a){
-
-}
+public static void test(int a, short b){}
+public static void test(short b,int a){}
 ```
 
-- 实际上，println就是一个被重载的函数
+- 实际上，println 就是一个被重载的函数
 
 - 方法重写 Overrider 
 
   - 子类中出现和父类中一模一样的方法(包括返回值类型,方法名,参数列表）
   - 1.重写的方法必须要和父类一模一样(包括返回值类型,方法名,参数列表)
-  - 2.重写的方法可以使用@Override注解来标识
+  - 2.重写的方法可以使用 @Override 注解来标识
 
 #### 重载的注意事项
 
@@ -485,16 +481,16 @@ public static int[] calculate(int a,int b){
 - 4.本地方法栈（native method stack）：与操作系统相关
 - 5.寄存器（register）：与 CPU 相关
 
-Java 的垃圾回收，对于提高对象的创建速度，具有明显的效果。Java从堆空间分配空间的速度，可以和其他语义从堆栈上分配空间的速度相媲美。在某些 Java VM 中，堆的实现截然不同，但是堆内存的分配可以看做：有一个堆指针，简单移动到尚未分配的区域，通过这种方式分配对象内存，其效率比得上 C++ 在栈上分配空间的效率。当然，在实际簿记工作方面，还有少量额外的开销，但是比不上查找可用空间的开销。（**Java GC 会清理出可用的空间，堆指针在空用空间中移动，这样就完成了内存的分配。而 C++ 需要遍历查找可用的内存，这个查找开销较大。这样一对比，会发现，Java 分配对象的速度并不比 C++慢**）
+Java 的垃圾回收，对于提高对象的创建速度，具有明显的效果。Java 从堆空间分配空间的速度，可以和其他语言从堆栈上分配空间的速度相媲美。在某些 Java VM 中，堆的实现截然不同，但是堆内存的分配可以看做：有一个堆指针，简单移动到尚未分配的区域，通过这种方式分配对象内存，其效率比得上 C++ 在栈上分配空间的效率。当然，在实际簿记工作方面，还有少量额外的开销，但是比不上查找可用空间的开销。（<b>Java GC 会清理出可用的空间，堆指针在空用空间中移动，这样就完成了内存的分配。而 C++ 需要遍历查找可用的内存，这个查找开销较大。这样一对比，会发现，Java 分配对象的速度并不比 C++ 慢</b>）
 
 Java 的 GC 工作的时候，一面回收内存空间，一面使堆中的对象紧凑排列。
 
-Java 的优化技术\=\=\=>JIT（Just-In-Time）：这种技术可以把重新全部或部分翻译成本地机器码，提升程序速度。当要装载某个类时，编译器会先找到其 `.class` 文件，然后将该类的字节码转入内存。此时有两种方式可供选择：
+Java 的优化技术\=\=\=>JIT（Just-In-Time）：这种技术可以把程序的全部或部分代码翻译成本地机器码，提升程序速度。当要装载某个类时，编译器会先找到其 `.class` 文件，然后将该类的字节码转入内存。此时有两种方式可供选择：
 
-- 一、让即时编译器编译所有代码，但是这种做法有两个缺陷：
-    - ①这种加载动作散落在整个程序的生命周期内，累加起来要花很多时间
-    - ②会增加可执行代码的长度（字节码要比 JIT 展开后的本地机器码小很多），这将导致页面调度，从而降低程序速度。
-- 二、惰性评估，只在必要的时候编译代码。
+- <span style="color:orange">一、让即时编译器编译所有代码，但是这种做法有两个缺陷：</span>
+    - <span style="color:orange">①这种加载动作散落在整个程序的生命周期内，累加起来要花很多时间</span>
+    - <span style="color:orange">②会增加可执行代码的长度（字节码要比 JIT 展开后的本地机器码小很多），这将导致页面调度，从而降低程序速度。</span>
+- <span style="color:orange">二、惰性评估，只在必要的时候编译代码。</span>
 
 ### 常见异常
 
