@@ -5671,7 +5671,7 @@ public class RunnableMethodReference {
 
 #### 未绑定的方法引用
 
-未绑定的方法引用就是，类的非静态方法，且这个方法没有与任何实例对象关联起来。<b>使用未绑定的引用时， 我们必须先提供对象。</b>具体请看代码：
+未绑定的方法引用就是，尚未关联到某个对象的普通方法。<b>使用未绑定的方法引用， 我们必须先提供对象，然后才能使用。</b>具体请看代码：
 
 ```java
 class X {
@@ -5705,7 +5705,7 @@ public class UnboundMethodReference {
 
 拿到未绑定的方法引用，并且调用它的 transform() 方法，将一个 X 类的对象传递给它，最后使得 x.f() 以某种方式被调用。 Java 知道它必须拿到第一个参数，该参数实际就是 this，然后调用方法作用在它之上。<span style="color:orange">如果方法有更多参数，只要遵循第一个参数去的是 this 即可，我测试了几个方法，字节码中的 this 参数始终都是第一个。</span>
 
-PS：方法引用只是把方法的引用赋值给了其他方法。我们赋值给接口，利用多态，让【接口.方法】可以调用赋值给他的那个方法，但是这个方法的调用需要一个对象！
+PS：方法引用只是把方法的引用赋值给了其他方法。我们赋值给接口，利用多态，让【接口.方法】可以调用赋值给他的那个方法，但是这个方法的调用需要一个对象。
 
 <b>关于隐藏参数 This 的问题</b>
 
@@ -5740,8 +5740,6 @@ LocalVariableTable:
 > 多个参数的 Demo
 
 ```java
-package tij.chapter12;
-
 class This {
     void two(int i, double d) {}
     void three(int i, double d, String s) {}
@@ -5783,12 +5781,8 @@ class Dog {
     int age = -1; // For "unknown"
 
     Dog() { name = "stray"; }
-
     Dog(String nm) { name = nm; }
-
-    Dog(String nm, int yrs) {
-        name = nm;age = yrs;
-    }
+    Dog(String nm, int yrs) { name = nm;age = yrs; }
 
     @Override
     public String toString() {
@@ -5828,31 +5822,31 @@ public class CtorReference {
 
 Dog 有三个构造函数，函数式接口内的 make() 方法反映了构造函数参数列表（make() 方法名称可以不同）。 
 
-注意我们如何对 [1]，[2] 和 [3] 中的每一个使用 `Dog::new`。这三个构造函数只有一个相同名称：`::new`，但在每种情况下赋值给不同的接口，编译器可以根据接口中的方法推断出使用哪个构造函数。 <span style="color:orange">编译器知道调用函数式方法（本例中为 make()）就相当于调用构造函数。</span>
+注意我们如何对 [1]，[2] 和 [3] 中的每一个使用 `Dog::new`。这三个构造函数只有一名字：`::new`，但在每种情况下赋值给不同的接口，编译器可以根据接口中的方法推断出使用哪个构造函数。 <span style="color:orange">编译器知道调用函数式方法（本例中为 make()）就相当于调用构造函数。</span>
 
 ### 函数式接口
 
 Java 8 引入了 java.util.function 包。它包含一组接口，这些接口是 Lambda 表达式和方法引用的目标类型。每个接口都只包含一个抽象方法。在编写接口时，可以使用 @FunctionalInterface 注解强制执行此“函数式方法”模式。
 
-如果将方法引用或 Lambda 表达式赋值给函数式接口（类型需要匹配），Java 会适配你的赋值到目标接口。编译器会在后台把方法引用或 Lambda 表达式包装进实现目标接口的类的实例中。
+`如果将一个方法引用或 Lambda 表达式赋值给函数式接口（类型需要匹配），Java 会调整这个赋值，使其匹配目标接口。而在底层，Java 编译器会创建一个实现了目标接口的类的实例，并将我们的方法引用或 Lambda 表达式包裹在其中。`
 
 > 个人理解
 
-函数式接口就是，你把这个接口当成形式参数传递过去，你在方法里用了这个接口的方法，你需要使用这个方法就需要去实现；实现可以用匿名内部类或者函数式。
+函数式接口就是，你把这个接口当成形式参数传递过去，你在方法里用了这个接口的方法，你需要使用这个方法就需要去实现；实现可以用匿名内部类或者 Lambda。
 
 #### 函数式接口的命名准则
 
 - 如果<span style="color:red">只处理对象而非基本类型</span>，名称则为 Function，Consumer，Predicate 等。 参数类型通过泛型添加。
-- 如果<span style="color:red">接收的参数是基本类型</span>，则由名称的第一部分表示，如 LongConsumer， DoubleFunction，IntPredicate 等，但返回基本类型的 Supplier 接口例外。
+- 如果<span style="color:red">接收的参数是基本类型</span>，则由名称的前缀为基本参数类型名称，如 LongConsumer， DoubleFunction，IntPredicate 等，但返回基本类型的 Supplier 接口例外。
 - 如果<span style="color:red">返回值为基本类型</span>，则用 To 表示，如 ToLongFunction  和 IntToLongFunction。
-- 如果<span style="color:red">返回值类型与参数类型一致</span>，则是一个运算符：单个参数使用 UnaryOperator， 两个参数使用 BinaryOperator。
+- 如果<span style="color:red">返回值类型与参数类型一致</span>，则是一个运算符：单个参数使用 UnaryOperator， 两个参数使用 BinaryOperator。（Unary -- 元）
 - 如果<span style="color:red">接收两个参数且返回值为布尔值</span>，则是一个谓词（Predicate）。
 - 如果<span style="color:red">接收的两个参数类型不同</span>，则名称中有一个 Bi，如 BiPredicate。
 
 #### 四大函数式接口
 
 - 消费型接口：void Consumer\<T\> 
-  - 对类型为T的对象应用操作，包含方法
+  - 对类型为 T 的对象应用操作，包含方法
   - void accept(T t)
 - 供给型接口：T Supplier\<T\>
   - 返回类型为 T 的对象，包含方法
@@ -5901,7 +5895,6 @@ public class SupplierDemo {
     // 返回integer
     private static Integer getInteger(Supplier<Integer> sup){
         return sup.get();
-
     }
     // 返回String
     private static String getString(Supplier<String> sup){
@@ -6153,15 +6146,11 @@ public class FunctionVariants {
 
 ```java
 class A {
-    {
-        System.out.println("消费了A");
-    }
+    { System.out.println("消费了A"); }
 }
 
 class B {
-    {
-        System.out.println("消费了B");
-    }
+    { System.out.println("消费了B"); }
 }
 
 public class BiConsumerDemo {
@@ -6201,21 +6190,12 @@ class BB {}
 class CC {}
 
 public class ClassFunctionals {
-    static AA f1() {
-        return new AA();
-    }
-    static CC f5(AA aa) {
-        return new CC();
-    }
-    static CC f6(AA aa, BB bb) {
-        return new CC();
-    }
-    static AA f9(AA aa) {
-        return new AA();
-    }
-    static AA f10(AA aa1, AA aa2) {
-        return new AA();
-    }
+    static AA f1() { return new AA(); }
+    static CC f5(AA aa) { return new CC(); }
+    static CC f6(AA aa, BB bb) { return new CC(); }
+    static AA f9(AA aa) { return new AA(); }
+    static AA f10(AA aa1, AA aa2) { return new AA(); }
+    
     public static void main(String[] args) {
         Supplier<AA> s = ClassFunctionals::f1; // 提供对象
         s.get();
@@ -6242,32 +6222,16 @@ class AA {}
 class BB {}
 class CC {}
 public class ClassFunctionals {
-    static AA f1() {
-        return new AA();
-    }
-    static int f2(AA aa1, AA aa2) {
-        return 1;
-    }
+    static AA f1() { return new AA(); }
+    static int f2(AA aa1, AA aa2) { return 1; }
     static void f3(AA aa) {}
     static void f4(AA aa, BB bb) {}
-    static CC f5(AA aa) {
-        return new CC();
-    }
-    static CC f6(AA aa, BB bb) {
-        return new CC();
-    }
-    static boolean f7(AA aa) {
-        return true;
-    }
-    static boolean f8(AA aa, BB bb) {
-        return true;
-    }
-    static AA f9(AA aa) {
-        return new AA();
-    }
-    static AA f10(AA aa1, AA aa2) {
-        return new AA();
-    }
+    static CC f5(AA aa) { return new CC(); }
+    static CC f6(AA aa, BB bb) { return new CC(); }
+    static boolean f7(AA aa) { return true; }
+    static boolean f8(AA aa, BB bb) { return true; }
+    static AA f9(AA aa) { return new AA(); }
+    static AA f10(AA aa1, AA aa2) { return new AA(); }
 
     public static void main(String[] args) {
         Supplier<AA> s = ClassFunctionals::f1; // 提供对象
@@ -6339,7 +6303,7 @@ class FunctionWithWarp{
 
 为什么会缺少基本类型的函数式接口?
 
-<span style="color:orange">用基本类型的唯一原因是可以避免传递参数和返回结果过程中的自动装箱和自动拆箱，进而提升性能。 似乎是考虑到使用频率，某些函数类型并没有预定义。 当然，如果因为缺少针对基本类型的函数式接口造成了性能问题，你可以轻松编写自己的接口（参考 Java 源代码）——尽管这里出现性能瓶颈的可能性不大。</span>
+<span style="color:orange">用基本类型的唯一原因是可以避免传递参数和返回结果过程中的自动装箱和自动拆箱，进而提升性能。 似乎是考虑到使用频率，某些函数类型并没有预定义。 当然，如果因为缺少针对基本类型的函数式接口造成了性能问题，我们可以轻松编写自己的接口（参考 Java 源代码）——不过这里出现性能瓶颈的可能性不大。</span>
 
 ### 高阶函数
 
@@ -6390,7 +6354,7 @@ public class ConsumeFunction {
 
 > 根据所接受的函数生成一个新函数
 
-先看下 addThen 的源码
+先看下 addThen 的代码
 
 ```java
 /**
@@ -6430,23 +6394,22 @@ public class TransformFunction {
             System.out.println(i);
             return new O();
         });
-        // 消费了两次嘛。先消费了 I。然后消费了 f2 产生的新对象 O。
+        // 消费了两次。先消费了 I。然后消费了 f2 产生的新对象 O。
         O o = f2.apply(new I());
+        /*
+        I
+        O
+        */
     }
 }
 
 class I {
     @Override
-    public String toString() {
-        return "I";
-    }
+    public String toString() { return "I"; }
 }
-
 class O {
     @Override
-    public String toString() {
-        return "O";
-    }
+    public String toString() { return "O"; }
 }
 ```
 
@@ -6454,7 +6417,7 @@ class O {
 
 ### 闭包
 
-闭包能够将一个方法作为一个变量去存储，这个方法有能力去访问所在类的自由变量。
+闭包能够将一个方法作为一个变量去存储，这个方法有能力去访问所在类的自由变量。`(简单说闭包是一个包含了上下文环境的匿名函数)`
 
 > 闭包的特性：
 >
@@ -6464,7 +6427,7 @@ class O {
 
 #### Lambda表达式内的变量
 
-被 Lambda 表达式引用的局部变量必须是 final 或者是等同 final 效果的。即，如果这个变量需要被 return 出去，那么必须是 final 修饰的！
+被 Lambda 表达式引用的局部变量必须是 final 或者是等同 final 效果的。`即，如果这个变量需要被 return 出去，那么必须是 final 修饰的！`
 
 > 验证代码
 
@@ -6475,7 +6438,7 @@ IntSupplier makeFun(int x) {
     return () -> x++ + i++;
 }
 
-// 实际上代码等同于这样
+// 上述代码等同于
 IntSupplier makeFun(final int x) {
     final int i = 0;
     // 报错。
@@ -6511,7 +6474,7 @@ public class Closure6 {
         int i = 0;
         i++;
         x++;
-        // 不是 返回 i 和 x了，不会存在被其他函数引用 makeFun 方法中的变量。
+        // 不是 返回 i 和 x 了，不会存在被其他函数引用 makeFun 方法中的变量。
         final int iFinal = i;
         final int xFinal = x;
         return () -> xFinal + iFinal;
@@ -6526,7 +6489,7 @@ public class Closure7 {
     IntSupplier makeFun(int x) {
         Integer i = 0;
         i = i + 1;
-        // 报错，识别到 i 的应用被改了。
+        // 报错，识别到 i 的引用被改了。
         return () -> x + i;
     }
     
@@ -6571,29 +6534,87 @@ public class Closure8 {
 */
 ```
 
-> <b>小结</b>
->
-> 如果它是对象中的字段，那么它拥有独立的生存周期，并且不需要任何特殊的捕获，以便稍后在调用 Lambda 时存在。如果是方法内部的，则会隐式声明为 final。
+<b>小结</b>
+
+如果它是对象中的字段，那么它拥有独立的生命周期，不需要任何特殊的捕获，以便稍后在调用 Lambda 时存在。如果是方法内部的，则会隐式声明为 final。
 
 #### 内部类作为闭包
 
-与 Lambda 表达式类似，变量 x 和 i 必须被明确声明为 final。在 Java8 中，内部类的规则放宽，包括等同 final 效果。【为什么要这样，它使用函数作用域之外的变量，闭包是为了解决当你调用函数时，可以知道，它对那些“外部”变量引用了什么】
+先看这份代码
 
 ```java
+import java.util.function.IntSupplier;
+
+public class Closure1 {
+    int i;
+
+    IntSupplier makeFun(int x) {
+        // 虽然改变了 i 的值，但是没有问题。
+        // makeFun 返回的相当于一个匿名内部类对象，i 是外部类对象的成员变量，即 i 有自己的生命周期
+        // 内部类对象引用了外部类对象的变量（内部类对象持有外部类对象的引用）无需进行特殊处理
+        // 先前将返回值所涉及的变量声明为 final 是害怕内部类对象要使用这些变量时，这些变量消失不见了
+        return () -> x + i++;
+    }
+
+    public static void main(String[] args) {
+        Closure1 closure1 = new Closure1();
+        IntSupplier intSupplier = closure1.makeFun(3);
+        IntSupplier intSupplier1 = closure1.makeFun(6);
+        int asInt = intSupplier.getAsInt();
+        int asInt1 = intSupplier1.getAsInt();
+        System.out.println(asInt); // 3, i 自增变成了 1
+        System.out.println(asInt1);// 7, 6+1=7
+    }
+}
+```
+
+下面的代码表明，只要有内部类，就会有闭包。在 Java8 之前，x 和 i 必须显示的声明为 final，到了 Java8，内部类中不用显示声明为 final 了，会自动设置为 final 变量。【为什么要这样？它使用函数作用域之外的变量，闭包是为了解决当你调用函数时，可以知道，它对那些“外部”变量引用了什么】
+
+```java
+import java.util.function.IntSupplier;
+
 public class AnonymousClosure {
     IntSupplier makeFun(int x) {
         int i = 0;
-        // 同样规则的应用:
-        // i++; // 非等同 final 效果
+        // 同样的规则的适用于:
+        // i++; // 虽然 IDE 不会提示错误，但是运行的时候会报错，从内部类引用的本地变量必须是最终变量或实际上的最终变量
         // x++; // 同上
+        return new IntSupplier() {
+            // i++; // 报错，等同 final 效果
+            // x++; // 报错，等同 final 效果
+            public int getAsInt() {
+                return x + i;
+            }
+        };
+    }
+
+    public static void main(String[] args) {
+        AnonymousClosure anonymousClosure = new AnonymousClosure();
+        System.out.println(anonymousClosure.makeFun(5).getAsInt());
+    }
+}
+```
+
+我们来观察下上述代码的反编译结果：
+
+```java
+public class AnonymousClosure {
+    public AnonymousClosure() {}
+
+    // x 和 i 都被优化为了 final 变量
+    IntSupplier makeFun(final int x) {
+        final int i = 0; 
         return new IntSupplier() {
             public int getAsInt() {
                 return x + i;
             }
         };
     }
+    // some code
 }
 ```
+
+可以看到 x 和 i 都被 JVM 优化为了 final 变量。`（IDEA 反编译的结果不一定准确,只可作为参考,想知道编译器到底如何处理的请看字节码！）`
 
 ### 函数组合 ★
 
@@ -6628,23 +6649,25 @@ default <V> Function<T, V> andThen(Function<? super R, ? extends V> after) {
 }
 ```
 
-<span style="color:orange">一句话：f1.compose(f2).addThen(f3)，f2 先执行，再执行 f1，最后添加 f3（即 f3 最后执行）</span>
+<span style="color:orange">f1.compose(f2).addThen(f3)，f2 先执行，再执行 f1，最后执行 f3</span>
 
 ```java
 public class FunctionComposition {
     static Function<String, String> f1 = s -> {
+        // AFTER ALL AMBULANCES
         System.out.println(s);
         return s.replace('A', '_');
     },
-            f2 = s -> s.substring(3),
-            f3 = s -> s.toLowerCase(),
-    // 这个啥意思？
+    f2 = s -> s.substring(3),
+    f3 = s -> s.toLowerCase(),
+    // 先执行函数 f2，再把 f2 的结果作为 f1 的参数执行 f1，最后把 f1 的结果作为 f3 的参数执行 f3
     f4 = f1.compose(f2).andThen(f3);
 
     public static void main(String[] args) {
         // 当 f1 获得字符串时，它已经被 f2 剥离了前三个字符。这是因为 compose（f2）表
         //示 f2 的调用发生在 f1 之前。
-        f4.apply("GO AFTER ALL AMBULANCES");
+        // _fter _ll _mbul_nces
+        System.out.println(f4.apply("GO AFTER ALL AMBULANCES"));
     }
 }
 
@@ -6663,7 +6686,7 @@ public class PredicateComposition {
             p4 = p1.negate().and(p2).or(p3);
 
     public static void main(String[] args) {
-        // 如果字符串中不包含 bar 且长度小于 5，或者它包含 foo ，则结果为 true。
+        // 如果（字符串中不包含 bar 且长度小于 5），或者（它包含 foo），则结果为 true。
         Stream.of("bar", "foobar", "foobaz", "fongopuckey")
                 .filter(p4)
                 .forEach(System.out::println);
@@ -6675,7 +6698,9 @@ public class PredicateComposition {
 
 ### 柯里化和部分求值
 
-柯里化：将一个多参数的函数，转换为一系列单参数函数。
+<b>柯里化：</b>将一个多参数的函数，转换为一系列单参数函数。
+
+<b>应用场景：</b>比如，我们需要对多个参数进行相同的操作，如拼接，有时候只需要对 2 个参数进行拼接，有时候是 3 个，有时候是 4 个。我们可以使用柯里化四参数来完成 2~4 个参数的操作。
 
 #### 柯里化两参数
 
@@ -6690,7 +6715,7 @@ public class CurryingAndPartials {
     }
 
     public static void main(String[] args) {
-        // 柯里化的函数: 柯里化两参数
+        // 柯里化的函数: 柯里化两参数 a 是一个参数，a-> 后面的 b 是第二个参数
         Function<String, Function<String, String>> sum = a -> b -> a + b;
 
         System.out.println(uncurried("Hi", "Ho"));
@@ -6709,14 +6734,14 @@ public class CurryingAndPartials {
 
 #### 柯里化三参数
 
-对于每一级的箭头级联（Arrow-cascading），你都会在类型声明周围包裹另一个 Function。
+对于每一级的箭头级联（Arrow-cascading），你都会在类型声明外再包裹另一个 Function。
 
 ```java
 public class Curry3Args {
     public static void main(String[] args) {
         Function<String,
-                Function<String,
-                        Function<String, String>>> sum =
+                Function<String, // 包裹一个函数
+                        Function<String, String>>> sum = // 包裹一个函数
                 a -> b -> c -> a + b + c;
         Function<String,
                 Function<String, String>> hi =
@@ -6797,7 +6822,7 @@ public class InterDemo {
 
 ### 为什么使用流
 
-- 集合优化了对象的存储，而流则是关于一组对象的处理。
+- 集合优化了对象的存储，而流则是关于对象处理的。
 - 流（Streams）是与任何特定存储机制无关的元素序列——实际上，我们说流是 “没有存储” 的。
 - 取代了在集合中迭代元素的做法，使用流即可从管道中提取元素并对其操作。这些管道通常被串联在一起形成一整套的管线，来对流进行操作。
 - 把焦点从集合转到了流上。
@@ -6833,7 +6858,7 @@ public class Randoms {
 - sorted() 排序
 - forEach() 遍历输出
 
-> <b>声明式编程</b>：声明了要做什么， 而不是指明（每一步）如何做
+> <b>声明式编程</b>：声明了要做什么， 而不是指明（每一步）怎么做
 
 ```java
 // 命令式编程
@@ -6851,11 +6876,11 @@ public class ImperativeRandoms {
 }
 ```
 
-Randoms 是声明式编程，ImperativeRandoms 是命令式编程。必须研究代码才能搞清楚 ImperativeRandoms.java 程序在做什么。而在 Randoms.java 中，代码会直接告诉你它在做什么，语义清晰。
+Randoms 是声明式编程，ImperativeRandoms 是命令式编程。必须研究代码才能搞清楚 ImperativeRandoms.java 程序在做什么。而在 Randoms.java 中，代码会直接告诉你它在做什么，<b>语义清晰</b>。
 
 ### 流支持
 
-要扩展流的话，有巨大的挑战：需要扩充现有接口，这样会破坏每一个实现接口的类。
+要扩展流的话，有个非常大的问题：我们需要扩充现有接口，但是扩充现有接口又会破坏每一个实现了该接口，但是没有实现新加入方法的类。
 
 最终的处理方式：Java8 在接口中添加被 default（默认）修饰的方法。通过这种方案，设计者们可以将流式（stream）方法平滑地嵌入到现有类中。
 
@@ -6863,9 +6888,9 @@ Randoms 是声明式编程，ImperativeRandoms 是命令式编程。必须研究
 
 - 创建流
 - 修改流元素（中间操作）
-- 消费流元素（终端操作）通常意味着收集流元素（通常是汇入一个集合）。
+- 消费流元素（终结操作）通常意味着收集流元素（通常是汇入一个集合）。
 
-### 流创建
+### 流的创建
 
 > 创建流的几种方式：非 `kye:value` 的集合可以直接调用 stream 方法生成流，而 key，value 形式的需要间接生成流
 
@@ -6920,10 +6945,10 @@ class Bubble {
 }
 ```
 
-每个集合都可以通过调用 stream() 方法来产生一个流
+每个 Collection 都可以通过调用 stream() 方法来生成一个流
 
-- map \=\=\=\>`<R> Stream<R> map(Function<? super T, ? extends R> mapper);` 会产生一个新流。
-- mapToInt() \=\=\=\>`mapToInt() 方法将一个对象流（object stream）转换成为包含整型数字的 IntStream`，可以避免自动装箱拆箱，提高性能。
+- map \=\=\=\> `<R> Stream<R> map(Function<? super T, ? extends R> mapper);` 会产生一个新流。
+- mapToInt() \=\=\=\> `mapToInt() 方法将一个对象流（object stream）转换成为包含整型数字的 IntStream`，可以避免自动装箱拆箱，提高性能。
 
 ```java
 public class CollectionToStream {
@@ -6968,9 +6993,8 @@ Stream<Integer> boxed();
 ```java
 public class RandomGenerators {
     public static <T> void show(Stream<T> stream) {
-        stream
-                .limit(4) // 取前四个元素
-                .forEach(System.out::println);
+        stream.limit(4) // 取前四个元素
+              .forEach(System.out::println);
         System.out.println("++++++++");
     }
 
@@ -6988,8 +7012,8 @@ public class RandomGenerators {
         show(rand.longs(2).boxed());
         show(rand.doubles(2).boxed());
         // 控制流的大小和界限 产生三个元素
-        show(rand.ints(3, 3, 9).boxed()); // 3个元素 范围 3<=x<=9
-        show(rand.longs(3, 12, 22).boxed()); // 3个元素 范围 12<=x<=22
+        show(rand.ints(3, 3, 9).boxed()); // 3个元素 范围 3<=x<9
+        show(rand.longs(3, 12, 22).boxed()); // 3个元素 范围 12<=x<22
         show(rand.doubles(3, 11.5, 12.3).boxed());
     }
 }
@@ -7116,7 +7140,7 @@ public class Generator implements Supplier<String> {
     Random rand = new Random(47);
     char[] letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
-    @Override // Supplier 的方法，用来提供数据
+    @Override // Supplier 接口的方法，用来提供数据的
     public String get() {
         return "" + letters[rand.nextInt(letters.length)];
     }
@@ -7141,9 +7165,10 @@ public class Fibonacci {
     int x = 1;
 
     Stream<Integer> numbers() {
+        // 第一个参数 0 会作为 第二个参数 lambda 表达式的参数传递过去，lambda 表达式的返回值会继续作为 lambda 表达式的参数。
         return Stream.iterate(0, i -> {
             int result = x + i;
-            x = i; // x 是成员变量。 fibonacci f3 = f2 + f1 嘛，所以需要 利用一个变量 x 追踪另外一个元素
+            x = i; // x 是成员变量。 fibonacci f3 = f2 + f1 嘛，所以需要利用一个变量 x 追踪另外一个元素
             return result;
         });
     }
@@ -7229,8 +7254,7 @@ public class FileToWordsRegexp {
     }
 
     public Stream<String> stream() {
-        return Pattern
-                .compile("[ .,?]+").splitAsStream(all);
+        return Pattern.compile("[ .,?]+").splitAsStream(all);
     }
 
     public static void
@@ -7249,24 +7273,26 @@ public class FileToWordsRegexp {
 }
 ```
 
-在构造器中我们读取了文件中的所有内容（跳过第一行注释，并将其转化成为单行 字符串）。现在，当你调用 stream() 的时候，可以像往常一样获取一个流，但这回你可以多次调用 stream() ，每次从已存储的字符串中创建一个新的流。这里有个限制，整 个文件必须存储在内存中；在大多数情况下这并不是什么问题，但是这丢掉了流操作非常重要的优点： 
+在构造器中我们读取了文件中的所有内容（跳过第一行注释）。现在，当我们调用 stream() 时，和以前一样，获取到了一个流。但这次，我们可以多次调用 stream() ，每次都从已存储的字符串中创建一个新的流。这里有个不足，整个文件必须存储在内存中；在大多数情况下这并不是什么问题，但是这丢掉了流操作非常重要的优点： 
 
 - “不需要把流存储起来。” 当然，流确实需要一些内部存储，但存储的只是序列的一小部分，和存储整个序列不同。 
 - 它们是懒加载的，调用时才计算。
 
+但，这个问题也是可以解决的。
+
 ### 中间操作
 
-中间操作用于从一个流中获取对象，并将对象作为另一个流从后端输出，以连接到其他操作。
+中间操作从一个流中获取对象，并将对象作为另一个流从后端输出，以连接到其他操作。
 
 #### 中间流操作
 
-- `filter`：过滤，满足条件的保留，不满足的不保留。传入的是Predicate
+- `filter`：过滤，满足条件的保留，不满足的不保留。传入的是 Predicate
 
-- `limit`取前xx个元素
+- `limit`取前 xx 个元素
 
-- `skip`：跳过前xx个元素
+- `skip`：跳过前 xx 个元素
 
-- `concat`：`concat(Steam a,Stream b)` 合并a，b两个流
+- `concat`：`concat(Steam a,Stream b)` 合并 a，b 两个流
 
 - `distinct`：基于`hashCode（）`和`equals（）`的去重
 
@@ -7286,7 +7312,7 @@ public class FileToWordsRegexp {
 
 #### 跟踪和调试
 
-peek() 操作的目的是帮助调试。它允许你无修改地查看流中的元素。<b>[ 具体看代码 ]</b>
+peek() 操作的目的是帮助调试。它允许我们无修改地查看流中的元素。<b>[ 具体看代码 ]</b>
 
 ```java
 public class Peeking {
@@ -7311,6 +7337,8 @@ first peek:0	second peek:0	final value:0
 */
 ```
 
+peek 接受的是一个遵循 Consumer 函数式接口的函数，这样的函数没有返回值，所以也就不可能用不同的对象替换掉流中的对象。我们只能“看看”这些对象。
+
 #### 流元素排序
 
 传入一个 Comparator 参数
@@ -7323,7 +7351,7 @@ public class SortedComparator {
     public static void main(String[] args) throws Exception {
         Arrays.stream(new String[]{"!@!#", "A", "B", "s", "ASFASF"})
                 .limit(10)
-            	//你定义了比较器，这里可以定义排序规则，正序还是反序
+            	// 你定义了比较器，这里可以定义排序规则，正序还是反序
                 .sorted(Comparator.reverseOrder())
                 .forEach(System.out::print);
     }
@@ -7332,8 +7360,8 @@ public class SortedComparator {
 
 #### 移除元素
 
-- distinct()：在 Randoms.java 类中的 distinct() 可用于消除流中的重复元素。 相比创建一个 Set 集合来消除重复，该方法的工作量要少得多。 
-- filter(Predicate)：过滤操作，保留如下元素：若元素传递给过滤函数产生的结果为 true。
+- distinct()：在 Randoms.java 类中的 distinct() 可用于消除流中的重复元素。 相比创建一个 Set 集合来消除重复，该方法简单、方便得多。 
+- filter(Predicate)：过滤操作，若元素传递给过滤函数产生的结果为 true 则保留。
 
 ```java
 import java.util.stream.LongStream;

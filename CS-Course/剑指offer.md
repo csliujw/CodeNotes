@@ -1306,6 +1306,80 @@ class NumMatrix {
 }
 ```
 
+## 双指针
+
+
+
+## 滑动窗口
+
+维护两个边界即可。
+
+[76. 最小覆盖子串 - 力扣（LeetCode）](https://leetcode.cn/problems/minimum-window-substring/)
+
+- 暴力做法，直接扫描；判断是否存在字符用 hash 表。
+- 滑动窗口：维护两个指针，满足条件后记录。然后再移动指针。怎么移动呢？看看是否有单调性，然后优化。这里是有的，如果 i，j 范围内正好包含所有字母，所以剩下的最短的序列，一定是 i，j 不会变小。j 是随着 i 增加而增加的。
+- i 从左往右枚举；j 从左往右枚举。
+- 具体例子：i（在 j 前面） ，j 双指针向前走，直到区间内包含这个字符串了。然后 i 继续前移，如果某个字符的数目多了，则 j 前移知道该字符数目为 1，并记录新的字符串；反复这样做。（可以画图看看 i j 会满足什么性质）
+
+[32. 最长有效括号 - 力扣（LeetCode）](https://leetcode.cn/problems/longest-valid-parentheses/)
+
+可以将问题抽象为求和为 0 的最大子序列长度。'(' 表示 1 ')' 表示 -1. 从前先后扫一次，得到一组结果；再从后向前扫一次，得到另一组结果；取两组结果的最大值。 
+
+## 单调栈/队列
+
+快速查找每个数左侧第一个比它小的数，基本就是用单调栈了。
+
+查找滑动窗口中的最值，基本就是单调队列。
+
+### 单调栈
+
+acwing 830 839 模板题
+
+[84. 柱状图中最大的矩形 - 力扣（LeetCode）](https://leetcode.cn/problems/largest-rectangle-in-histogram/)
+
+先思考如何枚举出所有情况。固定上边界，在左右枚举。如何快速求出左右边界呢？
+
+- 求左右边界： 
+    - 找出左边离他最近的，比他小的柱形，
+    - 找出右边离他最近的，比他小的柱形。
+- 如何求出这个数的左右边界呢？
+- 求左边界
+    - 2	1	5	6	2	3 为例子。
+    - 2 的左边界是 -1，
+    - 2 1 不满足递增条件，2 出 stack，==> 1，因此 1 的左边界是 -1
+    - 1 5 满足递增条件，5 的左边界是 5 左边的第一个数 1.
+    - 1 5 6，xxxx 是 5
+    - 1 5 6 2，不满足条件，将不满足条件的数出栈 1 2，因此 2 的左边界是 1.
+
+- 求右边界
+    - 2	1	5	6	2	3 为例子。逆序输入
+    - 3，3 的右边界是无穷
+    - 3 2，3 出栈，2 的右边界是无穷
+    - 2 6，6 的右边界是 2
+    - 2 6 5，6 出栈，2 5，5 的右边界是 2
+    - 2 5 1，5 2 出栈 1 的右边界是无穷
+    - 1 2 ，2 的右边界是 1
+
+- 求出左右边界后，计算可能的 max 即可。
+
+[42. 接雨水 - 力扣（LeetCode）](https://leetcode.cn/problems/trapping-rain-water/)
+
+<a href="https://www.acwing.com/solution/content/34623/">单调栈做法</a>
+
+[918. 环形子数组的最大和 - 力扣（LeetCode）](https://leetcode.cn/problems/maximum-sum-circular-subarray/)
+
+单调队列，求最值。前缀和数组；
+
+### 单调队列
+
+举例：1 3 2 
+
+如果前一个数 1，小于等于后一个数 3，就删除前一个数 1，最后，这个队列（3 2）就满足单调下降了。求最大值的话，队头就一定是最大值了。
+
+[剑指 Offer 59 - I. 滑动窗口的最大值 - 力扣（LeetCode）](https://leetcode.cn/problems/hua-dong-chuang-kou-de-zui-da-zhi-lcof/)
+
+
+
 ## 字符串
 
 ### 字符串中的变位词
@@ -1322,7 +1396,7 @@ class NumMatrix {
 
 #### 解题思路
 
-主要是要明白题目的意思。比如 s1="ab", 如果 s2 中的子串包含“ab”或 “ba”，那就是有变位词。
+主要是要明白题目的意思。比如 s1="ab", 如果 s2 中的子串包含 "ab" 或 "ba"，那就是有变位词。
 
 先统计 s1 中字符串的频率（大数组当 hash 表）。在用双指针遍历 s2 中的字符串，统计字符出现的次数。如果当前范围内，所有字符出现的频率都一样，则这个范围内的字符串是变位词。
 
@@ -2085,7 +2159,7 @@ getRandom：随机返回现有集合中的一项。每个元素应该有相同�
 
 平均时间复杂度 O(1) 的存取，很自然的想到用 HashMap 来做。但是 getRandom 又该怎么做呢？
 
-它要求随机返回集合中的一项，那么可以使用随机数来获取 index，然后拿到对应 index 的数据。此处使用 ArrayList 存储数据，来随机获取集合中的一项。至于 O(1) 的 remove，可以将末尾的元素直接覆盖掉需要被异常的元素。
+它要求随机返回集合中的一项，那么可以使用随机数来获取 index，然后拿到对应 index 的数据。此处使用 ArrayList 存储数据，来随机获取集合中的一项。至于 O(1) 的 remove，可以用末尾的元素直接覆盖掉需要被移除的元素。
 
 - 用 ArrayList 实现随机返回集合中的一项
 - 用 HashMap 实现快速判断元素是否存在。key\=\=>待插入的元素，val\=\=>插入的索引位置
@@ -2104,9 +2178,6 @@ class RandomizedSet {
     HashMap<Integer, Integer> numToIndex;
     Random random;
 
-    /**
-    * Initialize your data structure here.
-    */
     public RandomizedSet() {
         save = new ArrayList<>();
         numToIndex = new HashMap<>();
@@ -2134,7 +2205,9 @@ class RandomizedSet {
         // 如果包含
         if (numToIndex.containsKey(val)) {
             int index = numToIndex.remove(val);
+            // 更新 map 中最后一个元素的索引
             numToIndex.put(save.get(save.size() - 1), index);
+            // 移除指定的元素 val
             numToIndex.remove(val);
             save.set(index, save.get(save.size() - 1));
             save.remove(save.size() - 1);
@@ -8576,3 +8649,37 @@ class Solution {
 }
 ```
 
+# 秋招每日一题
+
+## 用户分组
+
+有 n 个人被分成数量未知的组。每个人都被标记为一个从 0 到 n - 1 的唯一ID 。
+
+给定一个整数数组 groupSizes ，其中 groupSizes[i] 是第 i 个人所在的组的大小。例如，如果 groupSizes[1] = 3 ，则第 1 个人必须位于大小为 3 的组中。
+
+返回一个组列表，使每个人 i 都在一个大小为 groupSizes[i] 的组中。
+
+每个人应该 恰好只 出现在 一个组 中，并且每个人必须在一个组中。如果有多个答案，返回其中 任何 一个。可以 保证 给定输入 至少有一个 有效的解。
+
+<b>示例 1：</b>
+
+```
+输入：groupSizes = [3,3,3,3,3,1,3]
+输出：[[5],[0,1,2],[3,4,6]]
+解释：
+第一组是 [5]，大小为 1，groupSizes[5] = 1。
+第二组是 [0,1,2]，大小为 3，groupSizes[0] = groupSizes[1] = groupSizes[2] = 3。
+第三组是 [3,4,6]，大小为 3，groupSizes[3] = groupSizes[4] = groupSizes[6] = 3。 
+其他可能的解决方案有 [[2,1,6],[5],[0,4,3]] 和 [[5],[0,6,2],[4,3,1]]。
+```
+
+<b>示例 2：</b>
+
+```
+输入：groupSizes = [2,1,3,3,3,2]
+输出：[[1],[0,5],[2,3,4]]
+```
+
+
+
+DP 不能确定那个集合里有最优解，贪心可以确当那个集合里有最优解。
