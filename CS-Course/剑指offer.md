@@ -101,6 +101,93 @@ int main(){
 
 队列中有些元素是不是没有用到，如果把没有用到删除了会怎么样？
 
+前一个数小于等于后一个数，就把前一个（只是前一个）数删了。1 3 -1 ，1 小于 3，那么删除 1 后，一定单调（下降）。求最大值是，队头一定是最大值。后面要保证加入一个新元素后，依旧是单调的。
+
+距离，窗口大小为 5，依次将 5 4 3 4 6 加入。
+
+```
+5
+5	4 
+5	4	3
+5	4	3	4 不单调了，把 4 前面一个数字删除
+5	4	4
+5	4	4	6 不单调了，把 6 前面一个数字删除
+5	4	6	  不单调了，把 6 前面一个数字删除
+5	6		  不单调了，把 6 前面一个数字删除
+6		      单调了
+```
+
+```java
+class Solution {
+    public int[] maxSlidingWindow(int[] nums, int k) {
+        int[] ans = new int[nums.length - k + 1];
+        int point = 0;
+        Deque<Integer> deque = new ArrayDeque<>();
+        if (nums.length == 0 || k == 0 || k == 1) return nums;
+        // 先生成一个窗口
+        for (int i = 0; i < k; i++) {
+            // 如果不为空，则看是否单调递减，不是则清空前面的元素。
+            while (!deque.isEmpty() && nums[deque.peekLast()] < nums[i]) deque.removeLast();
+            deque.addLast(i);
+        }
+
+        for (int i = k; i < nums.length; i++) {
+            // 找窗口中的最大值
+            ans[point++] = nums[deque.peekFirst()]; // 不会出现 NPE
+            // 如果窗口中最大值的 index 恰好需要被移除的话(如果添加 i 后，窗口过大，则移除队首元素)
+            if (i - deque.getFirst() == k) deque.removeFirst();
+            // 然后加入新元素前看是否要移除新元素前一个元素，让队列抱持单调
+            while (!deque.isEmpty() && nums[deque.peekLast()] < nums[i]) deque.removeLast();
+            deque.addLast(i);
+        }
+        ans[point] = nums[deque.getFirst()];
+        return ans;
+    }
+}
+```
+
+[面试题59 - II. 队列的最大值 - 力扣（LeetCode）](https://leetcode.cn/problems/dui-lie-de-zui-da-zhi-lcof/)
+
+也是用单调队列来做。
+
+```java
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.Queue;
+
+
+// 用双端队列维护一个单调递减的序列。队头的就是 max。如果入队的元素大于前一个元素，则前一个元素出队。（单调队列）
+public class MaxQueue {
+    Queue<Integer> normal = new LinkedList<Integer>();
+    Deque<Integer> max = new ArrayDeque<Integer>();
+
+    public MaxQueue() {}
+
+    public int max_value() {
+        if (normal.isEmpty()) return -1;
+        return max.getFirst();
+    }
+
+    public void push_back(int value) {
+        normal.offer(value);
+        if (max.isEmpty()) {
+            max.addLast(value);
+        } else {
+            while (!max.isEmpty() && max.getLast() < value) max.removeLast();
+            max.addLast(value);
+        }
+    }
+
+    public int pop_front() {
+        if (normal.isEmpty()) return -1;
+        Integer poll = normal.poll();
+        if (max.getFirst().equals(poll)) max.removeFirst();
+        return poll;
+    }
+}
+```
+
 ## 动态规划
 
 - 背包问题
@@ -5405,6 +5492,71 @@ class Solution {
 }
 ```
 
+## 35.复杂链表的复制
+
+### 解题思路
+
+先复制 next 指针，再复制 random 指针。
+
+- 复制 next 指针很简单，遍历一遍就行，复制 random 指针比较麻烦。
+- 由于一个指针可能会被多个节点作为 random 指针，所以我们先构造 next 指针，在逐一为每个节点构造 random 指针。我们需要记录节点与节点之间的映射关系。old --> new 和 new --> old。
+- 构造 random 指针的时候，先用 new 做 key，查询出对应的 old node，在看 old node 的 random 对应那个 new node。
+
+```java
+Node old = newToOld.get(newNode);
+Node nowRandom = oldToNew(old.random);
+newNode.random = nowRandom;
+```
+
+### 代码
+
+```java
+/*
+// Definition for a Node.
+class Node {
+    int val;
+    Node next;
+    Node random;
+
+    public Node(int val) {
+        this.val = val;
+        this.next = null;
+        this.random = null;
+    }
+}
+*/
+class Solution {
+    public Node copyRandomList(Node head) {
+        Node ans = new Node(-1);
+        Node tmp = ans;
+        // next 节点可以保证一直是新的，但是 random 可能是重复用了某个节点，所以需要判断是否是重复的点。可以用 map
+        Map<Node,Node> oldToNew = new HashMap<>(); // old node 与 new node 的映射
+        Map<Node,Node> newToOld = new HashMap<>(); // new node 与 old node 的映射
+        // 遍历两次，先构造 next，在构造 random
+        while(head!=null){
+            Node cur = new Node(head.val);
+            tmp.next = cur;
+
+            oldToNew.put(head,cur);
+            newToOld.put(cur,head);
+
+            tmp = cur;
+            head = head.next;
+        }
+        // 再构造 random 值。
+        tmp = ans.next;
+
+        while(tmp!=null){
+            Node old = newToOld.get(tmp);
+            Node random = oldToNew.getOrDefault(old.random,null);
+            tmp.random = random;
+            tmp = tmp.next;
+        }
+        return ans.next;
+    }  
+}
+```
+
 
 
 ## 36.二叉搜索树与双向链表
@@ -6402,18 +6554,18 @@ b-->指向2
 ```
 
 ```java
-public ListNode reverseList(ListNode head) {
-    if(head==null || head.next == null) return head;
-    ListNode pre = head;
-    ListNode next = head.next;
-    pre.next = null;
-    while(next!=null){
-        ListNode tmp = next.next;
-        next.next = pre;
-        pre = next;
-        next = tmp;
+class Solution {
+    public ListNode reverseList(ListNode head) {
+        ListNode cur = head, pre = null;
+        // 每次修改一个节点的指向。第一次是指向 null，第二次是指向第一个节点。
+        while(cur!=null){
+            ListNode tmp = cur.next;
+            cur.next = pre;
+            pre = cur;
+            cur = tmp;
+        }
+        return pre;
     }
-    return pre;
 }
 ```
 

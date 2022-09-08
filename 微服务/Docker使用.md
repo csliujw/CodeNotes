@@ -29,7 +29,7 @@ Docker 为了解决依赖的兼容问题的，采用了两个手段：
 
 <img src="assets/image-20210731142219735.png" width="60%">
 
-这样打包好的应用包中，既包含应用本身，也保护应用所需要的Libs、Deps，无需再操作系统上安装这些，自然就不存在不同应用之间的兼容问题了。
+这样打包好的应用包中，既包含应用本身，也保护应用所需要的 Libs、Deps，无需再操作系统上安装这些，自然就不存在不同应用之间的兼容问题了。
 
 虽然解决了不同应用的兼容问题，但是开发、测试等环境会存在差异，操作系统版本也会有差异，怎么解决这些问题呢？
 
@@ -331,7 +331,7 @@ docker run --name containerName -p 80:80 -d nginx
 命令解读：
 
 - docker run ：创建并运行一个容器
-- --name : 给容器起一个名字，比如叫做mn
+- --name : 给容器起一个名字，比如叫做 mn
 - -p ：将宿主机端口与容器端口映射，冒号左侧是宿主机端口，右侧是容器端口
 - -d：后台运行容器
 - nginx：镜像名称，例如 nginx
@@ -542,7 +542,7 @@ docker volume inspect html
 
 <img src="assets/image-20210731173809877.png">
 
-可以看到，我们创建的html这个数据卷关联的宿主机目录为`/var/lib/docker/volumes/html/_data`目录。
+可以看到，我们创建的html这个数据卷关联的宿主机目录为`/var/lib/docker/volumes/html/_data` 目录。
 
 **小结**：
 
@@ -591,7 +591,7 @@ docker run \
 docker run --name mn -v html:/usr/share/nginx/html -p 80:80 -d nginx
 ```
 
-② 进入html数据卷所在位置，并修改HTML内容
+② 进入 html 数据卷所在位置，并修改 HTML 内容
 
 ```sh
 # 查看html数据卷的位置
@@ -760,19 +760,19 @@ docker run 的命令中通过 -v 参数挂载文件或目录到容器中：
 
 实现思路如下：
 
-- ① 新建一个空的目录，然后在目录中新建一个文件，命名为Dockerfile
+- ① 新建一个空的目录，然后在目录中新建一个文件，命名为 Dockerfile
 
-- ② 拷贝课前资料提供的docker-demo.jar到这个目录中
+- ② 拷贝课前资料提供的 docker-demo.jar 到这个目录中
 
-- ③ 编写Dockerfile文件：
+- ③ 编写 Dockerfile 文件：
 
-  - a ）基于java:8-alpine作为基础镜像
+  - a ）基于 java:8-alpine 作为基础镜像
 
-  - b ）将app.jar拷贝到镜像中
+  - b ）将 app.jar 拷贝到镜像中
 
   - c ）暴露端口
 
-  - d ）编写入口ENTRYPOINT
+  - d ）编写入口 ENTRYPOINT
 
     内容如下：
 
@@ -783,9 +783,9 @@ docker run 的命令中通过 -v 参数挂载文件或目录到容器中：
     ENTRYPOINT java -jar /tmp/app.jar
     ```
 
-- ④ 使用docker build命令构建镜像
+- ④ 使用 docker build 命令构建镜像
 
-- ⑤ 使用docker run创建容器并运行
+- ⑤ 使用 docker run 创建容器并运行
 
 ## 小结
 

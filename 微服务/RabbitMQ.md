@@ -79,7 +79,7 @@ MQ，中文是消息队列（MessageQueue），字面来看就是存放消息的
 
 几种常见 MQ 的对比：
 
-|            | RabbitMQ<            | ActiveMQ                 | RocketMQ | Kafka  |
+|            | RabbitMQ            | ActiveMQ                 | RocketMQ | Kafka  |
 | ---------- | ----------------------- | ------------------------------ | ------------ | ---------- |
 | 公司/社区  | Rabbit                  | Apache                         | 阿里         | Apache     |
 | 开发语言   | Erlang                  | Java                           | Java         | Scala&Java |

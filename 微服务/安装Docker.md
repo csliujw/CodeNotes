@@ -8,11 +8,11 @@ Docker CE 分为 `stable` `test` 和 `nightly` 三个更新频道。
 
 # CentOS安装Docker
 
-Docker CE 支持 64 位版本 CentOS 7，并且要求内核版本不低于 3.10， CentOS 7 满足最低内核的要求，所以我们在CentOS 7安装Docker。
+Docker CE 支持 64 位版本 CentOS 7，并且要求内核版本不低于 3.10， CentOS 7 满足最低内核的要求，所以我们在 CentOS 7 安装 Docker。
 
 ## 卸载（可选）
 
-如果之前安装过旧版本的Docker，可以使用下面命令卸载：
+如果之前安装过旧版本的 Docker，可以使用下面命令卸载：
 
 ```bash
 yum remove docker \
@@ -30,7 +30,7 @@ yum remove docker \
 
 ## 安装docker
 
-首先需要大家虚拟机联网，安装yum工具
+首先需要大家虚拟机联网，安装 yum 工具
 
 ```sh
 yum install -y yum-utils \
@@ -57,7 +57,7 @@ yum makecache fast
 yum install -y docker-ce
 ```
 
-docker-ce为社区免费版本。稍等片刻，docker即可安装成功。
+docker-ce 为社区免费版本。稍等片刻，docker 即可安装成功。
 
 ## 启动docker
 

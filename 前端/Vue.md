@@ -18,7 +18,7 @@ v-model 指令双向数据绑定，只要 vm 监听到 data 中任何一条数�
 > v-cloak 基本不用
 
 - 解决：插值表达式闪烁的问题（v-cloak 指令来解决闪烁问题）
-- 应用：网络比较卡是，可以为最外层的元素添加 v-cloak，防止用户看到插值表达式
+- 应用：网络比较卡时，可以为最外层的元素添加 v-cloak，防止用户看到插值表达式
 
 ```html
 <style>
@@ -43,7 +43,7 @@ v-model 指令双向数据绑定，只要 vm 监听到 data 中任何一条数�
 
 ## 常见指令
 
-vue中的指令，只有`{{}}`是用在内容节点中的，其它所有的指令，都是用在属性节点中的！！
+vue 中的指令，只有 `{{}}` 是用在内容节点中的，其它所有的指令，都是用在属性节点中的。
 
 - 内容节点 `<div>{{msg}}</div>`
 - 属性节点 `<div v-html='msg'></div>`
@@ -114,7 +114,7 @@ v-text 不存在闪烁问题。
 
 简写形式：
 
-- v-bind可以简写为 `:`，如
+- v-bind 可以简写为 `:`，如
 - `<buttuon :title="mytitle">按钮</button>`
 - `<img :src="boo ？img1:img2" />` boo是布尔值，img1/2 是图片链接，以此动态切换图片路径
 
@@ -124,7 +124,7 @@ v-text 不存在闪烁问题。
 
 `<div v-on:click="show('hello')">按钮</div>`   绑定事件传参
 
-`<div @click="show('hello')">按钮</div>`   **==简写==**
+`<div @click="show('hello')">按钮</div>`   简写
 
 > v-model：双向数据绑定
 
@@ -202,6 +202,7 @@ Vue 常见的过渡动画（不重要）
 
 <body>
     <div id="app">
+        传入的参数是 time，然后调用方法 dataFormat
         <h3>{{time | dataFormat}}</h3>
     </div>
 </body>
@@ -232,7 +233,7 @@ Vue 常见的过渡动画（不重要）
 ### 什么是生命周期
 
 <b>生命周期</b>：实例的生命周期，就是一个阶段，从创建到运行，再到销毁的阶段。
-<b>生命周期函数</b>：在实例的生命周期钟，在特定阶段执行的一些特定的事件，这些事件，叫做生命周期函数；
+<b>生命周期函数</b>：在实例的生命周期中，在特定阶段执行的一些特定的事件，这些事件，叫做生命周期函数；
 
 - 生命周期函数 = 生命周期钩子 = 生命周期事件
 
@@ -241,7 +242,7 @@ Vue 常见的过渡动画（不重要）
 - 创建期间的生命周期函数：（特点：每个实例一辈子只执行一次）
     - `beforeCreate`：创建之前，此时 data 和 methods 尚未初始化
     - created（第一个重要的函数，此时，data 和 methods 已经创建好了，可以被访问了，首页数据的请求一般在这里发起！）
-    - `beforeMount`：挂在模板结构之前，此时，页面还没有被渲染到浏览器中（如果想初始化一些第三方的JS插件，必须在mounted中进行初始化。比如echarts，它需要在初始化完毕的dom中进行操作）
+    - `beforeMount`：挂在模板结构之前，此时，页面还没有被渲染到浏览器中（如果想初始化一些第三方的 JS 插件，必须在 mounted 中进行初始化。比如 echarts，它需要在初始化完毕的 dom 中进行操作）
     - mounted（第二个重要的函数，此时，页面刚被渲染出来；如果需要操作 DOM 元素，最好在这个阶段；如使用三方插件，该插件需要 DOM 初始化完毕！）
 
 - 运行期间的生命周期函数：（特点：按需被调用至少 0 次，最多 N 次）
@@ -263,7 +264,7 @@ ES6 中的新语法，Promise 是一个构造函数；每个 new 出来的 Promi
 
 JS 解析引擎是单线程的；宿主环境（浏览器、Node 环境）是多线程的。
 
-异步的任务会放到异步回调函数的队列中。当js把自己栈中的任务执行完后，才会执行异步回调函数队列中的任务。
+异步的任务会放到异步回调函数的队列中。当 js 把自己栈中的任务执行完后，才会执行异步回调函数队列中的任务。
 
 > 作用
 
@@ -303,7 +304,7 @@ fs.readFile('./files/1.txt', 'utf-8', (err, dataStr1) => {
 })
 ```
 
-Promise不会减少代码量，但是可以解决回调地狱的问题。
+Promise 不会减少代码量，但是可以解决回调地狱的问题。
 
 创建形式上的异步操作
 
@@ -373,7 +374,7 @@ r1.then(function (info) { console.log(info); console.log("success"); }, function
 
 > ES7 中 async 和 await 可以简化 Promise 调用，提高 Promise 代码的阅读性和理解性。
 
-- 如果某个方法的返回值是 Promise 对象，那么，就可以用 await关键字，来修饰 promise 实例
+- 如果某个方法的返回值是 Promise 对象，那么，就可以用 await 关键字，来修饰 promise 实例
 - 如果一个方法内部用了 await 那么这个方法必须修饰为 async 异步方法
     - 精简：await 只能用在被 async 修饰的方法中
 
@@ -514,7 +515,7 @@ const { name, age: userage } = user
 console.log(name, userage);
 ```
 
-这样我们获取数据的时候，就可以用解构赋值，得到我们想要的那部分数据了！
+这样我们获取数据的时候，就可以用解构赋值，只得到我们想要的那部分数据了！
 
 ```js
 async function getInfo() {
@@ -668,7 +669,6 @@ this.$http.get('/user/10',{params:{name:'zs',age:22}}) // ===> http://127.0.0.1:
         return `${y}-${m}-${d}`
     })
 
-
     const vm = new Vue({
         el: '#app',
         data: {
@@ -688,15 +688,18 @@ this.$http.get('/user/10',{params:{name:'zs',age:22}}) // ===> http://127.0.0.1:
                 // 应该这么写
                 this.brandList = res.message;
             },
+            
             async add() {
                 const { data: res } = await this.$http.post('/api/addproduct', { name: this.name });
                 if (res.status !== 0) return alert('添加失败！');
                 this.getBandList();
                 this.name = '';
             },
+            
             search() {
                 return this.brandList.filter(item=>item.name.includes(this.keywords))
             },
+            
             async remove(id) {
                 const { data: res } = await this.$http.get('/api/delproduct/' + id);
                 if (res.status !== 0) return alert('删除失败');
@@ -720,7 +723,7 @@ this.$http.get('/user/10',{params:{name:'zs',age:22}}) // ===> http://127.0.0.1:
         - 导入模块：const fs = require('fs')
         - 暴露模块：module.exports={}
     - ES6 模块化规范：
-        - import $ from 'jquery' ==> 从jquery包中导入 `$`
+        - import $ from 'jquery' ==> 从 jquery 包中导入 `$`
 
 ## Vue中的动画
 
@@ -796,12 +799,12 @@ this.$http.get('/user/10',{params:{name:'zs',age:22}}) // ===> http://127.0.0.1:
 
 ### 三方动画库
 
-Vue不支持animate4.0
+Vue 不支持 animate4.0
 
-- 把需要添加动画的元素，使用v-if或v-show进行控制。
-- 把需要添加动画的元素，使用Vue提供的元素`<transition></transition>`包裹起来
-- 为`<transition></transition>`添加两个属性类`enter-active-class,leave-active-class`
-- 把需求添加动画的元素，添加一个class='animated'
+- 把需要添加动画的元素，使用 v-if 或 v-show 进行控制。
+- 把需要添加动画的元素，使用 Vue 提供的元素 `<transition></transition>` 包裹起来
+- 为 `<transition></transition>` 添加两个属性类 `enter-active-class,leave-active-class`
+- 把需求添加动画的元素，添加一个 class='animated'
 
 ```html
 <!DOCTYPE html>
@@ -838,26 +841,27 @@ Vue不支持animate4.0
 
 ### v-for的列表过渡
 
-- 把v-for循环渲染的元素，添加`:key`属性【注意：如果为列表项添加动画效果，一定要指定key，并且，key的值不能为索引】
+- 把 v-for 循环渲染的元素，添加 `:key` 属性【注意：如果为列表项添加动画效果，一定要指定 key，并且，key 的值不能为索引】
 
-- 在v-for循环渲染的元素外层，包裹`<transition-group>`标签
+- 在 v-for 循环渲染的元素外层，包裹 `<transition-group>` 标签
 
 - 添加两组类即可：
 
-    ```css
-    .v-enter,
-    .v-leave-to{
-        opacity:0,
-        transform:translateY(100px);
-    }
-    
-    .v-enter-active,
-    .v-leave-active{
-        transition:all 0.8s ease;
-    }
-    ```
 
-> 具体Demo
+```css
+.v-enter,
+.v-leave-to{
+    opacity:0,
+    transform:translateY(100px);
+}
+
+.v-enter-active,
+.v-leave-active{
+    transition:all 0.8s ease;
+}
+```
+
+> 具体 Demo
 
 ```html
 <!DOCTYPE html>
@@ -935,7 +939,7 @@ Vue不支持animate4.0
 
 > 如何解决上述问题？
 
-- 对于JS或CSS，可以压缩和合并；小图片适合转Base64格式的编码。
+- 对于 JS 或 CSS，可以压缩和合并；小图片适合转 Base64 格式的编码。
     - 合并：减少发送请求次数
     - 压缩：减小文件的传输量
     - Base：把图片转换成了字符串，无需为图片发起请求。
@@ -943,24 +947,22 @@ Vue不支持animate4.0
 
 ## Webpack
 
-**Webpack：**前端项目的构建工具；前端的项目都是基于webpack进行构建和运行的。
+**Webpack：**前端项目的构建工具；前端的项目都是基于 webpack 进行构建和运行的。
 
 **为什么用Webpack：**
 
-- 1、如果项目使用webpack进行构建，我们可以书写高级的ES代码，且不用考虑兼容性。
-- 2、webpack能够优化项目的性能，比如合并、压缩文件等；
+- 1、如果项目使用 webpack 进行构建，我们可以书写高级的 ES 代码，且不用考虑兼容性。
+- 2、webpack 能够优化项目的性能，比如合并、压缩文件等；
 - 3、基于webpack，程序员可以把自己的开发重心，放到功能上；
 
 **什么项目适合使用webpack：**
 
 - 单页面应用程序
-    - vue、react、angular只要用前端三大框架开发项目，必然会使用webpack工具。
+    - vue、react、angular 只要用前端三大框架开发项目，必然会使用 webpack 工具。
 - 不太适合与多页面的普通网站结合使用
 - <a href="http://webpack.github.io/">官网</a>
 
 ## webpack 流程
-
-<img src="..\pics\redis\image-20210627210139677.png">
 
 vscode快捷键==li{这是第$个li}*9==
 
@@ -1002,9 +1004,9 @@ webpack学习失败。我直接上极客时间的Vue了。
 
 ## 模块化和组件化
 
-模块化：从代码角度分析，把可复用的代码，抽离为单独的模块；==实现代码的复用。==
+模块化：从代码角度分析，把可复用的代码，抽离为单独的模块；实现代码的复用。
 
-组件化：从页面UI的角度分析，把页面中可复用的 UI 结构，抽离为单独的组件；==实现 UI 的复用。==
+组件化：从页面 UI 的角度分析，把页面中可复用的 UI 结构，抽离为单独的组件；实现 UI 的复用。
 
 ## ES6导入导出新语法
 
@@ -1070,14 +1072,14 @@ export var a = 10
 
 ### 模块化、组件化
 
-模块化：实现代码的复用；把可复用的代码 抽离为单独的模块；
+模块化：实现代码的复用；把可复用的代码抽离为单独的模块；
 
 - 提供模块作用域的概念，防止全局变量污染
 - 提高了代码的复用率，方便了程序员之间共享代码
 
-组件化：把页面中可复用的UI结构，抽离为单独的组件。
+组件化：把页面中可复用的 UI 结构，抽离为单独的组件。
 
-- 方便UI结构的重用
+- 方便 UI 结构的重用
 - 可以直接使用第三方封装好的组件库
 - 更专注于业务逻辑
 
@@ -1086,7 +1088,7 @@ export var a = 10
 > 语法
 
 - `Vue.component('组件名称',{组件的配置对象})`
-- 在组件的配置对象中：可以使用template属性指定当前组件要渲染的模板结构
+- 在组件的配置对象中：可以使用 template 属性指定当前组件要渲染的模板结构
 
 > 使用语法组件
 
@@ -1095,8 +1097,8 @@ export var a = 10
 > 注意
 
 - 从更抽象的角度来说，每个组件，就相对于一个自定义的元素；
-- 组件中的DOM结构，有且只能有唯一的根元素来进行包裹。
-- 组件其实就是封装了一些HMTL。
+- 组件中的 DOM 结构，有且只能有唯一的根元素来进行包裹。
+- 组件其实就是封装了一些 HMTL。
 
 > 完整代码示例
 
@@ -1156,18 +1158,19 @@ const vm = new Vue({
 
 ### 私有组件的data
 
-- 私有组件的data必须是一个function，且必须return一个数据对象。
+- 私有组件的 data 必须是一个 function，且必须 return 一个数据对象。
 
-- vm 实例中，data 即可以方法 也可以是对象
+- vm 实例中，data 即可以方法也可以是对象
 
-    ```js
-    const vm = new Vue({
-    	el: '#app2',
-    	data: {
-    		info: '000'
-    	}
-    }
-    ```
+
+```js
+const vm = new Vue({
+	el: '#app2',
+	data: {
+		info: '000'
+	}
+}
+```
 
 ```js
 Vue.component("my-test", {
@@ -1196,13 +1199,13 @@ Vue.component("my-test", {
 
 ## Vue 文件结构说明
 
-每个 .Vue 文件，都是一个 vue 组件（叫做 单文件组件），它由三部分组成：
+每个 .Vue 文件，都是一个 vue 组件（叫做单文件组件），它由三部分组成：
 
 - template 结构
 - script 行为
 - style 样式
 
-> 定义组件Demo
+> 定义组件 Demo
 
 ```vue
 <template>
@@ -1247,7 +1250,7 @@ h3 {
     </script>
     ```
 
-- 把这个组件 注册为全局组件或私有组件
+- 把这个组件注册为全局组件或私有组件
 
     **全局组件**
 
