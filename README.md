@@ -54,6 +54,10 @@
 - [深入分析JavaWeb技术内幕读书笔记](JavaWeb/深入分析JavaWeb技术内幕.md)
 - [Tomcat架构解析-未完成](JavaWeb/Tomcat架构解析.md)
 
+## 😅C++
+
+- C++ 挖个坑，后面填
+
 ## 🚄并发编程
 
 - [基本概念](Java-Multithreading/01-基本概念.md)
@@ -94,6 +98,12 @@
 - [RabbitMQ基本使用](微服务/RabbitMQ.md)
 - [SpringCloud](微服务/SpringCloud.md)
 - [nacos安装](微服务/nacos安装.md)
+
+## ♒深度学习&机器学习
+
+- [深度学习&机器学习理论基础](machine learning/深度学习理论基础.md)
+- [深度学习模型加速](machine learning/深度学习模型加速.md)
+- [数学之美](machine learning/数学之美.md)
 
 ## 📄文档
 
