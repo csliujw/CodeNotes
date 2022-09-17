@@ -659,7 +659,7 @@ eval 不启用 BatchNormalization 和 Dropout，保证 BN 和 Dropout 不发生�
 - 损失函数：参数学习的目标函数，通过最小化损失函数来学习各种参数
 - 优化器：如何使损失函数最小，这涉及优化器
 
-<div align="center"><img src="../pics/pytorch/pytorch_structure.png"></div>
+<div align="center"><img src="img/pytorch_structure.png"></div>
 
 ## torch.nn模块构建网络
 
@@ -1435,7 +1435,7 @@ CUDA 的安装，如果安装过 vs 可能会出错，所以 cuda 建议选择�
 
   - 每一层 FC（Fully Connected Layer）接一个 BN（Batch Normalization）层
 
-    <div align="center"><img src="../pics/pytorch/Batch_normalization_hhj.png"></div>
+    <div align="center"><img src="img/Batch_normalization_hhj.png"></div>
 
 - <b>目标函数选择</b>
 
@@ -1486,7 +1486,7 @@ CWH
 
 - <b>一般池化</b>
 
-  <div align="center"><img src="../pics/pytorch/Pooling_schematic.gif"></div>
+  <div align="center"><img src="img/Pooling_schematic.gif"></div>
 
   我们定义池化窗口的大小为 sizeX，即下图中红色正方形的边长，定义两个相邻池化窗口的水平位移/竖直位移为 stride。一般池化由于每一池化窗口都是不重复的，所以 sizeX=stride
 
@@ -1500,7 +1500,7 @@ CWH
 
 - <b>全局最大（或均值）池化</b>：与平常最大或最小池化相对而言，全局池化是对整个特征图的池化而不是在移动窗口范围内的池化
 
-  <div align="center"><img src="../pics/pytorch/three_pooling.png"></div>
+  <div align="center"><img src="img/three_pooling.png"></div>
 
   池化层在 CNN 中可用来减小尺寸，提高运算速度及减小噪声影响，让各特征更具有健壮性。池化层比卷积层更简单，它没有卷积运算，只是在滤波器算子滑动区域内取最大值或平均值。而池化的作用则体现在降采样：保留显著特征、降低特征维度，增大感受野。深度网络越往后面越能捕捉到物体的语义信息，这种语义信息是建立在较大的感受野基础上。
 
@@ -1510,7 +1510,7 @@ CWH
 
 - 3 个 3 * 3 的卷积核（通道数为 3）给图片做步长为 1，卷积后，图片变为【<span style="color:red">几个核（不同的核），就几个通道！</span>】
 
-  <div align="center"><img src="../pics/pytorch/cnn03.png"></div>
+  <div align="center"><img src="img/cnn03.png"></div>
 
 #### 上采样
 
@@ -1518,17 +1518,17 @@ CWH
 
 - 转置卷积（也叫反卷积）
 
-  <div align="center"><img src="../pics/pytorch/上采样1.gif"></div>
+  <div align="center"><img src="img/上采样1.gif"></div>
 
 - 上采样（unsampling）
 
-  <div align="center"><img src="../pics/pytorch/unsampling.png"></div>
+  <div align="center"><img src="img/unsampling.png"></div>
 
   其中右侧为 unsampling，可以看出 unsampling 就是将输入 feature map 中的某个值映射填充到输出上采样的 feature map 的某片对应区域中，而且是全部填充的一样的值
 
 - 上池化（unpooling）
 
-  <div align="center"><img src="../pics/pytorch/unPooling.png"></div>
+  <div align="center"><img src="img/unPooling.png"></div>
 
   unpooling 的操作与 unsampling 类似，区别是 unpooling 记录了原来 pooling 是取样的位置，在 unpooling 的时候将输入feature map 中的值填充到原来记录的位置上，而其他位置则以 0 来进行填充。
 
@@ -1550,7 +1550,7 @@ full、same、valid
 
 #### full mode
 
-<div align="center"><img src="../pics/pytorch/full_mode.png"></div>
+<div align="center"><img src="img/full_mode.png"></div>
 
 中间那个橘黄色的是图像，边上蓝色的是卷积核
 
@@ -1558,7 +1558,7 @@ full 的意思是，卷积核和 image 刚开始相交就做卷积。白色部�
 
 #### same mode
 
-<div align="center"><img src="../pics/pytorch/same_mode.png"></div>
+<div align="center"><img src="img/same_mode.png"></div>
 
 当 filter 的中心 (K) 与 image 的边角重合时，开始做卷积运算，可见 filter 的运动范围比 full 模式小了一圈。
 
@@ -1566,7 +1566,7 @@ full 的意思是，卷积核和 image 刚开始相交就做卷积。白色部�
 
 #### valid
 
-<div align="center"><img src="../pics/pytorch/valid_mode.png"></div>
+<div align="center"><img src="img/valid_mode.png"></div>
 
 当 filter 全部在 image 里面的时候，进行卷积运算，可见 filter 的移动范围较 same 更小了。
 
@@ -1623,13 +1623,13 @@ full 的意思是，卷积核和 image 刚开始相交就做卷积。白色部�
 - 上采样采用转置卷积
 - 推断速度快
 
-<div align="center"><img src="../pics/pytorch/U-Net.png"></div>
+<div align="center"><img src="img/U-Net.png"></div>
 
 #### PSPNet
 
 利用基于不同区域地信息集合，通过金字塔池化模块，使用金字塔场景解析网络来发挥上下文信息的能力。
 
-<div align="center"><img src="../pics/pytorch/PSPNet.png"></div>
+<div align="center"><img src="img/PSPNet.png"></div>
 
 <b>特点</b>
 
@@ -1672,7 +1672,7 @@ DeepLab v3 使用 ResNet 作为主干网络
 - 为了解决多尺度目标的分割问题，在残差块中使用了多尺度网格方法（MultiGrid），从而引入不同的空洞率。
 - 在空洞空间金字塔池化模块中加入图像级（Image-level）特征，并且使用了BatchNormalization 技巧。
 
-<div align="center"><img src="../pics/pytorch/DeepLabV3.png"></div>
+<div align="center"><img src="img/DeepLabV3.png"></div>
 
 #### VGG
 
@@ -1690,9 +1690,9 @@ VGG16 相比 AlexNet 的一个改进是<b>采用连续的几个 3x3 的卷积核
 
 这样一算（用心去感觉） 相当于一个5 x 5
 
-<div align="center"><img src="../pics/pytorch/ReceptineField.jpg"></div>
+<div align="center"><img src="img/ReceptineField.jpg"></div>
 
-<div align="center"><img src="../pics/pytorch/receptine_field.png"></div>
+<div align="center"><img src="img/receptine_field.png"></div>
 
 感受野，直观感受。5x5 的经过两次 3x3 的卷积后，变成了 1，所以说，两个 3x3 的卷积核感受野大小为 5.
 
@@ -1727,9 +1727,9 @@ PS：有的文章称：发现这些全连接层即使被去除，对于性能也
 
 主要思路：使用一个密集成分来近似或者代替最优的局部稀疏结构。
 
-<div align="center"><img src="../pics/pytorch/inception_1_naive.png"></div>
+<div align="center"><img src="img/inception_1_naive.png"></div>
 
-<div align="center"><img src="../pics/pytorch/inception_1_reduction.png"></div>
+<div align="center"><img src="img/inception_1_reduction.png"></div>
 
 对于上图中的（a）做出几点解释：
 
@@ -1760,7 +1760,7 @@ RNN 让神经网络有了记忆，<span style="color:red">对于序列化的数�
 
 神经网络可以当做是能够拟合任意函数的黑盒子，只要训练数据足够，给定特定的 x，就能得到希望的y，结构图如下：
 
-<div align="center"><img src="../pics/pytorch/cnn_review.jpg"></div>
+<div align="center"><img src="img/cnn_review.jpg"></div>
 
 将神经网络模型训练好之后，在输入层给定一个 x，通过网络之后就能够在输出层得到特定的y，那么既然有了这么强大的模型，为什么还需要 RNN（循环神经网络）呢？
 
@@ -1770,7 +1770,7 @@ RNN 让神经网络有了记忆，<span style="color:red">对于序列化的数�
 
 ### RNN结构
 
-<div align="center"><img src="../pics/pytorch/RNN01.jpg"></div>
+<div align="center"><img src="img/RNN01.jpg"></div>
 
 x 是一个向量，它表示<b>输入层</b>的值（这里面没有画出来表示神经元节点的圆圈）；s 是一个向量，它表示<b>隐藏层</b>的值（这里隐藏层面画了一个节点，你也可以想象这一层其实是多个节点，节点数与向量 s 的维度相同）；
 
@@ -1780,15 +1780,15 @@ U 是输入层到隐藏层的<b>权重矩阵</b>，o 也是一个向量，它表
 
 我们给出这个抽象图对应的具体图：
 
-<div align="center"><img src="../pics/pytorch/RNN02.jpg"></div>
+<div align="center"><img src="img/RNN02.jpg"></div>
 
 把上图按时间线展开的话：
 
-<div align="center"><img src="../pics/pytorch/RNN03.jpg"></div>
+<div align="center"><img src="img/RNN03.jpg"></div>
 
 用公式表示如下：
 
-<div align="center"><img src="../pics/pytorch/RNN04.png"></div>
+<div align="center"><img src="img/RNN04.png"></div>
 
 注意：为了简单说明问题，偏置都没有包含在公式里面
 
@@ -1806,7 +1806,7 @@ LSTM Long Short-Term Memory
 
 多了一个控制全局的记忆，会将分线剧情，根据其重要程度写入主线中。忘记方面，若分线剧情改变了，忘记就会更新主线中的对应内容。输出根据主线和支线进行判断。
 
-<div align="center"><img src="../pics/pytorch/LSTM_RNN.png"></div>
+<div align="center"><img src="img/LSTM_RNN.png"></div>
 
 ### RNN 分类
 
@@ -1816,7 +1816,7 @@ RNN 一般用在时间序列方面的数据，如何用它处理图片？
 
 <span style="color:red">用 RNN 的最后一个时间点输出来判断之前看到的图片属于哪一类</span>
 
-<div align="center"><img src="../pics/pytorch/CS231n_RNN.jpg"></div>
+<div align="center"><img src="img/CS231n_RNN.jpg"></div>
 
 图像的分类对应上图就是个 `many to one` 的问题. 对于 mnist 来说其图像的 size 是 28x28，如果将其看成 28 个 step，每个 step 的 size 是 28 的话，是不是刚好符合上图. 当我们得到最终的输出的时候将其做一次线性变换就可以加 softmax 来分类了
 
@@ -1824,7 +1824,7 @@ RNN 一般用在时间序列方面的数据，如何用它处理图片？
 
 ## DQN
 
-<div align="center"><img src="../pics/pytorch/DQN01.png"></div>
+<div align="center"><img src="img/DQN01.png"></div>
 
 ## GAN
 
@@ -1844,7 +1844,7 @@ Generative Adversarial Nets
 
 生成对抗网络
 
-<div align="center"><img  src="../pics/pytorch/GAN01.png"></div>
+<div align="center"><img  src="img/GAN01.png"></div>
 
 Generator 会根据随机数来生成有意义的数据 , Discriminator 会学习如何判断哪些是真实数据 , 哪些是生成数据, 然后将学习的经验反向传递给 Generator, 让 Generator 能根据随机数生成更像真实数据的数据. 这样训练出来的 Generator 可以有很多用途, 比如最近有人就拿它来生成各种卧室的图片.
 
@@ -1912,7 +1912,7 @@ Batch normalization 的 batch 是批数据, 把数据分成小批小批进行 st
 
 <b>Normalization公式</b>
 
-<div align="center"><img src="../pics/pytorch/normalization.png"></div>
+<div align="center"><img src="img/normalization.png"></div>
 
 我们引入一些 batch normalization 的公式。这三步就是我们在刚刚一直说的 normalization 工序, 但是公式的后面还有一个反向操作, 将 normalize 后的数据再扩展和平移. 原来这是为了让神经网络自己去学着使用和修改这个扩展参数 gamma, 和 平移参数 β, 这样神经网络就能自己慢慢琢磨出前面的 normalization 操作到底有没有起到优化的作用, 如果没有起到作用, 我就使用 gamma 和 belt 来抵消一些 normalization 的操作.
 
@@ -1946,7 +1946,7 @@ $$
 损失函数
 loss = (\hat{y}-y)^2 = (x * \omega - y)^2
 $$
-y_hat 是预测值
+$\hat y$ 是预测值
 
 ω 是权重。
 
@@ -1976,7 +1976,7 @@ loss = （y_hat -y）^2
 ## 线性回归
 
 - 准备数据
-- 设计模型，计算 y_hat
+- 设计模型，计算 $\hat y$
 - 构造损失函数和构造器
 - 训练周期
   - forward：算损失
@@ -2240,19 +2240,19 @@ if __name__ == '__main__':
 
 有 10 个分类，有 9 个参数就够了。第 10 个分类用 1-前面的求和，但是这样不利于并行计算。
 
-<div align="center"><img src="../pics/pytorch/softmax01.png"></div>
+<div align="center"><img src="img/softmax01.png"></div>
 
 归一化？
 
-<img src="../pics/pytorch/softmax02.png">
+<img src="img/softmax02.png">
 
-<div align="center"><img src="../pics/pytorch/softmax03.png"></div>
+<div align="center"><img src="img/softmax03.png"></div>
 
 激活的操作，在交叉熵损失中完成了。
 
-<img src="../pics/pytorch/cross01.png">
+<img src="img/cross01.png">
 
-<div align="center"><img src="../pics/pytorch/cross02.png"></div>
+<div align="center"><img src="img/cross02.png"></div>
 
 <b>交叉熵损失 demo 测试</b>
 
@@ -2278,19 +2278,19 @@ print(l1, l2)
 
 拿到图像后先把他变成 Tensor 数据类型
 
-<div align="center"><img src="../pics/pytorch/soft_pre_data.png"></div>
+<div align="center"><img src="img/soft_pre_data.png"></div>
 
 - 1x28x28 1 维 28*28 == 把三阶张量变成一阶，一张图片一共 784 个像素数。
 - ToTensor 把图像变成 Tensor 类型
 - Normalize(mean,σ) 让数据满足 0 1 分布
 
-<div align="center"><img src="../pics/pytorch/design_model01.png"></div>
+<div align="center"><img src="img/design_model01.png"></div>
 
-<img src="../pics/pytorch/design_model02.png">
+<img src="img/design_model02.png">
 
-<div align="center"><img src="../pics/pytorch/clao.png"></div>
+<div align="center"><img src="img/clao.png"></div>
 
-<img src="../pics/pytorch/train_and_test.png">
+<img src="img/train_and_test.png">
 
 # 自定义PyTorch的功能
 

@@ -5775,6 +5775,11 @@ class Solution {
 }
 ```
 
+## 52.两个链表的第一个公共结点
+
+- 暴力求解，遍历链表，把链表中的所有元素分别加入两个 stack 中。然后再找出 stack 中最后一个相同的元素。
+- 
+
 ## 53.在排序数组中查找数字
 
 统计一个数字在排序数组中出现的次数。
@@ -5885,6 +5890,41 @@ class Solution {
 }
 ```
 
+## 54.二叉搜索树的第K大节点
+
+[剑指 Offer 54. 二叉搜索树的第k大节点 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/er-cha-sou-suo-shu-de-di-kda-jie-dian-lcof/)
+
+给定一棵二叉搜索树，请找出其中第 `k` 大的节点的值。
+
+### 解题思路
+
+典型的中序遍历问题。问题在于如何查找第 K 大的节点？我们可以用一个小顶堆存储 K 个最大的元素，这样，遍历结束后，堆顶的元素就是第 K 大的值。
+
+### 代码
+
+```java
+public class Offer054KthLargest {
+    PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+
+    public int kthLargest(TreeNode root, int k) {
+        dfs(root, k);
+        return minHeap.peek();
+    }
+
+    public void dfs(TreeNode root, int k) {
+        if (root == null) return;
+        dfs(root.left, k);
+        if (minHeap.size() < k) {
+            minHeap.offer(root.val);
+        } else if (minHeap.peek() < root.val) {
+            minHeap.poll();
+            minHeap.offer(root.val);
+        }
+        dfs(root.right, k);
+    }
+}
+```
+
 ## 55.二叉树的深度
 
 [剑指 Offer 55 - I. 二叉树的深度 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/er-cha-shu-de-shen-du-lcof/)
@@ -5953,8 +5993,8 @@ true
 如果编写递归代码呢？
 
 - 使用一个 flag 记录是否是平衡二叉树。
-  - 如果当前节点为 null，return 0，
-  - 如果当前的二叉树不是平衡二叉树，为 flag 设置为 false；return 当前节点的最大深度
+    - 如果当前节点为 null，return 0，
+    - 如果当前的二叉树不是平衡二叉树，为 flag 设置为 false；return 当前节点的最大深度
 - 上述的做法存在一个问题，进行了多余的递归，可以进行剪枝，如果已经判定了不是 AVL，则不用继续遍历了。
 
 ### 代码
@@ -6011,43 +6051,6 @@ class Solution {
         int right = helper(root.right);
         if(left==-1 || right == -1 || Math.abs(left-right)>1) return -1;
         return Math.max(left,right)+1;
-    }
-}
-```
-
-
-
-## 54.二叉搜索树的第K大节点
-
-[剑指 Offer 54. 二叉搜索树的第k大节点 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/er-cha-sou-suo-shu-de-di-kda-jie-dian-lcof/)
-
-给定一棵二叉搜索树，请找出其中第 `k` 大的节点的值。
-
-### 解题思路
-
-典型的中序遍历问题。问题在于如何查找第 K 大的节点？我们可以用一个小顶堆存储 K 个最大的元素，这样，遍历结束后，堆顶的元素就是第 K 大的值。
-
-### 代码
-
-```java
-public class Offer054KthLargest {
-    PriorityQueue<Integer> minHeap = new PriorityQueue<>();
-
-    public int kthLargest(TreeNode root, int k) {
-        dfs(root, k);
-        return minHeap.peek();
-    }
-
-    public void dfs(TreeNode root, int k) {
-        if (root == null) return;
-        dfs(root.left, k);
-        if (minHeap.size() < k) {
-            minHeap.offer(root.val);
-        } else if (minHeap.peek() < root.val) {
-            minHeap.poll();
-            minHeap.offer(root.val);
-        }
-        dfs(root.right, k);
     }
 }
 ```
@@ -6179,6 +6182,16 @@ class Solution {
     }
 }
 ```
+
+## 57.和为 K 的两个数字
+
+数字有序，找出数字中和为 k 的两个数；
+
+典型的双指针。
+
+## 58.翻转单词顺序
+
+
 
 ## 58.左旋转字符串
 
