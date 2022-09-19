@@ -41,3 +41,7 @@ MVC 设计模式
 canvas 画图，需要生成一个合法的地图。可以从左下角到右上角；可以从右上角到左下角
 
 vue ref 属性，setup 方法，onMounted 方法
+
+## 前端
+
+常见导航栏组件，用于代码复用。UI 用 BootStrap 或 LayUI

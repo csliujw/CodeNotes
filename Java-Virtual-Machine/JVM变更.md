@@ -3,9 +3,6 @@
 [OpenJDK (java.net)](http://openjdk.java.net/) 查阅 JDK 变更信息；如永久代的移除。
 
 <div align="center"><img src="jvm_image/image-20211103172035745.png"><div>
-
-    </div>
-
 # Remove the Permanent Generation
 
 | Owner       | Jon Masamitsu                                                |

@@ -655,7 +655,8 @@ graph LR
 
 ### 添加Redis缓存
 
-<div align="center"><img src="img/image-20220507220302647.png">
+<div align="center"><img src="img/image-20220507220302647.png"></div>
+
 
 <div align="center"><img src="img/image-20220507220326256.png"></div>
 
@@ -1874,7 +1875,7 @@ void testHyperLogLog() {
 }
 ```
 
-> HyperLogLog的作用
+> HyperLogLog 的作用
 >
 > - 做海量数据的统计工作
 > - HyperLogLog 的优点：内存占用极低；性能非常好
@@ -1900,6 +1901,8 @@ void testHyperLogLog() {
 
 - RDB 持久化
 - AOF 持久化
+
+### 
 
 
 

@@ -1,5 +1,7 @@
 # Git分布式版本控制工具
 
+[Git学习笔记 | Kisugi Takumi](https://kisugitakumi.com/2022/01/18/Git学习笔记/#Git学习笔记)
+
 <img src="img/011500266295799.webp">
 
 ## 概述
