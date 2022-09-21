@@ -2186,19 +2186,21 @@ slave 节点宕机恢复后可以找 master 节点同步数据，那 master 节�
 
 Redis 提供了哨兵（Sentinel）机制来实现主从集群的自动故障恢复。哨兵是用于监控整个集群做故障恢复的。
 
+- 哨兵的作用和原理
+- 搭建哨兵集群
+- RedisTemplate的哨兵模式
+
 ### 哨兵原理
 
 #### 集群的结构和作用
 
-哨兵的结构如图：
-
-<div align="center"><img src="img/image-20210725154528072.png"></div>
-
-哨兵的作用如下：
+<b style="color:red">哨兵的作用如下：</b>
 
 - <b>监控</b>：Sentinel 会不断检查您的 master 和 slave 是否按预期工作。
 - <b>自动故障恢复</b>：如果 master 故障，Sentinel 会将一个 slave 提升为 master。当故障实例恢复后也以新的 master 为主。
 - <b>通知</b>：Sentinel 充当 Redis 客户端的服务发现来源，当集群发生故障转移时，会将最新信息推送给 Redis 的客户端。<span style="color:orange">（Redis 客户端找主从服务的时候，是从 Sentinel 中找的，由 Sentinel 告诉客户端主的地址在哪里，从的地址在哪里；此时 Sentinel 就充当了 Redis 客户端服务发现的来源了。）</span>
+
+<div align="center"><img src="img/image-20210725154528072.png"></div>
 
 #### 服务状态监控
 
@@ -2211,7 +2213,7 @@ Sentinel 基于心跳机制监测服务状态，每隔 1 秒向集群的每个�
 
 #### 故障恢复原理
 
-一旦发现 master 故障，sentinel 需要在 salve 中选择一个作为新的 master，选择依据是这样的：
+一旦发现 master 故障，sentinel 需要在 slave 中选择一个作为新的 master，选择依据是这样的：
 
 - 首先会判断 slave 节点与 master 节点断开时间长短，如果超过指定值（down-after-milliseconds * 10）则会排除该 slave 节点<span style="color:orange">（断开时间越长，未同步的数据就越多，这样的节点就不具备选举的资格）</span>
 - 然后判断 slave 节点的 slave-priority 值（默认都是 1），越小优先级越高，如果是 0 则永不参与选举
@@ -2303,6 +2305,12 @@ public LettuceClientConfigurationBuilderCustomizer clientConfigurationBuilderCus
 
 ## Redis分片集群
 
+- 搭建分片集群
+- 散列插槽
+- 集群伸缩
+- 故障转移
+- RedisTemplate访问分片集群
+
 ### 搭建分片集群
 
 主从和哨兵可以解决高可用、高并发读的问题。但是依然有两个问题没有解决：
@@ -2314,8 +2322,6 @@ public LettuceClientConfigurationBuilderCustomizer clientConfigurationBuilderCus
 使用分片集群可以解决上述问题，如图：
 
 <div align="center"><img src="img/image-20210725155747294.png"></div>
-
-
 
 分片集群特征：
 
@@ -2335,7 +2341,9 @@ Redis 会把每一个 master 节点映射到 0~16383 共 16384 个插槽（hash 
 
 <div align="center"><img src="img/image-20210725155820320.png"></div>
 
-数据 key 不是与节点绑定，而是与插槽绑定。redis 会根据 key 的有效部分计算插槽值，分两种情况：
+数据 key 不是与节点绑定，而是与插槽绑定。redis 会根据 key 的有效部分计算插槽值。<span style="color:red">简单说就是根据 key 的哈希映射判断，这个 key 存储在哪里。</span>
+
+key 的有效部分分两种情况：
 
 - key 中包含 "{}"，且 “{}” 中至少包含 1 个字符，“{}” 中的部分是有效部分
 - key 中不包含 “{}”，整个 key 都是有效部分
@@ -2346,7 +2354,9 @@ Redis 会把每一个 master 节点映射到 0~16383 共 16384 个插槽（hash 
 
 如图，在 7001 这个节点执行 set a 1 时，对 a 做 hash 运算，对 16384 取余，得到的结果是 15495，因此要存储到 103 节点。
 
-到了 7003 后，执行 `get num` 时，对 num 做 hash 运算，对 16384 取余，得到的结果是 2765，因此需要切换到 7001 节点。
+到了 7003 后，执行 `get num` 时，对 num 做 hash 运算，对 16384 取余，得到的结果是 2765 插槽的范围不在 7003 内，而是在 7001 的插槽范围内，因此需要切换到 7001 节点。
+
+为什么 Redis 的 key 要和插槽绑定而不是直接和 Redis 实例绑定呢？因为 Redis 的实例可能会宕机，key 直接和实例绑定的话，宕机了 key 就没有对应的实例了。如果和插槽绑定的话，插槽对应的实例是可以进行更替（更方便）的，数据跟着插槽走，永远都可以找到插槽的位置。
 
 #### 小结
 
@@ -2359,6 +2369,10 @@ Redis 如何判断某个 key 应该在哪个实例？
 如何将同一类数据固定的保存在同一个 Redis 实例？
 
 - 这一类数据使用相同的有效部分，例如 key 都以 {typeId} 为前缀
+
+  ```sh
+  set {a}num 111 # 让他们拥有相同的有效部分
+  ```
 
 ### 集群伸缩
 
