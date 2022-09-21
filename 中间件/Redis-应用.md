@@ -570,7 +570,7 @@ PS：需要修改 application.yaml 文件中的 MySQL、Redis 的地址信息。
 
 具体的流程如下。
 
-<div align="center"><img src="img/image-20220507210751764.png"</div>
+<div align="center"><img src="img/image-20220507210751764.png"></div>
 
 我们需要在一些操作上判断用户是否登录。一种方式是在特定的操作上加判断，另一种方式是写一个过滤器，当访问特定的 url 路径时，判断是否登录。显然，用过滤器的方式更好。我们需要把拦截器拦截到的用户信息传递到 Controller 里去，并且要保证线程安全（一条完整的 HTTP 请求对应一个线程，如果共享数据，如用同一个 ArrayList 存储，会出现并发安全问题）。我们可以使用 ThreadLocal，可以确保线程之间安全的使用自己线程中的数据。
 
@@ -1902,7 +1902,886 @@ void testHyperLogLog() {
 - RDB 持久化
 - AOF 持久化
 
-### 
+### RDB持久化
+
+RDB 全称 Redis Database Backup file（Redis 数据备份文件），也被叫做 Redis 数据快照。简单来说就是把内存中的所有数据都记录到磁盘中。当 Redis 实例故障重启后，从磁盘读取快照文件，恢复数据。快照文件称为 RDB 文件，默认是保存在当前运行目录。
+
+#### 执行时机
+
+RDB 持久化在四种情况下会执行：
+
+- 执行 save 命令
+- 执行 bgsave 命令
+- Redis 停机时
+- 触发 RDB 条件时
+
+<b>1）save命令</b>
+
+执行下面的命令，可以立即执行一次 RDB：
+
+<div align="center"><img src="img/image-20210725144536958.png"></div>
+
+save 命令会导致主进程执行 RDB，这个过程中其它所有命令都会被阻塞。适合用在 Redis 即将停止时，比如在数据迁移时可能用到。
+
+<b>2）bgsave 命令</b>
+
+下面的命令可以异步执行 RDB：
+
+<div align="center"><img src="img/image-20210725144725943.png"></div>
+
+这个命令执行后会开启独立进程完成 RDB，主进程可以持续处理用户请求，不受影响。
+
+<b>3）停机时</b>
+
+Redis 停机时会执行一次 save 命令，实现 RDB 持久化。
+
+<b>4）触发 RDB 条件</b>
+
+Redis 内部有触发 RDB 的机制，可以在 redis.conf 文件中找到，格式如下：
+
+```properties
+# 900秒内，如果至少有1个key被修改，则执行bgsave ， 如果是save "" 则表示禁用RDB
+save 900 1  
+save 300 10  
+save 60 10000 
+```
+
+RDB 的其它配置也可以在 redis.conf 文件中设置：
+
+```properties
+# 是否压缩 ,建议不开启，压缩也会消耗cpu，磁盘的话不值钱
+rdbcompression yes
+
+# RDB文件名称
+dbfilename dump.rdb  
+
+# 文件保存的路径目录
+dir ./ 
+```
+
+RDB 的频率不要太高，频率太高会一直处于写入数据的状态，影响性能，一般用默认的就好。
+
+#### RDB原理
+
+bgsave 开始时会 fork 主进程得到子进程，子进程共享主进程的内存数据。完成 fork 后读取内存数据并写入 RDB 文件。注意：fork 这个操作过程是阻塞的。
+
+fork 采用的是 copy-on-write 技术：
+
+- 当主进程执行读操作时，访问共享内存；
+- 当主进程执行写操作时，则会拷贝一份数据，执行写操作。
+
+<div align="center"><img src="img/image-20210725151319695.png"></div>
+
+Linux 中，所有的进程都没办法直接操作物理内存而是由操作系统给每个进程分配一个虚拟内存，主进程操作虚拟内存，操作系统维护一个虚拟内存与物理内存直接的映射关系（页表）。fork 主进程实际上是 fork 页表（页表中保存了物理内存与虚拟内存的映射关系）的过程，让子进程和主进程拥有一样的映射关系。这样就实现了子进程和主进程一样的内存共享。这样就无需拷贝内存中的数据，直接实现数据共享。
+
+但这样会有一个问题，就是一个读一个写，会有并发问题。如果子进程在拷贝数据的时候，主进程还在写怎么办？fork 底层会采用 copy-on-write 的技术。然源数据只读，如果需要修改就复制一份数据，在复制的数据中进行修改（后面好像是等持久化结束后，在写入源数据。MySQL 也有一个类似的操作，查下 MySQL 的笔记）
+
+#### 小结
+
+RDB 方式 bgsave 的基本流程？
+
+- fork 主进程得到一个子进程，共享内存空间
+- 子进程读取内存数据并写入新的 RDB 文件
+- 用新 RDB 文件替换旧的 RDB 文件
+
+RDB 会在什么时候执行？save 60 1000 代表什么含义？
+
+- 默认是服务停止时才会执行
+- 代表 60 秒内至少执行 1000 次修改则触发 RDB
+
+RDB 的缺点？
+
+- RDB 执行间隔时间长，两次 RDB 之间写入数据有丢失的风险（要速度快的话就牺牲数据的一致性）
+- fork 子进程、压缩、写出 RDB 文件都比较耗时
+
+### AOF持久化
+
+AOF 全称为 Append Only File（追加文件）。Redis 处理的每一个写命令都会记录在 AOF 文件，可以看做是命令日志文件。
+
+<div align="center"><img src="img/image-20210725151543640.png"></div>
+
+#### AOF配置
+
+AOF 默认是关闭的，需要修改 redis.conf 配置文件来开启 AOF：
+
+```properties
+# 是否开启AOF功能，默认是no
+appendonly yes
+# AOF文件的名称
+appendfilename "appendonly.aof"
+```
+
+AOF 的命令记录的频率也可以通过 redis.conf 文件来配：
+
+```properties
+# 表示每执行一次写命令，立即记录到AOF文件，Redis 主进程完成磁盘写入操作。
+appendfsync always 
+# 写命令执行完先放入AOF缓冲区，然后表示每隔1秒将缓冲区数据写到AOF文件，是默认方案，子进程完成磁盘写入操作
+appendfsync everysec 
+# 写命令执行完先放入AOF缓冲区，由操作系统决定何时将缓冲区内容写回磁盘
+appendfsync no
+```
+
+三种策略对比：
+
+<div align="center"><img src="img/image-20210725151654046.png"></div>
+
+#### AOF文件重写
+
+因为是记录命令，AOF 文件会比 RDB 文件大的多。而且 AOF 会记录对同一个 key 的多次写操作，但只有最后一次写操作才有意义。通过执行 bgrewriteaof 命令，可以让 AOF 文件执行重写功能，用最少的命令达到相同效果。
+
+<div align="center"><img src="img/image-20210725151729118.png"></div>
+
+如图，AOF 原本有三个命令，但是 `set num 123 和 set num 666` 都是对 num 的操作，第二次会覆盖第一次的值，因此第一个命令记录下来没有意义。
+
+所以重写命令后，AOF 文件内容就是：`mset name jack num 666`
+
+Redis 也会在触发阈值时自动去重写 AOF 文件。阈值也可以在 redis.conf 中配置：
+
+```properties
+# AOF文件比上次文件增长超过 100%（翻了一倍）则触发重写
+auto-aof-rewrite-percentage 100
+# AOF文件体积超过 64mb 就触发重写 
+auto-aof-rewrite-min-size 64mb 
+```
+
+### 混合RDB和AOF
+
+Redis 4.0 中提出了一个混合使用 AOF 日志和内存快照的方法。内存快照以一定的频率执行，在两次快照之间，使用 AOF 日志记录这期间的所有命令操作。这样，不用频繁执行快照，避免了频繁 fork 对主线程的影响。且，AOF 日志也只用记录两次快照间的操作，无需记录所有操作了，不会出现文件过大的情况，也可以避免重写开销。如下图所示，T1 和 T2 时刻的修改，用 AOF 日志记录，等到第二次做全量快照时，就可以清空 AOF 日志，因为此时的修改都已经记录到快照中了，恢复时就不再用日志了。
+
+<div align="center"><img src="img/AOF_RDB.webp" width="80%"></div>
+
+### RDB与AOF对比
+
+RDB 和 AOF 各有自己的优缺点，如果对数据安全性要求较高，在实际开发中往往会<b>结合</b>两者来使用。
+
+<div align="center"><img src="img/image-20210725151940515.png"></div>
+
+## Redis主从
+
+### 搭建主从架构
+
+单节点 Redis 的并发能力是有上限的，要进一步提高 Redis 的并发能力，就需要搭建主从集群，实现读写分离。
+
+<div align="center"><img src="img/image-20210725152037611.png"></div>
+
+多个从结点承担读的请求，Redis 读取数据的能力可以得到极大的提升。
+
+### 主从同步原理
+
+#### 全量同步
+
+主从第一次建立连接时，会执行<b>全量同步</b>，将 master 节点的所有数据都拷贝给 slave 节点，流程：
+
+<div align="center"><img src="img/image-20210725152222497.png"></div>
+
+这里有一个问题，master 如何得知 salve 是第一次来连接呢？？
+
+有几个概念，可以作为判断依据：
+
+- <b>Replication Id</b>：简称 replid，是数据集的标记，id 一致则说明是同一数据集。每一个 master 都有唯一的 replid，slave 则会继承 master 节点的 replid
+- <b>offset</b>：偏移量，随着记录在 repl_baklog 中的数据增多而逐渐增大。slave 完成同步时也会记录当前同步的 offset。如果 slave 的 offset 小于 master 的 offset，说明 slave 数据落后于 master，需要更新。
+
+因此 slave 做数据同步，必须向 master 声明自己的 replication id  和 offset，master 才可以判断到底需要同步哪些数据。
+
+因为 slave 原本也是一个 master，有自己的 replid 和 offset，当第一次变成 slave，与 master 建立连接时，发送的 replid 和 offset 是自己的 replid 和 offset。
+
+master 判断发现 slave 发送来的 replid 与自己的不一致，说明这是一个全新的 slave，就知道要做全量同步了。
+
+master 会将自己的 replid 和 offset 都发送给这个 slave，slave 保存这些信息。以后 slave 的 replid 就与 master 一致了。
+
+因此，<b>master 判断一个节点是否是第一次同步的依据，就是看 replid 是否一致</b>。
+
+<div align="center"><img src="img/image-20210725152700914.png"></div>
+
+完整流程描述：
+
+- slave 节点请求增量同步
+- master 节点判断 replid，发现不一致，拒绝增量同步
+- master 将完整内存数据生成 RDB，发送 RDB 到 slave
+- slave 清空本地数据，加载 master 的 RDB
+- master 将 RDB 期间的命令记录在 repl_baklog，并持续将 log 中的命令发送给 slave
+- slave 执行接收到的命令，保持与 master 之间的同步
+
+#### 增量同步
+
+全量同步需要先做 RDB，然后将 RDB 文件通过网络传输个 slave，成本太高了。因此除了第一次做全量同步，其它大多数时候 slave 与 master 都是做<b>增量同步</b>。
+
+增量同步就是只更新 slave 与 master 存在差异的部分数据。如图：
+
+<div align="center"><img src="img/image-20210725153201086.png"></div>
+
+那么 master 怎么知道 slave 与自己的数据差异在哪里呢？简单来说是根据 master 和 slave 的 offset 的差值来判断的，如果 master 和 slave 的 offset 不一样，则说明主从需要进行同步。如果 master 的 offset 覆盖了未同步的数据，就得进行全增量同步了。具体原理请看 “repl_backlog 原理”
+
+#### repl_backlog原理
+
+master 怎么知道 slave 与自己的数据差异在哪里呢？这就要靠全量同步时的 repl_baklog 文件了。
+
+这个文件是一个固定大小的数组，只不过数组是环形，也就是说<b>角标到达数组末尾后，会再次从 0 开始读写</b>，这样数组头部的数据就会被覆盖。
+
+repl_baklog 中会记录 Redis 处理过的命令日志及 offset，包括 master 当前的 offset，和 slave 已经拷贝到的 offset：
+
+<div align="center"><img src="img/image-20210725153359022.png"></div>
+
+slave 与 master 的 offset 之间的差异，就是 salve 需要增量拷贝的数据了。随着不断有数据写入，master 的 offset 逐渐变大， slave 也不断的拷贝，追赶 master 的 offset
+
+<div align="center"><img src="img/image-20210725153524190.png"></div>
+
+直到数组被填满
+
+<div align="center"><img src="img/image-20210725153715910.png"></div>
+
+此时，如果有新的数据写入，就会覆盖数组中的旧数据。不过，旧的数据只要是绿色的，说明是已经被同步到slave的数据，即便被覆盖了也没什么影响。因为未同步的仅仅是红色部分。
+
+但是，如果 slave 出现网络阻塞，导致 master 的 offset 远远超过了 slave 的 offset： 
+
+<div align="center"><img src="img/image-20210725153937031.png">
+</div>
+
+如果 master 继续写入新数据，其 offset 就会覆盖旧的数据，直到将 slave 现在的 offset 也覆盖：
+
+<div align="center"><img src="img/image-20210725154155984.png"></div>
+
+棕色框中的红色部分，就是尚未同步，但是却已经被覆盖的数据。此时如果 slave 恢复，需要同步，却发现自己的 offset 都没有了，无法完成增量同步了。只能做全量同步。
+
+<div align="center"><img src="img/image-20210725154216392.png"></div>
+
+### 主从同步优化
+
+主从同步可以保证主从数据的一致性，非常重要。
+
+可以从以下几个方面来优化 Redis 主从就集群：
+
+- 在 master 中配置 repl-diskless-sync yes 启用无磁盘复制，<span style="color:orange">（即，不是先在磁盘中生成 RDB 然后再通过网络发送出去，而是直接通过网络发送，不再经过磁盘了。适合磁盘 IO 速度慢，网络速度快。）</span>，避免全量同步时的磁盘 IO。
+- Redis 单节点上的内存占用不要太大，减少 RDB 导致的过多磁盘 IO
+
+上面两个都是在提高全量同步的性能，下面两点是从减少全量同步出发的。
+
+- 适当提高 repl_baklog 的大小，允许主从数据的差异更大，就可以减少全量同步发生的几率了。发现 slave 宕机时尽快实现故障恢复，尽可能避免全量同步
+- 限制一个 master 上的 slave 节点数量，如果实在是太多 slave，则可以采用主-从-从链式结构，减少 master 压力<span style="color:orange">（后面的 slave 同步中间的 slave 的数据）</span>
+
+<div align="center"><img src="img/image-20210725154405899.png"></div>
+
+### 小结
+
+<b>简述全量同步和增量同步区别？</b>
+
+- 全量同步：master 将完整内存数据生成 RDB，发送 RDB 到slave。后续命令则记录在 repl_baklog，逐个发送给 slave。
+- 增量同步：slave 提交自己的 offset 到 master，master 获取 repl_baklog 中从 offset 之后的命令给 slave
+
+<b>什么时候执行全量同步？</b>
+
+- slave 节点第一次连接 master 节点时
+- slave 节点断开时间太久，repl_baklog 中的 offset 已经被覆盖时
+
+<b>什么时候执行增量同步？</b>
+
+- slave 节点断开又恢复，并且在 repl_baklog 中能找到 offset 时
+
+<b>实际使用是全量同步+增量同步一起使用。</b>
+
+## Redis哨兵
+
+slave 节点宕机恢复后可以找 master 节点同步数据，那 master 节点宕机该如何处理？
+
+Redis 提供了哨兵（Sentinel）机制来实现主从集群的自动故障恢复。哨兵是用于监控整个集群做故障恢复的。
+
+### 哨兵原理
+
+#### 集群的结构和作用
+
+哨兵的结构如图：
+
+<div align="center"><img src="img/image-20210725154528072.png"></div>
+
+哨兵的作用如下：
+
+- <b>监控</b>：Sentinel 会不断检查您的 master 和 slave 是否按预期工作。
+- <b>自动故障恢复</b>：如果 master 故障，Sentinel 会将一个 slave 提升为 master。当故障实例恢复后也以新的 master 为主。
+- <b>通知</b>：Sentinel 充当 Redis 客户端的服务发现来源，当集群发生故障转移时，会将最新信息推送给 Redis 的客户端。<span style="color:orange">（Redis 客户端找主从服务的时候，是从 Sentinel 中找的，由 Sentinel 告诉客户端主的地址在哪里，从的地址在哪里；此时 Sentinel 就充当了 Redis 客户端服务发现的来源了。）</span>
+
+#### 服务状态监控
+
+Sentinel 基于心跳机制监测服务状态，每隔 1 秒向集群的每个实例发送 ping 命令：
+
+- 主观下线：如果某 sentinel 节点发现某实例未在规定时间响应，则认为该实例<b>主观下线</b>，sentinel 认为你下线了，所以是主观下线。
+- 客观下线：若超过指定数量（quorum）的 sentinel 都认为该实例主观下线，则该实例<b>客观下线</b>。 quorum 值最好超过 Sentinel 实例数量的一半。
+
+<div align="center"><img src="img/image-20210725154632354.png"></div>
+
+#### 故障恢复原理
+
+一旦发现 master 故障，sentinel 需要在 salve 中选择一个作为新的 master，选择依据是这样的：
+
+- 首先会判断 slave 节点与 master 节点断开时间长短，如果超过指定值（down-after-milliseconds * 10）则会排除该 slave 节点<span style="color:orange">（断开时间越长，未同步的数据就越多，这样的节点就不具备选举的资格）</span>
+- 然后判断 slave 节点的 slave-priority 值（默认都是 1），越小优先级越高，如果是 0 则永不参与选举
+- 如果 slave-prority 一样，则判断 slave 节点的 offset 值，越大说明数据越新，优先级越高
+- 最后是判断 slave 节点的运行 id 大小，越小优先级越高。（是为了避免 offset 都一样，难以抉择，因此依靠 id 随便选一个）
+
+当选出一个新的 master 后，该如何实现切换呢？流程如下：
+
+- sentinel 给备选的 slave1 节点发送 slaveof no one 命令，让该节点成为 master
+- sentinel 给所有其它 slave 发送 slaveof 192.168.150.101 7002 命令，让这些 slave 成为新 master 的从节点，开始从新的 master 上同步数据。
+- 最后，sentinel 将故障节点标记为 slave，当故障节点恢复后会自动成为新的 master 的 slave 节点
+
+<div align="center"><img src="img/image-20210725154816841.png"></div>
+
+#### 小结
+
+Sentinel 的三个作用是什么？
+
+- 监控
+- 故障转移
+- 通知
+
+Sentinel 如何判断一个 redis 实例是否健康？
+
+- 每隔 1 秒发送一次 ping 命令，如果超过一定时间没有相向则认为是主观下线
+- 如果大多数 sentinel 都认为实例主观下线，则判定服务下线
+
+故障转移步骤有哪些？
+
+- 首先选定一个 slave 作为新的 master，执行 slaveof no one（自己不再是 slave，要变成 master）
+- 然后让所有节点都执行 slaveof 新 master
+- 修改故障节点配置，添加 slaveof 新 master
+
+### 搭建哨兵集群
+
+~ 这部分没有实践过，先记个笔记，后面再说。
+
+### RedisTemplate
+
+在 Sentinel 集群监管下的 Redis 主从集群，其节点会因为自动故障转移而发生变化，Redis 的客户端必须感知这种变化，及时更新连接信息。Spring 的 RedisTemplate 底层利用 lettuce 实现了节点的感知和自动切换。
+
+#### 导入Demo工程
+
+redis-demo 这个文件夹
+
+#### 引入依赖
+
+在项目的 pom 文件中引入依赖：
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
+</dependency>
+```
+
+#### 配置Redis地址
+
+在配置文件 application.yml 中指定 redis 的 sentinel 相关信息：
+
+```yaml
+spring:
+  redis:
+    sentinel:
+      master: mymaster
+      nodes:
+        - 192.168.150.101:27001
+        - 192.168.150.101:27002
+        - 192.168.150.101:27003
+```
+
+#### 配置读写分离
+
+在项目的启动类中，添加一个新的 bean：
+
+```java
+@Bean
+public LettuceClientConfigurationBuilderCustomizer clientConfigurationBuilderCustomizer(){
+    return clientConfigurationBuilder -> clientConfigurationBuilder.readFrom(ReadFrom.REPLICA_PREFERRED);
+}
+```
+
+这个 bean 中配置的就是读写策略，包括四种：
+
+- MASTER：从主节点读取
+- MASTER_PREFERRED：优先从 master 节点读取，master 不可用才读取replica
+- REPLICA：从 slave（replica）节点读取
+- REPLICA _PREFERRED：优先从 slave（replica）节点读取，所有的 slave 都不可用才读取 master
+
+## Redis分片集群
+
+### 搭建分片集群
+
+主从和哨兵可以解决高可用、高并发读的问题。但是依然有两个问题没有解决：
+
+- 海量数据存储问题
+
+- 高并发写的问题
+
+使用分片集群可以解决上述问题，如图：
+
+<div align="center"><img src="img/image-20210725155747294.png"></div>
+
+
+
+分片集群特征：
+
+- 集群中有多个 master，每个 master 保存不同数据
+
+- 每个 master 都可以有多个 slave 节点
+
+- master 之间通过 ping 监测彼此健康状态
+
+- 客户端请求可以访问集群任意节点，最终都会被转发到正确节点
+
+### 散列插槽
+
+#### 插槽原理
+
+Redis 会把每一个 master 节点映射到 0~16383 共 16384 个插槽（hash slot）上，查看集群信息时就能看到：
+
+<div align="center"><img src="img/image-20210725155820320.png"></div>
+
+数据 key 不是与节点绑定，而是与插槽绑定。redis 会根据 key 的有效部分计算插槽值，分两种情况：
+
+- key 中包含 "{}"，且 “{}” 中至少包含 1 个字符，“{}” 中的部分是有效部分
+- key 中不包含 “{}”，整个 key 都是有效部分
+
+例如：key 是 num，那么就根据 num 计算，如果是 {itcast} num，则根据 itcast 计算。计算方式是利用 CRC16 算法得到一个 hash 值，然后对 16384 取余，得到的结果就是 slot 值。
+
+<div align="center"><img src="img/image-20210725155850200.png"></div>
+
+如图，在 7001 这个节点执行 set a 1 时，对 a 做 hash 运算，对 16384 取余，得到的结果是 15495，因此要存储到 103 节点。
+
+到了 7003 后，执行 `get num` 时，对 num 做 hash 运算，对 16384 取余，得到的结果是 2765，因此需要切换到 7001 节点。
+
+#### 小结
+
+Redis 如何判断某个 key 应该在哪个实例？
+
+- 将 16384 个插槽分配到不同的实例
+- 根据 key 的有效部分计算哈希值，对 16384 取余
+- 余数作为插槽，寻找插槽所在实例即可
+
+如何将同一类数据固定的保存在同一个 Redis 实例？
+
+- 这一类数据使用相同的有效部分，例如 key 都以 {typeId} 为前缀
+
+### 集群伸缩
+
+redis-cli --cluster 提供了很多操作集群的命令，可以通过下面方式查看：
+
+<div align="center"><img src="img/image-20210725160138290.png"></div>
+
+添加节点的命令
+
+<div align="center"><img src="img/image-20210725160448139.png"></div>
+
+#### 需求分析
+
+需求：向集群中添加一个新的 master 节点，并向其中存储 num = 10
+
+- 启动一个新的 redis 实例，端口为 7004
+- 添加 7004 到之前的集群，并作为一个 master 节点
+- 给 7004 节点分配插槽，使得 num 这个 key 可以存储到 7004 实例
+
+这里需要两个新的功能：
+
+- 添加一个节点到集群中
+- 将部分插槽分配到新插槽
+
+<b>创建 Redis 实例</b>
+
+创建一个文件夹：
+
+```sh
+mkdir 7004
+```
+
+拷贝配置文件：
+
+```sh
+cp redis.conf /7004
+```
+
+修改配置文件：
+
+```sh
+sed /s/6379/7004/g 7004/redis.conf
+```
+
+启动
+
+```sh
+redis-server 7004/redis.conf
+```
+
+<b>添加新节点到 redis</b>
+
+<div align="center"><img src="img/image-20210725160448139.png"></div>
+
+执行命令：
+
+```sh
+redis-cli --cluster add-node  192.168.150.101:7004 192.168.150.101:7001
+```
+
+通过命令查看集群状态：
+
+```sh
+redis-cli -p 7001 cluster nodes
+```
+
+如图，7004 加入了集群，并且默认是一个 master 节点：
+
+<div align="center"><img src="img/image-20210725161007099.png"></div>
+
+但是，可以看到 7004 节点的插槽数量为 0，因此没有任何数据可以存储到 7004 上
+
+<b>转移插槽</b>
+
+我们要将 num 存储到 7004 节点，因此需要先看看 num 的插槽是多少：
+
+<div align="center"><img src="img/image-20210725161241793-16637601446392.png"></div>
+
+如上图所示，num 的插槽为 2765.
+
+我们可以将 0~3000 的插槽从 7001 转移到 7004，命令格式如下：
+
+<div align="center"><img src="img/image-20210725161401925-16637601446381.png"></div>
+
+具体命令如下：
+
+建立连接：
+
+<div align="center"><img src="img/image-20210725161506241-16637601446393.png"></div>
+
+得到下面的反馈：
+
+<div align="center"><img src="img/image-20210725161540841-16637601446394.png"></div>
+
+询问要移动多少个插槽，我们计划是 3000 个：
+
+新的问题来了：
+
+<div align="center"><img src="img/image-20210725161637152-16637601446395.png"></div>
+
+那个 node 来接收这些插槽？？
+
+显然是 7004，那么 7004 节点的 id 是多少呢？
+
+<div align="center"><img src="img/image-20210725161731738-16637601446396.png"></div>
+
+复制这个 id，然后拷贝到刚才的控制台后：
+
+<div align="center"><img src="img/image-20210725161817642-16637601446397.png"></div>
+
+这里询问，你的插槽是从哪里移动过来的？
+
+- all：代表全部，也就是三个节点各转移一部分
+- 具体的 id：目标节点的 id
+- done：没有了
+
+这里我们要从 7001 获取，因此填写 7001 的 id：
+
+<div align="center"><img src="img/image-20210725162030478-166376014464011.png"></div>
+
+填完后，点击 done，这样插槽转移就准备好了：
+
+<div align="center"><img src="img/image-20210725162101228-16637601446398.png"></div>
+
+确认要转移吗？输入 yes：
+
+然后，通过命令查看结果：
+
+<div align="center"><img src="img/image-20210725162145497-16637601446409.png"></div>
+
+可以看到： 
+
+<div align="center"><img src="img/image-20210725162224058-166376014464010.png"></div>
+
+目的达成。
+
+### 故障转移
+
+集群初识状态是这样的：
+
+<div align="center"><img src="img/image-20210727161152065-166376053323329.png"></div>
+
+其中 7001、7002、7003 都是 master，我们计划让 7002 宕机。
+
+#### 自动故障转移
+
+当集群中有一个master宕机会发生什么呢？比如直接停止一个 redis 实例，例如 7002：
+
+```sh
+redis-cli -p 7002 shutdown
+```
+
+1）首先是该实例与其它实例失去连接
+
+2）然后是疑似宕机：
+
+<div align="center"><img src="img/image-20210725162319490-166376045993423.png"></div>
+
+3）最后是确定下线，自动提升一个 slave 为新的 master：
+
+<div align="center"><img src="img/image-20210725162408979-166376045993424.png"></div>
+
+4）当 7002 再次启动，就会变为一个 slave 节点了：
+
+<div align="center"><img src="img/image-20210727160803386-166376045993425.png"></div>
+
+#### 手动故障转移
+
+利用 cluster failover 命令可以手动让集群中的某个 master 宕机，切换到执行 cluster failover 命令的这个 slave 节点，实现无感知的数据迁移。其流程如下：
+
+<div align="center"><img src="img/image-20210725162441407.png"></div>
+
+这种 failover 命令可以指定三种模式：
+
+- 缺省：默认的流程，如图 1~6 歩
+- force：省略了对 offset 的一致性校验
+- takeover：直接执行第 5 歩，忽略数据一致性、忽略 master 状态和其它 master 的意见
+
+<b>案例需求</b>：在 7002 这个 slave 节点执行手动故障转移，重新夺回 master 地位。
+
+步骤如下：
+
+1）利用 redis-cli 连接 7002 这个节点
+
+2）执行 cluster failover 命令
+
+如图：
+
+<div align="center"><img src="img/image-20210727160037766.png"></div>
+
+效果：
+
+<div align="center"><img src="img/image-20210727161152065.png"></div>
+
+### RedisTemplate访问分片集群
+
+RedisTemplate 底层同样基于 lettuce 实现了分片集群的支持，而使用的步骤与哨兵模式基本一致：
+
+1）引入 redis 的 starter 依赖
+
+2）配置分片集群地址
+
+3）配置读写分离
+
+与哨兵模式相比，其中只有分片集群的配置方式略有差异，如下：
+
+```yaml
+spring:
+  redis:
+    cluster:
+      nodes:
+        - 192.168.150.101:7001
+        - 192.168.150.101:7002
+        - 192.168.150.101:7003
+        - 192.168.150.101:8001
+        - 192.168.150.101:8002
+        - 192.168.150.101:8003
+```
+
+# 最佳实践
+
+- Redis 键值设计
+- 批处理优化
+- 服务端优化
+- 集群
+
+## 键值设计
+
+### 优雅的Key设计
+
+Redis 的 key 虽然可以自定义，但最好遵循下面的几个最佳实践约定：
+
+- 遵循基本格式：`[业务名称]:[数据名]:[id]`
+- 长度不超过 44 字节，节省内存。
+- 不包含特殊字符
+
+例如：登录业务，保存用户信息，key 可以这样设计 `login:user:10`
+
+<b>优点</b>
+
+- 可读性强、
+- 避免 key 冲突、
+- 方便管理
+- 更节省内存：key 是 string 类型，底层编码包含 int、embstr 和 raw 三种。embstr 在小于 44 字节使用，采用连续内存空间，内存占用更小。
+
+```shell
+# 示例 如果是 4.0 版本以下的 redis embstr 的长度限制是 39 字节
+set name 123
+type num # string
+object encoding num # "int" 类型
+
+set name Jack
+object encoding name # "embstr"
+type name # string
+
+set name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa # 44 字节
+object encoding name # "embstr"
+
+set name aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa # 45 字节
+object encoding name # "raw"
+```
+
+### 慎用BigKey
+
+BigKey 通常以 Key 的大小和 key 中的成员的数量来综合判断的，如：
+
+- Key 本身的数据量过大：一个 String 类型的 key，它的值为 5MB
+- Key 中的成员数过多：一个 ZSET 类型的 Key，它的成员数量为 10,000 个
+- Key 中成员的数据量过大：一个 Hash 类型的 key，它的成员数量虽然只有 1000 个，但这些成员的 value 总大小为 100MB
+
+推荐值：
+
+- 单个 key 的 value 小于 10KB
+- 对于集合类型的 key，建议元素数量小于 1000
+
+```shell
+memory usage name # 衡量 key 占用的字节大小，不推荐使用，耗费 CPU，实践上预估一下就行。
+# 字符串看长度，集合看大小，大致估计
+```
+
+<b>BigKey 的危害</b>
+
+- 网络阻塞：对 BigKey 进行请求时，少量的 QPS 就可能导致带宽使用率被占满，导致 Redis 实例，甚至是物理机变慢
+- 数据倾斜：BigKey 所在的 Redis 实例内存使用率远超其他实例，无法使数据分片的内存资源达到平衡
+- Redis 阻塞：对元素较多的 hash、list、zset 等做运算会耗时较久，使主线程被阻塞
+- CPU 压力：对 BigKey 的数据序列化和反序列化会导致 CPU 的使用率飙升，影像 Redis 实例和本机其他应用
+
+<b>如何发现 BigKey</b>
+
+- `redis-cli --bigkeys` 利用 redis-cli 提供的 --bigkeys 参数，可以遍历分析所有 key，并返回 key 的整体统计信息与每个数据的 Top1 的 big key
+- `scan 扫描` 自行编程，利用 scan 扫描 Redis 中的所有 key，利用 strlen、hlen 等命令判断 key 的长度（不推荐使用 MEMORY USAGE，十分耗费 CPU）
+- `第三方工具` 利用三方工具，如 Redis-Rdb-Tools 分析 RDB 快照文件，全面分析内存使用情况
+- `网络监控` 自定义工具，监控进出 Redis 的网络数据，超出预警值时主动告警
+
+<b>删除 BigKey</b>
+
+BigKey 内存占用较多，删除这些 key 也需要耗费很长的时间，导致 Redis 主线程阻塞，引发一系列问题。
+
+- redis 3.0 及以下版本，如果是集合类型，则遍历 BigKey 的元素，先逐个删除子元素，最后删除 BigKey
+- redis 4.0 以后可以使用 unlink 异步删除 `unlink key`
+
+### 恰当的数据类型
+
+BigKey 往往都是业务设计不恰当导致的，选择更合适的数据类型，避免 BigKey。
+
+<b>比如，存储一个 User 对象，我们有三种存储方式</b>
+
+- json 字符串，实现简单，但是数据耦合强，不灵活，需要修改或获取部分字段的话需要传输所有的数据。
+
+    |user:1|{"name":"Jack", "age":21}|
+
+- 字段打散，可以灵活访问，但是原本一个 key 可以解决的，现在却需要多个 key，占用空间大（key 占用的空间）
+
+    |user:1:name|Jack|	|user:1:age|21|
+
+- hash，只需要一个 key，并且内部的 value 也是哈希结构的，并且内部的 value 采用的也是压缩链表，空间占用小，可以灵活访问对象的任意字段，缺点是代码相对复杂。
+
+每一次存储 key，value 的时候，在 redis 内部是有很多元信息要保存的，原本一个 key 可以解决的，你用多个 key，元信息的内存消耗就上来了。
+
+<b>假如有 hash 类型的 key，其中有 100 万对 field 和 value，field 是自增 id，这个 key 存在什么问题？如何优化？</b>
+
+方案一：修改 hash entry 的数量上限
+
+- 存在的问题：hash 的 entry 数量超过 500 时，会使用哈希表而不是 ZipList，内存占用较多。
+- 可以通过 hash-max-ziplist-entries 配置 entry 上限。但是如果 entry 过多就会导致 BigKey。
+
+```shell
+config get hash-max-ziplist-entries # 获取配置的最大值
+
+config set hash-max-ziplist-entries 1000 # 设置最大值为 1000
+```
+
+方案二：拆分为 string 类型
+
+- 存在的问题：string 底层没有太多内存优化，内存占用较多（大量的 key 会产生大量与数据无关的元学习，占用内存空间）
+- 想要批量获取数据比较麻烦
+
+方案三：把一个大的 hash 拆分为小的 hash，分开存储<span style="color:orange">（数据分片）</span>。
+
+- 比如，将 id/100 作为 key，这样数据就会分散到 100 个哈希中，将 id % 100 作为 field，这样每 100 个元素作为一个 Hash
+
+hash、set、hashset 这些的 key 有内存优化（ziplist），推荐使用。临时存储信息，占用存储空间小的用 string 还是挺合适的，比如短信验证码。
+
+### 总结
+
+key 的最佳实践
+
+- 固定格式：`[业务名]:[数据名]:[id]`
+- 足够简短：不超过 44 字节
+- 不包含特殊字符
+
+value 的最佳实践
+
+- 合理的拆分数据，拒绝 BigKey
+- 选择合适的数据结构
+- Hash 结构的 entry 数量不要超过 1000（默认是 500，可进行配置）
+- 设置合理的超时时间
+
+## 批处理优化
+
+- pipeline
+- 集群下的批处理
+
+### Pipeline
+
+大数据量的导入。
+
+<b>单个命令的执行流程</b>
+
+一次命令的响应时间 = 1 次往返的网络传输耗时 + 1 次 Redis 执行命令耗时
+
+<b>N 条命令批量执行</b>
+
+N 次命令的响应时间 = 1 次往返的网络传输耗时 + N 次 Redis 执行命令耗时
+
+<b>批处理方案</b>
+
+较少网络耗时，使用 mset、hmset 这些命令，如利用 mset 批量插入 10 万条数据，每次插入 1k 条。但是，不要在一次批处理中传输太多命令，否则单次命令占用带宽过多，会导致网络阻塞。
+
+MSET 这些命令虽然可以进行批处理操作，但是只能操作部分数据类型，因此如果有对复杂数据类型的批处理需求，可以使用 Pipeline。
+
+```java
+void test(){
+    Pipeline pipeline = jedis.pipelined();
+    for(int i=1; i<= 100000; i++){
+        pipeline.set("test:key_"+i,"value_"+i);
+        // pipelien.zaddXX
+        if(i%1000 == 0){
+            // 每放入 1000 条命令，批量执行
+            pipeline.sync();
+        }
+    }
+}
+```
+
+M 操作比 Pipeline 快，因为 M 操作是 Redis 内置的操作，Redis 会把 M 操作的多组 key 和 value 作为一个原子性操作，一次性执行完；而 Pipeline 是把所有命令一起发过去，但未必是一起执行。
+
+<b>总结</b>
+
+批处理方案
+
+- 原生 M 操作
+- Pipeline 批处理操作
+
+注意事项
+
+- 批处理时不建议一次携带太多命令
+- Pipeline 的多个命令直接不具备原子性
+
+### 集群下的批处理
+
+如 MSET 或 Pipeline 这样的批处理需要在一次请求中携带多条命令，而此时如果 Redis 是一个集群，那批处理命令的多个 key 必须落在一个插槽中，否则会导致执行失败。
+
+| -        | 串行命令                       | 串行 slot                                                    | 并行 slot                                                    | hash_tag                                                     |
+| -------- | ------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 实现思路 | for 循环遍历，依次执行每个命令 | 在客户端计算每个 key 的 slot，将 slot 一致分为一组，每组都利用 Pipelien 批处理。串行执行各组命令。 | 在客户端计算每个 key 的 slot，将 slot 一致分为一组，每组都利用 Pipelien 批处理。并行执行各组命令。 | 将所有 key 设置相同的 hash_tag，则所有 key 的 slot 一定相同。 |
+| 耗时     | N 次网络耗时+N 次命令耗时      | m 次网络耗时 + N 次命令耗时 <br>m = key 的 slot 个数         | 1 次网络耗时+N 次命令耗时                                    | 1 次网络耗时+N 次命令耗时                                    |
+| 优点     | 实现简单                       | 耗时较短                                                     | 耗时非常短                                                   | 耗时非常短，实现简单                                         |
+| 缺点     | 耗时非常久                     | 实现稍复杂 <br> slot 越多，耗时越久                          | 实现复杂                                                     | 容易出现数据倾斜                                             |
+
+
+
+
 
 
 
