@@ -604,8 +604,6 @@ WHERE P1.EMAIL=P2.EMAIL AND P1.ID>P2.ID
 select user_id,concat(upper(left(name,1)),lower(right(name,length(name)-1))) name from Users order by user_id;
 ```
 
-
-
 #### 习题
 
 按照需求完成如下 DQL 语句编写 
@@ -1293,7 +1291,7 @@ from table1 RIGHT [INNER] JOIN table2
 ON 连接条件...;
 ```
 
-<span style="color:red"><b>相当于查询表2(右表)的所有数据 包含 表1和表2交集部分的数据<b></span>
+<span style="color:red">相当于查询表2(右表)的所有数据 包含 表1和表2交集部分的数据</span>
 
 ### 自连接
 
@@ -1316,8 +1314,7 @@ UNION [ALL]
 select 字段列表 from tableB...;
 ```
 
-对于联合查询的多张表的列数必须保持一致，字段类型也需要保持一致。 
-union all 会将全部的数据直接合并在一起；union 会对合并之后的数据去重。
+对于联合查询的多张表的列数必须保持一致，字段类型也需要保持一致。 union all 会将全部的数据直接合并在一起；union 会对合并之后的数据去重。
 
 ### 子查询 
 
@@ -1362,11 +1359,13 @@ where column1 = (select column1 from t2);
 #### 行子查询
 
 子查询返回的结果是一行（可以是多列），这种子查询称为行子查询。 
+
 常用的操作符：= 、<> 、IN 、NOT IN
 
 #### 表子查询
 
 子查询返回的结果是多行多列，这种子查询称为表子查询。 
+
 常用的操作符：IN
 
 ### 多表查询案例
@@ -1743,7 +1742,7 @@ WSL-Ubuntu 安装 [怎样在 Ubuntu Linux 上安装 MySQL - 知乎 (zhihu.com)](
 
 Linux 的版本为 CentOS 7;
 
-### 2下载Linux版MySQL安装包
+### 下载Linux版MySQL安装包
 
 https://downloads.mysql.com/archives/community/
 

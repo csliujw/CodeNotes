@@ -2,6 +2,8 @@
 
 non-blocking io 非阻塞 IO
 
+[《Unix 网络编程》笔记汇总 - CoolGin - 博客园 (cnblogs.com)](https://www.cnblogs.com/Sherry4869/p/16723105.html)
+
 ## 0. 说明
 
 > 笔记来源
