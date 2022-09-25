@@ -12452,17 +12452,15 @@ class Triangle extends Shape {
 }
 ```
 
-将一个 Shape 的子类对象放入 Stream\<Shape\> 时，会发生隐式的向上类型转换，转型为 Shape。转型为 Shape 后，对象的确切类型信息就丢失了。
+将一个 Shape 的子类对象放入 Stream\<Shape\> 时，会发生隐式的向上转型，转型为 Shape。转型为 Shape 后，对象的确切类型信息就丢失了。实际上 Stream\<Shape\> 是将所有的内容都当作 Object 保存，当有一个元素被取出时，会被自动转型为 Shape。<span style="color:orange">这就是反射最基本的形式，在运行时检查所有的类型转换是否正确。反射：在运行时确定对象的类型。</span>
 
-实际上 Stream\<Shape\> 是将所有的内容都当作 Object 保存，当有一个元素被取出是，会被自动转型为 Shape。<span style="color:orange">这就是反射最基本的形式，在运行时检查所有的类型转换是否正确。</span>
-
-但是，当我们需要对个别的子类进行一些操作时，就需要可以获取到对象的确切类型。如，我们需要对三角形进行旋转，这时候就需要通过反射查询某个 Shape 引用所指的确切类型。
+但是，当我们需要获取到对象的确切类型时，如，我们需要对三角形进行旋转，这时候就需要通过反射查询某个 Shape 引用所指的确切类型是不是三角形了。
 
 ```java
 public static void main(String[] args) {
     Stream<Shape> shape = Stream.of(new Circle(), new Square(), new Triangle());
     shape.forEach(e->{
-        if(e.getClass() == Triangle.class){
+        if(e.getClass() == Triangle.class){ // kclass 指针指向了确切的类型，可以获取到。
             System.out.println("I find Triangle. We can op it");
         }
     });
@@ -12473,11 +12471,11 @@ public static void main(String[] args) {
 
 ### Class对象
 
-<span style="color:orange">Class 对象，存储了类的相关信息，也是理解 Java 反射工作原理的关键。</span>Java 的类型信息在运行时的表示是由称为 Class 对象的特殊对象完成的，它包含了与类有关的信息。实际上，Class 对象就是用来创建该类所有"常规"对象的。Java 使用 Class 对象来执行反射，即便是类型转换这样的操作都是用 Class 对象实现的。不仅如此，Class 类还提供了使用反射的其它方式。
+<span style="color:orange">Class 对象，存储了与类相关的信息，也是理解 Java 反射工作原理的关键。</span>实际上，Class 对象就是用来创建该类所有"常规"对象的。Java 使用 Class 对象来执行反射，即便是类型转换这样的操作都是用 Class 对象实现的。不仅如此，Class 类还提供了使用反射的其它方式。
 
 程序中的每个类都有一个 Class 对象。每当我们编写并且编译了一个新类，就会产生一个 Class 对象（更恰当的说，是被保存在一个同名的 .class 文件中）。为了生成这个类的对象，Java 虚拟机 (JVM) 先会调用“类加载器”子系统把这个类加载到内存中。
 
-类加载器子系统可能包含一条类加载器链，但有且只有一个原生类加载器，它是 JVM 实现的一部分。原生类加载器加载的是"可信类"（包括 Java API 中的类）。它们通常是从本地盘加载的。在这条链中，通常不需要添加额外的类加载器，但是如果有特殊的需求（例如以某种特殊的方式加载类，以支持 Web 服务器应用，或者通过网络下载类），也可以挂载额外的类加载器。
+类加载器子系统可能包含一条类加载器链，但有且只有一个原生类加载器，它是 JVM 实现的一部分。原生类加载器加载的是"可信/安全的类"（包括 Java API 中的类）。它们通常是从本地盘加载的。在这条链中，通常不需要添加额外的类加载器，但是如果有特殊的需求（例如以某种特殊的方式加载类，以支持 Web 服务器应用，或者通过网络下载类），也可以挂载额外的类加载器。
 
 所有的类都是第一次使用时动态加载到 JVM 中的，当程序创建第一个对类的静态成员的引用或者是使用类中的静态变量时（<span style="color:orange">使用 static final 修饰的变量不会触发类加载</span>），就会加载这个类。其实构造器也是类的静态方法，尽管构造器前面并没有 static 关键字。因此，使用 new 操作符创建类的新对象，也算作对类的静态成员引用。
 
@@ -12525,7 +12523,7 @@ After creating Cookie
 */
 ```
 
-上面的代码中，Candy、Gum 和 Cookie 这几个类都有一个 static{...} 静态初始化块，这些静态初始化块在类第一次被加载的时候就会执行。也就是说，静态初始化块会打印出相应的信息，告诉我们这些类分别是什么时候被加载了。而在主方法里边，创建对象的代码都放在了 print() 语句之间，以帮助我们判断类加载的时间点。 从输出中可以看到，Class 对象仅在需要的时候才会被加载，static 初始化是在类加载时进行的。
+上面的代码中，Candy、Gum 和 Cookie 这几个类都有一个 static{...} 静态初始化块，这些静态初始化块在类第一次被加载的时候就会执行。也就是说，静态初始化块会打印出相应的信息，告诉我们这些类分别是什么时候被加载了。从输出中可以看到，Class 对象仅在需要的时候才会被加载，static 初始化是在类加载时进行的。
 
 #### Class类
 
@@ -12751,7 +12749,7 @@ public class GenericClassReferences {
         Class<Integer> genericIntClass = int.class;
         genericIntClass = Integer.class; // 同一个东西
         intClass = double.class;
-					// genericIntClass = double.class; // 非法
+		// genericIntClass = double.class; // 非法
     }
 }
 ```
@@ -12896,119 +12894,87 @@ cast() 方法接受参数对象，并将其类型转换为 Class 引用的类型
 
 目前，我们知道，RTTI（运行时类型识别） 类型包括
 
-- 传统的类型转换，如 “(Shape)”，由 RTTI 确保转换的正确性，如果执行了一个 错误的类型转换，就会抛出一个 ClassCastException 异常。
-- 代表对象类型的 Class 对象. 通过查询 Class 对象可以获取运行时所需的信息.
+- 传统的类型转换，如 “(Shape)”，使用反射确保转型是否正确，如果执行了一个错误的类型转换，就会抛出一个 ClassCastException 异常。
+- 代表对象类型的 Class 对象。可以通过查询 Class 对象获取有用的运行时信息。
 
-在 C++ 中，经典的类型转换 “(Shape)” 并不使用 RTTI。它只是简单地告诉编译器将这个对象作为新的类型对待. 而 Java 会进行类型检查，这种类型转换一般被称作 “类型安全的向下转型”。之所以称作 “向下转型”，是因为传统上类继承图是这么画的。 将 Circle 转换为 Shape 是一次向上转型, 将 Shape 转换为 Circle 是一次向下转型。 但是, 因为我们知道 Circle 肯定是一个 Shape，所以编译器允许我们自由地做向上转型的赋值操作，且不需要任何显式的转型操作。当你给编译器一个 Shape 的时候，编 译器并不知道它到底是什么类型的 Shape——它可能是 Shape，也可能是 Shape 的子类型，例如 Circle、Square、Triangle 或某种其他的类型。在编译期，编译器只能知道它是 Shape。因此，你需要使用显式地进行类型转换，以告知编译器你想转换的特定类型， 否则编译器就不允许你执行向下转型赋值。（编译器将会检查向下转型是否合理，因此它不允许向下转型到实际不是待转型类型的子类类型上）。
+在 C++ 中，经典的类型转换 “(Shape)” 并不使用 RTTI（反射）。它只是简单地告诉编译器将这个对象作为新的类型对待。而 Java 会进行类型检查，这种类型转换一般被称作 “类型安全的向下转型”。之所以称作 “向下转型”，是因为传统上类继承图是这么画的。 将 Circle 转换为 Shape 是一次向上转型, 将 Shape 转换为 Circle 是一次向下转型。 但是, 因为我们知道 Circle 肯定是一个 Shape，所以编译器允许我们自由地做向上转型的赋值操作，且不需要任何显式的转型操作。当你给编译器一个 Shape 的时候，编译器并不知道它到底是什么类型的 Shape——它可能是 Shape，也可能是 Shape 的子类型，例如 Circle、Square、Triangle 或某种其他的类型。在编译期，编译器只能知道它是 Shape。因此，你需要使用显式地进行类型转换，以告知编译器你想转换的特定类型， 否则编译器就不允许你执行向下转型赋值。（编译器将会检查向下转型是否合理，因此它不允许向下转型到实际不是待转型类型的子类类型上）。
 
-RTTI 在 Java 中还有第三种形式，那就是关键字 instanceof。它返回一个布尔值， 告诉我们对象是不是某个特定类型的实例，可以用提问的方式使用它，就像这个样子：
+RTTI 在 Java 中还有第三种形式，那就是关键字 instanceof。它返回一个布尔值， 告诉我们对象是不是某个特定类型的实例：
 
 ```java
 if(x instanceof Dog)
 	((Dog)x).bark();
 ```
 
-在将 x 的类型转换为 Dog 之前，通过 instanceof 先检查 x 是否是 Dog 类型的对象再向下转型前，避免 ClassCastException 异常。instanceof 有一个严格的限制：只可以将它与命名类型进行比较，而不能与 Class 对象作比较。
+在将 x 的类型转换为 Dog 之前，通过 instanceof 先检查 x 是否是 Dog 类型的对象再向下转型，避免 ClassCastException 异常。instanceof 有一个严格的限制：只可以将它与命名类型进行比较，而不能与 Class 对象作比较。
 
 #### 使用类字面量
 
+...
 
+### 运行时的类信息
 
-### 类加载器前置知识概述
+在我们不知道某个对象的确切类型，instanceof 可以帮助我们确定对象的类型。但是这里有一个限制：只有在编译时就知道的类型信息才能使用 instanceof。即：编译器必须知道你使用的所有类。
 
-<b>类加载的时机</b>
+当我们获取了一个不在我们程序空间的对象引用（如，从其他磁盘获取的，从网络中获取的），我们就无法得知这个对象所属的类。那，我们这么才可以使用这样的类呢？Java 的反射机制提供了一种检测可用方法并生成方法名称的机制。在运行时获取类信息让我们具备了，通过网络从远程平台上创建和运行对象的能力，这种能力称之为<b>远程方法调用</b>。有了远程方法调用，我们就可以将 Java 程序中的对象分布到多台机器上，并行计算。
 
-类从被加载到虚拟机内存中开始，到卸载出内存为止，整个生命周期包括：
+Class 类和 java.lang.reflect 库一起支持了反射，这个库中包含了 Field、Method、Constructor 类（每个都实现了 Member 接口）。这些类型的对象是由 JVM 在运行时创建的，用来表示未知类中对应的成员。这样，我们就可使用 Constructor 来创建新的对象，使用 get/set 方法来读取和修改与 Field 对象关联的字段，使用 invoke 方法调用与 Method 对象关联的方法。
 
-加载，验证，准备，解析，初始化，使用和卸载 七个阶段
-
-####  加载
-
-加载是类加载过程的一个阶段，加载阶段需要完成以下三件事情
-
-- 通过一个类的全限定名来获取定义此类的二进制字节流
-- 将这个字节流所代表的静态存储结构转化为方法区的运行时数据结构
-- 在内存中生成一个代表这个类的 java.lang.Class 对象，作为方法区，这个类的各种数据的访问入口。
-
-任何类被使用时，系统都会为之建立一个 java.lang.Class 对象
-
-#### 连接
-
-- 验证阶段：用于检测被加载的类是否有正确的内部结构【符合 JVM 规范】。【不是必要阶段，可省略】
-
-- 准备阶段：负责为类的类变量分配内存，设置默认初始化值。
-
-  - 这时候进行的内存分配仅包含类变量（被 static 修饰的变量），不包括实例变量，实例变量将会在对象实例化时随对象一起分配在 Java 堆中。
-
-  - 这里的初始值“通常情况”下时数据类型的零值
-
-    `public staatic int value = 123` value 在准备阶段过后初始值为 0，而非 123
-
-- 解析阶段：将常量池内的符号引用替换为直接引用
-
-  - 符号引用（Symbolic References）：符号引用以一组符号来描述所引用的目标，符号引用可以是任何形式的字面量，只要使用时能无歧义的定位到目标即可。与虚拟机的内存布局无关
-  - 直接引用（Direct References）：直接引用可以是直接指向目标的指针、相对偏移量或是一个能间接定位到目标的句柄。与虚拟机的内存布局有关。如果有直接引用了，那么目标一定在内存中！
-
-#### 初始化
-
-类加载过程的最后一步。到了初始化阶段，才开始执行类中定义的 Java 程序代码（或者是是字节码）
-
-<b>类的初始化步骤</b>
-
-- 假如类还未被加载和连接，则程序先加载并连接该类
-- 假如该类的直接父类还未被初始化，则先初始化其直接父类
-- 假如父类中有初始化语句，则系统依次执行这些初始化语句
-
-<b>类的初始化时机</b>
-
-- 创建类的实例
-- 调用类的类方法
-- 访问类或接口的类的变量，或者为该类变量赋值
-- 使用反射方式来强制创建某个类或接口对应的 java.lang.Class 对象
-- 初始化某个类的子类
-- 直接使用 java.exe 命令运行某个主类
-
-### 类加载器
-
-#### 类加载器作用
-
-- 负责将 .class 文件加载到内存中，并为之生成对应的 `java.lang.Class` 对象
-
-#### JVM的类加载机制
-
-- 全盘负责：当一个类加载器负责加载某个 Class 时，该 Class 所依赖和引用的其他 Class 也将由该类加载器负责载入，除非显示使用另一个类加载器来载入
-- 父类委托：当一个类加载器负责某个 Class 时，先让父类加载器试图加载该 Class，只有在父类加载器无法加载该类时才尝试从自己的类路径中加载该类
-- 缓存机制：保证所有加载过的 Class 都会被缓存，当程序需要使用某个 Class 对象时，类加载器先从缓存区中搜索该 Class，只有当缓存中不存在该 Class 对象时，系统才会读取该类对应的二进制数据，并将其转换成 Class 对象，存储到缓存区。
-
-#### ClassLoader
-
-- 负责加载类的对象
-
-#### 运行时的内置类加载器
-
-- `Bootstrap class loader`：它是虚拟机的内置类加载器，通常表示为 null，并且没用父
-- `Platform class loader`：平台类加载器可以看到所有平台类，平台类包括由平台类加载器或其祖先定义的 `JavaSE` 平台 `API`，其实现类和 `JDK` 特定的运行时类
-- `System class loader`：也被称为应用程序类加载器，与平台类加载器不同，系统类加载器通常定义应用程序类路径，模块路径和 `JDK` 特定工具上的类
-- 类加载器的继承关系：`System` 的父加载器为 `Platform`，而 `Platform` 的父加载器为 `Bootstrap`
+> <b>下面是一个 Java 在运行时读取其他磁盘下的 .class 文件，并利用 .class 文件创建对象，执行方法的示例：</b>
 
 ```java
-@Test
-public void fn1(){
-    // 获得系统加载
-    ClassLoader c = ClassLoader.getSystemClassLoader();
-    System.out.println(c);//sun.misc.Launcher$AppClassLoader@18b4aac2
-
-    //获得父类加载
-    ClassLoader c2 = c.getParent();
-    System.out.println(c2);//sun.misc.Launcher$ExtClassLoader@4a574795
-
-    //获得父类加载
-    ClassLoader c3 = c2.getParent();
-    System.out.println(c3);// null
+// 存储在其他磁盘的 Java 代码
+public class ExtraClass {
+    public void extraClassSay(String msg) {
+        System.out.format("hello %s", msg);
+    }
 }
 ```
 
-### 反射
+反射加载程序外部的字节码文件，并通过该文件创建实例对象，执行方法。
+
+```java
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+
+public class TestClassExtraClass extends ClassLoader {
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        byte[] classByte = null;
+        Class<?> classObj = null;
+        try {
+            // 将字节码文件读入内存
+            Path path = Paths.get(new URI("file:///D:/test/ExtraClass.class"));
+            classByte = Files.readAllBytes(path);
+            // defineClass,将一个字节数组转为 Class 对象。
+            classObj = defineClass("ExtraClass", classByte, 0, classByte.length);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return classObj;
+    }
+
+    public static void main(String[] args) throws Exception {
+        TestClassExtraClass loader = new TestClassExtraClass();
+        Class<?> extraClass = Class.forName("ExtraClass", true, loader);
+        Object unArgs = extraClass.getDeclaredConstructor().newInstance(); // 无参构造
+        Method[] methods = extraClass.getMethods();
+        for (Method method : methods) {
+            String methodName = method.getName();
+            Class<?>[] parameterTypes = method.getParameterTypes();
+            // 获得方法所需的参数列表
+            Arrays.stream(parameterTypes).forEach(System.out::println);
+            if (methodName.equals("extraClassSay")) {
+                method.invoke(unArgs, "load class invoke");
+            }
+        }
+    }
+}
+```
 
 #### 反射概述
 
@@ -13037,9 +13003,38 @@ public void getClazz() throws ClassNotFoundException {
     System.out.println(c2 == c3); //true
 
     // 灵活 可以把xx写在配置文件中
-    Class<?>  c4 = Class.forName("com.bbxx.demo1.Student");
+    Class<?> c4 = Class.forName("com.bbxx.demo1.Student");
     System.out.println(c3 == c4); //true
 }
+```
+
+XX.class 不会触发类加载，这种获取字节码的方式也安全，有编译时检查。Class.forName 这种方式，会触发类加载，但是没有编译时检查。以下是测试代码：
+
+```java
+class Student{
+    static {
+        System.out.println("load student class");
+    }
+}
+public class ClassLoaderDemo {
+    public static void main(String[] args) throws ClassNotFoundException {
+        // 不会触发 static 静态代码块的初始化
+        System.out.println("===================Student.class start===================");
+        Class<Student> studentClass = Student.class;
+        System.out.println("===================Student.class end===================");
+
+        System.out.println("===================class.forName start===================");
+        Class<?> aClass = Class.forName("tij.chapter19.Student");
+        System.out.println("===================class.forName end===================");
+    }
+}
+/*
+===================Student.class start===================
+===================Student.class end===================
+===================class.forName start===================
+load student class
+===================class.forName end===================
+*/
 ```
 
 #### 获取构造方法
@@ -13115,11 +13110,13 @@ public void getFiled() throws Exception {
 
 #### 反射越过泛型检查
 
+使用反射执行方法时，会要求指定方法入参的类型，将入参指定为 Object 就可以向集合中添加任意类型的对象了。
+
 ```java
 @Test
 public void refelectDemo() throws Exception {
     ArrayList<Integer> list = new ArrayList<Integer>();
-    // list.add("123"); 抱错，有泛型检查
+    // list.add("123"); 报错，有泛型检查
     Class<? extends ArrayList> clazz = list.getClass();
     // 是Object.class
     Method add = clazz.getMethod("add", Object.class);
@@ -13128,9 +13125,9 @@ public void refelectDemo() throws Exception {
 }
 ```
 
-### 动态代理
+#### 动态代理
 
-一个对象封装真实对象，代替其提供其他或不同的操作。当我们希望将额外的操作与 “真实对象” 做分离时，可以考虑使用代理模式
+代理是基本的设计模式之一。它是为了替代“实际”对象而插入的一个对象，从而提供额外的或不同的操作。这些操作通常涉及与“实际”对象的通信，因此代理通常充当中间人的决策。当我们希望将额外的操作与 “真实对象” 做分离时，可以考虑使用代理模式。
 
 > 常规的代理模式
 
@@ -13167,9 +13164,7 @@ class SimpleProxyObj implements Interface {
 
     private Interface realObj;
 
-    public SimpleProxyObj() {
-
-    }
+    public SimpleProxyObj() {}
 
     public SimpleProxyObj(Interface realObj) {
         this.realObj = realObj;
@@ -13189,19 +13184,20 @@ class SimpleProxyObj implements Interface {
 }
 ```
 
+consumer 方法接受一个 Interface 参数，因此它不知道自己得到的是一个 RealObject 还是 SimpleProxy，真实对象和代理对象都实现了 Interface 接口。SimpleProxy 被插入到客户端和 RealObject 之间来执行操作，然后调用 RealObject 的相同方法。
+
+当我们想把额外的操作从 RealObject 中分离出来，有些时候又要一些额外的操作，且不同场景下需要的额外操作不同时，代理模型就很有用了。例如，我们希望跟踪对 RealObject 中方法的调用，或者测量此类调用的开销时，如果直接在 RealObject 中修改，改来改去很繁琐，也破坏了程序的设计原则（对修改关闭，对扩展开放）；这时候就可以使用代理模式，对每类功能创建一个代理对象，由代理对象执行那些繁琐/变动的操作。
+
 > Java 的动态代理
 
-仅动态创建代理对象而且动态处理对代理方法的调用。在动态代理上进行的所有调用都被重定向到单个调用处理程序，该处理程序负责发现调用的内容并决定如何处理。
-
-动态代理重写上述 example
+Java 的动态代理比代理更强大，它可以动态地创建代理，并动态处理对所代理方法地调用。在动态代理上进行的所有调用都会被重定向到一个调用处理程序，该处理程序负责发现调用的内容并决定如何处理。用 Java 的动态代理重写上述 example：
 
 ```java
 class DynamicProxyHandler implements InvocationHandler {
     private Interface realObject;
 
-    public DynamicProxyHandler() {
-    }
-
+    public DynamicProxyHandler() {}
+	// 调用处理器会将所有调用重定向到 invoke 方法，因此需要给调用处理器传入一个 realObject
     public DynamicProxyHandler(Interface realObject) {
         this.realObject = realObject;
     }
@@ -13218,12 +13214,11 @@ public class SimpleDynamicProxy {
     public static void main(String[] args) {
         RealObj realObj = new RealObj();
 
-        /**
-         * 三个参数，都是接口的
-         */
-        Interface anInterface = (Interface) Proxy.newProxyInstance(Interface.class.getClassLoader(),
-                new Class[]{Interface.class},
-                new DynamicProxyHandler(realObj));
+        // 三个参数，都是接口的
+        Interface anInterface = (Interface) Proxy.newProxyInstance(
+            	Interface.class.getClassLoader(), // 一个类加载器
+                new Class[]{Interface.class}, // 希望代理实现的接口列表
+                new DynamicProxyHandler(realObj)); // InvocationHandler 接口的一个实现
         anInterface.doingSomething();
     }
 }
@@ -13232,13 +13227,13 @@ public class SimpleDynamicProxy {
 > 动态代理模拟 AOP
 
 - AOP：面向切面编程
-  - `beforeAdvice` 前置通知
-  - `afterAdvice` 后置通知
+    - `beforeAdvice` 前置通知
+    - `afterAdvice` 后置通知
 
 - 代码结构
-  - `beforeAdvice` 为一个接口
-  - `afterAdvice` 为一个接口
-  - 具体通知实现这些接口，完成具体的功能
+    - `beforeAdvice` 为一个接口
+    - `afterAdvice` 为一个接口
+    - 具体通知实现这些接口，完成具体的功能
 
 ```java
 public class DynamicalProxyAOP {
@@ -13325,19 +13320,163 @@ class ProxyHandler<T> implements InvocationHandler {
 
 可用策略模式改进 Advice
 
+### 接口和类型信息
+
+ 这部分谈的内容有点高屋建瓴的感觉。讨论的是在使用接口进行代码解耦时，能否规避掉向下转型、反射等方式对代码解耦的破坏。
+
+interface 关键字的一个重要目标是允许程序员隔离组件，从而减少耦合。如果只和接口通信，那么就可以实现这个目标，但是通过类型信息可能会绕开接口，这样接口就不一定能保证解耦了。
+
+```java
+public interface A {
+    void f();
+}
+
+class B implements A {
+    @Override
+    public void f() {}
+
+    public void g() {}
+
+    public static void main(String[] args) {
+        A a = new B();
+        if (a instanceof B) {
+            ((B) a).g(); // 获取类型信息，向下转型，绕过接口
+        }
+    }
+}
+```
+
+通过反射，我们发现 a 实际上可以被当作 B 实现的。将 a 强转为 B 我们就可以绕过接口，调用接口中不存在的方法。这是合法且可以接受的，但是这样就违背了期望用接口对代码进行解耦的初衷。一种解决办法是，使用包范围权限限制实现类的访问，这样 package 外的客户端程序员就看不到它了：
+
+```java
+public interface A {
+    void f();
+}
+
+class B implements A {
+    @Override
+    public void f() {}
+
+    public void g() {}
+
+    public static void main(String[] args) {
+        A a = new B(); // 包内访问没问题，包外就无法访问了
+        if (a instanceof B) {
+            ((B) a).g(); // 获取类型信息，向下转型，绕过接口
+        }
+    }
+}
+```
+
+但是我们还是可以通过反射来访问并调用所有的方法，包括 private 方法。即便代码是已经发布且编译的，依旧可以通过 `javap -private C` 显示所有的成员，包括私有成员。即便是我们将接口的实现类定义为 `private static class XX implments A`，或是使用匿名内部了，反射依旧可以获取到。                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+
+### 类加载器前置知识概述
+
+<b>类加载的时机</b>
+
+类从被加载到虚拟机内存中开始，到卸载出内存为止，整个生命周期包括：
+
+加载，验证，准备，解析，初始化，使用和卸载 七个阶段
+
+####  加载
+
+加载是类加载过程的一个阶段，加载阶段需要完成以下三件事情
+
+- 通过一个类的全限定名来获取定义此类的二进制字节流
+- 将这个字节流所代表的静态存储结构转化为方法区的运行时数据结构
+- 在内存中生成一个代表这个类的 java.lang.Class 对象，作为方法区，这个类的各种数据的访问入口。
+
+任何类被使用时，系统都会为之建立一个 java.lang.Class 对象
+
+#### 连接
+
+- 验证阶段：用于检测被加载的类是否有正确的内部结构【符合 JVM 规范】。【不是必要阶段，可省略】
+
+- 准备阶段：负责为类的类变量分配内存，设置默认初始化值。
+
+  - 这时候进行的内存分配仅包含类变量（被 static 修饰的变量），不包括实例变量，实例变量将会在对象实例化时随对象一起分配在 Java 堆中。
+
+  - 这里的初始值“通常情况”下时数据类型的零值
+
+    `public staatic int value = 123` value 在准备阶段过后初始值为 0，而非 123
+
+- 解析阶段：将常量池内的符号引用替换为直接引用
+
+  - 符号引用（Symbolic References）：符号引用以一组符号来描述所引用的目标，符号引用可以是任何形式的字面量，只要使用时能无歧义的定位到目标即可。与虚拟机的内存布局无关
+  - 直接引用（Direct References）：直接引用可以是直接指向目标的指针、相对偏移量或是一个能间接定位到目标的句柄。与虚拟机的内存布局有关。如果有直接引用了，那么目标一定在内存中！
+
+#### 初始化
+
+类加载过程的最后一步。到了初始化阶段，才开始执行类中定义的 Java 程序代码（或者是是字节码）
+
+<b>类的初始化步骤</b>
+
+- 假如类还未被加载和连接，则程序先加载并连接该类
+- 假如该类的直接父类还未被初始化，则先初始化其直接父类
+- 假如父类中有初始化语句，则系统依次执行这些初始化语句
+
+<b>类的初始化时机</b>
+
+- 创建类的实例
+- 调用类的类方法
+- 访问类或接口的类的变量，或者为该类变量赋值
+- 使用反射方式来强制创建某个类或接口对应的 java.lang.Class 对象
+- 初始化某个类的子类
+- 直接使用 java.exe 命令运行某个主类
+
+### 类加载器
+
+#### 类加载器作用
+
+- 负责将 .class 文件加载到内存中，并为之生成对应的 `java.lang.Class` 对象
+
+#### JVM的类加载机制
+
+- 全盘负责：当一个类加载器负责加载某个 Class 时，该 Class 所依赖和引用的其他 Class 也将由该类加载器负责载入，除非显示使用另一个类加载器来载入
+- 父类委托：当一个类加载器负责某个 Class 时，先让父类加载器试图加载该 Class，只有在父类加载器无法加载该类时才尝试从自己的类路径中加载该类
+- 缓存机制：保证所有加载过的 Class 都会被缓存，当程序需要使用某个 Class 对象时，类加载器先从缓存区中搜索该 Class，只有当缓存中不存在该 Class 对象时，系统才会读取该类对应的二进制数据，并将其转换成 Class 对象，存储到缓存区。
+
+#### ClassLoader
+
+- 负责加载类的对象
+
+#### 运行时的内置类加载器
+
+- `Bootstrap class loader`：它是虚拟机的内置类加载器，通常表示为 null
+- `Platform class loader`：平台类加载器可以看到所有平台类，平台类包括由平台类加载器或其祖先定义的 `JavaSE` 平台 `API`，其实现类和 `JDK` 特定的运行时类
+- `System class loader`：也被称为应用程序类加载器，与平台类加载器不同，系统类加载器通常定义应用程序类路径，模块路径和 `JDK` 特定工具上的类
+- 类加载器的继承关系：`System` 的父（不是继承关系）加载器为 `Platform`，而 `Platform` 的父加载器为 `Bootstrap`
+
+```java
+@Test
+public void fn1(){
+    // 获得系统加载
+    ClassLoader c = ClassLoader.getSystemClassLoader();
+    System.out.println(c);//sun.misc.Launcher$AppClassLoader@18b4aac2
+
+    //获得父类加载
+    ClassLoader c2 = c.getParent();
+    System.out.println(c2);//sun.misc.Launcher$ExtClassLoader@4a574795
+
+    //获得父类加载
+    ClassLoader c3 = c2.getParent();
+    System.out.println(c3);// null
+}
+```
+
 ### 总结
 
 `RTTI` 允许通过匿名类的引用来获取类型信息。在学会使 用多态调用方法之前，使用 switch + RTTI 的组合很容易获取到类型信息，实现功能，但是这样损失了多态机制在代码开发和维护过程中的重要价值。面向对象编程语言是想让我们尽可能地使用多态 机制，只在非用不可的时候才使用 `RTTI`。
 
-<span style="color:green">`RTTI` 有时候也能解决效率问题。假设你的代码运用了多态，但是为了实现多态，导致其中某个对象的效率非常低。这时候，你就可以挑出那个类，使用 `RTTI` 为它编写一段特别的代码以提高效率。然而必须注意的是，不要太早地关注程序的效率问题。</span>
+<span style="color:green">`RTTI` 有时候也能解决效率问题。假设你的代码运用了多态，但是为了实现多态，导致其中某个对象的效率非常低。这时候，你就可以挑出那个类，使用 `RTTI` 为它编写一段特别的代码以提高效率。然而必须注意的是，不要太早地关注程序的效率问题，这容易适得其反。</span>
 
 ## 第二十章-泛型
 
 ### 引入泛型
 
-通过继承或接口的方式实现通用代码对程序的约束还是太强了，我们希望有更简单的方式编写更通用的代码，使代码可以应用于多种类型（可以更好的支持 Java 容器了）。因此 `Java5` 引入了泛型机制。
+通过继承或接口的方式实现的通用代码对程序的约束还是太强了，我们希望有更简单的方式编写更通用的代码，使代码可以应用于多种类型（可以更好的支持 Java 容器了）。因此 `Java5` 引入了泛型机制。
 
-Java 的泛型受 C++ 的影响。泛型在编程语言中出现的最初目的是希望类或方法能够具备最广泛的表达能力，但 Java 的泛型并未完全实现这些。优点和局限性都很明显。对比 C++ 的泛型机制，我们可以很明显的感受到 Java 泛型的局限性。Java 语言的泛型只在程序源码中存在，编译后的字节码泛型全部被替换为原来的裸类型，并在相应的地方插入了强制类型转换字节码，这种设计使得 Java 的泛型在使用效果和运行效率上都低于 C# 的具现化泛型。
+Java 的泛型受 C++ 的影响。泛型在编程语言中出现的最初目的是希望类或方法能够具备最广泛的表达能力，但 Java 的泛型并未完全实现这些。优点和局限性都很明显。对比 C++ 的泛型机制，我们可以很明显的感受到 Java 泛型的局限性。Java 语言的泛型只在程序源码中存在，编译后的字节码泛型全部被替换为原来的裸类型，并在相应的地方插入了强制类型转换字节码（checkcast），这种设计使得 Java 的泛型在使用效果和运行效率上都低于 C# 的具现化泛型。
 
 > 泛型的优点
 
@@ -13346,12 +13485,13 @@ Java 的泛型受 C++ 的影响。泛型在编程语言中出现的最初目的�
 
 ### 简单泛型
 
-泛型的主要目的是用来指定容器要持有什么类型的对象，并且由编译器来保证类型的正确性。
+泛型的主要目的是用来常见集合，并且由编译器来保证类型的正确性。
 
 > 泛型的基本使用（一）
 
 - 我们也可以用 Object 接收对象，然后 get 得到结果，对结果进行强制类型转换。但是这样做不安全，一旦传入的类型和强转的不一致，代码在运行时就会报错。而泛型可以在编译时就进行类型检查，更为安全。
-- <b>总结：</b>泛型，告诉编译器想要使用什么类型，然后编译器帮助你处理一切的细节。
+
+而泛型会告诉编译器我们想要使用什么类型，然后编译器会帮助我们处理一切的细节。
 
 ```java
 public class Hold2<T> {
@@ -13419,7 +13559,7 @@ public class TwoTuple<A, B> {
 
 ```java
 public class GenericMethods {
-    public <T> void f(T t) {
+    public <T> void f(T t) { // 我们无需指定参数类型，编译器会自动进行类型推断
         System.out.println(t.getClass().getName());
     }
 
@@ -13559,7 +13699,9 @@ public class LostInformation {
 */
 ```
 
-Java 泛型是使用擦除实现的。这意味着当你在使用泛型时，任何具体的类型信息都被擦除了，你唯一知道的就是你在使用一个对象。因此，List 和 List 在运行时实际上是相同的类型。它们都被擦除成原生类型 List。
+<b>泛型代码内部并不存在有关泛型参数类型的可用信息。</b>我们可以知道的只有诸如类型参数的标识符和泛型类型的边界信息，但是无法知道实际用于创建具体实例的类型参数。
+
+Java 泛型是通过<b>类型擦除</b>实现的。这意味着当你在使用泛型时，任何具体的类型信息都被擦除了，你唯一知道的就是你在使用一个对象。因此，`List<String>` 和 `List<Integer>` 在运行时实际上是相同的类型。它们都被擦除成原生类型 List。
 
 上面代码的反编译结果如下：
 
@@ -13617,7 +13759,7 @@ class Manipulator<T> {
 }
 ```
 
-因为擦除，Java 编译器无法将 manipulate() 方法必须能调用 obj 的 f() 方法这一需求映射到 HasF 具有 f() 方法这个事实上。<span style="color:red">为了调用 f()，我们必须协助泛型类，给定泛型类一个边界，以此告诉编译器只能接受遵循这个边界的类型。</span>
+因为擦除，Java 编译器无法将 `manipulate() 必须调用 obj 上的 f() `的需求映射到 `HasF 具有 f() 方法`这个事实上。<span style="color:red">为了调用 f()，我们必须协助泛型类，为泛型指定边界，以此告诉编译器只接受符合该边界的类型。</span>
 
 ```java
 public class HasF {
@@ -13644,7 +13786,7 @@ class Manipulator<T extends HasF> {
 }
 ```
 
-泛型参数类型会把泛型擦除到它的第一个边界。上述代码泛型为`<T extends HasF>` 会被擦除到 `HasF`，这样是为了兼容之前没有使用泛型的代码。为什么说是为了兼容呢？
+泛型参数类型会把泛型擦除到它的第一个边界。上述代码泛型为 `<T extends HasF>` 会被擦除到 `HasF`，这样是为了兼容之前没有使用泛型的代码。为什么说是为了兼容呢？
 
 看 `ArrayList`，是一个泛型类，如果没有泛型擦除，那么之前的不支持泛型且使用了 `ArrayList` 的代码就得更改。
 
@@ -13653,22 +13795,24 @@ class Manipulator<T extends HasF> {
 - 希望代码能够跨多个类工作时。
 - 某个类有一个返回 T 的方法。
 
+只有当代码足够复杂时，使用泛型才有所帮助。
+
 #### 迁移兼容性
 
-泛型擦除这是 Java 的一个折中选择。泛型擦除降低了泛型的泛化性。泛型在 Java 中仍旧是有用的，不过不如它们本来设想的那么有用。
+泛型擦除这是 Java 的一个折中选择。泛型擦除降低了泛型的泛化性。但泛型在 Java 中仍旧是有用的，不过不如它们本来设想的那么有用。
 
-在基于擦除的实现中，泛型类型被当作第二类类型处理，即不能在某些重要的上下文使用泛型类型。<span style="color:red">泛型类型只有在静态类型检测期间才出现，在此之后，程序中的所有泛型类型都将被擦除，替换为它们的非泛型上界。例如，`List<T>` 这样的类型注解会被擦除为 List，普通的类型变量在未指定边界的情况下会被擦除为 Object。</span>
+在基于擦除的实现中，泛型类型被当作第二类类型处理，无法在某些重要的上下文使用泛型类型。<span style="color:red">泛型类型只有在静态类型检测期间才出现，在此之后，程序中的所有泛型类型都将被擦除，替换为它们的非泛型上界。例如，`List<T>` 这样的类型注解会被擦除为 List，普通的类型变量在未指定边界的情况下会被擦除为 Object，除非指定了边界。</span>
 
 - `List<T>` 被擦除为 List
 - List<普通类型> 如 `List<Integer>` 将被擦除为 Object
 
 <span style="color:red">擦除的核心动机是你可以在泛化的客户端上使用非泛型的类库。</span>
 
-例如，假设一个应用使用了两个类库 X 和 Y，Y 使用了类库 Z。随着 Java 5 的出现，这个应用和这些类库的创建者最终可能希望迁移到泛型上。但是当进行迁移时，它们有着不同的动机和限制。为了实现迁移兼容性，不管是否使用了泛型，都要求可以正常运行。因此，它们不能探测其他类库是否使用了泛型。故，某个特定的类库使用了泛型这样的证据必须被” 擦除 “。
+例如，假设一个应用使用了两个类库 X 和 Y，Y 使用了类库 Z。随着 Java 5 的出现，这个应用和这些类库的创建者最终可能希望迁移到泛型上。但是当进行迁移时，它们有着不同的动机和限制。为了实现迁移兼容性，不管是否使用了泛型，都要求可以正常运行。因此，它们不能检测其他类库是否使用了泛型。因此，如果某个特定的类库使用了泛型，那么这个泛型必须被“擦除”。
 
 #### 擦除的问题
 
-泛型不能用于显式地引用运行时类型的操作中，例如转型、`instanceof` 操作和 `new` 表达式。因为所有关于参数的类型信息都丢失了，当你在编写泛型代码时，必须时刻提醒自己，你只是看起来拥有有关参数的类型信息而已。
+泛型代码无法用于需要显式引用运行时类型的操作中，例如转型、`instanceof` 操作和 `new` 表达式。因为所有关于参数的类型信息都丢失了，当你在编写泛型代码时，必须时刻提醒自己，你只是看起来拥有有关参数的类型信息而已。
 
 ```java
 // 泛型语法也在强烈暗示整个类中所有 T 出现的地方都被替换，
@@ -13679,11 +13823,11 @@ class Foo<T> {
 Foo<Cat> f = new Foo<>();
 ```
 
-#### 边界处的动作
+#### 边界处的行为
 
 `ArrayList<T>` 中的泛型 T 虽然会被擦除，但是编译器会确保 `ArrayList<T>` 中存放的对象是 T 类型的。因此，即使擦除了方法或类中实际类型的信息， 编译器仍可以确保方法或类中使用的类型的内部一致性。
 
-类型信息被擦除了，那么我们在哪里校验放入 List 中的数据是不是正确的，取数据时又该在什么时候进行类型转换呢？这类问题就是边界：即对象进入和离开方法的地点。这些也就是编译器在编译期执行类型检查并插入转型代码的地点。<span style="color:red">【该数据符不符合我之前擦除的泛型的类型，编译器会擦除泛型，也会在必要的地点生成对应类型检查转型字节码】</span>
+   类型信息被擦除了，那么我们在哪里校验放入 List 中的数据是不是正确的，取数据时又该在什么时候进行类型转换呢？这类问题就是边界：即对象进入和离开方法的地点。这些也就是编译器在编译期执行类型检查并插入转型代码的地点。<span style="color:red">【该数据符不符合我之前擦除的泛型的类型，编译器会擦除泛型，也会在必要的地点生成对应类型检查转型字节码】</span>
 
 > 观察下面类型强转代码的字节码
 
@@ -13730,7 +13874,7 @@ public static void main(java.lang.String[]);
 > 加入泛型后的代码，注意观察字节码
 
 - 传递给 set 的数据在编译期会进行类型检查（语法分析，分析语法是否正确）
-- get 获得的数据是  Object ，在执行了 get 方法后会执行 `checkcast`，检验类型转换。
+- get 获得的数据是 Object ，在执行了 get 方法后会执行 `checkcast`，检验类型转换。
 
 ```java
 public class GenericHolder<T> {
@@ -13776,7 +13920,7 @@ public static void main(java.lang.String[]);
 
 #### 别样的类型检测
 
-因为擦除，我们将失去执行泛型代码中某些操作的能力。无法在运行时知道确切类型，但是我们可以通过其他手段来进行弥补！
+因为擦除，我们失去了在泛型代码中执行某些操作的能力。任何需要在运行时知道确切类型的操作都无法运行。但是我们可以通过其他手段来进行弥补！
 
 > 用 `isInstance` 替代 `instanceof`
 
@@ -13789,7 +13933,7 @@ class House extends Building {}
 
 public class ClassTypeCapture<T> {
     Class<T> kind;
-
+	// 我们在创建的时候，传入一个类型标签，用于指示这里面的元素是什么确切类型。
     public ClassTypeCapture(Class<T> kind) {
         this.kind = kind;
     }
@@ -13812,14 +13956,15 @@ true
 
 #### 创建类型实例
 
-试图在通过 new T() 是行不通的，一是由于擦除，如`List<T>` 被擦除为 List；二是编译器无法验证 T 是否具有默认（无参）构造函数。但是在 C++ 中，此操作是安全的（在编译时检查）
+试图通过 new T() 创建对象是行不通的，一是由于擦除，如 `List<T>` 被擦除为 List；二是编译器无法验证 T 是否具有默认（无参）构造函数。但是在 C++ 中，此操作是安全的（在编译时检查）
 
-> Java 中的解决方案是传入一个工厂对象，并使用该对象创建新实例。最便利的工厂对象就是 Class 对象，因此，如果使用类型标记，则可以使用 `newInstance()` 创建该类型的新对象：
+Java 的解决方案是传入一个工厂对象，并使用该对象创建新实例。最便利的工厂对象就是 Class 对象，因此，如果使用类型标记，则可以使用 `newInstance()` 创建该类型的新对象：
 
 ```java
 class ClassAsFactory<T> implements Supplier<T> {
     Class<T> kind;
-
+	
+    // 也是引入 tag，利用 tag 创建对象
     ClassAsFactory(Class<T> kind) {
         this.kind = kind;
     }
@@ -13894,7 +14039,7 @@ public class CreatorGeneric {
 - `return (T[]) Array.newInstance(componentType, length);`，为了创建一个泛型数组，居然还要传入一个 Class 对象，似乎不是很合理。
 - 直接创建一个 Object 类型的数组，在获取元素的时候，进行强转（<span style="color:red">推荐</span>）
 
-> 无法创建泛型数组。通用解决方案是在创建泛型数组的时候使用 `ArrayList`。但是，有时候我们仍然会创建泛型类型的数组。可以通过使编译器满意的方式定义对数组的通用引用。
+我们无法创建泛型数组。通用解决方案是在创建泛型数组的时候使用 `ArrayList`。但是，有时候我们仍然会创建泛型类型的数组。可以通过使编译器满意的方式定义对数组的通用引用。
 
 ```java
 class Generic<T> {
@@ -13920,25 +14065,31 @@ public class ArrayOfGenericReference {
 }
 ```
 
-- 创建一个 Object 数组，然后强制类型转换
+所有数组不论持有的是什么类型，都有相同的结构（包括每个数组的大小和布局）因此，我们可以创建一个 Object 数组，然后将其强制类型转换为目标数组类型。这可以通过编译，但会在运行时抛出 ClassCastException 异常。<span style="color:red">出现这个异常的原因是：数组时刻都掌握这它们的实际类型信息，而该类型信息是在创建数组的时刻确定的。尽管 array 被转型为 Integer[]，该信息也只会存在于编译时（并且，未加上 @SuppressWarnings 还会出现转型警告），在运行时，他还是 Object 数组。</span>
 
 ```java
 @SuppressWarnings("all") // 压制警告
-class Generic2<T> {
-    private T[] array;
+class Generic<T> {
+    T[] array;
 
     public void f1() {
         // 创建一个 Object 数组，然后强制类型转换
         array = (T[]) new Object[20];
     }
+
+    public static void main(String[] args) {
+        Generic3<Integer> gen = new Generic3<>();
+        gen.f1(); // 通过编译
+        gen.array[0] = Integer.valueOf(12); // 抛出异常class [Ljava.lang.Object; cannot be cast to class [Ljava.lang.Integer;
+    }
 }
 ```
 
-- 创建一个 Object 数组，在必要的时候才进行类型转换，<b style="color:red">强烈推荐</b>
+由于泛型擦除得缘故，数组得运行时类型只能是 Object[]。如果我们立刻将其转型未 T[]，那么在编译时，数组得实际类型便会丢失，编译器就可能会错过对某些潜在错误得检查。唯一可以成功创建一个泛型类数组的方法就是，创建一个类型未被擦除类型，即 Object 数组，在必要的时候才进行类型转换，<b style="color:red">强烈推荐</b>
 
 ```java
 @SuppressWarnings("all") // 压制警告
-class Generic2<T> {
+class Generic<T> {
     private Object[] array;
 
     public void f1() {
@@ -13953,13 +14104,9 @@ class Generic2<T> {
 }
 ```
 
-### 边界
+### 使用 extends 限定边界
 
-边界允许我们对泛型使用的参数类型施加约束，且我们可以在绑定的类型中调用方法！
-
-不使用边界的话，由于擦除会删除类型信息，因此唯一可用于无限制泛型参数的方法就是那些 Object 可用的方法。但是！如果我们将该参数类型限制为某类型的子集，则可以调用该子集中的方法。泛型中的 extends 关键字可以进行这种约束。
-
-#### 使用 extends 限定边界
+由于类型擦除移除了类型信息，对于无边界的泛型参数，我们只能调用 Object 中可用的方法。如果可以将参数类型限制在某个类型子集中，你就可以调用该子集上可用的方法了。为了应用这种限制，Java 泛型复用了 extends 关键字。
 
 <span style="color:red">限定类型后，如果类型使用错误，编译器会提示。指定边界后，类型擦除时就不会转换为 Object 了，而是会转换为它的边界类型。</span>
 
@@ -13992,7 +14139,7 @@ interface HasColor {
 class Coord {
     public int x, y;
 }
-
+// 类必需放在最前面，然后才是接口。和使用继承一样，只能继承一个具体的类，但是可以实现多个接口
 public class WithColorCoord<T extends Coord & HasColor> {
     T item;
 
@@ -14029,28 +14176,63 @@ public class WithColorCoord{
 
 ### 通配符
 
-多态允许父类持有子类类型的引用。在泛型中呢？
+先看一个数组的例子，这个例子展示了数组的一种特殊行为，可以将子类类型的数组赋值给父类类型数组的引用,
+
+```java
+class Fruit{}
+class Apple extends Fruit{}
+class Jonathan extends Apple{}
+class Orange extends Fruit{}
+
+public class CovariantArrays {
+    public static void main(String[] args) {
+        Fruit[] fruits = new Apple[10];
+        fruits[0] = new Apple();
+        fruits[1] = new Jonathan();
+
+        try {
+            // 编译器允许添加 Fruit
+            fruits[0] = new Fruit();
+        }catch (Exception e){
+            e.printStackTrace(); // ArrayStoreException
+        }
+
+        try {
+            // 编译器允许添加 Orange
+            fruits[1] = new Orange();
+        }catch (Exception e){
+            e.printStackTrace(); // ArrayStoreException
+        }
+    }
+}
+```
+
+<span style="color:red">实际的数组类型是 Apple[]，我们可以将 Apple 或 Apple 的子类放入该数组，这在编译时和运行时都是没问题的。但是，我们也可以把 Fruit 对象或 Fruit 的子类对象放入该数组，可以通过编译，因为它持有的是 Fruit[] 的引用。但是在运行时的数组机制知道自己是在处理 Apple[]，并会在向该数组中放入异构类型时抛出错误。</span>
+
+泛型的主要目的之一时要让这样的错误检查提前到编译时。那么，如果用泛型集合替代数组会怎么样？
 
 ```java
 class Fruit {}
 class Apple extends Fruit {}
 
 public class NoCovariantGenerics {
-    // 报错，不能把一个涉及 Apple 的泛型 赋值给涉及 Fruit 的泛型
-    // 我们讨论的时集合类型，而不是集合持有对象的类型，泛型没有内建的协变类型
+    // 报错，不能把一个涉及 Apple 的泛型赋值给涉及 Fruit 的泛型
+    // 我们讨论的是集合类型，而不是集合持有对象的类型，泛型没有内建的协变类型
     List<Fruit> flist = new ArrayList<Apple>();
 }
 ```
 
+<span style="color:red">我们讨论的是集合类型，而不是集合持有对象的类型。和数组不一样，泛型没有内建的协变性。</span>
+
 如果我们想在两个类型之间建立某种向上转型的关系，需要使用通配符。
 
 - <span style="color:red">`<?>` 指定了没有限制的泛型类型，只能读不能写。</span>
-- `<? extends Parent>`  指定了泛型类型的上界。集合里面所有的类都要是他的子类；
+- `<? extends Parent>`  指定了泛型类型的上界。集合里面所有的类都要是他的子类；泛型擦除时会擦除到 Paraent 这个类型边界。
     - 可以向里面添加数据吗？不可以！因为这里只指定了集合里面的所有类都是他的子类，但是不知道具体是那个类型的子类，添加后可能会导致不安全的转型操作，所以不能添加。
     - 可以向拿数据出来吗？可以！拿出来的数据都可以安全的转型为 Parent 类。
 
 - `<? super Child>`  指定了泛型类型的下界，集合里面所有的类都是 Child 的父类
-    - 可以向里面添加数据吗？可以，可以添加 Child 的子类，它可以安全的转型为集合中限定的下界 Child
+    - 可以向里面添加数据吗？可以，可以添加 Child 的子类（加的小粒度数据，不会出现问题），它可以安全的转型为集合中限定的下界 Child。
     - 不能往外面拿，拿到的数据，只能转型为 Object，因为集合中的数据是 Child 的父类类型，无法确定到底是那个父类类型
 
 - 上述说的不能拿，意思是拿出来的数据没有具体的类型，只能用 Object 接收的意思。
@@ -14139,11 +14321,8 @@ list ->    Food
 - 如果即需要提供数据(in), 又需要接收数据(out), 就不要使用通配符.
 
 ```java
-class Fruits {
-}
-
-class Apples extends Fruits {
-}
+class Fruits {}
+class Apples extends Fruits {}
 
 public class NoCovariantGenerics {
 
@@ -14172,7 +14351,7 @@ public class NoCovariantGenerics {
 
 上界 `<? extends Fruit>`
 
-下界`<? super Fruit>`
+下界 `<? super Fruit>`
 
 <b>上界和下界的特点</b>
 
@@ -14368,10 +14547,8 @@ public class EnumClass {
 
 如果我们希望每个枚举实例可以返回对自身信息的消息描述的话，我们可以自定义一个方法来返回描述信息。
 
-```<java
-/**
- * 带有详细信息的枚举
- */
+```java
+// 带有详细信息的枚举
 public enum OzWitch {
     WEST("This is WEST"),
     NORTH("This is NORTH"),
