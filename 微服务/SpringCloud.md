@@ -12,49 +12,49 @@
 
 ## 单体架构
 
-**单体架构**：将业务的所有功能集中在一个项目中开发，打成一个包部署。
+<b>单体架构</b>：将业务的所有功能集中在一个项目中开发，打成一个包部署。
 
 <img src="assets/image-20210713202807818.png">
 
 > 单体架构的优缺点如下：
 
-**优点：**
+<b>优点：</b>
 
 - 架构简单
 - 部署成本低
 
-**缺点：**
+<b>缺点：</b>
 
 - 耦合度高（维护困难、升级困难）
 
 ## 分布式架构
 
-**分布式架构**：根据业务功能对系统做拆分，每个业务功能模块作为独立项目开发，称为一个服务。
+<b>分布式架构</b>：根据业务功能对系统做拆分，每个业务功能模块作为独立项目开发，称为一个服务。
 
 <img src="assets/image-20210713203124797.png">
 
 > 分布式架构的优缺点：
 
-**优点：**
+<b>优点：</b>
 
 - 降低服务耦合
 - 有利于服务升级和拓展
 
-**缺点：**
+<b>缺点：</b>
 
 - 服务调用关系错综复杂
 
-分布式架构虽然降低了服务耦合，但是服务拆分时也有很多问题需要思考：
+分布式架构虽然降低了服务耦合，但是服务拆分时也有很多问题：
 
 - 服务拆分的粒度如何界定？
-- 服务之间如何调用？
+- 服务之间如何调用？-- 服务之间通过 socket 进行通信，常见的方式是 http 请求。
 - 服务的调用关系如何管理？
 
-人们需要制定一套行之有效的标准来约束分布式架构。
+需要制定一套行之有效的标准来约束分布式架构。
 
 ## 微服务
 
-> **微服务架构：一种良好的分布式架构方案**
+> <b>微服务架构：一种良好的分布式架构方案</b>
 
 - 优点：拆分粒度更小、服务更独立、耦合度更低。
 - 缺点：架构非常复杂，运维、监控、部署难度提高。
@@ -70,20 +70,20 @@
 
 微服务的上述特性其实是在给分布式架构制定一个标准，进一步降低服务之间的耦合度，提供服务的独立性和灵活性。做到高内聚，低耦合。
 
-因此，可以认为**微服务**是一种经过良好架构设计的**分布式架构方案** 。
+因此，可以认为<b>微服务</b>是一种经过良好架构设计的<b>分布式架构方案</b>。
 
-<img src="assets\image-20210923224508151.png">
+<img src="assets/image-20210923224508151.png">
 
-- **服务网关：**网关把请求分发到服务集群，做负载均衡，隔离，容错等。
-- **注册中心：**维护微服务中每个节点的信息。
-- **配置中心：**统一管理整个微服务群的配置，将来用变更，用通知的方式去让对应的服务监控到配置的服务，实现配置的热更新。
-- **服务集群：**微服务拆分，形成集群。集群中的服务要遵从单一职责原则，面向服务，对外暴露接口。
+- <b>服务网关：</b>网关把请求分发到服务集群，做负载均衡，隔离，容错等。
+- <b>注册中心：</b>维护微服务中每个节点的信息。
+- <b>配置中心：</b>统一管理整个微服务群的配置，将来用变更，用通知的方式去让对应的服务监控到配置的服务，实现配置的热更新。
+- <b>服务集群：</b>微服务拆分，形成集群。集群中的服务要遵从单一职责原则，面向服务，对外暴露接口。
 
 > 微服务技术对比
 
-<img src="assets\image-20210923225225196.png">
+<img src="assets/image-20210923225225196.png">
 
-<img src="assets\image-20210923225454898.png">
+<img src="assets/image-20210923225454898.png">
 
 ## Spring Cloud
 
@@ -190,17 +190,17 @@ cloud-order 表中持有 cloud-user 表中的 id 字段。
 
 ## 实现远程调用案例
 
-在order-service服务中，有一个根据id查询订单的接口：
+在 order-service 服务中，有一个根据 id 查询订单的接口：
 
 <img src="assets/image-20210713212749575.png">
 
-根据id查询订单，返回值是Order对象，如图：
+根据 id 查询订单，返回值是 Order 对象，如图：
 
 <img src="assets/image-20210713212901725.png">
 
-其中的user为null
+其中的 user 为 null
 
-在user-service中有一个根据id查询用户的接口：
+在 user-service 中有一个根据 id 查询用户的接口：
 
 <img src="assets/image-20210713213146089.png">
 
@@ -210,11 +210,11 @@ cloud-order 表中持有 cloud-user 表中的 id 字段。
 
 ### 案例需求：
 
-修改 order-service 中的根据id查询订单业务，要求在查询订单的同时，根据订单中包含的 userId 查询出用户信息，一起返回。
+修改 order-service 中的根据 id 查询订单业务，要求在查询订单的同时，根据订单中包含的 userId 查询出用户信息，一起返回。
 
 <img src="assets/image-20210713213312278.png">
 
-因此，我们需要在 `order-service` 中向 `user-service` 发起一个http的请求，调用 http://localhost:8081/user/{userId} 这个接口。
+因此，我们需要在 `order-service` 中向 `user-service` 发起一个 http 的请求，调用 http://localhost:8081/user/{userId} 这个接口。
 
 大概的步骤是这样的：
 
@@ -260,9 +260,9 @@ public class OrderApplication {
 
 在服务调用关系中，会有两个不同的角色：
 
-**服务提供者**：一次业务中，被其它微服务调用的服务。（提供接口给其它微服务）
+<b>服务提供者</b>：一次业务中，被其它微服务调用的服务。（提供接口给其它微服务）
 
-**服务消费者**：一次业务中，调用其它微服务的服务。（调用其它微服务提供的接口）
+<b>服务消费者</b>：一次业务中，调用其它微服务的服务。（调用其它微服务提供的接口）
 
 <img src="assets/image-20210713214404481.png">
 
@@ -281,19 +281,19 @@ public class OrderApplication {
 
 <img src="assets/image-20210713214925388.png">
 
-> **思考：**
+> <b>思考：</b>
 
-- `order-service` 在发起远程调用的时候，该如何得知 `user-service` 实例的ip地址和端口？
+- `order-service` 在发起远程调用的时候，该如何得知 `user-service` 实例的 ip 地址和端口？
 - 有多个 `user-service` 实例地址，`order-service` 调用时该如何选择？
 - `order-service` 如何得知某个 `user-service` 实例是否依然健康，是不是已经宕机？
 
-## Eureka 的结构和作用
+## Eureka的结构和作用
 
 这些问题都需要利用 Spring Cloud 中的注册中心来解决，其中最广为人知的注册中心就是 Eureka，其结构如下：
 
 <img src="assets/image-20210713220104956.png">
 
-> <span style="color:green">**order-service 如何得知 user-service 实例地址？**</span>
+> <b style="color:orange">order-service 如何得知 user-service 实例地址？</b>
 
 获取地址信息的流程如下：
 
@@ -301,20 +301,18 @@ public class OrderApplication {
 - `eureka-server` 保存服务名称到服务实例地址列表的映射关系。<span style="color:red">（key-->服务名称；value-->服务地址）</span>
 - `order-service` 根据服务名称，拉取实例地址列表。这个叫服务发现或服务拉取
 
-> <span style="color:green">**order-service 如何从多个 user-service 实例中选择具体的实例？**</span>
+> <b style="color:orange">order-service 如何从多个 user-service 实例中选择具体的实例？</b>
 
 - `order-service` 从实例列表中<span style="color:red">利用负载均衡算法选中一个实例地址</span>
 - 向该实例地址发起远程调用
 
-> <span style="color:green">**order-service 如何得知某个 user-service 实例是否依然健康，是不是已经宕机？**</span>
+> <b style="color:orange">order-service 如何得知某个 user-service 实例是否依然健康，是不是已经宕机？</b>
 
-- `user-service` 会每隔一段时间（默认30秒）向 `eureka-server` 发起请求，报告自己状态，称为心跳
+- `user-service` 会每隔一段时间（默认 30 秒）向 `eureka-server` 发起请求，报告自己状态，称为心跳
 - 当超过一定时间没有发送心跳时，`eureka-server` 会认为微服务实例故障，将该实例从服务列表中剔除
 - `order-service` 拉取服务时，就能将故障实例排除了
 
-> <span style="color:green">**注意：一个微服务，既可以是服务提供者，又可以是服务消费者，因此 eureka 将服务注册、服务发现等功能统一封装到了eureka-client 端**</span>
-
-因此，接下来我们动手实践的步骤包括：
+<b style="color:orange">注意：一个微服务，既可以是服务提供者，又可以是服务消费者，因此 eureka 将服务注册、服务发现等功能统一封装到了eureka-client 端</b>
 
 <img src="assets/image-20210713220509769.png">
 
@@ -377,11 +375,13 @@ server:
 spring:
   application:
     name: eureka-server
-eureka:
+eureka: # 配置 eureka 的地址信息。
   client:
     service-url: 
       defaultZone: http://127.0.0.1:10086/eureka
 ```
+
+为什么 eureka 要自己配置自己？因为 eureka 也是一个微服务，所以会把自己也注册进去。为了以后 eureka 集群通信准备的。
 
 ### 启动服务
 
@@ -414,7 +414,7 @@ eureka:
 spring:
   application:
     name: userservice
-eureka:
+eureka: # 配置 eureka 地址，将 userservice 注册到 eureka 中
   client:
     service-url:
       defaultZone: http://127.0.0.1:10086/eureka
@@ -481,7 +481,7 @@ eureka:
 
 ### 服务拉取和负载均衡
 
-最后，我们要去 `eureka-server` 中拉取 `user-service` 服务的实例列表，并且实现负载均衡。不过这些动作不用我们去做，只需要添加一些注解即可。
+最后，我们要去 `eureka-server` 中拉取 `user-service` 服务的实例列表，并且实现负载均衡。添加注解 @LoadBalanced 即可实现负载均衡。
 
 在 order-service 的 `OrderApplication` 中，给 `RestTemplate` 这个Bean添加一个 `@LoadBalanced` 注解：
 
@@ -491,48 +491,48 @@ eureka:
 
 <img src="assets/image-20210713224245731.png">
 
-`spring` 会自动帮助我们从 `eureka-server` 端，根据 `userservice` 这个服务名称，获取实例列表，而后完成负载均衡。
+`spring` 会自动帮助我们从 `eureka-server` 端，根据 `userservice` 这个服务名称，获取实例列表，而后完成负载均衡。<span style="color:orange">而这个服务拉取，不是每次请求服务都要进行的，服务消费者会拉取到服务列表后会进行缓存，后面的一段时间可以直接用缓存的服务列表信息。然后每隔 30 秒更新一次服务列表信息</span>
 
-# Ribbon 负载均衡
+# Ribbon负载均衡
 
-上一节中，我们添加了`@LoadBalanced` 注解，即可实现负载均衡功能，这是什么原理呢？
+添加了`@LoadBalanced` 注解，即可实现负载均衡功能，这是什么原理呢？
 
 ## 负载均衡原理
 
 `Spring Cloud` 底层其实是利用了一个名为 `Ribbon` 的组件，来实现负载均衡功能的。
 
-assets/image-20210713224517686.png
+<img src="assets/image-20210713224517686.png">
 
-那么我们发出的请求明明是 http://userservice/user/1，怎么变成了http://localhost:8081的呢？
+我们发出的请求明明是 http://userservice/user/1，怎么变成了 http://localhost:8081 的呢？实际上是做了一个映射，将 userservice 映射到了其他地址。
 
 ## 源码跟踪
 
-为什么我们只输入了 `service` 名称就可以访问了呢？之前还要获取 `IP` 和端口。显然有人帮我们根据 `service`  名称，获取到了服务实例的 `IP` 和端口。它就是`LoadBalancerInterceptor`，这个类会在对 `RestTemplate` 的请求进行拦截，然后从 `Eureka` 根据服务 `id` 获取服务列表，随后利用负载均衡算法得到真实的服务地址信息，替换服务 `id`。
+为什么我们只输入了 `service` 名称就可以访问了呢？之前还要获取 `IP` 和端口。显然有人帮我们根据 `service`  名称，获取到了服务实例的 `IP` 和端口。它就是 `LoadBalancerInterceptor`，这个类会在对 `RestTemplate` 的请求进行拦截，然后从 `Eureka` 根据服务 `id` 获取服务列表，随后利用负载均衡算法得到真实的服务地址信息，替换服务 `id`。
 
-> 我们进行源码跟踪：
+> 想看处理流程的可以进行源码跟踪：
 
 ### LoadBalancerIntercepor
 
 <img src="assets/1525620483637.png">
 
-可以看到这里的intercept方法，拦截了用户的 `HttpRequest` 请求，然后做了几件事：
+可以看到这里的 intercept 方法，拦截了用户的 `HttpRequest` 请求，然后做了几件事：
 
 - `request.getURI()`：获取请求 `uri`，本例中就是 http://user-service/user/8
-- `originalUri.getHost()`：获取 `uri` 路径的主机名，其实就是服务id，`user-service`
+- `originalUri.getHost()`：获取 `uri` 路径的主机名，其实就是服务 id，`user-service`
 - `this.loadBalancer.execute()`：处理服务 id，和用户请求。
 
-这里的`this.loadBalancer`是`LoadBalancerClient`类型，我们继续跟入。
+这里的 `this.loadBalancer` 是 `LoadBalancerClient` 类型，我们继续跟入。
 
 ### LoadBalancerClient
 
-继续跟入execute方法：
+继续跟入 execute 方法：
 
 <img src="assets/1525620787090.png">
 
 代码是这样的：
 
 - `getLoadBalancer(serviceId)：`根据服务 `id` 获取 `ILoadBalancer`，而 `ILoadBalancer` 会拿着服务 `id` 去 `eureka` 中获取服务列表并保存起来。
-- `getServer(loadBalancer)：`利用内置的负载均衡算法，从服务列表中选择一个。本例中，可以看到获取了8082端口的服务
+- `getServer(loadBalancer)：`利用内置的负载均衡算法，从服务列表中选择一个。本例中，可以看到获取了 8082 端口的服务
 
 放行后，再次访问并跟踪，发现获取的是 8081：
 
@@ -540,9 +540,9 @@ assets/image-20210713224517686.png
 
 果然实现了负载均衡。
 
-### 负载均衡策略 `IRule`
+### 负载均衡策略IRule
 
-在刚才的代码中，可以看到获取服务使通过一个`getServer`方法来做负载均衡:
+在刚才的代码中，可以看到获取服务使通过一个 `getServer` 方法来做负载均衡:
 
 <img src="assets/1525620835911.png">
 
@@ -554,17 +554,15 @@ assets/image-20210713224517686.png
 
 <img src="assets/1525622652849.png">
 
-我们看看这个rule是谁：
+我们看看这个 rule 是谁：
 
 <img src="assets/1525622699666.png">
 
-这里的rule默认值是一个 `RoundRobinRule`，看类的介绍：
+这里的 rule 默认值是一个 `RoundRobinRule`，看类的介绍：
 
 <img src="assets/1525622754316.png">
 
-这不就是轮询的意思嘛。
-
-到这里，整个负载均衡的流程我们就清楚了。
+这不就是轮询的意思嘛。到这里，整个负载均衡的流程我们就清楚了。
 
 ### 总结
 
@@ -594,9 +592,9 @@ assets/image-20210713224517686.png
 | **内置负载均衡规则类**      | **规则描述**                                                 |
 | --------------------------- | ------------------------------------------------------------ |
 | `RoundRobinRule`            | 简单轮询服务列表来选择服务器。它是 Ribbon 默认的负载均衡规则。 |
-| `AvailabilityFilteringRule` | 对以下两种服务器进行忽略：   <br>（1）在默认情况下，这台服务器如果3次连接失败，这台服务器就会被设置为“短路”状态。短路状态将持续30秒，如果再次连接失败，短路的持续时间就会几何级地增加。  <br>（2）并发数过高的服务器。如果一个服务器的并发连接数过高，配置了 `AvailabilityFilteringRule` 规则的客户端也会将其忽略。并发连接数的上限，可以由客户端的`<clientName>.<clientConfigNameSpace>.ActiveConnectionsLimit`属性进行配置。 |
+| `AvailabilityFilteringRule` | 对以下两种服务器进行忽略：   <br>（1）在默认情况下，这台服务器如果 3 次连接失败，这台服务器就会被设置为“短路”状态。短路状态将持续30秒，如果再次连接失败，短路的持续时间就会几何级地增加。  <br>（2）并发数过高的服务器。如果一个服务器的并发连接数过高，配置了 `AvailabilityFilteringRule` 规则的客户端也会将其忽略。并发连接数的上限，可以由客户端的 `<clientName>.<clientConfigNameSpace>.ActiveConnectionsLimit` 属性进行配置。 |
 | `WeightedResponseTimeRule`  | 为每一个服务器赋予一个权重值。服务器响应时间越长，这个服务器的权重就越小。这个规则会随机选择服务器，这个权重值会影响服务器的选择。 |
-| **`ZoneAvoidanceRule`**     | 以区域可用的服务器为基础进行服务器的选择。使用 Zone 对服务器进行分类，这个 Zone 可以理解为一个机房、一个机架等。而后再对 Zone 内的多个服务做轮询。 |
+| `ZoneAvoidanceRule`         | 以区域可用的服务器为基础进行服务器的选择。使用 Zone 对服务器进行分类，这个 Zone 可以理解为一个机房、一个机架等。而后再对 Zone 内的多个服务做轮询。 |
 | `BestAvailableRule`         | 忽略那些短路的服务器，并选择并发数较低的服务器。             |
 | `RandomRule`                | 随机选择一个可用的服务器。                                   |
 | `RetryRule`                 | 重试机制的选择逻辑                                           |
@@ -607,7 +605,7 @@ assets/image-20210713224517686.png
 
 通过定义 `IRule` 实现可以修改负载均衡规则，有两种方式：
 
-<span style="color:purple">**代码方式**</span>：在 <span style="color:red">order-service </span>中的 `OrderApplication` 类中，定义一个新的`IRule`，<span style="color:green">这样 order-service 在请求服务的时候就会根据我们配置的负载均衡规则进行查找最合适的服务。</span>
+<span style="color:purple">代码方式</span>：在 <span style="color:red">order-service </span>中的 `OrderApplication` 类中，定义一个新的 `IRule`，<span style="color:green">这样 order-service 在请求服务的时候就会根据我们配置的负载均衡规则进行查找最合适的服务。</span>
 
 ```java
 @Bean
@@ -616,7 +614,7 @@ public IRule randomRule(){
 }
 ```
 
-<span style="color:purple">**配置文件方式**</span>：在 `order-service` 的 `application.yml` 文件中，添加新的配置也可以修改规则：
+<span style="color:purple">配置文件方式</span>：在 `order-service` 的 `application.yml` 文件中，添加新的配置也可以修改规则：
 
 ```yaml
 userservice: # 给某个微服务配置负载均衡规则，这里是userservice服务
@@ -624,11 +622,11 @@ userservice: # 给某个微服务配置负载均衡规则，这里是userservice
     NFLoadBalancerRuleClassName: com.netflix.loadbalancer.RandomRule # 负载均衡规则 
 ```
 
-> **注意**，一般用默认的负载均衡规则，不做修改。
+<b>注意，一般用默认的负载均衡规则，不做修改。</b>
 
 ## 饥饿加载
 
-`Ribbon` 默认是采用懒加载，即第一次访问时才会去创建 `LoadBalanceClient`，请求时间会很长。
+`Ribbon` 默认是采用懒加载，即第一次访问时才会去创建 `LoadBalanceClient`，因此第一次请求的时间会很长。
 
 而饥饿加载则会在项目启动时创建，降低第一次访问的耗时，通过下面配置开启饥饿加载：
 
@@ -653,9 +651,7 @@ ribbon:
 
 # Nacos注册中心
 
-国内公司一般都推崇阿里巴巴的技术，比如注册中心，`SpringCloudAlibaba` 也推出了一个名为 `Nacos` 的注册中心。
-
-## 认识和安装Nacos
+`SpringCloudAlibaba` 推出了一个名为 `Nacos` 的注册中心。
 
 [Nacos](https://nacos.io/) 是阿里巴巴的产品，现在是 [SpringCloud](https://spring.io/projects/spring-cloud) 中的一个组件。相比 [Eureka](https://github.com/Netflix/eureka) 功能更加丰富，在国内受欢迎程度较高。
 
@@ -674,7 +670,7 @@ ribbon:
 
 ### 引入依赖
 
-在 `cloud-demo` 父工程的 `pom` 文件中的`<dependencyManagement>`中引入`SpringCloudAlibaba` 的依赖：
+在 `cloud-demo` 父工程的 `pom` 文件中的 `<dependencyManagement>` 中引入 `SpringCloudAlibaba` 的依赖：
 
 ```xml
 <dependency>
@@ -695,7 +691,7 @@ ribbon:
 </dependency>
 ```
 
-> <span style="color:red">**注意**：不要忘了注释掉eureka的依赖。</span>
+> <span style="color:red">注意：不要忘了注释掉 eureka 的依赖。</span>
 
 ### 配置nacos地址
 
@@ -708,7 +704,7 @@ spring:
       server-addr: localhost:8848
 ```
 
-> <span style="color:red">**注意**：不要忘了注释掉eureka的地址</span>
+> <span style="color:red">注意：不要忘了注释掉 eureka 的地址</span>
 
 ### 重启
 
@@ -718,7 +714,7 @@ spring:
 
 ## 服务分级存储模型
 
-一个**服务**可以有多个**实例**，例如我们的 user-service，可以有:
+一个<b>服务</b>可以有多个<b>实例</b>，例如我们的 user-service，可以有:
 
 - 127.0.0.1:8081
 - 127.0.0.1:8082
@@ -730,7 +726,7 @@ spring:
 - 127.0.0.1:8082，在上海机房
 - 127.0.0.1:8083，在杭州机房
 
-Nacos 就将同一机房内的实例 划分为一个**集群**。
+Nacos 就将同一机房内的实例划分为一个<b>集群</b>。
 
 也就是说，user-service 是服务，一个服务可以包含多个集群，如杭州、上海，每个集群下可以有多个实例，形成分级模型，如图：
 
@@ -777,11 +773,11 @@ spring:
 
 ### 同集群优先的负载均衡
 
-默认的 `ZoneAvoidanceRule` 并不能实现根据同集群优先来实现负载均衡，它知识首次会访问同集群的服务，后面就是轮询，一个一个依次使用了。
+默认的 `ZoneAvoidanceRule` 并不能实现根据同集群优先来实现负载均衡，它只是首次访问是会同集群的服务，后面就是轮询，一个一个依次使用了。
 
-因此 `Nacos` 中提供了一个`NacosRule`的实现，可以优先从同集群中挑选实例。
+因此 `Nacos` 中提供了一个 `NacosRule` 的实现，可以优先从同集群中挑选实例。
 
-1）给order-service配置集群信息
+1）给 order-service 配置集群信息
 
 修改 `order-service` 的 `application.yml` 文件，添加集群配置：
 
@@ -804,6 +800,14 @@ userservice:
     NFLoadBalancerRuleClassName: com.alibaba.cloud.nacos.ribbon.NacosRule # 负载均衡规则 
 ```
 
+这样就是优先访问同集群的服务了，同集群内有多个服务的话，会随机选择一个服务进行访问。
+
+<b>Nacos 负载均衡策略</b>
+
+- 优先同集群服务实例列表
+- 本地集群找不到提供者，才去其他集群寻找，并且会报警告
+- 确定了可用实例列表后，再采用随机负载均衡挑选实例
+
 ## 权重配置
 
 实际部署中会出现这样的场景：
@@ -814,7 +818,7 @@ userservice:
 
 因此，Nacos 提供了权重配置来控制访问频率，权重越大则访问频率越高。
 
-在nacos控制台，找到 user-service 的实例列表，点击编辑，即可修改权重：
+在 nacos 控制台，找到 user-service 的实例列表，点击编辑，即可修改权重：
 
 <img src="assets/image-20210713235133225.png">
 
@@ -822,7 +826,9 @@ userservice:
 
 <img src="assets/image-20210713235235219.png">
 
-> **注意**：如果权重修改为0，则该实例永远不会被访问
+> <b>注意</b>：如果权重修改为 0，则该实例永远不会被访问
+
+可以通过权值配置，在需要进行服务升级时，先将一部分服务器的权值设置为 0，服务神升级后在将升级后的服务器权值设置成 0.1 用小批量用户测下升级后稳不稳定，稳定后再进行大批量的升级。
 
 ## 环境隔离
 
@@ -832,7 +838,7 @@ userservice:
 - `namespace` 下可以有 group、service 等
 - 不同 `namespace` 之间相互隔离，例如不同 `namespace` 的服务互相不可见
 
-<img src="assets/image-20210714000101516.png">
+<img src="assets/image-20210714000101516.png" width="40%" >
 
 ### 创建 namespace
 
@@ -868,23 +874,25 @@ spring:
         namespace: 492a7d5d-237b-46a1-a99a-fa8e98e4b0f9 # 命名空间，填ID
 ```
 
-重启order-service后，访问控制台，可以看到下面的结果：
+重启 order-service 后，访问控制台，可以看到下面的结果：
 
 <img src="assets/image-20210714000830703.png">
 
 <img src="assets/image-20210714000837140.png">
 
-此时访问order-service，因为namespace不同，会导致找不到userservice，控制台会报错：
+此时访问 order-service，因为 namespace 不同，会导致找不到 userservice，控制台会报错：
 
 <img src="assets/image-20210714000941256.png">
 
 ## Nacos 与 Eureka 的区别
 
-Nacos 的服务实例分为两种l类型：
+Nacos 会把服务实例划分为两种类型：
 
-- 临时实例：如果实例宕机超过一定时间，会从服务列表剔除，默认的类型。
+- 一种是临时实例：如果实例宕机超过一定时间，会从服务列表剔除，默认的服务实例类型。对于临时实例，通过心跳机制检测服务的状态与 Eureka 一致。
 
-- 非临时实例：如果实例宕机，不会从服务列表剔除，也可以叫永久实例。
+- 另一种是非临时实例：如果实例宕机，不会从服务列表剔除，只是会将其标记为"不健康"，等待他恢复成健康状态。也可以叫永久实例。
+
+:orange:<span style="color:orange">Eureka 做服务拉取是 30 秒更新/拉取一次服务列表，更新的可能不够及时；而 nacos 中，如果采用的是非临时实例，会有有消息推送，假设 nacos 发现有服务挂了会把主动推送变更消息到消费者那边，让消费者及时更新。但是 nacos 非临时实例的主动检测模式对服务器的压力比较大，一般都是采用临时实例。</span>
 
 配置一个服务实例为永久实例：
 
@@ -947,7 +955,7 @@ Nacos 一方面可以将配置集中管理，另一方可以在配置变更时�
 
 然后在弹出的表单中，填写配置信息：
 
-- Data ID 就是配置文件的名称。配置文件的名称取名：`服务名称-[profile].[后缀名]`
+- Data ID 就是配置文件的名称。配置文件的名称取名：`服务名称-[profile].[后缀名]` 避免文件名字冲突。
 
 <img src="assets/image-20210714164856664.png">
 
@@ -955,9 +963,7 @@ Nacos 一方面可以将配置集中管理，另一方可以在配置变更时�
 
 ### 从微服务拉取配置
 
-微服务要拉取 nacos 中管理的配置，并且与本地的 application.yml 配置合并，才能完成项目启动。
-
-但如果尚未读取 application.yml，又如何得知 nacos 地址呢？
+微服务要拉取 nacos 中管理的配置，并且与本地的 application.yml 配置合并，才能完成项目启动。但如果尚未读取 application.yml，又如何得知 nacos 地址呢？
 
 因此 spring 引入了一种新的配置文件：bootstrap.yaml 文件，会在 application.yml 之前被读取，流程如下：
 
@@ -1185,11 +1191,11 @@ Nacos 生产环境下一定要部署为集群状态，部署方式参考课前�
 
 # Feign远程调用
 
-先来看我们以前利用 RestTemplate 发起远程调用的代码：
+先前我们利用 RestTemplate 发起远程调用的代码：
 
 <img src="assets/image-20210714174814204.png">
 
-> 存在下面的问题：
+但是 RestTemplate 存在下面的问题：
 
 - 代码可读性差，编程体验不统一
 - 参数复杂 URL 难以维护
@@ -1246,7 +1252,7 @@ public interface UserClient {
 - 请求参数：Long id
 - 返回值类型：User
 
-这样，Feign 就可以帮助我们发送http请求，无需自己使用RestTemplate来发送了。
+这样，Feign 就可以帮助我们发送 http 请求，无需自己使用 RestTemplate 来发送了。
 
 ### 测试
 
@@ -1268,19 +1274,17 @@ public interface UserClient {
 
 ## 自定义配置
 
-Feign可以支持很多的自定义配置，如下表所示：
+Feign 可以支持很多的自定义配置，如下表所示：
 
-| 类型                   | 作用             | 说明                                                       |
-| ---------------------- | ---------------- | ---------------------------------------------------------- |
-| **feign.Logger.Level** | 修改日志级别     | 包含四种不同的级别：NONE、BASIC、HEADERS、FULL             |
-| feign.codec.Decoder    | 响应结果的解析器 | http远程调用的结果做解析，例如解析 json 字符串为 java 对象 |
-| feign.codec.Encoder    | 请求参数编码     | 将请求参数编码，便于通过 http 请求发送                     |
-| feign.Contract         | 支持的注解格式   | 默认是 Spring MVC 的注解                                   |
-| feign.Retryer          | 失败重试机制     | 请求失败的重试机制，默认是没有，不过会使用 Ribbon 的重试   |
+| 类型                      | 作用             | 说明                                                         |
+| ------------------------- | ---------------- | ------------------------------------------------------------ |
+| <b>feign.Logger.Level</b> | 修改日志级别     | 包含四种不同的级别：NONE、BASIC、HEADERS、FULL               |
+| feign.codec.Decoder       | 响应结果的解析器 | http 远程调用的结果做解析，例如解析 json 字符串为 java 对象  |
+| feign.codec.Encoder       | 请求参数编码     | 将请求参数编码，便于通过 http 请求发送                       |
+| feign.Contract            | 支持的注解格式   | 默认是 Spring MVC 的注解                                     |
+| feign.Retryer             | 失败重试机制     | 请求失败的重试机制，默认是没有，但是 feign 底层是依赖于 Ribbon 的，Ribbon 自己会进行重试。（如有多个服务 A，B，C，请求 A 长时间没有响应那就继续请求 B） |
 
-一般情况下，默认值就能满足我们使用，如果要自定义时，只需要创建自定义的 @Bean 覆盖默认 Bean 即可。
-
-下面以日志为例来演示如何自定义配置。
+一般情况下，默认值就能满足我们使用，如果要自定义时，只需要创建自定义的 @Bean 覆盖默认 Bean 即可。下面以日志为例来演示如何自定义配置。
 
 ### 配置文件方式
 
@@ -1309,7 +1313,7 @@ feign:
 - NONE：不记录任何日志信息，这是默认值。<span style="color:red">（记录日志用 NONE 或 BASIC）</span>
 - BASIC：仅记录请求的方法，URL 以及响应状态码和执行时间。
 - HEADERS：在 BASIC 的基础上，额外记录了请求和响应的头信息。
-- FULL：记录所有请求和响应的明细，包括头信息、请求体、元数据。<span style="color:red">（调试错误的时候用 Full）</span>
+- FULL：记录所有请求和响应的明细，包括头信息、请求体、元数据。<span style="color:red">(调试错误的时候用 Full)</span>
 
 ### Java代码方式
 
@@ -1324,13 +1328,13 @@ public class DefaultFeignConfiguration  {
 }
 ```
 
-如果要**全局生效**，将其放到启动类的 @EnableFeignClients 这个注解中：
+如果要<b>全局生效</b>，将其放到启动类的 @EnableFeignClients 这个注解中：
 
 ```java
 @EnableFeignClients(defaultConfiguration = DefaultFeignConfiguration.class) 
 ```
 
-如果是**局部生效**，则把它放到对应的 @FeignClient 这个注解中：（uservice 只对 uservice 这个服务有效）
+如果是<b>局部生效</b>，则把它放到对应的 @FeignClient 这个注解中：（uservice 只对 uservice 这个服务有效）
 
 ```java
 @FeignClient(value = "userservice", configuration = DefaultFeignConfiguration.class) 
@@ -1344,7 +1348,7 @@ Feign 底层发起 http 请求，依赖于其它的框架。其底层客户端�
 - Apache HttpClient ：支持连接池
 - OKHttp：支持连接池
 
-因此提高 Feign 的性能主要手段就是使用**连接池**代替默认的 URLConnection。
+因此提高 Feign 的性能主要手段就是使用<b>连接池</b>代替默认的 URLConnection。
 
 这里我们用 Apache 的 HttpClient 来演示。
 
@@ -1394,6 +1398,21 @@ Debug 方式启动 order-service 服务，可以看到这里的 client，底层�
 
 ②  配置文件开启 httpClient 功能，设置连接池参数
 
+> HTTP 连接池复用扩展
+
+[Http持久连接与HttpClient连接池 - kingszelda - 博客园 (cnblogs.com)](https://www.cnblogs.com/kingszelda/p/8988505.html)
+
+- HTTP/1.1 采取持久连接的方式替代了Keep-Alive。
+- HTTP/1.1 的连接默认情况下都是持久连接。如果要显式关闭，需要在报文中加上 Connection:Close 首部。即在 HTTP/1.1 中，所有的连接都进行了复用。
+- 然而如同 Keep-Alive 一样，空闲的持久连接也可以随时被客户端与服务端关闭。不发送 Connection:Close 不意味着服务器承诺连接永远保持打开。
+
+ HttpClien 中使用了连接池来管理持有连接，同一条 TCP 链路上，连接是可以复用的。HttpClient 通过连接池的方式进行连接持久化。
+
+- 当有连接第一次使用的时候建立连接
+- 结束时对应连接不关闭，归还到池中
+- 下次同个目的的连接可从池中获取一个可用连接
+- 定期清理过期连接
+
 ## 最佳实践
 
 所谓最近实践，就是使用过程中总结的经验，最好的一种使用方式。观察可以发现，Feign 的客户端与服务提供者的 Controller 代码非常相似：
@@ -1419,7 +1438,7 @@ UserController：
 
 1）定义一个 API 接口，利用定义方法，并基于 Spring MVC 注解做声明。
 
-2）Feign 客户端和 Controller 都集成改接口
+2）Feign 客户端和 Controller 都继承接口
 
 <img src="assets/image-20210714190640857.png">
 
@@ -1436,9 +1455,7 @@ UserController：
 
 ### 抽取方式
 
-将 Feign 的 Client 抽取为独立模块，并且把接口有关的 POJO、默认的 Feign 配置都放到这个模块中，提供给所有消费者使用。
-
-例如，将 UserClient、User、Feign 的默认配置都抽取到一个 feign-api 包中，所有微服务引用该依赖包，即可直接使用。
+:orange:<span style="color:orange">将 Feign 的 Client 抽取为独立模块，并且把接口有关的 POJO、默认的 Feign 配置都放到这个模块中，提供给所有消费者使用。例如，将 UserClient、User、Feign 的默认配置都抽取到一个 feign-api 包中，所有微服务引用该依赖包，即可直接使用。</span>
 
 <img src="assets/image-20210714214041796.png">
 
@@ -1489,7 +1506,7 @@ UserController：
 
 <img src="assets/image-20210714205623048.png">
 
-这是因为 UserClient 现在在 cn.itcast.feign.+clients 包下，
+这是因为 UserClient 现在在 cn.itcast.feign.clients 包下，
 
 而 order-service 的 @EnableFeignClients 注解是在 cn.itcast.order 包下，不在同一个包，无法扫描到 UserClient。
 
@@ -1517,22 +1534,22 @@ Spring Cloud Gateway 是 Spring Cloud 的一个全新项目，该项目是基于
 
 ## 为什么需要网关
 
-Gateway 网关是我们服务的守门神，所有微服务的统一入口。
+Gateway 网关是我们服务的守门神，所有微服务的统一入口。先判断请求是不是可以放行，可以放行才会把请求转发到对应的微服务。
 
-网关的**核心功能特性**：
+网关的<b>核心功能特性</b>：
 
-- 服务路由、负载均衡
+- 服务路由、负载均衡（有点像权限校验+路由转发+负载均衡）
 - 身份认证和权限校验
 - 请求限流
 
 架构图：
 <img src="assets/image-20210714210131152.png">
 
-**权限控制**：网关作为微服务入口，需要校验用户是是否有请求资格，如果没有则进行拦截。
+<b>权限控制</b>：网关作为微服务入口，需要校验用户是是否有请求资格，如果没有则进行拦截。
 
-**路由和负载均衡**：一切请求都必须先经过 gateway，但网关不处理业务，而是根据某种规则，把请求转发到某个微服务，这个过程叫做路由。当然路由的目标服务有多个时，还需要做负载均衡。
+<b>路由和负载均衡</b>：一切请求都必须先经过 gateway，但网关不处理业务，而是根据某种规则，把请求转发到某个微服务，这个过程叫做路由。当然路由的目标服务有多个时，还需要做负载均衡。
 
-**限流**：当请求流量过高时，在网关中按照下流的微服务能够接受的速度来放行请求，避免服务压力过大。
+<b>限流</b>：当请求流量过高时，在网关中按照下流的微服务能够接受的速度来放行请求，避免服务压力过大。
 
 在 Spring Cloud 中网关的实现包括两种：
 
@@ -1663,18 +1680,18 @@ spring:
 | Between    | 是某两个时间点之前的请求        | -  Between=2037-01-20T17:42:47.789-07:00[America/Denver],  2037-01-21T17:42:47.789-07:00[America/Denver] |
 | Cookie     | 请求必须包含某些 cookie         | - Cookie=chocolate, ch.p                                     |
 | Header     | 请求必须包含某些 header         | - Header=X-Request-Id, \d+                                   |
-| Host       | 请求必须是访问某个 host（域名） | -  Host=**.somehost.org,**.anotherhost.org                   |
+| Host       | 请求必须是访问某个 host（域名） | -  Host=<b>\*\*.somehost.org.</b>\*\*.anotherhost.org        |
 | Method     | 请求方式必须是指定方式          | - Method=GET,POST                                            |
 | Path       | 请求路径必须符合指定规则        | - Path=/red/{segment},/blue/**                               |
 | Query      | 请求参数必须包含指定参数        | - Query=name, Jack 或者-  Query=name                         |
-| RemoteAddr | 请求者的ip必须是指定范围        | - RemoteAddr=192.168.1.1/24                                  |
+| RemoteAddr | 请求者的 ip 必须是指定范围      | - RemoteAddr=192.168.1.1/24                                  |
 | Weight     | 权重处理                        |                                                              |
 
 我们只需要掌握 Path 这种路由工程就可以了。
 
 ## 过滤器工厂
 
-Gateway Filter 是网关中提供的一种过滤器，可以对进入网关的请求和微服务返回的响应做处理：
+:orange:<span style="color:orange">Gateway Filter 是网关中提供的一种过滤器，可以对进入网关的请求和微服务返回的响应做处理，如添加请求头：</span>
 
 <img src="assets/image-20210714212312871.png">
 
@@ -1682,19 +1699,19 @@ Gateway Filter 是网关中提供的一种过滤器，可以对进入网关的�
 
 Spring 提供了 31 种不同的路由过滤器工厂。例如：
 
-| **名称**             | **说明**                     |
-| -------------------- | ---------------------------- |
-| AddRequestHeader     | 给当前请求添加一个请求头     |
-| RemoveRequestHeader  | 移除请求中的一个请求头       |
-| AddResponseHeader    | 给响应结果中添加一个响应头   |
-| RemoveResponseHeader | 从响应结果中移除有一个响应头 |
-| RequestRateLimiter   | 限制请求的流量               |
+| **名称**                  | **说明**                     |
+| ------------------------- | ---------------------------- |
+| AddRequestHeader          | 给当前请求添加一个请求头     |
+| RemoveRequestHeader       | 移除请求中的一个请求头       |
+| AddResponseHeader         | 给响应结果中添加一个响应头   |
+| RemoveResponseHeader      | 从响应结果中移除有一个响应头 |
+| <b>RequestRateLimiter</b> | 限制请求的流量               |
 
 ### 请头过滤器
 
 下面我们以 AddRequestHeader 为例来讲解。
 
-> **需求**：给所有进入 userservice 的请求添加一个请求头：Truth=itcast is freaking awesome!
+> <b>需求</b>：给所有进入 userservice 的请求添加一个请求头：Truth=itcast is freaking awesome!
 
 只需要修改 gateway 服务的 application.yml 文件，添加路由过滤即可：
 
@@ -1744,13 +1761,13 @@ defaultFilters 的作用是什么？
 
 ## 全局过滤器
 
-上一节学习的过滤器，网关提供了31种，但每一种过滤器的作用都是固定的。如果我们希望拦截请求，做自己的业务逻辑则没办法实现。
+上一节学习的过滤器，网关提供了 31 种，但每一种过滤器的作用都是固定的。如果我们希望拦截请求，做自己的业务逻辑则没办法实现。
 
 ### 全局过滤器作用
 
-全局过滤器的作用也是处理一切进入网关的请求和微服务响应，与 Gateway Filter 的作用一样。区别在于 Gateway Filter 通过配置定义，处理逻辑是固定的；**而 Global Filter 的逻辑需要自己写代码实现。**
+全局过滤器的作用也是处理一切进入网关的请求和微服务响应，与 Gateway Filter 的作用一样。区别在于 Gateway Filter 是通过配置定义的，处理逻辑是固定的；<b style="color:orange">而 Global Filter 的逻辑需要自己写代码实现，可以实现自定义逻辑。</b>
 
-定义方式是实现 Global Filter 接口。
+定义方式是实现 GlobalFilter 接口。
 
 ```java
 public interface GlobalFilter {
@@ -1781,9 +1798,7 @@ public interface GlobalFilter {
 
 如果同时满足则放行，否则拦截
 
-实现：
-
-在 gateway 中定义一个过滤器：
+实现：在 gateway 中定义一个过滤器：
 
 ```java
 package cn.itcast.gateway.filters;
@@ -1823,15 +1838,15 @@ public class AuthorizeFilter implements GlobalFilter {
 
 请求进入网关会碰到三类过滤器：当前路由的过滤器、DefaultFilter、GlobalFilter
 
-**请求路由后**，会将当前路由过滤器和 DefaultFilter、GlobalFilter，合并到一个过滤器链（集合）中，排序后依次执行每个过滤器：
+<b>请求路由后</b>，会将当前路由过滤器和 DefaultFilter、GlobalFilter，合并到一个过滤器链（集合）中 [通过适配器模式让它们都变成 GlobalFilter 类型的过滤器]，排序后依次执行每个过滤器：
 
 <img src="assets/image-20210714214228409.png">
 
 排序的规则是什么呢？
 
-- 每一个过滤器都必须指定一个 int 类型的 order 值，**order 值越小，优先级越高，执行顺序越靠前**。
+- 每一个过滤器都必须指定一个 int 类型的 order 值，<b>order 值越小，优先级越高，执行顺序越靠前</b>
 - GlobalFilter 通过实现 Ordered 接口，或者添加 @Order 注解来指定 order 值，由我们自己指定
-- 路由过滤器和 defaultFilter 的order由Spring指定，默认是按照声明顺序从 1 递增。
+- 路由过滤器和 defaultFilter 的 order 由 Spring 指定，默认是按照声明顺序从 1 递增。
 - 当过滤器的 order 值一样时，会按照 defaultFilter > 路由过滤器 > GlobalFilter 的顺序执行。
 
 详细内容，可以查看源码：
@@ -1850,9 +1865,14 @@ public class AuthorizeFilter implements GlobalFilter {
 
 - 域名相同，端口不同：localhost:8080 和 localhost8081
 
-跨域问题：**浏览器禁止**请求的发起者与服务端发生**跨域 Ajax 请求**，请求被浏览器拦截的问题
+网关是基于 WebFlux 实现的，先前解决的跨域问题是解决的 Servlet 的跨域问题，在这里不一定适用。
 
-解决方案：CORS，可查看 https://www.ruanyifeng.com/blog/2016/04/cors.html
+跨域问题：客户端通过 Ajax 向服务器端发送请求时，浏览器会禁止请求的发起者与服务端发生跨。不过，多个微服务之间，不会存在跨域问题。
+
+解决方案：CORS，浏览器询问服务器，允不允许它跨域。可查看 
+
+- <a href="https://www.ruanyifeng.com/blog/2016/04/same-origin-policy.html">浏览器同源策略</a>：如果两个页面它们之间的协议、域名或端口有一个不一样，那么都无法访问对方的数据（Cookie）。同源政策的目的，是为了保证用户信息的安全，防止恶意的网站窃取数据。
+- <a href="https://www.ruanyifeng.com/blog/2016/04/cors.html">跨域问题</a>：CORS 是一个 W3C 标准，全称是"跨域资源共享"（Cross-origin resource sharing）。它允许浏览器向跨源服务器，发出 [`XMLHttpRequest`](https://www.ruanyifeng.com/blog/2012/09/xmlhttprequest_level_2.html) 请求，从而克服了 AJAX 只能[同源](https://www.ruanyifeng.com/blog/2016/04/same-origin-policy.html)使用的限制。CORS 需要浏览器和服务器同时支持。目前，所有浏览器都支持该功能，IE 浏览器不能低于 IE10。整个 CORS 通信过程，都是浏览器自动完成，不需要用户参与。对于开发者来说， CORS 通信与同源的 AJAX 通信没有差别，代码完全一样。浏览器一旦发现 AJAX 请求跨源，就会自动添加一些附加的头信息，有时还会多出一次附加的请求，但用户不会有感觉。因此，实现 CORS 通信的关键是服务器。只要服务器实现了 CORS 接口，就可以跨源通信。
 
 ### 模拟跨域问题
 
@@ -1893,4 +1913,3 @@ spring:
             allowCredentials: true # 是否允许携带cookie
             maxAge: 360000 # 这次跨域检测的有效期
 ```
-

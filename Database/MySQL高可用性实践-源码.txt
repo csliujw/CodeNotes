@@ -1,0 +1,5227 @@
+第1章 异步复制
+1.2.2 安装MySQL
+# 进入安装目录
+cd /usr/local
+
+# 从tar包中提取文件
+tar xvf /home/mysql/mysql-8.0.16-linux-glibc2.12-x86_64.tar.xz
+
+# 建立软连接
+ln -s mysql-8.0.16-linux-glibc2.12-x86_64 mysql
+
+# 进入mysql目录
+cd mysql
+
+# 建立secure_file_priv系统变量指向的目录
+mkdir mysql-files
+
+# 修改属主为mysql
+chown mysql:mysql mysql-files
+
+# 修改目录权限
+chmod 750 mysql-files
+
+# mysql系统初始化
+bin/mysqld --initialize --user=mysql
+
+# 建立SSL/RSA相关文件，如果不启用SSL连接，这步可省略
+bin/mysql_ssl_rsa_setup
+
+# 启动mysql服务器
+bin/mysqld_safe --user=mysql &
+
+# 连接mysql服务器
+bin/mysql -u root -p
+
+-- 修改root密码
+alter user user() identified by "123456";
+
+-- 创建一个新的mysql管理员账号
+create user 'wxy'@'%' identified with mysql_native_password by '123456';
+grant all on *.* to 'wxy'@'%' with grant option;
+
+show variables like 'have_ssl';
+show variables like 'default_authentication_plugin';
+create user 'wxy'@'%' identified with mysql_native_password by '123456';
+select host,user,plugin from mysql.user;
+
+1.3.1 空库
+-- 主库
+set global server_id=1125;
+-- 从库1
+set global server_id=1126;
+-- 从库2
+set global server_id=1127;
+
+show master status;
+
+create user 'repl'@'%' identified with mysql_native_password by '123456';
+grant replication client,replication slave on *.* to 'repl'@'%';
+
+change master to
+       master_host='172.16.1.125',
+       master_port=3306,
+       master_user='repl',
+       master_password='123456',
+       master_log_file='binlog.000003',
+       master_log_pos=155;
+
+start slave;
+show slave status\G
+select * from mysql.user where user='repl'\G
+
+show processlist;
+
+1.3.2 脱机
+-- 主库
+create user 'repl'@'%' identified with mysql_native_password by '123456';
+grant replication client,replication slave on *.* to 'repl'@'%';
+
+mysqladmin -uroot -p123456 shutdown
+
+scp -r /usr/local/mysql/data/ 172.16.1.126:/usr/local/mysql
+
+mysqld_safe --user=mysql &
+show master status;
+change master to
+       master_host='172.16.1.125',
+       master_port=3306,
+       master_user='repl',
+       master_password='123456',
+       master_log_file='binlog.000004',
+       master_log_pos=155;
+
+start slave;
+show slave status\G
+
+tail /usr/local/mysql/data/hdp3.err
+
+1.3.3 联机
+-- 主库
+create user 'repl'@'%' identified with mysql_native_password by '123456';
+grant replication client,replication slave on *.* to 'repl'@'%';
+
+change master to
+       master_host='172.16.1.125',
+       master_port=3306,
+       master_user='repl',
+       master_password='123456';
+
+mysqldump --single-transaction --all-databases --master-data=1 --host=172.16.1.125 --default-character-set=utf8mb4 --user=wxy --password=123456 --apply-slave-statements | mysql -uroot -p123456 -h127.0.0.1
+
+-- 从库
+show slave status\G
+
+# 安装依赖包
+yum -y install libev
+
+# 安装XtraBackup
+rpm -ivh percona-xtrabackup-80-8.0.6-1.el7.x86_64.rpm
+
+# 主库执行
+ssh-keygen    
+... 一路回车 ...    
+ssh-copy-id 172.16.1.126
+
+# 从库执行
+mysqladmin -u root -p123456 shutdown
+
+# 清空数据目录
+rm -rf /usr/local/mysql/data/*
+
+# 主库执行
+xtrabackup -uroot -p123456 --socket=/tmp/mysql.sock --no-lock --backup --compress --stream=xbstream --parallel=4 --target-dir=./ | ssh mysql@172.16.1.126 "xbstream -x -C /usr/local/mysql/data/ --decompress"
+
+# 应用日志
+xtrabackup --prepare --target-dir=/usr/local/mysql/data/
+
+cat /usr/local/mysql/data/xtrabackup_binlog_info
+
+mysqld_safe --user=mysql &
+
+-- 创建主库信息，其中的master_log_file和master_log_pos值来自第6步
+change master to
+       master_host='172.16.1.125',
+       master_port=3306,
+       master_user='repl',
+       master_password='123456',
+       master_log_file='binlog.000011',
+       master_log_pos=155;
+
+-- 启动复制
+start slave;
+ 
+-- 确认复制状态
+show slave status\G
+
+
+第2章 半同步复制
+2.2.1 ACK异步化
+select name, type, processlist_state
+  from performance_schema.threads
+ where name like '%ack_receiver%';
+
+2.5.1 安装插件
+-- 在主
+install plugin rpl_semi_sync_master soname 'semisync_master.so';
+-- 在每个从
+install plugin rpl_semi_sync_slave soname 'semisync_slave.so';
+
+select plugin_name, plugin_status
+  from information_schema.plugins
+ where plugin_name like '%semi%';
+
+show variables like '%semi%';
+
+2.5.2 启用半同步复制
+-- 主
+set global rpl_semi_sync_master_enabled = 1;
+
+-- 从
+set global rpl_semi_sync_slave_enabled = 1;
+
+# 主
+plugin-load="rpl_semi_sync_master=semisync_master.so"
+rpl_semi_sync_master_enabled=1
+
+# 从
+plugin-load="rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_slave_enabled=1
+
+plugin-load="rpl_semi_sync_master=semisync_master.so;rpl_semi_sync_slave=semisync_slave.so"
+rpl-semi-sync-master-enabled=1
+rpl-semi-sync-slave-enabled=1
+
+stop slave io_thread;
+start slave io_thread;
+
+show status like 'Rpl_semi_sync_master_status';
+show status like 'Rpl_semi_sync_slave_status';
+
+2.5.3 监控半同步复制
+show status like 'rpl_semi_sync%';
+
+2.6.1 正常提交事务
+-- 主
+create database test;
+use test;
+create table test.t1 (a int) engine=innodb;
+insert into t1 values(1);
+show status like 'rpl_semi_sync%';
+
+-- 从
+select * from test.t1;
+
+2.6.2 回滚事务
+-- 主
+show variables like 'autocommit';
+set session autocommit=0;                  -- 关闭自动提交，开启事务
+insert into t1 values(2);                  -- 向事务表插入记录
+create table t2 (a int) engine=myisam;     -- 创建非事务表t2
+insert into t1 values(3);                  -- 向事务表插入记录
+insert into t2 values(3);                  -- 向非事务表插入记录
+rollback;                                  -- 回滚事务
+show warnings;
+select * from t1;
+select * from t2;
+show status like 'rpl_semi_sync%';
+
+-- 从
+show variables like 'autocommit';
+select * from test.t1;
+select * from test.t2;
+
+2.6.3 rpl_semi_sync_master_wait_no_slave与从库数量
+-- 关闭两个从库的复制
+stop slave;
+show status like 'rpl_semi_sync%';                  -- 查看当前是否启用半同步复制
+
+-- 主
+show status like 'Rpl_semi_sync_master_clients';    -- 查看当前半同步从库数
+show status like 'Rpl_semi_sync_master_status';     -- 查看是否启用半同步复制
+insert into t1 values(3);
+commit;
+select * from t1;
+show status like 'Rpl_semi_sync_master_status';
+
+-- 启动一个从库的复制
+start slave;
+select * from test.t1;
+show status like 'rpl_semi_sync%';
+ 
+-- 主
+show variables like 'rpl_semi_sync_master_wait_for_slave_count';
+show status like 'Rpl_semi_sync_master_clients';
+show status like 'Rpl_semi_sync_master_status';
+insert into t1 values(4);
+commit;
+
+-- 从
+select * from test.t1;
+
+-- 关闭rpl_semi_sync_master_wait_no_slave
+set global rpl_semi_sync_master_wait_no_slave=off;
+
+-- 关闭所有从库的复制
+stop slave;
+
+-- 主
+show status like 'Rpl_semi_sync_master_clients';    -- 查看当前半同步从库数
+show status like 'Rpl_semi_sync_master_status';
+insert into t1 values(5);
+commit;
+select * from t1;
+
+
+第3章 GTID与复制
+3.1.2 GTID的格式与存储
+use test;
+create table t1(a int);
+create table t2(a int);
+insert into t1 values(1),(2);
+insert into t2 values(1),(2);
+commit;
+
+show master status\G
+set gtid_next = '8eed0f5b-6f9b-11e9-94a9-005056a57a4e:356';
+truncate table test.t1;
+select * from test.t1;
+set gtid_next = automatic;
+
+set gtid_next='8eed0f5b-6f9b-11e9-94a9-005056a57a4e:357';
+begin;
+delete from test.t1 where a=1;
+select sleep(10);
+commit;
+set gtid_next=automatic;
+
+set gtid_next='8eed0f5b-6f9b-11e9-94a9-005056a57a4e:357';
+begin;
+delete from test.t2 where a=1;
+commit;
+set gtid_next=automatic;
+
+-- 会话1
+mysql -uroot -p123456 test < s1.sql
+-- 会话2
+mysql -uroot -p123456 test < s2.sql
+
+select * from t1;
+select * from t2;
+
+set gtid_next='8eed0f5b-6f9b-11e9-94a9-005056a57a4e:360';
+begin;
+delete from test.t1 where a=2;
+select sleep(10);
+rollback;
+set gtid_next=automatic;
+
+set gtid_next='8eed0f5b-6f9b-11e9-94a9-005056a57a4e:360';
+begin;
+delete from test.t2 where a=1;
+commit;
+set gtid_next=automatic;
+
+-- 会话1
+mysql -uroot -p123456 test < s1.sql
+-- 会话2
+mysql -uroot -p123456 test < s2.sql
+
+select * from t1;
+select * from t2;
+
+desc mysql.gtid_executed;
+
+select * from performance_schema.threads where name like '%gtid%'\G
+
+show master status\G
+show variables like 'gtid%';
+select * from mysql.gtid_executed;
+show slave status\G
+
+more binlog.index
+ls -lt binlog.*
+
+use test;
+create table t1(a int);
+insert into t1 select 1;
+
+use test;
+delimiter //
+create procedure p1(a int)
+begin
+   declare i int default 1;
+   while i<=a do
+      insert into t1 values (i);
+      set i=i+1;
+   end while;
+end;
+//
+delimiter ;
+
+call p1(10000);
+
+3.2.1 典型事务的GTID生命周期
+set global slave_parallel_workers=8;
+stop slave;
+start slave;
+show processlist;
+
+create database db1;
+create database db2;
+create database db3;
+create database db4;
+create database db5;
+create database db6;
+create database db7;
+create database db8;
+create table db1.t1(a int);
+create table db2.t1(a int);
+create table db3.t1(a int);
+create table db4.t1(a int);
+create table db5.t1(a int);
+create table db6.t1(a int);
+create table db7.t1(a int);
+create table db8.t1(a int);
+ 
+use test;
+delimiter //
+create procedure p1(a int)
+begin
+   declare i int default 1;
+   while i<=a do
+      insert into db1.t1 values (i);
+      insert into db2.t1 values (i);
+      insert into db3.t1 values (i);
+      insert into db4.t1 values (i);
+      insert into db5.t1 values (i);
+      insert into db6.t1 values (i);
+      insert into db7.t1 values (i);
+      insert into db8.t1 values (i);
+      set i=i+1;
+   end while;
+end;
+//
+delimiter ;
+call p1(5000);
+
+ps -ef | grep mysqld | grep -v grep | awk {'print $2'} | xargs kill -9
+
+mysqld_safe --defaults-file=/etc/my.cnf --skip-slave-start --slave_parallel_workers=8 &
+
+show variables like 'gtid_executed'\G
+start slave;
+show variables like 'gtid_executed'\G
+
+3.2.3 gtid_next系统变量
+show variables like 'gtid%';
+set gtid_next='8eed0f5b-6f9b-11e9-94a9-005056a57a4e:50058';
+show variables like 'gtid%';
+begin;commit;
+show variables like 'gtid%';
+create table t1(a int);
+set gtid_next=automatic;
+create table t1(a int);
+
+mysqlbinlog  --base64-output=decode-rows binlog.000001 | tail -15
+
+3.2.4 gtid_purged系统变量
+mysqladmin -uroot -p123456 shutdown
+mysqld_safe --defaults-file=/etc/my.cnf --skip-log-bin &
+mysql -uroot -p123456 -e "show variables like 'gtid_purged'"
+... 主库执行更新 ...
+mysql -uroot -p123456 -e "show variables like 'gtid_purged'"
+
+show binary logs;
+show variables like 'gtid_purged';
+flush logs;
+purge master logs to 'binlog.000002';
+show variables like 'gtid_purged';
+
+show variables like 'gtid%';
+set gtid_purged='8eed0f5b-6f9b-11e9-94a9-005056a57a4e:50060-50061';
+set global gtid_purged='8eed0f5b-6f9b-11e9-94a9-005056a57a4e:50060-50061';
+set global gtid_purged='8eed0f5b-6f9b-11e9-94a9-005056a57a4e:50061';
+set global gtid_purged='8eed0f5b-6f9b-11e9-94a9-005056a57a4e:1-50059';
+set global gtid_purged='8eed0f5b-6f9b-11e9-94a9-005056a57a4e:1-50059:50060';
+show variables like 'gtid%';
+
+reset master;
+stop slave;
+reset slave all;
+show variables like 'gtid%';
+
+change master to
+       master_host = '172.16.1.125',
+       master_port = 3306,
+       master_user = 'repl',
+       master_password = '123456',
+       master_auto_position = 1;
+start slave;
+show slave status\G
+
+set global gtid_purged='8eed0f5b-6f9b-11e9-94a9-005056a57a4e:1-10005';
+stop slave;
+start slave;
+show slave status\G
+show variables like 'gtid%';
+
+show variables like 'gtid%';
+ls -lt binlog.*
+mysqlbinlog --base64-output=decode-rows binlog.000001
+mysqlbinlog   --base64-output=decode-rows binlog.000002 | head -10
+mysqlbinlog   --base64-output=decode-rows binlog.000002 > binlog.000002.txt
+grep @@SESSION.GTID_NEXT binlog.000002.txt | head -1
+grep @@SESSION.GTID_NEXT binlog.000002.txt | tail -2
+mysqlbinlog --base64-output=decode-rows binlog.000003
+select * from mysql.gtid_executed;
+
+3.3 GTID自动定位
+-- 从库停止复制
+stop slave;
+
+-- 主库做更新
+truncate table t1;
+
+-- 主库修改binlog文件名，模拟事务丢失
+mysql -uroot -p123456 -e "show master status;"
+mv binlog.000001 binlog.000001.bak
+
+-- 从库启动复制
+start slave;
+show slave status\G
+
+-- 主库
+mv binlog.000001.bak binlog.000001
+
+-- 从库
+stop slave;
+start slave;
+show slave status\G
+
+-- 主库reset master
+reset master;
+
+-- 从库重启复制
+stop slave;
+start slave;
+show slave status\G
+
+reset master;
+stop slave;
+reset slave all;
+change master to
+       master_host = '172.16.1.125',
+       master_port = 3306,
+       master_user = 'repl',
+       master_password = '123456',
+       master_auto_position = 1;
+start slave;
+
+3.4.1 联机配置GTID复制
+set global enforce_gtid_consistency=warn;
+
+set global enforce_gtid_consistency=true;
+set global gtid_mode=off_permissive;
+set global gtid_mode=on_permissive;
+set global gtid_mode=on;
+
+xtrabackup -uroot -p123456 --socket=/tmp/mysql.sock --no-lock --backup --compress --stream=xbstream --parallel=4 --target-dir=./ | ssh mysql@172.16.1.126 "xbstream -x -C /usr/local/mysql/data/ --decompress"
+
+xtrabackup --prepare --target-dir=/usr/local/mysql/data/
+
+server_id=1126                # 服务器ID
+read_only=on                  # 从库只读
+gtid_mode=on                  # 开启GTID
+enforce-gtid-consistency=true # 强制GTID一致
+
+mysqld_safe --defaults-file=/etc/my.cnf &
+
+change master to
+       master_host = '172.16.1.125',
+       master_port = 3306,
+       master_user = 'repl',
+       master_password = '123456',
+       master_auto_position = 1;
+start slave;
+show slave status\G
+
+gtid_mode=on
+enforce-gtid-consistency=true
+
+3.4.2 联机更改复制模式
+stop slave; 
+change master to master_auto_position = 1; 
+start slave;
+
+stop slave;
+show slave status\G
+change master to 
+       master_auto_position = 0, 
+       master_log_file = 'xxx', 
+       master_log_pos = xxx;
+start slave;
+
+3.5.1 跳过一个事务
+stop slave;
+set gtid_next='8eed0f5b-6f9b-11e9-94a9-005056a57a4e:980055';
+begin;commit;
+set gtid_next='8eed0f5b-6f9b-11e9-94a9-005056a57a4e:980056';
+begin;commit;
+set gtid_next='8eed0f5b-6f9b-11e9-94a9-005056a57a4e:980057';
+begin;commit;
+set gtid_next='automatic';
+start slave;
+
+3.5.2 mysqldump导出
+mysqldump --single-transaction --all-databases --master-data=2 --host=172.16.1.125 --user=repl --password=123456
+
+3.5.3 主从切换
+-- 从库（新主库）
+stop slave;
+reset slave all;
+ 
+-- 主库（新从库）
+change master to
+       master_host = '172.16.1.126',
+       master_port = 3306,
+       master_user = 'repl',
+       master_password = '123456',
+       master_auto_position = 1;
+start slave;
+
+select @@global.gtid_executed;
+
+-- 从库（新主库）
+drop table test.t1;
+create table test.t1(a int);
+insert into test.t1 select 100;
+ 
+stop slave;
+reset slave all;
+ 
+-- 主库（新从库）
+change master to
+       master_host = '172.16.1.125',
+       master_port = 3306,
+       master_user = 'repl',
+       master_password = '123456',
+       master_auto_position = 1;
+start slave;
+
+-- 从库（新主库）
+drop table test.t1;
+create table test.t1(a int);
+insert into test.t1 select 100;
+ 
+stop slave;
+reset slave all;
+flush logs;
+ 
+# 模拟binlog文件丢失
+mv binlog.000022 binlog.000022.bak
+ 
+-- 主库（新从库）
+change master to
+       master_host = '172.16.1.125',
+       master_port = 3306,
+       master_user = 'repl',
+       master_password = '123456',
+       master_auto_position = 1;
+start slave;
+
+set sql_log_bin=0;
+create index idx1 on test.t1(a);
+
+3.6 GTID限制
+use test;
+create table t_myisam(a int) engine=myisam;
+create table t_innodb(a int) engine=innodb;
+update t_myisam, t_innodb set t_myisam.a=1, t_innodb.a=1;
+ 
+begin;
+insert into t_myisam select 1;
+insert into t_innodb select 1;
+update t_myisam set a=2;
+update t_innodb set a=2;
+commit;
+
+show variables like 'binlog_format';
+create table t2 as select * from t1;
+set binlog_format=statement;
+create table t2 as select * from t1;
+
+show variables like 'binlog_format';
+begin;
+create temporary table tmp1 select * from t1;
+commit;
+set binlog_format=statement;
+drop temporary table tmp1;
+set binlog_format=statement;
+create temporary table tmp1 select * from t1;
+drop temporary table tmp1;
+begin;
+create temporary table tmp1 select * from t1;
+
+mysqldump --single-transaction --all-databases --master-data=2 --host=172.16.1.125 --user=wxy --password=123456 | mysql -uroot -p123456
+
+mysql -uroot -p123456 -e "reset master;"
+mysqldump --single-transaction --all-databases --master-data=2 --host=172.16.1.125 --user=wxy --password=123456 | mysql -uroot -p123456
+
+3.7.2 用户自定义函数
+create function gtid_is_equal(gtid_set_1 longtext, gtid_set_2 longtext)
+returns int deterministic
+  return gtid_subset(gtid_set_1, gtid_set_2) and gtid_subset(gtid_set_2, gtid_set_1);
+
+create function gtid_is_disjoint(gtid_set_1 longtext, gtid_set_2 longtext)
+returns int deterministic
+  return gtid_subset(gtid_set_1, gtid_subtract(gtid_set_1, gtid_set_2));
+
+create function gtid_is_disjoint_union(gtid_set_1 longtext, gtid_set_2 longtext, sum longtext)
+returns int deterministic
+  return gtid_is_equal(gtid_subtract(sum, gtid_set_1), gtid_set_2) and
+         gtid_is_equal(gtid_subtract(sum, gtid_set_2), gtid_set_1);
+
+create function gtid_normalize(g longtext)
+returns longtext deterministic
+return gtid_subtract(g, '');
+
+create function gtid_union(gtid_set_1 longtext, gtid_set_2 longtext)
+returns longtext deterministic
+  return gtid_normalize(concat(gtid_set_1, ',', gtid_set_2));
+
+create function gtid_intersection(gtid_set_1 longtext, gtid_set_2 longtext)
+returns longtext deterministic
+  return gtid_subtract(gtid_set_1, gtid_subtract(gtid_set_1, gtid_set_2));
+
+create function gtid_symmetric_difference(gtid_set_1 longtext, gtid_set_2 longtext)
+returns longtext deterministic
+  return gtid_subtract(concat(gtid_set_1, ',', gtid_set_2), gtid_intersection(gtid_set_1, gtid_set_2));
+
+create function gtid_subtract_uuid(gtid_set longtext, uuid text)
+returns longtext deterministic
+  return gtid_subtract(gtid_set, concat(uuid, ':1-', (1 << 63) - 2));
+
+create function gtid_intersection_with_uuid(gtid_set longtext, uuid text)
+returns longtext deterministic
+  return gtid_subtract(gtid_set, gtid_subtract_uuid(gtid_set, uuid));
+
+3.7.3 使用示例
+master_gtid_executed=`mysql -uwxy -p123456 -h172.16.1.125 -N -e "select replace(@@global.gtid_executed,char(10),'')"` 
+slave_gtid_executed=`mysql -uwxy -p123456 -N -e "select replace(@@global.gtid_executed,char(10),'')"` 
+sql="select gtid_subset('$master_gtid_executed', '$slave_gtid_executed')"
+mysql -uwxy -p123456 -e "$sql"
+
+master_gtid_executed=`mysql -uwxy -p123456 -h172.16.1.125 -N -e "select replace(@@global.gtid_executed,char(10),'')"` 
+slave_gtid_executed=`mysql -uwxy -p123456 -N -e "select replace(@@global.gtid_executed,char(10),'')"` 
+sql="select gtid_subtract('$master_gtid_executed', '$slave_gtid_executed')"
+mysql -uwxy -p123456 -e "$sql"
+
+SELECT GTID_IS_EQUAL($gtid_purged_set, @@GLOBAL.gtid_executed);
+
+SELECT GTID_IS_DISJOINT($gtid_purged_set, @@GLOBAL.gtid_executed);
+
+SELECT @@GLOBAL.gtid_executed;
+
+SELECT GTID_IS_DISJOINT_UNION($original_gtid_executed, 
+                              $gtid_purged_set, 
+                              @@GLOBAL.gtid_executed);
+
+SELECT GTID_UNION(RECEIVED_TRANSACTION_SET, @@GLOBAL.gtid_executed) 
+  FROM performance_schema.replication_connection_status 
+ WHERE channel_name = 'name';
+
+SELECT GTID_SUBTRACT_UUID(@@GLOBAL.gtid_executed, server_uuid_of_master);
+
+SELECT GTID_SUBTRACT_UUID(GTID_SUBTRACT_UUID(@@GLOBAL.gtid_executed,
+                          server_uuid_of_master_1),
+                          server_uuid_of_master_2);
+
+SELECT GTID_INTERSECTION_WITH_UUID(@@GLOBAL.gtid_executed, my_server_uuid);
+
+master2_gtid_executed := `mysql -h master2 -N -e "SELECT @@GLOBAL.gtid_executed;"`
+master2_server_uuid := `mysql -h master2 -N -e "SELECT @@GLOBAL.server_uuid;"`
+slave_gtid_executed := `mysql -h slave3 -N -e "SELECT @@GLOBAL.gtid_executed;"`
+
+SELECT GTID_SUBSET(GTID_INTERSECTION_WITH_UUID(
+$master2_gtid_executed,$master2_server_uuid),$slave_gtid_executed);
+
+
+第4章 复制拓扑与性能
+4.1.2 双（多）主复制
+-- 主1
+select * from t1;
+-- 主2
+select * from t1;
+ 
+-- 主2延迟复制，模拟两个主库不同的执行顺序
+stop slave;
+change master to master_delay = 10;
+start slave;
+ 
+-- 主1
+set binlog_format='statement';
+update t1 set a=a+1;
+ 
+-- 主2在复制之前（10秒之内）执行
+set binlog_format='statement';
+update t1 set a=a*2;
+ 
+-- 10秒之后查询
+-- 主1
+select * from t1;
+ 
+-- 主2
+select * from t1;
+
+-- 主1
+use test;
+create table t1(a int auto_increment primary key);
+ 
+delimiter //
+create procedure p1(a int)
+begin
+   declare i int default 1;
+   while i<=a do
+      insert into t1(a) select null;
+        set i=i+1;
+   end while;
+end;
+//
+delimiter ;
+call p1(1000);
+ 
+-- 主2，在主1执行过程期间同时在主2执行
+call p1(1000);
+
+-- 主1
+set auto_increment_offset=1;
+set auto_increment_increment=2;
+call p1(1000);
+ 
+-- 主2，在主1执行过程期间同时在主2执行
+set auto_increment_offset=2;
+set auto_increment_increment=2;
+call p1(1000);
+
+-- 主1
+select count(*),min(a),max(a) from t1;
+ 
+-- 主2
+select count(*),min(a),max(a) from t1;
+
+set global read_only=1;
+set global super_read_only=1;
+
+use test;
+create table t1(a int auto_increment primary key);
+insert into t1 select -1;
+commit;
+ 
+-- session 1
+set autocommit=0; 
+insert into t1 select null;
+ 
+-- session 2
+alter table t1 add column (b int);
+ 
+-- session 3
+update t1 set a=-2 where a=-1;
+ 
+-- session 4
+show processlist;
+
+#!/bin/bash
+source ~/.bashrc
+ 
+rm -rf /tmp/kill.sql
+mysql -u root -p123456 -P3306 -h127.0.0.1 -e "select * into outfile '/tmp/kill.sql' from (select concat('kill ',id,';') from information_schema.processlist where command='sleep' union all select 'set sql_log_bin=0;' union all select 'alter table test.t1 add column (b int);') t;"
+ 
+mysql -u root -p123456 -P3306 -h127.0.0.1 < /tmp/kill.sql
+
+-- 查询事务对应的线程
+select t1.trx_id,
+       t1.trx_state,
+       t1.trx_query,
+       t2.id,
+       t2.state,
+       t2.command	   
+  from information_schema.innodb_trx t1, 
+       information_schema.processlist t2 
+ where t1.trx_mysql_thread_id = t2.id\G
+
+-- 查询正在执行的事务：
+select * from information_schema.innodb_trx;
+
+-- 查看正在锁的事务
+select * from information_schema.innodb_locks; 
+
+-- 查看等待锁的事务
+select * from information_schema.innodb_lock_waits;
+
+-- 1. A停止复制
+stop slave;
+ 
+-- 2. B上执行一个长时间的alter table操作
+alter table t1 add column (b int);
+ 
+-- 3. 在上一步执行过程中，A上操作同一个表
+call p1(1000000);
+ 
+-- 4. B确认复制状态和线程状态
+show slave status\G
+show processlist;
+select max(a) from t1;
+ 
+-- 5. 前面的步骤都执行完后，A开启复制
+start slave;
+
+-- 1. A停止复制
+stop slave;
+ 
+-- 2. A上执行一个长时间的操作
+call p1(1000000);
+ 
+-- 3. 在上一步执行过程中，B上alter table同一个表
+alter table t1 add column b int,drop column a;
+ 
+-- 4. B确认复制状态和线程状态
+show slave status\G
+
+alter table t1 change b a bigint auto_increment primary key;
+stop slave;
+start slave;
+
+-- 1. M1停止sql_thread线程
+stop slave sql_thread;
+ 
+-- 2. M2停止sql_thread线程
+stop slave sql_thread;
+ 
+-- 3. M3做更新
+insert into test.t1 values (1);
+commit;
+ 
+-- 4. M3停库
+mysqladmin -uroot -p123456 shutdown
+ 
+-- 5. M1启动sql_thread线程，此时M3的更新复制到M1
+start slave sql_thread;
+ 
+-- 6. M1复制M2，此时原环形复制中移除了M3，其中master_log_file和master_log_pos从M2的show master status的输出得到。
+ 
+stop slave;
+change master to
+       master_host = '172.16.1.126',
+       master_port = 3306,
+       master_user = 'repl',
+       master_password = '123456',
+       master_auto_position = 0,
+       master_log_file='binlog.000002',
+       master_log_pos=664210;
+start slave;
+ 
+-- 7. M2启动sql_thread线程，此时M2复制了来自M3的更新，并继续传递给M1，复制陷入死循环。在M1、M2上查询test.t1，可以看到记录不停增长。
+start slave sql_thread;
+
+4.1.3 多源复制
+stop slave;
+set global master_info_repository = 'table';
+set global relay_log_info_repository = 'table';
+
+change master to
+       master_host = '172.16.1.125',
+       master_port = 3306,
+       master_user = 'repl',
+       master_password = '123456',
+       master_auto_position = 1
+   for channel 'master-125';
+ 
+change master to
+       master_host = '172.16.1.126',
+       master_port = 3306,
+       master_user = 'repl',
+       master_password = '123456',
+       master_auto_position = 1
+   for channel 'master-126';
+
+-- 启动所有线程所有通道的复制
+start slave; 
+ 
+-- 启动所有通道的io_thread线程
+start slave io_thread; 
+ 
+-- 启动所有通道的sql_thread线程
+start slave sql_thread;
+ 
+-- 启用单个通道 
+start slave for channel 'master_125';
+start slave io_thread for channel 'master_125';
+start slave sql_thread for channel 'master_125';
+
+reset slave;
+reset slave for channel 'master_125';
+
+-- 查询特定通道的连接状态
+select * from replication_connection_status where channel_name='master-125'\G
+
+-- 主库1
+insert into test.t1 values(125);
+
+-- 主库2
+insert into test.t1 values(126);
+
+-- 从库
+select * from test.t1;
+
+-- 主库1
+truncate table test.t1;
+
+-- 从库
+select * from test.t1;
+
+-- 主库1
+create user 'u1'@'%' identified by '123456';
+ 
+-- 主库2
+create user 'u1'@'%' identified by '123456';
+ 
+-- 从库
+show slave status\G
+
+stop slave for channel 'master-126';
+show slave status for channel 'master-126'\G
+
+set gtid_next='53442434-8bfa-11e9-bc15-005056a50f77:1009';
+begin;commit;
+set gtid_next=automatic;
+start slave for channel 'master-126';
+
+stop slave;
+change replication filter replicate_ignore_db = (mysql);
+start slave;
+
+4.1.4 Blackhole引擎与日志服务器
+show engines;
+
+default_storage_engine=blackhole
+
+# init_blackhole.sh
+source ~/.bashrc
+
+# 全量导入主库，无数据
+mysqldump --single-transaction --all-databases --host=172.16.1.125 -d --user=wxy --password=123456 | mysql -uroot -p123456 
+ 
+# 修改所有表的存储引擎为blackhole
+rm -rf /tmp/black.sql
+mysql -uroot -p123456 -e "
+select concat('alter table ', table_schema, '.', table_name, ' engine=''blackhole''', ';') 
+ from information_schema.tables 
+ where table_schema not in ('information_schema','mysql','performance_schema','sys')
+  and table_type='BASE TABLE' into outfile '/tmp/black.sql';"
+ 
+# 在执行的SQL文件第一行加入sql_log_bin=0，否则下级从库也会执行
+sed -i '1i\set sql_log_bin=0;' /tmp/black.sql
+mysql -uroot -p123456 < /tmp/black.sql
+
+# 将主库备份到从库，在125执行
+xtrabackup -uroot -p123456 --socket=/tmp/mysql.sock --no-lock --backup --compress --stream=xbstream --parallel=4 --target-dir=./ | ssh mysql@172.16.1.127 "xbstream -x -C /usr/local/mysql/data/ --decompress"
+ 
+# 从库执行应用日志，在127执行
+xtrabackup --prepare --target-dir=/usr/local/mysql/data/
+
+# 启动从库，在127执行
+mysqld_safe --defaults-file=/etc/my.cnf &
+
+-- 在126执行
+change master to
+       master_host = '172.16.1.125',
+       master_port = 3306,
+       master_user = 'repl',
+       master_password = '123456',
+       master_auto_position = 1;
+start slave;
+show slave status\G
+ 
+-- 在127执行
+change master to
+       master_host = '172.16.1.126',
+       master_port = 3306,
+       master_user = 'repl',
+       master_password = '123456',
+       master_auto_position = 1;
+start slave;
+show slave status\G
+
+log_bin = /usr/local/mysql/data/binlog
+log_bin_index = /usr/local/mysql/data/binlog.index
+
+/bin/ls -1 /usr/local/mysql/data/binlog.[0-9]* > /usr/local/mysql/data/binlog.index
+
+4.2.1 测试规划
+cd tpcc-mysql-master/src
+make
+mysql -uroot -p123456 -e "create database tpcc_test;"
+cd tpcc-mysql-master
+mysql -uroot -p123456 -Dtpcc_test < create_table.sql
+mysql -uroot -p123456 -Dtpcc_test < add_fkey_idx.sql
+tpcc_load -h127.0.0.1 -d tpcc_test -u root -p "123456" -w 10
+mysqldump --databases tpcc_test -uroot -p123456 --set-gtid-purged=off > tpcc_test.sql
+
+# 初始化tpcc数据
+mysql -uwxy -p123456 -h172.16.1.125 < tpcc_test.sql
+ 
+# 读取主库的二进制坐标
+read master_file master_pos < <(mysql -uwxy -p123456 -h172.16.1.125 -e "show master status;" --skip-column-names | awk '{print $1,$2}')
+ 
+# 从库初始化tcpp数据结束后停止复制
+mysql -uwxy -p123456 -e "select master_pos_wait('$master_file',$master_pos);stop slave;"
+ 
+# 取得从库开始GTID
+read start_gtid < <(mysql -uwxy -p123456 -e "show variables like 'gtid_executed';" --skip-column-names | awk '{print $2}' | sed "s/\\\n//g")
+ 
+# 主库执行压测，10个仓库，32个并发线程，预热1分钟，压测5分钟
+tpcc_start -h172.16.1.125 -d tpcc_test -u wxy -p "123456" -w 10 -c 32 -r 60 -l 300 > tpcc_test.log 2>&1
+ 
+# 读取主库的二进制坐标
+read master_file master_pos < <(mysql -uwxy -p123456 -h172.16.1.125 -e "show master status;" --skip-column-names | awk '{print $1,$2}')
+ 
+# 从库复制开始时间
+start_time=`date '+%s'`
+ 
+# 从库执行复制
+mysql -uwxy -p123456 -e "start slave;select master_pos_wait('$master_file',$master_pos);"
+ 
+# 从库复制结束时间
+end_time=`date '+%s'`
+ 
+# 复制执行时长
+elapsed=$(($end_time - $start_time))
+ 
+# 取得从库结束GTID
+read end_gtid < <(mysql -uwxy -p123456 -e "show variables like 'gtid_executed';" --skip-column-names | awk '{print $2}' | sed "s/\\\n//g")
+ 
+# 取得从库执行的事务数
+read start end < <(mysql -uwxy -p123456 -e "select gtid_subtract('$end_gtid','$start_gtid');" --skip-column-names | awk -F: '{print $2}' | awk -F- '{print $1,$2}')
+trx=$(($end - $start + 1))
+ 
+# 计算从库、主库的TPS
+Slave_TPS=`expr $trx / $elapsed`
+Master_TPS=`expr $trx / 360`
+ 
+# 打印输出
+echo "TRX: $trx" "Elapsed: $elapsed" "Slave TPS: $Slave_TPS" "Master TPS: $Master_TPS"
+
+4.2.3 组提交与多线程复制
+mysqlbinlog binlog.000064 | grep last_committed | awk '{print $11, $12}' | head -10
+mysqlbinlog binlog.000064 | grep -o 'last_committed.*' | sed 's/=/ /g' | awk '{print $4-$2-1}' | sort -g | uniq -c
+
+sync_binlog = 1
+innodb_flush_log_at_trx_commit = 1
+slave_preserve_commit_order = 1
+slave_parallel_type = LOGICAL_CLOCK
+
+4.2.4 基于WriteSet的多线程复制
+drop table if exists t1;
+create table t1 (a int primary key);
+insert into t1 values (1), (2);
+ 
+flush logs;
+set global binlog_transaction_dependency_tracking  = WRITESET;
+update t1 set a=10 where a=1; 
+update t1 set a=20 where a=2; 
+ 
+set global binlog_transaction_dependency_tracking  = COMMIT_ORDER;
+update t1 set a=1 where a=10; 
+update t1 set a=2 where a=20;
+
+mysqlbinlog binlog.000002 --base64-output=decode-rows -v | grep -e 'last_committed' -A4 -e 'UPDATE' | grep -v "# original\|# immediate\|/*!" | awk '{if ($1!="###") {print $11, $12} else {print $0}}'
+
+binlog_transaction_dependency_tracking  = WRITESET
+transaction_write_set_extraction      = XXHASH64
+
+sync_binlog = 1
+innodb_flush_log_at_trx_commit = 1
+slave_preserve_commit_order = 1
+slave_parallel_type = LOGICAL_CLOCK
+
+
+第5章 延迟复制与部分复制
+5.1.1 延迟复制简介
+stop slave sql_thread;
+change master to master_delay = 60;
+start slave sql_thread;
+
+-- 主
+create table test.t3(a int);
+ 
+-- 从
+desc test.t3;
+
+-- 从
+select desired_delay from performance_schema.replication_applier_configuration;
+select remaining_delay from performance_schema.replication_applier_status;
+
+-- 主
+drop table test.t3;
+select remaining_delay from performance_schema.replication_applier_status;
+
+5.2.2 评估库级复制选项
+-- 从
+stop slave sql_thread;
+change replication filter replicate_do_db=(db2);
+start slave sql_thread;
+
+-- 主
+set binlog_format=statement;
+use db1;
+drop table db2.t1;
+
+-- 从
+desc db2.t1;
+
+-- 主
+use db2;
+create table db1.t1(a int);
+
+-- 从
+desc db1.t1;
+
+-- 主
+use db1;
+set binlog_format=row;
+create table db2.t1(a int);
+
+-- 主
+drop table db2.t1;
+create table db2.t1(a varchar(5));
+insert into db2.t1 values('aaa');
+
+5.2.3 评估表级复制选项
+stop slave sql_thread;
+change replication filter replicate_do_table = (db1.t1), replicate_ignore_table = (db1.t2);
+start slave sql_thread;
+
+-- 主
+create database db1;
+create table db1.t1(a int);
+create table db1.t2(a int);
+insert into db1.t1 values (1);
+insert into db1.t2 values (1);
+
+-- 从
+select * from db1.t1;
+
+-- 从
+create table db1.t2(a int);
+insert into db1.t2 values (1);
+
+-- 主
+update db1.t1 set a=2;
+update db1.t2 set a=2;
+
+-- 从
+select * from db1.t1;
+select * from db1.t2;
+
+-- 主
+update db1.t1 t1, db1.t2 t2 set t1.a=3, t2.a=3;
+
+-- 从
+select * from db1.t1;
+select * from db1.t2;
+
+-- 主
+set binlog_format=statement;
+update db1.t1 t1, db1.t2 t2 set t1.a=4, t2.a=4;
+
+-- 从
+select * from db1.t1;
+select * from db1.t2;
+
+-- 主
+drop table db1.t1,db1.t2;
+
+-- 从
+select * from db1.t1;
+select * from db1.t2;
+
+5.2.4 复制规则应用
+stop slave sql_thread;
+change replication filter replicate_do_table = (), replicate_ignore_table = ();
+start slave sql_thread;
+
+create database db1;
+create database db2;
+create table db1.t1(a int);
+create table db2.t2(a int);
+
+stop slave sql_thread;
+change replication filter replicate_ignore_db = (db1), replicate_do_table = (db2.t2);
+start slave sql_thread;
+
+set binlog_format=statement;
+use db1;
+insert into db2.t2 values (1);
+
+select * from db2.t2;
+
+set binlog_format=row;
+use db1;
+insert into db2.t2 values (1);
+
+select * from db2.t2;
+
+5.2.5 部分复制示例
+stop slave sql_thread;
+change replication filter replicate_wild_do_table=('db1.%');
+start slave sql_thread;
+
+stop slave sql_thread;
+change replication filter replicate_wild_do_table=('db2.%');
+start slave sql_thread;
+
+-- 主
+create database db1;
+create database db2;
+create table db1.t1(a int);
+create table db2.t2(a int);
+insert into db1.t1 select 1;
+insert into db2.t2 select 2;
+ 
+-- 从1
+select * from db1.t1;
+select * from db2.t2;
+ 
+-- 从2
+select * from db1.t1;
+select * from db2.t2;
+
+-- 主
+delimiter //
+create procedure db1.p1 ()
+begin
+select 1;
+end;
+//
+delimiter ;
+ 
+-- 从1
+call db1.p1();
+ 
+-- 从2
+call db1.p1();
+show slave status\G
+
+# 从库1
+mysqldump --single-transaction --databases db1 --master-data=1 --host=172.16.1.125 --user=wxy --password=123456 --apply-slave-statements | mysql -uroot -p123456 
+
+# 从库2
+mysqldump --single-transaction --databases db2 --master-data=1 --host=172.16.1.125 --user=wxy --password=123456 --apply-slave-statements | mysql -uroot -p123456
+
+5.3.1 计划内切换
+#!/bin/bash
+source ~/.bashrc
+ 
+rm -rf /tmp/kill.sql
+mysql -u root -p123456 -P3306 -h127.0.0.1 -e "select * into outfile '/tmp/kill.sql' from (select 'set global read_only=on;' union all select concat('kill ',id,';') from information_schema.processlist where command='sleep' ) t; "
+ 
+mysql -u root -p123456 -P3306 -h127.0.0.1 < /tmp/kill.sql
+
+5.3.2 计划外切换
+create database db1;
+use db1;
+create table t1(a int);
+insert into t1 values (1),(2),(3);
+update t1 set a=3 where a=1;
+delete from t1 where a=3;
+insert into t1 select 1;  -- 用于查看同样地SQL语句，event是否一样
+insert into t1 select 1;
+insert into t1 select 1;
+commit;
+
+stop slave;
+
+flush logs;
+
+insert into t1 values (10),(11),(12);
+delete from t1 where a=1;
+commit;
+
+mysqladmin -uwxy -p shutdown
+
+start slave;
+
+show processlist;
+show slave status\G
+select * from db1.t1;
+
+stop slave;
+reset slave all;
+set global read_only=off;
+
+sed -i 's/^read_only/#&/' /etc/my.cnf
+
+mysqlbinlog --base64-output=decode-rows --verbose /usr/local/mysql/data/binlog.000006
+
+while read LINE
+do
+    filename=/usr/local/mysql/data/${LINE:2}
+    echo $filename
+    mysqlbinlog --base64-output=decode-rows --verbose $filename | grep -A30 -n "original_committed_timestamp=1559024064330837"
+done  < /usr/local/mysql/data/binlog.index
+
+stop slave;
+reset slave all;
+change master to
+     master_host='172.16.1.126',
+     master_port=3306,
+     master_user='repl',
+     master_password='123456',
+     master_log_file='binlog.000023',
+     master_log_pos=2380;
+
+start slave;
+show slave status\G
+select * from db1.t1;
+
+第6章 组复制
+6.2.1 部署单主模式组复制
+install plugin group_replication soname 'group_replication.so';
+show plugins;
+
+[mysqld]
+server_id=1125
+gtid_mode=ON
+enforce-gtid-consistency=true
+binlog_checksum=NONE
+innodb_buffer_pool_size=4G
+ 
+disabled_storage_engines="MyISAM,BLACKHOLE,FEDERATED,ARCHIVE,MEMORY"
+ 
+log_bin=binlog
+log_slave_updates=ON
+binlog_format=ROW
+master_info_repository=TABLE
+relay_log_info_repository=TABLE
+ 
+transaction_write_set_extraction=XXHASH64
+group_replication_group_name="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+group_replication_start_on_boot=off
+group_replication_local_address= "172.16.1.125:33061"
+group_replication_group_seeds= "172.16.1.125:33061,172.16.1.126:33061,172.16.1.127:33061"
+group_replication_bootstrap_group=off
+
+# hdp3：
+server_id=1126
+group_replication_local_address= "172.16.1.126:33061"
+ 
+# hdp4：
+server_id=1127
+group_replication_local_address= "172.16.1.127:33061"
+
+mysqladmin -uroot -p123456 shutdown
+mysqld_safe --defaults-file=/etc/my.cnf &
+
+create user 'repl'@'%' identified with 'mysql_native_password' by '123456';
+grant replication slave on *.* to 'repl'@'%';
+
+change master to 
+       master_user='repl', 
+       master_password='123456' 
+  for channel 'group_replication_recovery';
+
+set global group_replication_bootstrap_group=on;
+start group_replication;
+set global group_replication_bootstrap_group=off;
+
+select * from performance_schema.replication_group_members\G
+
+create database test;
+use test;
+create table t1(a bigint auto_increment primary key);
+
+delimiter //
+create procedure p1(a int)
+begin
+   declare i int default 1;
+   while i<=a do
+      insert into t1 select null;
+      set i=i+1;
+end while;
+end;
+//
+delimiter ;
+ 
+-- 模拟联机事务 
+call p1(100000);
+
+# 复制到hdp3
+xtrabackup -uroot -p123456 --socket=/tmp/mysql.sock --no-lock --backup --compress --stream=xbstream --parallel=4 --target-dir=./ | ssh mysql@172.16.1.126 "xbstream -x -C /usr/local/mysql/data/ --decompress"
+
+# 复制到hdp4
+xtrabackup -uroot -p123456 --socket=/tmp/mysql.sock --no-lock --backup --compress --stream=xbstream --parallel=4 --target-dir=./ | ssh mysql@172.16.1.127 "xbstream -x -C /usr/local/mysql/data/ --decompress"
+
+xtrabackup --prepare --target-dir=/usr/local/mysql/data/
+
+mysqld_safe --defaults-file=/etc/my.cnf &
+
+-- 重置relay log info
+reset slave all;
+-- 设置复制通道
+change master to master_user='repl', master_password='123456' for channel 'group_replication_recovery';
+-- 添加到组
+start group_replication;
+
+select * from performance_schema.replication_group_members;
+
+ps -ef | grep mysqld | grep -v grep | awk '{print $2}' | xargs kill -9
+select * from performance_schema.replication_group_members;
+
+stop group_replication;
+set global group_replication_bootstrap_group=on;
+start group_replication;
+set global group_replication_bootstrap_group=off;
+
+mysqld_safe --defaults-file=/etc/my.cnf &
+
+change master to master_user='repl', master_password='123456' for channel 'group_replication_recovery';
+start group_replication;
+
+6.2.3 容错示例
+-- 在hdp2上执行
+use test;
+truncate table t1;
+call p1(100000);
+
+# 停止hdp4的MySQL实例
+ps -ef | grep mysqld | grep -v grep | awk {'print $2'} | xargs kill -9
+
+select * from performance_schema.replication_group_members;
+select * from performance_schema.replication_group_member_stats where member_id='5f045152-a393-11e9-8020-005056a50f77'\G
+select min(a),max(a),count(*) from test.t1;
+
+mysqld_safe --defaults-file=/etc/my.cnf &
+
+select * from performance_schema.replication_group_members\G
+
+select * from performance_schema.replication_group_member_stats where member_id='5c93a708-a393-11e9-8343-005056a5497f'\G
+select min(a),max(a),count(*) from test.t1;
+
+change master to master_user='repl', master_password='123456' for channel 'group_replication_recovery';
+start group_replication;
+
+select * from performance_schema.replication_group_members;
+select * from performance_schema.replication_group_member_stats where member_id='5c93a708-a393-11e9-8343-005056a5497f'\G
+select min(a),max(a),count(*) from test.t1;
+
+-- 在hdp4上执行
+use test;
+truncate table t1;
+call p1(100000);
+
+# 停止hdp4的MySQL实例
+ps -ef | grep mysqld | grep -v grep | awk {'print $2'} | xargs kill -9
+
+select * from performance_schema.replication_group_members;
+select * from performance_schema.replication_group_member_stats\G
+select min(a),max(a),count(*) from test.t1;
+
+mysqld_safe --defaults-file=/etc/my.cnf &
+select * from performance_schema.replication_group_member_stats where member_id='5c93a708-a393-11e9-8343-005056a5497f'\G
+select min(a),max(a),count(*) from test.t1;
+
+change master to master_user='repl', master_password='123456' for channel 'group_replication_recovery';
+start group_replication;
+
+select * from performance_schema.replication_group_members;
+select * from performance_schema.replication_group_member_stats where member_id='5c93a708-a393-11e9-8343-005056a5497f'\G
+select min(a),max(a),count(*) from test.t1;
+
+6.3.1 概述
+select member_id, count_transactions_in_queue 
+  from performance_schema.replication_group_member_stats;
+
+6.3.2 测试规划
+-- PRIMARY
+change master to master_user='repl', master_password='123456' for channel 'group_replication_recovery';
+set global group_replication_bootstrap_group=on;
+start group_replication;
+set global group_replication_bootstrap_group=off;
+select * from performance_schema.replication_group_members;
+ 
+-- SECONDARY
+stop slave;
+reset slave all;
+change master to master_user='repl', master_password='123456' for channel 'group_replication_recovery';
+start group_replication;
+
+# tpcc_test.sh
+# 初始化tpcc数据
+mysql -uwxy -p123456 -h172.16.1.125 < tpcc_test.sql
+ 
+# 开始GTID
+read start_gtid < <(mysql -uwxy -p123456 -e "show variables like 'gtid_executed';" --skip-column-names | awk '{print $2}' | sed "s/\\\n//g")
+ 
+# 等待SECONDARY执行完初始化复制
+mysql -uwxy -p123456 -h172.16.1.126 -e "select wait_for_executed_gtid_set('$start_gtid');" > /dev/null &
+mysql -uwxy -p123456 -h172.16.1.127 -e "select wait_for_executed_gtid_set('$start_gtid');" > /dev/null
+ 
+# 开始时间
+start_time=`date '+%s'`
+ 
+# PRIMARY执行压测，10个仓库，32个并发线程，预热1分钟，压测5分钟
+tpcc_start -h172.16.1.125 -d tpcc_test -u wxy -p "123456" -w 10 -c 32 -r 60 -l 300 > tpcc_test.log 2>&1
+ 
+# 结束GTID
+read end_gtid < <(mysql -uwxy -p123456 -e "show variables like 'gtid_executed';" --skip-column-names | awk '{print $2}' | sed "s/\\\n//g")
+ 
+# 等待SECONDARY执行完复制
+mysql -uwxy -p123456 -h172.16.1.126 -e "select wait_for_executed_gtid_set('$end_gtid'); select unix_timestamp(now());" --skip-column-names | awk 'NR>1' > end_time1 &
+mysql -uwxy -p123456 -h172.16.1.127 -e "select wait_for_executed_gtid_set('$end_gtid'); select unix_timestamp(now());" --skip-column-names | awk 'NR>1' > end_time2
+ 
+# 结束时间
+end_time1=`cat end_time1`
+end_time2=`cat end_time2`
+ 
+# 复制执行时长
+elapsed1=$(($end_time1 - $start_time))
+elapsed2=$(($end_time2 - $start_time))
+ 
+# 执行的事务数
+read start end < <(mysql -uwxy -p123456 -e "select gtid_subtract('$end_gtid','$start_gtid');" --skip-column-names | awk -F: '{print $2}' | awk -F- '{print $1,$2}')
+trx=$(($end - $start + 1))
+ 
+# 计算PRIMARY、SECONDARY的TPS
+Master_TPS=`expr $trx / 360`
+Slave1_TPS=`expr $trx / $elapsed1`
+Slave2_TPS=`expr $trx / $elapsed2`
+ 
+# 打印输出
+echo "TRX: $trx" 
+echo "Master TPS: $Master_TPS"
+echo "Elapsed1: $elapsed1" "Slave1 TPS: $Slave1_TPS"
+echo "Elapsed2: $elapsed2" "Slave2 TPS: $Slave2_TPS"
+
+6.3.5 写入集
+select member_id, count_transactions_in_queue 
+  from performance_schema.replication_group_member_stats;
+
+6.3.7 其它配置
+select * from performance_schema.memory_summary_global_by_event_name 
+ where event_name like 'memory/group_rpl/gcs_xcom::xcom_cache'\G
+
+6.3.8 主从、半同步、组复制性能对比测试
+[mysqld]
+server_id=1125    # 两个从库为1126、1127
+gtid_mode=ON
+enforce-gtid-consistency=true
+innodb_buffer_pool_size=4G
+disabled_storage_engines="MyISAM,BLACKHOLE,FEDERATED,ARCHIVE,MEMORY"
+ 
+log_bin=binlog
+log_slave_updates=ON
+binlog_format=ROW
+binlog_checksum=NONE
+master_info_repository=TABLE
+relay_log_info_repository=TABLE
+ 
+# 主库启用写集
+binlog_transaction_dependency_tracking = WRITESET
+transaction_write_set_extraction     = XXHASH64
+ 
+# 从库使用8线程MTS
+slave_parallel_type = LOGICAL_CLOCK
+slave_parallel_workers = 8
+slave_preserve_commit_order=1
+
+-- 在从库执行
+change master to
+       master_host = '172.16.1.125',
+       master_port = 3306,
+       master_user = 'repl',
+       master_password = '123456',
+       master_auto_position = 1;
+start slave;
+
+./tpcc_test.sh
+
+# 主库增加配置：
+plugin-load="rpl_semi_sync_master=semisync_master.so"
+rpl_semi_sync_master_enabled=1
+ 
+# 从库增加配置：
+plugin-load="rpl_semi_sync_slave=semisync_slave.so"
+rpl_semi_sync_slave_enabled=1
+
+./tpcc_test.sh
+
+plugin-load=group_replication.so
+group_replication_group_name="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+group_replication_start_on_boot=off
+group_replication_local_address= "172.16.1.125:33061" # 两个SECONDARY为"172.16.1.126:33061"、"172.16.1.127:33061"
+group_replication_group_seeds= "172.16.1.125:33061,172.16.1.126:33061,172.16.1.127:33061"
+group_replication_bootstrap_group=off
+
+-- PRIMARY执行
+reset master;
+reset slave all;
+change master to master_user='repl', master_password='123456' for channel 'group_replication_recovery';
+set global group_replication_bootstrap_group=on;
+start group_replication;
+set global group_replication_bootstrap_group=off;
+ 
+-- SECONDARY执行
+reset master;
+stop slave;
+reset slave all;
+change master to master_user='repl', master_password='123456' for channel 'group_replication_recovery';
+start group_replication;
+
+./tpcc_test.sh
+
+
+第7章 MySQL Router
+7.2.1 安装配置
+tar xzf mysql-router-2.1.6-linux-glibc2.12-x86-64bit.tar.gz 
+mv mysql-router-2.1.6-linux-glibc2.12-x86-64bit mysql-router-2.1.6
+
+# 在资源文件.bashrc中添加
+echo "export PATH=\$PATH:/home/mysql/mysql-router-2.1.6/bin;" >> ~/.bashrc
+
+# 使资源配置生效
+source ~/.bashrc
+
+mysqlrouter --help
+
+# 复制配置文件
+cp /home/mysql/mysql-router-2.1.6/share/doc/mysqlrouter/sample_mysqlrouter.conf /etc/mysqlrouter.conf
+cp /home/mysql/mysql-router-2.1.6/share/doc/mysqlrouter/sample_mysqlrouter.init /etc/init.d/mysqlrouter
+ 
+# 修改属主为mysql
+chown mysql:mysql /etc/mysqlrouter.conf
+chown mysql:mysql /etc/init.d/mysqlrouter
+ 
+# 变为可执行
+chmod +x /etc/init.d/mysqlrouter
+ 
+# 系统启动时自动执行
+echo "/etc/init.d/mysqlrouter" >> /etc/rc.d/rc.local
+ 
+# 建立日志目录
+mkdir /home/mysql/mysql-router-2.1.6/log
+
+# /etc/mysqlrouter.conf
+[DEFAULT]
+# 日志路径
+logging_folder = /home/mysql/mysql-router-2.1.6/log
+# 插件路径
+plugin_folder = /home/mysql/mysql-router-2.1.6/lib/mysqlrouter
+# 配置路径
+config_folder = /home/mysql/mysql-router-2.1.6/config
+# 运行时状态路径
+runtime_folder = /home/mysql/mysql-router-2.1.6/run
+# 数据文件路径
+data_folder = /home/mysql/mysql-router-2.1.6/data
+ 
+[logger]
+# 日志级别
+level = INFO
+ 
+# 以下选项用于路由标识的策略部分
+[routing:basic_failover]
+# Router地址
+bind_address = 172.16.1.125
+# Router端口
+bind_port = 7001
+# 读写模式
+mode = read-write
+# 目标服务器
+destinations = 172.16.1.126:3306,172.16.1.127:3306
+ 
+[routing:load_balance]
+bind_address = 172.16.1.125
+bind_port = 7002
+mode = read-only
+destinations = 172.16.1.126:3306,172.16.1.127:3306
+
+# /etc/init.d/mysqlrouter
+#! /bin/bash
+ 
+# Source function library
+. /etc/rc.d/init.d/functions
+ 
+# Source networking configuration
+. /etc/sysconfig/network
+ 
+# add general install path
+base_dir=/home/mysql/mysql-router-2.1.6
+# fix exec path
+exec=${base_dir}/bin/mysqlrouter
+prog=mysqlrouter
+piddir=${base_dir}/run
+pidfile=${piddir}/mysqlrouter.pid
+logdir=${base_dir}/log
+logfile=$logdir/mysqlrouter.log
+lockfile=/var/lock/subsys/$prog
+ 
+# add conf path
+conf=/etc/mysqlrouter.conf
+ 
+start () {
+[ -d $piddir ] || mkdir -p $piddir
+chown mysql:mysql $piddir
+[ -d $logdir ] || mkdir -p $logdir
+chown mysql:mysql $logdir
+[ -e $logfile ] || touch $logfile
+chown mysql:mysql $logfile
+export ROUTER_PID=$pidfile
+# add opt -c to resolv mysqlrouter.ini
+daemon --user mysql $exec -c $conf >/dev/null 2>&1 &              #
+ret=$?
+if [ $ret -eq "0" ]; then
+action $"Starting $prog: " /bin/true
+touch /var/lock/subsys/$prog
+else
+action $"Starting $prog: " /bin/false
+fi
+return $ret
+}
+ 
+stop () {
+[ -f /var/lock/subsys/$prog ] || return 0
+killproc mysqlrouter >/dev/null 2>&1
+ret=$?
+if [ $ret -eq "0" ]; then
+rm -f $pidfile
+rm -f /var/lock/subsys/$prog
+action $"Stopping $prog: " /bin/true
+else
+ation $"Stopping $prog: " /bin/false
+fi
+}
+ 
+restart () {
+stop
+start
+}
+ 
+condrestart () {
+[ -e /var/lock/subsys/$prog ] && restart || return 0
+}
+ 
+case "$1" in
+start)
+start
+;;
+stop)
+stop
+;;
+status)
+status -p "$pidfile" $prog
+;;
+restart)
+restart
+;;
+condrestart|try-restart)
+condrestart
+;;
+reload)
+exit 3
+;;
+force-reload)
+restart
+;;
+*)
+echo $"Usage: $0 {start|stop|status|condrestart|try-restart|reload|force-reload}"
+exit 2
+esac
+ 
+exit $?
+
+rm -f $pidfile
+rm -f /var/lock/subsys/$prog
+
+service mysqlrouter start
+more /home/mysql/mysql-router-2.1.6/log/mysqlrouter.log
+
+yum -y install redhat-lsb-core
+
+log_daemon_msg () {
+    # Dummy function to be replaced by LSB library.
+    echo $@
+}
+log_progress_msg() {
+   echo $@
+}
+log_end_msg () {
+    # Dummy function to be replaced by LSB library.
+    if test "$1" != "0"; then
+      echo "Error with $DESCRIPTION: $NAME"
+    fi
+    return $1
+}
+
+7.2.2 自动失败切换
+mysql -utest -p123456 -h172.16.1.125 -P7001 -N -s -e "show variables like 'server_id'"
+mysql -utest -p123456 -h172.16.1.125 -P7002 -N -s -e "show variables like 'server_id'"
+
+pkill -9 mysqld
+mysql -utest -p123456 -h172.16.1.125 -P7001 -N -s -e "show variables like 'server_id'"
+mysql -utest -p123456 -h172.16.1.125 -P7002 -N -s -e "show variables like 'server_id'"
+
+service mysql start
+mysql -utest -p123456 -h172.16.1.125 -P7001 -N -s -e "show variables like 'server_id'"
+mysql -utest -p123456 -h172.16.1.125 -P7002 -N -s -e "show variables like 'server_id'"
+
+service mysqlrouter restart
+mysql -utest -p123456 -h172.16.1.125 -P7001 -N -s -e "show variables like 'server_id'"
+mysql -utest -p123456 -h172.16.1.125 -P7002 -N -s -e "show variables like 'server_id'"
+
+mysql -utest -p123456 -h172.16.1.125 -P7001 -e "use test; create table t1 (a int); insert into t1 values (1);"
+mysql -utest -p123456 -h172.16.1.125 -P7002 -N -s -e "show variables like 'server_id';select * from test.t1;"
+
+# 验证read-only模式下的写请求：
+mysql -utest -p123456 -h172.16.1.125 -P7002 -e "insert into test.t1 values (2);"
+mysql -utest -p123456 -h172.16.1.125 -P7002 -N -s -e "show variables like 'server_id';select * from test.t1;"
+
+7.2.3 负载均衡
+[routing:load_balance]
+bind_address = 172.16.1.125
+bind_port = 7001
+mode = read-only
+destinations = 172.16.1.126:3306,172.16.1.127:3306
+
+7.2.5 多实例
+# /etc/mysqlrouter.conf
+[DEFAULT]
+logging_folder = /home/mysql/mysql-router-2.1.6/log
+plugin_folder = /home/mysql/mysql-router-2.1.6/lib/mysqlrouter
+config_folder = /home/mysql/mysql-router-2.1.6/config
+runtime_folder = /home/mysql/mysql-router-2.1.6/run
+data_folder = /home/mysql/mysql-router-2.1.6/data
+ 
+[logger]
+level = INFO
+ 
+[routing:db1_write]
+bind_address = 172.16.1.100
+bind_port = 33060
+mode = read-write
+destinations = 172.16.1.125:3306,172.16.1.126:3306
+ 
+[routing:db1_read]
+bind_address = 172.16.1.100
+bind_port = 33061
+mode = read-only
+destinations = 172.16.1.126:3306
+ 
+[routing:db2_write]
+bind_address = 172.16.1.100
+bind_port = 33070
+mode = read-write
+destinations = 172.16.1.125:3307,172.16.1.126:3307
+ 
+[routing:db2_read]
+bind_address = 172.16.1.100
+bind_port = 33071
+mode = read-only
+destinations = 172.16.1.126:3307
+
+/sbin/ifconfig ens32:1 172.16.1.100
+
+mysql -uroot -p123456 -P33060 -h172.16.1.100 -N -s -e "show variables like 'server_id'; show variables like 'port'"
+mysql -uroot -p123456 -P33061 -h172.16.1.100 -N -s -e "show variables like 'server_id'; show variables like 'port'"
+mysql -uroot -p123456 -P33070 -h172.16.1.100 -N -s -e "show variables like 'server_id'; show variables like 'port'"
+mysql -uroot -p123456 -P33071 -h172.16.1.100 -N -s -e "show variables like 'server_id'; show variables like 'port'"
+
+mysqladmin -uroot -p123456 -P3306 -h127.0.0.1 shutdown
+mysqladmin -uroot -p123456 -P3307 -h127.0.0.1 shutdown
+
+mysql -uroot -p123456 -P33060 -h172.16.1.100 -N -s -e "show variables like 'server_id'; show variables like 'port'"
+mysql -uroot -p123456 -P33061 -h172.16.1.100 -N -s -e "show variables like 'server_id'; show variables like 'port'"
+mysql -uroot -p123456 -P33070 -h172.16.1.100 -N -s -e "show variables like 'server_id'; show variables like 'port'"
+mysql -uroot -p123456 -P33071 -h172.16.1.100 -N -s -e "show variables like 'server_id'; show variables like 'port'"
+
+mysqld_safe --defaults-file=/home/mysql/mysql-5.6.14/my.cnf &
+mysqld_safe --defaults-file=/home/mysql/mysql-5.6.14/my_2.cnf &
+service mysqlrouter restart
+
+mysql -uroot -p123456 -P33060 -h172.16.1.100 -N -s -e "show variables like 'server_id'; show variables like 'port'"
+mysql -uroot -p123456 -P33061 -h172.16.1.100 -N -s -e "show variables like 'server_id'; show variables like 'port'"
+mysql -uroot -p123456 -P33070 -h172.16.1.100 -N -s -e "show variables like 'server_id'; show variables like 'port'"
+mysql -uroot -p123456 -P33071 -h172.16.1.100 -N -s -e "show variables like 'server_id'; show variables like 'port'"
+
+7.3.1 安装
+tar -Jxvf mysql-router-8.0.17-linux-glibc2.12-x86_64.tar.xz
+ll mysql-router-8.0.17-linux-glibc2.12-x86_64
+export PATH=.:/sbin:/bin:/usr/sbin:/usr/bin:/usr/X11R6/bin:/home/mysql/mysql-5.6.14/bin:/home/mysql/mysql-router-8.0.17-linux-glibc2.12-x86_64/bin;
+
+mysqlrouter --version
+mysqlrouter --help
+
+7.3.2 启动
+# /home/mysql/.mysqlrouter.conf
+[logger]
+level = INFO
+ 
+[routing:secondary]
+bind_address = localhost
+bind_port = 7001
+destinations = 172.16.1.125:3306,172.16.1.126:3306,172.16.1.127:3306
+routing_strategy = round-robin
+ 
+[routing:primary]
+bind_address = localhost
+bind_port = 7002
+destinations = 172.16.1.125:3306,172.16.1.126:3306,172.16.1.127:3306
+routing_strategy = first-available
+
+mysqlrouter -c /home/mysql/.mysqlrouter.conf &
+
+ps -ef | grep router
+more ~/mysql-router-8.0.17-linux-glibc2.12-x86_64/mysqlrouter.log
+netstat -tnlp
+
+mysql -uwxy -p123456 -P7001 --protocol=TCP -N -s -e"select @@hostname"
+mysql -uwxy -p123456 -P7002 --protocol=TCP -N -s -e"select @@hostname"
+
+mysqladmin -uwxy -p123456 -h172.16.1.125 -P3306 shutdown
+mysql -uwxy -p123456 -P7002 --protocol=TCP -N -s -e"select @@hostname"
+mysqladmin -uwxy -p123456 -h172.16.1.126 -P3306 shutdown
+mysql -uwxy -p123456 -P7002 --protocol=TCP -N -s -e"select @@hostname"
+mysqladmin -uwxy -p123456 -h172.16.1.127 -P3306 shutdown
+
+mysqld_safe --defaults-file=/etc/my.cnf &
+mysql -uwxy -p123456 -P7002 --protocol=TCP -N -s -e"select @@hostname"
+
+kill `ps -ef | grep router | grep -v grep | awk '{print $2}'`
+mysqlrouter -c ~/.mysqlrouter.conf &
+mysql -uwxy -p123456 -P7002 --protocol=TCP -N -s -e"select @@hostname"
+
+7.3.3 配置
+mysqlrouter --help | more
+mysqlrouter --config /custom/path/to/router.conf --extra-config /another/config.conf
+mysqlrouter --config b.conf --extra-config a.conf --extra-config c.conf
+
+
+第8章 MySQL Fabric
+8.2.2 安装与配置
+cd /root
+tar xvf mysql-5.7.10-linux-glibc2.5-x86_64.tar
+tar zxvf mysql-5.7.10-linux-glibc2.5-x86_64.tar.gz
+ln -s mysql-5.6.13-linux-glibc2.5-x86_64 mysql
+groupadd mysql
+useradd -r -g mysql mysql
+chown -R mysql .
+
+cd /root
+tar zxvf mysql-utilities-1.5.6.tar.gz
+cd mysql-utilities-1.5.6
+sudo python setup.py install
+
+# /etc/my_fabric.cnf
+[mysqld]
+basedir=/root/mysql
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+binlog-format=ROW
+log-slave-updates=true
+gtid-mode=on
+enforce-gtid-consistency=true
+master-info-repository=TABLE
+relay-log-info-repository=TABLE
+sync-master-info=1
+port=3306
+report-host=fab_connector
+report-port=3306
+server-id=1
+log-bin=fab-bin.log
+
+mysqld --defaults-file=/etc/my_fabric.cnf --initialize
+mysqld --defaults-file=/etc/my_fabric.cnf --user=mysql &
+mysql -h 127.0.0.1 -P3306 -u root -p -e "CREATE USER 'fabric'@'localhost' IDENTIFIED BY 'secret';GRANT ALL ON fabric.* TO 'fabric'@'localhost'";
+
+# /etc/my_group1_1_init.cnf
+[mysqld]
+basedir=/root/mysql
+datadir=/var/lib/group1_1
+port=3326
+socket=/var/lib/group1_1/mysql.sock
+
+# /etc/my_group1_1.cnf
+[mysqld]
+basedir=/root/mysql
+datadir=/var/lib/group1_1
+port=3326
+socket=/var/lib/group1_1/mysql.sock
+binlog-format=ROW
+log-slave-updates=true
+gtid-mode=on
+enforce-gtid-consistency=true
+master-info-repository=TABLE
+relay-log-info-repository=TABLE
+sync-master-info=1
+report-host=fab_group1
+report-port=3326
+server-id=11
+log-bin=fab1a-bin.log
+log_error_verbosity=1
+
+# 初始化实例并记录临时密码
+mysqld --defaults-file=/etc/my_group1_1_init.cnf --initialize
+
+# 启动实例
+chown -R mysql /var/lib/group1_1
+mysqld --defaults-file=/etc/my_group1_1_init.cnf --user=mysql &
+
+# 修改初始密码，创建使用Fabric的MySQL用户
+mysql -h 127.0.0.1 -P3328 -u root -p
+alter user user() identified by 'new_password';
+create user 'fabric'@'%' identified by 'secret';
+grant all on *.* to 'fabric'@'%';
+
+# 重启实例
+mysqladmin -u root --protocol=tcp -h127.0.0.1 -P3326 -p shutdown
+mysqld --defaults-file=/etc/my_group1_1.cnf --user=mysql &
+
+# /etc/mysql/fabric.cfg
+[DEFAULT]	
+sysconfdir = /etc	
+logdir = /var/log	
+
+[statistics]
+prune_time = 3600	
+
+[logging]	
+url = file:///var/log/fabric.log	
+level = INFO
+
+[storage]
+auth_plugin = mysql_native_password
+database = fabric
+user = fabric
+address = localhost:3306
+connection_delay = 1
+connection_timeout = 6
+password = secret
+connection_attempts = 6
+
+[failure_tracking]
+notification_interval = 60
+notification_clients = 50
+detection_timeout = 1
+detection_interval = 6
+notifications = 300
+detections = 3
+failover_interval = 0
+prune_time = 3600
+
+[servers]
+restore_user = fabric
+unreachable_timeout = 5
+backup_password = secret 
+backup_user = fabric
+user = fabric
+restore_password = secret
+password = secret
+
+[connector]
+ttl = 1
+
+[protocol.xmlrpc]
+disable_authentication = no
+realm = MySQL Fabric
+threads = 5
+user = admin
+address = 192.168.16.119:32274
+password = secret
+
+[executor]
+executors = 5
+
+[sharding]
+mysqldump_program = /root/mysql/bin/mysqldump
+mysqlclient_program = /root/mysql/bin/mysql
+
+[protocol.mysql]
+disable_authentication = no
+user = admin
+address = 192.168.16.119:32275
+password = secret
+
+mysqlfabric manage setup
+show tables from fabric;
+mysqlfabric manage start --daemonize
+mysqlfabric manage ping
+
+# 创建HA组
+mysqlfabric group create my_group1
+
+# 向组中添加MySQL实例
+mysqlfabric group add my_group1 192.168.56.102:3326
+mysqlfabric group add my_group1 192.168.56.102:3327
+mysqlfabric group add my_group1 192.168.56.102:3328
+
+# 自动在my_group1中选出一个实例提升为主库
+mysqlfabric group promote my_group1
+
+# 查看my_group1中的实例
+mysqlfabric group lookup_servers my_group1
+
+# 缺省Fabric并不会执行故障时的主从自动切换，需要激活该功能
+mysqlfabric group activate my_group1
+
+8.2.3 HA功能测试
+mysqlfabric group lookup_servers my_group1
+mysqladmin -u root --protocol=tcp -h127.0.0.1 -P3328 -p shutdown
+mysqlfabric group lookup_servers my_group1
+
+use test;
+create table t1(a int);
+insert into t1 values(1);
+commit;
+
+mysqlfabric group remove my_group1 192.168.56.102:3328
+mysqld --defaults-file=/etc/my_group1_3.cnf --user=mysql &
+mysqlfabric group add my_group1 192.168.56.102:3328
+
+mysqlfabric group lookup_servers my_group1
+
+select * from test.t1;
+
+mysqlfabric group lookup_servers my_group1
+mysqladmin -u root --protocol=tcp -h127.0.0.1 -P3328 -p shutdown
+mysqlfabric group lookup_servers my_group1
+
+show slave status\G
+
+mysqlfabric group lookup_servers my_group1
+
+plugin_dir=/root/mysql-5.7.10-linux-glibc2.5-x86_64/lib/plugin
+
+install plugin rpl_semi_sync_master soname 'semisync_master.so';
+install plugin rpl_semi_sync_slave soname 'semisync_slave.so';
+
+rpl_semi_sync_slave_enabled=1
+rpl_semi_sync_master_enabled = 1
+rpl_semi_sync_master_timeout = 1000
+
+
+第9章 MMM
+9.2.2 安装配置
+server-id=125                # 保证两台MySQL配置不同值
+log-bin=mysql-bin            # 开启二进制日志
+auto_increment_increment=2   # 自增步长为2，一般有n台主MySQL就设置为n
+auto_increment_offset=1      # 自增初始值，第n台主MySQL设置为n
+
+server-id=126
+log-bin=mysql-bin
+auto_increment_increment=2
+auto_increment_offset=2
+
+create user 'repl'@'%' identified by '123456';
+grant replication slave on *.* to 'repl'@'%';
+
+show master status;
+
+-- 125的MySQL实例执行
+change master to
+       master_host='172.16.1.126',
+       master_user='repl',
+       master_password='123456',
+       master_log_file='mysql-bin.000001',
+       master_log_pos=120;
+		   
+-- 126的MySQL实例执行
+change master to
+       master_host='172.16.1.125',
+       master_user='repl',
+       master_password='123456',
+       master_log_file='mysql-bin.000001',
+       master_log_pos=120;
+
+start slave;
+
+yum -y install mysql-mmm-*
+
+grant super,replication client,process on *.* to 'mmm_agent'@'%' identified by '123456';
+grant replication client on *.* to 'mmm_monitor'@'%' identified by '123456';
+
+# /etc/mysql-mmm/mmm_common.conf
+active_master_role      writer
+ 
+<host default>
+    cluster_interface        ens32
+    pid_path                 /var/run/mmm_agentd.pid
+    bin_path                 /usr/libexec/mysql-mmm/
+    replication_user         repl
+    replication_password     123456
+    agent_user               mmm_agent
+    agent_password           123456
+</host>
+ 
+<host db1>
+    ip      172.16.1.125
+    mode    master
+    peer    db2
+</host>
+ 
+<host db2>
+    ip      172.16.1.126
+    mode    master
+    peer    db1
+</host>
+ 
+<role writer>
+    hosts    db1, db2
+    ips     172.16.1.100
+    mode    exclusive
+</role>
+ 
+<role reader>
+    hosts    db1, db2
+    ips     172.16.1.210, 172.16.1.211
+    mode    balanced
+</role>
+
+scp /etc/mysql-mmm/mmm_common.conf 172.16.1.126:/etc/mysql-mmm/
+scp /etc/mysql-mmm/mmm_common.conf 172.16.1.127:/etc/mysql-mmm/
+
+# /etc/mysql-mmm/mmm_agent.conf
+include mmm_common.conf
+this db1
+
+# /etc/mysql-mmm/mmm_agent.conf
+include mmm_common.conf
+this db2
+
+# /etc/mysql-mmm/mmm_mon.conf
+include mmm_common.conf
+ 
+<monitor>
+    ip                  172.16.1.127
+    pid_path            /var/run/mmm_mond.pid
+    bin_path            /usr/libexec/mysql-mmm
+    status_path         /var/lib/mysql-mmm/mmm_mond.status
+    ping_ips            172.16.1.125,172.16.1.126
+    auto_set_online     60
+</monitor>
+ 
+<host default>
+    monitor_user        mmm_monitor
+    monitor_password    123456
+</host>
+ 
+debug 0
+
+9.2.3 功能测试
+/etc/init.d/mysql-mmm-agent start
+/etc/init.d/mysql-mmm-agent start
+
+/etc/init.d/mysql-mmm-monitor start
+
+mmm_control show
+mmm_control checks
+
+service mysql stop
+mmm_control show
+service mysql start
+mmm_control show
+
+stop slave;
+mmm_control show
+start slave;
+mmm_control show
+
+/etc/init.d/mysql-mmm-monitor stop
+ip a | grep ens32
+/etc/init.d/mysql-mmm-monitor start
+
+tail -f /var/log/mysql-mmm/mmm_mond.log
+
+
+第10章 MHA
+10.2.2 安装Perl依赖模块
+# 安装一个epel源
+wget -O /etc/yum.repos.d/epel-7.repo http://mirrors.aliyun.com/repo/epel-7.repo
+ 
+# 用yum安装依赖包
+yum install perl-DBD-MySQL perl-Config-Tiny perl-Log-Dispatch perl-Parallel-ForkManager perl-Time-HiRes -y
+
+10.2.3 配置SSH免密登录
+ssh-keygen -t rsa
+ssh-copy-id -i /root/.ssh/id_rsa.pub root@172.16.1.125
+ssh-copy-id -i /root/.ssh/id_rsa.pub root@172.16.1.126
+ssh-copy-id -i /root/.ssh/id_rsa.pub root@172.16.1.127
+
+# 在hdp4 172.16.1.127（Master）上用root用户执行
+ssh-keygen -t rsa
+ssh-copy-id -i /root/.ssh/id_rsa.pub root@172.16.1.125
+ssh-copy-id -i /root/.ssh/id_rsa.pub root@172.16.1.126
+
+# 在hdp3 172.16.1.126（slave1）上用root用户执行
+ssh-keygen -t rsa
+ssh-copy-id -i /root/.ssh/id_rsa.pub root@172.16.1.125
+ssh-copy-id -i /root/.ssh/id_rsa.pub root@172.16.1.127
+
+# 在hdp2 172.16.1.125（slave2）上用root用户执行
+ssh-keygen -t rsa
+ssh-copy-id -i /root/.ssh/id_rsa.pub root@172.16.1.126
+ssh-copy-id -i /root/.ssh/id_rsa.pub root@172.16.1.127
+
+10.2.4 安装MHA Node
+rpm -ivh mha4mysql-node-0.56-0.el6.noarch.rpm
+
+10.2.5 安装MHA Manager
+rpm -ivh mha4mysql-manager-0.56-0.el6.noarch.rpm
+
+10.2.6 配置MHA
+mkdir -p /etc/masterha
+
+# /etc/masterha/app1.cnf
+[server default]
+manager_log=/var/log/masterha/app1/manager.log
+manager_workdir=/var/log/masterha/app1.log
+master_binlog_dir=/data
+master_ip_failover_script=/usr/bin/master_ip_failover
+master_ip_online_change_script=/usr/bin/master_ip_online_change
+password=123456
+ping_interval=1
+remote_workdir=/tmp
+repl_password=123456
+repl_user=repl
+secondary_check_script=/usr/bin/masterha_secondary_check -s hdp4 -s hdp3 --user=root --master_host=hdp4 --master_ip=172.16.1.127 --master_port=3306
+shutdown_script=""
+ssh_user=root
+user=root
+ 
+[server1]
+hostname=172.16.1.127
+port=3306
+ 
+[server2]
+candidate_master=1
+check_repl_delay=0
+hostname=172.16.1.126
+port=3306
+ 
+[server3]
+hostname=172.16.1.125
+port=3306
+
+ln -s /home/mysql/mysql-5.6.14/bin/mysqlbinlog /usr/bin/mysqlbinlog
+ln -s /home/mysql/mysql-5.6.14/bin/mysql /usr/bin/mysql
+
+mysql -uroot -p123456 -e "set global relay_log_purge=0"
+
+10.2.7 创建相关脚本
+# /root/purge_relay_log.sh
+#!/bin/bash
+. /home/mysql/.bashrc
+ 
+user=root
+passwd=123456
+port=3306
+log_dir='/data'
+work_dir='/data'
+purge='/usr/bin/purge_relay_logs'
+ 
+if [ ! -d $log_dir ]
+then
+   mkdir $log_dir -p
+fi
+ 
+$purge --user=$user --password=$passwd --disable_relay_log_purge --port=$port --workdir=$work_dir >> $log_dir/purge_relay_logs.log 2>&1
+
+chmod 755 purge_relay_log.sh
+
+# /usr/bin/master_ip_failover
+#!/usr/bin/env perl
+use strict;
+use warnings FATAL => 'all';
+use Getopt::Long;
+ 
+my (
+    $command, $ssh_user, $orig_master_host, $orig_master_ip,
+    $orig_master_port, $new_master_host, $new_master_ip, $new_master_port
+);
+ 
+my $vip = '172.16.1.100';  # Virtual IP 
+my $key = "1"; 
+my $ssh_start_vip = "/sbin/ifconfig ens32:$key $vip";
+my $ssh_stop_vip = "/sbin/ifconfig ens160:$key down";
+ 
+GetOptions(
+    'command=s'       => \$command,
+    'ssh_user=s'      => \$ssh_user,
+    'orig_master_host=s' => \$orig_master_host,
+    'orig_master_ip=s'  => \$orig_master_ip,
+    'orig_master_port=i' => \$orig_master_port,
+    'new_master_host=s'  => \$new_master_host,
+    'new_master_ip=s'   => \$new_master_ip,
+    'new_master_port=i'  => \$new_master_port,
+);
+ 
+exit &main();
+ 
+sub main {
+    print "\n\nIN SCRIPT TEST====$ssh_stop_vip==$ssh_start_vip===\n\n"; 
+ 
+    if ( $command eq "stop" || $command eq "stopssh" ) {
+        my $exit_code = 1;
+        eval {
+            print "Disabling the VIP on old master: $orig_master_host \n";
+            &stop_vip();
+            $exit_code = 0;
+        };
+        if ($@) {
+            warn "Got Error: $@\n";
+            exit $exit_code;
+        }
+        exit $exit_code;
+    }
+    elsif ( $command eq "start" ) {
+        my $exit_code = 10;
+        eval {
+            print "Enabling the VIP - $vip on the new master - $new_master_host \n";
+            &start_vip();
+            $exit_code = 0;
+        };
+        if ($@) {
+            warn $@;
+            exit $exit_code;
+        }
+        exit $exit_code;
+    }
+    elsif ( $command eq "status" ) {
+        print "Checking the Status of the script.. OK \n"; 
+        `ssh $ssh_user\@$orig_master_host \" $ssh_start_vip \"`;
+        exit 0;
+    }
+    else {
+        &usage();
+        exit 1;
+    }
+}
+ 
+sub start_vip() {
+    `ssh $ssh_user\@$new_master_host \" $ssh_start_vip \"`;
+}
+
+sub stop_vip() {
+    `ssh $ssh_user\@$orig_master_host \" $ssh_stop_vip \"`;
+}
+ 
+sub usage {
+    print
+    "Usage: master_ip_failover --command=start|stop|stopssh|status --orig_master_host=host --orig_master_ip=ip --orig_master_port=port --new_master_host=host --new_master_ip=ip --new_master_port=port\n";
+}
+
+# /usr/bin/master_ip_online_change
+#!/usr/bin/env perl
+  
+use strict;
+use warnings FATAL => 'all';
+  
+use Getopt::Long;
+use MHA::DBHelper;
+use MHA::NodeUtil;
+use Time::HiRes qw(sleep gettimeofday tv_interval);
+use Data::Dumper;
+  
+my $_tstart;
+my $_running_interval = 0.1;
+my (
+ $command, $orig_master_host, $orig_master_ip,
+ $orig_master_port, $orig_master_user,
+ $new_master_host, $new_master_ip, $new_master_port,
+ $new_master_user, 
+);
+  
+my $vip = '172.16.1.100';  # Virtual IP 
+my $key = "1"; 
+my $ssh_start_vip = "/sbin/ifconfig ens32:$key $vip";
+my $ssh_stop_vip = "/sbin/ifconfig ens160:$key down";
+my $ssh_user = "root";
+my $new_master_password = "123456";
+my $orig_master_password = "123456";
+  
+GetOptions(
+ 'command=s'              =>\$command,
+ 'orig_master_host=s'     =>\$orig_master_host,
+ 'orig_master_ip=s'       =>\$orig_master_ip,
+ 'orig_master_port=i'     =>\$orig_master_port,
+ 'orig_master_user=s'     =>\$orig_master_user,
+ 'new_master_host=s'      =>\$new_master_host,
+ 'new_master_ip=s'        =>\$new_master_ip,
+ 'new_master_port=i'      =>\$new_master_port,
+ 'new_master_user=s'      =>\$new_master_user,
+);
+  
+exit &main();
+  
+sub current_time_us {
+  my ($sec, $microsec ) = gettimeofday();
+  my$curdate = localtime($sec);
+ return $curdate . " " . sprintf( "%06d", $microsec);
+}
+  
+sub sleep_until {
+  my$elapsed = tv_interval($_tstart);
+  if ($_running_interval > $elapsed ) {
+   sleep( $_running_interval - $elapsed );
+  }
+}
+  
+sub get_threads_util {
+  my$dbh                    = shift;
+  my$my_connection_id       = shift;
+  my$running_time_threshold = shift;
+  my$type                   = shift;
+  $running_time_threshold = 0 unless ($running_time_threshold);
+  $type                   = 0 unless($type);
+  my@threads;
+  
+  my$sth = $dbh->prepare("SHOW PROCESSLIST");
+  $sth->execute();
+  
+ while ( my $ref = $sth->fetchrow_hashref() ) {
+    my$id         = $ref->{Id};
+    my$user       = $ref->{User};
+    my$host       = $ref->{Host};
+    my$command    = $ref->{Command};
+    my$state      = $ref->{State};
+    my$query_time = $ref->{Time};
+    my$info       = $ref->{Info};
+   $info =~ s/^\s*(.*?)\s*$/$1/ if defined($info);
+   next if ( $my_connection_id == $id );
+   next if ( defined($query_time) && $query_time <$running_time_threshold );
+   next if ( defined($command)    && $command eq "Binlog Dump" );
+   next if ( defined($user)       && $user eq "system user" );
+   next
+     if ( defined($command)
+     && $command eq "Sleep"
+     && defined($query_time)
+     && $query_time >= 1 );
+  
+    if( $type >= 1 ) {
+     next if ( defined($command) && $command eq "Sleep" );
+     next if ( defined($command) && $command eq "Connect" );
+    }
+  
+    if( $type >= 2 ) {
+     next if ( defined($info) && $info =~ m/^select/i );
+     next if ( defined($info) && $info =~ m/^show/i );
+    }
+  
+   push @threads, $ref;
+  }
+ return @threads;
+}
+  
+sub main {
+  if ($command eq "stop" ) {
+    my$exit_code = 1;
+   eval {
+     my $new_master_handler = new MHA::DBHelper();
+  
+     $new_master_handler->connect( $new_master_ip, $new_master_port,
+       $new_master_user, $new_master_password, 1 );
+     print current_time_us() . " Set read_only on the new master..";
+     $new_master_handler->enable_read_only();
+     if ( $new_master_handler->is_read_only() ) {
+       print "ok.\n";
+     }
+     else {
+       die "Failed!\n";
+     }
+     $new_master_handler->disconnect();
+  
+     my $orig_master_handler = new MHA::DBHelper();
+     $orig_master_handler->connect( $orig_master_ip, $orig_master_port,
+       $orig_master_user, $orig_master_password, 1 );
+  
+     my $time_until_read_only = 15;
+     $_tstart = [gettimeofday];
+     my @threads = get_threads_util( $orig_master_handler->{dbh},
+       $orig_master_handler->{connection_id} );
+     while ( $time_until_read_only > 0 && $#threads >= 0 ) {
+       if ( $time_until_read_only % 5 == 0 ) {
+         printf
+"%s Waiting all running %d threads aredisconnected.. (max %d milliseconds)\n",
+           current_time_us(), $#threads + 1, $time_until_read_only * 100;
+         if ( $#threads < 5 ) {
+           print Data::Dumper->new( [$_] )->Indent(0)->Terse(1)->Dump ."\n"
+             foreach (@threads);
+         }
+       }
+       sleep_until();
+       $_tstart = [gettimeofday];
+       $time_until_read_only--;
+       @threads = get_threads_util( $orig_master_handler->{dbh},
+         $orig_master_handler->{connection_id} );
+     }
+  
+     print current_time_us() . " Set read_only=1 on the orig master..";
+     $orig_master_handler->enable_read_only();
+     if ( $orig_master_handler->is_read_only() ) {
+       print "ok.\n";
+     }
+     else {
+       die "Failed!\n";
+     }
+  
+     my $time_until_kill_threads = 5;
+     @threads = get_threads_util( $orig_master_handler->{dbh},
+       $orig_master_handler->{connection_id} );
+     while ( $time_until_kill_threads > 0 && $#threads >= 0 ) {
+       if ( $time_until_kill_threads % 5 == 0 ) {
+         printf
+"%s Waiting all running %d queries aredisconnected.. (max %d milliseconds)\n",
+           current_time_us(), $#threads + 1, $time_until_kill_threads * 100;
+         if ( $#threads < 5 ) {
+           print Data::Dumper->new( [$_] )->Indent(0)->Terse(1)->Dump ."\n"
+             foreach (@threads);
+         }
+       }
+       sleep_until();
+       $_tstart = [gettimeofday];
+       $time_until_kill_threads--;
+       @threads = get_threads_util( $orig_master_handler->{dbh},
+         $orig_master_handler->{connection_id} );
+     }
+  
+     print "Disabling the VIPon old master: $orig_master_host \n";
+     &stop_vip();    
+  
+     print current_time_us() . " Killing all applicationthreads..\n";
+     $orig_master_handler->kill_threads(@threads) if ( $#threads >= 0);
+     print current_time_us() . " done.\n";
+     $orig_master_handler->disconnect();
+  
+     $exit_code = 0;
+    };
+    if($@) {
+     warn "Got Error: $@\n";
+     exit $exit_code;
+    }
+   exit $exit_code;
+  }
+ elsif ( $command eq "start" ) {
+    my$exit_code = 10;
+    eval{
+     my $new_master_handler = new MHA::DBHelper();
+  
+     $new_master_handler->connect( $new_master_ip, $new_master_port,
+       $new_master_user, $new_master_password, 1 );
+  
+     print current_time_us() . " Set read_only=0 on the newmaster.\n";
+     $new_master_handler->disable_read_only();
+  
+     $new_master_handler->disconnect();
+  
+     print "Enabling the VIP -$vip on the new master - $new_master_host \n";
+     &start_vip();
+     $exit_code = 0;
+    };
+    if($@) {
+     warn "Got Error: $@\n";
+     exit $exit_code;
+    }
+   exit $exit_code;
+  }
+ elsif ( $command eq "status" ) {
+   exit 0;
+  }
+  else{
+   &usage();
+   exit 1;
+  }
+}
+  
+sub start_vip() {
+   `ssh $ssh_user\@$new_master_host \" $ssh_start_vip \"`;
+}
+
+sub stop_vip() {
+   `ssh $ssh_user\@$orig_master_host \" $ssh_stop_vip \"`;
+}
+  
+sub usage {
+ print
+"Usage: master_ip_online_change --command=start|stop|status--orig_master_host=host --orig_master_ip=ip --orig_master_port=port--new_master_host=host --new_master_ip=ip --new_master_port=port\n";
+  die;
+}
+
+10.2.8 检查MHA配置
+masterha_check_ssh --conf=/etc/masterha/app1.cnf
+masterha_check_repl --conf=/etc/masterha/app1.cnf
+masterha_check_status --conf=/etc/masterha/app1.cnf
+mkdir -p /var/log/masterha/app1/
+nohup masterha_manager --conf=/etc/masterha/app1.cnf --remove_dead_master_conf --ignore_last_failover < /dev/null > /var/log/masterha/app1/manager.log 2>&1 &
+masterha_check_status --conf=/etc/masterha/app1.cnf
+cat /var/log/masterha/app1/manager.log
+
+10.3.1 初始绑定VIP
+/sbin/ifconfig ens160:1 172.16.1.100/24
+ip a
+
+10.3.2 测试自动切换
+mysql -uroot -p123456 -e "stop slave io_thread;"
+
+# 用root用户安装sysbench
+yum install sysbench -y
+ 
+# 用mysql用户建立sbtest 数据库
+mysql -uroot -p123456 -e "create database sbtest;"
+ 
+# 用mysql用户执行sysbench生成数据
+sysbench /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua --mysql-host=127.0.0.1 --mysql-port=3306 --mysql-user=root --mysql-password=123456 --oltp-test-mode=complex --oltp-tables-count=10 --oltp-table-size=10000 --threads=10 --time=120 --report-interval=10 --db-driver=mysql prepare
+
+service mysql stop
+
+ip a
+
+mysql -uroot -p123456 -h172.16.1.100 -e "use sbtest; show tables; select count(*) from sbtest1; select count(*) from sbtest10;"
+
+mysql -uroot -p123456 -h172.16.1.125 -e "show slave status\G"
+mysql -uroot -p123456 -h172.16.1.126 -e "show slave status\G"
+masterha_check_status --conf=/etc/masterha/app1.cnf
+
+10.3.3 测试手工切换
+-- 在hdp4、hdp3、hdp2上重置master、slave
+stop slave;
+drop database sbtest;
+reset master;
+reset slave all;
+ 
+-- 在hdp3、hdp2上重新指向hdp4为master
+change master to
+master_host='172.16.1.127',
+master_port=3306,
+master_user='repl',
+master_password='123456',
+master_log_file='mysql-bin.000001',
+master_log_pos=120;
+ 
+start slave;
+show slave status\G
+
+# 在hdp3上用root用户执行
+/sbin/ifconfig ens32:1 down
+ 
+# 在hdp4上用root用户执行
+/sbin/ifconfig ens160:1 172.16.1.100
+
+# 在hdp1上用root用户执行
+nohup masterha_manager --conf=/etc/masterha/app1.cnf --remove_dead_master_conf --ignore_last_failover < /dev/null > /var/log/masterha/app1/manager.log 2>&1 &
+
+masterha_stop --conf=/etc/masterha/app1.cnf
+
+service mysql stop
+
+masterha_master_switch --master_state=dead --conf=/etc/masterha/app1.cnf --dead_master_host=172.16.1.127 --dead_master_port=3306 --new_master_host=172.16.1.126 --new_master_port=3306 --ignore_last_failover
+
+ip a
+
+mysql -uroot -p123456 -h172.16.1.125 -e "show slave status\G"
+
+mysql -uroot -p123456 -h172.16.1.100 -e "show variables like 'server_id';"
+
+10.3.4 测试在线切换
+masterha_stop --conf=/etc/masterha/app1.cnf
+masterha_master_switch --conf=/etc/masterha/app1.cnf --master_state=alive --new_master_host=172.16.1.126 --new_master_port=3306  --orig_master_is_new_slave --running_updates_limit=10000
+
+mysql -uroot -p123456 -h172.16.1.125 -e "show slave status\G"
+mysql -uroot -p123456 -h172.16.1.126 -e "show slave status\G"
+mysql -uroot -p123456 -h172.16.1.127 -e "show slave status\G"
+
+ip a
+
+mysql -uroot -p123456 -h172.16.1.100 -e "show variables like 'server_id'"
+
+10.3.5 修复宕机的Master
+grep -i "All other slaves should start" /var/log/masterha/app1/manager.log
+
+
+第11章 Keepalived + LVS
+11.3.2 安装配置
+yum -y install ipvsadm
+
+wget -q http://www.keepalived.org/software/keepalived-1.2.13.tar.gz
+tar -zxvf keepalived-1.2.13.tar.gz
+cd keepalived-1.2.13
+./configure && make && make install
+cp /usr/local/etc/rc.d/init.d/keepalived /etc/rc.d/init.d/
+cp /usr/local/etc/sysconfig/keepalived /etc/sysconfig/
+mkdir /etc/keepalived
+cp /usr/local/etc/keepalived/keepalived.conf /etc/keepalived/
+cp /usr/local/sbin/keepalived /usr/sbin/
+chkconfig --add keepalived
+chkconfig --level 345 keepalived on
+
+iptables -t mangle -I PREROUTING -d 172.16.1.100 -p tcp -m tcp --dport 3306 -m mac ! --mac-source 00:50:56:a5:49:7f -j MARK --set-mark 0x1
+
+iptables -t mangle -I PREROUTING -d 172.16.1.100 -p tcp -m tcp --dport 3306 -m mac ! --mac-source 00:50:56:a5:0f:77 -j MARK --set-mark 0x2
+
+# master的/etc/keepalived/keepalived.conf
+global_defs {
+   router_id LVS_DEVEL
+} 
+ 
+vrrp_sync_group VG1 {
+group {
+VI_1
+}
+}
+ 
+vrrp_instance VI_1 {
+    state BACKUP
+    interface ens32 
+    virtual_router_id 51
+    priority 100  
+    notify_master "/home/mysql/remove_slave.sh"
+    advert_int 1
+    nopreempt
+    authentication {
+        auth_type PASS
+        auth_pass 1234
+    }
+    virtual_ipaddress {
+        172.16.1.100
+        172.16.1.210
+    }
+}
+
+# 写VIP virtual_server，只配置本地机器
+virtual_server 172.16.1.210 3306 {# 定义虚拟服务器，地址与上面的virtual_ipaddress相同
+    delay_loop 3                  # 健康检查时间间隔，3秒
+    lb_algo rr			          # 负载均衡调度算法：rr|wrr|lc|wlc|sh|dh|lblc
+    lb_kind DR			          # 负载均衡转发规则：NAT|DR|TUN
+    # persistence_timeout 5	      # 会话保持时间5秒，动态服务建议开启
+    protocol TCP                  # 转发协议protocol，一般有tcp和udp两种
+    
+	real_server 172.16.1.126 3306 {
+        weight 1                  # 权重越大负载分越大，0表示失效
+        notify_down /home/mysql/mysql_down.sh
+        TCP_CHECK {
+            connect_timeout 3
+            nb_get_retry 3
+            delay_before_retry 3
+            connect_port 3306
+        }
+    }
+}
+
+# 读VIP virtual_server，配置fwmark转发
+virtual_server fwmark 1 {	
+    delay_loop 3			       
+    lb_algo rr				       
+    lb_kind DR				       
+    # persistence_timeout 5	       
+    protocol TCP			      
+ 
+    real_server 172.16.1.126 3306 {
+        weight 1			        
+	    notify_down /home/mysql/mysql_down.sh
+        TCP_CHECK {
+            connect_timeout 3
+            nb_get_retry 3
+            delay_before_retry 3
+            connect_port 3306
+        }
+    }
+    real_server 172.16.1.127 3306 {
+        weight 1
+        TCP_CHECK {
+            connect_timeout 3
+            nb_get_retry 3
+            delay_before_retry 3
+            connect_port 3306
+        }
+    }
+}
+
+# backup的/etc/keepalived/keepalived.conf
+global_defs {
+   router_id LVS_DEVEL
+} 
+ 
+vrrp_sync_group VG1 {
+group {
+VI_1
+}
+}
+ 
+vrrp_instance VI_1 {
+    state BACKUP
+    interface ens160 
+    virtual_router_id 51
+    priority 90  
+    notify_master "/home/mysql/remove_slave.sh"
+    advert_int 1
+    nopreempt
+    authentication {
+        auth_type PASS
+        auth_pass 1234
+    }
+    virtual_ipaddress {
+        172.16.1.100
+        172.16.1.210
+    }
+}
+
+# 写VIP virtual_server，只配置本地机器
+virtual_server 172.16.1.210 3306 {# 定义虚拟服务器，地址与上面的virtual_ipaddress相同
+    delay_loop 3                  # 健康检查时间间隔，3秒
+    lb_algo rr                    # 负载均衡调度算法：rr|wrr|lc|wlc|sh|dh|lblc
+    lb_kind DR                    # 负载均衡转发规则：NAT|DR|TUN
+    # persistence_timeout 5	      # 会话保持时间5秒，动态服务建议开启
+    protocol TCP                  # 转发协议protocol，一般有tcp和udp两种
+    
+	real_server 172.16.1.127 3306 {
+        weight 1                  # 权重越大负载分越大，0表示失效
+	    notify_down /home/mysql/mysql_down.sh
+        TCP_CHECK {
+            connect_timeout 3
+            nb_get_retry 3
+            delay_before_retry 3
+            connect_port 3306
+        }
+    }
+}
+
+# 读VIP virtual_server，配置fwmark转发
+virtual_server fwmark 2 {	
+    delay_loop 3			       
+    lb_algo rr				       
+    lb_kind DR				       
+    # persistence_timeout 5	       
+    protocol TCP			      
+ 
+    real_server 172.16.1.126 3306 {
+        weight 1			        
+        TCP_CHECK {
+            connect_timeout 3
+            nb_get_retry 3
+            delay_before_retry 3
+            connect_port 3306
+        }
+    }
+    real_server 172.16.1.127 3306 {
+        weight 1
+        notify_down /home/mysql/mysql_down.sh
+        TCP_CHECK {
+            connect_timeout 3
+            nb_get_retry 3
+            delay_before_retry 3
+            connect_port 3306
+        }
+    }
+}
+
+# /home/mysql/mysql_down.sh
+#!/bin/bash
+/etc/init.d/keepalived stop
+
+# /home/mysql/remove_slave.sh
+#!/bin/bash
+. /home/mysql/.bashrc
+
+user=root
+password=123456
+log=/home/mysql/remove_slave.log
+
+echo "`date`" >> $log
+mysql -u$user -p$password -e "set global read_only=OFF;stop slave;reset master;reset slave all;" >> $log
+/bin/sed -i 's#read-only#\#read-only#' /home/mysql/mysql-5.6.14/my.cnf
+
+# /etc/init.d/realserver
+#!/bin/sh
+RVIP=172.16.1.100
+WVIP=172.16.1.210
+. /etc/rc.d/init.d/functions
+ 
+case "$1" in
+# 禁用本地的ARP请求、绑定本地回环地址
+start)
+    /sbin/ifconfig lo down
+    /sbin/ifconfig lo up
+    echo "1" >/proc/sys/net/ipv4/conf/lo/arp_ignore
+    echo "2" >/proc/sys/net/ipv4/conf/lo/arp_announce
+    echo "1" >/proc/sys/net/ipv4/conf/all/arp_ignore
+    echo "2" >/proc/sys/net/ipv4/conf/all/arp_announce
+    /sbin/sysctl -p >/dev/null 2>&1
+	
+    # 在回环地址上绑定VIP，设定掩码，与Direct Server上自身的IP保持通信
+    /sbin/ifconfig lo:0 $RVIP netmask 255.255.255.255 up 
+    /sbin/ifconfig lo:1 $WVIP netmask 255.255.255.255 up 
+	
+    /sbin/route add -host $RVIP dev lo:0
+    /sbin/route add -host $WVIP dev lo:1
+	
+    echo "LVS-DR real server starts successfully.\n"
+    ;;
+stop)
+    /sbin/ifconfig lo:0 down
+    /sbin/ifconfig lo:1 down
+    /sbin/route del $RVIP >/dev/null 2>&1
+    /sbin/route del $WVIP >/dev/null 2>&1
+	
+    echo "1" >/proc/sys/net/ipv4/conf/lo/arp_ignore
+    echo "2" >/proc/sys/net/ipv4/conf/lo/arp_announce
+    echo "1" >/proc/sys/net/ipv4/conf/all/arp_ignore
+    echo "2" >/proc/sys/net/ipv4/conf/all/arp_announce
+echo "LVS-DR real server stopped.\n"
+    ;;
+status)
+    isLoOn=`/sbin/ifconfig lo:0 | grep "$RVIP"`
+    isRoOn=`/bin/netstat -rn | grep "$RVIP"`
+    if [ "$isLoON" == "" -a "$isRoOn" == "" ]; then
+        echo "LVS-DR real server has run yet."
+    else
+        echo "LVS-DR real server is running."
+    fi
+    exit 3
+    ;;
+*)
+    echo "Usage: $0 {start|stop|status}"
+    exit 1
+esac
+exit 0
+
+chmod +x /etc/init.d/realserver
+echo "/etc/init.d/realserver" >> /etc/rc.d/rc.local
+
+service realserver start
+/etc/init.d/
+
+ip a
+
+ipvsadm -Ln
+
+11.3.3 功能测试
+mysql -utest -p123456 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+mysql -utest -p123456 -h172.16.1.210 -N -s -e "show variables like 'server_id'"
+
+pkill -9 mysqld
+mysql -utest -p123456 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+mysql -utest -p123456 -h172.16.1.210 -N -s -e "show variables like 'server_id'"
+
+ipvsadm -Ln
+
+service mysql start
+mysql -utest -p123456 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+
+pkill -9 mysqld
+mysql -utest -p123456 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+mysql -utest -p123456 -h172.16.1.210 -N -s -e "show variables like 'server_id'"
+
+ip a
+
+mysql -utest -p123456 -h172.16.1.210
+select * from test.t1;
+delete from test.t1;
+commit;
+
+11.4.2 安装配置
+# masterA自增长ID
+auto_increment_offset = 1      #奇数ID
+auto_increment_increment = 2   
+# masterB自增加ID
+auto_increment_offset = 2      #偶数ID
+auto_increment_increment = 2   
+
+# master的/etc/keepalived/keepalived.conf
+global_defs {
+   router_id LVS_DEVEL
+} 
+ 
+vrrp_sync_group VG1 {
+group {
+VI_1
+}
+}
+ 
+vrrp_instance VI_1 {
+    state BACKUP
+    interface ens32 
+    virtual_router_id 51
+    priority 100  
+    advert_int 1
+    nopreempt
+    authentication {
+        auth_type PASS
+        auth_pass 1234
+    }
+    virtual_ipaddress {
+        172.16.1.100
+    }
+}
+
+virtual_server 172.16.1.100 3306 {# 定义虚拟服务器，地址与上面的virtual_ipaddress相同
+    delay_loop 3                  # 健康检查时间间隔，3秒
+    lb_algo rr                    # 负载均衡调度算法：rr|wrr|lc|wlc|sh|dh|lblc
+    lb_kind DR                    # 负载均衡转发规则：NAT|DR|TUN
+    # persistence_timeout 5       # 会话保持时间5秒，动态服务建议开启
+    protocol TCP                  # 转发协议protocol，一般有tcp和udp两种
+ 
+    #后端真实服务器，有几台就设置几个
+    real_server 172.16.1.126 3306 {
+        weight 1                  # 权重越大负载分越大，0表示失效
+        TCP_CHECK {
+            connect_timeout 3
+            nb_get_retry 3
+            delay_before_retry 3
+            connect_port 3306
+        }
+    }
+    real_server 172.16.1.127 3306 {
+        weight 1
+        TCP_CHECK {
+            connect_timeout 3
+            nb_get_retry 3
+            delay_before_retry 3
+            connect_port 3306
+        }
+    }
+}
+
+# /etc/init.d/realserver
+#!/bin/sh
+VIP=172.16.1.100
+. /etc/rc.d/init.d/functions
+
+case "$1" in
+# 禁用本地的ARP请求、绑定本地回环地址
+start)
+    /sbin/ifconfig lo down
+    /sbin/ifconfig lo up
+    echo "1" >/proc/sys/net/ipv4/conf/lo/arp_ignore
+    echo "2" >/proc/sys/net/ipv4/conf/lo/arp_announce
+    echo "1" >/proc/sys/net/ipv4/conf/all/arp_ignore
+    echo "2" >/proc/sys/net/ipv4/conf/all/arp_announce
+/sbin/sysctl -p >/dev/null 2>&1
+
+# 在回环地址上绑定VIP，设定掩码，与Direct Server上自身的IP保持通信
+    /sbin/ifconfig lo:0 $VIP netmask 255.255.255.255 up 
+    /sbin/route add -host $VIP dev lo:0
+    echo "LVS-DR real server starts successfully.\n"
+    ;;
+stop)
+    /sbin/ifconfig lo:0 down
+    /sbin/route del $VIP >/dev/null 2>&1
+    echo "1" >/proc/sys/net/ipv4/conf/lo/arp_ignore
+    echo "2" >/proc/sys/net/ipv4/conf/lo/arp_announce
+    echo "1" >/proc/sys/net/ipv4/conf/all/arp_ignore
+    echo "2" >/proc/sys/net/ipv4/conf/all/arp_announce
+echo "LVS-DR real server stopped.\n"
+    ;;
+status)
+    isLoOn=`/sbin/ifconfig lo:0 | grep "$VIP"`
+    isRoOn=`/bin/netstat -rn | grep "$VIP"`
+    if [ "$isLoON" == "" -a "$isRoOn" == "" ]; then
+        echo "LVS-DR real server has run yet."
+    else
+        echo "LVS-DR real server is running."
+    fi
+    exit 3
+    ;;
+*)
+    echo "Usage: $0 {start|stop|status}"
+    exit 1
+esac
+exit 0
+
+chmod +x /etc/init.d/realserver
+echo "/etc/init.d/realserver" >> /etc/rc.d/rc.local
+
+service realserver start
+
+ip a
+
+/etc/init.d/keepalived start
+
+ip a
+
+ipvsadm -Ln
+
+11.4.3 功能测试
+mysql -uwxy -p123456 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+
+/etc/init.d/keepalived stop
+ip a
+mysql -uwxy -p123456 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+
+pkill -9 mysqld
+ipvsadm -Ln
+mysql -uwxy -p123456 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+
+ipvsadm -Ln
+
+
+第12章 Heartbeat + haproxy
+12.3.2 安装配置
+groupadd haproxy # 添加haproxy组
+useradd -g haproxy haproxy -s /bin/false # 创建账户haproxy并加入到haproxy组
+
+tar zxvf haproxy-1.8.12.tar.gz
+
+cd haproxy-1.8.12
+make TARGET=linux3100 CPU=x86_64 PREFIX=/usr/local/haprpxy
+make install PREFIX=/usr/local/haproxy
+
+mkdir -p /usr/local/haproxy/conf # 创建配置文件目录
+mkdir -p /etc/haproxy # 创建配置文件目录
+touch /usr/local/haproxy/conf/haproxy.cfg # 创建配置文件
+ln -s /usr/local/haproxy/conf/haproxy.cfg /etc/haproxy/haproxy.cfg # 添加配置文件软连接
+cp -r /root/haproxy-1.8.12/examples/errorfiles /usr/local/haproxy/errorfiles # 拷贝错误页面
+ln -s /usr/local/haproxy/errorfiles /etc/haproxy/errorfiles # 添加软连接
+mkdir -p /usr/local/haproxy/log # 创建日志文件目录
+touch /usr/local/haproxy/log/haproxy.log # 创建日志文件
+ln -s /usr/local/haproxy/log/haproxy.log /var/log/haproxy.log # 添加软连接
+cp /root/haproxy-1.8.12/examples/haproxy.init /etc/rc.d/init.d/haproxy # 拷贝开机启动文件
+chmod +x /etc/rc.d/init.d/haproxy # 添加脚本执行权限
+chkconfig haproxy on # 设置开机启动
+ln -s /usr/local/haproxy/sbin/haproxy /usr/sbin # 添加软连接
+
+# /usr/local/haproxy/conf/haproxy.cfg
+global
+    log       127.0.0.1 local2                # 日志定义级别
+    chroot    /usr/local/haproxy              # 当前工作目录
+    pidfile   /var/run/haproxy.pid            # 进程id文件
+    maxconn   4000                            # 最大连接数
+    user      haproxy                         # 运行该程序的用户
+    group     haproxy                         # 运行该程序的组
+    daemon                                    # 以后台形式运行
+    stats socket /usr/local/haproxy/stats     # socket文件所在目录
+ 
+defaults
+    mode      tcp          # haproxy运行模式（http | tcp | health）
+    log       global       # 采用全局定义的日志
+    option     dontlognull # 不记录健康检查的日志信息
+    option     redispatch  # 服务器挂掉后,将其上的请求重新分发到其它健康的服务器
+    retries    3           # 三次连接失败则服务器不用
+    timeout http-request    10s   # http请求超时
+    timeout queue           1m    # 排队超时
+    timeout connect         10s   # 连接超时
+    timeout client          1m    # 客户端超时
+    timeout server          1m    # 服务器超时
+    timeout http-keep-alive 10s   # keep-alive连接超时
+    timeout check           10s   # 心跳检测
+    maxconn                 600   # 最大连接数
+ 
+listen stats                               # 配置haproxy状态页（用来查看的页面）
+    mode http
+    bind :8888
+    stats enable
+    stats hide-version                     # 隐藏haproxy版本号
+    stats uri      /haproxyadmin?stats     # 状态页uri
+    stats realm    Haproxy\ Statistics     # 输入账户密码时的提示文字
+    stats auth     admin:admin             # 用户名:密码
+ 
+frontend  read 
+     bind *:3307
+    # 监听前端端口，表示任何IP访问3307端口都会将数据轮番转发到mysql服务器群组中
+    default_backend  mysql_read               # 后端服务器组名
+ 
+backend mysql_read
+    balance        roundrobin                 # 使用轮询方式调度
+    server mysql1 172.16.1.126:3306 check port 3306 maxconn 300
+    server mysql2 172.16.1.127:3306 check port 3306 maxconn 300
+ 
+frontend  write
+    bind *:3308
+    # 监听前端端口，表示任何IP访问3308端口都会将数据轮番转发到mysql服务器群组中
+    default_backend  mysql_write              # 后端服务器组名  
+
+backend mysql_write
+    server mysql1 172.16.1.126:3306 check port 3306 maxconn 300
+
+# /etc/rsyslog.conf
+# Provides TCP syslog reception
+$ModLoad imtcp                      # 去掉注释
+$InputTCPServerRun 514              # 去掉注释
+local2.*   /var/log/haproxy.log     # 添加此行
+
+systemctl disable firewalld
+
+# /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+ 
+172.16.1.126 hdp3
+172.16.1.127 hdp4
+
+#  在172.16.1.126上
+hostnamectl set-hostname hdp3
+#  在172.16.1.127上
+hostnamectl set-hostname hdp4
+
+yum -y install glib2-devel libtool-ltdl-devl net-snmp-devel bzip2-devel ncurses-devel openssl-devel libtool libxml2 libxml2-devel gettext bison flex zlib-devel mailx which libxslt docbook-dtds docbook-style-xsl PyXML shadow-utils opensp autoconf automake bzip2 e2fsprogs-devel libxslt-devel libtool-ltdl-devel make asciidoc libuuid-devel
+
+groupadd haclient
+useradd -g haclient -M -s /sbin/nologin hacluster
+
+bunzip2 0a7add1d9996.tar.bz2
+tar -xf 0a7add1d9996.tar
+cd Reusable-Cluster-Components-glue--0a7add1d9996
+./autogen.sh
+./configure --prefix=/usr/local/heartbeat && make && make install
+
+bunzip2 0a7add1d9996.tar.bz2
+tar -xf 0a7add1d9996.tar
+cd Reusable-Cluster-Components-glue--0a7add1d9996
+./autogen.sh
+./configure --prefix=/usr/local/heartbeat && make && make install
+
+tar -zxf resource-agents-3.9.6.tar.gz 
+cd resource-agents-3.9.6
+./autogen.sh
+export CFLAGS="$CFLAGS -I/usr/local/heartbeat/include -L/usr/local/heartbeat/lib"
+./configure --prefix=/usr/local/heartbeat/
+ln -s  /usr/local/heartbeat/lib/* /lib/
+ln -s  /usr/local/heartbeat/lib/* /lib64/
+make && make install
+
+cd /usr/local/heartbeat/share/doc/heartbeat
+cp -a ha.cf authkeys haresources /usr/local/heartbeat/etc/ha.d/
+cd /usr/local/heartbeat/etc/ha.d
+chmod 600 etc/ha.d/authkeys
+ln -svf /usr/local/heartbeat/lib64/heartbeat/plugins/RAExec/* /usr/local/heartbeat/lib/heartbeat/plugins/RAExec/
+ln -svf /usr/local/heartbeat/lib64/heartbeat/plugins/* /usr/local/heartbeat/lib/heartbeat/plugins/ 
+
+# /usr/local/heartbeat/etc/ha.d/ha.cf
+# 保存调试信息文件
+debugfile /var/log/ha-debug         
+ 
+# 日志文件
+logfile /var/log/ha-log
+ 
+# 表示使用系统日志            
+logfacility local0 
+ 
+# 心跳的时间间隔，单位秒                 
+keepalive 1                         
+ 
+# 超出该时间间隔未收到对方节点的心跳，则判定对方死亡
+deadtime 30  
+ 
+# 超出该时间间隔未收到对方节点的心跳，则发出警告记录到日志中           
+warntime 10 
+ 
+# 在某些系统上，系统启动或重启之后需要经过一段时间网络才能正常工作
+# 该选项用于解决这种情况产生的时间间隔，取值至少为deadtime的2倍
+initdead 120  
+ 
+# 设置广播通信使用的端口，694为默认使用的端口号                           
+udpport 694                         
+ 
+# 传播心跳广播的网卡信息
+bcast ens32      
+ 
+# 设置对方机器心跳检测的IP                   
+ucast ens32 172.16.1.127   
+ 
+# 在该选项设为on的情况下，一旦主节点恢复运行，则自动获取资源并取代备用节点         
+auto_failback off              
+ 
+# 配置主备节点信息
+node hdp3                           
+node hdp4           
+ 
+# 如果ping不通该地址，就认为当前断网，需要转移VIP
+ping 172.16.1.254                   
+ 
+# 指定与heartbeat一同启动和关闭的进程，该进程被自动监视，遇到故障则重新启动。
+# 最常用的进程是ipfail，该进程用于检测和处理网络故障，
+# 需要配合ping语句指定的ping node来检测网络连接。如果系统是64bit，注意该文件的路径。
+respawn hacluster /usr/local/heartbeat/libexec/heartbeat/ipfail  
+ 
+# 指定用户和组
+apiauth ipfail gid=haclient uid=hacluster
+
+# /usr/local/heartbeat/etc/ha.d/authkeys
+auth 2
+2 sha1 HI!
+
+# /usr/local/heartbeat/etc/ha.d/haresources
+hdp3 172.16.1.100 mysql
+
+# /usr/local/heartbeat/etc/ha.d/resource.d/mysql
+/home/mysql/remove_slave.sh
+/etc/init.d/haproxy restart
+
+# /home/mysql/remove_slave.sh
+#!/bin/bash
+. /home/mysql/.bashrc
+ 
+user=root
+password=123456
+log=/home/mysql/remove_slave.log
+ 
+echo "`date`" >> $log
+ 
+rm -rf /tmp/kill.sql
+mysql -u$user -p$password -e "select * into outfile '/tmp/kill.sql' from (select concat('kill ',id,';') from information_schema.processlist where command='sleep' 
+union all select 'set global read_only=OFF;' 
+union all select 'stop slave;' 
+union all select 'reset slave all;') t;"
+ 
+mysql -u$user -p$password < /tmp/kill.sql >> $log
+ 
+/bin/sed -i 's#read-only#\#read-only#' /home/mysql/mysql-5.6.14/my.cnf
+
+# /home/mysql/mysql_check.sh
+#!/bin/bash
+. /home/mysql/.bashrc
+ 
+count=1
+ 
+while true
+do
+ 
+mysql -uroot -p123456 -S /data/mysql.sock -e "show status;" > /dev/null 2>&1
+i=$?
+ps aux | grep mysqld | grep -v grep > /dev/null 2>&1
+j=$?
+if [ $i = 0 ] && [ $j = 0 ]
+then
+   sleep 3
+else
+   if [ $i = 1 ] && [ $j = 0 ]
+   then
+       sleep 3
+   else
+        if [ $count -gt 5 ]
+        then
+              break
+        fi
+   let count++
+   continue
+   fi
+fi
+ 
+done
+/etc/init.d/heartbeat stop
+
+chkconfig heartbeat on
+systemctl start heartbeat
+
+systemctl start haproxy
+
+ip a
+ps -ef | grep heartbeat | grep -v grep
+ps -ef | grep haproxy | grep -v grep
+ps -ef | grep mysql_check | grep -v grep
+
+12.3.3 功能测试
+mysql -utest -p123456 -P3307 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+mysql -utest -p123456 -P3308 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+
+pkill -9 mysqld
+mysql -utest -p123456 -P3307 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+mysql -utest -p123456 -P3308 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+
+service mysql start
+mysql -utest -p123456 -P3307 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+
+pkill -9 mysqld
+mysql -utest -p123456 -P3307 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+mysql -utest -p123456 -P3308 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+
+ip a
+
+mysql -utest -p123456 -P3308 -h172.16.1.100 -e "use test; create table t1(a int); insert into t1 values (1),(2),(3); commit; select * from t1;"
+
+mysql -u root -p123456 -e "show slave status\G"
+more /home/mysql/mysql-5.6.14/my.cnf | grep read-only
+
+12.4.2 安装配置
+# /usr/local/haproxy/conf/haproxy.cfg
+global
+    log        127.0.0.1 local2               # 日志定义级别
+    chroot     /usr/local/haproxy             # 当前工作目录
+    pidfile    /var/run/haproxy.pid           # 进程id文件
+    maxconn    4000                           # 最大连接数
+    user       haproxy                        # 运行该程序的用户
+    group      haproxy                        # 运行该程序的组
+    daemon                                    # 以后台形式运行
+    stats socket /usr/local/haproxy/stats     # socket文件所在目录
+ 
+defaults
+    mode       tcp                # haproxy运行模式（http | tcp | health）
+    log        global             # 采用全局定义的日志
+    option     dontlognull        # 不记录健康检查的日志信息
+    option     redispatch         # 服务器挂掉后,将其上的请求重新分发到其它健康的服务器
+    retries    3                  # 三次连接失败则服务器不用
+    timeout http-request    10s   # http请求超时
+    timeout queue           1m    # 排队超时
+    timeout connect         10s   # 连接超时
+    timeout client          1m    # 客户端超时
+    timeout server          1m    # 服务器超时
+    timeout http-keep-alive 10s   # keep-alive连接超时
+    timeout check           10s   # 心跳检测
+    maxconn                 600   # 最大连接数
+ 
+listen stats                                  # 配置haproxy状态页（用来查看的页面）
+    mode http
+    bind :8888
+    stats enable
+    stats hide-version                        # 隐藏haproxy版本号
+    stats uri      /haproxyadmin?stats        # 状态页uri
+    stats realm    Haproxy\ Statistics        # 输入账户密码时的提示文字
+    stats auth     admin:admin                # 用户名:密码
+ 
+frontend  main 
+     bind 0.0.0.0:6603
+    # 监听前端端口，表示任何IP访问6603端口都会将数据轮番转发到mysql服务器群组中
+    default_backend  mysql                    # 后端服务器组名
+ 
+backend mysql
+    balance        roundrobin                 # 使用轮询方式调度
+    server mysql1 172.16.1.126:3306 check port 3306 maxconn 300
+    server mysql2 172.16.1.127:3306 check port 3306 maxconn 300
+
+# /usr/local/heartbeat/etc/ha.d/haresources
+hdp3 172.16.1.100 haproxy
+
+# /usr/local/heartbeat/etc/ha.d/resource.d/haproxy
+/etc/init.d/haproxy restart
+
+chkconfig heartbeat on
+systemctl start heartbeat
+
+systemctl start haproxy
+
+12.4.3 功能测试
+mysql -utest -p123456 -P6603 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+
+pkill -9 mysqld
+mysql -utest -p123456 -P6603 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+
+service mysql start
+systemctl restart haproxy
+mysql -utest -p123456 -P6603 -h172.16.1.100 -N -s -e "show variables like 'server_id'"
+
+pkill -9 mysqld
+ip a
+/etc/init.d/haproxy status
+
+systemctl start heartbeat
+ip a
+
+
+第13章 Innodb Cluster
+13.1.2 MySQL Shell
+mysqlsh --file code.js
+
+tar -zxvf mysql-shell-8.0.17-linux-glibc2.12-x86-64bit.tar.gz
+
+~/mysql-shell-8.0.17-linux-glibc2.12-x86-64bit/bin/mysqlsh
+
+\? dba
+dba.help('getCluster')
+
+13.2 创建InnoDB Cluster
+/usr/bin/env python
+
+13.2.1 检查实例配置
+mysqlsh
+dba.checkInstanceConfiguration('wxy@172.16.1.125:3306')
+dba.checkInstanceConfiguration('wxy@172.16.1.126:3306')
+dba.checkInstanceConfiguration('wxy@172.16.1.127:3306')
+
+13.2.2 配置实例
+dba.configureInstance('wxy@172.16.1.125:3306')
+dba.checkInstanceConfiguration('wxy@172.16.1.125:3306')
+
+dba.configureInstance('wxy@172.16.1.126:3306')
+dba.configureInstance('wxy@172.16.1.127:3306')
+
+13.2.3 创建集群
+\connect wxy@172.16.1.125:3306
+dba.createCluster('testCluster')
+
+13.2.4 向集群添加实例
+var cluster = dba.getCluster()
+cluster.addInstance('wxy@172.16.1.126:3306')
+cluster.addInstance('wxy@172.16.1.127:3306')
+
+13.2.5 查看集群状态
+cluster.status()
+
+13.2.6 基于已有组复制创建集群
+mysqlsh --uri wxy@172.16.1.125:3306
+var cluster = dba.createCluster('testCluster', {adoptFromGR: true});
+
+13.2.7 配置MySQL Router
+mysqlrouter --bootstrap wxy@172.16.1.125:3306
+
+# /home/mysql/mysql-router-8.0.17-linux-glibc2.12-x86_64/mysqlrouter.conf
+# File automatically generated during MySQL Router bootstrap
+[DEFAULT]
+name=system
+keyring_path=/home/mysql/mysql-router-8.0.17-linux-glibc2.12-x86_64/var/lib/mysqlrouter/keyring
+master_key_path=/home/mysql/mysql-router-8.0.17-linux-glibc2.12-x86_64/mysqlrouter.key
+connect_timeout=15
+read_timeout=30
+dynamic_state=/home/mysql/mysql-router-8.0.17-linux-glibc2.12-x86_64/var/lib/mysqlrouter/state.json
+ 
+[logger]
+level = INFO
+ 
+[metadata_cache:testCluster]
+router_id=1
+user=mysql_router1_c13bmjjayuwr
+metadata_cluster=testCluster
+ttl=0.5
+use_gr_notifications=0
+ 
+[routing:testCluster_default_rw]
+bind_address=0.0.0.0
+bind_port=6446
+destinations=metadata-cache://testCluster/default?role=PRIMARY
+routing_strategy=first-available
+protocol=classic
+ 
+[routing:testCluster_default_ro]
+bind_address=0.0.0.0
+bind_port=6447
+destinations=metadata-cache://testCluster/default?role=SECONDARY
+routing_strategy=round-robin-with-fallback
+protocol=classic
+ 
+[routing:testCluster_default_x_rw]
+bind_address=0.0.0.0
+bind_port=64460
+destinations=metadata-cache://testCluster/default?role=PRIMARY
+routing_strategy=first-available
+protocol=x
+ 
+[routing:testCluster_default_x_ro]
+bind_address=0.0.0.0
+bind_port=64470
+destinations=metadata-cache://testCluster/default?role=SECONDARY
+routing_strategy=round-robin-with-fallback
+protocol=x
+
+mysqlrouter &
+
+13.2.8 客户端连接测试
+# router_connect_test.sh
+mysql -uwxy -123456 -P6446 --protocol=TCP -N -r -B -e"select @@hostname"
+mysql -uwxy -123456 -P6446 --protocol=TCP -N -r -B -e"select @@hostname"
+mysql -uwxy -123456 -P6447 --protocol=TCP -N -r -B -e"select @@hostname"
+mysql -uwxy -123456 -P6447 --protocol=TCP -N -r -B -e"select @@hostname"
+mysql -uwxy -123456 -P6447 --protocol=TCP -N -r -B -e"select @@hostname"
+mysqlsh --sql -uwxy -123456 -P64460 -e"select @@hostname"
+mysqlsh --sql -uwxy -123456 -P64460 -e"select @@hostname"
+mysqlsh --sql -uwxy -123456 -P64470 -e"select @@hostname"
+mysqlsh --sql -uwxy -123456 -P64470 -e"select @@hostname"
+mysqlsh --sql -uwxy -123456 -P64470 -e"select @@hostname"
+
+./router_connect_test.sh > result.txt
+cat result.txt
+
+13.2.9 测试高可用性
+# 在hdp2上执行
+mysqladmin -uroot -p123456 shutdown
+ 
+# 在hdp1上执行
+router_connect_test.sh > result.txt
+cat result.txt
+
+# 在hdp2上执行
+mysqld_safe &
+ 
+# 在hdp1上执行
+router_connect_test.sh > result.txt
+cat result.txt
+
+# 在hdp4上执行
+mysqladmin -uroot -p123456 shutdown 
+ 
+# 在hdp1上执行
+router_connect_test.sh > result.txt
+cat result.txt
+
+# 在hdp4上执行
+mysqld_safe &
+ 
+# 在hdp1上执行
+router_connect_test.sh > result.txt
+cat result.txt
+
+13.3.1 配置实例的自动重新加入
+mysqlsh --uri wxy@172.16.1.126:3306 -p123456 -e "var cluster = dba.getCluster(); cluster.setOption('autoRejoinTries',10)"
+mysql -uwxy -p123456 -P6446 --protocol=TCP -N -r -B -e"select @@group_replication_autorejoin_tries"
+
+mysqlsh --uri wxy@172.16.1.126:3306 -p123456 -e "var cluster = dba.getCluster(); cluster.setOption('exitStateAction','ABORT_SERVER')"
+mysql -uwxy -p123456 -P6446 --protocol=TCP -N -r -B -e"select @@group_replication_exit_state_action"
+
+13.3.2 从InnoDB Cluster中删除实例
+var cluster = dba.getCluster();
+cluster.removeInstance('wxy@172.16.1.126:3306');
+
+\option dba.gtidWaitTimeout
+shell.options['dba.gtidWaitTimeout']=120
+\option dba.gtidWaitTimeout
+
+13.3.3 重启群集
+dba.rebootClusterFromCompleteOutage();
+\connect wxy@172.16.1.125:3306
+dba.rebootClusterFromCompleteOutage();
+
+show variables like 'gtid_executed';
+
+13.3.4 解散InnoDB Cluster
+\connect wxy@172.16.1.125:3306
+var cluster = dba.getCluster()
+cluster.dissolve()
+
+13.3.5 配置新主选举权重
+dba.createCluster('testCluster', {memberWeight:35})
+var mycluster = dba.getCluster()
+mycluster.addInstance('wxy@172.16.1.126:3306', {memberWeight:25})
+mycluster.addInstance('wxy@172.16.1.127:3306', {memberWeight:50})
+
+13.3.7 更改组复制拓扑
+cluster.setPrimaryInstance('172.16.1.126:3306')
+cluster.switchToMultiPrimaryMode()
+cluster.switchToSinglePrimaryMode('172.16.1.125:3306')
+
+13.3.8 设置InnoDB Cluster的选项
+cluster.options({all:true})
+cluster.setOption('clusterName','procCluster')
+cluster.setInstanceOption('172.16.1.125:3306', 'exitStateAction', 'READ_ONLY')
+
+
+第14章 Galera Cluster
+14.2.1 初始安装
+yum install perl-Time-HiRes
+yum -y install perl-DBD-MySQL.x86_64
+yum -y install libaio*
+
+cat > /etc/yum.repos.d/galera.repo <<-END
+[galera]
+name = Galera
+baseurl = https://releases.galeracluster.com/galera-3.28/centos/7/x86_64
+gpgkey = https://releases.galeracluster.com/galera-3.28/GPG-KEY-galeracluster.com
+gpgcheck = 1
+ 
+[mysql-wsrep]
+name = MySQL-wsrep
+baseurl = https://releases.galeracluster.com/mysql-wsrep-5.7.27-25.19/centos/7/x86_64
+gpgkey=https://releases.galeracluster.com/mysql-wsrep-5.7.27-25.19/GPG-KEY-galeracluster.com
+gpgcheck = 1
+END
+
+yum install -y galera-3 mysql-wsrep-5.7
+rpm -qa | grep -E 'galera|wsrep'
+
+# 安装xtrabackup
+rpm -ivh percona-xtrabackup-24-2.4.15-1.el7.x86_64.rpm
+
+# /etc/my.cnf
+[mysqld]
+log-error=/var/log/mysqld.log
+wsrep_provider=/usr/lib64/galera-3/libgalera_smm.so
+wsrep_cluster_name="mysql_galera_cluster"
+wsrep_cluster_address="gcomm://172.16.1.125,172.16.1.126,172.16.1.127"
+wsrep_sst_method=xtrabackup
+wsrep_sst_auth=wxy:P@sswo2d
+wsrep_node_name=node1               # 另外两个节点分别为node2、node3
+wsrep_node_address="172.16.1.125"   # 另外两个节点分别为172.16.1.126、172.16.1.127
+
+/usr/bin/mysqld_bootstrap
+
+systemctl status mysqld
+
+# 查找初始密码
+grep -i 'temporary password' /var/log/mysqld.log
+ 
+# 修改mysql root用户密码，需要根据提示输入上一步输出的初始密码
+mysqladmin -uroot -p password 'P@sswo2d'
+
+create user wxy identified by 'P@sswo2d';
+grant all on *.* to wxy with grant option;
+
+systemctl start mysqld
+
+show status like 'wsrep_cluster_size';
+
+-- node1
+create database test;
+use test;
+create table t1(a int);
+insert into t1 values(1);
+ 
+-- node2
+use test;
+create table t2(a int);
+insert into t2 values(2);
+ 
+-- node2
+use test;
+create table t3(a int);
+insert into t3 values(3);
+
+select t1.a,t2.a,t3.a from test.t1,test.t2,test.t3;
+
+cd /etc/yum.repos.d/
+wget http://mirrors.163.com/.help/CentOS7-Base-163.repo
+yum -y upgrade openssl
+
+14.2.2 使用SST增加节点
+# 在hdp4上执行
+systemctl stop mysqld
+rm -rf /var/lib/mysql
+rm -rf /var/log/mysqld.log
+
+# 安装tpcc-mysql
+tar -zxvf tpcc-mysql.tar.gz
+cd tpcc-mysql/src
+make
+cd ..
+ 
+# 创建压测库表
+mysql -uwxy -pP@sswo2d -h172.16.1.125 -e "create database tpcc_test;"
+mysql -uwxy -pP@sswo2d -h172.16.1.125 -Dtpcc_test < create_table.sql
+mysql -uwxy -pP@sswo2d -h172.16.1.125 -Dtpcc_test < add_fkey_idx.sql
+ 
+# 准备数据
+tpcc_load 172.16.1.125 tpcc_test wxy P@sswo2d 10
+ 
+# 备份测试库用于重复测试
+mysqldump --databases tpcc_test -uwxy -pP@sswo2d -h172.16.1.125 > tpcc_test.sql
+ 
+# 执行压测
+tpcc_start -h172.16.1.125 -d tpcc_test -u wxy -p "P@sswo2d" -w 10 -c 32 -r 60 -l 300
+
+systemctl start mysqld
+
+14.2.3 使用IST增加节点
+tpcc_start -h172.16.1.125 -d tpcc_test -u wxy -p "P@sswo2d" -w 10 -c 32 -r 60 -l 300
+
+set global show_compatibility_56=on;
+set @start := (select sum(variable_value/1024/1024) from information_schema.global_status where variable_name like 'wsrep%bytes'); 
+do sleep(60); 
+set @end := (select sum(variable_value/1024/1024) from information_schema.global_status where variable_name like 'wsrep%bytes'); 
+select round((@end - @start),2) as `Mb/min`, round((@end - @start),2) * 60 as `Mb/hour`;
+
+wsrep_provider_options="gcache.size=1073741824"
+
+# 在hdp4上用root用户执行
+systemctl stop mysqld
+rm -rf /var/lib/mysql/*
+rm -rf /var/log/mysqld.log 
+rm -rf /tmp/incremental/*
+
+mysql -uwxy -pP@sswo2d -h172.16.1.125 -Dtpcc_test < tpcc_test.sql
+
+tpcc_start -h172.16.1.125 -d tpcc_test -u wxy -p "P@sswo2d" -w 10 -c 32 -r 60 -l 300
+
+# 在hdp2上用mysql用户执行下面的命令进行全量备份（已经事先配置好了hdp2到hdp4的免密登录）
+innobackupex --defaults-file=/etc/my.cnf --user=wxy --password=P@sswo2d --socket=/var/lib/mysql/mysql.sock --galera-info --no-lock --stream=xbstream ./ | ssh mysql@172.16.1.127 "xbstream -x -C /var/lib/mysql"
+ 
+# 再执行一个增量备份，这里仅用于演示
+scp mysql@172.16.1.127:/var/lib/mysql/xtrabackup_checkpoints /home/mysql/
+innobackupex --defaults-file=/etc/my.cnf --user=wxy --password=P@sswo2d --socket=/var/lib/mysql/mysql.sock --incremental --incremental-basedir=/home/mysql --galera-info --no-lock --stream=xbstream ./ | ssh mysql@172.16.1.127 "xbstream -x -C /tmp/incremental"
+
+# 恢复全量
+innobackupex --apply-log --redo-only /var/lib/mysql/
+# 恢复增量
+innobackupex --apply-log --redo-only /var/lib/mysql/ --incremental-dir=/tmp/incremental
+
+# 查看xtrabackup_galera_info
+cat /var/lib/mysql/xtrabackup_galera_info
+ 
+# 生成grastate.dat文件，uuid和seqno的值来自xtrabackup_galera_info
+tee /var/lib/mysql/grastate.dat <<EOF
+# GALERA saved state
+version: 2.1
+uuid:   650c3acb-eff8-11e9-9905-c73959fd46ca
+seqno:  743544
+safe_to_bootstrap: 0
+EOF
+
+# 用root用户在hdp4上执行
+systemctl start mysqld
+
+14.3.1 在线DDL
+-- 创建测试表并装载大量数据
+create table t1 as select * from information_schema.tables;
+insert into t1 select * from t1;
+...
+insert into t1 select * from t1;
+ 
+-- 创建主键
+alter table t1 add column id int auto_increment primary key first;
+ 
+-- 在session 1中执行加字段的DDL
+alter table t1 add column c1 int;
+ 
+-- 在session 1的语句执行期间，在session 2中执行插入记录的DML
+insert into t1 (table_catalog,table_schema,table_name,table_type,table_comment) 
+values('a','a','a','a','a');
+
+set global wsrep_osu_method='RSU';
+
+-- 在节点1执行
+set wsrep_osu_method='RSU';
+alter table t1 add column c1 int;
+insert into t1(c1) select 1;
+ 
+-- 在节点2执行
+alter table t1 add column c1 int;
+
+# 安装依赖包
+yum install perl-TermReadKey.x86_64 
+yum install perl-DBI
+yum install perl-DBD-MySQL
+yum install perl-Time-HiRes
+yum install perl-IO-Socket-SSL
+ 
+# 安装percona-toolkit
+rpm -ivh percona-toolkit-3.1.0-2.el7.x86_64.rpm
+
+pt-online-schema-change --alter="add column c1 int;" --execute D=test,t=t1,u=root,p=P@sswo2d
+
+14.3.2 恢复主组件
+systemctl stop mysqld
+systemctl start mysqld
+
+# gvwstate.dat
+my_uuid: 9085dadf-f953-11e9-92e9-005056a50f77
+#vwbeg
+view_id: 3 9085dadf-f953-11e9-92e9-005056a50f77 3
+bootstrap: 0
+member: 9085dadf-f953-11e9-92e9-005056a50f77 0
+member: 8e2de005-f953-11e9-88b4-005056a5497f 0
+member: 7dc3eb7e-f953-11e9-ad17-005056a57a4e 0
+#vwend
+
+systemctl start mysqld
+
+14.3.3 重置仲裁
+show global status like 'wsrep_cluster_status';
+show status like 'wsrep_last_committed';
+
+set global wsrep_provider_options='pc.bootstrap=yes';
+
+systemctl stop mysqld
+/usr/bin/mysqld_bootstrap
+systemctl start mysqld
+
+14.3.4 管理流控
+show status like 'wsrep_flow_control_%';
+
+14.3.6 启用Galera仲裁员
+# arbitrator.config
+group = mysql_galera_cluster
+address = gcomm://172.16.1.125,172.16.1.126,172.16.1.127
+
+garbd --cfg /var/lib/mysql/arbitrator.config &
+
+# /etc/sysconfig/garb
+# 已存在的两个节点地址
+GALERA_NODES="172.16.1.125:4567 172.16.1.126:4567"    
+# group名称保持与两节点的wsrep_cluster_name系统变量一致
+GALERA_GROUP="mysql_galera_cluster"    
+# 日志文件
+LOG_FILE="/var/log/garb.log"
+
+touch /var/log/garb.log
+chown nobody:nobody /var/log/garb.log
+chmod 644 /var/log/garb.log
+systemctl start garb
+
+systemctl stop garb
+
+iptables -A OUTPUT -d 172.16.1.125 -j DROP
+iptables -A OUTPUT -d 172.16.1.127 -j DROP
+
+show status like 'wsrep_local_state_comment';
+
+iptables -F
+
+systemctl start garb
+
+show status like 'wsrep_cluster_size';
+
+iptables -A OUTPUT -d 172.16.1.125 -j DROP
+iptables -A OUTPUT -d 172.16.1.127 -j DROP
+
+show status like 'wsrep_local_state_comment';
+show status like 'wsrep_cluster_size'
+
+14.3.7 Galera集群监控
+show global status like 'wsrep_%';
+
+cp /usr/share/mysql/wsrep_notify /home/mysql/wsrep_notify.sh
+chown mysql:mysql /home/mysql/wsrep_notify.sh
+chmod 755 /home/mysql/wsrep_notify.sh
+sed -i 's/rootpass/P@sswo2d/' /home/mysql/wsrep_notify.sh
+mysql -uroot -pP@sswo2d -e "set global wsrep_notify_cmd='/home/mysql/wsrep_notify.sh';"
+
+iptables -A OUTPUT -d 172.16.1.125 -j DROP
+iptables -A OUTPUT -d 172.16.1.127 -j DROP
+
+iptables -F
+
+mysql -uroot -pP@sswo2d -e "select * from wsrep.membership;select * from wsrep.status;"
+
+wsrep_log_conflicts=ON
+wsrep_provider_options="cert.log_conflicts=ON"
+wsrep_debug=ON
+
+14.4.1 测试规划
+# tpcc_test.sh
+# 初始化tpcc数据
+mysql -uwxy -pP@sswo2d -h172.16.1.125 -Dtpcc_test < tpcc_test.sql
+ 
+# 获取节点1的last_committed用于比较
+read last_committed < <(mysql -uwxy -pP@sswo2d -h172.16.1.125 -e "show status like 'wsrep_last_committed';" --skip-column-names | awk '{print $2}' | sed "s/\\\n//g")
+ 
+# 等待其它两个节点执行完初始化复制
+read last_committed_1 < <(mysql -uwxy -pP@sswo2d -h172.16.1.126 -e "show status like 'wsrep_last_committed';" --skip-column-names | awk '{print $2}' | sed "s/\\\n//g")
+read last_committed_2 < <(mysql -uwxy -pP@sswo2d -h172.16.1.127 -e "show status like 'wsrep_last_committed';" --skip-column-names | awk '{print $2}' | sed "s/\\\n//g")
+ 
+while [ $last_committed_1 -lt $last_committed -o $last_committed_2 -lt $last_committed ]
+do
+    read last_committed_1 < <(mysql -uwxy -pP@sswo2d -h172.16.1.126 -e "show status like 'wsrep_last_committed';" --skip-column-names | awk '{print $2}' | sed "s/\\\n//g")
+    read last_committed_2 < <(mysql -uwxy -pP@sswo2d -h172.16.1.127 -e "show status like 'wsrep_last_committed';" --skip-column-names | awk '{print $2}' | sed "s/\\\n//g")
+done
+ 
+# 开始时间
+start_time=`date '+%s'`
+ 
+# 开始事务序号
+read start_last_committed < <(mysql -uwxy -pP@sswo2d -h172.16.1.125 -e "show status like 'wsrep_last_committed';" --skip-column-names | awk '{print $2}' | sed "s/\\\n//g")
+ 
+# 节点1执行压测，10个仓库，32个并发线程，预热1分钟，压测5分钟
+tpcc_start -h172.16.1.125 -d tpcc_test -u wxy -p "P@sswo2d" -w 10 -c 32 -r 60 -l 300 > tpcc_test.log 2>&1
+ 
+# 获取节点1的last_committed用于比较
+read last_committed < <(mysql -uwxy -pP@sswo2d -h172.16.1.125 -e "show status like 'wsrep_last_committed';" --skip-column-names | awk '{print $2}' | sed "s/\\\n//g")
+ 
+# 等待其它两个节点执行完复制
+read last_committed_1 < <(mysql -uwxy -pP@sswo2d -h172.16.1.126 -e "show status like 'wsrep_last_committed';" --skip-column-names | awk '{print $2}' | sed "s/\\\n//g")
+read last_committed_2 < <(mysql -uwxy -pP@sswo2d -h172.16.1.127 -e "show status like 'wsrep_last_committed';" --skip-column-names | awk '{print $2}' | sed "s/\\\n//g")
+ 
+while [ $last_committed_1 -lt $last_committed -o $last_committed_2 -lt $last_committed ]
+do
+    if [ $last_committed_1 -lt $last_committed ] 
+    then
+        read last_committed_1 < <(mysql -uwxy -pP@sswo2d -h172.16.1.126 -e "show status like 'wsrep_last_committed';" --skip-column-names | awk '{print $2}' | sed "s/\\\n//g")
+    else
+        end_time1=`date '+%s'`
+    fi
+    
+    if [ $last_committed_2 -lt $last_committed ] 
+    then
+        read last_committed_2 < <(mysql -uwxy -pP@sswo2d -h172.16.1.127 -e "show status like 'wsrep_last_committed';" --skip-column-names | awk '{print $2}' | sed "s/\\\n//g")
+    else
+        end_time2=`date '+%s'`
+    fi
+done
+ 
+if [ ! $end_time1 ]; then
+    end_time1=`date '+%s'`
+fi
+ 
+if [ ! $end_time2 ]; then
+    end_time2=`date '+%s'`
+fi
+ 
+# 复制执行时长
+elapsed1=$(($end_time1 - $start_time))
+elapsed2=$(($end_time2 - $start_time))
+ 
+# 执行的事务数
+trx=$(($last_committed - $start_last_committed))
+ 
+# 计算三个节点的TPS
+Master_TPS=`expr $trx / 360`
+Slave1_TPS=`expr $trx / $elapsed1`
+Slave2_TPS=`expr $trx / $elapsed2`
+ 
+# 打印输出
+echo "TRX: $trx" 
+echo "Node1 TPS: $Master_TPS"
+echo "Elapsed1: $elapsed1" "Node2 TPS: $Slave1_TPS"
+echo "Elapsed2: $elapsed2" "Node3 TPS: $Slave2_TPS"
+
+14.4.2 测试过程
+show status like 'wsrep_cert_deps_distance';
+set global wsrep_slave_threads=60;
+
+show status like 'wsrep_flow_control_%';
+set global wsrep_provider_options = 'gcs.fc_limit = 1000';
+show status like 'wsrep_flow_control_%';
+
+14.5.1 安装
+# 安装依赖包
+yum install gcc* libtool
+# 下载GLB源文件
+git clone https://github.com/codership/glb
+# 在git创建的glb目录中，运行bootstrap脚本
+cd glb/
+./bootstrap.sh
+# 配置
+./configure
+# 编译
+make
+# 安装
+make install
+
+# GLB脚本文件
+cp files/glbd.sh /etc/init.d/glb
+# GLB配置文件
+cp files/glbd.cfg /etc/sysconfig/glbd
+
+14.5.2 配置
+# /etc/sysconfig/glbd
+LISTEN_ADDR="8010"
+CONTROL_ADDR="127.0.0.1:8011"
+CONTROL_FIFO="/var/run/glbd.fifo"
+THREADS="4"
+MAX_CONN=256
+DEFAULT_TARGETS="172.16.1.125:3306 172.16.1.126:3306 172.16.1.127:3306"
+OTHER_OPTIONS="--round-robin"
+
+14.5.3 启动
+service glb start
+service glb getinfo
+
+14.5.4 测试
+mysql -uwxy -pP@sswo2d -h127.0.0.1 -P8010 -N -s -e "select @@wsrep_node_name;"
+
+
+第15章 DRBD
+15.2.2 安装前准备
+# /etc/sysconfig/network-scripts/ifcfg-ens32
+# Generated by dracut initrd
+NAME="ens32"
+DEVICE="ens32"
+ONBOOT=yes
+NETBOOT=yes
+UUID="adb62466-2361-405e-ada9-b48fe7c09546"
+IPV6INIT=yes
+BOOTPROTO=static
+TYPE=Ethernet
+IPADDR=172.16.1.125
+NETMASK=255.255.255.0
+GATEWAY=172.16.1.254
+DNS1=172.16.1.10
+
+service network restart
+
+# /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1       localhost localhost.localdomain localhost6 localhost6.localdomain6
+ 
+172.16.1.125 node1
+172.16.1.126 node2
+
+systemctl stop firewalld 
+systemctl disable firewalld
+
+# node1上执行：
+ssh-keygen -t rsa
+ssh-copy-id 172.16.1.126
+
+# node2上执行：
+ssh-keygen -t rsa
+ssh-copy-id 172.16.1.125
+
+yum install ntp
+systemctl enable ntpd.service
+service ntpd start
+
+15.2.3 下载安装DRBD
+# 导入GPG-KEY，用于验证签名
+rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+# 安装yum源
+yum install https://www.elrepo.org/elrepo-release-7.0-4.el7.elrepo.noarch.rpm
+# 安装drbd和内核相关软件包
+yum install -y drbd90-utils kmod-drbd90 kernel*
+# 因为升级了内核，需要重启系统
+reboot
+
+modprobe drbd
+lsmod | grep drbd
+
+15.2.4 配置DRBD
+cat /etc/drbd.conf
+
+# /etc/drbd.d/global_common.conf
+global {
+    usage-count no;         # 不让官方统计drbd的使用情况
+}
+ 
+common {
+        protocol C;         # 使用DRBD的同步协议，数据可靠性高  
+        disk {
+        on-io-error detach; # 配置I/O错误处理策略为分离
+    }
+}
+
+# /etc/drbd.d/mysql.res
+resource mysql {                # 资源名称
+  disk /dev/sdb;                # 磁盘分区
+  device /dev/drbd0;            # DRBD设备
+  meta-disk internal;           # 元数据存储方式
+  on node1 {
+    device /dev/drbd0;
+    disk /dev/sdb;
+    address 172.16.1.125:7789;  # 节点1地址
+  }
+  on node2 {
+    device /dev/drbd0;
+    disk /dev/sdb;
+    address 172.16.1.126:7789;  # 节点2地址
+  }
+}
+
+scp -rp /etc/drbd.d/* node2:/etc/drbd.d/
+
+drbdadm create-md mysql
+drbdadm up mysql
+drbdadm role mysql
+drbdadm --force primary mysql
+drbdadm role mysql
+
+mkfs.xfs /dev/drbd0
+mount /dev/drbd0 /mnt
+
+drbdadm dstate mysql
+drbdadm cstate mysql
+
+15.3 测试MySQL数据同步
+datadir = /mnt/
+
+# 停止mysql服务
+service mysql stop
+# 将数据目录拷贝到挂载点
+cp -r /data/* /mnt/
+# 将数据目录的属主改为mysql
+chown -R mysql:mysql /mnt/
+# 启动mysql服务
+service mysql start
+
+create database db1;
+use db1;
+create table t1 (a int);
+insert into t1 select 1;
+commit;
+
+service mysql stop
+umount /mnt
+drbdadm secondary mysql
+
+drbdadm primary mysql
+mount /dev/drbd0 /mnt
+chown -R mysql:mysql /mnt
+service mysql start
+
+select * from db1.t1;
+
+15.4.1 配置
+# /usr/local/heartbeat/etc/ha.d/ha.cf
+debugfile /var/log/ha-debug
+logfile /var/log/ha-log
+logfacility local0
+keepalive 1
+deadtime 30
+warntime 10
+initdead 120
+udpport 694
+bcast ens32
+ucast ens32 172.16.1.126
+auto_failback off
+node node1
+node node2
+ping 172.16.1.254
+respawn hacluster /usr/local/heartbeat/libexec/heartbeat/ipfail  
+apiauth ipfail gid=haclient uid=hacluster
+
+# /usr/local/heartbeat/etc/ha.d/authkeys
+auth 1
+1 crc
+
+# /usr/local/heartbeat/etc/ha.d/haresources
+node1 IPaddr::172.16.1.101/24/ens32 drbddisk::mysql Filesystem::/dev/drbd0::/mnt::xfs mysql
+
+cd /usr/local/heartbeat/etc/ha.d
+chmod 600 authkeys
+ln -svf /usr/local/heartbeat/lib64/heartbeat/plugins/RAExec/* /usr/local/heartbeat/lib/heartbeat/plugins/RAExec/
+ln -svf /usr/local/heartbeat/lib64/heartbeat/plugins/* /usr/local/heartbeat/lib/heartbeat/plugins/
+
+cp /etc/ha.d/resource.d/drbddisk /usr/local/heartbeat/etc/ha.d/resource.d/
+
+# /usr/local/heartbeat/etc/ha.d/resource.d/mysql
+chown -R mysql:mysql /mnt/
+service mysql start
+
+# /home/mysql/mysql_check.sh
+#!/bin/bash
+. /home/mysql/.bashrc
+ 
+count=1
+ 
+while true
+do
+ 
+mysql -uroot -p123456 -S /data/mysql.sock -e "show status;" > /dev/null 2>&1
+i=$?
+ps aux | grep mysqld | grep -v grep > /dev/null 2>&1
+j=$?
+if [ $i = 0 ] && [ $j = 0 ]
+then
+   sleep 3
+else
+   if [ $i = 1 ] && [ $j = 0 ]
+   then
+       sleep 3
+   else
+        if [ $count -gt 5 ]
+        then
+              break
+        fi
+   let count++
+   continue
+   fi
+fi
+ 
+done
+ 
+/etc/init.d/heartbeat stop
+
+systemctl start heartbeat
+systemctl enable heartbeat
+systemctl status heartbeat
+
+ip a
+
+mysql -h172.16.1.101 -uroot -p123456 -e "select * from db1.t1"
+
+15.4.2 测试
+# 首先启动mysql检测脚本，因为heartheat不检查服务的可用性，需要通过自定义脚本实现
+nohup /home/mysql/mysql_check.sh &
+# 停止mysqld
+service mysql stop
+
+# 先启动node1的heartheat
+systemctl start heartbeat
+# 停止node2的heartheat，也可以使用 iptables -I INPUT -p icmp -j DROP 禁用 ping
+systemctl stop heartbeat
+
+# 先启动node2的heartheat
+systemctl start heartbeat
+# node1重启
+reboot
+
+# 停止node1的heartbeat服务
+systemctl stop heartbeat
+ 
+# 停止node2的heartbeat服务
+systemctl stop heartbeat
+ 
+# 在node1上添加防火墙策略，拒绝node2的广播包
+iptables -A INPUT -i ens32 -p udp -s 172.16.1.126 --dport 694 -j DROP
+ 
+# 在node2上添加防火墙策略，拒绝node1的广播包
+iptables -A INPUT -i ens32 -p udp -s 172.16.1.125 --dport 694 -j DROP
+ 
+# 启动node1的heartbeat服务
+systemctl start heartbeat
+ 
+# 启动node2的heartbeat服务
+systemctl start heartbeat
+
+
+第16章 优化案例
+16.1 快速生成数字辅助表
+create table nums (a bigint unsigned not null primary key) engine=innodb;
+
+drop procedure if exists pcreatenums;
+delimiter //
+create procedure pcreatenums(cnt bigint)
+begin
+    declare s int default 1;
+    set session autocommit=0;
+    while s<=cnt do
+        insert into nums values(s);
+        set s=s+1;
+    end while;
+    commit;
+end;
+//
+
+call pcreatenums(1000000);
+
+drop procedure if exists pcreatenums;
+delimiter //
+create procedure pcreatenums(cnt int)
+begin
+    declare s int default 1;
+    set session autocommit=0;
+    insert into nums select s;
+    while s<=cnt do
+        insert into nums select a+s from nums where a+s <=cnt;
+        set s=s*2;
+    end while;
+    commit;
+end;
+//
+
+call pcreatenums(1000000);
+
+set session cte_max_recursion_depth=1000000;
+insert into nums 
+  with recursive temp (n) as (select 1 union all select n+1 from temp where n < 1000000) 
+select n from temp;
+
+16.2.1 问题描述
+-- 建立源表
+create table t_source  
+(  
+  item_id int,  
+  created_time datetime,  
+  modified_time datetime,  
+  item_name varchar(20),  
+  other varchar(20)  
+);  
+ 
+-- 建立目标表
+create table t_target like t_source; 
+ 
+-- 生成100万测试数据，其中有50万created_time和item_name重复
+delimiter //      
+create procedure sp_generate_data()    
+begin     
+    set @i := 1;   
+    
+    while @i<=500000 do  
+        set @created_time := date_add('2017-01-01',interval @i second);  
+        set @modified_time := @created_time;  
+        set @item_name := concat('a',@i);  
+        insert into t_source  
+        values (@i,@created_time,@modified_time,@item_name,'other');  
+        set @i:=@i+1;    
+    end while;  
+    commit;    
+    
+    set @last_insert_id := 500000;  
+    insert into t_source  
+    select item_id + @last_insert_id,  
+           created_time,  
+           date_add(modified_time,interval @last_insert_id second),  
+           item_name,  
+           'other'   
+      from t_source;  
+    commit;
+end     
+//      
+delimiter ;     
+    
+call sp_generate_data();  
+ 
+-- 源表没有主键或唯一性约束，有可能存在两条完全一样的数据，所以再插入一条记录模拟这种情况。
+insert into t_source select * from t_source where item_id=1;
+
+select count(*),count(distinct created_time,item_name) from t_source;
+
+16.2.2 巧用索引与变量
+truncate t_target;  
+insert into t_target  
+select distinct t1.* from t_source t1 where item_id in   
+(select min(item_id) from t_source t2 where t1.created_time=t2.created_time and t1.item_name=t2.item_name);
+
+truncate t_target;  
+insert into t_target  
+select distinct t1.* from t_source t1,  
+(select min(item_id) item_id,created_time,item_name from t_source group by created_time,item_name) t2  
+where t1.item_id = t2.item_id;
+
+set @a:='1000-01-01 00:00:00';  
+set @b:=' ';  
+set @f:=0;  
+truncate t_target;  
+insert into t_target  
+select item_id,created_time,modified_time,item_name,other  
+  from   
+(select t0.*,if(@a=created_time and @b=item_name,@f:=0,@f:=1) f, 
+        @a:=created_time,@b:=item_name  
+  from (select * from t_source order by created_time,item_name) t0) t1 where f=1;
+
+-- 建立created_time和item_name字段的联合索引
+create index idx_sort on t_source(created_time,item_name,item_id);  
+analyze table t_source; 
+
+set @a:='1000-01-01 00:00:00';
+set @b:=' ';
+truncate t_target;
+insert into t_target
+select * from t_source force index (idx_sort)
+ where (@a!=created_time or @b!=item_name)
+   and (@a:=created_time) is not null and (@b:=item_name) is not null
+ order by created_time,item_name;
+
+16.2.3 利用窗口函数
+truncate t_target;  
+insert into t_target 
+select item_id, created_time, modified_time, item_name, other
+ from (select *, row_number() over (partition by created_time,item_name) as rn
+         from t_source) t where rn=1;
+
+16.2.4 多线程并行
+select date_add('2017-01-01',interval 125000 second) dt1,
+       date_add('2017-01-01',interval 2*125000 second) dt2,
+       date_add('2017-01-01',interval 3*125000 second) dt3,
+       max(created_time) dt4
+  from t_source;
+
+select case when created_time >= '2017-01-01' 
+             and created_time < '2017-01-02 10:43:20'
+            then '2017-01-01'
+            when created_time >= '2017-01-02 10:43:20'
+             and created_time < '2017-01-03 21:26:40'
+            then '2017-01-02 10:43:20'
+            when created_time >= '2017-01-03 21:26:40' 
+             and created_time < '2017-01-05 08:10:00'
+            then '2017-01-03 21:26:40' 
+            else '2017-01-05 08:10:00'
+        end min_dt,
+       case when created_time >= '2017-01-01' 
+             and created_time < '2017-01-02 10:43:20'
+            then '2017-01-02 10:43:20'
+            when created_time >= '2017-01-02 10:43:20'
+             and created_time < '2017-01-03 21:26:40'
+            then '2017-01-03 21:26:40'
+            when created_time >= '2017-01-03 21:26:40' 
+             and created_time < '2017-01-05 08:10:00'
+            then '2017-01-05 08:10:00'
+            else '2017-01-06 18:53:20'
+        end max_dt,
+       count(*)
+  from t_source
+ group by case when created_time >= '2017-01-01' 
+                and created_time < '2017-01-02 10:43:20'
+               then '2017-01-01'
+               when created_time >= '2017-01-02 10:43:20'
+                and created_time < '2017-01-03 21:26:40'
+               then '2017-01-02 10:43:20'
+               when created_time >= '2017-01-03 21:26:40' 
+                and created_time < '2017-01-05 08:10:00'
+               then '2017-01-03 21:26:40' 
+               else '2017-01-05 08:10:00'
+           end,
+          case when created_time >= '2017-01-01' 
+                and created_time < '2017-01-02 10:43:20'
+               then '2017-01-02 10:43:20'
+               when created_time >= '2017-01-02 10:43:20'
+                and created_time < '2017-01-03 21:26:40'
+               then '2017-01-03 21:26:40'
+               when created_time >= '2017-01-03 21:26:40' 
+                and created_time < '2017-01-05 08:10:00'
+               then '2017-01-05 08:10:00'
+               else '2017-01-06 18:53:20'
+           end;
+
+delimiter //
+create procedure sp_unique(i smallint)    
+begin     
+    set @a:='1000-01-01 00:00:00';  
+    set @b:=' ';  
+    if (i<4) then
+        insert into t_target  
+        select * from t_source force index (idx_sort)  
+         where created_time >= date_add('2017-01-01',interval (i-1)*125000 second) 
+           and created_time < date_add('2017-01-01',interval i*125000 second) 
+           and (@a!=created_time or @b!=item_name) 
+           and (@a:=created_time) is not null 
+           and (@b:=item_name) is not null  
+         order by created_time,item_name;  
+    else 
+    insert into t_target  
+        select * from t_source force index (idx_sort)  
+         where created_time >= date_add('2017-01-01',interval (i-1)*125000 second) 
+           and created_time <= date_add('2017-01-01',interval i*125000 second) 
+           and (@a!=created_time or @b!=item_name) 
+           and (@a:=created_time) is not null 
+           and (@b:=item_name) is not null  
+         order by created_time,item_name;  
+    end if;    
+end     
+//
+
+# duplicate_removal.sh
+#!/bin/bash
+mysql -vvv -u root -p123456 test -e "truncate t_target" &>/dev/null 
+date '+%H:%M:%S'
+for y in {1..4}
+do
+  sql="call sp_unique($y)"
+  mysql -vvv -u root -p123456 test -e "$sql" &>par_sql1_$y.log &
+done
+wait
+date '+%H:%M:%S'
+
+./duplicate_removal.sh
+
+cat par_sql1_1.log | sed '/^$/d'
+cat par_sql1_2.log | sed '/^$/d'
+cat par_sql1_3.log | sed '/^$/d'
+cat par_sql1_4.log | sed '/^$/d'
+
+-- 用于查看事件执行时间等信息
+create table t_event_history  (  
+   dbname  varchar(128) not null default '',  
+   eventname  varchar(128) not null default '',  
+   starttime  datetime(3) not null default '1000-01-01 00:00:00',  
+   endtime  datetime(3) default null,  
+   issuccess  int(11) default null,  
+   duration  int(11) default null,  
+   errormessage  varchar(512) default null,  
+   randno  int(11) default null
+);
+
+delimiter //
+create event ev1 on schedule at current_timestamp + interval 1 hour on completion preserve disable do 
+begin
+    declare r_code char(5) default '00000';  
+    declare r_msg text;  
+    declare v_error integer;  
+    declare v_starttime datetime default now(3);  
+    declare v_randno integer default floor(rand()*100001);  
+      
+    insert into t_event_history (dbname,eventname,starttime,randno) 
+    #作业名    
+    values(database(),'ev1', v_starttime,v_randno);    
+     
+    begin  
+        #异常处理段  
+        declare continue handler for sqlexception    
+        begin  
+          set v_error = 1;  
+          get diagnostics condition 1 r_code = returned_sqlstate , r_msg = message_text;  
+        end;  
+          
+        #此处为实际调用的用户程序过程  
+        call sp_unique(1);  
+    end;  
+      
+update t_event_history set 
+       endtime=now(3),
+       issuccess=isnull(v_error),
+       duration=timestampdiff(microsecond,starttime,now(3)), 
+       errormessage=concat('error=',r_code,', message=',r_msg),
+       randno=null 
+ where starttime=v_starttime and randno=v_randno;  
+
+end
+//     
+ 
+create event ev2 on schedule at current_timestamp + interval 1 hour on completion preserve disable do 
+begin
+    declare r_code char(5) default '00000';  
+    declare r_msg text;  
+    declare v_error integer;  
+    declare v_starttime datetime default now(3);  
+    declare v_randno integer default floor(rand()*100001);  
+      
+    insert into t_event_history (dbname,eventname,starttime,randno) 
+    #作业名    
+    values(database(),'ev2', v_starttime,v_randno);    
+     
+    begin  
+        #异常处理段  
+        declare continue handler for sqlexception    
+        begin  
+          set v_error = 1;  
+          get diagnostics condition 1 r_code = returned_sqlstate , r_msg = message_text;  
+        end;  
+          
+        #此处为实际调用的用户程序过程  
+        call sp_unique(2);  
+    end;  
+      
+update t_event_history set 
+       endtime=now(3),
+       issuccess=isnull(v_error),
+       duration=timestampdiff(microsecond,starttime,now(3)), 
+       errormessage=concat('error=',r_code,', message=',r_msg),
+       randno=null 
+       where starttime=v_starttime and randno=v_randno;      
+end
+//  
+ 
+create event ev3 on schedule at current_timestamp + interval 1 hour on completion preserve disable do 
+begin
+    declare r_code char(5) default '00000';  
+    declare r_msg text;  
+    declare v_error integer;  
+    declare v_starttime datetime default now(3);  
+    declare v_randno integer default floor(rand()*100001);  
+      
+    insert into t_event_history (dbname,eventname,starttime,randno) 
+    #作业名    
+    values(database(),'ev3', v_starttime,v_randno);    
+     
+    begin  
+        #异常处理段  
+        declare continue handler for sqlexception    
+        begin  
+          set v_error = 1;  
+          get diagnostics condition 1 r_code = returned_sqlstate , r_msg = message_text;  
+        end;  
+          
+        #此处为实际调用的用户程序过程  
+        call sp_unique(3);  
+    end;  
+      
+    update t_event_history set
+             endtime=now(3),
+             issuccess=isnull(v_error),
+             duration=timestampdiff(microsecond,starttime,now(3)),
+             errormessage=concat('error=',r_code,', message=',r_msg),
+             randno=null
+       where starttime=v_starttime and randno=v_randno;  
+      
+end
+//  
+ 
+create event ev4 on schedule at current_timestamp + interval 1 hour on completion preserve disable do 
+begin
+    declare r_code char(5) default '00000';  
+    declare r_msg text;  
+    declare v_error integer;  
+    declare v_starttime datetime default now(3);  
+    declare v_randno integer default floor(rand()*100001);  
+      
+    insert into t_event_history (dbname,eventname,starttime,randno) 
+    #作业名    
+    values(database(),'ev4', v_starttime,v_randno);    
+     
+    begin  
+        #异常处理段  
+        declare continue handler for sqlexception    
+        begin  
+          set v_error = 1;  
+          get diagnostics condition 1 r_code = returned_sqlstate , r_msg = message_text;  
+        end;  
+          
+        #此处为实际调用的用户程序过程  
+        call sp_unique(4);  
+    end;  
+      
+update t_event_history set 
+       endtime=now(3),
+       issuccess=isnull(v_error),
+       duration=timestampdiff(microsecond,starttime,now(3)), 
+       errormessage=concat('error=',r_code,', message=',r_msg),
+       randno=null 
+       where starttime=v_starttime and randno=v_randno;  
+      
+end
+//
+
+mysql -vvv -u root -p123456 test -e "truncate t_target;
+alter event ev1 on schedule at current_timestamp enable;
+alter event ev2 on schedule at current_timestamp enable;
+alter event ev3 on schedule at current_timestamp enable;
+alter event ev4 on schedule at current_timestamp enable;"
+
+select * from test.t_event_history;
+
+16.3.1 问题描述与分析
+create table test1 (roomid int, userid int, s datetime, e datetime);
+insert into test1 values
+(1, 1, '2018-01-01 01:01:01', '2018-01-01 01:10:01'),
+(1, 2, '2018-01-01 01:01:02', '2018-01-01 01:01:05'),
+(1, 3, '2018-01-01 01:01:05', '2018-01-01 01:02:05'),
+(2, 4, '2018-01-01 01:03:02', '2018-01-01 01:12:05'),
+(2, 5, '2018-01-01 01:11:02', '2018-01-01 01:12:05'),
+(2, 6, '2018-01-01 01:15:02', '2018-01-01 01:16:05'),
+(2, 7, '2018-01-01 01:01:03', '2018-01-01 01:11:05'),
+(1, 1, '2018-01-01 01:01:05', '2018-01-01 01:10:01'),
+(1, 1, '2018-01-01 01:01:02', '2018-01-01 01:11:01'),
+(1, 1, '2018-01-01 01:11:02', '2018-01-01 01:11:05'),
+(2, 1, '2018-01-01 01:01:03', '2018-01-03 01:11:01'),
+(2, 8, '2018-01-01 23:01:03', '2018-01-02 01:11:01'),
+(3, 1, '2018-01-05 01:01:01', '2018-01-10 01:01:01'),
+(3, 2, '2018-01-05 01:01:01', '2018-01-06 01:01:01'),
+(3, 3, '2018-01-06 01:01:01', '2018-01-06 02:01:01');
+ 
+commit;
+
+16.3.2 优化重叠查询
+select distinct roomid, userid,
+       if(date(s)!=date(e) and id>1,date(s+interval id-1 day),s) s,
+       if(date(s+interval id-1 day)=date(e),e,
+          date_format(s+interval id-1 day,'%Y-%m-%d 23:59:59')) e  
+  from (select distinct s.roomid, s.userid, s.s,
+                -- 合并后每个区间的结束时间
+                (select min(e)                              
+                   from (select distinct roomid, userid, e
+                           from test1 a
+                          where not exists (select * from test1 b
+                                             where a.roomid = b.roomid
+                                               and a.userid = b.userid
+                                               and a.e >= b.s
+                                               and a.e < b.e)) s2
+                  where s2.e > s.s
+                    and s.roomid = s2.roomid
+                    and s.userid = s2.userid) e
+           from 
+                -- 每个房间每个用户的开始时间
+                (select distinct roomid, userid, s
+                   from test1 a 
+                  where not exists (select * from test1 b 
+                                     where a.roomid = b.roomid 
+                                       and a.userid = b.userid
+                                       and a.s > b.s
+                                       and a.s <= b.e)) s,
+                -- 每个房间每个用户的结束时间
+                (select distinct roomid, userid, e
+                   from test1 a
+                  where not exists (select * from test1 b
+                                     where a.roomid = b.roomid 
+                                       and a.userid = b.userid
+                                       and a.e >= b.s
+                                       and a.e < b.e)) e
+          where s.roomid = e.roomid
+            and s.userid = e.userid) t1,
+        (select id from nums where id<=100) nums
+ where nums.id<=datediff(e,s)+1;
+
+select @id:=id from nums;
+
+delimiter //
+create procedure p_cursor()
+ begin
+       declare done int default 0;      
+       declare v_id bigint;
+    
+       declare cur_nums cursor for select id from nums;
+       declare continue handler for not found set done = 1;      
+    
+       open cur_nums;
+       repeat
+           fetch cur_nums into v_id;
+        until done end repeat;
+       close cur_nums;
+   end//
+ 
+call p_cursor()//
+
+drop procedure if exists sp_overlap;
+delimiter //
+ 
+create procedure sp_overlap()  
+begin  
+    declare done int default 0;      
+    declare v_roomid bigint; 
+    declare v_userid bigint;    
+    declare v_start datetime;  
+    declare v_end datetime;  
+ 
+    declare v_prev_roomid int;  
+    declare v_prev_userid bigint;  
+    declare v_max_end datetime;
+    
+    declare cur_t1 cursor for select roomid,userid,s,e from test1 order by roomid,userid,s,e;
+    
+    declare continue handler for not found set done = 1;      
+      
+    drop table if exists t;  
+    drop table if exists t1;            
+    drop table if exists tmp_s;    
+ 
+    create temporary table t(      
+       roomid bigint,      
+       userid bigint,      
+       s datetime,      
+       e datetime,      
+       broken int      
+    ) engine=memory;    
+  
+    create temporary table t1 (            
+       roomid int,            
+       userid bigint,            
+       s datetime,            
+       e datetime
+    ) engine=memory;            
+    
+    create temporary table tmp_s(        
+       roomid bigint,        
+       userid bigint,        
+       s datetime,        
+       e datetime,        
+       i int        
+    ) engine=memory;        
+      
+    open cur_t1;        
+    repeat        
+       fetch cur_t1 into v_roomid,v_userid,v_start,v_end;        
+       if done !=1 then      
+         if(v_roomid=v_prev_roomid and v_userid=v_prev_userid) then   
+            if(v_start<=v_max_end) then  
+               insert into t values(v_roomid,v_userid,v_start,v_end,0);  
+            else   
+               insert into t values(v_roomid,v_userid,v_start,v_end,1);  
+            end if;  
+            if(v_end>=v_max_end) then  
+               set v_max_end:=v_end;  
+            end if;  
+            set v_prev_roomid:=v_roomid;  
+            set v_userid:=v_userid;  
+         else  
+            set v_max_end:=v_end;  
+            set v_prev_roomid:=v_roomid;  
+            set v_prev_userid:=v_userid;  
+            insert into t values(v_roomid,v_userid,v_start,v_end,1);  
+  
+         end if;  
+       end if;      
+    until done end repeat;        
+    close cur_t1;     
+    
+    insert into tmp_s  
+    select roomid,userid,min(s) s,max(e) e,datediff(max(e),min(s))+1 i   
+     from (select roomid,userid,s,e,
+                    case when @flag=flag then @rn:=@rn+broken 
+                         when @flag:=flag then @rn:=broken end ran 
+             from (select roomid,userid,s,e,broken,concat(roomid,',',userid) flag 
+                     from t,(select @flag:='',@rn:=0) vars) a 
+                    order by roomid,userid,s,e) b   
+     group by roomid,userid,ran;       
+   
+     select max(i) into @c from tmp_s;        
+            
+     insert into t1(roomid,userid,s,e)          
+     select roomid, userid, 
+            if(date(s)!=date(e) and id>1,date(s+interval id-1 day),s) s,     
+            if(date(s+interval id-1 day)=date(e) ,e,
+               date_format(s+interval id-1 day,'%y-%m-%d 23:59:59')) e
+      from tmp_s t1, (select id from nums where id<=@c) nums 
+     where (nums.id<=t1.i);
+end
+//
+
+set max_heap_table_size=268435456;
+set tmp_table_size=268435456;
+call sp_overlap();
+
+16.3.3 改进取得活跃时段的算法
+drop procedure if exists sp_active_duration;
+delimiter //
+
+create procedure sp_active_duration()
+begin
+    declare done int default 0;
+    declare v_roomid bigint;
+   declare v_start datetime;
+   declare v_end datetime;
+
+   drop table if exists tmp_time_point;     
+   create temporary table tmp_time_point(
+      roomid bigint,     
+      timepoint datetime
+   ) engine=memory;   
+                
+   insert into tmp_time_point select roomid,s from t1;
+   insert into tmp_time_point select roomid,e from t1;
+    
+   select roomid,date(s) dt,round(sum(timestampdiff(second,s,e))/60) ts,max(c) c
+     from (select roomid,s,e ,count(distinct userid) c
+             from (select distinct v6.roomid,v6.userid,starttime s,endtime e
+                     from (select distinct roomid,cast(starttime as datetime) starttime,
+                                                  cast(endtime as datetime) endtime
+                             from (select if(@roomid=roomid,@d,'') as starttime,
+                                          @d:=timepoint,@roomid:=roomid,
+                                          p.roomid,p.timepoint endtime
+                                     from tmp_time_point p,
+                                          (select @d:='',@roomid:=-1) vars
+                                    order by roomid,timepoint) v4
+                            where starttime!='' and date(starttime)=date(endtime)
+                              and starttime <> endtime) v5 
+               inner join t1 v6 on(v5.starttime between v6.s and v6.e
+                                   and v5.endtime between v6.s and v6.e
+                                   and v5.roomid=v6.roomid)) v6 
+            group by roomid,s,e having count(distinct userid)>1) v7
+    group by roomid,date(s);
+ 
+end
+//
+ 
+delimiter ;
+
+drop procedure if exists sp_active_duration;
+delimiter //
+
+create procedure sp_active_duration()
+begin
+   declare done int default 0;
+   declare v_roomid bigint;
+   declare v_start datetime;
+   declare v_end datetime;
+
+   declare cur_test cursor for select roomid,s,e from t1;
+
+   declare continue handler for not found set done = 1;
+
+   drop table if exists tmp_time_point;
+   create temporary table tmp_time_point(
+    roomid bigint,
+     timepoint datetime,
+     type smallint
+   ) engine=memory;
+        
+   -- 开始点+1, 结束点-1
+   insert into tmp_time_point(roomid,timepoint,type) select roomid,s,1 from t1;
+   insert into tmp_time_point(roomid,timepoint,type) select roomid,e,-1 from t1;
+
+   select roomid,date(s) dt,round(sum(timestampdiff(
+          second,date_format(s,'%Y-%m-%d %H:%i:%s'),
+          date_format(e,'%Y-%m-%d %H:%i:%s')))/60) ts,max(rn) c
+     from (select if(@roomid=roomid,@d,'') as s,
+                  @d:=str_to_date(timepoint,'%Y-%m-%d %H:%i:%s.%f'),
+                  @roomid:=roomid,
+                  p.roomid,
+                  str_to_date(timepoint,'%Y-%m-%d %H:%i:%s.%f') e,
+                  rn    
+             from (select round(case when @roomid=roomid then @rn:=@rn+prevType
+                                     when @roomid:=roomid then @rn:=prevType end) 
+                          rn,b.prevType,roomid,timepoint,type
+                     from (select a.roomid,timepoint,type,
+                                  if(@roomid=roomid,@type,0) prevType, 
+                                  @roomid:=roomid, @type:=type 
+                             from (select * 
+                                     from (select roomid,timepoint,sum(type) type
+                                             from tmp_time_point
+                                            group by roomid,timepoint) tmp_time_point,
+                                          (select @roomid:=-1,@rn:=0,@type:=0) vars
+                                    order by roomid ,timepoint) a) b
+                    order by roomid ,timepoint) p,
+                  (select @d:='',@roomid:=-1) vars      
+            order by roomid,timepoint) v4
+    where rn>=2  
+    group by roomid,date(s);    
+
+end
+//
+
+delimiter ;
+
+set max_heap_table_size=268435456;
+set tmp_table_size=268435456;
+call sp_overlap();
+call sp_active_duration();
+
+16.3.4 MySQL 8的单条查询解决方案
+select @a:=id from nums limit 1;
+show warnings;
+
+with c1 as  -- 合并同一房间同一用户的重叠时间段，用于统计峰值人数
+(
+  select distinct roomid,userid,min(s) s,max(e) e
+    from (select roomid,userid,s,e,
+                 sum(broken) over (partition by roomid, userid order by s,e) flag  
+            from (select *,  
+                         (case when s <= max(e)
+                               over (partition by roomid, userid order by s,e
+                               rows between unbounded preceding and 1 preceding) then 0
+                               else 1
+                           end) as broken
+                    from test1
+                 ) t
+         ) t
+   group by roomid,userid,flag
+),
+c2 as  -- 拆分跨天的时间段
+(
+  select *
+   from (select roomid,userid,s,e
+           from c1
+          where date(s) = date(e)  -- 不跨天
+          union all
+         select roomid,userid,
+            case when id = 1 then s
+                 else date_add(date(s),interval id-1 day)
+             end s,
+            case when id = m2 then e
+                 else date_add(date(s),interval id*3600*24 -1 second)
+             end e   
+           from (select roomid,userid,s,e,id,
+                        max(id) over (partition by roomid,userid,s) m2
+                   from c1,(select id from nums where id<=100) n
+                  where date(s) <> date(e) -- 跨天
+                    and id <= date(e)-date(s)+1) t1) t1
+),
+c3 as -- 在计算最小范围的同时，计算区间用户数
+(  
+  select roomid,ts endtime,
+         sum(prevtype) over (partition by roomid order by ts) rn,
+         lag(ts) over (partition by roomid order by ts) starttime
+    from (select a.*,
+                 ifnull(lag(type) over (partition by roomid order by ts),0) prevtype
+            from (select roomid,ts,sum(type) type
+                    from (select roomid,e ts, -1 type from c2
+                           union all
+                          select roomid,s ts, 1 type from c2
+                         ) t1 group by roomid,ts
+                 ) a
+         ) c
+)
+select roomid,dt,round(sum(dur)/60) ts,max(rn) c 
+  from (select roomid,date(starttime) dt,timestampdiff(second,starttime,endtime) dur,rn
+         from c3 where rn>=2
+       ) t
+ group by roomid,dt  
+ order by roomid,dt;
+
+16.4.2 创建硬链接
+ln t1.frm t1.frm.h
+ln t1.ibd t1.ibd.h
+
+# MySQL数据目录
+datadir=`mysql -uroot -p123456 -S /data/mysqldata/mysql.sock -e "show variables like 'datadir'" -N -B | awk '{print $2}'`
+# 数据库名
+dbname='dbname'
+ 
+cd $datadir/$dbname
+# 创建硬链接
+ls *.{ibd,frm} | awk '{print "ln "$0" "$0".h"}' | bash
+
+16.4.3 删除表
+drop table t1;
+
+16.4.4 删除文件释放空间
+# rmtablefile.sh
+#!/bin/bash
+# 表定义文件很小，可直接删除
+rm $1.frm.h
+ 
+# 表数据文件大小，单位M
+filesize=`ls -l $1.ibd.h | awk '{print int($5/1024/1024)}'`
+if (( $filesize < 100 ))
+then
+    # 小于100直接删除
+    rm $1.ibd.h
+else
+    # 大于等于100，每次截断100M
+    for i in `seq $filesize -100 0`
+    do
+        sleep 2
+        echo $i
+        truncate -s ${i}M $1.ibd.h
+    done
+ 
+    # 删除小于100M的文件
+    rm $1.ibd.h
+fi

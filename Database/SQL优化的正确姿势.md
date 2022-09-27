@@ -1,5 +1,3 @@
-年少不知优化苦，遇坑方知优化难。——村口王大爷
-
 <a href="https://mp.weixin.qq.com/s/qi-mBwiQ4cpI7YLpsXhnZA">文章来源</a>
 
 ## 全文内容预览：

@@ -102,7 +102,7 @@ docker 官方镜像仓库网速较差，我们需要设置国内镜像服务：
 
 参考阿里云的镜像加速文档：https://cr.console.aliyun.com/cn-hangzhou/instances/mirrors
 
-# CentOS7安装DockerCompose
+# CentOS安装DockerCompose
 
 ## 下载
 
@@ -128,7 +128,7 @@ curl -L https://github.com/docker/compose/releases/download/1.23.1/docker-compos
 chmod +x /usr/local/bin/docker-compose
 ```
 
-## Base自动补全命令：
+## Base自动补全命令
 
 ```sh
 # 补全命令
@@ -203,7 +203,7 @@ systemctl daemon-reload
 systemctl restart docker
 ```
 
-# Ubuntun 补充
+# Ubuntun补充
 
 - sudo ufw disable 关闭防火墙
 - sudo ufw status 查看防火墙状态
