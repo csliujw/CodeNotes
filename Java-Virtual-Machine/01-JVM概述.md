@@ -38,7 +38,7 @@ Java Virtual Machine，JAVA 程序的运行环境（JAVA 二进制字节码的�
 
 <div align="center"><img src="jvm_image/JVM_JRE_JDK.png" style="width:70%"></div>
 
-> **学习路线**
+> <b>学习路线</b>
 
 <div align="center"><img src="jvm_image/JVM_Study.png" style="width:70%"></div>
 
