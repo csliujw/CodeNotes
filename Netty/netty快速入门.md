@@ -4,7 +4,7 @@ non-blocking io 非阻塞 IO
 
 [《Unix 网络编程》笔记汇总 - CoolGin - 博客园 (cnblogs.com)](https://www.cnblogs.com/Sherry4869/p/16723105.html)
 
-## 0. 说明
+## 说明
 
 > 笔记来源
 
@@ -16,8 +16,8 @@ non-blocking io 非阻塞 IO
 - 彻底理解阻塞、非阻塞的区别，并与 Netty、NIO 的编码联系起来。
 - 懂得多路复用在服务器开发时的优势。为什么在此基础上还要加多线程
 - Netty 中是如何实现异步的，异步处理的优势是什么
-- Netty中是如何管理线程的，EventLoop 如何运作
-- Netty中是如何管理内存的，ByteBuf 的特点和分配时机
+- Netty 中是如何管理线程的，EventLoop 如何运作
+- Netty 中是如何管理内存的，ByteBuf 的特点和分配时机
 - 看源码、调试的一些技巧
 
 > 环境搭建
@@ -120,22 +120,47 @@ logback.xml 配置文件，用于日志输出
 </configuration>
 ```
 
-## 1. 三大组件
+简化版日志，日志打印在控制台上
 
-### 1.1 Channel & Buffer
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
 
-channel 数据的传输通道（可以想象成一个水管）。buffer 内存缓冲区，用来暂存从 channel 中 读/写的数据。
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoder的默认实现类是ch.qos.logback.classic.encoder.PatternLayoutEncoder -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{5} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- name值可以是包名或具体的类名：该包（包括子包）下的类或该类将采用此logger -->
+    <logger name="com.john.logging.b" level="INFO">
+        <appender-ref ref="STDOUT" />
+    </logger>
+
+    <!-- root的默认level是DEBUG -->
+    <root level="DEBUG">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>
+```
+
+## 三大组件
+
+### Channel & Buffer
+
+channel 数据的传输通道（可以想象成一个水管）。buffer 内存缓冲区，用来暂存从 channel 中读/写的数据。
 
 channel 有一点类似于 stream，它就是读写数据的<b>双向通道</b>，数据可以是 从 channel-->buffer，也可以是从 buffer-->channel，而之前的 stream 只是单向的，要么是输入，要么是输出。channel 比 stream 更为底层。
 
 ```mermaid
-graph LR
-channel --- buffer
+flowchart LR
+channel <---> buffer
 ```
 
 常见的 Channel 有
 
-* FileChannel：文件的数据传输通道，高版本JDK把IO流重写了，可以用NIO进行文件流的传输了
+* FileChannel：文件的数据传输通道，高版本 JDK 把 IO 流重写了，可以用 NIO 进行文件流的传输了
 * DatagramChannel：UDP 网络编程时的数据传输通道
 * SocketChannel：TCP 网络编程时的数据传输通道（客户端/服务器端）
 * ServerSocketChannel：TCP 网络编程时的数据传输通道（服务器端）
@@ -153,7 +178,7 @@ buffer 则用来缓冲读写数据，常见的 buffer 有
 * DoubleBuffer
 * CharBuffer
 
-### 1.2 Selector
+### Selector
 
 selector 单从字面意思不好理解，需要结合服务器的设计演化来理解它的用途
 
@@ -191,11 +216,11 @@ end
 #### ⚠️ 线程池版缺点
 
 * 阻塞模式下，线程同一时间仅能处理一个 socket 连接
-* 仅适合短连接场景，短连接，连接断开了线程就可以腾出手出执行其他任务了。早期的 tomcat 就是用的线程池设计的，适用于HTTP这种短连接的请求。
+* 仅适合短连接场景，短连接，连接断开了线程就可以腾出手出执行其他任务了。早期的 tomcat 就是用的线程池设计的，适用于 HTTP 这种短连接的请求。
 
 #### selector 版设计
 
-selector 的作用就是配合一个线程来管理多个 channel，获取这些 channel 上发生的事件，<span style="color:green">**这些 channel 工作在非阻塞模式下，不会让线程吊死在一个 channel 上。适合连接数特别多，但流量低的场景（low traffic，channel不是频繁的发送读写操作）**</span>，做到了 IO 多路复用。
+selector 的作用就是配合一个线程来管理多个 channel，获取这些 channel 上发生的事件，<b style="color:orange">这些 channel 工作在非阻塞模式下，不会让线程吊死在一个 channel 上。适合连接数特别多，但流量低的场景（low traffic，channel 不是频繁的发送读写操作）</b>，做到了 IO 多路复用。
 
 ```mermaid
 graph TD
@@ -209,7 +234,7 @@ end
 
 调用 selector 的 select() 会阻塞，直到 channel 发生了读写就绪事件，这些事件发生，select 方法就会返回这些事件交给 thread 来处理
 
-## 2. ByteBuffer
+## ByteBuffer
 
 有一普通文本文件 data.txt，内容为
 
@@ -234,6 +259,9 @@ public class ChannelDemo1 {
                     break;
                 }
                 // 切换 buffer 读模式
+                // buffer.flip();一定得有，如果没有，就是从文件最后开始读取的，
+                // 当然读出来的都是byte=0时候的字符。通过buffer.flip();这个语句，
+                // 就能把buffer的当前位置更改为buffer缓冲区的第一个位置。
                 buffer.flip();
                 while(buffer.hasRemaining()) {
                     log.debug("{}", (char)buffer.get());
@@ -270,25 +298,25 @@ public class ChannelDemo1 {
 10:39:03 [DEBUG] [main] c.i.n.ChannelDemo1 - 读到字节数：-1
 ```
 
-### 2.1  ByteBuffer 正确使用姿势
+### ByteBuffer 正确使用姿势
 
 1. 向 buffer 写入数据，例如调用 channel.read(buffer)
-2. 调用 flip() 切换至**读模式**（flip 浏览）
+2. 调用 flip() 切换至<b>读模式</b>（flip 浏览）
 3. 从 buffer 读取数据，例如调用 buffer.get()
-4. 调用 clear() 或 compact() 切换至**写模式**
+4. 调用 clear() 或 compact() 切换至<b>写模式</b>
 5. 重复 1~4 步骤
 
-### 2.2 ByteBuffer 结构
+### ByteBuffer 结构
 
 ByteBuffer 有以下重要属性
 
 * capacity：容量，一共可以装多少数据。
-* position：读写指针，即 读/写 到那个位置了。会在 position 的位置进行写入数据或读取数据。
-* <span style="color:green">**limit：读/写 限制点。**</span>
+* position：读写指针，即"读/写"到那个位置了。会在 position 的位置进行写入数据或读取数据。
+* <b style="color:purple">limit：读/写限制点。</b>
     * 写模式就是最多写到哪个索引。
     * 读模式就是最多读到哪个索引。
 
-一开始，position指向index=0，写模式下就是在index=0处写入数据，读模式下就是读取index=0处的数据。
+一开始，position 指向 index=0，写模式下就是在 index=0 处写入数据，读模式下就是读取 index=0 处的数据。
 
 <div align="center"><img src="img/0021.png"></div>
 
@@ -315,6 +343,13 @@ compact 方法，是把未读完的部分向前压缩，然后切换至写模式
 #### 💡 调试工具类
 
 ```java
+import io.netty.util.internal.StringUtil;
+
+import java.nio.ByteBuffer;
+
+import static io.netty.util.internal.MathUtil.isOutOfBounds;
+import static io.netty.util.internal.StringUtil.NEWLINE;
+
 public class ByteBufferUtil {
     private static final char[] BYTE2CHAR = new char[256];
     private static final char[] HEXDUMP_TABLE = new char[256 * 4];
@@ -379,6 +414,7 @@ public class ByteBufferUtil {
 
     /**
      * 打印所有内容
+     *
      * @param buffer
      */
     public static void debugAll(ByteBuffer buffer) {
@@ -394,6 +430,7 @@ public class ByteBufferUtil {
 
     /**
      * 打印可读取内容
+     *
      * @param buffer
      */
     public static void debugRead(ByteBuffer buffer) {
@@ -415,7 +452,7 @@ public class ByteBufferUtil {
         }
         dump.append(
                 "         +-------------------------------------------------+" +
-                        NEWLINE + "         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |" +
+                        NEWLINE + "         |  0  1  2  3  4  5  6  7  8  9  a.txt  b  c  d  e  f |" +
                         NEWLINE + "+--------+-------------------------------------------------+----------------+");
 
         final int startIndex = offset;
@@ -492,13 +529,80 @@ ByteBuffer.allocate()：分配指定字节大小的空间
 - put：写入数据
 - flip：开启读模式 
 
-compact
+compact：且换写模式
 
 - 只是把未读取的数据移动到了前面而已，并不会清空数据
-- 例如 61 62 63 61 被读取了，然后 compact
+- 例如 61 62 63，61 被读取了，然后 compact
 - 变成 62 63 64 64
 
-### 2.3 ByteBuffer 常见方法
+```java
+// 前面的那个工具类 ByteBufferUtil
+import com.netty.nio.utils.ByteBufferUtil; 
+
+import java.nio.ByteBuffer;
+
+public class TestByteBuffer {
+    public static void main(String[] args) {
+        ByteBuffer buffer = ByteBuffer.allocate(5);
+        // 查看没有放入任何数据的布局
+        ByteBufferUtil.debugAll(buffer);
+        buffer.put((byte) 1);
+        buffer.put((byte) 2);
+        buffer.put((byte) 3);
+        // 查看放入数据后的布局，position 从 0 变成了 3
+        ByteBufferUtil.debugAll(buffer);
+        buffer.flip();
+        // 且换写模式后 position 的位置从 3 变成了 1
+        ByteBufferUtil.debugAll(buffer);
+        // 拿一个数据后，position 变成了 1
+        byte b = buffer.get();
+        ByteBufferUtil.debugAll(buffer);
+
+        // 数据压缩，把未读取的数据移动到前面
+        buffer.compact();
+        ByteBufferUtil.debugAll(buffer);
+    }
+}
+/*
++--------+-------------------- all ------------------------+----------------+
+position: [0], limit: [5]
+         +-------------------------------------------------+
+         |  0  1  2  3  4  5  6  7  8  9  a.txt  b  c  d  e  f |
++--------+-------------------------------------------------+----------------+
+|00000000| 00 00 00 00 00                                  |.....           |
++--------+-------------------------------------------------+----------------+
++--------+-------------------- all ------------------------+----------------+
+position: [3], limit: [5]
+         +-------------------------------------------------+
+         |  0  1  2  3  4  5  6  7  8  9  a.txt  b  c  d  e  f |
++--------+-------------------------------------------------+----------------+
+|00000000| 01 02 03 00 00                                  |.....           |
++--------+-------------------------------------------------+----------------+
++--------+-------------------- all ------------------------+----------------+
+position: [0], limit: [3]
+         +-------------------------------------------------+
+         |  0  1  2  3  4  5  6  7  8  9  a.txt  b  c  d  e  f |
++--------+-------------------------------------------------+----------------+
+|00000000| 01 02 03 00 00                                  |.....           |
++--------+-------------------------------------------------+----------------+
++--------+-------------------- all ------------------------+----------------+
+position: [1], limit: [3]
+         +-------------------------------------------------+
+         |  0  1  2  3  4  5  6  7  8  9  a.txt  b  c  d  e  f |
++--------+-------------------------------------------------+----------------+
+|00000000| 01 02 03 00 00                                  |.....           |
++--------+-------------------------------------------------+----------------+
++--------+-------------------- all ------------------------+----------------+
+position: [2], limit: [5]
+         +-------------------------------------------------+
+         |  0  1  2  3  4  5  6  7  8  9  a.txt  b  c  d  e  f |
++--------+-------------------------------------------------+----------------+
+|00000000| 02 03 03 00 00                                  |.....           |
++--------+-------------------------------------------------+----------------+
+*/
+```
+
+### ByteBuffer 常见方法
 
 JDK 自带的 ByteBuffer 申请的 Buffer 大小是固定的。
 
@@ -511,9 +615,9 @@ Bytebuffer buf = ByteBuffer.allocate(16); // class java.nio.HeapByteBuffer
 Bytebuffer dir = ByteBuffer.allocateDirect(10) // class java.nio.DirectByteBuffer
 ```
 
-`class java.nio.HeapByteBuffer` - Java 堆内存，读写效率低，受到  GC 影响（GC算法可能会有内存移动/整理，数据得重新复制，会来回搬迁）
+`class java.nio.HeapByteBuffer` - Java 堆内存，读写效率低，受到 GC 影响（GC 算法可能会有内存移动/整理，数据得重新复制，会来回搬迁）
 
-`class java.nio.DirectByteBuffer` - 直接内存，读写效率高（少一次拷贝），不会受  GC 影响，分配效率低。但是 netty 为我们设计了一个 Buffer 池，尽可能的提高分配效率，减小内存泄漏的概率。
+`class java.nio.DirectByteBuffer` - 直接内存，读写效率高（少一次拷贝），不会受 GC 影响，分配效率低。但是 netty 为我们设计了一个 Buffer 池，尽可能的提高分配效率，减小内存泄漏的概率。
 
 #### 向 buffer 写入数据
 
@@ -548,26 +652,28 @@ byte b = buf.get();
 get 方法会让 position 读指针向后走，如果想重复读取数据
 
 * 可以调用 rewind 方法将 position 重新置为 0
-* 或者**调用 get(int i) 方法获取索引 i 的内容，它不会移动读指针！**
+* 或者调用 get(int i) 方法获取索引 i 的内容，它不会移动读指针！
 
 ```java
-@Test
-public void read() {
-    ByteBuffer allocate = ByteBuffer.allocate(10);
-    allocate.put(new byte[]{'a', 'b', 'c', 'd'});
-    allocate.flip();
-
-    // rewind 重复读数据 其实就是 令position = 0;
-    allocate.get(new byte[4]);
-    debugAll(allocate);
-    allocate.rewind();
-    debugAll(allocate);
+public static void testRead() {
+    // 测试重复读写某部分数据
+    ByteBuffer buffer = ByteBuffer.allocate(10);
+    buffer.put(new byte[]{'a', 'b', 'c', 'd'});
+    // 切换读模式
+    buffer.flip();
+    System.out.println((char) buffer.get());
+    buffer.rewind();
+    System.out.println((char) buffer.get());
 }
+/*
+a
+a
+*/
 ```
 
 #### mark 和 reset
 
-<b style="color:green">mark 是在读取时，做一个标记，</b>即使 position 改变，只要调用 reset 就能回到 mark 的位置
+<b style="color:purple">mark 在读取时，会做一个标记，</b>即使 position 改变，只要调用 reset 就能回到 mark 的位置
 
 ```java
 @Test
@@ -632,11 +738,21 @@ java.nio.HeapByteBuffer[pos=0 lim=5 cap=5]
 
 > ByteBuffer===>String
 
+```java
+public static void testByteBuffer2String() {
+    // 默认切换到读模式
+    ByteBuffer buffer = ByteBuffer.wrap("hello".getBytes(StandardCharsets.UTF_8));
+    CharBuffer decode = StandardCharsets.UTF_8.decode(buffer);
+    System.out.println(decode.toString());
+}
+// hello
+```
+
 #### ⚠️ Buffer 的线程安全
 
-> Buffer 是**非线程安全的**
+> Buffer 是非线程安全的
 
-### 2.4 Scattering Reads
+### Scattering Reads
 
 分散读取，有一个文本文件 3parts.txt
 
@@ -644,7 +760,7 @@ java.nio.HeapByteBuffer[pos=0 lim=5 cap=5]
 onetwothree
 ```
 
-使用如下方式读取，可以将数据填充至多个 buffer
+如果长度已知，使用如下方式读取，可以将数据填充至多个 buffer
 
 ```java
 @Test
@@ -667,66 +783,31 @@ public void test() {
 
 结果：都读取到了数据
 
-### 2.5 Gathering Writes
+### Gathering Writes
 
 使用如下方式写入，可以将多个 buffer 的数据填充至 channel
 
 ```java
-public class TestScatteringReads {
-    @Test
-    public void test() {
-        try (FileChannel file = new RandomAccessFile("read.txt", "rw").getChannel()) {
-            ByteBuffer buf1 = ByteBuffer.allocate(3);
-            ByteBuffer buf2 = ByteBuffer.allocate(4);
-            ByteBuffer buf3 = ByteBuffer.allocate(5);
-            long read = file.read(new ByteBuffer[]{buf1, buf2, buf3});
-            buf1.flip();
-            buf2.flip();
-            buf3.flip();
-            debugAll(buf1);
-            debugAll(buf2);
-            debugAll(buf3);
+// 聚集写
+public class TestGatheringWrites {
+    public static void main(String[] args) {
+        try (
+                RandomAccessFile file = new RandomAccessFile("hello.txt", "rw")
+        ) {
+            ByteBuffer hello = StandardCharsets.UTF_8.encode("hello");
+            ByteBuffer world = StandardCharsets.UTF_8.encode("world");
+            ByteBuffer java = StandardCharsets.UTF_8.encode("java");
+            file.getChannel().write(new ByteBuffer[]{hello, world, java});
         } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
 ```
 
-输出
+### 练习
 
-```
-+--------+-------------------- all ------------------------+----------------+
-position: [0], limit: [3]
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 33 33 33                                        |333             |
-+--------+-------------------------------------------------+----------------+
-+--------+-------------------- all ------------------------+----------------+
-position: [0], limit: [4]
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 34 34 34 34                                     |4444            |
-+--------+-------------------------------------------------+----------------+
-+--------+-------------------- all ------------------------+----------------+
-position: [0], limit: [5]
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 35 35 35 35 35                                  |55555           |
-+--------+-------------------------------------------------+----------------+
-```
-
-文件内容
-
-```
-helloworldjava
-```
-
-### 2.6 练习
-
-网络上有多条数据发送给服务端，数据之间使用 \n 进行分隔，但由于某种原因这些数据在接收时，被进行了重新组合，例如原始数据有3条为
+网络上有多条数据发送给服务端，数据之间使用 `\n` 进行分隔，但由于某种原因这些数据在接收时，被进行了重新组合，例如原始数据有3条为
 
 * Hello,world\n
 * I'm zhangsan\n
@@ -734,55 +815,54 @@ helloworldjava
 
 变成了下面的两个 byteBuffer (黏包，半包)
 
-* Hello,world\nI'm zhangsan\nHo
-* w are you?\n
+* Hello,World\nJa
+* va How are you\n
 
-现在要求你编写程序，将错乱的数据恢复成原始的按 \n 分隔的数据。<b>自己回去再写一遍。</b>
+现在要求你编写程序，将错乱的数据恢复成原始的按 `\n` 分隔的数据。
 
 ```java
-import org.junit.Test;
-
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
-import static netty.study.utils.ByteBufferUtil.debugAll;
-
+// 解決粘包，半包问题
 public class TestRecordContent {
-    @Test
-    public void test1() {
+
+    public static void main(String[] args) {
         ByteBuffer source = ByteBuffer.allocate(32);
-        source.put("Hello,world\nI'm zhangsan\nHo".getBytes());
+        source.put("Hello,World\nJa".getBytes(StandardCharsets.UTF_8));
         split(source);
-        source.put("w are you?\nhaha!\n".getBytes());
+        source.put("va How are you\n".getBytes(StandardCharsets.UTF_8));
         split(source);
     }
 
-    private void split(ByteBuffer source) {
-        source.flip();
+    private static void split(ByteBuffer source) {
+        source.flip(); // 读模式
         for (int i = 0; i < source.limit(); i++) {
-            // 找到一条完整的消息
             if (source.get(i) == '\n') {
-                int length = i + 1 - source.position();// 换行符位置+1 - 起始
-                ByteBuffer target = ByteBuffer.allocate(length);
-                // 从 source 读，向 target写 
-                for (int j = 0; j < length; j++) {
+                // 说明找到了一条完整的消息，我们不需要 \n 符号，所以此处不加 1
+                int len = i - source.position();
+                ByteBuffer target = ByteBuffer.allocate(len);
+                for (int j = 0; j < len; j++) {
                     target.put(source.get());
                 }
-                debugAll(target);
+                source.get(); // 去除回车换行符
+                target.flip();
+                String s = StandardCharsets.UTF_8.decode(target).toString();
+                System.out.println(s);
             }
-
         }
-        source.compact(); // 把剩余部分向前移动。
+        source.compact();
     }
 }
 ```
 
-## 3. 文件编程
+## 文件编程
 
-### 3.1 FileChannel
+### FileChannel
 
 #### ⚠️ FileChannel 工作模式
 
-> <b style="color:green">FileChannel 只能工作在阻塞模式下。而和网络相关的才能配合 selector 工作在非阻塞模式下。</b>
+> <b style="color:purple">FileChannel 只能工作在阻塞模式下。而和网络相关的才能配合 selector 工作在非阻塞模式下。</b>
 
 #### 获取
 
@@ -848,9 +928,9 @@ channel.position(newPos);
 
 操作系统出于性能的考虑，会将数据缓存，不是立刻写入磁盘。可以调用 force(true)  方法将文件内容和元数据（文件的权限等信息）立刻写入磁盘
 
-### 3.2 两个 Channel 传输数据
+### 两个 Channel 传输数据
 
-只要是 jdk 中带了 transferTo 的底层都会用操作系统的<b>零拷贝</b>进行优化。`transferTo` 一次最多传<b>2G</b>
+只要是 JDK 中带了 transferTo 的底层都会用操作系统的<b>零拷贝</b>进行优化。`transferTo` 一次最多传 <b>2G</b>
 
 ```java
 public class TestFileChannelTransferTo {
@@ -861,12 +941,13 @@ public class TestFileChannelTransferTo {
             // 起始位置，传多少字节，传到哪里去【效率高】
             from.transferTo(0, from.size(), to);
         } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
 ```
 
-超过 2g 大小的文件传输，可以进行多次传输。
+超过 2G 大小的文件传输，可以进行多次传输。
 
 ```java
 @Test
@@ -876,7 +957,7 @@ public void bigFile() {
         FileChannel to = new FileOutputStream("D:\\copy.zip").getChannel();
     ) {
         // 效率高，底层会利用操作系统的零拷贝进行优化
-        long size = from.size(); // 4845135158 ≈ 4.6G 就是文件的大小。这个应该是直接读的文件大小相关信息。
+        long size = from.size(); // 4845135158 ≈ 4.6G 就是文件的大小。
         System.out.println("=============");
         System.out.println(size);
         System.out.println("=============");
@@ -904,9 +985,9 @@ position:2147483647 left:2697651511
 position:4294967294 left:550167864
 ```
 
-### 3.3 Path
+### Path
 
-jdk7 引入了 Path 和 Paths 类
+JDK7 引入了 Path 和 Paths 类
 
 * Path 用来表示文件路径
 * Paths 是工具类，用来获取 Path 实例
@@ -940,6 +1021,8 @@ d:
 Path path = Paths.get("d:\\data\\projects\\a\\..\\b");
 System.out.println(path);
 System.out.println(path.normalize()); // 正常化路径
+// 当前项目的根目录
+System.out.println(System.getProperty("user.dir"));
 ```
 
 会输出
@@ -949,52 +1032,50 @@ d:\data\projects\a\..\b
 d:\data\projects\b
 ```
 
-### 3.4 Files
+### Files
 
 #### 基本操作
 
-> 检查文件是否存在
+> <b>检查文件是否存在</b>
 
 ```java
 Path path = Paths.get("helloword/data.txt");
 System.out.println(Files.exists(path));
 ```
 
-> 创建一级目录
+> <b>创建一级目录</b>
 
 ```java
 Path path = Paths.get("helloword/d1");
-Files.createDirectory(path);
+Files.createDirectory(path); // 只能创建一级目录
 ```
 
 * 如果目录已存在，会抛异常 FileAlreadyExistsException
 * 不能一次创建多级目录，否则会抛异常 NoSuchFileException
 
-> 创建多级目录用
+> <b>创建多级目录用</b>
 
 ```java
 Path path = Paths.get("helloword/d1/d2");
 Files.createDirectories(path);
 ```
 
-> 拷贝文件
+> <b>拷贝文件</b>
 
 ```java
 Path source = Paths.get("helloword/data.txt");
 Path target = Paths.get("helloword/target.txt");
-
+// 效率也很高。和 transferTo 效率差不多
 Files.copy(source, target);
 ```
 
 * 如果文件已存在，会抛异常 FileAlreadyExistsException
 
-> 如果希望用 source 覆盖掉 target，需要用 StandardCopyOption 来控制
+* 如果希望用 source 覆盖掉 target，需要用 StandardCopyOption 来控制
 
-```java
-Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
-```
+    `Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);`
 
-> 移动文件
+> <b>移动文件</b>
 
 ```java
 Path source = Paths.get("helloword/data.txt");
@@ -1005,7 +1086,7 @@ Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
 
 * StandardCopyOption.ATOMIC_MOVE 保证文件移动的原子性
 
-> 删除文件
+> <b>删除文件</b>
 
 ```java
 Path target = Paths.get("helloword/target.txt");
@@ -1015,7 +1096,7 @@ Files.delete(target);
 
 * 如果文件不存在，会抛异常 NoSuchFileException
 
-> 删除目录
+> <b>删除目录</b>
 
 ```java
 Path target = Paths.get("helloword/d1");
@@ -1027,7 +1108,7 @@ Files.delete(target);
 
 #### Files.walk
 
-> 遍历目录文件
+> <b>遍历目录文件</b>
 
 ```java
 import org.junit.Test;
@@ -1063,7 +1144,7 @@ public class TestTravelFilePath {
 }
 ```
 
-> 统计 java 文件的数目
+> <b>统计 Java 文件的数目</b>
 
 ```java
 import org.junit.Test;
@@ -1101,7 +1182,7 @@ public class TestTravelFilePath {
 }
 ```
 
-> 删除多级目录
+> <b>删除多级目录</b>
 
 ```java
 @Test
@@ -1143,11 +1224,11 @@ String target = "D:\\Snipaste-1.16.2-x64aaa";
 Files.walk(Paths.get(source)).forEach(path -> {
     try {
         String targetName = path.toString().replace(source, target);
-        // 是目录
+        // 是目录,则创建目录
         if (Files.isDirectory(path)) {
             Files.createDirectory(Paths.get(targetName));
         }
-        // 是普通文件
+        // 是普通文件,则复制文件
         else if (Files.isRegularFile(path)) {
             Files.copy(path, Paths.get(targetName));
         }
@@ -1159,9 +1240,9 @@ long end = System.currentTimeMillis();
 System.out.println(end - start);
 ```
 
-## 4. 网络编程
+## 网络编程
 
-### 4.1 非阻塞 vs 阻塞
+### 非阻塞 vs 阻塞
 
 对代码进行 `debug` 查看阻塞，非阻塞的特点。
 
@@ -1173,37 +1254,58 @@ System.out.println(end - start);
     * 阻塞的表现其实就是线程暂停了，暂停期间不会占用 cpu，但线程相当于闲置
 * 单线程下，阻塞方法之间相互影响，几乎不能正常工作，需要多线程支持
 * 但多线程下，有新的问题，体现在以下方面
-    * 32 位 jvm 一个线程 320k，64 位 jvm 一个线程 1024k，如果连接数过多，必然导致 OOM，并且线程太多，反而会因为频繁上下文切换导致性能降低
+    * 32 位 jvm 一个线程 320kb，64 位 jvm 一个线程 1024kb，如果连接数过多，必然导致 OOM，并且线程太多，反而会因为频繁上下文切换导致性能降低
     * 可以采用线程池技术来减少线程数和线程上下文切换，但治标不治本，如果有很多连接建立，但长时间 inactive，会阻塞线程池中所有线程，因此不适合长连接，只适合短连接
 
 > 服务器端
 
 ```java
-// 使用 nio 来理解阻塞模式, 单线程
-// 0. ByteBuffer
-ByteBuffer buffer = ByteBuffer.allocate(16);
-// 1. 创建了服务器
-ServerSocketChannel ssc = ServerSocketChannel.open();
+import lombok.extern.slf4j.Slf4j;
 
-// 2. 绑定监听端口
-ssc.bind(new InetSocketAddress(8080));
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
+import java.util.List;
 
-// 3. 连接集合
-List<SocketChannel> channels = new ArrayList<>();
-while (true) {
-    // 4. accept 建立与客户端连接， SocketChannel 用来与客户端之间通信
-    log.debug("connecting...");
-    SocketChannel sc = ssc.accept(); // 阻塞方法，线程停止运行
-    log.debug("connected... {}", sc);
-    channels.add(sc);
-    for (SocketChannel channel : channels) {
-        // 5. 接收客户端发送的数据
-        log.debug("before read... {}", channel);
-        channel.read(buffer); // 阻塞方法，线程停止运行
-        buffer.flip();
-        debugRead(buffer);
-        buffer.clear();
-        log.debug("after read...{}", channel);
+import static com.netty.nio.utils.ByteBufferUtil.debugRead;
+
+// 阻塞 IO
+@Slf4j
+public class Server {
+    public static void main(String[] args) throws IOException {
+        // 使用 nio 来理解阻塞模式, 单线程
+
+        // 1. 创建了服务器
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+
+        // 2. 绑定监听端口
+        serverSocketChannel.bind(new InetSocketAddress(10086));
+        ByteBuffer buffer = ByteBuffer.allocate(32);
+
+        // 3. 连接集合
+        List<SocketChannel> channels = new ArrayList<>();
+        while (true) {
+            log.debug("connecting...");
+            // 4. accept 建立与客户端连接， SocketChannel 用来与客户端之间通信
+            SocketChannel accept = serverSocketChannel.accept(); // 阻塞方法，线程停止运行
+            log.debug("connected");
+            channels.add(accept);
+            channels.forEach(channel -> {
+                try {
+                    log.debug("before read ... {}", channel);
+                    channel.read(buffer); // 阻塞方法，线程停止运行
+                    buffer.flip();
+                    debugRead(buffer);
+                    buffer.compact();
+                    log.debug("after read... {}", channel);
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            });
+        }
     }
 }
 ```
@@ -1211,10 +1313,19 @@ while (true) {
 > 客户端
 
 ```java
-SocketChannel sc = SocketChannel.open();
-sc.connect(new InetSocketAddress("localhost", 8080));
-// open.write(StandardCharsets.UTF_8.encode("hello"));  debug evaluate
-System.out.println("waiting...");
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
+
+public class Client {
+    public static void main(String[] args) throws IOException {
+        SocketChannel client = SocketChannel.open();
+        client.connect(new InetSocketAddress("localhost",10086));
+		// client.write(StandardCharsets.UTF_8.encode("hello")); // evaluate
+        System.out.println("waiting");
+    }
+}
 ```
 
 #### 非阻塞
@@ -1234,7 +1345,7 @@ System.out.println("waiting...");
 * 但非阻塞模式下，即使没有连接建立，和可读数据，线程仍然在不断运行，白白浪费了 `cpu`
 * 数据复制过程中，线程实际还是阻塞的（`AIO` 改进的地方）
 
-<b style="color:green">服务器端，客户端代码不变。这样写，虽然是非阻塞的，但是即便客户端没有发送数据过来，服务器的线程也要不断进行循环，很消耗 CPU。有读取事件时再进行处理比较好。</b>
+<b style="color:green">服务器端，客户端代码不变。这样写，虽然是非阻塞的，但是即便客户端没有发送数据过来，服务器的线程也要不断进行循环 (因为代码里是 while true)，很消耗 CPU。有读取事件时再进行处理比较好。</b>
 
 ```java
 // 使用 nio 来理解非阻塞模式, 单线程
@@ -1276,10 +1387,9 @@ while (true) {
 * 如果不用 Selector 的非阻塞模式，线程大部分时间都在做无用功，而 Selector 能够保证
     * 有可连接事件时才去连接
     * 有可读事件才去读取
-    * 有可写事件才去写入
-        * 限于网络传输能力，Channel 未必时时可写，一旦 Channel 可写，会触发 Selector 的可写事件
+    * 有可写事件才去写入，限于网络传输能力，Channel 未必时时可写，一旦 Channel 可写，会触发 Selector 的可写事件
 
-### 4.2 Selector
+### Selector
 
 ```mermaid
 graph TD
@@ -1291,9 +1401,9 @@ selector --> c3(channel)
 end
 ```
 
-好处
+<b>好处</b>
 
-* 一个线程配合 selector 就可以监控多个 channel 的事件，事件发生线程才去处理。避免非阻塞模式下所做无用功
+* 一个线程配合 selector 就可以监控多个 channel 的事件，事件发生线程才去处理 (select 会阻塞，有事件发生了就会唤醒)。避免非阻塞模式下所做无用功。
 * 让这个线程能够被充分利用
 * 节约了线程的数量
 * 减少了线程上下文切换
@@ -1395,7 +1505,7 @@ public class Server2 {
 }
 ```
 
-### 4.3 处理 accept 事件
+### 处理 accept 事件
 
 客户端代码为
 
@@ -1463,7 +1573,7 @@ public class ChannelDemo6 {
 
 > 事件发生后，要么处理，要么取消（cancel），不能什么都不做，否则下次该事件仍会触发，这是因为 nio 底层使用的是水平触发
 
-### 4.4 处理 read 事件
+### 处理 read 事件
 
 ```java
 @Slf4j
@@ -1549,7 +1659,7 @@ sun.nio.ch.ServerSocketChannelImpl[/0:0:0:0:0:0:0:0:8080]
 
 > 因为 select 在事件发生后，就会将相关的 key 放入 selectedKeys 集合，但不会在处理完后从 selectedKeys 集合中移除，需要我们自己编码删除。例如
 >
-> * 第一次触发了 ssckey 上的 accept 事件，没有移除 ssckey （key会绑定）
+> * 第一次触发了 ssckey 上的 accept 事件，没有移除 ssckey （key 会绑定）
 > * 第二次触发了 sckey 上的 read 事件，但这时 selectedKeys 中还有上次的 ssckey ，在处理时因为没有真正的 serverSocket 连上了，就会导致空指针异常
 
 #### 💡 cancel 的作用
@@ -1604,7 +1714,6 @@ hell
 owor
 ld�
 �好
-
 ```
 
 为什么？
@@ -1738,7 +1847,7 @@ System.in.read();
     * 一种思路是首先分配一个较小的 buffer，例如 4k，如果发现数据不够，再分配 8k 的 buffer，将 4k buffer 内容拷贝至 8k buffer，优点是消息连续容易处理，缺点是数据拷贝耗费性能，参考实现 [http://tutorials.jenkov.com/java-performance/resizable-array.html](http://tutorials.jenkov.com/java-performance/resizable-array.html)
     * 另一种思路是用多个数组组成 buffer，一个数组不够，把多出来的内容写入新的数组，与前面的区别是消息存储不连续解析复杂，优点是避免了拷贝引起的性能损耗
 
-### 4.5 处理 write 事件
+### 处理 write 事件
 
 #### 一次无法写完例子
 
@@ -1838,18 +1947,20 @@ public class WriteClient {
 
 只要向 channel 发送数据时，socket 缓冲可写，这个事件会频繁触发，因此应当只在 socket 缓冲区写不下时再关注可写事件，数据写完之后再取消关注
 
-### 4.6 更进一步
+### 更进一步
 
 #### 💡 利用多线程优化
 
-> 现在都是多核 cpu，设计时要充分考虑别让 cpu 的力量被白白浪费
+> 现在都是多核 CPU，设计时要充分考虑别让 CPU 的力量被白白浪费
 
-前面的代码只有一个选择器，没有充分利用多核 cpu，如何改进呢？
+前面的代码只有一个选择器，没有充分利用多核 CPU，如何改进呢？用多个线程进行优化。
 
 分两组选择器
 
 * 单线程配一个选择器，专门处理 accept 事件
-* 创建 cpu 核心数的线程，每个线程配一个选择器，轮流处理 read 事件
+* 创建 CPU 核心数的线程，每个线程配一个选择器，轮流处理 read 事件
+
+<div align="center"><img src="img/image-20221019181004505.png"></div>
 
 ```java
 public class ChannelDemo7 {
@@ -1857,8 +1968,8 @@ public class ChannelDemo7 {
         new BossEventLoop().register();
     }
 
-
     @Slf4j
+    // 只负责数据的接待（accept）
     static class BossEventLoop implements Runnable {
         private Selector boss;
         private WorkerEventLoop[] workers;
@@ -1879,9 +1990,10 @@ public class ChannelDemo7 {
                 start = true;
             }
         }
-
+		
+        // 只负责数据的读写
         public WorkerEventLoop[] initEventLoops() {
-//        EventLoop[] eventLoops = new EventLoop[Runtime.getRuntime().availableProcessors()];
+			// EventLoop[] eventLoops = new EventLoop[Runtime.getRuntime().availableProcessors()];
             WorkerEventLoop[] workerEventLoops = new WorkerEventLoop[2];
             for (int i = 0; i < workerEventLoops.length; i++) {
                 workerEventLoops[i] = new WorkerEventLoop(i);
@@ -1986,12 +2098,12 @@ public class ChannelDemo7 {
 }
 ```
 
-#### 💡 如何拿到 cpu 个数
+#### 💡 如何拿到 CPU 个数
 
-> * Runtime.getRuntime().availableProcessors() 如果工作在 docker 容器下，因为容器不是物理隔离的，会拿到物理 cpu 个数，而不是容器申请时的个数
-> * 这个问题直到 jdk 10 才修复，使用 jvm 参数 UseContainerSupport 配置， 默认开启
+> * Runtime.getRuntime().availableProcessors() 如果工作在 docker 容器下，因为容器不是物理隔离的，会拿到物理 CPU 个数，而不是容器申请时的个数
+> * 这个问题直到 JDK10 才修复，使用 jvm 参数 UseContainerSupport 配置， 默认开启
 
-### 4.7 UDP
+### UDP
 
 * UDP 是无连接的，client 发送数据不会管 server 是否开启
 * server 这边的 receive 方法会将接收到的数据存入 byte buffer，但如果数据报文超过 buffer 大小，多出来的数据会被默默抛弃
@@ -2047,15 +2159,15 @@ public class UdpClient {
 +--------+-------------------------------------------------+----------------+
 ```
 
-## 5. NIO vs BIO
+## NIO vs BIO
 
-### 5.1 stream vs channel
+### stream vs channel
 
 * stream 不会自动缓冲数据，channel 会利用系统提供的发送缓冲区、接收缓冲区（更为底层）
 * stream 仅支持阻塞 API，channel 同时支持阻塞、非阻塞 API，网络 channel 可配合 selector 实现多路复用
 * <b>二者均为全双工，即读写可以同时进行</b>
 
-### 5.2 IO 模型
+### IO 模型
 
 <b style="color:green">同步阻塞、同步非阻塞、同步多路复用、异步阻塞（没有此情况，网上瞎说的）、异步非阻塞</b>
 
@@ -2100,7 +2212,7 @@ public class UdpClient {
 
 UNIX 网络编程 - 卷 I
 
-### 5.3 零拷贝
+### 零拷贝
 
 #### 传统 IO 问题
 
@@ -2121,15 +2233,15 @@ socket.getOutputStream().write(buf);
 
 <div align="center"><img src="img/0024.png"></div>
 
-1. java 本身并不具备 IO 读写能力，因此 read 方法调用后，要从 java 程序的<b>用户态切换至内核态</b>，去调用操作系统（Kernel）的读能力，将数据读入<b>内核缓冲区</b>。这期间用户线程阻塞，操作系统使用 DMA（Direct Memory Access）来实现文件读，其间也不会使用 cpu
+1️⃣java 本身并不具备 IO 读写能力，因此 read 方法调用后，要从 java 程序的<b>用户态切换至内核态</b>，去调用操作系统（Kernel）的读能力，将数据读入<b>内核缓冲区</b>。这期间用户线程阻塞，操作系统使用 DMA（Direct Memory Access）来实现文件读，其间也不会使用 cpu
 
-    > DMA 也可以理解为硬件单元，用来解放 cpu 完成文件 IO
+> DMA 也可以理解为硬件单元，用来解放 cpu 完成文件 IO
 
-2. 从<b>内核态切换回用户态</b>，将数据从<b>内核缓冲区</b>读入<b>用户缓冲区</b>（即 byte[] buf），这期间 CPU 会参与拷贝，无法利用 DMA
+2️⃣从<b>内核态切换回用户态</b>，将数据从<b>内核缓冲区</b>读入<b>用户缓冲区</b>（即 byte[] buf），这期间 CPU 会参与拷贝，无法利用 DMA
 
-3. 调用 write 方法，这时将数据从<b>用户缓冲区</b>（byte[] buf）写入 <b>socket 缓冲区</b>，cpu 会参与拷贝
+3️⃣调用 write 方法，这时将数据从<b>用户缓冲区</b>（byte[] buf）写入 <b>socket 缓冲区</b>，cpu 会参与拷贝
 
-4. 接下来要向网卡写数据，这项能力 java 又不具备，因此又得从<b>用户态</b>切换至<b>内核态</b>，调用操作系统的写能力，使用 DMA 将 <b>socket 缓冲区</b>的数据写入网卡，不会使用 cpu
+4️⃣接下来要向网卡写数据，这项能力 java 又不具备，因此又得从<b>用户态</b>切换至<b>内核态</b>，调用操作系统的写能力，使用 DMA 将 <b>socket 缓冲区</b>的数据写入网卡，不会使用 cpu
 
 可以看到中间环节较多，java 的 IO 实际不是物理设备级别的读写，而是缓存的复制，底层的真正读写是操作系统来完成的
 
@@ -2182,7 +2294,7 @@ socket.getOutputStream().write(buf);
     * 如果文件比较大，那需要把大量的数据读到缓冲区去，缓冲区是为了方便反复获取数据，如果文件比较大，要把文件发生到网卡，数据从头到尾只读取了一次，没发挥到缓存的效果，反而因为文件较大，把缓冲区内存都占满了，导致其他文件的读写受到影响。
     * 适合读取频繁的小文件。
 
-### 5.3 AIO
+### AIO
 
 AIO 用来解决数据复制阶段的阻塞问题
 
@@ -2361,24 +2473,24 @@ public class AioServer {
 
 # Netty入门
 
-## 1. 概述
+## 概述
 
-### 1.1 Netty 是什么？	
+### Netty 是什么？	
 
 ```
 Netty is an asynchronous event-driven network application framework
 for rapid development of maintainable high performance protocol servers & clients.
 ```
 
-Netty 是一个异步的、基于事件驱动的网络应用框架，用于快速开发可维护、高性能的网络服务器和客户端
+Netty 是一个异步的、基于事件驱动的网络应用框架，用于快速开发可维护、高性能的网络服务器和客户端。<b style="color:red">注意：Netty 不是用到异步 IO。说 Netty 是异步框架指的是多线程。</b>
 
-### 1.2 Netty 的作者
+### Netty 的作者
 
 <div align="center"><img src="img/0005.png"></div>
 
 他还是另一个著名网络应用框架 Mina 的重要贡献者
 
-### 1.3 Netty 的地位
+### Netty 的地位
 
 Netty 在 Java 网络应用框架中的地位就好比：Spring 框架在 JavaEE 开发中的地位
 
@@ -2394,12 +2506,12 @@ Netty 在 Java 网络应用框架中的地位就好比：Spring 框架在 JavaEE
 * Spring 5.x - flux api 完全抛弃了 tomcat ，使用 netty 作为服务器端
 * Zookeeper - 分布式协调框架
 
-### 1.4 Netty 的优势
+### Netty 的优势
 
 * Netty vs NIO，工作量大，bug 多
     * 需要自己构建协议
     * 解决 TCP 传输问题，如粘包、半包
-    * epoll 空轮询导致 CPU 100%
+    * epoll 空轮询导致 CPU 100%（Linux 多路复用的底层是 epoll，epoll 在 NIO 里有 Bug，NIO 的作者在处理 epoll 的时候有 Bug 会导致 selector 方法在某些情况下阻塞不了。）
     * 对 API 进行增强，使之更易用，如 FastThreadLocal => ThreadLocal，ByteBuf => ByteBuffer
 * Netty vs 其它网络应用框架
     * Mina 由 apache 维护，将来 3.x 版本可能会有较大重构，破坏 API 向下兼容性，Netty 的开发迭代更迅速，API 更简洁、文档更优秀
@@ -2407,13 +2519,13 @@ Netty 在 Java 网络应用框架中的地位就好比：Spring 框架在 JavaEE
         * 2.x 2004
         * 3.x 2008
         * 4.x 2013
-        * 5.x 已废弃（没有明显的性能提升，维护成本高）
+        * 5.x 已废弃（加入了 AIO，但是没有明显的性能提升，维护成本高）
 
 > Netty 的注意事项
 
 Netty 中的很多方法都是异步的，遇到这些异步的方法，不能直接在异步后面加方法进行处理，要么同步（sync 方法阻塞）关闭，要么配合异步（addListener 异步关闭）关闭。
 
-## 2. Hello World
+## Hello World
 
 ```java
 public class QuickServer {
@@ -2426,7 +2538,7 @@ public class QuickServer {
                 .channel(NioServerSocketChannel.class)
                 // 4.BOSS 负责处理连接， worker(child) 负责处理读写，决定了 worker(child) 能执行哪些操作
                 .childHandler(
-                        // 5.和客户端进行数据读写的通道。channel 代表和客户端进行数据读写的通道 Initializer 初始化，负责添加别的 handler
+                        // 5.代表和客户端进行数据读写的通道。channel 代表和客户端进行数据读写的通道 Initializer 初始化，它是负责添加别的 handler
                         new ChannelInitializer<NioServerSocketChannel>() {
                             @Override
                             protected void initChannel(NioServerSocketChannel ch) throws Exception {
@@ -2470,7 +2582,7 @@ public class QuickClient {
 }
 ```
 
-### 2.1 目标
+### 目标
 
 开发一个简单的服务器端和客户端
 
@@ -2487,7 +2599,7 @@ public class QuickClient {
 </dependency>
 ```
 
-### 2.2 服务器端
+### 服务器端
 
 注意 ChannelInitializer 的泛型是 NioSocketChannel
 
@@ -2534,7 +2646,7 @@ public class QuickServer {
 
 > 代码解读
 
-* 1 处，创建 NioEventLoopGroup，可以简单理解为<b>线程池 + Selector</b>后面会详细展开
+* 1 处，创建 NioEventLoopGroup，可以简单理解为<b>线程池 + Selector</b> 后面会详细展开
 
 * 2 处，选择服务 Scoket 实现类，其中 NioServerSocketChannel 表示基于 NIO 的服务器端实现，其它实现还有
 
@@ -2548,7 +2660,7 @@ public class QuickServer {
 
 * 6 处，SocketChannel 的业务处理器，使用上一个处理器的处理结果
 
-### 2.3 客户端
+### 客户端
 
 ```java
 public class QuickClient {
@@ -2563,7 +2675,8 @@ public class QuickClient {
                 .handler(new ChannelInitializer<NioSocketChannel>() {
                     @Override // 在建立连接后被调用
                     protected void initChannel(NioSocketChannel ch) throws Exception {
-                        ch.pipeline().addLast(new StringEncoder()); // 把 hello xxx 转成 ByteBuffer
+                        // 把字符串编码成 ByteBuf。
+                        ch.pipeline().addLast(new StringEncoder());
                     }
                 })
                 .connect("127.0.0.1", 8080)
@@ -2597,29 +2710,29 @@ public class QuickClient {
 
 * 数据经过网络传输，到达服务器端，服务器端 5 和 6 处的 handler 先后被触发，走完一个流程
 
-### 2.4 流程梳理
+### 流程梳理
 
 <div align="center"><img src="img/0040.png"></div>
 
 #### 💡 提示
 
-> 一开始需要树立正确的观念
+> <b>一开始需要树立正确的观念</b>
 >
 > * 把 channel 理解为数据的通道
 > * 把 msg 理解为流动的数据，最开始输入是 ByteBuf，但经过 pipeline 的加工，会变成其它类型对象，最后输出又变成 ByteBuf
 > * 把 handler 理解为数据的处理工序
 >     * 工序有多道，合在一起就是 pipeline，pipeline 负责发布事件（读、读取完成...）传播给每个 handler， handler 对自己感兴趣的事件进行处理（重写了相应事件处理方法）
 >     * handler 分 Inbound 和 Outbound 两类
->         * Inbound 入站
->         * Outbound 出站
-> * 把 eventLoop 理解为处理数据的工人（使用单线程的线程池实现的？）
->     * 工人可以管理多个 channel 的 io 操作，并且一旦工人负责了某个 channel，就要负责到底（绑定）。一个 channel 只被一个线程操作，线程安全。
+>         * Inbound 入站，数据输/写入时由 Inbound 入站处理器处理
+>         * Outbound 出站，数据写出时由 Outbound 出站处理器处理
+> * 把 eventLoop 理解为处理数据的工人 (底层使用的单线程的线程池)
+>     * 工人可以管理多个 channel 的 io 操作，并且一旦工人负责了某个 channel，就要负责到底（绑定）。<span style="color:red">一个 channel 只被一个线程操作，线程安全。</span>
 >     * 工人既可以执行 io 操作，也可以进行任务处理，每位工人有任务队列，队列里可以堆放多个 channel 的待处理任务，任务分为普通任务、定时任务
 >     * 工人按照 pipeline 顺序，依次按照 handler 的规划（代码）处理数据，可以为每道工序指定不同的工人（非 IO 操作的处理可以换工人）
 
-## 3. 组件
+## 组件
 
-### 3.1 EventLoop
+### EventLoop
 
 事件循环对象
 
@@ -2658,10 +2771,12 @@ EventLoopGroup 是一组 EventLoop，Channel 一般会调用 EventLoopGroup 的 
 @Slf4j(topic = "c.TestEventLoop")
 public class TestEventLoop {
     public static void main(String[] args) {
-        NioEventLoopGroup group = new NioEventLoopGroup(2); // io 事件、普通任务、定时任务
-//        DefaultEventLoopGroup eventExecutors1 = new DefaultEventLoopGroup();// 普通任务、定时任务
-//        System.out.println(NettyRuntime.availableProcessors(
-
+        // 可以提交 io 事件、普通任务、定时任务
+        // nThreads 传入 0 的话，就设置默认的线程数 Math.max(1,可用处理器*2)
+        NioEventLoopGroup group = new NioEventLoopGroup(2); 
+        // 普通任务、定时任务
+        // DefaultEventLoopGroup eventExecutors1 = new DefaultEventLoopGroup();
+		// System.out.println(NettyRuntime.availableProcessors())
         // 获取下一个事件的循环
         System.out.println(group.next());
         System.out.println(group.next());
@@ -2669,15 +2784,13 @@ public class TestEventLoop {
         System.out.println(group.next());
     }
 }
-```
-
-输出
-
-```
-io.netty.channel.nio.NioEventLoop@3e96bacf
-io.netty.channel.nio.NioEventLoop@484970b0
-io.netty.channel.nio.NioEventLoop@3e96bacf
-io.netty.channel.nio.NioEventLoop@484970b0
+/*
+io.netty.channel.nio.NioEventLoop@8317c52
+io.netty.channel.nio.NioEventLoop@76f2bbc1
+io.netty.channel.nio.NioEventLoop@8317c52
+io.netty.channel.nio.NioEventLoop@76f2bbc1
+轮流用，相当于实现了一个简单的负载均衡
+*/
 ```
 
 也可以使用 for 循环
@@ -2687,13 +2800,6 @@ DefaultEventLoopGroup group = new DefaultEventLoopGroup(2);
 for (EventExecutor eventLoop : group) {
     System.out.println(eventLoop);
 }
-```
-
-输出
-
-```
-io.netty.channel.DefaultEventLoop@60f82f98
-io.netty.channel.DefaultEventLoop@35f983a6
 ```
 
 #### 💡 优雅关闭
@@ -2885,7 +2991,7 @@ static void invokeChannelRead(final AbstractChannelHandlerContext next, Object m
 * 如果两个 handler 绑定的是同一个线程，那么就直接调用
 * 否则，把要调用的代码封装为一个任务对象，由下一个 handler 的线程来调用
 
-#### 演示 `NioEventLoop` 处理普通&定时任务
+#### NioEventLoop 处理普通&定时任务
 
 ```java
 @Slf4j(topic = "c.TestEventLoop")
@@ -2914,7 +3020,7 @@ public class TestEventLoop {
 }
 ```
 
-#### 演示 `NioEventLoop` 处理 `io` 事件
+#### NioEventLoop 处理 io 事件
 
 服务器端两个 `nio` `worker` 工人
 
@@ -2979,13 +3085,15 @@ public static void main(String[] args) throws InterruptedException {
 
 再增加两个非 nio 工人
 
-#### 演示 `NioEventLoop` 分工细化
+#### NioEventLoop 分工细化
 
 > 将 boss 与 worker 细分下。调用 group 里接收带两个参数的方法即可。
 
 - 第一个参数是 `boss` 只负责处理 `accept` 事件。
     - `NioServerSocketChannel` 只有一个，那我们是不是应该把 boss 的 `EventLoopGroup` 设置为1呢？不用的。因为 `NioServerSocketChannel` 只有一个，将来注册事件的时候，也只会在 `EventLoopGroup` 里找一个 `eventLoop` 进行绑定。
 - 第二个参数是 worker 只负责 `sockerChannel` 上的读写。
+
+EventLoopGroup 本质上是一个线程池，因此 boss 和第一个 NioEventLoopGroup 中的线程绑定，只会绑定一次。
 
 <b>服务器端代码</b>
 
@@ -2997,7 +3105,7 @@ public class EventLoopServer2 {
                 // boss 只负责 ServerSocketChannel 上的 accept 事件，
                 // worker 只负责 socketChannel 上的读写
                 .group(new NioEventLoopGroup(), new NioEventLoopGroup(/*根据自己的需求设置*/2))
-                // server socket channel 只和一个 EventLoop 绑定。不可能有更多的 Server Socket。
+                // server socket channel 只会和一个 EventLoop 绑定。不可能有更多的 Server Socket。因此第一个 NioEventLoopGroup 不用指定线程数
                 .channel(NioServerSocketChannel.class)
                 .childHandler(new ChannelInitializer<NioSocketChannel>() {
                     @Override
@@ -3081,9 +3189,11 @@ public class EventLoopServer3 {
                             public void channelRead(ChannelHandlerContext ctx, Object msg) {
                                 ByteBuf buf = (ByteBuf) msg;
                                 log.debug(buf.toString(StandardCharsets.UTF_8) + " handler1");
-                                ctx.fireChannelRead(msg);// 将消息传递给下一个 group。
+                                // 将消息传递给下一个 group！！！！
+                                ctx.fireChannelRead(msg);
                             }
                         });
+                        // 执行时间过长，用其他 EventLoop 处理
                         ch.pipeline().addLast(group, "handler2", new ChannelInboundHandlerAdapter() {
                             @Override // ByteBuf 类型
                             public void channelRead(ChannelHandlerContext ctx, Object msg) {
@@ -3187,7 +3297,7 @@ nioWorkers.scheduleAtFixedRate(() -> {
 
 可以用来执行定时任务
 
-### 3.2 Channel
+### Channel
 
 Cahnnel 的主要作用
 
@@ -3368,7 +3478,7 @@ public class CloseFutureClient {
             while (true) {
                 String s = sc.nextLine();
                 if ("q".equals(s)) {
-                    channel.close();
+                    channel.close(); // close 方法也是异步操作
                     log.debug("处理关闭之后的操作");
                     return;
                 }
@@ -3400,12 +3510,6 @@ public class GoodCloseFutureClient {
                 .handler(new ChannelInitializer<NioSocketChannel>() {
                     @Override
                     protected void initChannel(NioSocketChannel ch) throws Exception {
-                        // 需要在 logback 里进行配置
-                        /**
-                         *    <logger name="io.netty.handler.logging.LoggingHandler" level="debug" additivity="false">
-                         *         <appender-ref ref="STDOUT"/>
-                         *     </logger>
-                         * */
                         ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
                         ch.pipeline().addLast(new StringEncoder());
                     }
@@ -3452,8 +3556,8 @@ closeFuture.addListener(new ChannelFutureListener() {
     @Override
     public void operationComplete(ChannelFuture future) throws Exception {
         log.debug("处理关闭之后的操作");
-        // 优雅地关闭客户端。会把 nio group 里所有的线程关闭了。
-        group.shutdownGracefully(); //BootStrap 里的 new NioEventLoopGroup(); 被提取出来了。命名为 group。这样可以完全关闭客户端，即关闭group里所有的线程。
+        // 优雅地关闭客户端。会把 nio group 里所有的线程关闭了。确保整个程序结束。
+        group.shutdownGracefully(); // BootStrap 里的 new NioEventLoopGroup(); 被提取出来了。命名为 group。这样可以完全关闭客户端，即关闭 group 里所有的线程。
     }
 });
 ```
@@ -3462,7 +3566,7 @@ closeFuture.addListener(new ChannelFutureListener() {
 
 * 有些同学看到这里会有疑问：为什么不在一个线程中去执行建立连接、去执行关闭 channel，那样不是也可以吗？非要用这么复杂的异步方式：比如一个线程发起建立连接，另一个线程去真正建立连接
 
-* 还有同学会笼统地回答，因为 netty 异步方式用了多线程、多线程就效率高。其实这些认识都比较片面，多线程和异步所提升的效率并不是所认为的
+* 还有同学会笼统地回答，因为 netty 异步方式用了多线程、多线程就效率高。其实这些认识都比较片面，多线程和异步所提升的东西和我们想象中的可能会有所不同。
 
 思考下面的场景，4 个医生给人看病，每个病人花费 20 分钟，而且医生看病的过程中是以病人为单位的，一个病人看完了，才能看下一个病人。假设病人源源不断地来，可以计算一下 4 个医生一天工作 8 小时，处理的病人总数是：`4 * 8 * 3 = 96`
 
@@ -3478,15 +3582,15 @@ closeFuture.addListener(new ChannelFutureListener() {
 
 要点
 
-* 单线程没法异步提高效率，必须配合多线程、多核 `cpu` 才能发挥异步的优势
+* 单线程没法异步提高效率，必须配合多线程、多核 `CPU` 才能发挥异步的优势
 * 异步并没有缩短响应时间，反而有所增加，但是增加了吞吐量。
 * 合理进行任务拆分，也是利用异步的关键
 
-### 3.3 Future & Promise
+### Future & Promise
 
 在异步处理时，经常用到这两个接口
 
-首先要说明 `netty` 中的 `Future` 与 `jdk` 中的 `Future` 同名，但是 是两个接口，`netty` 的 `Future` 继承自 `jdk` 的 `Future`，而 `Promise` 又对 `netty` `Future` 进行了扩展
+首先要说明 `netty` 中的 `Future` 与 `jdk` 中的 `Future` 同名，但是是两个接口，`netty` 的 `Future` 继承自 `jdk` 的 `Future`，而 `Promise` 又对 `netty` `Future` 进行了扩展
 
 * `jdk Future` 只能同步等待任务结束（或成功、或失败）才能得到结果
 * `netty Future` 可以同步等待任务结束得到结果，也可以异步方式得到结果，但都是要等任务结束
@@ -3526,7 +3630,7 @@ public class TestJdkFuture {
         });
         // 主线程通过 future 来获取结果
         System.out.println("等待结果");
-        // 在线程间传递结果。future 是被动的，由执行任务的线程把结果填到future对象中。（任务给future，main等结果）
+        // 在线程间传递结果。future 是被动的，由执行任务的线程把结果填到 future 对象中。（任务给 future，main 等结果）
         Integer integer = future.get();
         System.out.println(integer);
     }
@@ -3571,14 +3675,17 @@ public class TestNettyFuture {
 }
 ```
 
-#### `Netty Promise`
+#### Netty Promise
 
 ```java
 @Slf4j
 public class TestNettyPromise {
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         NioEventLoopGroup group = new NioEventLoopGroup();
+        // 两个线程传递数据的容器，JUC 里的一个 SynchronousQueue 类也可以，
+        // SynchronousQueue 中不存储数据或者说只能存储一个数据
         DefaultPromise<Integer> promise = new DefaultPromise<>(group.next());
+        
         Thread th = new Thread(() -> {
             try {
                 // 开启线程，计算完毕后向 promise 填充结果。
@@ -3838,20 +3945,19 @@ io.netty.util.concurrent.BlockingOperationException: DefaultPromise@47499c2a(inc
 	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
 	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
 	at java.lang.Thread.run(Thread.java:745)
-
 ```
 
-### 3.4 Handler & Pipeline
+### Handler & Pipeline
 
 
-ChannelHandler 用来处理 Channel 上的各种事件，分为入站、出站两种。所有 ChannelHandler 被连成一串，就是 Pipeline
+ChannelHandler 用来处理 Channel 上的各种事件，分为入站、出站两种。所有 ChannelHandler 被连成一串，就是 Pipeline。
 
-* 入站处理器通常是 ChannelInboundHandlerAdapter 的子类，主要用来读取客户端数据，写回结果
-* 出站处理器通常是 ChannelOutboundHandlerAdapter 的子类，主要对写回结果进行加工
+* 入站处理器通常是 ChannelInboundHandlerAdapter 的子类，主要用来读取客户端数据，写回结果。（`外部数据-->channel`）做数据的读取操作。
+* 出站处理器通常是 ChannelOutboundHandlerAdapter 的子类，主要对写回结果进行加工。（`channel-->外部数据`）做数据的写出操作。
 
 打个比喻，每个 `Channel` 是一个产品的加工车间，Pipeline 是车间中的流水线，`ChannelHandler` 就是流水线上的各道工序，而后面要讲的 `ByteBuf` 是原材料，经过很多工序的加工：先经过一道道入站工序，再经过一道道出站工序最终变成产品
 
-先搞清楚顺序，服务端
+<b style="color:purple">先搞清楚顺序，服务端：客户端发送数据，服务器端接受到数据，用入站处理器（ChannelInboundHandlerAdapter 子类）进行处理，在处理完毕后如果需要给一个回执，就在最后一个入站处理器里通过 NioSocketChannel 写出数据。写出数据的出站处理器（ChannelOutboundHandlerAdapter 子类）调用顺序是 `tail->head`，在 `tail->head` 的遍历过程中，凡是遇到出站处理器就调用。</b>
 
 ```java
 package netty.quick.pipeline;
@@ -3893,17 +3999,18 @@ public class TestPipelineServer {
                                 super.channelRead(ctx, msg);
                             }
                         });
+                        
                         // head -> h1 ->h2 -> h3 -> tail
                         pipeline.addLast("h3", new ChannelInboundHandlerAdapter() {
                             @Override
                             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
                                 log.debug("3");
                                 super.channelRead(ctx, msg);
-                                // 分配了一个 buf 对象，然后写入一些字节。（为了触发出战处理器）
+                                // 分配了一个 buf 对象，然后写入一些字节。（为了触发出站处理器），注意这里用的是 ch(NioSocketChannel)写出数据的。
                                 ch.writeAndFlush(ctx.alloc().buffer().writeBytes("hello".getBytes(StandardCharsets.UTF_8)));
                             }
                         });
-                        // 出战处理器，只有你向 channel 里写了数据才会触发。出战是从尾巴向前走。
+                        // 出站处理器，只有你向 channel 里写了数据才会触发。出战是从尾巴向前走。
                         // head -> h1 ->h2 -> h3 -> h4 -> tail
                         pipeline.addLast("h4", new ChannelOutboundHandlerAdapter() {
                             @Override
@@ -3985,18 +4092,18 @@ public class TestPipelineClient {
 
 <div align="center"><img src="img/0008.png"></div>
 
-* 入站处理器中，ctx.fireChannelRead(msg) 是<b>调用下一个入站处理器</b>
+* 入站处理器中，ctx.fireChannelRead(msg) 是<b>调用下一个入站处理器</b>，如果当前是最后一个入站处理器那么就没必要调用了。
     * 如果注释掉 1 处代码，则仅会打印 1
     * 如果注释掉 2 处代码，则仅会打印 1 2
 * 3 处的 ctx.channel().write(msg) 会<b>从尾部开始触发</b>后续出站处理器的执行
     * 如果注释掉 3 处代码，则仅会打印 1 2 3
 * 类似的，出站处理器中，ctx.write(msg, promise) 的调用也会<b>触发上一个出站处理器</b>
     * 如果注释掉 6 处代码，则仅会打印 1 2 3 6
-* ctx.channel().write(msg) vs ctx.write(msg)
+* <b style="color:purple">ctx.channel().write(msg) vs ctx.write(msg)</b>
     * 都是触发出站处理器的执行
-    * ctx.channel().write(msg) 从尾部开始查找出站处理器
-    * ctx.write(msg) 是从当前节点找上一个出站处理器
-    * 3 处的 ctx.channel().write(msg) 如果改为 ctx.write(msg) 仅会打印 1 2 3，因为节点3 之前没有其它出站处理器了
+    * ctx.channel().write(msg) 从尾部开始查找出站处理器，即从 tail 找 Out_6
+    * ctx.write(msg) 是从当前节点找上一个出站处理器，假定当前结点是 In_3，则 ctx.write(msg) 找的是 In_2 看它是不是出站处理器
+    * 3 处的 ctx.channel().write(msg) 如果改为 ctx.write(msg) 仅会打印 1 2 3，因为节点 3 之前没有其它出站处理器了
     * 6 处的 ctx.write(msg, promise) 如果改为 ctx.channel().write(msg) 会打印 1 2 3 6 6 6... 因为 ctx.channel().write() 是从尾部开始查找，结果又是节点6 自己
 * 入站处理器中，`ctx.fireChannelRead(msg)` 是<b>调用下一个入站处理器</b>
 * `ch.writeAndFlush(ctx.alloc().buffer().writeBytes("xxx".getBytes()));` 分配了一个 `buf` 对象，然后写入一些字节。（为了触发出站处理器）,会从 tail 开始向前找 出站 处理器 一个一个运行
@@ -4006,7 +4113,47 @@ public class TestPipelineClient {
 
 <div align="center"><img src="img/0009.png"></div>
 
-### 3.5 EmbeddedChannel
+为什么需要这么多的出站处理器和入站处理器呢？可以一层一层处理数据，然后将当前层处理的数据传递给下一层。伪代码示例：
+
+```java
+pipeline.addLast("h1", new ChannelInboundHandlerAdapter() {
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        log.debug("1");
+        new_msg = 处理后的msg
+        super.channelRead(ctx, new_msg);
+    }
+});
+
+// head -> h1 ->h2 -> tail
+pipeline.addLast("h2", new ChannelInboundHandlerAdapter() {
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        log.debug("2");
+        // 继续处理 msg，由于是最后一个入站处理器，所以不用调用 super.channelRead(ctx,msg) 即 ctx.fireChannelRead(msg); 了
+    }
+});
+
+// head -> h1 ->h2 -> h3 -> tail
+pipeline.addLast("h3", new ChannelOutboundHandlerAdapter() {
+    @Override
+    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+        log.debug("3");
+        super.write(ctx, msg, promise);
+    }
+});
+
+// head -> h1 ->h2 -> h3 -> h4 -> tail
+pipeline.addLast("h4", new ChannelOutboundHandlerAdapter() {
+    @Override
+    public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+        log.debug("4");
+        super.write(ctx, msg, promise);
+    }
+});
+```
+
+### EmbeddedChannel
 
 Netty 提供的用来测试的 channel。这样测试起来就不用启动服务器端和客户端了。
 
@@ -4057,15 +4204,18 @@ public class TestEmbeddedChannel {
 }
 ```
 
-### 3.6 ByteBuf
+### ByteBuf
 
-是对字节数据的封装
+ByteBuf 是对 NIO 的 ByteBuffer 的增加，是对字节数据的封装。
 
 #### 1）创建
+
+下面代码创建了一个默认的 ByteBuf（池化基于直接内存的 ByteBuf），初始容量是 256。
 
 ```java
 public class TestByteBuf {
     public static void main(String[] args) {
+        // 不指定默认是 256 字节，且可以动态扩容。PooledUnsafeDirectByteBuf 是直接内存
         ByteBuf buf = ByteBufAllocator.DEFAULT.buffer();
         // PooledUnsafeDirectByteBuf(ridx: 0, widx: 0, cap: 256)
         // ridx 读指针     widx 写指针
@@ -4078,30 +4228,47 @@ public class TestByteBuf {
         System.out.println(buf);
     }
 }
-```
-
-上面代码创建了一个默认的 ByteBuf（池化基于直接内存的 ByteBuf），初始容量是 10
-
-输出
-
-```
+/*
 PooledUnsafeDirectByteBuf(ridx: 0, widx: 0, cap: 256)
 PooledUnsafeDirectByteBuf(ridx: 0, widx: 300, cap: 512)
+*/
 ```
 
-<b style="color:red">其中 log 方法参考如下</b>
+<b style="color:red">一个更为清晰的例子</b>
 
 ```java
-private static void log(ByteBuf buffer) {
-    int length = buffer.readableBytes();
-    int rows = length / 16 + (length % 15 == 0 ? 0 : 1) + 4;
-    StringBuilder buf = new StringBuilder(rows * 80 * 2)
-        .append("read index:").append(buffer.readerIndex())
-        .append(" write index:").append(buffer.writerIndex())
-        .append(" capacity:").append(buffer.capacity())
-        .append(NEWLINE);
-    appendPrettyHexDump(buf, buffer);
-    System.out.println(buf.toString());
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+
+import java.nio.charset.StandardCharsets;
+
+import static io.netty.buffer.ByteBufUtil.appendPrettyHexDump;
+import static io.netty.util.internal.StringUtil.NEWLINE;
+
+public class TestByteBuf {
+    public static void main(String[] args) {
+        ByteBuf buffer = ByteBufAllocator.DEFAULT.buffer();
+        log(buffer);
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < 300; i++) {
+            builder.append("a");
+        }
+        buffer.writeBytes(builder.toString().getBytes(StandardCharsets.UTF_8));
+        log(buffer);
+    }
+	
+    // 更为清晰的打印数据
+    private static void log(ByteBuf buffer) {
+        int length = buffer.readableBytes();
+        int rows = length / 16 + (length % 15 == 0 ? 0 : 1) + 4;
+        StringBuilder buf = new StringBuilder(rows * 80 * 2)
+                .append("read index:").append(buffer.readerIndex())
+                .append(" write index:").append(buffer.writerIndex())
+                .append(" capacity:").append(buffer.capacity())
+                .append(NEWLINE);
+        appendPrettyHexDump(buf, buffer);
+        System.out.println(buf.toString());
+    }
 }
 ```
 
@@ -4139,9 +4306,24 @@ ByteBuf buffer = ByteBufAllocator.DEFAULT.directBuffer(10);
 * 4.1 以后，非 Android 平台默认启用池化实现，Android 平台启用非池化实现
 * 4.1 之前，池化功能还不成熟，默认是非池化实现
 
+<b style="color:red">池化的引用计数初始化结果是 2，这是为了重复利用这个 ByteBuf，下面是验证的代码。</b>默认情况下，创建的 ByteBuf 是池化的。
+
+```java
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+
+public class TestPoolByteBuf {
+    public static void main(String[] args) {
+        // debug 可以看到 buffer refCnt = 2
+        ByteBuf buffer = ByteBufAllocator.DEFAULT.buffer();
+        System.out.println(123);
+    }
+}
+```
+
 #### 4）组成
 
-ByteBuf 由四部分组成：最大容量一般是整数的最大值。
+<b>ByteBuf 由四部分组成：最大容量一般是整数的最大值。</b>
 
 <div align="center"><img src="img/0010.png"></div>
 
@@ -4222,7 +4404,7 @@ log(buffer);
 扩容规则是
 
 * 如何写入后数据大小未超过 512，则选择下一个 16 的整数倍，例如写入后大小为 12 ，则扩容后 capacity 是 16
-* 如果写入后数据大小超过 512，则选择下一个 2^n，例如写入后大小为 513，则扩容后 capacity 是 2^10=1024（2^9=512 已经不够了）
+* 如果写入后数据大小超过 512，则选择下一个 2^n，例如写入后大小为 513，则扩容后 capacity 是 $2^{10}=1024$（$2^9=512$ 已经不够了）
 * 扩容不能超过 max capacity 会报错
 
 结果是
@@ -4310,7 +4492,7 @@ read index:4 write index:12 capacity:16
 由于 Netty 中有堆外内存的 ByteBuf 实现，堆外内存最好是手动来释放，而不是等 GC 垃圾回收。
 
 * UnpooledHeapByteBuf 使用的是 JVM 内存，只需等 GC 回收内存即可
-* UnpooledDirectByteBuf 使用的就是直接内存了，也可以等 GC 进行回收，但是对内存的释放不及时，<b>一般推荐主动调用特殊的方法来回收内存</b>
+* UnpooledDirectByteBuf 使用的就是直接内存了，也可以等 GC 进行回收，但是内存的释放不及时，<b>一般推荐主动调用特殊的方法来回收内存</b>
 * PooledByteBuf 和它的子类使用了池化机制，需要更复杂的规则来回收内存
 
 > 回收内存的源码实现，请关注下面方法的不同实现
@@ -4359,7 +4541,10 @@ TailContext 释放未处理消息逻辑
 
 `TailContext` 释放未处理消息逻辑：实现了入站接口（它需要收尾，也得关心入站的信息，所以实现了 `ChannelInboundHandler`）
 
-入站消息 ---> 看 `chanelRead` 方法 --> 调用了 `onUnhandledInboundMessage` 方法 --> `onUnhandledInboundMessage` 方法 --> `ReferenceCountUtil.release(msg);`
+```mermaid
+graph LR
+入站消息-->看TailContext#chanelRead方法-->|调用了|onUnhandledInboundMessage-->|调用了|ReferenceCountUtil#release
+```
 
 ```java
 // io.netty.channel.DefaultChannelPipeline#onUnhandledInboundMessage(java.lang.Object)
@@ -4388,7 +4573,10 @@ public static boolean release(Object msg) {
 
 > `HeadContext` 源码
 
-`writer` --> `unsafe.write(AbstractUnsafe)` --> `ReferenceCountUtil.release(msg);`
+```mermaid
+graph LR
+出站消息-->HeadContext#writer-->|调用|unsafe#write-->|调用|ReferenceCountUtil#release
+```
 
 ```java
 public final void write(Object msg, ChannelPromise promise) {
@@ -4425,9 +4613,9 @@ public final void write(Object msg, ChannelPromise promise) {
 
 #### 9）slice
 
-slice 切片是共享内存，但是指针独立。调用完 slice 后需要调用 retain，确保自己的 `buf` 由自己`释放`
+<b>slice 切片是共享内存，但是指针独立。调用完 slice 后需要调用 retain，确保自己的 `buf` 由自己`释放`，且切片后大小就固定了！</b>
 
-【零拷贝】的体现之一（对数据零拷贝的体系之一，与前面讲的不是不经过Java内存，直接到网络设备的零拷贝有点不同），对原始 ByteBuf 进行切片成多个 ByteBuf，切片后的 ByteBuf 并没有发生内存复制，还是使用原始 ByteBuf 的内存，切片后的 ByteBuf 维护独立的 read，write 指针
+【零拷贝】的体现之一（对数据零拷贝的体系之一，与前面讲的不是不经过 Java 内存，直接到网络设备的零拷贝有点不同），对原始 ByteBuf 进行切片成多个 ByteBuf，切片后的 ByteBuf 并没有发生内存复制，还是使用原始 ByteBuf 的内存，切片后的 ByteBuf 维护独立的 read，write 指针
 
 <div align="center"><img src="img/0011.png"></div>
 
@@ -4450,7 +4638,7 @@ System.out.println(ByteBufUtil.prettyHexDump(origin));
 +--------+-------------------------------------------------+----------------+
 ```
 
-这时调用 slice 进行切片，无参 slice 是从原始 ByteBuf 的 read index 到 write index 之间的内容进行切片，切片后的 max capacity 被固定为这个区间的大小，因此不能追加 write
+<b style="color:red">这时调用 slice 进行切片，无参 slice 是从原始 ByteBuf 的 read index 到 write index 之间的内容进行切片，切片后的 max capacity 被固定为这个区间的大小，因此不能追加 write</b>
 
 ```java
 ByteBuf slice = origin.slice();
@@ -4536,7 +4724,7 @@ System.out.println(ByteBufUtil.prettyHexDump(origin));
 
 #### 10）duplicate
 
-【零拷贝】的体现之一，就好比截取了原始 ByteBuf 所有内容，并且没有 max capacity 的限制，也是与原始 ByteBuf 使用同一块底层内存，只是读写指针是独立的
+<b>【零拷贝】的体现之一，就好比截取了原始 ByteBuf 所有内容，并且没有 max capacity 的限制，也是与原始 ByteBuf 使用同一块底层内存，只是读写指针是独立的。</b>
 
 <div align="center"><img src="img/0012.png"></div>
 
@@ -4548,73 +4736,83 @@ System.out.println(ByteBufUtil.prettyHexDump(origin));
 
 #### 12）CompositeByteBuf
 
-【零拷贝】的体现之一，可以将多个 ByteBuf 合并为一个逻辑上的 ByteBuf，避免拷贝。用之后也是建议 retain 一下，让引用计数+1
+【零拷贝】的体现之一，可以将多个 ByteBuf 合并为一个逻辑上的 ByteBuf，避免拷贝。用之后也是建议 retain 一下，让引用计数 +1
 
-有两个 ByteBuf 如下
+有两个 ByteBuf 如下，现在需要一个新的 ByteBuf，内容来自于刚才的 buf1 和 buf2，如何实现？
+
+方法 1：创建一个新的 ByteBuf 然后复制数据。这种方法不太好，进行了数据的内存复制操作
 
 ```java
-ByteBuf buf1 = ByteBufAllocator.DEFAULT.buffer(5);
-buf1.writeBytes(new byte[]{1, 2, 3, 4, 5});
-ByteBuf buf2 = ByteBufAllocator.DEFAULT.buffer(5);
-buf2.writeBytes(new byte[]{6, 7, 8, 9, 10});
-System.out.println(ByteBufUtil.prettyHexDump(buf1));
-System.out.println(ByteBufUtil.prettyHexDump(buf2));
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
+
+import static io.netty.buffer.ByteBufUtil.appendPrettyHexDump;
+import static io.netty.util.internal.StringUtil.NEWLINE;
+
+public class TestCompositeByteBuf {
+    public static void main(String[] args) {
+        ByteBuf buf1 = ByteBufAllocator.DEFAULT.buffer();
+        buf1.writeBytes(new byte[]{'a', 'b', 'c'});
+        ByteBuf buf2 = ByteBufAllocator.DEFAULT.buffer();
+        buf2.writeBytes(new byte[]{'d', 'e', 'f'});
+
+        ByteBuf total = ByteBufAllocator.DEFAULT.buffer();
+        total.writeBytes(buf1).writeBytes(buf2);
+
+        log(total);
+    }
+
+    static void log(ByteBuf buffer) {
+        int length = buffer.readableBytes();
+        int rows = length / 16 + (length % 15 == 0 ? 0 : 1) + 4;
+        StringBuilder buf = new StringBuilder(rows * 80 * 2)
+                .append("read index:").append(buffer.readerIndex())
+                .append(" write index:").append(buffer.writerIndex())
+                .append(" capacity:").append(buffer.capacity())
+                .append(NEWLINE);
+        appendPrettyHexDump(buf, buffer);
+        System.out.println(buf.toString());
+    }
+}
 ```
 
 输出
 
 ```
+read index:0 write index:6 capacity:256
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 01 02 03 04 05                                  |.....           |
-+--------+-------------------------------------------------+----------------+
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 06 07 08 09 0a                                  |.....           |
+|00000000| 61 62 63 64 65 66                               |abcdef          |
 +--------+-------------------------------------------------+----------------+
 ```
 
-现在需要一个新的 ByteBuf，内容来自于刚才的 buf1 和 buf2，如何实现？
-
-方法1：
+方法 2：使用 addComponents
 
 ```java
-ByteBuf buf3 = ByteBufAllocator.DEFAULT
-    .buffer(buf1.readableBytes()+buf2.readableBytes());
-buf3.writeBytes(buf1);
-buf3.writeBytes(buf2);
-System.out.println(ByteBufUtil.prettyHexDump(buf3));
-```
-
-结果
-
-```
-         +-------------------------------------------------+
-         |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
-+--------+-------------------------------------------------+----------------+
-|00000000| 01 02 03 04 05 06 07 08 09 0a                   |..........      |
-+--------+-------------------------------------------------+----------------+
-```
-
-这种方法好不好？回答是不太好，因为进行了数据的内存复制操作
-
-方法2：
-
-```java
-CompositeByteBuf buf3 = ByteBufAllocator.DEFAULT.compositeBuffer();
-// true 表示增加新的 ByteBuf 自动递增 write index, 否则 write index 会始终为 0
-buf3.addComponents(true, buf1, buf2);
+public class TestCompositeByteBuf {
+    public static void main(String[] args) {
+        ByteBuf buf1 = ByteBufAllocator.DEFAULT.buffer();
+        buf1.writeBytes(new byte[]{'a', 'b', 'c'});
+        ByteBuf buf2 = ByteBufAllocator.DEFAULT.buffer();
+        buf2.writeBytes(new byte[]{'d', 'e', 'f'});
+	
+        // true 表示增加新的 ByteBuf 自动递增 write index, 否则 write index 会始终为 0
+        CompositeByteBuf buf3 = ByteBufAllocator.DEFAULT.compositeBuffer();
+        buf3.addComponents(true, buf1, buf2);
+        log(buf3);
+    }
+}
 ```
 
 结果是一样的
 
 ```
+read index:0 write index:6 capacity:6
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 01 02 03 04 05 06 07 08 09 0a                   |..........      |
+|00000000| 61 62 63 64 65 66                               |abcdef          |
 +--------+-------------------------------------------------+----------------+
 ```
 
@@ -4677,11 +4875,11 @@ class io.netty.buffer.CompositeByteBuf
 * 支持链式调用，使用更流畅
 * 很多地方体现零拷贝，例如 slice、duplicate、CompositeByteBuf
 
-## 4. 双向通信
+## 双向通信
 
-### 4.1 练习
+### 练习
 
-实现一个 echo server
+实现一个 echo server，可以通过 debug 的方式查看思考题中的 ByteBuf 是否会被自动释放。
 
 编写 server
 
@@ -4697,14 +4895,12 @@ new ServerBootstrap()
                 public void channelRead(ChannelHandlerContext ctx, Object msg) {
                     ByteBuf buffer = (ByteBuf) msg;
                     System.out.println(buffer.toString(Charset.defaultCharset()));
-
                     // 建议使用 ctx.alloc() 创建 ByteBuf
                     ByteBuf response = ctx.alloc().buffer();
                     response.writeBytes(buffer);
                     ctx.writeAndFlush(response);
-
-                    // 思考：需要释放 buffer 吗
-                    // 思考：需要释放 response 吗
+                    // 思考：需要释放 buffer 吗，需要我们手动释放，因为我们并没有将 buffer 传递给最后的 TailContext 它不会帮我们释放。
+                    // 思考：需要释放 response 吗，不需要 HeadContext 会自动释放，我 debug 确实看到了它的 refCnt 从 2 变成 1
                 }
             });
         }
@@ -4727,8 +4923,7 @@ Channel channel = new Bootstrap()
                 public void channelRead(ChannelHandlerContext ctx, Object msg) {
                     ByteBuf buffer = (ByteBuf) msg;
                     System.out.println(buffer.toString(Charset.defaultCharset()));
-
-                    // 思考：需要释放 buffer 吗
+                    // 思考：需要释放 buffer 吗，需要，因为我们并未将 buffer 传递给 TailContext，所以 TailContext 不会帮助我们释放 buffer，需要我们自己手动释放。
                 }
             });
         }
@@ -4753,7 +4948,7 @@ new Thread(() -> {
 
 ### 💡 读和写的误解
 
-我最初在认识上有这样的误区，认为只有在 netty，nio 这样的多路复用 IO 模型时，读写才不会相互阻塞，才可以实现高效的双向通信，但实际上，<b>Java Socket 是全双工的（读写可以同时进行，发一条数据，不必非得等接收到了响应再处理）</b>：在任意时刻，线路上存在 `A 到 B` 和 `B 到 A` 的双向信号传输。即使是阻塞 IO，读和写是可以同时进行的，只要分别采用读线程和写线程即可，读不会阻塞写、写也不会阻塞读
+我最初在认识上有这样的误区，认为只有在 netty，nio 这样的多路复用 IO 模型时，读写才不会相互阻塞，才可以实现高效的双向通信，但实际上，<b>Java Socket 是全双工的（读写可以同时进行，发一条数据，不必非得等接收到了响应再处理）</b>：在任意时刻，线路上存在 `A➡️B` 和 `B➡️A` 的双向信号传输。即使是阻塞 IO，读和写是可以同时进行的，只要分别采用读线程和写线程即可，读不会阻塞写、写也不会阻塞读
 
 例如
 
@@ -4827,57 +5022,51 @@ public class TestClient {
 
 # Netty进阶
 
-## 1. 粘包与半包
+## 粘包与半包
 
-### 1.1 粘包现象
+### 粘包现象
 
 服务端代码
 
 ```java
-public class HelloWorldServer {
-    static final Logger log = LoggerFactory.getLogger(HelloWorldServer.class);
-    void start() {
-        NioEventLoopGroup boss = new NioEventLoopGroup(1);
-        NioEventLoopGroup worker = new NioEventLoopGroup();
-        try {
-            ServerBootstrap serverBootstrap = new ServerBootstrap();
-            serverBootstrap.channel(NioServerSocketChannel.class);
-            serverBootstrap.group(boss, worker);
-            serverBootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
-                @Override
-                protected void initChannel(SocketChannel ch) throws Exception {
-                    ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
-                    ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
-                        @Override
-                        public void channelActive(ChannelHandlerContext ctx) throws Exception {
-                            log.debug("connected {}", ctx.channel());
-                            super.channelActive(ctx);
-                        }
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+public class MsgServer {
+    public static void main(String[] args) {
+        NioEventLoopGroup boss = new NioEventLoopGroup(1);
+        NioEventLoopGroup worker = new NioEventLoopGroup(2);
+        try {
+            ServerBootstrap serverBootstrap = new ServerBootstrap().group(boss, worker)
+			serverBootstrap.channel(NioServerSocketChannel.class)
+                    .childHandler(new ChannelInitializer<NioSocketChannel>() {
                         @Override
-                        public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-                            log.debug("disconnect {}", ctx.channel());
-                            super.channelInactive(ctx);
+                        protected void initChannel(NioSocketChannel ch) {
+                            ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG));
                         }
                     });
-                }
-            });
-            ChannelFuture channelFuture = serverBootstrap.bind(8080);
-            log.debug("{} binding...", channelFuture.channel());
-            channelFuture.sync();
-            log.debug("{} bound...", channelFuture.channel());
-            channelFuture.channel().closeFuture().sync();
+            ChannelFuture sync = serverBootstrap.bind(8080).sync();
+            // 在这里面 sync.channel().closeFuture().sync();这个语句的主要目的是，
+            // 如果缺失上述代码，则main方法所在的线程，即主线程会在执行完bind().sync()方法后
+            // 会进入finally 代码块，之前的启动的nettyserver也会随之关闭掉，整个程序都结束了。
+            sync.channel().closeFuture().sync(); // 简而言之就是不然程序关闭掉。异步的等待 channel 关闭。
+
+            // 如何主动关闭 serverBootstrap 的连接呢？
+            // sync.channel().close(); // 关闭绑定的 channel
         } catch (InterruptedException e) {
-            log.error("server error", e);
+            log.debug("server error");
         } finally {
             boss.shutdownGracefully();
             worker.shutdownGracefully();
-            log.debug("stoped");
         }
-    }
-
-    public static void main(String[] args) {
-        new HelloWorldServer().start();
     }
 }
 ```
@@ -4885,72 +5074,76 @@ public class HelloWorldServer {
 客户端代码希望发送 10 个消息，每个消息是 16 字节
 
 ```java
-public class HelloWorldClient {
-    static final Logger log = LoggerFactory.getLogger(HelloWorldClient.class);
-    public static void main(String[] args) {
-        NioEventLoopGroup worker = new NioEventLoopGroup();
-        try {
-            Bootstrap bootstrap = new Bootstrap();
-            bootstrap.channel(NioSocketChannel.class);
-            bootstrap.group(worker);
-            bootstrap.handler(new ChannelInitializer<SocketChannel>() {
-                @Override
-                protected void initChannel(SocketChannel ch) throws Exception {
-                    log.debug("connetted...");
-                    ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
-                        @Override
-                        public void channelActive(ChannelHandlerContext ctx) throws Exception {
-                            log.debug("sending...");
-                            Random r = new Random();
-                            char c = 'a';
-                            for (int i = 0; i < 10; i++) {
-                                ByteBuf buffer = ctx.alloc().buffer();
-                                buffer.writeBytes(new byte[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15});
-                                ctx.writeAndFlush(buffer);
-                            }
-                        }
-                    });
-                }
-            });
-            ChannelFuture channelFuture = bootstrap.connect("127.0.0.1", 8080).sync();
-            channelFuture.channel().closeFuture().sync();
+import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetSocketAddress;
+
+@Slf4j
+public class MsgClient {
+    public static void main(String[] args) {
+        NioEventLoopGroup group = new NioEventLoopGroup();
+        try {
+            ChannelFuture localhost = new Bootstrap()
+                    .group(group)
+                    .channel(NioSocketChannel.class)
+                    .handler(new ChannelInitializer<NioSocketChannel>() {
+                        @Override
+                        protected void initChannel(NioSocketChannel ch) throws Exception {
+                            ch.pipeline().addLast(new ChannelInboundHandlerAdapter() {
+                                @Override
+                                // channel 连接成功后就会触发 active 事件，以前是用 sync 方法，sync 连接成功后在拿到 channel 去发消息，
+                                // 这里用的是 channelActive
+                                public void channelActive(ChannelHandlerContext ctx) throws Exception {
+                                    for (int i = 0; i < 10; i++) {
+                                        ByteBuf buffer = ctx.alloc().buffer(16);
+                                        buffer.writeBytes(new byte[]{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q'});
+                                        ch.writeAndFlush(buffer);
+                                    }
+                                    ctx.fireChannelActive();
+                                }
+                            });
+                        }
+                    }).connect(new InetSocketAddress("localhost", 8080));
+            localhost.sync();
+            // 发送完数据后，客户端就停止了
         } catch (InterruptedException e) {
-            log.error("client error", e);
+            log.debug("client error");
         } finally {
-            worker.shutdownGracefully();
+            group.shutdownGracefully();
         }
     }
 }
 ```
 
-服务器端的某次输出，可以看到一次就接收了 160 个字节，而非分 10 次接收
+服务器端的某次输出，可以看到一次就接收了 160 个字节，而非分 10 次接收。
 
 ```
-08:24:46 [DEBUG] [main] c.i.n.HelloWorldServer - [id: 0x81e0fda5] binding...
-08:24:46 [DEBUG] [main] c.i.n.HelloWorldServer - [id: 0x81e0fda5, L:/0:0:0:0:0:0:0:0:8080] bound...
-08:24:55 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x94132411, L:/127.0.0.1:8080 - R:/127.0.0.1:58177] REGISTERED
-08:24:55 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x94132411, L:/127.0.0.1:8080 - R:/127.0.0.1:58177] ACTIVE
-08:24:55 [DEBUG] [nioEventLoopGroup-3-1] c.i.n.HelloWorldServer - connected [id: 0x94132411, L:/127.0.0.1:8080 - R:/127.0.0.1:58177]
-08:24:55 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x94132411, L:/127.0.0.1:8080 - R:/127.0.0.1:58177] READ: 160B
+15:11:41.301 [nioEventLoopGroup-3-1] DEBUG i.n.h.l.LoggingHandler - [id: 0x0298aba7, L:/127.0.0.1:8080 - R:/127.0.0.1:63910] READ: 160B
          +-------------------------------------------------+
          |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f |
 +--------+-------------------------------------------------+----------------+
-|00000000| 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f |................|
-|00000010| 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f |................|
-|00000020| 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f |................|
-|00000030| 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f |................|
-|00000040| 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f |................|
-|00000050| 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f |................|
-|00000060| 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f |................|
-|00000070| 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f |................|
-|00000080| 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f |................|
-|00000090| 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f |................|
+|00000000| 61 62 63 64 65 66 67 68 6a 6b 6c 6d 6e 6f 70 71 |abcdefghjklmnopq|
+|00000010| 61 62 63 64 65 66 67 68 6a 6b 6c 6d 6e 6f 70 71 |abcdefghjklmnopq|
+|00000020| 61 62 63 64 65 66 67 68 6a 6b 6c 6d 6e 6f 70 71 |abcdefghjklmnopq|
+|00000030| 61 62 63 64 65 66 67 68 6a 6b 6c 6d 6e 6f 70 71 |abcdefghjklmnopq|
+|00000040| 61 62 63 64 65 66 67 68 6a 6b 6c 6d 6e 6f 70 71 |abcdefghjklmnopq|
+|00000050| 61 62 63 64 65 66 67 68 6a 6b 6c 6d 6e 6f 70 71 |abcdefghjklmnopq|
+|00000060| 61 62 63 64 65 66 67 68 6a 6b 6c 6d 6e 6f 70 71 |abcdefghjklmnopq|
+|00000070| 61 62 63 64 65 66 67 68 6a 6b 6c 6d 6e 6f 70 71 |abcdefghjklmnopq|
+|00000080| 61 62 63 64 65 66 67 68 6a 6b 6c 6d 6e 6f 70 71 |abcdefghjklmnopq|
+|00000090| 61 62 63 64 65 66 67 68 6a 6b 6c 6d 6e 6f 70 71 |abcdefghjklmnopq|
 +--------+-------------------------------------------------+----------------+
-08:24:55 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x94132411, L:/127.0.0.1:8080 - R:/127.0.0.1:58177] READ COMPLETE
 ```
 
-### 1.2 半包现象
+### 半包现象
 
 客户端代码希望发送 1 个消息，这个消息是 160 字节，代码改为
 
@@ -5001,13 +5194,13 @@ serverBootstrap.option(ChannelOption.SO_RCVBUF, 10);
 08:44:24 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x1719abf7, L:/127.0.0.1:8080 - R:/127.0.0.1:59221] READ COMPLETE
 ```
 
-> **注意**
+> <b style="color:red">注意</b>
 >
 > serverBootstrap.option(ChannelOption.SO_RCVBUF, 10) 影响的底层接收缓冲区（即滑动窗口）大小，仅决定了 netty 读取的最小单位，netty 实际每次读取的一般是它的整数倍
 
-### 1.3 现象分析
+### 现象分析
 
-粘包
+<b style="color:red">粘包</b>
 
 * 现象，发送 abc def，接收 abcdef
 * 原因
@@ -5015,36 +5208,34 @@ serverBootstrap.option(ChannelOption.SO_RCVBUF, 10);
     * 滑动窗口：假设发送方 256 bytes 表示一个完整报文，但由于接收方处理不及时且窗口大小足够大，这 256 bytes 字节就会缓冲在接收方的滑动窗口中，当滑动窗口中缓冲了多个报文就会粘包
     * Nagle 算法：尽可能多的发送数据，但是会造成粘包
 
-半包
+<b style="color:red">半包</b>
 
 * 现象，发送 abcdef，接收 abc def
 * 原因
     * 应用层：接收方 ByteBuf 小于实际发送数据量
     * 滑动窗口：假设接收方的窗口只剩了 128 bytes，发送方的报文大小是 256 bytes，这时放不下了，只能先发送前 128 bytes，等待 ack 后才能发送剩余部分，这就造成了半包
-    * MSS 限制：当发送的数据超过 MSS 限制后，会将数据切分发送，就会造成半包
+    * MSS 限制 (链路层的限制嘛)：当发送的数据超过 MSS 限制后，会将数据切分发送，就会造成半包
 
-**本质是因为 TCP 是流式协议，消息无边界**
+<b>本质是因为 TCP 是流式协议，消息无边界</b>
 
-> 滑动窗口
+> <b style="color:red">滑动窗口</b>
 >
-> * TCP 以一个段（segment）为单位，每发送一个段就需要进行一次确认应答（ack）处理，但如果这么做，缺点是包的往返时间越长性能就越差
+> * TCP 以一个段（segment）为单位，每发送一个段就需要进行一次确认应答（ack）处理，但如果没发送一个数据都要等待一个确认应答（ack）后才发送其他消息的话，吞吐量就小了。包的往返时间越长性能就越差。
 >
 >     <div align="center"><img src="img/0049.png"></div>
 >
-> 
->
-> * 为了解决此问题，引入了窗口概念，窗口大小即决定了无需等待应答而可以继续发送的数据最大值
+> * 为了解决此问题，引入了窗口概念，窗口大小即决定了无需等待应答而可以继续发送的数据最大值。当最前面的数据响应（ack）回来了，窗口就会向后移动。
 >
 >     <img src="C:/development/note/CodeNotes/Netty/img/0051.png">
 >
-> * 窗口实际就起到一个缓冲区的作用，同时也能起到流量控制的作用
+> * 窗口实际就起到一个缓冲区的作用，同时也能起到流量控制的作用，不至于让数据发送的太快，也不至于向先前一问一答那样发的太慢。
 >
 >     * 图中深色的部分即要发送的数据，高亮的部分即窗口
->     * 窗口内的数据才允许被发送，当应答未到达前，窗口必须停止滑动
+>    * 窗口内的数据才允许被发送，当应答未到达前，窗口必须停止滑动
 >     * 如果 1001~2000 这个段的数据 ack 回来了，窗口就可以向前滑动
 >     * 接收方也会维护一个窗口，只有落在窗口内的数据才能允许接收
 
->  MSS 限制
+>  <b style="color:red">MSS 限制</b>
 >
 >  * 链路层对一次能够发送的最大数据有限制，这个限制称之为 MTU（maximum transmission unit），不同的链路设备的 MTU 值也有所不同，例如
 >
@@ -5060,9 +5251,9 @@ serverBootstrap.option(ChannelOption.SO_RCVBUF, 10);
 >
 >  <div align="center"><img src="img/0031.jpg"></div>
 
-> Nagle 算法
+> <b style="color:red">Nagle 算法</b>
 >
-> * 即使发送一个字节，也需要加入 tcp 头和 ip 头，也就是总字节数会使用 41 bytes，非常不经济。因此为了提高网络利用率，tcp 希望尽可能发送足够大的数据，这就是 Nagle 算法产生的缘由
+> * 即使发送一个字节，也需要加入 tcp 头（20 bytes）和 ip（20 bytes） 头，也就是总字节数会使用 41 bytes，非常不经济。因此为了提高网络利用率，tcp 希望尽可能发送足够大的数据，这就是 Nagle 算法产生的缘由
 > * 该算法是指发送端即使还有应该发送的数据，但如果这部分数据很少的话，则进行延迟发送
 >     * 如果 SO_SNDBUF 的数据达到 MSS，则需要发送
 >     * 如果 SO_SNDBUF 中含有 FIN（表示需要连接关闭）这时将剩余数据发送，再关闭
@@ -5071,16 +5262,16 @@ serverBootstrap.option(ChannelOption.SO_RCVBUF, 10);
 >     * 上述条件不满足，但发生超时（一般为 200ms）则需要发送
 >     * 除上述情况，延迟发送
 
-### 1.4 解决方案
+### 解决方案
 
 1. 短链接，发一个包建立一次连接，这样连接建立到连接断开之间就是消息的边界，缺点效率太低
 2. 每一条消息采用固定长度，缺点浪费空间
-3. 每一条消息采用分隔符，例如 \n，缺点需要转义
+3. 每一条消息采用分隔符，例如 `\n`，缺点需要转义
 4. 每一条消息分为 head 和 body，head 中包含 body 的长度
 
-#### 方法1，短链接
+#### 方法1-短链接
 
-> 客户端代码 以解决粘包为例
+> 客户端代码--以解决粘包为例
 
 ```java
 public class HelloWorldClient {
@@ -5142,7 +5333,10 @@ public class HelloWorldServer {
         try {
             ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.channel(NioServerSocketChannel.class);
-            serverBootstrap.option(ChannelOption.SO_RCVBUF, 10); // 设置默认缓冲区大小。
+            // 一般不用设置，OS 会自动调整
+            // serverBootstrap.option(ChannelOption.SO_RCVBUF, 10); // 设置系统的接受缓冲区（滑动窗口）
+            // 调整 netty 的接受缓冲区 byteBuf，然后加大发送方一次发送的数据，就会产生半包现象。
+            serverBootstrap.childOption(ChannelOption.RCVBUF_ALLOCATOR, new AdaptiveRecvByteBufAllocator(16,16,16))
             serverBootstrap.group(boss, worker);
             serverBootstrap.childHandler(new ChannelInitializer<SocketChannel>() {
                 @Override
@@ -5187,11 +5381,23 @@ public class HelloWorldServer {
 
 > 半包用这种办法还是不好解决，因为接收方的缓冲区大小是有限的
 
-#### 方法2，固定长度
+#### 方法2-固定长度
 
-`FixedLengthFrameDecoder` 服务器端代码让所有数据包长度固定（假设长度为 8 字节），服务器端加入
+`FixedLengthFrameDecoder` 服务器端代码让所有数据包长度固定（假设长度为 3 字节）
 
-`ch.pipeline().addLast(new FixedLengthFrameDecoder(10));`
+```shell
+A decoder that splits the received ByteBufs by the fixed number of bytes. For example, if you received the following four fragmented packets:
++---+----+------+----+
+| A | BC | DEFG | HI |
++---+----+------+----+
+   
+A FixedLengthFrameDecoder(3) will decode them into the following three packets with the fixed length:
++-----+-----+-----+
+| ABC | DEF | GHI |
++-----+-----+-----+
+```
+
+服务器端加入 `ch.pipeline().addLast(new FixedLengthFrameDecoder(10));`
 
 ```java
 @Slf4j
@@ -5226,7 +5432,7 @@ public class Server2 {
 }
 ```
 
-> 客户端测试代码，注意, 采用这种方法后，客户端什么时候 flush 都可以
+> 客户端测试代码，注意，采用这种方法后，客户端什么时候 flush 都可以
 
 ```java
 @Slf4j
@@ -5381,7 +5587,7 @@ public class Client2 {
 * 长度定的太大，浪费
 * 长度定的太小，对某些数据包又显得不够
 
-#### 方法3，固定分隔符
+#### 方法3-固定分隔符
 
 `LineBasedFrameDecoder`
 
@@ -5546,16 +5752,30 @@ public class Client3 {
 21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-3-2] - [id: 0x58df9632, L:/127.0.0.1:8080 - R:/127.0.0.1:13567] READ COMPLETE
 ```
 
-缺点，处理字符数据比较合适，但如果内容本身包含了分隔符（字节数据常常会有此情况），那么就会解析错误
+缺点，效率比较低，接受到数据后需要一个字节一个字节的判断找出边界。处理字符数据比较合适，但如果内容本身包含了分隔符（字节数据常常会有此情况），那么就会解析错误
 
-#### 方法4，预设长度
+#### 方法4-预设长度
 
-`LengthFieldBasedFrameDecoder`  看下源码注释就清晰了。
+```java
+public LengthFieldBasedFrameDecoder(
+    int maxFrameLength, // 帧的最大长度
+    int lengthFieldOffset, //
+    int lengthFieldLength,
+    int lengthAdjustment, 
+    int initialBytesToStrip) {
+    //...
+}
+```
 
-- `lengthFieldOffset` - 长度字段偏移量
-- `lengthFieldLength` - 长度字段长度
+`LengthFieldBasedFrameDecoder` 看下源码注释就清晰了。发送消息的时候，先发消息内容的长度，并且规定好用开头的多少字节记录 length 的信息。length 记录了消息的长度。
+
+- `lengthFieldOffset` - 长度字段偏移量，就是说从那个字节开始记录了 length 的信息。
+- `lengthFieldLength` - 长度字段长度，就是说用几个字节记录 length 的信息。
+    - 比如 `lengthFieldOffset=0`，`lengthFieldLength=2`，那么长度部分的偏移量从 0 开始，一共用了两个字节记录，即 0~1 记录了 length 的值。
+    - 比如 `lengthFieldOffset=2`，`lengthFieldLength=3`，那么 2~4 就记录了 length 的值。
+
 - `lengthAdjustment` - 从长度字段开始算，还有几个字节是内容
-- `initialBytesToStip` - 从头剥离几个字节
+- `initialBytesToStip` - 从头剥离几个字节，比如我们不想要 length 那部分的字节，那么我们把 `initialBytesToStip` 设置成 length 所占用的字节数即可。
 
 ```java
 /**
@@ -5606,7 +5826,7 @@ public class Client3 {
  * <b>lengthFieldOffset</b>   = <b>2</b> (= the length of Header 1) 长度字段的偏移量 从第二个字节开始（刚刚是从索引0开始）
  * <b>lengthFieldLength</b>   = <b>3</b>  用3个字节记录长度
  * lengthAdjustment    = 0
- * initialBytesToStrip = 0
+ * initialBytesToStrip = 0 不剥离任何字节
  * 其实就是 从 2 开始 到 2+3 记录的是消息的长度
  * BEFORE DECODE (17 bytes)                      AFTER DECODE (17 bytes)
  * +----------+----------+----------------+      +----------+----------+----------------+
@@ -5624,7 +5844,7 @@ public class Client3 {
  * <pre>
  * lengthFieldOffset   = 0
  * lengthFieldLength   = 3
- * <b>lengthAdjustment</b>    = <b>2</b> (= the length of Header 1) 从长度开始算，跳过两个字节才是消息，
+ * <b>lengthAdjustment</b>    = <b>2</b> (= the length of Header 1) 从长度开始算，跳过两个字节才是消息，因为 Header 1 占 2 个字节
  * initialBytesToStrip = 0
  * 意思就是，从 3+2 开始算，才是要用到的消息内容（Actual Content）。
  * BEFORE DECODE (17 bytes)                      AFTER DECODE (17 bytes)
@@ -5697,8 +5917,9 @@ public class TestLengthFieldDecoder {
         buffer.writeBytes(bytes);
     }
 }
-客户端输出
 ```
+
+客户端输出
 
 ```
 14:37:10 [DEBUG] [nioEventLoopGroup-2-1] c.i.n.HelloWorldClient - connetted...
@@ -5790,12 +6011,11 @@ public class TestLengthFieldDecoder {
 |00000000| 6a 6a 6a 6a 6a 6a 6a 6a 6a                      |jjjjjjjjj       |
 +--------+-------------------------------------------------+----------------+
 14:37:10 [DEBUG] [nioEventLoopGroup-3-1] i.n.h.l.LoggingHandler - [id: 0x744f2b47, L:/192.168.0.103:9090 - R:/192.168.0.103:49979] READ COMPLETE
-
 ```
 
-## 2. 协议设计与解析
+## 协议设计与解析
 
-### 2.1 为什么需要协议？
+### 为什么需要协议？
 
 TCP/IP 中消息传输基于流的方式，没有边界。
 
@@ -5845,7 +6065,7 @@ TCP/IP 中消息传输基于流的方式，没有边界。
 >
 > 这里的束修金，也作“束脩”，应当是泛指教师应当得到的报酬
 
-### 2.2 redis 协议举例
+### redis协议举例
 
 ```java
 NioEventLoopGroup worker = new NioEventLoopGroup();
@@ -5914,8 +6134,6 @@ try {
     worker.shutdownGracefully();
 }
 ```
-
-### 2.3 http 协议举例
 
 与 `redis` 进行交互
 
@@ -6014,11 +6232,11 @@ public class TestRedis {
 00:49:32.470 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-2-1] - [id: 0x9a509446, L:/127.0.0.1:14078 - R:localhost/127.0.0.1:6379] READ COMPLETE
 ```
 
-### 2.3 http 协议举例
+### http协议举例
 
 - `HttpServerCodec` HTTP 编码解码器
     - `HttpServerCodec extends CombinedChannelDuplexHandler<HttpRequestDecoder, HttpResponseEncoder>`
-    - 继承了 `HttpRequest` 编码器和 `HttpResponse` 解码器
+    - 继承了 `HttpRequest` 解码器和 `HttpResponse` 编码器
 - `SimpleChannelInboundHandler` 只关心某种类型的数据。通过泛型限定关心的数据类型。
 
 ```java
@@ -6048,6 +6266,7 @@ public class TestHttp {
 //                            }
 //                        }
 //                    });
+                    // 只关注特定类型的消息
                     ch.pipeline().addLast(new SimpleChannelInboundHandler<HttpRequest>() {
                         @Override
                         protected void channelRead0(ChannelHandlerContext ctx, HttpRequest msg) throws Exception {
@@ -6057,9 +6276,9 @@ public class TestHttp {
                             DefaultFullHttpResponse response =
                                     new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.OK);
                             byte[] bytes = "<h1>hello world netty http protocol</h1>".getBytes(StandardCharsets.UTF_8);
+                            // 要告诉浏览器响应内容多长。这里浏览器知道你要发多少数据过去，就不会一直傻傻等数据了。
                             response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, bytes.length);
                             response.content().writeBytes(bytes);
-                            // 要告诉浏览器响应内容多长。这里浏览器知道你要发多少数据过去，就不会一直傻傻等数据了。
                             ctx.writeAndFlush(response);
                         }
                     });
@@ -6083,7 +6302,7 @@ public class TestHttp {
 hello world netty http protocol
 ```
 
-### 2.4 自定义协议要素
+### 自定义协议要素
 
 * 魔数，用来在第一时间判定是否是无效数据包
 * 版本号，可以支持协议的升级
@@ -6152,16 +6371,17 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
 EmbeddedChannel channel = new EmbeddedChannel(
     new LoggingHandler(),
     new LengthFieldBasedFrameDecoder(
-        1024, 12, 4, 0, 0),
+        1024, 12, 4, 0, 0), // 接收到的数据不完整的话，就不会把消息传递到后面
     new MessageCodec()
 );
 // encode
 LoginRequestMessage message = new LoginRequestMessage("zhangsan", "123", "张三");
-//        channel.writeOutbound(message);
+// channel.writeOutbound(message);
 // decode
 ByteBuf buf = ByteBufAllocator.DEFAULT.buffer();
 new MessageCodec().encode(null, message, buf);
 
+// 验证去掉 LengthFieldBasedFrameDecoder 后会出现黏包半包的问题
 ByteBuf s1 = buf.slice(0, 100);
 ByteBuf s2 = buf.slice(100, buf.readableBytes() - 100);
 s1.retain(); // 引用计数 2
@@ -6173,17 +6393,19 @@ channel.writeInbound(s2);
 
 <div align="center"><img src="img/0013.png"></div>
 
-#### 💡 什么时候可以加 @Sharable
+#### 💡 什么时候可以加@Sharable
 
 * 当 handler 不保存状态时，就可以安全地在多线程下被共享
-* 但要注意对于编解码器类，不能继承 ByteToMessageCodec 或 CombinedChannelDuplexHandler 父类，他们的构造方法对 @Sharable 有限制
+* 但要注意对于编解码器类，ByteToMessageCodec 或 CombinedChannelDuplexHandler 的子类不能被标注为 @Sharable，因为他们的构造方法对 @Sharable 有限制
 * 如果能确保编解码器不会保存状态，可以继承 MessageToMessageCodec 父类
+* 黏包半包的处理器不能在多线程下被共享。
 
 ```java
 @Slf4j
 @ChannelHandler.Sharable
 /**
  * 必须和 LengthFieldBasedFrameDecoder 一起使用，确保接到的 ByteBuf 消息是完整的
+ * 这样就不会记录上一次的数据
  */
 public class MessageCodecSharable extends MessageToMessageCodec<ByteBuf, Message> {
     @Override
@@ -6228,14 +6450,15 @@ public class MessageCodecSharable extends MessageToMessageCodec<ByteBuf, Message
         Message message = (Message) ois.readObject();
         log.debug("{}, {}, {}, {}, {}, {}", magicNum, version, serializerType, messageType, sequenceId, length);
         log.debug("{}", message);
+        // netty 里约定了，解码后的结果要存起来
         out.add(message);
     }
 }
 ```
 
-## 3. 聊天室案例
+## 聊天室案例
 
-### 3.1 聊天室业务介绍
+### 聊天室业务介绍
 
 ```java
 /**
@@ -6257,7 +6480,7 @@ public interface UserService {
 
 ```java
 /**
- * 会话管理接口
+ * 会话管理接口，记录用户的连接状态。管理用户名和他对应的 Channel 信息。
  */
 public interface Session {
 
@@ -6354,9 +6577,7 @@ public interface GroupSession {
 }
 ```
 
----
-
-### 3.2 聊天室业务-登录
+### 聊天室业务-登录
 
 ```java
 @Slf4j
@@ -6365,6 +6586,7 @@ public class ChatServer {
         NioEventLoopGroup boss = new NioEventLoopGroup();
         NioEventLoopGroup worker = new NioEventLoopGroup();
         LoggingHandler LOGGING_HANDLER = new LoggingHandler(LogLevel.DEBUG);
+        // MessageCodecSharable 拿到的是完整的消息，不存在拿到某个消息的一个片段，所以可以被共享。
         MessageCodecSharable MESSAGE_CODEC = new MessageCodecSharable();
         try {
             ServerBootstrap serverBootstrap = new ServerBootstrap();
@@ -6521,9 +6743,7 @@ public class ChatClient {
 }
 ```
 
----
-
-### 3.3 聊天室业务-单聊
+### 聊天室业务-单聊
 
 服务器端将 handler 独立出来
 
@@ -6572,7 +6792,7 @@ public class ChatRequestMessageHandler extends SimpleChannelInboundHandler<ChatR
 
 ----
 
-### 3.4 聊天室业务群聊
+### 聊天室业务群聊
 
 创建群聊
 
@@ -6666,7 +6886,7 @@ public class GroupMembersRequestMessageHandler extends SimpleChannelInboundHandl
 }
 ```
 
-### 3.5 聊天室业务-退出
+### 聊天室业务-退出
 
 ```
 @Slf4j
@@ -6689,7 +6909,7 @@ public class QuitHandler extends ChannelInboundHandlerAdapter {
 }
 ```
 
-### 3.6 聊天室业务-空闲检测
+### 聊天室业务-空闲检测
 
 #### 连接假死
 
@@ -6752,9 +6972,9 @@ ch.pipeline().addLast(new ChannelDuplexHandler() {
 
 # 优化与源码
 
-## 1. 优化
+## 优化
 
-### 1.1 扩展序列化算法
+### 扩展序列化算法
 
 序列化，反序列化主要用在消息正文的转换上
 
@@ -6937,7 +7157,7 @@ public class MessageCodecSharable extends MessageToMessageCodec<ByteBuf, Message
 }
 ```
 
-其中确定具体消息类型，可以根据 `消息类型字节` 获取到对应的 `消息 class`
+其中确定具体消息类型，可以根据`消息类型字节`获取到对应的`消息 class`
 
 ```java
 @Data
@@ -6995,7 +7215,7 @@ public abstract class Message implements Serializable {
 }
 ```
 
-### 1.2 参数调优
+### 参数调优
 
 #### CONNECT_TIMEOUT_MILLIS
 
@@ -7180,13 +7400,13 @@ java.net.SocketTimeoutException: connect timed out
 * 控制 netty 接收缓冲区大小
 * 负责入站数据的分配，决定入站缓冲区的大小（并可动态调整），统一采用 direct 直接内存，具体池化还是非池化由 allocator 决定
 
-### 1.3 RPC 框架
+### RPC 框架
 
 #### 准备工作
 
 这些代码可以认为是现成的，无需从头编写练习
 
-为了简化起见，在原来聊天项目的基础上新增 Rpc 请求和响应消息
+为了简化起见，在原来聊天项目的基础上新增 RPC 请求和响应消息
 
 ```java
 @Data
@@ -7272,7 +7492,7 @@ public class RpcResponseMessage extends Message {
 }
 ```
 
-服务器架子：关心RPC 请求消息
+服务器架子：关心 RPC 请求消息
 
 ```java
 @Slf4j
@@ -7489,7 +7709,6 @@ public class RpcResponseMessageHandler extends SimpleChannelInboundHandler<RpcRe
 @Slf4j
 public class RpcClientManager {
 
-
     public static void main(String[] args) {
         HelloService service = getProxyService(HelloService.class);
         System.out.println(service.sayHello("zhangsan"));
@@ -7613,9 +7832,9 @@ public class RpcResponseMessageHandler extends SimpleChannelInboundHandler<RpcRe
 }
 ```
 
-## 2. 源码分析
+## 源码分析
 
-### 2.1 启动剖析
+### 启动剖析
 
 我们就来看看 netty 中对下面的代码是怎样进行处理的
 
@@ -7962,7 +8181,7 @@ protected void doBeginRead() throws Exception {
 }
 ```
 
-### 2.2 NioEventLoop 剖析
+### NioEventLoop 剖析
 
 NioEventLoop 线程不仅要处理 IO 事件，还要处理 Task（包括普通任务和定时任务），
 
@@ -8251,7 +8470,7 @@ private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
 }
 ```
 
-### 2.3 accept 剖析
+### accept 剖析
 
 nio 中如下代码，在 netty 中的流程
 
@@ -8471,7 +8690,7 @@ protected void doBeginRead() throws Exception {
 }
 ```
 
-### 2.4 read 剖析
+### read 剖析
 
 再来看可读事件 `io.netty.channel.nio.AbstractNioByteChannel.NioByteUnsafe#read`，注意发送的数据未必能够一次读完，因此会触发多次 nio read 事件，一次事件内会触发多次 pipeline read，一次事件会触发一次 pipeline read complete
 
