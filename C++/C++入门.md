@@ -56,6 +56,50 @@ g++ 需生成可执行文件的源文件名 -o 可执行文件名称
 
 所以输入 `g++ shiyanlou.cpp -o shiyanlou` 命令且回车后，我们可以在代码文件浏览区看到生成的可执行文件 Hello。
 
+如果涉及到多文件编译的话
+
+```bash
+# g++ 编译 cpp 文件
+# https://blog.csdn.net/xuanyu_000001/article/details/127446636
+g++  main.cpp swap.cpp -o main
+```
+
+在 vscode 里的配置是
+
+```json
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++ 生成活动文件",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "${file}",
+                "/home/liujiawei/cpp/swap.cpp",  //将需要编译的文件添加到参数中，这样就和上面的命令对应起来了。
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "调试器生成的任务。"
+        }
+    ],
+    "version": "2.0.0"
+}
+```
+
+
+
 # 基本数据类型及表达式
 
 C++ 的数据类型分为基本数据类型和自定义数据类型，其基本数据类型如下：

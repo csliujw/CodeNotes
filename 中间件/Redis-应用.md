@@ -1607,13 +1607,13 @@ Feed 流产品有两种常见模式
 
 - 推拉结合：普通人粉丝少，用推模式。大 V 活跃粉丝人少，可以用推模式，人少，内存耗费不是很高，速度也快；普通粉丝人少，不适合用推模式，采用拉模式。
 
-|                  | **拉模式** | **推模式**                             | **推拉结合**           |
-| ---------------- | ---------- | -------------------------------------- | ---------------------- |
-| **写比例**       | 低         | 高                                     | 中                     |
-| **读比例**       | 高         | 低                                     | 中                     |
-| **用户读取延迟** | 高         | 低                                     | 低                     |
-| **实现难度**     | 复杂       | 简单                                   | 很复杂                 |
-| **使用场景**     | 很少使用   | 用户量少、没有大 V（用户量在千万以下） | 过千万的用户量，有大 V |
+|                  | 拉模式   | **推模式**                             | 推拉结合           |
+| ---------------- | -------- | -------------------------------------- | ---------------------- |
+| 写比例       | 低       | 高                                     | 中                     |
+| 读比例       | 高       | 低                                     | 中                     |
+| 用户读取延迟 | 高       | 低                                     | 低                     |
+| 实现难度     | 复杂     | 简单                                   | 很复杂                 |
+| 使用场景     | 很少使用 | 用户量少、没有大 V（用户量在千万以下） | 过千万的用户量，有大 V |
 
 #### 案例
 
@@ -2131,7 +2131,7 @@ slave 与 master 的 offset 之间的差异，就是 salve 需要增量拷贝的
 
 <div align="center"><img src="img/image-20210725153715910.png"></div>
 
-此时，如果有新的数据写入，就会覆盖数组中的旧数据。不过，旧的数据只要是绿色的，说明是已经被同步到slave的数据，即便被覆盖了也没什么影响。因为未同步的仅仅是红色部分。
+此时，如果有新的数据写入，就会覆盖数组中的旧数据。不过，旧的数据只要是绿色的，说明是已经被同步到 slave 的数据，即便被覆盖了也没什么影响。因为未同步的仅仅是红色部分。
 
 但是，如果 slave 出现网络阻塞，导致 master 的 offset 远远超过了 slave 的 offset： 
 
@@ -2188,7 +2188,7 @@ Redis 提供了哨兵（Sentinel）机制来实现主从集群的自动故障恢
 
 - 哨兵的作用和原理
 - 搭建哨兵集群
-- RedisTemplate的哨兵模式
+- RedisTemplate 的哨兵模式
 
 ### 哨兵原理
 
@@ -2299,7 +2299,7 @@ public LettuceClientConfigurationBuilderCustomizer clientConfigurationBuilderCus
 这个 bean 中配置的就是读写策略，包括四种：
 
 - MASTER：从主节点读取
-- MASTER_PREFERRED：优先从 master 节点读取，master 不可用才读取replica
+- MASTER_PREFERRED：优先从 master 节点读取，master 不可用才读取 replica
 - REPLICA：从 slave（replica）节点读取
 - REPLICA _PREFERRED：优先从 slave（replica）节点读取，所有的 slave 都不可用才读取 master
 
@@ -2309,7 +2309,7 @@ public LettuceClientConfigurationBuilderCustomizer clientConfigurationBuilderCus
 - 散列插槽
 - 集群伸缩
 - 故障转移
-- RedisTemplate访问分片集群
+- RedisTemplate 访问分片集群
 
 ### 搭建分片集群
 
@@ -2449,39 +2449,39 @@ redis-cli -p 7001 cluster nodes
 
 我们要将 num 存储到 7004 节点，因此需要先看看 num 的插槽是多少：
 
-<div align="center"><img src="img/image-20210725161241793-16637601446392.png"></div>
+<div align="center"><img src="img/image-20210725161241793"></div>
 
 如上图所示，num 的插槽为 2765.
 
 我们可以将 0~3000 的插槽从 7001 转移到 7004，命令格式如下：
 
-<div align="center"><img src="img/image-20210725161401925-16637601446381.png"></div>
+<div align="center"><img src="img/image-20210725161401925.png"></div>
 
 具体命令如下：
 
 建立连接：
 
-<div align="center"><img src="img/image-20210725161506241-16637601446393.png"></div>
+<div align="center"><img src="img/image-20210725161506241.png"></div>
 
 得到下面的反馈：
 
-<div align="center"><img src="img/image-20210725161540841-16637601446394.png"></div>
+<div align="center"><img src="img/image-20210725161540841.png"></div>
 
 询问要移动多少个插槽，我们计划是 3000 个：
 
 新的问题来了：
 
-<div align="center"><img src="img/image-20210725161637152-16637601446395.png"></div>
+<div align="center"><img src="img/image-20210725161637152.png"></div>
 
 那个 node 来接收这些插槽？？
 
 显然是 7004，那么 7004 节点的 id 是多少呢？
 
-<div align="center"><img src="img/image-20210725161731738-16637601446396.png"></div>
+<div align="center"><img src="img/image-20210725161731738.png"></div>
 
 复制这个 id，然后拷贝到刚才的控制台后：
 
-<div align="center"><img src="img/image-20210725161817642-16637601446397.png"></div>
+<div align="center"><img src="img/image-20210725161817642.png"></div>
 
 这里询问，你的插槽是从哪里移动过来的？
 
@@ -2491,21 +2491,21 @@ redis-cli -p 7001 cluster nodes
 
 这里我们要从 7001 获取，因此填写 7001 的 id：
 
-<div align="center"><img src="img/image-20210725162030478-166376014464011.png"></div>
+<div align="center"><img src="img/image-20210725162030478.png"></div>
 
 填完后，点击 done，这样插槽转移就准备好了：
 
-<div align="center"><img src="img/image-20210725162101228-16637601446398.png"></div>
+<div align="center"><img src="img/image-20210725162101228.png"></div>
 
 确认要转移吗？输入 yes：
 
 然后，通过命令查看结果：
 
-<div align="center"><img src="img/image-20210725162145497-16637601446409.png"></div>
+<div align="center"><img src="img/image-20210725162145497.png"></div>
 
 可以看到： 
 
-<div align="center"><img src="img/image-20210725162224058-166376014464010.png"></div>
+<div align="center"><img src="img/image-20210725162224058.png"></div>
 
 目的达成。
 
@@ -2513,7 +2513,7 @@ redis-cli -p 7001 cluster nodes
 
 集群初识状态是这样的：
 
-<div align="center"><img src="img/image-20210727161152065-166376053323329.png"></div>
+<div align="center"><img src="img/image-20210727161152065.png"></div>
 
 其中 7001、7002、7003 都是 master，我们计划让 7002 宕机。
 
@@ -2529,15 +2529,15 @@ redis-cli -p 7002 shutdown
 
 2）然后是疑似宕机：
 
-<div align="center"><img src="img/image-20210725162319490-166376045993423.png"></div>
+<div align="center"><img src="img/image-20210725162319490"></div>
 
 3）最后是确定下线，自动提升一个 slave 为新的 master：
 
-<div align="center"><img src="img/image-20210725162408979-166376045993424.png"></div>
+<div align="center"><img src="img/image-20210725162408979.png"></div>
 
 4）当 7002 再次启动，就会变为一个 slave 节点了：
 
-<div align="center"><img src="img/image-20210727160803386-166376045993425.png"></div>
+<div align="center"><img src="img/image-20210727160803386.png"></div>
 
 #### 手动故障转移
 
@@ -2877,7 +2877,7 @@ int8_t 中存储的不是元素。因为 Redis 的数组并未使用 C 语言相
 
 Intset 可以看做是特殊的整数数组，具备一些特点：
 
-- Redis 会确保 Intset 中的元素唯一、有序
+- Redis 会确保 intset 中的元素唯一、有序
 - 具备类型升级机制，可以节省内存空间
 - 底层采用二分查找方式来查询
 
@@ -3259,7 +3259,7 @@ ZSET 结构示意图：采用了 dict + skiplist 的模式，如果只是查找�
 当元素数量不多时，HT 和 SkipList 的优势不明显，而且更耗内存。因此，当元素数量不多时查询速度也不会慢，此时 zset 还会采用 ZipList 结构来节省内存，不过需要同时满足两个条件：
 
 * 元素数量小于 zset_max_ziplist_entries，默认值 128
-* 每个元素都小于 zset_max_ziplist_value字节，默认值 64
+* 每个元素都小于 zset_max_ziplist_value 字节，默认值 64
 
 ziplist 本身没有排序功能，而且没有键值对的概念，因此需要有 zset 通过编码实现：
 

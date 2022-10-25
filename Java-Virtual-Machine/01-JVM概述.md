@@ -2,7 +2,7 @@
 
 参考视频：[<b>解密 JVM 【黑马程序员出品】</b>](https://www.bilibili.com/video/BV1yE411Z7AP)
 
-参考书籍：深入理解Java虚拟机、Java虚拟机规范（Java8）
+参考书籍：《深入理解 Java 虚拟机》、《Java 虚拟机规范（Java8）》、《垃圾回收的算法与实现》、《Java 性能权威指南》
 
 GC文档：https://docs.oracle.com/en/java/javase/12/gctuning/
 
