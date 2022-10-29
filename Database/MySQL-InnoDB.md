@@ -1,6 +1,6 @@
 # MySQL InnoDB存储引擎
 
-记录读书过程中感觉重要的部分内容。
+记录 《MySQL InnoDB 存储引擎》读书过程中感觉重要的部分内容。
 
 <span style="color:green">**PS：非DBer，故不会太细致，主要学习原理。**</span>
 

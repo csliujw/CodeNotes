@@ -43,8 +43,8 @@
 
 `service mysqld start` Linux 下
 
-- `service mysqld start` 5.0版本是 `mysqld`
-- `service mysql start`  5.57版本是 `mysql`
+- `service mysqld start` 5.0 版本是 `mysqld`
+- `service mysql start`  5.57 版本是 `mysql`
 
 > 关闭 `MySQL` 服务
 
@@ -78,7 +78,7 @@
 >
 > 显示表的列：`show columns from tableName` 或 `desc tableName`
 
-> show的作用
+> show 的作用
 
 查看表结构
 
@@ -104,7 +104,7 @@
 
 - 查询单列 `select prod_name from products`
 - 查询多列 `select prod_id, prod_name, prod_price from products;` 列与列用逗号分割。
-- 查询所有 `select * from products`  尽量别使用通配符查询所有字段，会拉低查询效率。
+- 查询所有 `select * from products` 尽量别使用通配符查询所有字段，会拉低查询效率。
 - 查询不同的行（去重）`select distinct vend_id from products`  使用关键字 distinct
 - 限制结果 【限制查询的结果数目】
     - `select prod_name from products limit 5`  返回不多于 5 行
@@ -692,7 +692,7 @@ where p1.vend_id = p2.vend_id
 and p2.prod_id = 'DTNTR';
 ```
 
-用自联结而不用子查询 自联结通常作为外部语句用来替代从相同表中检索数据时使用的子查询语句。虽然最终的结果是相同的，但有时候处理联结远比处理子查询快得多。
+用自联结而不用子查询。自联结通常作为外部语句用来替代从相同表中检索数据时使用的子查询语句。虽然最终的结果是相同的，但有时候处理联结远比处理子查询快得多。
 
 ## 自然联结
 
@@ -712,7 +712,6 @@ inner join orders on customers.cust_id = orders.cust_id;
 select customers.cust_id, orders.order_num 
 from customers 
 left outer join orders on customers.cust_id = orders.cust_id;
-
 ```
 
 # 组合查询
@@ -829,10 +828,3 @@ CREATE VIEW 视图名(列a,列b,列c) AS SELECT 列1,列2,列3 FROM 表名字;
 ```sql
 CREATE VIEW v_emp (v_name,v_age,v_phone) AS SELECT name,age,phone FROM employee;
 ```
-
-
-
-
-
-
-

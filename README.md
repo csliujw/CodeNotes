@@ -32,7 +32,7 @@
 - [数据库基本用法](Database/数据库基本用法.md)
 - [MySQL必知必会读书笔记](Database/MySQL必知必会.md)
 - [事务控制](Database/事务控制.md)
-- [SQL优化](Database/SQL优化的正确姿势.md)
+- [SQL优化](Database/SQL优化杂记.md)
 - [MySQL提升](Database/MySQL-提升.md)
 - [MySQL-InnoDB 存储引擎读书笔记](Database/MySQL-InnoDB.md)
 - [MySQL实战45讲笔记](Database/MySQL实战45讲.md)

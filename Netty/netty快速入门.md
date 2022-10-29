@@ -14,10 +14,10 @@ non-blocking io 非阻塞 IO
 
 - 使用 Netty 开发基本网络应用程序
 - 彻底理解阻塞、非阻塞的区别，并与 Netty、NIO 的编码联系起来。
-- 懂得多路复用在服务器开发时的优势。为什么在此基础上还要加多线程
-- Netty 中是如何实现异步的，异步处理的优势是什么
-- Netty 中是如何管理线程的，EventLoop 如何运作
-- Netty 中是如何管理内存的，ByteBuf 的特点和分配时机
+- 懂得多路复用在服务器开发时的优势。为什么在此基础上还要加多线程（为了重复利用 CPU？）
+- Netty 中是如何实现异步的，异步处理的优势是什么（用多线程实现的异步，不会阻塞当前线程，可以处理更多的内容）
+- Netty 中是如何管理线程的，EventLoop 如何运作（Netty4 用 EventLoop 管理线程组的，所有的出站入站处理器都是在线程内部完成的，可以避免加锁解锁）
+- Netty 中是如何管理内存的，ByteBuf 的特点和分配时机（申请直接内存的开销很大，采用的内存池避免这种开销）
 - 看源码、调试的一些技巧
 
 > 环境搭建
@@ -149,7 +149,7 @@ logback.xml 配置文件，用于日志输出
 
 ### Channel & Buffer
 
-channel 数据的传输通道 (可以想象成一个水管)  。buffer 内存缓冲区，用来暂存从 channel 中读/写的数据。
+channel 数据的传输通道 (可以想象成一个水管)  。buffer 是内存缓冲区，用来暂存从 channel 中读/写的数据。
 
 channel 有一点类似于 stream，它就是读写数据的<b>双向通道</b>，数据可以是 从 channel-->buffer，也可以是从 buffer-->channel，而之前的 stream 只是单向的，要么是输入，要么是输出。channel 比 stream 更为底层。
 
@@ -2233,45 +2233,47 @@ socket.getOutputStream().write(buf);
 
 <div align="center"><img src="img/0024.png"></div>
 
-1️⃣java 本身并不具备 IO 读写能力，因此 read 方法调用后，要从 java 程序的<b>用户态切换至内核态</b>，去调用操作系统 (Kernel)  的读能力，将数据读入<b>内核缓冲区</b>。这期间用户线程阻塞，操作系统使用 DMA (Direct Memory Access)  来实现文件读，其间也不会使用 cpu
+1️⃣Java 本身并不具备 IO 读写能力，因此 read 方法调用后，要从 Java 程序的<b>用户态切换至内核态</b>，去调用操作系统 (Kernel)  的读能力，将数据读入<b>内核缓冲区</b>。这期间用户线程阻塞，操作系统使用 DMA (Direct Memory Access)  来实现文件读，其间也不会使用 CPU
 
-> DMA 也可以理解为硬件单元，用来解放 cpu 完成文件 IO
+> DMA 也可以理解为硬件单元，用来解放 CPU 完成文件 IO
 
 2️⃣从<b>内核态切换回用户态</b>，将数据从<b>内核缓冲区</b>读入<b>用户缓冲区</b> (即 byte[] buf)  ，这期间 CPU 会参与拷贝，无法利用 DMA
 
-3️⃣调用 write 方法，这时将数据从<b>用户缓冲区</b> (byte[] buf)  写入 <b>socket 缓冲区</b>，cpu 会参与拷贝
+3️⃣调用 write 方法，这时将数据从<b>用户缓冲区</b> (byte[] buf)  写入 <b>socket 缓冲区</b>，CPU 会参与拷贝
 
-4️⃣接下来要向网卡写数据，这项能力 java 又不具备，因此又得从<b>用户态</b>切换至<b>内核态</b>，调用操作系统的写能力，使用 DMA 将 <b>socket 缓冲区</b>的数据写入网卡，不会使用 cpu
+4️⃣接下来要向网卡写数据，这项能力 Java 又不具备，因此又得从<b>用户态</b>切换至<b>内核态</b>，调用操作系统的写能力，使用 DMA 将 <b>socket 缓冲区</b>的数据写入网卡，不会使用 CPU
 
-可以看到中间环节较多，java 的 IO 实际不是物理设备级别的读写，而是缓存的复制，底层的真正读写是操作系统来完成的
+可以看到中间环节较多，Java 的 IO 实际不是物理设备级别的读写，而是缓存的复制，底层的真正读写是操作系统来完成的
 
 * 用户态与内核态的切换发生了 3 次，这个操作比较重量级
 * 数据拷贝了共 4 次
 
 #### NIO 优化
 
+<span style="color:red">NIO 中的 Buffer 都在用户空间中，包括 DirectBuffer。而 Java NIO 的零拷贝也是在用户态层面的零拷贝不是 OS 中的零拷贝。是指将 JVM 内存映射到堆外内存（用户态内存缓冲区），减少从用户态内存缓冲区-->JVM 内存缓冲区的拷贝。</span>
+
 通过 DirectByteBuf 
 
-* ByteBuffer.allocate(10)  HeapByteBuffer 使用的还是 java 内存
+* ByteBuffer.allocate(10)  HeapByteBuffer 使用的还是 Java 内存
 * ByteBuffer.allocateDirect(10)  DirectByteBuffer 使用的是操作系统内存
 
 <div align="center"><img src="img/0025.png"></div>
 
-<b>大部分步骤与优化前相同</b>，不再赘述。唯有一点：java 可以使用 DirectByteBuf 将堆外内存映射到 jvm 内存中来直接访问使用
+<b>大部分步骤与优化前相同，不再赘述。唯有一点：Java 可以使用 DirectByteBuf 将堆外内存映射到 jvm 内存中来直接访问使用</b>
 
 * 这块内存不受 jvm 垃圾回收的影响，因此<b>内存地址固定，有助于 IO 读写</b>
-* java 中的 DirectByteBuf 对象仅维护了此内存的虚引用，内存回收分成两步
+* Java 中的 DirectByteBuf 对象仅维护了此内存的虚引用，内存回收分成两步
     * DirectByteBuf 对象被垃圾回收，将虚引用加入引用队列
     * 通过专门线程访问引用队列，根据虚引用释放堆外内存
 * 减少了一次数据拷贝，用户态与内核态的切换次数没有减少
 
-进一步优化 (底层采用了 linux 2.1 后提供的 sendFile 方法)  ，java 中对应着两个 channel 调用 transferTo/transferFrom 方法拷贝数据
+进一步优化 (底层采用了 linux 2.1 后提供的 sendFile 方法)  ，Java 中对应着两个 channel 调用 transferTo/transferFrom 方法拷贝数据
 
 <div align="center"><img src="img/0026.png"></div>
 
-1. java 调用 transferTo 方法后，要从 java 程序的<b>用户态切换至内核态</b>，使用 DMA 将数据读入<b>内核缓冲区</b>，不会使用 cpu
-2. 数据从<b>内核缓冲区</b>传输到 <b>socket 缓冲区</b>，cpu 会参与拷贝
-3. 最后使用 DMA 将 <b>socket 缓冲区</b>的数据写入网卡，不会使用 cpu
+1. Java 调用 transferTo 方法后，要从 Java 程序的<b>用户态切换至内核态</b>，使用 DMA 将数据读入<b>内核缓冲区</b>，不会使用 CPU
+2. 数据从<b>内核缓冲区</b>传输到 <b>socket 缓冲区</b>，CPU 会参与拷贝
+3. 最后使用 DMA 将 <b>socket 缓冲区</b>的数据写入网卡，不会使用 CPU
 
 可以看到
 
@@ -2282,14 +2284,14 @@ socket.getOutputStream().write(buf);
 
 <div align="center"><img src="img/0027.png"></div>
 
-1. java 调用 transferTo 方法后，要从 java 程序的用户态切换至内核态，使用 DMA 将数据读入内核缓冲区，不会使用 cpu
+1. Java 调用 transferTo 方法后，要从 Java 程序的用户态切换至内核态，使用 DMA 将数据读入内核缓冲区，不会使用 CPU
 2. 只会将一些 offset 和 length 信息拷入 socket 缓冲区，几乎无消耗
-3. 使用 DMA 将内核缓冲区的数据写入网卡，不会使用 cpu
+3. 使用 DMA 将内核缓冲区的数据写入网卡，不会使用 CPU
 
 整个过程仅只发生了一次用户态与内核态的切换，数据拷贝了 2 次。<b style="color:green">所谓的【零拷贝】，并不是真正无拷贝，而是在不会拷贝重复数据到 jvm 内存中</b>，零拷贝的优点有
 
 * 更少的用户态与内核态的切换
-* 不利用 cpu 计算，减少 cpu 缓存伪共享
+* 不利用 CPU 计算，减少 CPU 缓存伪共享
 * 零拷贝适合小文件传输，不适合大文件的传输。
     * 如果文件比较大，那需要把大量的数据读到缓冲区去，缓冲区是为了方便反复获取数据，如果文件比较大，要把文件发生到网卡，数据从头到尾只读取了一次，没发挥到缓存的效果，反而因为文件较大，把缓冲区内存都占满了，导致其他文件的读写受到影响。
     * 适合读取频繁的小文件。
@@ -2508,18 +2510,21 @@ Netty 在 Java 网络应用框架中的地位就好比：Spring 框架在 JavaEE
 
 ### Netty的优势
 
-* Netty vs NIO，工作量大，bug 多
-    * 需要自己构建协议
-    * 解决 TCP 传输问题，如粘包、半包
-    * epoll 空轮询导致 CPU 100% (Linux 多路复用的底层是 epoll，epoll 在 NIO 里有 Bug，NIO 的作者在处理 epoll 的时候有 Bug 会导致 selector 方法在某些情况下阻塞不了。)  
-    * 对 API 进行增强，使之更易用，如 FastThreadLocal => ThreadLocal，ByteBuf => ByteBuffer
-* Netty vs 其它网络应用框架
-    * Mina 由 apache 维护，将来 3.x 版本可能会有较大重构，破坏 API 向下兼容性，Netty 的开发迭代更迅速，API 更简洁、文档更优秀
-    * 久经考验，16 年，Netty 版本
-        * 2.x 2004
-        * 3.x 2008
-        * 4.x 2013
-        * 5.x 已废弃 (加入了 AIO，但是没有明显的性能提升，维护成本高)  
+1️⃣Netty vs NIO，工作量大，bug 多
+
+* 需要自己构建协议
+* 解决 TCP 传输问题，如粘包、半包
+* epoll 空轮询导致 CPU 100% (Linux 多路复用的底层是 epoll，epoll 在 NIO 里有 Bug，NIO 的作者在处理 epoll 的时候有 Bug 会导致 selector 方法在某些情况下阻塞不了。)  
+* 对 API 进行增强，使之更易用，如 FastThreadLocal => ThreadLocal，ByteBuf => ByteBuffer
+
+2️⃣Netty vs 其它网络应用框架
+
+* Mina 由 apache 维护，将来 3.x 版本可能会有较大重构，破坏 API 向下兼容性，Netty 的开发迭代更迅速，API 更简洁、文档更优秀
+* 久经考验，16 年，Netty 版本
+    * 2.x 2004
+    * 3.x 2008
+    * 4.x 2013
+    * 5.x 已废弃 (加入了 AIO，但是没有明显的性能提升，维护成本高)  
 
 > Netty 的注意事项
 

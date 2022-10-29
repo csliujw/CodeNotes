@@ -143,7 +143,7 @@ net stop mysql80
 
 4. 注释：
 
-    单行注释：-- 注释内容 或 # 注释内容 (MySQL 特有) 
+    单行注释：-- 注释内容或 # 注释内容 (MySQL 特有) 
 
     多行注释： /* 注释内容 */
 
@@ -158,20 +158,26 @@ net stop mysql80
 
 ### DDL
 
-数据库操作
-- show databases;
-- create database 数据库名
-- use 数据库名;
-- select databases();
-- drop databases 数据库名
+<div align="center"><b>数据库操作</b></div>
 
-表操作
-- show tables;
-- create table 表名(字段 字段类型, 字段 字段类型);
-- desc 表名;
-- show create table 表名;
-- alter table 表名 add/modify/drop/rename;
-- drop table 表名;
+| 操作                     | 解释                        |
+| ------------------------ | --------------------------- |
+| show databases;          | 显示所有的数据库            |
+| create database 数据库名 | 创建数据库                  |
+| use 数据库名;            | 使用数据库/切换为 xx 数据库 |
+| select database();       | 查询当前数据库名称          |
+| drop databases 数据库名  | 删除数据库                  |
+
+<div align="center"><b>表操作</b></div>
+
+| 操作                                             | 解释                     |
+| ------------------------------------------------ | ------------------------ |
+| show tables;                                     | 显示当前数据库中的所有表 |
+| create table 表名(字段 字段类型, 字段 字段类型); | 创建数据库表             |
+| desc 表名;                                       | 查看表结构               |
+| show create table 表名;                          | 查看建表语句             |
+| alter table 表名 add/modify/drop/rename;         | 修改表结构               |
+| alter table 表名 add/modify/drop/rename;         | 删除表                   |
 
 #### 数据库操作
 
@@ -276,7 +282,7 @@ MySQL 中的数据类型有很多，主要分为三类：数值类型、字符�
 
 #### 习题
 
-根据需求创建表(设计合理的数据类型、长度) 设计一张员工信息表，要求如下： 
+根据需求创建表 (设计合理的数据类型、长度) 设计一张员工信息表，要求如下： 
 
 1. 编号（纯数字） 
 2. 员工工号 (字符串类型，长度不超过 10 位) 
@@ -430,7 +436,6 @@ create table dept(
 )comment '部门表';
 INSERT INTO dept (id, name) VALUES (1, '研发部'), (2, '市场部'),(3, '财务部'), (4, '销售部');
 
-
 create table emp(
     id  int auto_increment comment 'ID' primary key,
     name varchar(50) not null comment '姓名',
@@ -499,9 +504,9 @@ select * from emp where name like '%X';
 
 #### count函数
 
-- COUNT(字段) 会统计该字段在表中出现的次数，<span style="color:orange">忽略字段为 null 的情况。</span>即不统计字段为 null 的记录。 
-- COUNT(\*) 则不同，它执行时返回检索到的行数的计数，<span style="color:orange">不管这些行是否包含 null 值。</span>
-- COUNT(1) 跟 COUNT(\*) 类似，不将任何列是否 null 列入统计标准，仅用 1 代表代码行，所以在统计结果的时候，不会忽略列值为 NULL 的行。
+- COUNT(字段) 会统计该字段在表中出现的次数，<span style="color:orange">忽略字段为 null 的情况。</span>即不统计字段为 null 的记录，每次会判断下字段是否为 null？。 
+- COUNT(\*) 则不同，它执行时返回检索到的行数的计数，<span style="color:orange">不管这些行是否包含 null 值，即不会额外判断是否为 null。</span>
+- COUNT(1) 跟 COUNT(\*) 类似，不将任何列是否 null 列入统计标准，仅用 1 代表代码行，所以在统计结果的时候，不会忽略列值为 NULL 的行，即不会判断是否为 null。
 
 COUNT(字段) 会有一个 null 判断，效率低。COUNT(1) 和 COUNT(\*) 没有这个判断，效率高。又 COUNT(\*) 是 SQL92 定义的标准统计数的语法，<b>建议使用 COUNT(\*)。</b>
 
@@ -1887,7 +1892,7 @@ mysql -u root -p
 - <b>查询缓存：</b>如果是 SELECT 语句，在解析查询之前，服务器会先检查查询缓存，如果能宅其中找到对应的查询，服务器就不必执行查询解析、优化和执行的整个过程，而是直接返回查询缓存中命中的结果。即有缓存查缓存，没缓存就分析。但是缓存的命中率很低，一般不用。MySQL 8.0 则是直接把缓存模块删除了。
 - <b>分析器：</b>对 SQL 语句做词法分析和语法分析。
 - <b>优化器：</b>分析 SQL 的性能。用关系表达式分析，计算每种方式的计算量，评估后选择一个最优的策略（数据库系统概论中有计算不同方式的计算量）
-- <b>执行器：</b>先判断有无权限，有权限则打开表继续执行。打开表的时候，执行器就会根据表的引擎定义，去使用这 个引擎提供的接口。
+- <b>执行器：</b>先判断有无权限，有权限则打开表继续执行。打开表的时候，执行器就会根据表的引擎定义，去使用这个引擎提供的接口。
 - <b>存储引擎：</b>插拔式。默认是 InnoDB。
 
 ### 存储引擎简介
@@ -2017,7 +2022,7 @@ MEMORY：将所有数据保存在内存中，访问速度快，通常用于临�
 | R-tree 索引    | 不支持                                          | 支持   | 不支持 |
 | Full-text 索引 | <span style="color:red">5.6 版本之后支持</span> | 支持   | 不支持 |
 
-<b style="color:red">我们平常所说的索引，如果没有特别指明，都是指 B+ 树结构组织的索引。</b>
+<b style="color:red">我们平常所说的索引，如果没有特别指明，都是指 B+Tree 结构组织的索引。</b>
 
 剖析各种平衡树结构做索引的优缺点
 
@@ -2070,9 +2075,7 @@ MySQL 先计算 Peter 的哈希值，并使用该值查找对应的记录指针�
 - 访问哈希索引的数据非常快，除非有很多哈希冲突，出现哈希冲突后，需要遍历链表中的所有指针才能找到元素。
 - 如果哈希冲突很多，一些索引维护操作的代价也很高，如在某个选择性很低（哈希冲突多）的列上简历哈希索引，那么表中删除一行时，存储引擎需要遍历对应哈希值的链表中的每一行，找到并删除对应行的引用，冲突越多，代价越大。
 
-存储引擎支持
-
-在 MySQL 中，支持 hash 索引的是 Memory 引擎，而 InnoDB 中具有自适应 hash 功能，hash 索引是存储引擎根据 B+Tree 索引在指定条件下自动构建的，这个自适应哈希的行为是自动的。
+存储引擎支持：在 MySQL 中，支持 hash 索引的是 Memory 引擎，而 InnoDB 中具有自适应 hash 功能，hash 索引是存储引擎根据 B+Tree 索引在指定条件下自动构建的，这个自适应哈希的行为是自动的。
 
 ### 问题辨析
 
@@ -2080,7 +2083,7 @@ MySQL 先计算 Peter 的哈希值，并使用该值查找对应的记录指针�
 
 ①相对于二叉树，层级更少，搜索效率高； 
 
-②对于 B-Tree，无论是叶子节点还是非叶子节点，都会保存数据，这样导致一 页中存储的键值减少，指针跟着减少，要同样保存大量数据，只能增加树的高度，导致性能降低；且 B-Tree 不利于范围查找。
+②对于 B-Tree，无论是叶子节点还是非叶子节点，都会保存数据，这样导致一页中存储的键值减少，指针跟着减少，要同样保存大量数据，只能增加树的高度，导致性能降低；且 B-Tree 不利于范围查找。
 
 ③相对 Hash 索引，B+tree 支持范围匹配及排序操作；
 
@@ -2112,7 +2115,7 @@ MySQL 先计算 Peter 的哈希值，并使用该值查找对应的记录指针�
 >
 > - 如果存在主键，主键索引就是聚集索引。 
 > - 如果不存在主键，将使用第一个唯一（UNIQUE）索引作为聚集索引。 
-> - 如果表没有主键，或没有合适的唯一索引，则 InnoDB 会自动生成一个 rowid 作为隐藏的聚集索引。[隐藏字段：`rowid，trx_id，roback_id`，如果没有可选择的聚集索引，就会有 `rowid` 这个隐藏字段]
+> - 如果表没有主键，或没有合适的唯一索引，则 InnoDB 会自动生成一个 rowid 作为隐藏的聚集索引。【隐藏字段：`rowid，trx_id，roback_id`，如果没有可选择的聚集索引，就会有 `rowid` 这个隐藏字段】
 
 假定聚集索引是 id, 非聚集索引是 name。`select * from user where name='Arm';` 的查询流程如下：先在二级索引/非聚集索引上查询一次，发现查询的索引中未覆盖所有的字段，于是进行回表查询，继续查询一次聚集索引。
 
@@ -2250,7 +2253,7 @@ mysql> show global status like 'Com_______';
 show variables like 'slow_query_log' # 查询是否开启慢日志
 ```
 
-慢查询日志记录了所有执行时间超过指定参数（long_query_time，单位：秒，默认 10 秒）的所有 SQL 语句的日志。 MySQL 的慢查询日志默认没有开启，需要在 MySQL 的配置文件（/etc/my.cnf）中配置如下信息：
+慢查询日志记录了所有执行时间超过指定参数（long_query_time，单位：秒，默认 10 秒）的所有 SQL 语句的日志。MySQL 的慢查询日志默认没有开启，需要在 MySQL 的配置文件（/etc/my.cnf）中配置如下信息：
 
 ```shell
 # 开启 MySQL 慢日志查询开关
@@ -2259,7 +2262,7 @@ slow_query_log=1
 long_query_time=2
 ```
 
-配置完毕之后，通过以下指令重新启动 MySQL 服务器进行测试，查看慢日志文件中记录的信息 `/var/lib/mysql/localhost-slow.log`, Windows 下是 `xx\xx\MySQL\MySQL Server 8.0 的 my.ini`
+配置完毕之后，通过以下指令重新启动 MySQL 服务器进行测试，查看慢日志文件中记录的信息 `/var/lib/mysql/localhost-slow.log`，Windows 下是 `xx\xx\MySQL\MySQL Server 8.0 的 my.ini`
 
 > profile 详情【了解】
 
@@ -2301,13 +2304,13 @@ EXPLAIN 执行计划各字段含义：
 - <span style="color:orange">select_type：表示 SELECT 的类型</span>，常见的取值有 SIMPLE（简单表，即不使用表连接或者子查询）、PRIMARY（主查询，即外层的查询）、 UNION（UNION 中的第二个或者后面的查询语句）、SUBQUERY（SELECT/WHERE 之后包含了子查询）等 
 - <span style="color:orange">type：表示连接类型</span>，
   - 性能由好到差的连接类型为 NULL、system、const、eq_ref、ref、range、 index、all。
-  - `system`：该表只有一行（相当于系统表），system 是 const 类型的特例。
-  - `const`：针对主键或唯一索引的等值查询扫描, 最多只返回一行数据。const 查询速度非常快, 因为它仅仅读取一次即可。
-  - `eq_ref`：当使用了索引的全部组成部分，并且索引是 PRIMARY KEY 或 UNIQUE NOT NULL 才会使用该类型，性能仅次于 system 及 const。
-  - `ref`：当满足最左前缀规则的索引，或者索引不是主键也不是唯一索引时才会发生。如果使用的索引只会匹配到少量的行，性能也是不错的。
-  - `range`：范围扫描，表示检索了指定范围的行，主要用于有限制的索引扫描。
-  - `index`：全索引扫描
-  - `all`：全表扫描，性能最差。
+  - system：该表只有一行（相当于系统表），system 是 const 类型的特例。
+  - const：针对主键或唯一索引的等值查询扫描, 最多只返回一行数据。const 查询速度非常快, 因为它仅仅读取一次即可。
+  - eq_ref：当使用了索引的全部组成部分，并且索引是 PRIMARY KEY 或 UNIQUE NOT NULL 才会使用该类型，性能仅次于 system 及 const。
+  - ref：当满足最左前缀规则的索引，或者索引不是主键也不是唯一索引时才会发生。如果使用的索引只会匹配到少量的行，性能也是不错的。
+  - range：范围扫描，表示检索了指定范围的行，主要用于有限制的索引扫描。
+  - index：全索引扫描
+  - all：全表扫描，性能最差。
 - <span style="color:orange">possible_key：显示可能应用在这张表上的索引，一个或多个。</span>
 - <span style="color:orange">Key：实际使用的索引</span>，如果为 NULL，则没有使用索引。 
 - <span style="color:orange">Key_len：表示索引中使用的字节数</span>， 该值为索引字段最大可能长度，并非实际使用长度，在不损失精确性的前提下， 长度越短越好 。 
@@ -2546,7 +2549,7 @@ explain select * from tb_user force index(idx_user_pro) where profession = '软�
 - <span style="color:orange">count 优化</span>：性能 count(字段)<count(主键 id)<count(1)≈count(\*)。count 字段会有一个检查是否为空的操作。
 - <span style="color:orange">update 优化</span>：尽量根据主键/索引字段进行数据更新
 
-### insert优化
+### insert
 
 一条一条执行，每次执行都需要与数据库进行网络传输。
 
@@ -2593,9 +2596,9 @@ set global local_infile = 1;
 load data local infile '/xx/xx/xx/sql.log' into table 'tb_user' fields terminated by ',' lines terminated by '\n';
 ```
 
-### 主键优化
+### primary key
 
-- <b>数据的组织方式</b>：在 InnoDB 存储引擎中，表数据都是根据主键顺序组织存放的，这种存储方式的表称为索引组织表（<span style="color:red">index organized table IOT</span>）
+<b>数据的组织方式</b>：在 InnoDB 存储引擎中，表数据都是根据主键顺序组织存放的，这种存储方式的表称为索引组织表（<span style="color:red">index organized table IOT</span>）
 
 主键顺序插入对比乱序插入，可以尽量避免页分裂。
 
@@ -2603,10 +2606,10 @@ load data local infile '/xx/xx/xx/sql.log' into table 'tb_user' fields terminate
 
 - 满足业务需求的情况下，尽量降低主键的长度。 主键较长的话，若二级索引过多（二级索引中存了主键）会导致索引占大量的磁盘，查询的时候会进行大量 I/O。
 - 插入数据时，尽量选择顺序插入，选择使用 AUTO_INCREMENT 自增主键。乱序插入会导致页分裂。
-- 尽量不要使用 UUID 做主键或者是其他自然主键，如身份证号 s。ID 长，I/O 也多，乱序插入也容易导致页分裂。
+- 尽量不要使用 UUID 做主键或者是其他自然主键，如身份证号。ID 长，I/O 也多，乱序插入也容易导致页分裂。
 - 业务操作时，避免对主键的修改。
 
-### order by优化
+### order by
 
 order by 优化主要是优化数据的排序方式。
 
@@ -2651,7 +2654,7 @@ explain select id,age,phone from tb_user order by age asc,phone desc;
 - ③多字段排序 一个升序一个降序，此时需要注意联合索引在创建时的规则 (ASC/DESC)。
 - ④如果不可避免的出现 filesort，大数据量排序时，可以适当增大排序缓冲区大小 sort_buffer_size 默认 。
 
-### group by优化
+### group by
 
 如何优化 group by 查询。
 
@@ -2678,7 +2681,7 @@ explain select age,count(*) from tb_user where profession='软件工程' group b
 - 在分组操作时，可以通过索引来提高效率。
 - 分组操作时，索引的使用也是满足最左前缀法则的。
 
-### limit优化
+### limit
 
 一个常见又非常头疼的问题就是 `limit 2000000,10`，此时需要 MySQL 排序前 2000010 记录，仅仅返回 2000000 - 2000010 的记录，其他记录丢弃，查询排序的代价非常大。
 
@@ -2686,7 +2689,7 @@ explain select age,count(*) from tb_user where profession='软件工程' group b
 select * from tb_user limit 2400000,20; # 查询耗时 1.3s~1.4s
 ```
 
-<span style="color:red">官方给的优化方案是，通过<b>覆盖索引+子查询</b>的方式进行优化。</span>
+<span style="color:orange">官方给的优化方案是，通过<b>覆盖索引+子查询</b>的方式进行优化。</span>
 
 先顺序拿到需要查询的 id，然后将查询的结果作为一个表，进行连表查询。
 
@@ -2701,7 +2704,7 @@ explain select * from tb_user t,(select id from tb_user order by id limit 200000
 select * from tb_user where id > (select id from tb_user order by id limit 2000000,1 ) limit 0,10;
 ```
 
-### count优化
+### count
 
 ```mysql
 explain select count(*) from tb_user;
@@ -2723,7 +2726,7 @@ explain select count(*) from tb_user;
 
 <span style="color:red">按照效率排序的话，count(字段) < count(主键 id) < count(1) ≈ count(\*)，所以尽量使用 count(\*)。</span>
 
-### update优化
+### update
 
 用 update 进行更新数据的时候，会加锁。InnoDB 的行锁是针对索引加的锁，不是针对记录加的锁，并且该索引不能失效，否则会从行锁升级为表锁。
 
@@ -3946,7 +3949,7 @@ update\delete 等操作先回到 buffer pool 里，然后把变化写入到 redo
 
 查下高性能 MySQL。
 
-大致意思是，为数据库表新增一行 `data_version` 来记录数据更新的版本号。每次更新数据时将版本号作为条件，并且每次更新时版本号+1。
+大致意思是，为数据库表新增一行 `version` 来记录数据更新的版本号。每次更新数据时将 version 作为条件，并且每次更新时 version+1。
 
 ## 代码实现
 
