@@ -3256,8 +3256,8 @@ mybatis 的 sql 文件
 
 ```xml
 <dependency>
-    <groupId>org.Springframework.boot</groupId>
-    <artifactId>Spring-boot-starter-data-redis</artifactId>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
 </dependency>
 ```
 

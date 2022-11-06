@@ -445,7 +445,7 @@ SpringDataRedis 中提供了 RedisTemplate 工具类，其中封装了各种对 
 | <b>redisTemplate</b>.opsForZSet()  | ZSetOperations  | 操作 SortedSet 类型数据 |
 | <b>redisTemplate</b>               |                 | 通用的命令              |
 
-① 引入一来就，redis 启动的坐标和连接池依赖
+① 引入依赖，redis 启动的坐标和连接池依赖
 
 ```xml
 <dependency>
@@ -638,7 +638,7 @@ Redis 代替 session 需要考虑的问题：
 
 ### 缓存
 
-<b>缓存</b>就是数据交换的缓冲区（称作Cache [ kæʃ ] ），是存贮数据的临时地方，一般读写性能较高。
+<b>缓存</b>就是数据交换的缓冲区（称作 Cache [ kæʃ ] ），是存贮数据的临时地方，一般读写性能较高。
 
 ```mermaid
 graph LR
