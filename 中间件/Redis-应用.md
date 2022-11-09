@@ -437,7 +437,7 @@ SpringData 是 Spring 中数据操作的模块，包含对各种数据库的集�
 SpringDataRedis 中提供了 RedisTemplate 工具类，其中封装了各种对 Redis 的操作。并且将不同数据类型的操作 API 封装到了不同的类型中：
 
 | API                                | 返回值类型      | 说明                    |
-| ---------------------------------- | --------------- | ----------------------- |
+| ---------------------------------- | :-------------- | ----------------------- |
 | <b>redisTemplate</b>.opsForValue() | ValueOperations | 操作 String 类型数据    |
 | <b>redisTemplate</b>.opsForHash()  | HashOperations  | 操作 Hash 类型数据      |
 | <b>redisTemplate</b>.opsForList()  | ListOperations  | 操作 List 类型数据      |
@@ -476,7 +476,7 @@ spring:
 ③ 注入 RedisTemplate
 
 ```java
-@Autowired
+@Autowired // 也可以用 @Resource JSR 的标准注解，不过 @Resource 默认安装名称进行注入的
 RedisTemplate redisTemplate;
 ```
 
@@ -503,26 +503,128 @@ public class RedisTemplateTest {
 
 >序列化方式
 
-RedisTemplate 可以接收任意 Object 作为值写入 Redis，只不过写入前会把 Object 序列化为字节形式，默认是采用 JDK 序列化，得到的结果是这样的
+RedisTemplate 可以接收任意 Object 作为值写入 Redis，只不过写入前会把 Object 序列化为字节形式，默认是采用 JDK 序列化（RedisTemplate#defaultSerializer 默认初始化为 JDK 序列化），得到的结果是这样的
 
 <div align="center"><img src="img/image-20220321221236720.png"></div>
 
-Spring 默认提供了一个 StringRedisTemplate 类，它的 key 和 value 的序列化方式默认就是 String 方式。省去了我们自定义 RedisTemplate 的过程，我们不用自己定义序列化反序列化的配置参数了。
+Spring 默认提供了一个 `StringRedisTemplate` 类，它的 key 和 value 的序列化方式默认就是 String 方式。省去了我们自定义 RedisTemplate 的过程，我们不用自己定义序列化反序列化的配置参数了。
+
+```java
+public class StringRedisTemplate extends RedisTemplate<String, String> {
+
+	/**
+	 * Constructs a new <code>StringRedisTemplate</code> instance. {@link #setConnectionFactory(RedisConnectionFactory)}
+	 * and {@link #afterPropertiesSet()} still need to be called.
+	 */
+	public StringRedisTemplate() {
+		setKeySerializer(RedisSerializer.string());
+		setValueSerializer(RedisSerializer.string());
+		setHashKeySerializer(RedisSerializer.string());
+		setHashValueSerializer(RedisSerializer.string());
+	}
+
+	/**
+	 * Constructs a new <code>StringRedisTemplate</code> instance ready to be used.
+	 *
+	 * @param connectionFactory connection factory for creating new connections
+	 */
+	public StringRedisTemplate(RedisConnectionFactory connectionFactory) {
+		this();
+		setConnectionFactory(connectionFactory);
+		afterPropertiesSet();
+	}
+
+	protected RedisConnection preProcessConnection(RedisConnection connection, boolean existingConnection) {
+		return new DefaultStringRedisConnection(connection);
+	}
+}
+```
+
+设置 RedisTemplate 的序列化方式，存取的时候都会自动转 JSON。存数据的时候会存入 "@class" 这个属性，表明是什么类型的数据，但是这样会占据一些内存空间，如果想节省内存空间就不能用 JSON 序列化器。eg：
+
+```js
+{
+    "@class":"com.ex.User",
+	"name":"Jack"
+}
+```
+
+```java
+@Configuration
+@SuppressWarnings("all")
+public class RedisConfig {
+    @Bean
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(connectionFactory);
+
+        GenericJackson2JsonRedisSerializer jackson2JsonRedisSerializer = new GenericJackson2JsonRedisSerializer();
+        // 设置 key 的序列化方式
+        template.setKeySerializer(RedisSerializer.string());
+        template.setHashKeySerializer(RedisSerializer.string());
+        template.setHashValueSerializer(jackson2JsonRedisSerializer);
+        template.setValueSerializer(jackson2JsonRedisSerializer);
+        return template;
+    }
+}
+```
+
+直接使用 Spring 提供的 `StringRedisTemplate`，key 和 value 都是 String 字符串序列化，且不会存储 “@class” 节省内存空间。
 
 ```java
 @SpringBootTest
 @RunWith(SpringRunner.class) // JUnit4 需要加这句
 public class RedisTemplateTest {
-    @Autowired
-    StringRedisTemplate redisTemplate;
+    @Resource // Resource 按名字注入，变量的名称要为 stringRedisTemplate
+    private StringRedisTemplate stringRedisTemplate;
 
-    @Test
-    public void test() {
-        redisTemplate.opsForValue().set("name", "hello-world");
-        redisTemplate.opsForValue().setIfAbsent("name", "hello");
+    @GetMapping("/get")
+    public String get() throws JsonProcessingException {
+        // Spring 默认的 JSON 处理工具。
+        // 还是不用 fastjson，一堆 bug。
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jack = objectMapper.writeValueAsString(new User("Jack"));
+        stringRedisTemplate.opsForValue().set("user:1000", jack);
+        String s = stringRedisTemplate.opsForValue().get("user:1000");
+		User user = objectMapper.readValue(s, User.class);
+        return user.toString();
+    }
+}
+
+// ====================== user ======================
+public class User {
+    public String name;
+
+    public User(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" + "name='" + name + '\'' + '}';
     }
 }
 ```
+
+注意，在使用 JSON 转换工具时，需要为非 public 字段设置 set/get 方法，不然会报错。
+
+```shell
+com.fasterxml.jackson.databind.exc.InvalidDefinitionException: 
+	No serializer found for class
+```
+
+### 序列化方案
+
+<b>方案一：</b>
+
+- 自定义 RedisTemplate
+- 修改 RedisTemplate 的序列化器为 GenericJacksonJsonRedisSerializer
+
+<b>方案二：</b>
+
+- 使用 StringRedisTemplate
+- 写入 Redis 时，手动把对象序列化为 JSON
+- 读取 Redis 时，手动把读取到的 JSON 反序列化为对象
 
 # 场景实战
 
@@ -530,14 +632,14 @@ public class RedisTemplateTest {
 
 ## 内容概述
 
-- 短信登录：Redis 共享 session 的应用
-- 商品缓存查询：缓存使用技巧；缓存雪崩、穿透等问题
-- 优惠券秒杀：Redis 计数器、Lua 脚本实现 Redis 分布式锁、Redis 的三种消息队列
-- 达人探店：基于 List 的点赞列表、基于 SortedSet 的点赞排行榜
-- 好友关注：基于 Set 集合的关注、取关、共同关注、消息推送等功能
-- 附件的商户：Redis 的 GenHash 的应用
-- 用户签到：Redis 的 BitMap 数据统计功能
-- UV 统计：Redis 的 HyperLogLog 的统计功能（一般大数据量下的话不会用这个）
+- <b>短信登录</b>：Redis 共享 session 的应用；
+- <b>商品缓存查询</b>：缓存使用技巧；缓存雪崩、穿透等问题；
+- <b>优惠券秒杀</b>：Redis 计数器、Lua 脚本实现 Redis 分布式锁、Redis 的三种消息队列；
+- <b>达人探店</b>：基于 List 的点赞列表、基于 SortedSet 的点赞排行榜；
+- <b>好友关注</b>：基于 Set 集合的关注、取关、共同关注、消息推送等功能；
+- <b>附件的商户</b>：Redis 的 GenHash 的应用；
+- <b>用户签到</b>：Redis 的 BitMap 数据统计功能；
+- <b>UV 统计</b>：Redis 的 HyperLogLog 的统计功能（一般大数据量下的话不会用这个）
 
 导入 SQL 文件
 
@@ -545,7 +647,7 @@ public class RedisTemplateTest {
 
 SQL 中包含如下的表
 
-- tb_user：用户表
+- tb_user：用户表，用户基本信息
 - tb_user_info：用户详情表
 - tb_shop：商户信息表
 - tb_shop_type：商户类型表
@@ -568,22 +670,36 @@ PS：需要修改 application.yaml 文件中的 MySQL、Redis 的地址信息。
 
 ### 基于Session实现登录
 
-具体的流程如下。
+具体的流程：发送验证码，回传验证码给用户，用户填写验证码登录时判断用户是否注册，注册了则直接登录，没注册则先注册然后再跳转到首页。
 
 <div align="center"><img src="img/image-20220507210751764.png"></div>
 
-我们需要在一些操作上判断用户是否登录。一种方式是在特定的操作上加判断，另一种方式是写一个过滤器，当访问特定的 url 路径时，判断是否登录。显然，用过滤器的方式更好。我们需要把拦截器拦截到的用户信息传递到 Controller 里去，并且要保证线程安全（一条完整的 HTTP 请求对应一个线程，如果共享数据，如用同一个 ArrayList 存储，会出现并发安全问题）。我们可以使用 ThreadLocal，可以确保线程之间安全的使用自己线程中的数据。
+另一个需要考虑的是，我们需要在一些操作上判断用户是否登录。一种方式是在特定的操作上加判断，另一种方式是写一个过滤器，当访问特定的 url 路径时，判断是否登录。显然，用过滤器的方式更好。我们需要把拦截器拦截到的用户信息传递到 Controller 里去，并且要保证线程安全（一条完整的 HTTP 请求对应一个线程，每一个进入 tomcat 的请求都是一个独立的线程来处理的，如果单例对象在多线程下共享数据，如用同一个 ArrayList 存储，会出现并发安全问题）。我们可以使用 ThreadLocal，可以确保线程之间安全的使用自己线程中的数据。<span style="color:red">为什么要用 ThreadLocal 保存用户信息？后面需要用到吗？是的，后面不少操作代码都需要获取到用户的信息，然后一个 HTTP 请求是在一个线程中完成的，因此这里先用 ThreadLocal 缓存用户信息，避免后面频繁的从 Session 中取出数据，后面改成 Redis 的话，可以避免频繁的从 Redis 中取出数据。而且，在最后请求处理完毕后，需要将用户从 ThreadLocal 中移除，拦截器的 afterCompletion 恰好是请求处理完毕之后执行</span>
 
 拦截器的两个方法
 
 - preHandler 在业务处理器处理请求之前被调用。
 - afterCompletion 完全处理请求之后被调用，可用于清理资源。
 
+```mermaid
+graph LR
+subgraph 拦截器
+	定义拦截器-->拦截所有请求-->判断用户是否存在-->存在-->存入ThreadLocal,&nbsp存UserDTO中存在的字段信息而非User-->放行
+	判断用户是否存在-->不存在-->拦截
+end
+subgraph 发送验证码
+	发送短信验证码&nbsp/user/code-->调用&nbspsendCode&nbsp方法,具体逻辑自己思考-->返回结果.
+end
+subgraph 登录
+	发送数据到&nbsp/user/login-->做好数据校验,判断好登录还是注册-->存储用户信息,返回结果.
+end
+```
+
 ### 集群的session共享问题
 
-<b>session 共享问题</b>：多台 Tomcat 并不共享 session 存储空间，当请求切换到不同 Tomcat 服务时导致数据丢失的问题。Tomcat 后面虽然提供了 session 拷贝的解决办法，但是太浪费内存空间了，数据拷贝是有延迟的。
+<b>session 共享问题</b>：多台 Tomcat 并不共享 session 存储空间，当请求切换到不同 Tomcat 服务时会出现无法找到 session 数据的问题。Tomcat 后面虽然提供了 session 拷贝的解决办法，但是太浪费内存空间了，而且数据拷贝是有延迟的。
 
-session的替代方案应该满足：
+session 的替代方案应该满足：
 
 - 数据共享
 - 内存存储
@@ -594,13 +710,82 @@ session的替代方案应该满足：
 
 ### 基于Redis实现共享session登录
 
+创建 session 时会自动创建 session id，写到用户浏览器的 cookie 中，每发一次请求就会带着 cookie（session id），这样就可以根据 session id 找到 session，从 session 中取数据。而 session id 客户端自己会维护好。使用 Redis 替代 session 的话，也需要我们自己从 Redis 中查询出是否有该用户的信息（成功登录），让客户端维护一个 Redis 的 key 用于查找数据。
+
+> 存入 Redis 的话需要思考用什么数据类型来保存，用什么作为 key。
+
+- 数据类型可以选择 String 或 Hash。对比 String，Hash 可以方便的存取/修改部分字段，此处选择 Hash。
+- key 的话需要保证唯一性，可以使用电话号码作为 key，但是这样不太好，因为前端要存储这个 key，用手机号的话不安全（如数据泄漏），建议使用一个随机字符串，且字符串的长度不要超过 44 字节。
+
 <div align="center"><img src="img/image-20220507215112295.png"></div>
-
-
 
 <div align="center"><img src="img/image-20220507215201598.png"></div>
 
+前端的 token，后端可以通过获取 authorization 来获取。
+
+```mermaid
+graph LR
+subgraph 登录
+	Redis&nbsp中获取验证码-->查询用户是否存在
+	查询用户是否存在-->|存在|用户信息转&nbspHash-->存入&nbspRedis-->key的设计:随机字符串
+	查询用户是否存在-->|不存在|返回错误信息
+end
+subgraph 发送验证
+	验证码数据存入&nbspRedis&nbsp并设置有效期-->key:LOGIN_CODE_KEY+phone
+end
+```
+
+```java
+// 用户登录 controller
+// 用户信息转 Hash，可以用 hutool 这个工具类
+// 将 UserDTO 转为 Hash 存储
+String token = UUID.randomUUID().toString(true);
+UserDTO userDTO= BeanUtil.copyProperties(user, UserDTO.class);
+// 对象转 map 时要确保值都是 string 的。
+Map<String, Object> userMap = BeanUtil.beanToMap(user, new HashMap<>(),
+                                             CopyOptions.create().
+                                             setIgnoreNullValue(true).
+                                             setFieldValueEditor((key, value) -> value.toString()));
+// Map<Sring, Object> userMap = BeanUtil.beanToMap(userDTO);
+String loginKey = "login:token:"+token; // 重构到 RedisConstants 中
+stringRedisTemplate.opsForHash().putAll(loginKey, userMap);
+// 设置时间的有效期
+stringRedisTemplate.expire(loginKey, 30,TimeUnit.MINUTES);
+return Result.ok(token);
+```
+
 注意，拦截器类是我们手动 new 出来放到 IOC 里面的，所以拦截器里注入 StringRedisTemplate 需要用构造函数手动给对象赋值。然后添加自定义的拦截器又是在 Configurate 类中做的， StringRedisTemplate 可以通过依赖注入实例化。
+
+```java
+public class LoginInterceptor implements HandlerInterceptor{
+    
+    private StringRedisTemplate stringRedisTemplate;
+    
+    public LoginInterceptor(StringRedisTemplate stringRedisTemplate){
+        this.stringRedisTemplate = stringRedisTemplate;
+    }
+    
+    public boolean preHandle(xxx){
+        // some code...
+        // map 转 对象
+        UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
+        // some code...
+    }
+}
+
+@Configuration
+public class MvcConfig implements WebMvcConfigurer{
+    
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+    
+    public void addInterceptors(InterceptorRegistry registry){
+        registry.addInterceptor(new LoginInterceptor()).excludePathPatterns(xxx);
+    }
+}
+```
+
+> 为什么选择用 Hash 存储用户数据而非 String？
 
 保存登录的用户信息，可以用 String 结构，以 JSON 字符串来保存，比较直观。
 
@@ -613,6 +798,10 @@ session的替代方案应该满足：
 
 <div align="center"><img src="img/image-20220507215602774.png"></div>
 
+> 为什么要用 ThreadLocal 暂存用户信息？
+
+<span style="color:orange">用户每次操作界面时，都需要重新计算用户 token 在 Redis 中的有效期。在拦截器中每次从 Redis 中获取用户数据，如果存在，则重新设置有效期，然后存入 ThreadLocal。后面的操作如果还要用到用户信息，就直接从 ThreadLocal 中取，无需再次请求 Redis（一个用户的请求可能涉及若干操作，而这些若干操作都是在一个线程中完成的，如果这若干操作中都需要用到用户信息，此时可以直接从 ThreadLocal 中取，无需多次访问 Redis，减小了网络开销，内存消耗也不大，用户请求结束后就会从 ThreadLocal 中移除数据）。</span>
+
 ### 总结
 
 Redis 代替 session 需要考虑的问题：
@@ -621,11 +810,54 @@ Redis 代替 session 需要考虑的问题：
 - 选择合适的 key
 - 选择合适的存储粒度
 
-登录拦截器的优化
+登录拦截器的优化，先前的拦截器拦截的只是需要做登录校验的路径，有些路径不需要检验但是也需要刷新 token，所有拦截器部分需要做一个优化。
+
+- 设置多个拦截器，一个拦截一切路径，并在该拦截器中做 token 的刷新，将用户信息存入 ThreadLocal。
+- 一个只拦截登录请求，查询 ThreadLocal 是否有用户，不存在则拦截，存在则继续。
 
 拦截器的执行顺序有个先后关系，可以通过 Order 来设置。Order 的值越小，执行计划等级越高。
 
 <div align="center"><img src="img/image-20220507215858667.png"></div>
+
+```java
+// 负责判断是否登录
+public class LoginInterceptor implements HandlerInterceptor{ 
+    public boolean preHandle(xxx){
+        // some code...
+        // map 转 对象
+        UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
+        // some code...
+    }
+}
+
+// 负责刷新 token
+public class RefreshTokenInterceptor implements HandlerInterceptor{
+    
+    private StringRedisTemplate stringRedisTemplate;
+    
+    public RefreshTokenInterceptor(StringRedisTemplate stringRedisTemplate){
+        this.stringRedisTemplate = stringRedisTemplate;
+    }
+    
+    public boolean preHandle(xxx){
+        // some code...
+        // map 转 对象
+        UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
+        // some code...
+    }
+}
+
+@Configuration
+public class MvcConfig implements WebMvcConfigurer{
+    
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+    
+    public void addInterceptors(InterceptorRegistry registry){
+        registry.addInterceptor(new RefreshTokenInterceptor(stringRedisTemplate)).excludePathPatterns(xxx).order(0); // 数字越小，越先执行。
+    }
+}
+```
 
 ## 商品查询缓存
 
@@ -638,37 +870,71 @@ Redis 代替 session 需要考虑的问题：
 
 ### 缓存
 
-<b>缓存</b>就是数据交换的缓冲区（称作 Cache [ kæʃ ] ），是存贮数据的临时地方，一般读写性能较高。
+缓存是数据交换的缓冲区（称作 Cache [ kæʃ ] ），是存贮数据的临时地方，一般读写性能较高。
 
 ```mermaid
 graph LR
 浏览器缓存-->应用层缓存-->数据库缓存-->CPU缓存
 ```
 
-- 缓存的作用：
-    - 降低后端负载
-    - 提高读写效率，降低响应时间
-- 缓存的成本
-    - 数据一致性成本
-    - 代码维护成本
-    - 运维成本
+| 缓存的作用                 | 缓存的成本     |
+| -------------------------- | -------------- |
+| 降低后端负载               | 数据一致性成本 |
+| 提高读写效率，降低响应时间 | 代码维护成本   |
+| -                          | 运维成本       |
 
 ### 添加Redis缓存
 
-<div align="center"><img src="img/image-20220507220302647.png"></div>
+<div align="center"><img src="img/image-20221107173826509.png">
+</div>
 
+> 查询商铺缓存
 
-<div align="center"><img src="img/image-20220507220326256.png"></div>
+key 设计为 `cache:shop:+id`，因为店铺的信息都是需要用到的，因此这里用 String。
 
-修改 ShopTypeController 中的 queryTypeList 方法，添加查询缓存
+```java
+@RestController
+@RequestMapping("/shop")
+public class ShopController{
+    // some code
+    @GetMapping("/{id}")
+    public Result queryShopById(@PathVariable("id") Long id) {
+        return Result.ok(shopService.getById(id));
+    }
+}
+
+@Service
+public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IShopService {
+
+    @Resource
+    public IShopService shopService;
+
+    public Result queryShopById(Long id) {
+        // 1. 从 Redis 查询商铺缓存
+        // 2. 判断是否存在
+        // 3. 存在，直接返回
+        JSONUtil.toBean(xxx,Shop.class);
+        // 4. 不存在，根据 id 查询数据库
+        // 5. 不存在，返回错误
+        // 6. 存在，写入 Redis
+        // 7. 返回
+    }
+}
+```
+
+> 修改 ShopTypeController 中的 queryTypeList 方法，添加查询缓存
+
+key 和 value 的选取，value 可以用 String，也可以用 List。
 
 <div align="center"><img src="img/image-20220507220401217.png"></div>
+
+
 
 ### 缓存更新策略
 
 |    -     | 内存淘汰                                                     | 超时剔除                                                     | 主动更新                                     |
 | :------: | ------------------------------------------------------------ | ------------------------------------------------------------ | -------------------------------------------- |
-|   说明   | 不用自己维护，利用Redis的内存淘汰机制，当内存不足时自动淘汰部分数据。下次查询时更新缓存。 | 给缓存数据添加TTL时间，到期后自动删除缓存。下次查询时更新缓存。 | 编写业务逻辑，在修改数据库的同时，更新缓存。 |
+|   说明   | 不用自己维护，利用 Redis 的内存淘汰机制，当内存不足时自动淘汰部分数据。下次查询时更新缓存。 | 给缓存数据添加 TTL 时间，到期后自动删除缓存。下次查询时更新缓存。 | 编写业务逻辑，在修改数据库的同时，更新缓存。 |
 |  一致性  | 差                                                           | 一般                                                         | 好                                           |
 | 维护成本 | 无                                                           | 低                                                           | 高                                           |
 
@@ -679,46 +945,27 @@ graph LR
 
 #### 主动更新策略
 
-- <b>Cache Aside Pattern</b>：由缓存的调用这，在更新数据库的同时更新缓存。【推荐这个】
-- <b>Read/Write Through Pattern</b>：缓存与数据库整合为一个服务，由服务来维护一致性。调用者调用该服务，无需关系缓存一致性问题。
-- <b>Write Behind Caching Pattern</b>：调用者只操作缓存，由其他线程异步的将缓存数据持久化到数据库，保证最终一致性。
+- <b>Cache Aside Pattern</b>：由缓存的调用者，在更新数据库的同时更新缓存。【推荐这个】
+- <b>Read/Write Through Pattern</b>：缓存与数据库整合为一个服务，由服务来维护一致性。调用者调用该服务，无需关心缓存一致性问题。
+- <b>Write Behind Caching Pattern</b>：调用者只操作缓存，由其他线程异步的将缓存数据持久化到数据库，保证最终一致性 (一致性很难保存，缓存宕机的话数据就永久丢失了，一致性和可靠性都不太好)。
 
-操作缓存和数据库时有三个问题需要考虑：
+> 操作缓存和数据库时有三个问题需要考虑
 
-操作缓存和数据库时有三个问题需要考虑：
+| 删除缓存还是更新缓存？                             | 如何保证缓存与数据库的操作的同时成功或失败？ | 先操作缓存还是先操作数据库？ |
+| -------------------------------------------------- | -------------------------------------------- | ---------------------------- |
+| 更新缓存：每次更新数据库都更新缓存，无效写操作较多 | 单体系统，将缓存与数据库操作放在一个事务     | 先删除缓存，再操作数据库❌    |
+| 删除缓存：更新数据库时让缓存失效，查询时再更新缓存 | 分布式系统，利用 TCC 等分布式事务方案        | 先操作数据库，再删除缓存✔️    |
 
-1.删除缓存还是更新缓存？
+> 缓存更新策略的最佳实践方案
 
-- 更新缓存：每次更新数据库都更新缓存，无效写操作较多
-- 删除缓存：更新数据库时让缓存失效，查询时再更新缓存
+1️⃣低一致性需求：使用 Redis 自带的内存淘汰机制
 
-2.如何保证缓存与数据库的操作的同时成功或失败？
+2️⃣高一致性需求：主动更新，并以超时剔除作为兜底方案
 
-- 单体系统，将缓存与数据库操作放在一个事务
-- 分布式系统，利用 TCC 等分布式事务方案
-
-3.先操作缓存还是先操作数据库？
-
-- 先删除缓存，再操作数据库
-- 先操作数据库，再删除缓存
-
-先操作数据库，再删除缓存。√
-
-先删除缓存，再操作数据库。×
-
-缓存更新策略的最佳实践方案：
-
-1.低一致性需求：使用Redis自带的内存淘汰机制
-
-2.高一致性需求：主动更新，并以超时剔除作为兜底方案
-
-- 读操作：
-    - 缓存命中则直接返回
-    - 缓存未命中则查询数据库，并写入缓存，设定超时时间
-
-- 写操作：
-    - 先写数据库，然后再删除缓存
-    - 要确保数据库与缓存操作的原子性
+| 读操作                                           | 写操作                         |
+| ------------------------------------------------ | ------------------------------ |
+| 缓存命中则直接返回                               | 先写数据库，然后再删除缓存     |
+| 缓存未命中则查询数据库，并写入缓存，设定超时时间 | 要确保数据库与缓存操作的原子性 |
 
 > 给查询商铺的缓存添加超时剔除和主动更新的策略
 
@@ -726,7 +973,9 @@ graph LR
 
 ① 根据 id 查询店铺时，如果缓存未命中，则查询数据库，将数据库结果写入缓存，并设置超时时间
 
-② 根据 id 修改店铺时，先修改数据库，再删除缓存
+② 根据 id 修改店铺时，先修改数据库，再删除缓存，这个操作需要加入事务，确保操作的一致性（update 方法上加 @Transactional）
+
+思考下，分布式系统下如何保证事务的一致性？TCC 分布式事务框架。
 
 ### 缓存穿透
 
@@ -734,15 +983,10 @@ graph LR
 
 常见的解决方案有两种：
 
-1️⃣缓存空对象
-
-- 优点：实现简单，维护方便
-- 缺点：额外的内存消耗；可能造成短期的不一致
-
-2️⃣布隆过滤
-
-- 优点：内存占用较少，没有多余 key
-- 缺点：实现复杂；存在误判可能
+| 解决方案   | 优点                             | 缺点                                       |
+| :--------- | -------------------------------- | ------------------------------------------ |
+| 缓存空对象 | 优点：实现简单，维护方便         | 缺点：额外的内存消耗；可能造成短期的不一致 |
+| 布隆过滤   | 优点：内存占用较少，没有多余 key | 缺点：实现复杂；存在误判可能               |
 
 <div align="center"><img src="img/image-20220607115533210.png"></div>
 
@@ -775,9 +1019,9 @@ graph LR
 
 4️⃣给业务添加多级缓存
 
-### 缓存穿透
+### 缓存击穿
 
-<span style="color:red">缓存击穿问题也叫热点 Key 问题，就是一个被高并发访问并且缓存重建业务较复杂的 key 突然失效了，无数的请求访问会在瞬间给数据库带来巨大的冲击。</span>
+<span style="color:red">缓存击穿问题也叫热点 Key 问题（少部分 key 失效），就是一个被高并发访问并且缓存重建业务较复杂的 key 突然失效了，无数的请求访问会在瞬间给数据库带来巨大的冲击。确保重建缓存的时候只有一个访问可以重建就行，其他访问获取旧的数据或等待缓存重建成功然后再从缓存中查询数据。</span>
 
 假定有多个线程（1，2，3，4）查询到了一个失效的缓存，线程 1 发现缓存失效了，开始走重建缓存的流程。此时缓存还未重建完毕，线程 2，3，4 也发现缓存失效了，也走了重建缓存的流程（没有必要）。
 
@@ -787,7 +1031,16 @@ graph LR
 
 <div align="center"><img src="img/image-20220607150022962.png"></div>
 
-互斥锁需要互相等待，1000 个线程来了，一个负责重建，其他的只能等待。如果重建时间长的话，系统性能会很差。可以为数据设置一个逻辑过期，解决等待的问题。
+互斥锁需要互相等待，1000 个线程来了，一个负责重建，其他的只能等待。如果重建时间长的话，系统性能会很差。可以为数据设置一个逻辑过期（就是数据永不过期，设置一个逻辑过期时间），解决等待的问题。为了避免多个线程重建缓存，此处也需要获取锁，只让一个线程可以重建缓存。
+
+```mermaid
+graph LR
+subgraph 逻辑过期
+	重建缓存-->获取互斥锁
+	获取互斥锁-->|成功|开启新线程重建缓存
+	获取互斥锁-->|失败|返回过期数据
+end
+```
 
 <div align="center"><img src="img/image-20220607150345908.png"></div>
 
@@ -798,14 +1051,14 @@ graph LR
 
 > 基于互斥锁解决缓存击穿问题
 
-需求：修改根据 id 查询商铺的业务，基于互斥锁（redis 的 setnx）方式来解决缓存击穿问题。
+需求：修改根据 id 查询商铺的业务，基于互斥锁（redis 的 setnx）方式来解决缓存击穿问题。如果只是一个单机的系统，可以直接使用语言内置的锁来解决缓存击穿。而 Redis String 类型的 setnx 可以实现这种类似的功能。setnx 只有在 key 不存在是才可以写（返回 1），key 存在的话无法写（返回 -1）。一般都会为 setnx 设置一个有效期。
 
 <div align="center"><img src="img/image-20220607151014185.png"></div>
 
 ```java
 private boolean tryLock(String key){
     Boolean flag = stringRedisTemplate.opsForValue().setIfAbsent(key,"1",10,TimeUnit.SECONDS);
-    return flag==null?false:true;
+    return flag == null?false:true;
 }
 
 private void unlock(String key){
@@ -814,6 +1067,30 @@ private void unlock(String key){
 ```
 
 获取锁成功后，应该再次检测 redis 缓存是否存在，做 doubleCheck，如果存在则无需重建缓存。
+
+```java
+public Shop queryWithMutex(Long id){
+    String key = CACHE_SHOP_KEY+id;
+    String shopJson = stringRedisTemplate.opsForValue().get(key);
+    // 判断是否存在
+    if(StrUtil.isNotBlank(shopJson)){
+        return JSONUtil.toBean(shopJson, Shop.class)
+    }
+    // 判断命中是否是空值
+    if(shopJson !=null){
+        // 返回一个错误信息
+        return null;
+    }
+    // some code
+    // 不存在，查询数据库
+    Shop shop = getById(id);
+    // 不存在，返回错误，写入空值
+    if(shop == null){
+        stringRedisTemplate.opsForValue().set(key,null);
+        return null;
+    }
+}
+```
 
 > 基于逻辑过期方式解决缓存击穿问题
 
@@ -845,7 +1122,7 @@ private void unlock(String key){
 - Redis 优化秒杀
 - Redis 消息队列实现异步秒杀
 
-### 全局唯一 ID
+### 全局唯一ID
 
 每个店铺都可以发布优惠券
 
@@ -1303,7 +1580,7 @@ Redisson 分布式锁原理：
 原理：多个独立的 Redis 节点，必须在所有节点都获取重入锁，才算获取锁成功
 缺陷：运维成本高、实现复杂
 
-## Redis 优化秒杀
+## Redis优化秒杀
 
 <div align="center"><h5>原始架构</h5></div>
 <div align="center"><img src="img/image-20220611230518024.png"></div>
