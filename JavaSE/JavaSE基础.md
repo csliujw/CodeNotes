@@ -14545,7 +14545,7 @@ public class ComparablePet implements Comparable<ComparablePet>{
 class Cat extends ComparablePet implements Comparable<Cat>{}
 ```
 
-遗憾的是，这行不通一旦为 Comparable 确定了 ComparablePet ，其他的实现类 就再也不能和 ComparablePet 之外的对象进行比较了。如果比较的动作是延迟到集合中进行的，那么可以为集合提供一个 Comparator 比较器，在比较器中定义比较规则。
+遗憾的是，这行不通一旦为 Comparable 确定了 ComparablePet，其他的实现类 就再也不能和 ComparablePet 之外的对象进行比较了。如果比较的动作是延迟到集合中进行的，那么可以为集合提供一个 Comparator 比较器，在比较器中定义比较规则。
 
 ### 特殊情况
 
@@ -14566,8 +14566,7 @@ class Test<T> {
 
 // 反编译的结果
 public class Demo {
-    public Demo() {
-    }
+    public Demo() {}
 
     public static void main(String[] args) {
         Test t = new Test();
@@ -14578,9 +14577,13 @@ public class Demo {
 
 ## 第二十一章-数组工具类
 
-就一些常见 API。
+就一些常见 API。其他的内容暂时用不到先不看，后面要用再学。
 
-## 第二十二章-枚举
+# Java进阶
+
+主要涉及枚举、注解、多线程、设计模式。
+
+## 第一章-枚举
 
 ### 枚举的优点
 
@@ -14989,7 +14992,9 @@ VERSION, getInfo=1.8.0_301
 
 我们以一个邮局的模型为例。邮局需要以尽可能通用的方式来处理每一封邮件，并且要不断尝试处理邮件，直到该邮件最终被确定为一封死信。其中的每一次尝试可以看作为一个策略（也是一个设计模式），而完整的处理方式列表就是一个职责链。
 
-## 第二十三章-注解
+## 第二章-对象传递和返回
+
+## 第三章-注解
 
 注解就是给程序添加一些信息，用字符@开头，这些信息用于修饰它后面紧挨着的其他代码元素，比如类、接口、字段、方法、方法中的参数、构造方法等。注解可以被编译器、程序运行时和其他工具使用，<b style="color:green">用于增强或修改程序行为，减轻编写 “样板” 代码的负担。</b>
 
@@ -15438,7 +15443,7 @@ public class TableCreator {
 }
 ```
 
-## 第二十四章-并发编程
+## 第四章-多线程入门
 
 进程与线程的概念，看下操作系统课本。
 
@@ -16312,7 +16317,11 @@ public class WorkStealingPool {
 - 使用本地变量和不可变类来保证线程安全。
 - 使用线程池而不是直接创建线程，这是因为创建线程代价很高，线程池可以有效地利用有限的线程来启动任务。
 
-## 第二十五章-设计模式
+## 第五章-并发编程
+
+## 第六章-底层并发
+
+## 第八章-设计模式
 
 设计模式：解决特定类问题的一种方法。<span style="color:red">将易变的事物与不变的事物分开。</span>设计模式的目标是隔离代码中的更改。例如：迭代器允许你编写通用代码，该代码对序列中的所有元素执行操作，而不考虑序列的构建方式。
 
@@ -16367,7 +16376,7 @@ public class Singleton {
 
 重用现有类中的大部分代码，并根据需要覆盖一个或多个方法来定制应用程序。
 
-## 第二十六章-网络编程
+## 其他-网络编程
 
 ### 网络编程入门
 
@@ -16763,7 +16772,7 @@ public class BSDemo3 {
 
 [netty的基本介绍 - KyleInJava - 博客园 (cnblogs.com)](https://www.cnblogs.com/kyleinjava/articles/10396859.html)
 
-## 第二十七章-JDBC
+## 其他-JDBC
 
 ### 使用C3P0
 
