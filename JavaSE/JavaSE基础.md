@@ -5579,7 +5579,7 @@ interface IntCall1 {
 
 Java8 方法引用指向的是方法。其语法是，类名或对象名，后面跟 `::`，然后跟方法名称。如：`Math::abs`
 
-方法引用的赋值，要求函数的签名（参数类型和返回类型）相符合。 可以将一个方法的行为赋给另一个方法。让两个方法可以完成相同的功能。
+方法引用的赋值，要求函数的签名（参数类型和返回类型）相符合。可以将一个方法的行为赋给另一个方法。让两个方法可以完成相同的功能。
 
 ```java
 public class MethodReferences {
@@ -6034,18 +6034,13 @@ class IBaz {
 
 class LBaz {
     long l;
-
-    LBaz(long l) {
-        this.l = l;
-    }
+    LBaz(long l) { this.l = l; }
 }
 
 class DBaz {
     double d;
 
-    DBaz(double d) {
-        this.d = d;
-    }
+    DBaz(double d) { this.d = d; }
 }
 
 public class FunctionVariants {
@@ -6616,7 +6611,7 @@ public class AnonymousClosure {
 
 可以看到 x 和 i 都被 JVM 优化为了 final 变量。`（IDEA 反编译的结果不一定准确,只可作为参考,想知道编译器到底如何处理的请看字节码！）`
 
-### 函数组合 ★
+### 函数组合★
 
 多个函数组合成新函数。
 
@@ -7718,7 +7713,7 @@ public class ForEach {
 #### 集合
 
 - collect(Collector)：使用 Collector 收集流元素到结果集合中。
-- collect(Supplier, BiConsumer, BiConsumer)：同上，第一个参数 Supplier 创建了一个新的结果集合，第二个参数 BiConsumer 将下一个元素收集到结果集合中，第三个参数BiConsumer 用于将两个结果集合合并起来。
+- collect(Supplier, BiConsumer, BiConsumer)：同上，第一个参数 Supplier 创建了一个新的结果集合，第二个参数 BiConsumer 将下一个元素收集到结果集合中，第三个参数 BiConsumer 用于将两个结果集合合并起来。这个方法不理解。
 
 ```java
 import java.util.ArrayList;
@@ -9138,7 +9133,7 @@ try {
 */
 ```
 
-#### Java 7 的 try-catch
+#### Java7 的 try-catch
 
 写法更加便捷
 
@@ -9172,7 +9167,7 @@ Java 异常体系不可能预见你将报告的所有错误， 所以有时候�
 
 > 自定义异常案例
 
-对异常来说，最重要的就是类名，程序抛出异常的时候，根据异常的类名知道是什么错误就足够了。<b style="color:orange">我们也不需要为异常提供有参构造器，切记！对异常最重要的部分是类名！</b>
+<b style="color:orange">对异常来说，最重要的就是类名，程序抛出异常的时候，根据异常的类名知道是什么错误就足够了。我们也不需要为异常提供有参构造器，切记！对异常最重要的部分是类名！</b>
 
 ```java
 public class SimpleException extends Exception {}
@@ -9387,7 +9382,7 @@ try{
 
 重新抛出异常会把异常抛给上一级环境中的异常处理程序，同一个 try 块的后续 catch 子句将被忽略。并且，异常对象的所有信息都会被保存，所以高一级环境中捕获此异常的处理程序可以从这个异常对象中得到所有信息。
 
-如果只是把当前异常对象重新抛出，那么 `printStackTrace()` 方法显示的将是原来异常抛出点的调用栈信息，而并非重新抛出点的信息。要想更新这个信息，可以调用 `fillInStackTrace()` 方法，这将返回一个 `Throwable` 对象，它是通过把当前调用栈信息填 入原来那个异常对象而建立的。
+如果只是把当前异常对象重新抛出，那么 `printStackTrace()` 方法显示的将是原来异常抛出点的调用栈信息，而并非重新抛出点的信息。要想更新这个信息，可以调用 `fillInStackTrace()` 方法，这将返回一个 `Throwable` 对象，它是通过把当前调用栈信息填入原来那个异常对象而建立的。
 
 ```java
 try{
@@ -14241,6 +14236,8 @@ public class WithColorCoord{
 
 ### 通配符
 
+#### extends
+
 先看一个数组的例子，这个例子展示了数组的一种特殊行为，可以将子类类型的数组赋值给父类类型数组的引用,
 
 ```java
@@ -14291,12 +14288,69 @@ public class NoCovariantGenerics {
 
 如果我们想在两个类型之间建立某种向上转型的关系，需要使用通配符。
 
+```java
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class GenericsAndCovariance {
+    static class Fruit {}
+    static class Apple extends Fruit {}
+    static class Orange extends Fruit {}
+
+    public static void main(String[] args) {
+        // 通配符提供了协变的能力。
+        List<? extends Fruit> list = new ArrayList<>();
+        // 协变能力的体现
+        list = new ArrayList<>(Arrays.asList(new Orange(), new Orange(), new Orange()));
+        // 无法向里面添加数据
+        // list.add(new Orange());
+        // 合法，但是没有什么意义
+        // list.add(null);
+        // 我们知道都是 Fruit 的子类，所以转型成 Fruit 是安全的
+        Fruit fruit = list.get(0);
+    }
+}
+```
+
+Fruit 的类型现在变成了 List,你可以将其理解为“某种由继承自 Fruit 的任意类型组成的 list”。但是这并不意味着 list 真的会持有任何 Fruit 类型。通配符引用指向了某个确定的类型，因此真正的意义是“某种 Fruit 引用未指定的具体类型”因此被赋值的 list 必须持有某种具体的类型，例如 Orange 或 Apple，但是为了向上转型为 Fruit，该类型是什么并没有人关心。
+
+list 中持有的可能是 `ArrayList<Orange>` 或是 `ArrayList<Apple>`，你向其中添加一个与他不一样的类型是不允许的，因此只能拿，不能添加。
+
+`list.contains(new Apple());` contains 方法没有使用泛型通配符而是用的 Object，因此允许调用。如果使用的是泛型通配符类型，那么编译器不会允许该调用。
+
+#### super
+
+逆变性，即利用超类通配符。可以认为是为通配符增加了边界限制，边界范围是某个类的任何父类。指明了该集合中的元素都是 XX 的父类，因此你可以传入指定类型的子类类型。（子类向上转型为父类是不会出现问题的）
+
+```java
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class SuperTypeWildcards {
+    static class Fruit {}
+    static class Apple extends Fruit {}
+    static class FSKApple extends Apple {}
+
+    public static void main(String[] args) {
+        List<? super Apple> apples = new ArrayList<>(Arrays.asList(new Apple(), new Fruit()));
+        list.add(new FSKApple()); // 允许放入数据
+        System.out.println(list.get(1).getClass());
+    }
+}
+```
+
+参数 apples 是由某种 Apple 的基类组成的 List，因此可以安全地向其中添加  Apple 类型或其子类 不过其下界(lower bound )是 Apple。所以我们并不知道是否可以安全地向这样一个 List 中添加 Fruit。因为这会使得 List 对其他非 Apple 的类型也散开怀抱，而这违反了静态类型的安全性。
+
+#### 小结
+
 - <span style="color:red">`<?>` 指定了没有限制的泛型类型，只能读不能写。</span>
 - `<? extends Parent>`  指定了泛型类型的上界。集合里面所有的类都要是他的子类；泛型擦除时会擦除到 Paraent 这个类型边界。
     - 可以向里面添加数据吗？不可以！因为这里只指定了集合里面的所有类都是他的子类，但是不知道具体是那个类型的子类，添加后可能会导致不安全的转型操作，所以不能添加。
     - 可以向拿数据出来吗？可以！拿出来的数据都可以安全的转型为 Parent 类。
 
-- `<? super Child>`  指定了泛型类型的下界，集合里面所有的类都是 Child 的父类
+- `<? super Child>` 指定了泛型类型的下界，集合里面所有的类都是 Child 的父类
     - 可以向里面添加数据吗？可以，可以添加 Child 的子类（加的小粒度数据，不会出现问题），它可以安全的转型为集合中限定的下界 Child。
     - 不能往外面拿，拿到的数据，只能转型为 Object，因为集合中的数据是 Child 的父类类型，无法确定到底是那个父类类型
 
@@ -14410,57 +14464,88 @@ public class NoCovariantGenerics {
 
 通配符和类型参数往往配合使用
 
-### 泛型上界和下界
+### 问题
 
-<b>泛型中上界和下界的定义</b>
+#### 基本类型不可作为类型参数
 
-上界 `<? extends Fruit>`
-
-下界 `<? super Fruit>`
-
-<b>上界和下界的特点</b>
-
-上界的 list 只能 get，不能 add（确切地说不能 add 出除 null 之外的对象，包括 Object ）
-
-下界的 list 只能 add，不能 get
-
-> Thinking In Java 中的代码示例：
+Java 泛型的限制之一就是无法在泛型中使用基本类型，即我们无法创建如 `ArrayList<int>` 这样的类型。解决的办法是使用基本类型的包装类，并结合自动装箱机制。
 
 ```java
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-class Fruit {}
-class Apple extends Fruit {}
-class Jonathan extends Apple {}
-class Orange extends Fruit {}
-public class CovariantArrays {
-
-  public static void main(String[] args) {
-    //上界
-    List flistTop = new ArrayList();
-    flistTop.add(null);
-    //add Fruit对象会报错
-    //flist.add(new Fruit());
-    Fruit fruit1 = flistTop.get(0);
-
-    //下界
-    List flistBottem = new ArrayList();
-    flistBottem.add(new Apple());
-    flistBottem.add(new Jonathan());
-    //get Apple对象会报错
-    //Apple apple = flistBottem.get(0);
-  }
+public class ListOfInt {
+    public static void main(String[] args) {
+        List<Integer> collect = IntStream.range(0, 10).boxed().collect(Collectors.toList());
+        System.out.println(collect.size()); // 10
+    }
 }
 ```
 
-**这些特点的原因**
+#### 泛型接口的问题
 
-上界 ，表示所有继承 Fruit 的子类，但是具体是哪个子类，无法确定，所以调用 add 的时候，要 add 什么类型，谁也不知道。但是 get 的时候，不管是什么子类，不管追溯多少辈，肯定有个父类是 Fruit，所以，我都可以用最大的父类 Fruit 接着，也就是把所有的子类向上转型为 Fruit。
+一个类无法实现同一个泛型接口的两种变体：由于类型擦除的缘故，这两个变体其实是相同的接口。
 
-下界 ，表示 Apple 的所有父类，包括 Fruit，一直可以追溯到老祖宗 Object 。那么当我 add 的时候，我不能 add Apple 的父类，因为不能确定 List 里面存放的到底是哪个父类。但是我可以 add Apple 及其子类。因为不管我的子类是什么类型，它都可以向上转型为 Apple 及其所有的父类甚至转型为 Object 。但是当我 get 的时候，Apple 的父类这么多，我用什么接着呢，除了 Object，其他的都接不住。
+```java
+interface Payable<T>{};
 
-所以，归根结底可以用一句话表示，那就是编译器可以支持向上转型，但不支持向下转型。具体来讲，我可以把 Apple 对象赋值给 Fruit 的引用，但是如果把 Fruit 对象赋值给 Apple 的引用就必须得用 cast
+// 报错，Duplicate class
+public class Hourly implements Payable<String>,Payable<Integer>{}
+```
+
+该问题会在用到某些更底层的 Java 接口，如 Comparable\<T\> 时带来困扰。
+
+#### 类型转换和警告
+
+对类型参数使用类型转换或 instanceof 是没有任何效果的，因为集合内部存储的元素为 Object，只是读取的时候给你转回 T。由于类型擦除的缘故，编译器无法知道类型转换是否是安全的，会给出警告。
+
+```java
+public class CalssCasting{
+    public void f(String[] args){
+        ObjectInputStream in = new ObjectInputStream(new FileInputStream(args[0]));
+        // 无法通过编译
+        // List<Widget> lwl = List<>.class.cast(in.readObject());
+        List<Widget> lwl = List.class.cast(in.readObject()); // OK
+    }
+}
+```
+
+然而，我们还是无法转型为实际的类型（List\<Widget\>）。也就是说，无法这么做：List\<Widget\>.class.cast(in.readObject()) 而且即使你像这样再增加一层转型：(List\<Widget\>)List.class.cast(in.readobject()) 也还是会产生警告。
+
+#### 重载的问题
+
+下面的代码无法通过编译。因为泛型擦除，重载该方法会产生相同类型的签名。
+
+```java
+import java.util.List;
+
+public class UseList <W,T>{
+    void f(List<W> v){}
+    void f(List<T> v){}
+}
+```
+
+#### 基类会劫持结构
+
+假设我们有一个 Pet（宠物）类，并且通过实现 Comparable 接口，实现了和其他 Pet 对象进行比较的能力
+
+```java
+public class ComparablePet implements Comparable<ComparablePet>{
+    @Override
+    public int compareTo(ComparablePet o) {
+        return 0;
+    }
+}
+```
+
+我们试图将比较类型的范围缩小到 ComparablePet 的子类中，举例来说 Cat（猫）应该只能和其他类型的 Cat 逬行比较
+
+```java
+class Cat extends ComparablePet implements Comparable<Cat>{}
+```
+
+遗憾的是，这行不通一旦为 Comparable 确定了 ComparablePet ，其他的实现类 就再也不能和 ComparablePet 之外的对象进行比较了。如果比较的动作是延迟到集合中进行的，那么可以为集合提供一个 Comparator 比较器，在比较器中定义比较规则。
 
 ### 特殊情况
 
@@ -16198,6 +16283,24 @@ pool-1-thread-1捡到了AWM
 pool-1-thread-2捡到了AK47
 */
 ```
+
+#### 线程池
+
+只讨论工作窃取线程池。
+
+```java
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class WorkStealingPool {
+    public static void main(String[] args) {
+        // 工作窃取线程池
+        ExecutorService threadPool = Executors.newWorkStealingPool();
+    }
+}
+```
+
+工作窃取算法使得已完成自身输入队列中所有工作项的线程可以“窃取”其他队列中的工作项。在执行密集计算型任务时，可以跨处理器分发工作项，最大化所有可用处理器的利用率，Java 的 fork/join 框架中同样用到了该算法。
 
 ### 最佳实践
 
