@@ -256,7 +256,7 @@ Redis 没有类似 MySQL 中的 Table 的概念，我们该如何区分不同类
 | user:1    | {"id":1, "name": "Jack", "age": 21}       |
 | product:1 | {"id":1, "name": "小米11", "price": 4999} |
 
-`Redis 的 key 的格式=\=\>[项目名]:[业务名]:[类型]:[id]`
+`Redis 的 key 的格式==>[项目名]:[业务名]:[类型]:[id]`
 
 ## Java客户端
 
@@ -1027,7 +1027,7 @@ key 和 value 的选取，value 可以用 String，也可以用 List。
 
 <div align="center"><img src="img/image-20220607145640360.png"></div>
 
-常见的解决方案有：互斥锁和逻辑过期。利用互斥锁，让其中一个线程重建缓存即可了。
+<span style="color:orange">常见的解决方案有：互斥锁和逻辑过期。利用互斥锁，让其中一个线程重建缓存即了。</span>
 
 <div align="center"><img src="img/image-20220607150022962.png"></div>
 
@@ -1049,15 +1049,19 @@ end
 | <b>互斥锁</b>   | 没有额外的内存消耗<br>保证一致性<br>实现简单 | 线程需要等待，性能受影响<br>可能有死锁风险   |
 | <b>逻辑过期</b> | 线程无需等待，性能较好                       | 不保证一致性<br>有额外的内存消耗<br>实现复杂 |
 
-> 基于互斥锁解决缓存击穿问题
+> <b>基于互斥锁解决缓存击穿问题</b>
 
-需求：修改根据 id 查询商铺的业务，基于互斥锁（redis 的 setnx）方式来解决缓存击穿问题。如果只是一个单机的系统，可以直接使用语言内置的锁来解决缓存击穿。而 Redis String 类型的 setnx 可以实现这种类似的功能。setnx 只有在 key 不存在是才可以写（返回 1），key 存在的话无法写（返回 -1）。一般都会为 setnx 设置一个有效期。
+需求：修改根据 id 查询商铺的业务，基于互斥锁（redis 的 setnx）方式来解决缓存击穿问题。如果只是一个单机的系统，可以直接使用语言内置的锁来解决缓存击穿。而 Redis String 类型的 setnx 可以实现这种类似的功能。<span style="color:orange">setnx 只有在 key 不存在是才可以写（返回 1），key 存在的话无法写（返回 -1）。一般都会为 setnx 设置一个有效期。</span>
 
 <div align="center"><img src="img/image-20220607151014185.png"></div>
 
 ```java
 private boolean tryLock(String key){
-    Boolean flag = stringRedisTemplate.opsForValue().setIfAbsent(key,"1",10,TimeUnit.SECONDS);
+    Boolean flag = stringRedisTemplate
+                        .opsForValue()
+        				// 设置有效期避免死锁。如果重建失败，其他线程拿到锁发现没有重建
+        				// 成功会继续重建缓存
+                        .setIfAbsent(key,"1",10,TimeUnit.SECONDS);
     return flag == null?false:true;
 }
 
@@ -1092,11 +1096,24 @@ public Shop queryWithMutex(Long id){
 }
 ```
 
-> 基于逻辑过期方式解决缓存击穿问题
+使用 JMeter 进行高并发压力测试。
 
-需求：修改根据 id 查询商铺的业务，基于互斥锁方式来解决缓存击穿问题。
+> <b>基于逻辑过期方式解决缓存击穿问题</b>
+
+需求：修改根据 id 查询商铺的业务，基于逻辑过期方式来解决缓存击穿问题。
 
 <div align="center"><img src="img/image-20220607151228929.png"></div>
+
+原先的 POJO 对象（Shop）没有逻辑过期这个字段，但是我们又不能破坏 Shop 类的结构，此时我们可以创建一个 ShopDTO，专门用来数据传输的，在这个类里加上逻辑过期字段。还有一种更通用的方式，定义一个 RedisData，存储传输的对象和逻辑过期时间。
+
+```java
+public class RedisData{
+    private LocalDateTime expireTime;
+    private Object data;
+}
+```
+
+
 
 ### 缓存工具封装
 
@@ -1126,12 +1143,12 @@ public Shop queryWithMutex(Long id){
 
 每个店铺都可以发布优惠券
 
-当用户抢购时，就会生成订单并保存到 tb_voucher_order 这张表中，而订单表如果使用数据库自增ID就存在一些问题：
+当用户抢购时，就会生成订单并保存到 tb_voucher_order 这张表中，而订单表如果使用数据库自增 ID 就存在一些问题：
 
 - id 的规律性太明显
 - 受单表数据量的限制
 
-全局 ID 生成器，是一种在分布式系统下用来生成全局唯一ID的工具，一般要满足下列特性：唯一性、高可用、高性能、递增性、安全性
+全局 ID 生成器，是一种在分布式系统下用来生成全局唯一 ID 的工具，一般要满足下列特性：唯一性、高可用、高性能、递增性、安全性
 
 为了增加 ID 的安全性，我们不直接使用 Redis 自增的数值，而是拼接一些其它信息
 
@@ -1187,8 +1204,8 @@ public long nextId(String keyPrefix){
 
 每个店铺都可以发布优惠券，分为平价券和特价券。平价券可以任意购买，而特价券需要秒杀抢购：
 
-tb_voucher：优惠券的基本信息，优惠金额、使用规则等
-tb_seckill_voucher：优惠券的库存、开始抢购时间，结束抢购时间。特价优惠券才需要填写这些信息
+tb_voucher：优惠券的基本信息，优惠金额、使用规则等。
+tb_seckill_voucher：优惠券的库存、开始抢购时间，结束抢购时间。特价优惠券才需要填写这些信息。
 
 下单时需要判断两点：
 
