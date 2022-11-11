@@ -868,7 +868,7 @@ public class MvcConfig implements WebMvcConfigurer{
 - 缓存击穿
 - 缓存工具封装
 
-### 缓存
+### 缓存介绍
 
 缓存是数据交换的缓冲区（称作 Cache [ kæʃ ] ），是存贮数据的临时地方，一般读写性能较高。
 
@@ -1013,7 +1013,7 @@ key 和 value 的选取，value 可以用 String，也可以用 List。
 
 1️⃣给不同的 Key 的 TTL 添加随机值，比如原先设置的 20，那么我们再加一个随机的 1~10 的值
 
-2️⃣利用 Redis 集群提高服务的可用性（很严重），尽可能的避免宕机。宕机的话，可以用 redis 的哨兵机制，监控服务。搭建 Redis 服务形成主从，如果有机器 宕机（如主宕机了，会随机从一个从机器里选一个替代主）
+2️⃣利用 Redis 集群提高服务的可用性（很严重），尽可能的避免宕机。宕机的话，可以用 redis 的哨兵机制，监控服务。搭建 Redis 服务形成主从，如果有机器宕机（如主宕机了，会随机从一个从机器里选一个替代主）
 
 3️⃣给缓存业务添加降级限流策略
 
@@ -1113,21 +1113,117 @@ public class RedisData{
 }
 ```
 
-
-
 ### 缓存工具封装
 
 <b>基于 StringRedisTemplate 封装一个缓存工具类，满足下列需求：</b>
 
-方法 1：将任意 Java 对象序列化为 json 并存储在 string 类型的 key 中，并且可以设置 TTL 过期时间
+1️⃣将任意 Java 对象序列化为 json 并存储在 string 类型的 key 中，并且可以设置 TTL 过期时间（针对普通 key 的）
 
-方法 2：将任意 Java 对象序列化为 json 并存储在 string 类型的 key 中，并且可以设置逻辑过期时间，用于处理缓存击穿问题
+2️⃣根据指定的 key 查询缓存，并反序列化为指定类型，利用缓存空值的方式解决缓存穿透问题（针对普通 key 的）
 
-方法 3：根据指定的 key 查询缓存，并反序列化为指定类型，利用缓存空值的方式解决缓存穿透问题
+3️⃣将任意 Java 对象序列化为 json 并存储在 string 类型的 key 中，并且可以设置逻辑过期时间，<span style="color:orange">用于处理缓存击穿问题</span>（针对热点 key 的）
 
-方法 4：根据指定的 key 查询缓存，并反序列化为指定类型，需要利用逻辑过期解决缓存击穿问题
+4️⃣根据指定的 key 查询缓存，并反序列化为指定类型，<span style="color:orange">需要利用逻辑过期解决缓存击穿问题</span>（针对热点 key 的）
 
 在更新缓存的时候，不知道数据库查询的具体操作，采用 lambda 由用户传入具体的操作。
+
+```java
+@Slf4j
+@Component
+/*
+// 缓存雪崩,设置过期时间时加上一个随机数，避免大量 key 同时过期
+// 缓存穿透,查询的数据 Redis 和数据库中都没有，可以通过缓存 null 值来解决。（占用内存，数据不一致）
+// 缓存击穿，热点 key 失效。大量用户查询数据，导致大量用户尝试重建缓存，可以采用互斥锁的方式重建缓存；也可以采用逻辑过期的方式。
+*/
+public class CacheClient{
+    private final StringRedisTemplate stringRedisTemplate;
+    
+    public CacheClient(StringRedisTemplate stringRedisTemplate){
+        this.stringRedisTemplate = stringRedisTemplate;
+    }
+    
+    public void set(String key, Object value, Long time, TimeUnit unit){
+        // cn.hutool.json 工具类中的方法 toJsoonStr
+        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(value), time, unit);
+    }
+   
+    // 设置逻辑过期时间
+		public void setWithLogicalExpore(String key, Object value, Long time, TimeUnit unit){
+        // cn.hutool.json 工具类中的方法 toJsoonStr
+        RedisData redisData = new RedisData(value, LocalDateTime.now().plusSeonds(unit.toSeconds(time)));
+					stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(redisData));
+    }
+    
+    // 缓存穿透，通过缓存空值来解决。需要自己判断那些数据会发生缓存穿透问题，然后查询数据的时候使用该方法。（比如，常见的存入 redis 的数据都可以使用这个来进行查询）
+    public <R, ID> R queryWithPassThrough(String keyPrefix, ID id, Class<R> type, Function<ID,R> dbFallback, Long Time, TimeUnit unit){
+        String key = keyPrefix + id;
+        // 1. 查询缓存
+        String json = stringRedisTemplate.opsForValue().get(key);
+        // 2. 判断是否存在，存在直接返回
+        if(StrUtil.isNotBlank(json)){
+            // 3.数据不为空，说明存在，直接返回
+            return JSONUtil.toBean(json, type);
+        }
+        // 4. 如果命中的是空值''，说明发生了缓存穿透，直接返回错误信息（如果发现数据库中没有会向 redis 中存入一个空值）
+        if(json != null){
+            return null;
+        }
+        // 5. 如果数据还未缓存到 Redis， 则查询数据库。
+        R r = dbFallback.apply(id);
+        
+        // 6. 不存在，发生错误，并向 Redis 中写入空值
+        if( r == null){
+            stringRedisTemplate.opsForValue().set(key, "", CACHE_NULL_TTL, TimeUnit.MINUTES);
+            return null;
+        }
+        // 7.存在，写入数据库
+        this.set(key, r, time, unit);
+        return r;
+    }
+    
+    // 使用逻辑时间过期解决缓存击穿问题。对于根据业务预判成功热点数据，可以统一采用该方法进行数据的查询。
+    public <ID,R> R queryWithLogicalExpire(String keyPrefix, ID id, Class<R> type, Function<ID, R> dbFallBack, Long time, TimeUnit unit){
+        String key = keyPrefix + id;
+        String json = stringRedisTemplate.opsForValue().get(key);
+        // 2. 判断是否存在，存在直接返回，不存在
+        if(StrUtil.isBlank(json)){
+            // 3.存在，直接返回
+            return null;
+        }
+        // 4.命中，把 json 反序列化伟对象
+        RedisData redisData = JSONUtil.toBean(json, RedisData.class);
+        R r = JSONUtil.toBean((JSONObject) redisData.getData(), type);
+        LocalDateTime expireTime = redisData.getExpireTime();
+        // 5. 判断是否逻辑过期
+        if(expireTime.isAfter(LocalDateTime.now())){
+            // 未过期
+            return r;
+        }
+        // 过期，缓存重建
+        // 6. 获取互斥锁
+        String lockKey = LOCK_SHOP_KEY + id;
+        boolean getLock = tryLock(lockKey);
+        if(getLock){
+            // 成功拿到锁则开启线程重建缓存,这个缓存重建是异步的，所以返回的是 r 而非 r1.
+            CACHE_REBUILD_EXECUTOR.submit(()->{
+                try{
+                    // 查询数据
+                    R r1 = dbFallBack.apply(id);
+                    // 写入 redis
+                    this.setWithLogicalExpore(key, r1, time, unit);
+                }cache(Exception e){
+                    throw new RuntimeException(e);
+                }finally{
+                    unlock(lockKey);
+                }
+            });
+        }
+        return r;
+    }
+}
+```
+
+
 
 ## 优惠券秒杀
 
@@ -1141,22 +1237,32 @@ public class RedisData{
 
 ### 全局唯一ID
 
+#### 问题
+
 每个店铺都可以发布优惠券
 
 当用户抢购时，就会生成订单并保存到 tb_voucher_order 这张表中，而订单表如果使用数据库自增 ID 就存在一些问题：
 
-- id 的规律性太明显
-- 受单表数据量的限制
+- id 的规律性太明显，被发现规律后可能会受到脚本的攻击。
+- 受单表数据量的限制。后期表数据可能过大，单张表无法保持，需要多张表。如果多张表采用自增 id 的话，会出现同一个 id 存在于多个表中。无法保证 id 的唯一性。
 
-全局 ID 生成器，是一种在分布式系统下用来生成全局唯一 ID 的工具，一般要满足下列特性：唯一性、高可用、高性能、递增性、安全性
+#### 全局 ID 生成器
+
+全局 ID 生成器，是一种在分布式系统下用来生成全局唯一 ID 的工具，一般要满足下列特性：
+
+- 唯一性，比如订单编号需要唯一。
+- 高可用，要确保在任何时候使用它时都能生成正确的 ID。
+- 高性能，在高并发情况下要能够快速生成大量 ID
+- 递增性，因为是要用它替代主键，所以要尽量确保递增，加快数据的插入和索引的更新（避免页分裂）
+- 安全性
 
 为了增加 ID 的安全性，我们不直接使用 Redis 自增的数值，而是拼接一些其它信息
 
 ```mermaid
 graph
-符号位-1bit
-时间戳-31bit
-序列化-32bit
+符号位&nbsp1bit
+时间戳&nbsp31bit
+序列化&nbsp32bit
 ```
 
 ID 的组成部分
@@ -1165,10 +1271,10 @@ ID 的组成部分
 - 时间戳：31bit，以秒为单位，可以使用 69 年
 - 序列号：32bit，秒内的计数器，支持每秒产生 $2^{32}$ 个不同 ID `A << COUNT_BIT | count`
 
-> 全局唯一 ID 生成策略
+#### 全局唯一 ID 生成策略
 
-- UUID
-- Redis 自增
+- UUID，ID 不自增，数据插入会导致页分裂。
+- Redis 自增，redis 自增+拼接一些其他的数据，让数据没那么有规律。
 - snowflake 算法
 - 数据库自增
 
@@ -1180,23 +1286,25 @@ ID 的组成部分
 > 案例：生成全局唯一 ID
 
 ```java
-private static final int COUNT_BIT = 32;
-public long nextId(String keyPrefix){
-    // 1.生成时间戳
-    LocalDateTime now = LocalDateTime.now();
-    long nowSecond = new.toEpochSecond(ZoneOffset.UTC);
-    long timestamp = nowSecond - BEGIN_TIMESTAMP;
-    
-    // 2.生成序列号
-    // 2.1 获取当前日期，精确到天
-    String date = now.format(DateTimeFormatter.ofPattern("yyy:MM:dd"));
-    // 2.2 自增长（不会存在空指针的，如果key不存在会自动给你重建一个，然后+1返回1给你）
-    Long count = stringRedisTemplate.opsForValue().increment("icr:"+keyPrefix+":"+date);
-    
-    // 拼接返回
-   	// 符号位 时间戳 序列化
-    // 用位运算。
-    return (timestamp<<COUNT_BIT)|count
+public class RedisIdWorker{
+    private static final int COUNT_BIT = 32;
+    public long nextId(String keyPrefix){
+        // 1.生成时间戳
+        LocalDateTime now = LocalDateTime.now();
+        long nowSecond = new.toEpochSecond(ZoneOffset.UTC);
+        long timestamp = nowSecond - BEGIN_TIMESTAMP;
+
+        // 2.生成序列号
+        // 2.1 获取当前日期，精确到天
+        String date = now.format(DateTimeFormatter.ofPattern("yyy:MM:dd"));
+        // 2.2 自增长（不会存在空指针的，如果key不存在会自动给你重建一个，然后+1返回1给你）
+        Long count = stringRedisTemplate.opsForValue().increment("icr:"+keyPrefix+":"+date);
+
+        // 拼接返回
+         // 符号位 时间戳 序列化
+        // 用位运算。timestamp 左移 32 位，然后在 | 上自增的位。count 的自增可以保证 id 的唯一性。
+        return (timestamp<<COUNT_BIT)|count
+    }
 }
 ```
 
@@ -1207,6 +1315,17 @@ public long nextId(String keyPrefix){
 tb_voucher：优惠券的基本信息，优惠金额、使用规则等。
 tb_seckill_voucher：优惠券的库存、开始抢购时间，结束抢购时间。特价优惠券才需要填写这些信息。
 
+VoucherController 中提供了一个接口用于添加秒杀优惠券：`VoucherController#addSeckillVoucher`
+
+> 秒杀下单的接口
+
+| -        | 说明                        |
+| -------- | --------------------------- |
+| 请求方式 | POST                        |
+| 请求路径 | /voucher-order/seckill/{id} |
+| 请求参数 | id,优惠券 id                |
+| 返回值   | 订单 id                     |
+
 下单时需要判断两点：
 
 - 秒杀是否开始或结束，如果尚未开始或已经结束则无法下单
@@ -1214,48 +1333,69 @@ tb_seckill_voucher：优惠券的库存、开始抢购时间，结束抢购时�
 
 <div align="center"><img src="img/image-20220607153644701.png"></div>
 
+注意：涉及到两张表的操作，因此需要加上事务。
+
 ### 超卖问题
+
+#### 问题
 
 超卖问题是典型的多线程安全问题，针对这一问题的常见解决方案就是加锁。
 
-认为线程安全问题一定会发生，因此在操作数据之前先获取锁，确保线程串行执行。例如 Synchronized、Lock 都属于悲观锁
+| 类型   | 说明                                                         |
+| ------ | ------------------------------------------------------------ |
+| 乐观锁 | 认为线程安全问题不一定会发生，因此不加锁，只是在更新数据时去判断有没有其它线程对数据做了修改。如果没有修改则认为是安全的，<br>自己才更新数据。如果已经被其它线程修改说明发生了安全问题，此时可以重试或异常。 |
+| 悲观锁 | 认为线程安全问题一定会发生，因此在操作数据之前先获取锁，确保线程串行执行。例如 Synchronized、Lock 都属于悲观锁 |
 
-认为线程安全问题不一定会发生，因此不加锁，只是在更新数据时去判断有没有其它线程对数据做了修改。如果没有修改则认为是安全的，自己才更新数据。如果已经被其它线程修改说明发生了安全问题，此时可以重试或异常。
+#### 乐观锁
 
-> 乐观锁
+乐观锁的关键是判断之前查询得到的数据是否有被修改过，常见的方式有两种：<b style="color:orange">版本号法和 CAS。</b>
 
-乐观锁的关键是判断之前查询得到的数据是否有被修改过，常见的方式有两种，版本号法和 CAS。
+- 版本号法，加一个版本字段，先查下数据的库存和版本，修改时判断版本是否一致，不一致说明被改过，重新查询库存，修改库存。可以直接用库存作为版本号。直接判断版本号是否一致的话，商品卖出的成功率太低。
+- CAS 是在版本号的基础上做了一些简化，版本号法是用版本标明数据有没有变化（需要维护版本），其实库存和版本做的事都是一样的，在查询的时候查出来，更新的时候判断下查询时的库存和更新时的库存是不是一样的即可。
+- 还有一种更简便的方法，更新的时候判断下库存是否大于 0，大于 0 就可以减库存了。这样也不会有太多的失败操作和事务回滚。
+- 有时候只能通过数据是否变化来判断是否可以卖出，这种时候为了提高并发度可以采用分段锁的思想。将数据分为多个段，让多个线程可以并发处理。
 
-版本号法，加一个版本字段，先查下数据的库存和版本，修改时判断版本是否一致，不一致说明被改过，重新查询库存，修改库存。可以直接用库存作为版本号。直接判断版本号是否一致的话，商品卖出的成功率太低，直接判断库存是否大于零更合适。
+#### 悲观锁
 
-有时候只能通过数据是否变化来判断是否可以卖出，这种时候为了提高并发度可以采用分段锁的思想。将数据分为多个段，让多个线程可以并发处理。
-
-> 悲观锁
-
-加重量级锁
-
-如果觉得并发粒度不够，可以采用分段锁的思想。
+加重量级锁，如果觉得并发粒度不够，可以采用分段锁的思想。
 
 | 方案                                             | 优点     | 缺点               |
 | ------------------------------------------------ | -------- | ------------------ |
 | 悲观锁，添加同步锁，让线程串行执行               | 简单粗暴 | 性能一般           |
 | 乐观锁，不加锁，在更新时判断是否有其它线程在修改 | 性能好   | 存在成功率低的问题 |
 
+#### 乐观锁解决超卖问题
+
+```mysql
+# 修改下 sql 语句, 失败率会非常高
+update voucherxxx set stock = stock-1 where voucher_id = k and stock = queryStock;
+
+# 再次修改 sql 语句
+update voucherxxx set stock = stock-1 where voucher_id = k and stock > 0;
+```
+
 ### 一人一单
+
+#### 问题
 
 修改秒杀业务，要求同一个优惠券，一个用户只能下一单。可以直接用联合主键完成，也可以代码里写逻辑。
 
 - 查询订单
 - 判断是否存在，不存在则扣减库存，创建订单。
 
-查询订单和扣减库存这块会出现并发问题，因为查询和创建不是原子性的。在加锁的时候需要注意锁的范围和事务的范围。
+查询订单和扣减库存这块会出现并发问题，因为查询和创建不是原子性的。在加锁的时候需要注意锁的范围和事务的范围。同时，需要注意用什么充当锁。此处可以采用用户的 id 充当锁，因为我们的目的是一人一单，避免有人用脚本刷单，对单个用户的一人一单操作加锁即可。（涉及到了 String 的 intern 方法）
 
 <div align="center"><img src="img/image-20220607154427229.png"></div>
+
+#### 单价情况下一人一单
+
+事务是由 Spring 进行管理的。在释放锁后，才会开始提交事务。函数执行完后，Spring 提交事务，此时锁以及被释放了，其他线程已经可以进来，而且事务尚未提交，其他用户查到的是未更新的数据，存在很大的问题。应该是提交事务后，再释放锁。
 
 ```java
 @Transactional
 public Result createVoucherOrder(Long voucherId){
     Long userId = UserHolder.getUser().getId();
+    // toString 返回的是一个 new String(xxx)
     synchronized(userId.toString().intern()){
         // 业务代码
     }
@@ -1264,7 +1404,7 @@ public Result createVoucherOrder(Long voucherId){
 }
 ```
 
-加大锁的范围
+加大锁的范围，需要注意的是，Spring 的事务是通过代理对象实现的，直接调用 createVoucherOrder 是不会走代理对象的，所以我们需要改成用代理对象调用
 
 ```java
 @Transactional
@@ -1273,17 +1413,27 @@ public Result createVoucherOrder(Long voucherId){
     // 业务代码
 }
 
-// 加大锁的范围,让锁锁住事务 Spring 事务失效的集中情况
+// 加大锁的范围,让锁锁住事务 Spring 事务失效的几中情况
 public XX KK(){
     // some code
     Long userId = UserHolder.getUser().getId();
     // Spring 的事务是通过代理对象实现的，直接调用 createVoucherOrder 是不会走代理对象的，所以我们需要改成用代理对象调用
     synchronized(userId.toString().intern()){
-    	IVoucherOrderService proxy = AopContext.currentProxy();
+    	IVoucherOrderService proxy = (IVoucherOrderService)AopContext.currentProxy();
         return proxy.createVoucherOrder(userId); // createVoucherOrder 是接口 IVoucherOrderService 中的方法
     }
 }
+
+// 在 SpringBoot 启动类上加上注解
+@EnableAspectJAutoProxy(exposeProxy = true) // 暴露代理对象。
+@MapperScan("xx.xxx.xxx")
+@SpringBootApplication
+public class XXApplication{
+    // some code
+}
 ```
+
+#### 分布式下的一人一单
 
 通过加锁可以解决在单机情况下的一人一单安全问题，但是在集群模式下就不行了。假定下面两个线程访问的是不同的服务器：
 
@@ -1301,7 +1451,7 @@ public XX KK(){
 
 3.jmeter 并发访问，出现并发安全问题，并未实现一人一单。
 
-分布式锁可以解决上述问题。当然也可以直接用数据库的联合主键解决一人一单的问题。
+分布式锁可以解决上述问题。当然也可以直接用数据库的联合主键解决一人一单的问题。对比下使用联合主键和分布式锁的性能差距。
 
 ### 分布式锁
 
@@ -1316,28 +1466,19 @@ public XX KK(){
 | 高性能 | 一般                        | 好                        | 一般                             |
 | 安全性 | 断开连接，自动释放锁        | 利用锁超时时间，到期释放  | 临时节点，断开连接自动释放       |
 
-> 基于 Redis 的分布式锁
+#### 基于Redis的分布式锁
 
-在代码中，我们为了实现分布式锁时定义了两个基本方法：
+在处理一人一单业务的时候，在分布式情况下需要使用分布式锁来确保一人一单。这里使用 Redis 定义一个分布式锁，再创建订单时先看能不能拿到锁，能拿到锁就创建订单，不能就返回错误。在代码中，我们为了实现分布式锁时定义了两个基本方法：
 
-- 获取锁方法：
-
-    - 互斥，确保只能有一个线程获取锁
-
-        `setnx lock thread1`，并通过 `expire lock 10` 添加锁过期时间，避免服务器宕机引起死锁
-
-    - 非阻塞：尝试一次，成功返回 true，失败返回 false
-
-
-- 释放锁方法：
-
-    - 手动释放
-    - 超时释放：获取锁时添加一个超时时间 `del key`
+| 方法       | 说明                                                         |
+| ---------- | ------------------------------------------------------------ |
+| 获取锁方法 | ①互斥，确保只能有一个线程获取锁<br>②`setnx lock thread1`，并通过 `expire lock 10` 添加锁过期时间，避免服务器宕机引起死锁<br>③非阻塞：尝试一次，成功返回 true，失败返回 false |
+| 释放锁方法 | ①手动释放<br>②超时释放：获取锁时添加一个超时时间 `del key`   |
 
 
 ```java
 public interface ILock{
-    // timeoutsec 表示锁的持有时间，过期后自动释放。
+    // 尝试获取锁，timeoutsec 表示锁的持有时间，过期后自动释放。
     boolean tryLock(long timeoutsec){};
     void unlock();
 }
@@ -1345,20 +1486,63 @@ public interface ILock{
 
 <div align="center"><img src="img/image-20220607155325168.png"></div>
 
-上述的方案存在一个问题，如果两个线程争抢锁，线程 1 抢到了，但是由于执行业务的时间太长了，致使锁超时释放。此时线程2 拿到了锁执行业务。在线程 2 执行业务的时候，线程 1 业务执行完毕了，释放了锁（释放了线程 2 加的锁），线程 3 在线程 2 为完成业务，且锁未超时的情况下拿到了锁。
+```java
+public class SimpleRedisLock implements ILock{
+    private String name;
+    private StringRedisTemplate stringRedisTemplate;
+    
+    private static final String KEY_PREFIX = "lock:";
+    
+    public SimpleRedisLock(String name, StringRedisTemplate stringRedisTemplate){
+        this.name = name;
+        this.stringRedisTemplate = stringRedisTemplate;
+    }
+    @Override
+    public boolean tryLock(long timeout){
+        long threadId = Thread.currentThread().getId();
+        Boolean success = stringRedisTemplate.opsForValue().setIfAbsent(KEY_PREFIX+name, threadId+"", timeout, TimeUnit.SECONDS);
+        return Boolean.TRUE.equals(success);
+    }
+    
+    @Override
+    public void unlock(){
+        stringRedisTemplate.opsForValue().delete(KEY_PREFIX+name);
+    }
+}
+// 使用锁的代码示例：
+new SimpleRedisLock("order:"+userId, stringRedisTemplate);
+```
+
+上述的方案存在一个问题，如果两个线程争抢锁，线程 1 抢到了，但是由于执行业务的时间太长了，致使锁超时释放。此时线程 2 拿到了锁执行业务。在线程 2 执行业务的时候，线程 1 业务执行完毕了，释放了锁（释放了其他线程加的锁），线程 3 在线程 2 为完成业务，且锁未超时的情况下拿到了锁。
+
+问题辨析：锁超时了，其他线程拿到了锁合理吗？如果是缓存重建这种情况，锁超时了还未成功重建缓存，其他线程在超时的情况下拿到锁是没什么大问题的。
 
 <div align="center"><img src="img/image-20220613171618902.png"></div>
 
 为了解决这个问题，我们需要在释放锁之前判断一下，是不是自己加的锁，是自己加的锁才要释放。
 
-> 改进 Redis 的分布式锁
+#### 改进Redis的分布式锁
 
 需求：修改之前的分布式锁实现，满足：
 
-- 在获取锁时存入线程标示（可以用 UUID 表示）
-- 在释放锁时先获取锁中的线程标示，判断是否与当前线程标示一致
+- 在获取锁时存入线程标识（可以用 UUID + Thread ID 表示），之前直接采用 JVM Thread 的 id，这种 id 是不唯一的。
+- 在释放锁时先获取锁中的线程标示，判断是否与当前线程标识一致
     - 如果一致则释放锁
     - 如果不一致则不释放锁
+
+```java
+// 修改分布式锁释放锁的代码
+public void unlock(){
+    String threadId = ID_PREFIX + Thread.currentThread().getId();
+    // 获取、判断、删除不是原子性的，会存在并发问题。
+    String id = stringRedisTemplate.opsForValue().get(KEY_PREFIX + name);
+    if(threadId.eqquals(id)){
+        // 一致则释放锁
+        stringRedisTemplate.opsForValue().delete(KEY_PREFIX+name);
+    }
+    // 不一致则不释放
+}
+```
 
 
 <span style="color:red">但是这种方案仍然存在问题</span>
@@ -1370,6 +1554,8 @@ public interface ILock{
 ### Lua 脚本
 
 <span style="color:orange">前面的核心问题在与，判断锁和释放锁不是原子性的操作，而 Lua 脚本可以解决这种问题。</span>
+
+#### 基本语法
 
 Redis 提供了 Lua 脚本功能，在一个脚本中编写多条 Redis 命令，确保多条命令执行时的原子性。Lua 是一种编程语言，它的基本语法可以参考网站：https://www.runoob.com/lua/lua-tutorial.html
 这里重点介绍 Redis 提供的调用函数，语法如下：
@@ -1408,15 +1594,20 @@ return name
 如果脚本中的 key、value 不想写死，可以作为参数传递。key 类型参数会放入 KEYS 数组，其它参数会放入 ARGV 数组，在脚本中可以从 KEYS 和 ARGV 数组获取这些参数：
 
 ```shell
+# keys 数组只有 1 个元素 name，arg 数组有一个元素 rose
 eval "return redis.call('set', KEYS[1],ARGV[1])" 1 name rose
+
+# keys 数组无元素（0），arg 数组有一个元素 arg1
+
+eval "return argv[1]" 0 arg1
 ```
 
-### Lua 改进分布式锁
+#### Lua 改进分布式锁
 
 释放锁的业务流程是这样的：
 
-- 1.获取锁中的线程标示
-- 2.判断是否与指定的标示（当前线程标示）一致
+- 1.获取锁中的线程标识
+- 2.判断是否与指定的标识（当前线程标识）一致
 - 3.如果一致则释放锁（删除）
 - 4.如果不一致则什么都不做
 - 5.如果用 Lua 脚本来表示则是这样的：
@@ -1442,7 +1633,7 @@ return 0
  args：对应 ARGV
 */
 public <T> execute(RedisScript<T> script, List<K> kyes, Object... args){
-    return scriptExecutor.execute(script,keys,args);
+    return scriptExecutor.execute(script, keys, args);
 }
 ```
 
@@ -1450,15 +1641,15 @@ public <T> execute(RedisScript<T> script, List<K> kyes, Object... args){
 
 ```java
 private static final DefaultRedisScript<Long> UNLOCK_SCRIPT;
-statIC{
+static{
     UNLOCK_SCRIPT = new DefaultRedisScript<>();
-	UNLOCK_SCRIPT.setLocation(new ClassPathResource("unlock.lua"));
+    UNLOCK_SCRIPT.setLocation(new ClassPathResource("unlock.lua"));
     UNLOCK_SCRIPT.setResultType(Long.class);
 }
 
 public static unlock(){
     stringRedisTemplate.execute(
-    	UNLOCK_SCRIPT,
+        UNLOCK_SCRIPT,
         Collections.singletionList(KEY_PREFIX+name),
         ID_PREFIX+Thread.currentThread().getId()
     );
@@ -1467,8 +1658,8 @@ public static unlock(){
 
 基于 Redis 的分布式锁实现思路：
 
-- 利用 set nx ex 获取锁，并设置过期时间，保存线程标示
-- 释放锁时先判断线程标示是否与自己一致，一致则删除锁
+- 利用 set nx ex 获取锁，并设置过期时间，保存线程标识
+- 释放锁时先判断线程标识是否与自己一致，一致则删除锁
 
 特性：
 
@@ -1484,6 +1675,8 @@ public static unlock(){
 - 主从一致性：如果 Redis 提供了主从集群，主从同步存在延迟，当主宕机时，如果从没有同步主中的锁数据，则会出现锁失效。
 
 ### Redisson
+
+#### 介绍&配置
 
 Redisson 是一个在 Redis 的基础上实现的 Java 驻内存数据网格（In-Memory Data Grid）。它不仅提供了一系列的分布式的 Java 常用对象，还提供了许多分布式服务，其中就包含了各种分布式锁的实现。
 
@@ -1544,7 +1737,18 @@ void testRedisson() throws InterruptedException {
 }
 ```
 
-> 原理
+#### 原理
+
+> 可重入锁原理
+
+与 Java 其他的可重入锁的原理很类似。内部的数据类型如下。
+
+| key  | value   |       |
+| ---- | ------- | ----- |
+|      | field   | value |
+| lock | thread1 | 1     |
+
+有人加锁时判断是是持有锁的线程，是则锁的重入次数（value 值）+1，不是则加锁失败。释放锁也是类似的，value -- 后为 0 就释放锁。
 
 <div align="center"><img src="img/image-20220611225200680.png"></div>
 
@@ -1575,6 +1779,8 @@ else  -- 等于0说明可以释放锁，直接删除
 end;
 ```
 
+源码位于 RedissonLock。如果有人释放锁了会发布一个消息，而那些等待锁的会订阅这个消息。如果在指定时间还没获取到锁就取消订阅。如果在指定时间内发现有人释放了锁，则尝试获取锁。这样不断的尝试。巧妙的运用了发布订阅模式，避免无休止的盲等。
+
 Redisson 分布式锁原理：
 
 - 可重入：利用 hash 结构记录线程 id 和重入次数
@@ -1583,21 +1789,49 @@ Redisson 分布式锁原理：
 
 <div align="center"><img src="img/image-20220611225523290.png"></div>
 
-### Redisson分布式锁主从一致问题
+#### 主从一致问题
 
-再刷下视频
+Redisson 分布式锁主从一致问题。如果是单节点的 Redis 发送了故障，会导致所有依赖于 Redis 的业务都出现问题。一般都会搭建主从节点。主节点负责写操作，从节点负责读操作。锁数据同步需要时间。假定在主节点要同步锁数据的时候，主节点宕机了，所有的从节点都没有同步到锁数据，访问新的主节点时
 
-1）不可重入 Redis 分布式锁：
-原理：利用 setnx 的互斥性；利用 ex 避免死锁；释放锁时判断线程标示
-缺陷：不可重入、无法重试、锁超时失效
-2）可重入的 Redis 分布式锁：
-原理：利用 hash 结构，记录线程标示和重入次数；利用 watchDog 延续锁时间；利用信号量控制锁重试等待
-缺陷：redis 宕机引起锁失效问题
-3）Redisson 的 multiLock：
-原理：多个独立的 Redis 节点，必须在所有节点都获取重入锁，才算获取锁成功
-缺陷：运维成本高、实现复杂
+```mermaid
+graph LR
+subgraph 设置锁,主从节点正常
+Java应用-->|获取锁,set&nbsplock&nbspthread1&nbspnx&nbspex&nbsp10|Redis&nbspMaster-->|主从同步|Redis&nbspSlave1
+Redis&nbspMaster-->|主从同步|Redis&nbspSlave2
+end
+```
+
+```mermaid
+graph LR
+subgraph 设置锁,主节点宕机
+Java应用-->|获取锁,set&nbsplock&nbspthread1&nbspnx&nbspex&nbsp10|Redis&nbspMaster宕机
+Java应用-->|获取锁,set&nbsplock&nbspthread1&nbspnx&nbspex&nbsp10|Redis&nbspSlave2升级为主节点
+Redis&nbspSlave2升级为主节点-->|主从同步|Redis&nbspSlave1
+end
+```
+
+这样，A 线程设置好了锁，其他线程尝试获取锁时，因为原先的主节点宕机了，而且锁没有同步过去，其他线程向新的主节点设置锁时可以设置成功。这样就不是一个线程持有锁了，而是两个了。Redission 的 multiLock 可以避免这种问题，只要 Redis 集群设置成这种模式，每个节点都可以读写。
+
+```mermaid
+graph LR
+subgraph 设置锁,主从节点正常
+Java应用-->|获取锁,set&nbsplock&nbspthread1&nbspnx&nbspex&nbsp10|Redis&nbspNode1,lock=thread1
+Java应用-->|获取锁,set&nbsplock&nbspthread1&nbspnx&nbspex&nbsp10|Redis&nbspNode2,lock=thread1
+Java应用-->|获取锁,set&nbsplock&nbspthread1&nbspnx&nbspex&nbsp10|Redis&nbspNode3,lock=thread1
+end
+```
+
+如果觉得这样的可用性不高，那么可以为这些节点再设置从节点。
+
+| 类型                    | 原理                                                         | 缺陷                           |
+| ----------------------- | ------------------------------------------------------------ | ------------------------------ |
+| 不可重入 Redis 分布式锁 | 利用 setnx 的互斥性；利用 ex 避免死锁；释放锁时判断线程标示  | 不可重入、无法重试、锁超时失效 |
+| 可重入的 Redis 分布式锁 | 利用 hash 结构，记录线程标示和重入次数；利用 watchDog 延续锁时间；利用信号量控制锁重试等待 | redis 宕机引起锁失效问题       |
+| Redisson 的 multiLock   | 多个独立的 Redis 节点，必须在所有节点都获取重入锁，才算获取锁成功 | 运维成本高、实现复杂           |
 
 ## Redis优化秒杀
+
+Redis 中预先缓存库存，下单前先查库存，库存够才允许下单。下单前再在 Redis 中做订单校验判断是否下单过。（有个业务问题，校验成功后 Redis 直接预减库存，生成订单信息加入 MQ。MQ 的消费端再慢慢从 MQ 中取出数据进行消费，修改数据库中的存货。如果用户取消订单，则 Redis 中库存 +1）
 
 <div align="center"><h5>原始架构</h5></div>
 <div align="center"><img src="img/image-20220611230518024.png"></div>
@@ -1605,14 +1839,14 @@ Redisson 分布式锁原理：
 <div align="center"><h5>Redis优化后</h5></div>
 <div align="center"><img src="img/image-20220611230740275.png"></div>
 
-
+key 的设计 `stock:vid:7`，用 String 即可。一人一单则采用 zset 中存储用户 id，确保唯一，key 的设计为 `order:vid:7`。
 
 > 改进秒杀业务，提高并发性能
 
 - 新增秒杀优惠券的同时，将优惠券信息保存到 Redis 中
 - 基于 Lua 脚本，判断秒杀库存、一人一单，决定用户是否抢购成功
-- 如果抢购成功，将优惠券 id 和用户 id 封装后存入阻塞队列
-- 开启线程任务，不断从阻塞队列中获取信息，实现异步下单功能
+- 如果抢购成功，将优惠券 id 和用户 id 封装后存入阻塞队列（暂时不写）
+- 开启线程任务，不断从阻塞队列中获取信息，实现异步下单功能（暂时不写）
 
 > 秒杀优化思路
 
@@ -1622,9 +1856,9 @@ Redisson 分布式锁原理：
     - 内存限制问题
     - 数据安全问题
 
-## Redis消息队列实现异步秒杀
+## 消息队列实现异步秒杀
 
-用 RabbitMQ 这些更好
+用 MQ 这些更好
 
 消息队列（Message Queue），字面意思就是存放消息的队列。最简单的消息队列模型包括 3 个角色：
 
@@ -1634,11 +1868,9 @@ Redisson 分布式锁原理：
 
 <div align="center"><img src="img/image-20220611231720897.png"></div>
 
-
-
 Redis 提供了三种不同的方式来实现消息队列：
 
-- list 结构：基于 List 结构模拟消息队列
+- List 结构：基于 List 结构模拟消息队列
 - PubSub：基本的点对点消息模型
 - Stream：比较完善的消息队列模型
 
@@ -1696,7 +1928,7 @@ XREAD 阻塞方式，读取最新的消息
 
 <div align="center"><img src="img/image-20220612204922366.png"></div>
 
-当我们指定起始 ID 为 $ 时，代表读取最新的消息，如果我们处理一条消息的过程中，又有超过 1 条以上的消息到达队列，则下次获取时也只能获取到最新的一条，会出现漏读消息的问题。
+当我们指定起始 ID 为 \$ 时，代表读取最新的消息，如果我们处理一条消息的过程中，又有超过 1 条以上的消息到达队列，则下次获取时也只能获取到最新的一条，会出现漏读消息的问题。
 
 > Stream 消息队列的 XREAD 命令特点
 >
@@ -1821,9 +2053,13 @@ public class SystemConstants{
 
 实现步骤：
 
-- 给 Blog 类中添加一个 isLike 字段，标示是否被当前用户点赞
+- 给 Blog 类中添加一个 isLike 字段，标示是否被当前用户点赞。
+- 如何用 Redis 实现该功能呢？
+    - 可以用 Blog 的 id 作为 key，然后 value 中记录那些用户点赞过。
+    - 用什么数据类型呢？用 set 集合，可以确保数据的值唯一，一个用户只能点赞一次。
+
 - 修改点赞功能，利用 Redis 的 set 集合判断是否点赞过，未点赞过则点赞数 +1，已点赞过则点赞数 -1
-- 修改根据 id 查询 Blog 的业务，判断当前登录用户是否点赞过，赋值给 isLike字段
+- 修改根据 id 查询 Blog 的业务，判断当前登录用户是否点赞过，赋值给 isLike 字段
 - 修改分页查询 Blog 业务，判断当前登录用户是否点赞过，赋值给 isLike 字段
 
 ### 点赞排行榜
@@ -1832,11 +2068,11 @@ public class SystemConstants{
 
 需求：按照点赞时间先后排序，返回 Top5 的用户
 
-|                 | List                 | Set          | SortedSet       |
-| --------------- | -------------------- | ------------ | --------------- |
-| <b>排序方式</b> | 按添加顺序排序       | 无法排序     | 根据score值排序 |
-| <b>唯一性</b>   | 不唯一               | 唯一         | 唯一            |
-| <b>查找方式</b> | 按索引查找或首尾查找 | 根据元素查找 | 根据元素查找    |
+|                 | List                 | Set          | SortedSet         |
+| --------------- | -------------------- | ------------ | ----------------- |
+| <b>排序方式</b> | 按添加顺序排序       | 无法排序     | 根据 score 值排序 |
+| <b>唯一性</b>   | 不唯一               | 唯一         | 唯一              |
+| <b>查找方式</b> | 按索引查找或首尾查找 | 根据元素查找 | 根据元素查找      |
 
 ## 好友关注
 
@@ -1868,7 +2104,7 @@ graph LR
 内容--->|匹配|用户
 ```
 
-#### Feed 流的模式
+#### Feed流的模式
 
 Feed 流产品有两种常见模式
 
@@ -2015,7 +2251,7 @@ geosearch g1 fromlonlat 116.397904 39.909005 byradius 10 km withdist # 默认是
 
 假定：在首页中点击某个频道，即可看到频道下的商户。
 
-我们可以按照商户类型做分组，类型相同的商户作为同一组，以 typeId 为 key 存入同一个 GEO 集合中即可
+我们可以按照商户类型做分组，类型相同的商户作为同一组，以 typeId 为 key 存入同一个 GEO 集合中即可。
 
 | key           | value | score |
 | ------------- | ----- | ----- |
