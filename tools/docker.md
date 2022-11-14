@@ -207,7 +207,7 @@ sudo docker  start container_id
 
 ## 容器的各种操作
 
-- 下面的创建方式，输出一句Hello后容器就终止了
+- 下面的创建方式，输出一句 Hello 后容器就终止了
     - `sudo docker run ubuntu:latest /bin/echo 'Hello'`
 - 启动一个终端，并允许用户进行交互
     - `sudo docker run -t -i ubuntu:latest /bin/bash`
@@ -228,7 +228,7 @@ sudo docker  start container_id
     - 停止容器
         - `sudo docker stop 8c`
     - 启动终止态的容器
-        - 最开始命令用了-it 启动就关闭了，但是start的时候，会在后台一直执行。
+        - 最开始命令用了-it 启动就关闭了，但是 start 的时候，会在后台一直执行。
         - `sudo docker start container_id`
     - 重启一个容器
         - `sudo docker restart container_id`

@@ -2086,13 +2086,16 @@ public class SystemConstants{
 
 <div align="center"><img src="img/image-20220612225906719.png"></div>
 
+- 关注就新增数据
+- 取关就删除数据
+
 ### 共同关注
 
-利用 Redis 中恰当的数据结构（如 Set 集合），实现共同关注功能。在博主个人页面展示出当前用户与博主的共同好友。
+利用 Redis 中恰当的数据结构（如 Set 集合），实现共同关注功能。在博主个人页面展示出当前用户与博主的共同好友。求 Redis 中两个 set 的交集即可。
 
 ### 关注推送
 
-关注推送也叫做 Feed 流，直译为投喂。为用户持续的提供“沉浸式”的体验，通过无限下拉刷新获取新的信息。传统模式是用户寻找内容，而 Feed 模式是内容匹配用户
+关注推送也叫做 Feed 流，直译为投喂。为用户持续的提供“沉浸式”的体验，通过无限下拉刷新获取新的信息。传统模式是用户寻找内容，而 Feed 模式是内容匹配用户。
 
 ```mermaid
 graph LR
@@ -2106,6 +2109,8 @@ graph LR
 
 #### Feed流的模式
 
+[Redis实现feed流 - 腾讯云开发者社区-腾讯云 (tencent.com)](https://cloud.tencent.com/developer/article/1791743)
+
 Feed 流产品有两种常见模式
 
 - Timeline：不做内容筛选，简单的按照内容发布时间排序，常用于好友或关注。例如朋友圈
@@ -2117,7 +2122,7 @@ Feed 流产品有两种常见模式
 
 <b style="color:orange">本例中的个人页面，是基于关注的好友来做 Feed 流，因此采用 Timeline 的模式。该模式的实现方案有三种：</b>
 
-- 拉模式：带上时间戳，按时间戳排序显示消息。假定 p4 关注了p1 和 p2，因此 p4 会把关注人的消息拉去到自己的收件箱。收件箱读完后就清理掉，因此比较节省内存（只保存一份消息）。但是每次读取的时候都重新去拉起消息做排序，比较耗时。如果关注的人多，这个耗时就更久了。
+- 拉模式：带上时间戳，按时间戳排序显示消息。假定 p4 关注了 p1 和 p2，只有在 p4 要读取消息的时候，p4 会把关注人的消息拉到自己的收件箱。收件箱读完后就清理掉，因此比较节省内存（只保存一份消息）。但是每次读取的时候都重新去拉取消息做排序，比较耗时。如果关注的人多，这个耗时就更久了。
 
     ```mermaid
     graph LR
@@ -2132,10 +2137,13 @@ Feed 流产品有两种常见模式
     ```mermaid
     graph LR
     张三-->|主动推送|粉丝1-->收件箱1[收件箱: msg-1666]
-    李四-->|主动推送|粉丝2-->收件箱2[收件箱: msg-1669]
+    张三-->|主动推送|粉丝2
+    李四-->|主动推送|粉丝2-->收件箱2[收件箱: msg-1669,msg-1666]
     ```
 
 - 推拉结合：普通人粉丝少，用推模式。大 V 活跃粉丝人少，可以用推模式，人少，内存耗费不是很高，速度也快；普通粉丝人少，不适合用推模式，采用拉模式。
+
+这么一看，微博的功能实现起来确实复杂。
 
 |                  | 拉模式   | **推模式**                             | 推拉结合           |
 | ---------------- | -------- | -------------------------------------- | ---------------------- |
@@ -2151,13 +2159,20 @@ Feed 流产品有两种常见模式
 
 ① 修改探店笔记的业务，在保存 blog 到数据库的同时，推送到粉丝的收件箱
 
-② 收件箱满足可以根据时间戳排序（List、Sorted），必须用 Redis 的数据结构实现
+②收件箱满足可以根据时间戳排序（List、Sorted），必须用 Redis 的数据结构实现，可以采用 Sorted。
 
 ③ 查询收件箱数据时，可以实现分页查询
 
 Feed 流中的数据会不断更新，所以数据的角标也在变化，因此不能采用传统的分页模式。可以采用滚动分页的模式：每次记录当前查询的最后一条记录，下一页就从最后一条记录开始查询。
 
 <div align="center"><img src="img/image-20220627124355521.png"></div>
+
+根据上面的描述可梳理好逻辑：
+
+- redis 中存储好用户信息和用户的粉丝信息（粉丝信息用 set 存储，可以直接从数据库查询，不存入 redis，这方面需要自己好好衡量下）
+- 发布笔记时，获取所有的粉丝信息，然后为粉丝创建一个 feed 队列，这个队列采用 Sorted，可根据时间戳对消息进行排序。然后向每个粉丝的 Sorted 里写入数据
+- 粉丝要查看朋友圈时尝试从自己的 feed 队列中获取数据
+- 如何处理分页？查询最后一个时间戳后的数据（sorted 的按分值查询数据）
 
 部分代码
 
@@ -2193,12 +2208,15 @@ public Result queryBlogOfFollow(Long max,Integer offset){
     Set<ZSetOperations.TypedTuple<String>> typedTuples = stringRedisTemplate.opsForZSet()
         .reverseRangeByScoreWithScores(key,0,max,offset,2);
     //...
-    // 解析数据
+    // 解析数据，注意集合中的最后一个才是最小时间
+    List<Long> ids = new ArrayList<>(typedTuples.size());
     long minTime = 0;
     int os = 1;
     for(ZSetOperations.TypedTule<String> tuple : typedTuples){
         ids.add(Long.valueOf(tuple.getValue()));
         long time = tuple.getScore().longValue();
+        // 统计下时间戳最小的相同的个数，作为下一次查询的 offset，然后返回给前端
+        // 下次前端请求数据的时候，申请 offset。
         if(time == minTime){
             os++;
         }else{
@@ -2206,6 +2224,8 @@ public Result queryBlogOfFollow(Long max,Integer offset){
             os = 1;
         }
     }
+    // 根据 id 查询 blogs,ids 是支持存储的
+    // 实战篇-10 19：51
     // 返回数据
 }
 ```
@@ -2216,13 +2236,15 @@ public Result queryBlogOfFollow(Long max,Integer offset){
 
 GEO 就是 Geolocation 的简写形式，代表地理坐标。Redis 在 3.2 版本中加入了对 GEO 的支持，允许存储地理坐标信息，帮助我们根据经纬度来检索数据。常见的命令有：
 
-- GEOADD：添加一个地理空间信息，包含：经度（longitude）、纬度（latitude）、值（member）
-- GEODIST：计算指定的两个点之间的距离并返回
-- GEOHASH：将指定 member 的坐标转为 hash 字符串形式并返回
-- GEOPOS：返回指定 member 的坐标
-- GEORADIUS：指定圆心、半径，找到该圆内包含的所有 member，并按照与圆心之间的距离排序后返回。6.2 以后已废弃
-- GEOSEARCH：在指定范围内搜索 member，并按照与指定点之间的距离排序后返回。范围可以是圆形或矩形。6.2. 新功能
-- GEOSEARCHSTORE：与 GEOSEARCH 功能一致，不过可以把结果存储到一个指定的 key。 6.2. 新功能
+| 命令           | 说明                                                         |
+| -------------- | ------------------------------------------------------------ |
+| GEOADD         | 添加一个地理空间信息，包含：经度（longitude）、纬度（latitude）、值（member） |
+| GEODIST        | 计算指定的两个点之间的距离并返回                             |
+| GEOHASH        | 将指定 member 的坐标转为 hash 字符串形式并返回               |
+| GEOPOS         | 返回指定 member 的坐标                                       |
+| GEORADIUS      | 指定圆心、半径，找到该圆内包含的所有 member，并按照与圆心之间的距离排序后返回。6.2 以后已废弃 |
+| GEOSEARCH      | 在指定范围内搜索 member，并按照与指定点之间的距离排序后返回。范围可以是圆形或矩形。6.2. 新功能 |
+| GEOSEARCHSTORE | 与 GEOSEARCH 功能一致，不过可以把结果存储到一个指定的 key。 6.2. 新功能 |
 
 > 练习
 
@@ -2237,14 +2259,14 @@ GEO 就是 Geolocation 的简写形式，代表地理坐标。Redis 在 3.2 版�
 搜索天安门（ 116.397904 39.909005 ）附近 10km 内的所有火车站，并按照距离升序排序
 
 ```bash
+# 添加数据
 geoadd g1 116.378248 39.865275 bjn 116.42803 39.903738  116.322287 39.893729 bjz bjx
 
+# 计算距离，默认是米，后面接 km 的话就是千米
 geodist g1 bjn bjx
 
+# xx key 搜索方式 经纬度 根据半径来搜 10 km 带上距离
 geosearch g1 fromlonlat 116.397904 39.909005 byradius 10 km withdist # 默认是升序的
-"""
-123
-"""
 ```
 
 ### 附件商户搜索
@@ -2308,7 +2330,7 @@ SpringDataRedis 的 2.3.9 版本并不支持 Redis 6.2 提供的 GEOSEARCH 命�
 
 把每一个 bit 位对应当月的每一天，形成了映射关系。用 0 和 1 标示业务状态，这种思路就称为位图（BitMap）。
 
-Redis 中是利用 string 类型数据结构实现 BitMap，因此最大上限是 512M，转换为bit则是 $2^{32}$个 bit 位。
+Redis 中是利用 string 类型数据结构实现 BitMap，因此最大上限是 512M，转换为 bit 则是 $2^{32}$个 bit 位。
 
 BitMap 的操作命令有：
 
@@ -2322,7 +2344,7 @@ BitMap 的操作命令有：
 
 ### 签到功能
 
-需求：实现签到接口，将当前用户当天签到信息保存到Redis中。因为BitMap底层是基于String数据结构，因此其操作也都封装在字符串相关操作中了。
+需求：实现签到接口，将当前用户当天签到信息保存到 Redis 中。因为 BitMap 底层是基于 String 数据结构，因此其操作也都封装在字符串相关操作中了。
 
 ### 签到统计
 
@@ -2423,9 +2445,14 @@ void testHyperLogLog() {
 单点 Redis 的问题：
 
 - 数据丢失问题，服务器重启可能会丢失数据；Redis 数据持久化可以解决该问题
-- 并发能力问题，单节点的 Redis 无法满足高并发场景；搭建主从集群，实现读写分离
-- 故障回复问题，如果 Redis 宕机，则服务不可用，需要一种自动的故障恢复手段；利用 Redis 哨兵，实现健康检测和自动恢复
-- 存储能力问题，Redis 基于内存，单节点的存储难以满足海里数据需求；搭建分片集群，利用插槽机制实现动态扩容
+- 并发能力问题，单节点的 Redis 无法满足高并发场景；<span style="color:red">搭建主从集群，实现读写分离</span>
+- 故障回复问题，如果 Redis 宕机，则服务不可用，需要一种自动的故障恢复手段；<span style="color:red">利用 Redis 哨兵，实现健康检测和自动恢复</span>
+- 存储能力问题，Redis 基于内存，单节点的存储难以满足海里数据需求；<span style="color:red">搭建分片集群，利用插槽机制实现动态扩容</span>
+
+水平扩展和垂直扩展
+
+- 水平扩展，就是添加机器。一台不够，就加两台。以数量弥补质量的不足
+- 垂直扩展，就是升级机器，加强装备。换一台更贵更豪华的机器。
 
 ## Redis的持久化
 
@@ -2445,7 +2472,7 @@ RDB 持久化在四种情况下会执行：
 - Redis 停机时
 - 触发 RDB 条件时
 
-<b>1）save命令</b>
+<b>1）save 命令</b>
 
 执行下面的命令，可以立即执行一次 RDB：
 
@@ -2479,7 +2506,7 @@ save 60 10000
 RDB 的其它配置也可以在 redis.conf 文件中设置：
 
 ```properties
-# 是否压缩 ,建议不开启，压缩也会消耗cpu，磁盘的话不值钱
+# 是否压缩 ,建议不开启，压缩也会消耗 cpu，磁盘的话不值钱
 rdbcompression yes
 
 # RDB文件名称
@@ -2493,7 +2520,7 @@ RDB 的频率不要太高，频率太高会一直处于写入数据的状态，�
 
 #### RDB原理
 
-bgsave 开始时会 fork 主进程得到子进程，子进程共享主进程的内存数据。完成 fork 后读取内存数据并写入 RDB 文件。注意：fork 这个操作过程是阻塞的。
+bgsave 开始时会 fork 主进程得到子进程，子进程共享主进程的内存数据。完成 fork 后读取内存数据并写入 RDB 文件。注意：fork 这个操作过程要拷贝页表是阻塞的。
 
 fork 采用的是 copy-on-write 技术：
 
@@ -2504,7 +2531,7 @@ fork 采用的是 copy-on-write 技术：
 
 Linux 中，所有的进程都没办法直接操作物理内存而是由操作系统给每个进程分配一个虚拟内存，主进程操作虚拟内存，操作系统维护一个虚拟内存与物理内存直接的映射关系（页表）。fork 主进程实际上是 fork 页表（页表中保存了物理内存与虚拟内存的映射关系）的过程，让子进程和主进程拥有一样的映射关系。这样就实现了子进程和主进程一样的内存共享。这样就无需拷贝内存中的数据，直接实现数据共享。
 
-但这样会有一个问题，就是一个读一个写，会有并发问题。如果子进程在拷贝数据的时候，主进程还在写怎么办？fork 底层会采用 copy-on-write 的技术。然源数据只读，如果需要修改就复制一份数据，在复制的数据中进行修改（后面好像是等持久化结束后，在写入源数据。MySQL 也有一个类似的操作，查下 MySQL 的笔记）
+但这样会有一个问题，就是一个读一个写，会有并发问题。如果子进程在拷贝数据的时候，主进程还在写怎么办？fork 底层会采用 copy-on-write 的技术。源数据只读，如果需要修改就复制一份数据，在复制的数据中进行修改，如果每次修改要复制的数据很大，那么这样的开销是很大的。<span style="color:red">JVM 垃圾回收算法的标记如果标记在对象上，修改对象的 GC 标记的频繁复制对象对内存的压力特别大，具体可看《垃圾回收的算法与实现》与写时复制技术不兼容。[JVM 笔记#标记清除](../Java-Virtual-Machine/03-垃圾回收.md###标记-清除)</span>（后面好像是等持久化结束后，在写入源数据。MySQL 也有一个类似的操作，查下 MySQL 的笔记）
 
 #### 小结
 
@@ -2552,9 +2579,44 @@ appendfsync everysec
 appendfsync no
 ```
 
+用配置文件的方式启动 Redis
+
+```shell
+sudo ./redis-server ../redis.conf
+```
+
+向 Redis 中写入数据可以发现，每次执行的命令都被写入到了 aof 文件中
+
+```shell
+→ cat appendonly.aof
+*2
+$6
+SELECT
+$1
+0
+*3
+$3
+set
+$4
+name
+$3
+ljw
+*3
+$3
+set
+$4
+name
+$3
+kkx
+```
+
 三种策略对比：
 
-<div align="center"><img src="img/image-20210725151654046.png"></div>
+| 配置项   | 刷盘时机     | 优点                   | 缺点                         |
+| -------- | ------------ | ---------------------- | ---------------------------- |
+| Always   | 同步刷盘     | 可靠性高，几乎不丢数据 | 性能影响大                   |
+| everysec | 每秒刷盘     | 性能适中               | 最多丢失 1 秒数据            |
+| no       | 操作系统控制 | 性能最好               | 可靠性较差，可能丢失大量数据 |
 
 #### AOF文件重写
 
@@ -2564,7 +2626,7 @@ appendfsync no
 
 如图，AOF 原本有三个命令，但是 `set num 123 和 set num 666` 都是对 num 的操作，第二次会覆盖第一次的值，因此第一个命令记录下来没有意义。
 
-所以重写命令后，AOF 文件内容就是：`mset name jack num 666`
+所以重写命令后，AOF 文件内容就是：`mset name jack num 666`。实际测试，AOF 文件重写后内容被压缩了，命令也被简化了~
 
 Redis 也会在触发阈值时自动去重写 AOF 文件。阈值也可以在 redis.conf 中配置：
 
@@ -2579,13 +2641,21 @@ auto-aof-rewrite-min-size 64mb
 
 Redis 4.0 中提出了一个混合使用 AOF 日志和内存快照的方法。内存快照以一定的频率执行，在两次快照之间，使用 AOF 日志记录这期间的所有命令操作。这样，不用频繁执行快照，避免了频繁 fork 对主线程的影响。且，AOF 日志也只用记录两次快照间的操作，无需记录所有操作了，不会出现文件过大的情况，也可以避免重写开销。如下图所示，T1 和 T2 时刻的修改，用 AOF 日志记录，等到第二次做全量快照时，就可以清空 AOF 日志，因为此时的修改都已经记录到快照中了，恢复时就不再用日志了。
 
-<div align="center"><img src="img/AOF_RDB.webp" width="80%"></div>
+<div align="center"><img src="img/AOF_RDB.webp"></div>
 
 ### RDB与AOF对比
 
 RDB 和 AOF 各有自己的优缺点，如果对数据安全性要求较高，在实际开发中往往会<b>结合</b>两者来使用。
 
-<div align="center"><img src="img/image-20210725151940515.png"></div>
+| -              | RDB                                          | AOF                                                          |
+| -------------- | -------------------------------------------- | ------------------------------------------------------------ |
+| 持久化方式     | 定时对整个内存做快照                         | 记录每一次执行的命令                                         |
+| 数据完整性     | 不完整，两次备份之间会丢失                   | 相对完整，取决于刷盘策略                                     |
+| 文件大小       | 会有压缩，文件体积小                         | 记录命令，文件体积大                                         |
+| 宕机恢复速度   | 很快                                         | 慢                                                           |
+| 数据恢复优先级 | 低，因为数据完整性不如 AOF                   | 高，数据完整性高                                             |
+| 系统资源占用   | 高，大量的 CPU 和内存消耗                    | 低，主要是磁盘 IO 资源，但是 AOF 重写时会占用大量 CPU 和内存资源 |
+| 使用场景       | 可以容忍数分钟的数据丢失，追求更快的启动速度 | 对数据安全性要求较高场景                                     |
 
 ## Redis主从
 
@@ -2596,6 +2666,87 @@ RDB 和 AOF 各有自己的优缺点，如果对数据安全性要求较高，�
 <div align="center"><img src="img/image-20210725152037611.png"></div>
 
 多个从结点承担读的请求，Redis 读取数据的能力可以得到极大的提升。
+
+将 redis.conf 文件复制多份，分别启动多个 Redis。此时这样启动的还只是一个一个孤立的 Redis。
+
+### 开启主从关系
+
+要配置主从关系可以使用 replicaof 或 slaveof（5.0 以前的命令）。
+
+有临时和永久两种模式
+
+- 修改配置文件，永久生效。在 redis.conf 中添加一行配置 `slaveof <masterip> <masterport>`
+- 使用 redis-cli 客户端连接到 redis 服务，执行 slaveof 命令（重启后失效）`slaveof masterip masterport`
+
+此处采用临时模式配置主从关系。
+
+1️⃣用不同配置文件开启多个 redis 服务；
+
+```shell
+# 在 6370 端口开启一个 redis 实例
+sudo ./bin/redis-server redis.conf
+# 连接 6739 端口的 redis 实例
+./bin/redis-cli -p 6379
+
+# 在 7000 端口开启一个 redis 实例
+sudo ./bin/redis-server 7000.conf
+# 连接 7000 端口的 redis 实例
+./bin/redis-cli -p 7000
+```
+
+2️⃣配置主从节点（只要指定从节点即可）
+
+```shell
+# 在 7000 redis-cli 中执行命令，将 7000 端口的 redis 指定为
+# 6379 端口的从节点。
+127.0.0.1:7000> SLAVEOF  172.26.26.72 6379
+OK
+```
+
+3️⃣查看从节点的 key，然后在主节点中写入一些数据，看是否会同步到从节点中
+
+```shell
+# 主节点和从节点此时数据都为空
+127.0.0.1:6379> keys *
+(empty array)
+
+127.0.0.1:7000> keys *
+(empty array)
+
+# 主节点中写数据
+127.0.0.1:6379> set master somevalue
+OK
+
+# 从节点同步到了主节点的数据
+127.0.0.1:7000> keys *
+1) "master"
+```
+
+4️⃣查看集群状态信息 `info replication`
+
+```shell
+127.0.0.1:7000> info replication
+# Replication
+role:slave
+master_host:127.0.0.1
+master_port:6379
+master_link_status:up
+master_last_io_seconds_ago:3
+master_sync_in_progress:0
+slave_repl_offset:423
+slave_priority:100
+slave_read_only:1
+connected_slaves:0
+master_failover_state:no-failover
+master_replid:b6811140f497c5bbe6f0ddd27c46b39a091fb7ac
+master_replid2:0000000000000000000000000000000000000000
+master_repl_offset:423
+second_repl_offset:-1
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:1
+repl_backlog_histlen:423
+```
 
 ### 主从同步原理
 
@@ -2649,11 +2800,11 @@ master 怎么知道 slave 与自己的数据差异在哪里呢？这就要靠全
 
 这个文件是一个固定大小的数组，只不过数组是环形，也就是说<b>角标到达数组末尾后，会再次从 0 开始读写</b>，这样数组头部的数据就会被覆盖。
 
-repl_baklog 中会记录 Redis 处理过的命令日志及 offset，包括 master 当前的 offset，和 slave 已经拷贝到的 offset：
+repl_baklog 中会记录 Redis 处理过的命令日志及 offset，包括 master 当前的 offset，和 slave 已经拷贝到的 offset（红色部分是尚未同步的内容）：
 
 <div align="center"><img src="img/image-20210725153359022.png"></div>
 
-slave 与 master 的 offset 之间的差异，就是 salve 需要增量拷贝的数据了。随着不断有数据写入，master 的 offset 逐渐变大， slave 也不断的拷贝，追赶 master 的 offset
+slave 与 master 的 offset 之间的差异，就是 slave 需要增量拷贝的数据了。随着不断有数据写入，master 的 offset 逐渐变大， slave 也不断的拷贝，追赶 master 的 offset
 
 <div align="center"><img src="img/image-20210725153524190.png"></div>
 
@@ -2674,18 +2825,18 @@ slave 与 master 的 offset 之间的差异，就是 salve 需要增量拷贝的
 
 棕色框中的红色部分，就是尚未同步，但是却已经被覆盖的数据。此时如果 slave 恢复，需要同步，却发现自己的 offset 都没有了，无法完成增量同步了。只能做全量同步。
 
+<b style="color:orange">repl_baklog 大小有上限，写满后会覆盖最早的数据。如果 slave 断开时间过久，导致尚未备份的数据被覆盖，则无法基于 log 做增量同步，智能再次全量同步。</b>
+
 <div align="center"><img src="img/image-20210725154216392.png"></div>
 
 ### 主从同步优化
 
-主从同步可以保证主从数据的一致性，非常重要。
-
-可以从以下几个方面来优化 Redis 主从就集群：
+> 主从同步可以保证主从数据的一致性，非常重要。可以从以下几个方面来优化 Redis 主从集群（如尽可能的避免全量同步，少做磁盘 IO）：
 
 - 在 master 中配置 repl-diskless-sync yes 启用无磁盘复制，<span style="color:orange">（即，不是先在磁盘中生成 RDB 然后再通过网络发送出去，而是直接通过网络发送，不再经过磁盘了。适合磁盘 IO 速度慢，网络速度快。）</span>，避免全量同步时的磁盘 IO。
-- Redis 单节点上的内存占用不要太大，减少 RDB 导致的过多磁盘 IO
+- Redis 单节点上的内存占用不要太大，这样 RDB 的文件也就比较小了。有点像用多个小的 RDB 替代一个超大的 RDB（有点 GC 的味道了）。
 
-上面两个都是在提高全量同步的性能，下面两点是从减少全量同步出发的。
+> 上面两个都是在提高全量同步的性能，下面两点是从减少全量同步出发的。
 
 - 适当提高 repl_baklog 的大小，允许主从数据的差异更大，就可以减少全量同步发生的几率了。发现 slave 宕机时尽快实现故障恢复，尽可能避免全量同步
 - 限制一个 master 上的 slave 节点数量，如果实在是太多 slave，则可以采用主-从-从链式结构，减少 master 压力<span style="color:orange">（后面的 slave 同步中间的 slave 的数据）</span>
@@ -2696,7 +2847,7 @@ slave 与 master 的 offset 之间的差异，就是 salve 需要增量拷贝的
 
 <b>简述全量同步和增量同步区别？</b>
 
-- 全量同步：master 将完整内存数据生成 RDB，发送 RDB 到slave。后续命令则记录在 repl_baklog，逐个发送给 slave。
+- 全量同步：master 将完整内存数据生成 RDB，发送 RDB 到 slave。后续命令则记录在 repl_baklog，逐个发送给 slave。
 - 增量同步：slave 提交自己的 offset 到 master，master 获取 repl_baklog 中从 offset 之后的命令给 slave
 
 <b>什么时候执行全量同步？</b>
@@ -2714,7 +2865,7 @@ slave 与 master 的 offset 之间的差异，就是 salve 需要增量拷贝的
 
 slave 节点宕机恢复后可以找 master 节点同步数据，那 master 节点宕机该如何处理？
 
-Redis 提供了哨兵（Sentinel）机制来实现主从集群的自动故障恢复。哨兵是用于监控整个集群做故障恢复的。
+<span style="color:orange">Redis 提供了哨兵（Sentinel）机制来实现主从集群的自动故障恢复。而哨兵是用于监控整个集群做故障恢复的。</span>
 
 - 哨兵的作用和原理
 - 搭建哨兵集群
@@ -2726,7 +2877,7 @@ Redis 提供了哨兵（Sentinel）机制来实现主从集群的自动故障恢
 
 <b style="color:red">哨兵的作用如下：</b>
 
-- <b>监控</b>：Sentinel 会不断检查您的 master 和 slave 是否按预期工作。
+- <b>监控</b>：Sentinel 会不断检查 master 和 slave 是否按预期工作。
 - <b>自动故障恢复</b>：如果 master 故障，Sentinel 会将一个 slave 提升为 master。当故障实例恢复后也以新的 master 为主。
 - <b>通知</b>：Sentinel 充当 Redis 客户端的服务发现来源，当集群发生故障转移时，会将最新信息推送给 Redis 的客户端。<span style="color:orange">（Redis 客户端找主从服务的时候，是从 Sentinel 中找的，由 Sentinel 告诉客户端主的地址在哪里，从的地址在哪里；此时 Sentinel 就充当了 Redis 客户端服务发现的来源了。）</span>
 
@@ -2743,18 +2894,18 @@ Sentinel 基于心跳机制监测服务状态，每隔 1 秒向集群的每个�
 
 #### 故障恢复原理
 
-一旦发现 master 故障，sentinel 需要在 slave 中选择一个作为新的 master，选择依据是这样的：
+<b>一旦发现 master 故障，sentinel 需要在 slave 中选择一个作为新的 master，选择依据是这样的：</b>
 
-- 首先会判断 slave 节点与 master 节点断开时间长短，如果超过指定值（down-after-milliseconds * 10）则会排除该 slave 节点<span style="color:orange">（断开时间越长，未同步的数据就越多，这样的节点就不具备选举的资格）</span>
+- 首先会判断 slave 节点与 master 节点断开时间长短，如果超过指定值（down-after-milliseconds \* 10）则会排除该 slave 节点<span style="color:orange">（断开时间越长，未同步的数据就越多，这样的节点就不具备选举的资格）</span>
 - 然后判断 slave 节点的 slave-priority 值（默认都是 1），越小优先级越高，如果是 0 则永不参与选举
 - 如果 slave-prority 一样，则判断 slave 节点的 offset 值，越大说明数据越新，优先级越高
 - 最后是判断 slave 节点的运行 id 大小，越小优先级越高。（是为了避免 offset 都一样，难以抉择，因此依靠 id 随便选一个）
 
-当选出一个新的 master 后，该如何实现切换呢？流程如下：
+<b>当选出一个新的 master 后，该如何实现切换呢？流程如下：</b>
 
 - sentinel 给备选的 slave1 节点发送 slaveof no one 命令，让该节点成为 master
 - sentinel 给所有其它 slave 发送 slaveof 192.168.150.101 7002 命令，让这些 slave 成为新 master 的从节点，开始从新的 master 上同步数据。
-- 最后，sentinel 将故障节点标记为 slave，当故障节点恢复后会自动成为新的 master 的 slave 节点
+- 最后，sentinel 将故障节点标记为 slave（就是在配置文件中加入一行 `slaveof master_ip port`），当故障节点恢复后会自动成为新的 master 的 slave 节点
 
 <div align="center"><img src="img/image-20210725154816841.png"></div>
 
@@ -2779,7 +2930,99 @@ Sentinel 如何判断一个 redis 实例是否健康？
 
 ### 搭建哨兵集群
 
-~ 这部分没有实践过，先记个笔记，后面再说。
+#### 集群结构
+
+这里我们搭建一个三节点形成的 Sentinel 集群，来监管之前的 Redis 主从集群。
+
+<div align="center">
+    <img src="img/image-20210701215227018.png">
+</div>
+
+三个 sentinel 实例信息如下：
+
+| 节点 |       IP        | PORT  |
+| ---- | :-------------: | :---: |
+| s1   | 192.168.150.101 | 27001 |
+| s2   | 192.168.150.101 | 27002 |
+| s3   | 192.168.150.101 | 27003 |
+
+#### 准备实例和配置
+
+要在同一台虚拟机开启 3 个实例，必须准备三份不同的配置文件和目录，配置文件所在目录也就是工作目录。
+
+我们创建三个文件夹，名字分别叫 s1、s2、s3：
+
+```sh
+# 进入/tmp目录
+cd /tmp
+# 创建目录
+mkdir s1 s2 s3
+```
+
+然后我们在 s1 目录创建一个 sentinel.conf 文件，添加下面的内容：
+
+```ini
+port 27001
+sentinel announce-ip 172.26.26.72
+sentinel monitor mymaster 172.26.26.72 27001 2
+sentinel down-after-milliseconds mymaster 5000
+sentinel failover-timeout mymaster 60000
+dir "/tmp/s1"
+```
+
+解读：
+
+- `port 27001`：是当前 sentinel 实例的端口
+- `sentinel monitor mymaster 172.26.26.72 2`：指定主节点信息
+    - `mymaster`：主节点名称，自定义，任意写
+    - `172.26.26.72 27001`：主节点的 ip 和端口
+    - `2`：选举 master 时的 quorum 值
+
+然后将 s1/sentinel.conf 文件拷贝到 s2、s3 两个目录中（在 /tmp 目录执行下列命令）：
+
+```sh
+# 方式一：逐个拷贝
+cp s1/sentinel.conf s2
+cp s1/sentinel.conf s3
+# 方式二：管道组合命令，一键拷贝
+echo s2 s3 | xargs -t -n 1 cp s1/sentinel.conf
+```
+
+修改 s2、s3 两个文件夹内的配置文件，将端口分别修改为 27002、27003：
+
+```sh
+sed -i -e 's/27001/27002/g' -e 's/s1/s2/g' s2/sentinel.conf
+sed -i -e 's/27001/27003/g' -e 's/s1/s3/g' s3/sentinel.conf
+```
+
+#### 启动
+
+为了方便查看日志，我们打开 3 个 ssh 窗口，分别启动 3 个 redis 实例，启动命令：
+
+```sh
+# 第1个
+redis-sentinel s1/sentinel.conf
+# 第2个
+redis-sentinel s2/sentinel.conf
+# 第3个
+redis-sentinel s3/sentinel.conf
+```
+
+#### 测试
+
+如果哨兵选举的时候一直失败，可能是没开发所有主从服务器和哨兵节点的端口 `systemctl stop firewalld.service`，如果是 ubuntu 系统则执行 `sudo ufw disable` 关闭防火墙。
+
+尝试让 master 节点 7001 宕机，查看 sentinel 日志：
+
+<div align="center"><img src="img/image-20210701222857997.png"></div>
+
+查看 7003 的日志：
+
+<div align="center"><img src="img/image-20210701223025709.png"></div>
+
+查看 7002 的日志：
+
+<div align="center"><img src="img/image-20210701223131264.png"></div>
 
 ### RedisTemplate
 
@@ -2862,6 +3105,199 @@ public LettuceClientConfigurationBuilderCustomizer clientConfigurationBuilderCus
 - master 之间通过 ping 监测彼此健康状态
 
 - 客户端请求可以访问集群任意节点，最终都会被转发到正确节点
+
+#### 集群结构
+
+片集群需要的节点数量较多，这里我们搭建一个最小的分片集群，包含 3 个 master 节点，每个 master 包含一个 slave 节点，结构如下
+
+<div align="center"><img src="img/image-20210702164116027.png"></div>
+
+这里我们会在同一台虚拟机中开启 6 个 redis 实例，模拟分片集群，信息如下：
+
+|       IP        | PORT |  角色  |
+| :-------------: | :--: | :----: |
+| 192.168.150.101 | 7001 | master |
+| 192.168.150.101 | 7002 | master |
+| 192.168.150.101 | 7003 | master |
+| 192.168.150.101 | 8001 | slave  |
+| 192.168.150.101 | 8002 | slave  |
+| 192.168.150.101 | 8003 | slave  |
+
+#### 准备实例和配置
+
+删除之前的 7001、7002、7003 这几个目录，重新创建出 7001、7002、7003、8001、8002、8003 目录：
+
+```sh
+# 进入/tmp目录
+cd /tmp
+# 删除旧的，避免配置干扰
+rm -rf 7001 7002 7003
+# 创建目录
+mkdir 7001 7002 7003 8001 8002 8003
+```
+
+在 /tmp 下准备一个新的 redis.conf 文件，内容如下：
+
+```ini
+port 6379
+# 开启集群功能
+cluster-enabled yes
+# 集群的配置文件名称，不需要我们创建，由redis自己维护
+cluster-config-file /tmp/6379/nodes.conf
+# 节点心跳失败的超时时间
+cluster-node-timeout 5000
+# 持久化文件存放目录
+dir /tmp/6379
+# 绑定地址
+bind 0.0.0.0
+# 让redis后台运行
+daemonize yes
+# 注册的实例ip
+replica-announce-ip 192.168.150.101
+# 保护模式
+protected-mode no
+# 数据库数量
+databases 1
+# 日志
+logfile /tmp/6379/run.log
+```
+
+将这个文件拷贝到每个目录下：
+
+```sh
+# 进入/tmp目录
+cd /tmp
+# 执行拷贝
+echo 7001 7002 7003 8001 8002 8003 | xargs -t -n 1 cp redis.conf
+```
+
+修改每个目录下的 redis.conf，将其中的 6379 修改为与所在目录一致：
+
+```sh
+# 进入/tmp目录
+cd /tmp
+# 修改配置文件
+printf '%s\n' 7001 7002 7003 8001 8002 8003 | xargs -I{} -t sed -i 's/6379/{}/g' {}/redis.conf
+```
+
+#### 启动
+
+因为已经配置了后台启动模式，所以可以直接启动服务：
+
+```sh
+# 进入/tmp目录
+cd /tmp
+# 一键启动所有服务
+printf '%s\n' 7001 7002 7003 8001 8002 8003 | xargs -I{} -t redis-server {}/redis.conf
+```
+
+通过 ps 查看状态：
+
+```sh
+ps -ef | grep redis
+```
+
+发现服务都已经正常启动：
+
+<div align="center"><img src="img/image-20210702174255799.png"></div>
+
+如果要关闭所有进程，可以执行命令：
+
+```sh
+ps -ef | grep redis | awk '{print $2}' | xargs kill
+```
+
+或者（推荐这种方式）：
+
+```sh
+printf '%s\n' 7001 7002 7003 8001 8002 8003 | xargs -I{} -t redis-cli -p {} shutdown
+```
+
+#### 创建集群
+
+虽然服务启动了，但是目前每个服务之间都是独立的，没有任何关联。
+
+我们需要执行命令来创建集群，在 Redis5.0 之前创建集群比较麻烦，5.0 之后集群管理命令都集成到了 redis-cli 中。
+
+> 1）Redis5.0 之前
+
+Redis5.0 之前集群命令都是用 redis 安装包下的 src/redis-trib.rb 来实现的。因为 redis-trib.rb 是有 ruby 语言编写的所以需要安装 ruby 环境。
+
+ ```sh
+# 安装依赖
+yum -y install zlib ruby rubygems
+gem install redis
+ ```
+
+然后通过命令来管理集群：
+
+```sh
+# 进入 redis 的 src 目录
+cd /tmp/redis-6.2.4/src
+# 创建集群
+./redis-trib.rb create --replicas 1 192.168.150.101:7001 192.168.150.101:7002 192.168.150.101:7003 192.168.150.101:8001 192.168.150.101:8002 192.168.150.101:8003
+```
+
+> 2）Redis5.0 以后
+
+我们使用的是 Redis6.2.4 版本，集群管理以及集成到了 redis-cli 中，格式如下：
+
+```sh
+redis-cli --cluster create --cluster-replicas 1 192.168.150.101:7001 192.168.150.101:7002 192.168.150.101:7003 192.168.150.101:8001 192.168.150.101:8002 192.168.150.101:8003
+```
+
+命令说明：
+
+- `redis-cli --cluster` 或者 `./redis-trib.rb`：代表集群操作命令
+- `create`：代表是创建集群
+- `--replicas 1` 或者 `--cluster-replicas 1` ：指定集群中每个 master 的副本个数为 1，此时`节点总数 ÷ (replicas + 1)` 得到的就是 master 的数量。因此节点列表中的前 n 个就是 master，其它节点都是 slave 节点，随机分配到不同 master
+
+
+运行后的样子：
+
+<div align="center"><img src="img/image-20210702181101969.png"></div>
+
+这里输入 yes，则集群开始创建：
+
+<div align="center"><img src="img/image-20210702181215705.png"></div>
+
+
+通过命令可以查看集群状态：
+
+```sh
+redis-cli -p 7001 cluster nodes
+```
+
+<div align="center"><img src="img/image-20210702181922809.png"></div>
+
+#### 测试
+
+尝试连接 7001 节点，存储一个数据：
+
+```sh
+# 连接
+redis-cli -p 7001
+# 存储数据
+set num 123
+# 读取数据
+get num
+# 再次存储
+set a 1
+```
+
+结果悲剧了：
+
+<div align="center"><img src="img/image-20210702182343979.png"></div>
+
+集群操作时，需要给 `redis-cli` 加上 `-c` 参数才可以：
+
+```sh
+redis-cli -c -p 7001
+```
+
+这次可以了：
+
+<div align="center"><img src="img/image-20210702182602145.png"></div>
 
 ### 散列插槽
 
