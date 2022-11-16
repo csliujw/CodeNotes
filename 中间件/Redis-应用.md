@@ -2932,7 +2932,7 @@ Sentinel 如何判断一个 redis 实例是否健康？
 
 #### 集群结构
 
-这里我们搭建一个三节点形成的 Sentinel 集群，来监管之前的 Redis 主从集群。
+先按之前的方式搭建好主从集群，然后继续搭建一个三节点形成的 Sentinel 集群，来监管之前的 Redis 主从集群。
 
 <div align="center">
     <img src="img/image-20210701215227018.png">
