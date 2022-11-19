@@ -91,15 +91,14 @@
 - 概念：关系型数据库，是建立在关系模型基础上，由多张相互连接的二维表组成的数据库。 
 
 - 特点： 
-    1. 使用表存储数据，格式统一，便于维护 ；
-
+    1. 使用表存储数据，格式统一，便于维护 】
     2. 使用 SQL 语句操作，标准统一，使用方便； 
     3. 数据存储在磁盘中，安全
 
 > 非关系型数据库 (NoSQL)
 
 - 概念：Not-Only SQL，泛指非关系型数据库，是对关系型数据库的补充。 
-- 特点： 1. 数据结构灵活；2. 伸缩性强
+- 特点：数据结构灵活；伸缩性强。
 
 
 SQL：操作关系型数据库的编程语言，是一套标准。
@@ -218,7 +217,7 @@ use demo;
 
 查询指定表的建表语句 `show create table 表名`
 
-<img src="img/image-20220131155715763.png">
+<div align="center"><img src="img/image-20220131155715763.png"></div>
 
 #### 表操作-创建
 
@@ -309,17 +308,17 @@ create table tb_emp(
 添加字段：`alter table 表名 add 字段名 类型(长度) [comment 注释] [约束];`
 `alter table tb_emp add nickname varchar(20) comment '昵称';` 
 
-<img src="img/image-20220131162848796.png">
+<div align="center"><img src="img/image-20220131162848796.png"></div>
 
 修改数据类型：`alter table 表名 modify 字段名 新数据类型(长度);`
 `alter table tb_emp modify nickname int;`
 
-<img src="img/image-20220131163101591.png">
+<div align="center"><img src="img/image-20220131163101591.png"></div>
 
 修改字段名和字段类型：`alter table 表名 change 旧字段名 新字段名 类型(长度) [comment 注释] [约束]`
 `alter table tb_emp change nickname username varchar(30) comment '用户名' not null;`
 
-<img src="img/image-20220131163452393.png">
+<div align="center"><img src="img/image-20220131163452393.png"></div>
 
 删除字段：`alter table 表名 drop 字段名;`
 `alter table tb_emp drop username;`
@@ -643,7 +642,7 @@ select * from emp where sex='男' and age between 20 and 40 order by age asc,ent
 
 #### 执行顺序
 
-<img src="img/image-20220201004522563.png">
+<div align="center"><img src="img/image-20220201004522563.png"></div>
 
 ### DCL
 
@@ -1066,7 +1065,7 @@ create table tb_user(
 
 外键用来让两张表的数据之间建立连接，从而保证数据的一致性和完整性。
 
-<img src="img/image-20220201153732702.png">
+<div align="center"><img src="img/image-20220201153732702.png"></div>
 
 注意：目前上述的两张表，在数据库层面，并未建立外键关联，所以是无法保证数据的一致性和完整性的。
 
@@ -1244,7 +1243,7 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 
 实现：在多的一方建立外键，指向一的一方的主键。
 
-<img src="img/image-20220201162055837.png">
+<div align="center"><img src="img/image-20220201162055837.png"></div>
 
 > 多对多
 
@@ -1254,7 +1253,7 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 
 实现：建立第三张中间表，中间表至少包含两个外键，分别关联两方主键
 
-<img src="img/image-20220201162206455.png">
+<div align="center"><img src="img/image-20220201162206455.png"></div>
 
 > 一对一
 
@@ -1264,7 +1263,7 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 
 实现：在任意一方加入外键，关联另外一方的主键，并且设置外键为唯一的 (UNIQUE)
 
-<img src="img/image-20220201162313709.png">
+<div align="center"><img src="img/image-20220201162313709.png"></div>
 
 ### 多表查询概述
 
@@ -1272,7 +1271,7 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 
 笛卡尔积：笛卡尔乘积是指在数学中，两个集合 A 集合和 B 集合的所有组合情况。(在多表查询时，需要消除无效的笛卡尔积) 
 
-<img src="img/image-20220201162441949.png">
+<div align="center"><img src="img/image-20220201162441949.png"></div>
 
 ### 内连接 
 
@@ -1573,7 +1572,7 @@ select count(*) from emp where dept_id = 1;
 
 <span style="color:red">事务</span>是一组操作的集合，它是一个不可分割的工作单位，事务会把所有的操作作为一个整体一起向系统提交或撤销操作请求，即这些操作<span style="color:red">要么同时成功，要么同时失败。</span>
 
-<img src="img/image-20220201163223983.png">
+<div align="center"><img src="img/image-20220201163223983.png"></div>
 
 <span style="color:red">默认 MySQL 的事务是自动提交的，也就是说，当执行一条 DML 语句，MySQL 会立即隐式的提交事务。</span>
 
@@ -1646,11 +1645,11 @@ insert into account(id,name,momeny) value(null,'张三',2000),(null,'李四',200
 | 不可重复读 | 一个事务先后读取同一条记录，但两次读取的数据不同，称之为不可重复读。<br>事务 A 多次读取同一数据，事务 B 在事务 A 多次读取的过程中，对数据作了<b>更新并提交事务</b>，<b>导致事务 A 多次读取同一数据时，结果不一致。</b><br>MySQL默认采用的是可重复读，通过快照实现的可重复读。 |
 | 幻读       | 一个事务按照条件查询数据时，没有对应的数据行，但是在插入数据时，又发现这行数据已经存在，好像出现了幻影 。 |
 
-<img src="img/image-20220201164120794.png">
+<div align="center"><img src="img/image-20220201164120794.png"></div>
 
-<img src="img/image-20220201164153913.png">
+<div align="center"><img src="img/image-20220201164153913.png"></div>
 
-<img src="img/image-20220201164216281.png">
+<div align="center"><img src="img/image-20220201164216281.png"></div>
 
 <b>总结：</b>不可重复读的和幻读很容易混淆，<b>不可重复读侧重于修改，幻读侧重于新增或删除</b>
 
@@ -1771,11 +1770,11 @@ Linux 的版本为 CentOS 7;
 
 https://downloads.mysql.com/archives/community/
 
-<img src="img/image-20211031230239760.png">
+<div align="center"><img src="img/image-20211031230239760.png"></div>
 
 ### 上传MySQL安装包
 
-<img src="img/image-20211031231930205.png">
+<div align="center"><img src="img/image-20211031231930205.png"></div>
 
 ### 创建目录,并解压
 
@@ -1882,7 +1881,7 @@ mysql -u root -p
 
 ### MySQL体系结构
 
-<img src="img/image-20220122173547178.png">
+<div align="center"><img src="img/image-20220122173547178.png"></div>
 
 <b>连接层</b>：最上层是一些客户端和链接服务，主要完成一些类似于连接处理、授权认证、及相关的安全方案。服务器也会为安全接入的每个客户端验证它所具有的操作权限。
 
@@ -1894,7 +1893,7 @@ mysql -u root -p
 
 >SQL 语句在 MySQL 的各个功能模块中的执行过程。
 
-<img src="img/45/45-1.png" width="80%">
+<div align="center"><img src="img/45/45-1.png" width="80%"></div>
 
 - MySQL 可大致分为 Server 层和存储引擎层两部分。
 - <b>连接器：</b>`mysql -h$ip -P$port -u$user -p`，连接上数据库。
@@ -1941,7 +1940,7 @@ show ENGINES;
 - 文件：xxx.ibd 中的 xxx 代表的是表名，innoDB 引擎的每张表都会对应这样一个表空间文件，存储该表的表结构（frm、sdi）、数据和索引。 参数：innodb_file_per_table
 - 表空间由一个一个的段组成，而段又由区组成。一个区（Extent）默认大小是 1MB，Extent 又由 Page 组成，一个 Page 的大小为 16KB。
 
-<img src="img/image-20220122175230096.png">
+<div align="center"><img src="img/image-20220122175230096.png"></div>
 
 > <b>MyISAM</b>
 
@@ -2053,7 +2052,7 @@ MEMORY：将所有数据保存在内存中，访问速度快，通常用于临�
 
 剖析各种平衡树结构做索引的优缺点
 
-<img src="img/image-20220202102720134.png">
+<div align="center"><img src="img/image-20220202102720134.png"></div>
 
 二叉树缺点：顺序插入时，会形成一个链表，查询性能大大降低。 大数据量情况下，层级较深，检索速度慢。 
 
@@ -2061,17 +2060,17 @@ MEMORY：将所有数据保存在内存中，访问速度快，通常用于临�
 
 > B-Tree/B 杠树（多路平衡查找树）：以一颗最大度数（max-degree）为 5 (5 阶)的 B-tree 为例(每个节点最多存储 4 个 key，5 个指针)
 
-<img src="img/image-20220202102904364.png">
+<div align="center"><img src="img/image-20220202102904364.png"></div>
 
 <span style="color:orange">B-Tree，相对于二叉树（二叉排序树，平衡二叉树，红黑树等），通过增加内部的节点数据个数来减少磁盘的 IO 操作。</span>具体动态变化的过程可以参考网站: https://www.cs.usfca.edu/~galles/visualization/BTree.html
 
 > B+Tree：以一颗最大度数（max-degree）为 4（4 阶）的 B+tree 为例：
 
-<img src="img/image-20220202103024493.png">
+<div align="center"><img src="img/image-20220202103024493.png"></div>
 
 <span style="color:red">MySQL 索引数据结构对经典的 B+Tree 进行了优化。在原 B+Tree 的基础上，增加一个指向相邻叶子节点的链表指针，就形成了带有顺序指针的 B+Tree，提高区间访问的性能。且 B+Tree 的数据都是顺序存储在叶子结点上的，方便范围查找。</span>
 
-<img src="img/image-20220202103738086.png">
+<div align="center"><img src="img/image-20220202103738086.png"></div>
 
 > B-Tree 和 B+Tree 的区别
 
@@ -2085,7 +2084,7 @@ B+Tree 索引如果不是按照索引最左列开始查找，则无法使用索�
 
 哈希索引，哈希索引就是采用一定的 hash 算法，将键值换算成新的 hash 值，映射到对应的槽位上，然后存储在 hash 表中。 如果两个(或多个)键值，映射到一个相同的槽位上，他们就产生了 hash 冲突（也称为 hash 碰撞），可以通过链表来解决。
 
-<img src="img/image-20220202103833246.png">
+<div align="center"><img src="img/image-20220202103833246.png"></div>
 
 哈希索引只有精确匹配索引所有列的查询才有效。对于每一行数据，存储引擎都会对所有的索引列计算一个哈希码，哈希码是一个较小的值，且不同键值的行计算出的哈希码也不一样。
 
@@ -2120,7 +2119,7 @@ MySQL 先计算 Peter 的哈希值，并使用该值查找对应的记录指针�
 
 假设我们要查找 [15,36] 直接的数据，那么需要访问 7 个磁盘块
 
-<img src="img/image-20220225172939761.png">
+<div align="center"><img src="img/image-20220225172939761.png"></div>
 
 ### 索引分类
 
@@ -2148,7 +2147,7 @@ MySQL 先计算 Peter 的哈希值，并使用该值查找对应的记录指针�
 
 假定聚集索引是 id, 非聚集索引是 name。`select * from user where name='Arm';` 的查询流程如下：先在二级索引/非聚集索引上查询一次，发现查询的索引中未覆盖所有的字段，于是进行回表查询，继续查询一次聚集索引。
 
-<img src="img/image-20220202104706091.png">
+<div align="center"><img src="img/image-20220202104706091.png"></div>
 
 <span style="color:red">二级索引可能会存在一个回表查询。二级索引中存储的是二级索引和主键（此处是 name 和 id），如果需要查询的数据不止 name 和 id，则会触发一次回表查询，根据主键 id，再查询一次数据，拿到需要的字段值。</span>
 
@@ -2538,7 +2537,7 @@ select count(distinct substring(email,1,5))/count(*) from tb_user;
 
 先查辅助索引（截取指定长度的前缀进行匹配），前缀匹配了，还要进行回表查询，回表查询拿到数据行后，还要对比 email 的值是否相同。
 
-<img src="img/image-20220227214410971.png">
+<div align="center"><img src="img/image-20220227214410971.png"></div>
 
 ### 单列索引与联合索引
 
@@ -2552,7 +2551,7 @@ select count(distinct substring(email,1,5))/count(*) from tb_user;
 
 多条件联合查询时， 优化器会评估哪个字段的索引效率更高，会选择该索引完成本次查询
 
-<img src="img/image-20220227214626402.png">
+<div align="center"><img src="img/image-20220227214626402.png"></div>
 
 ### 索引设计原则
 
@@ -2678,7 +2677,7 @@ create index idx_user_age_phone_ad on tb_user(age asc,phone desc);
 explain select id,age,phone from tb_user order by age asc,phone desc;
 ```
 
-<img src="img/image-20220228000551597.png">
+<div align="center"><img src="img/image-20220228000551597.png"></div>
 
 - ①根据排序字段建立合适的索引，多字段排序时，也遵循最左前缀法则。
 - ②尽量使用覆盖索引。
@@ -2873,7 +2872,7 @@ drop view stu_v_1,stu_v_2;
 - 基于视图 v2 创建 v3，没有添加 with cascaded check option 条件。
 - 在查询视图 v2 的时候，会检查是否满足 v2 的条件，是否满足 v1 的条件。<b>相当于</b>在 v1 后面加了 with cascaded check option 条件。
 
-<img src="img/image-20220415213642144.png">
+<div align="center"><img src="img/image-20220415213642144.png"></div>
 
 ```mysql
 create or replace view v1 as select id,name from student where id<=20;
@@ -2897,7 +2896,7 @@ insert into v3 (id, name) values (17,"nb2"); # 插入成功，不满足 v3 因�
 - 基于视图 v1 创建 v2
 - 基于视图 v2 创建 v3
 
-<img src="img/image-20220415213707823.png">
+<div align="center"><img src="img/image-20220415213707823.png"></div>
 
 
 
@@ -3634,13 +3633,13 @@ MySQL 中的锁，按照锁的粒度分，分为以下三类：
 
 全局锁就是对整个数据库实例加锁，加锁后整个实例就处于只读状态，后续的 DML 的写语句，DDL 语句，已经更新操作的事务提交语句都将被阻塞。典型的使用场景是做全库的逻辑备份，对所有的表进行锁定，从而获取一致性视图，保证数据的完整性。
 
-<img src="img/image-20220228172657764.png">
+<div align="center"><img src="img/image-20220228172657764.png"></div>
 
 从备份开始到结束，只能读数据。
 
 > 演示
 
-<img src="img/image-20220228172847492.png">
+<div align="center"><img src="img/image-20220228172847492.png"></div>
 
 > 特点
 
@@ -3673,7 +3672,7 @@ mysqldump --single-transaction -uroot -p123456 demo>demo.sql
 
 释放锁：unlock tables / 客户端断开连接。后面不用跟表名。
 
-<img src="img/image-20220228173534513.png">
+<div align="center"><img src="img/image-20220228173534513.png"></div>
 
 <span style="color:red">读锁不会阻塞其他客户端的读，但是会阻塞写。写锁既会阻塞其他客户端的读，又会阻塞其他客户端的写。</span>
 
@@ -3715,7 +3714,7 @@ InnoDB 的数据是基于索引组织的，行锁是对索引上的索引项加�
 - 间隙锁（Gap Lock）：锁定索引记录间隙（不含该记录），确保索引记录间隙不变，防止其他事务在这个间隙进行 insert，产生幻读。在 RR 隔离级别下都支持。 
 - 临键锁（Next-Key Lock）：行锁和间隙锁组合，同时锁住数据，并锁住数据前面的间隙 Gap。在 RR 隔离级别下支持。可简单理解为<b>行锁+间隙锁</b>
 
-<img src="img/image-20220228182334581.png">
+<div align="center"><img src="img/image-20220228182334581.png"></div>
 
 #### 行锁
 
@@ -3790,7 +3789,7 @@ select object_schema,object_name,index_name,lock_type,lock_mode,lock_data from p
 - 索引上的等值查询(普通索引)，向右遍历时最后一个值不满足查询需求时，next-key lock 退化为间隙锁。 
 - 索引上的范围查询(唯一索引) -- 会访问到不满足条件的第一个值为止。
 
-<img src="img/image-20220228183635482.png">
+<div align="center"><img src="img/image-20220228183635482.png"></div>
 
 <span style="color:red">注意：间隙锁唯一目的是防止其他事务插入间隙。间隙锁可以共存，一个事务采用的间隙锁不会阻止另一个事务在同一间隙上采用间隙锁。</span>
 
@@ -3807,36 +3806,36 @@ select object_schema,object_name,index_name,lock_type,lock_mode,lock_data from p
 
 ### 逻辑存储结构
 
-<img src="img/image-20220228203318131.png">
+<div align="center"><img src="img/image-20220228203318131.png"></div>
 
-<img src="img/image-20220228203414995.png">
+<div align="center"><img src="img/image-20220228203414995.png"></div>
 
 ### 架构
 
 MySQL5.5 版本开始，默认使用 InnoDB 存储引擎，它擅长事务处理，具有崩溃恢复特性，在日常开发中使用非常广泛。下面是 InnoDB 架构图，左侧为内存结构，右侧为磁盘结构。
 
-<img src="img/image-20220228203602095.png">
+<div align="center"><img src="img/image-20220228203602095.png"></div>
 
 #### 内存结构
 
-<img src="img/image-20220228203640696.png">
+<div align="center"><img src="img/image-20220228203640696.png"></div>
 
-<img src="img/image-20220228205314756.png">
+<div align="center"><img src="img/image-20220228205314756.png"></div>
 
 对于主键索引和唯一索引，是不会操作 change buffer 的。感觉 change buffer 和 buffer pool 差不多，只是 change buffer 里会对数据按索引进行排序，然后再把排序后的数据刷新到 buffer pool 里，等待数据刷回磁盘。
 
-<img src="img/image-20220228205423818.png">
-<img src="img/image-20220228205520373.png">
+<div align="center"><img src="img/image-20220228205423818.png"></div>
+<div align="center"><img src="img/image-20220228205520373.png"></div>
 
-<img src="img/image-20220228205837606.png">
+<div align="center"><img src="img/image-20220228205837606.png"></div>
 
 #### 磁盘结构
 
-<img src="img/image-20220228205934183.png">
-<img src="img/image-20220228210036160.png">
-<img src="img/image-20220228210117804.png">
+<div align="center"><img src="img/image-20220228205934183.png"></div>
+<div align="center"><img src="img/image-20220228210036160.png"></div>
+<div align="center"><img src="img/image-20220228210117804.png"></div>
 
-<img src="img/image-20220228210552934.png">
+<div align="center"><img src="img/image-20220228210552934.png"></div>
 
 #### 后台线程
 
@@ -3855,7 +3854,7 @@ Purge Thread 主要用于回收事务已经提交了的 undo log，在事务提�
 
 Page Cleaner Thread，协助 Master Thread 刷新脏页到磁盘的线程，它可以减轻 Master Thread 的工作压力，减少阻塞。
 
-<img src="img/image-20220228210738727.png">
+<div align="center"><img src="img/image-20220228210738727.png"></div>
 
 ### 事务原理
 
@@ -3872,7 +3871,7 @@ Page Cleaner Thread，协助 Master Thread 刷新脏页到磁盘的线程，它�
 
 <span style="color:red">原子性、一致性和持久性通过 redo log 和 undo log 实现的。隔离性通过锁和 MVCC 实现的。</span>
 
-<img src="img/image-20220228211213496.png">
+<div align="center"><img src="img/image-20220228211213496.png"></div>
 
 #### redo log实现持久性
 
@@ -3880,7 +3879,7 @@ Page Cleaner Thread，协助 Master Thread 刷新脏页到磁盘的线程，它�
 
 该日志文件由两部分组成：重做日志缓冲（redo log buffer）以及重做日志文件（redo log file），前者是在内存中，后者在磁盘中。当事务提交之后会把所有修改信息都存到该日志文件中。在刷新脏页到磁盘，发生错误时，可以用日志文件进行数据恢复。【redo log file 的写入速度会比直接写磁盘快很多，因为是顺序写入，不用花费大量的时间查找写入的位置，直接追加写入就行】
 
-<img src="img/image-20220228211850982.png">
+<div align="center"><img src="img/image-20220228211850982.png"></div>
 
 Buffer Pool 缓存了数据页的信息。进行 update 时，会先操纵缓存区。如果缓冲区没有数据，会通过后台线程，把数据读取到缓冲区，然后在缓冲区进行修改。这种被修改的数据页我们称为脏页，且脏页中的数据需要同步到磁盘中。
 
@@ -3920,7 +3919,7 @@ Undo log 存储：undo log 采用段的方式进行管理和记录，存放在�
 
 > <span style="color:red">记录中的隐藏字段</span>
 
-<img src="img/image-20220228212433507.png">
+<div align="center"><img src="img/image-20220228212433507.png"></div>
 
 | 隐藏字段    | 含义                                                         |
 | ----------- | ------------------------------------------------------------ |
@@ -3941,9 +3940,9 @@ Undo log 存储：undo log 采用段的方式进行管理和记录，存放在�
 
 在事务中对记录进行操作时，undo log 日志中会记录数据被修改前的内容。事务 `DB_TRX_ID` 会自增。
 
-<img src="img/image-20220228212827231.png">
-<img src="img/image-20220228212910928.png">
-<img src="img/image-20220228213010220.png">
+<div align="center"><img src="img/image-20220228212827231.png"></div>
+<div align="center"><img src="img/image-20220228212910928.png"></div>
+<div align="center"><img src="img/image-20220228213010220.png"></div>
 
 <b>不同事务或相同事务对同一条记录进行修改，会导致该记录的 undo log 生成一条记录版本链表，链表的头部是最新的旧记录，链表尾部是最早的旧记录。</b>
 
@@ -3960,7 +3959,7 @@ ReadView（读视图）是快照读 SQL 执行时 MVCC 提取数据的依据，<
 | `max_trx_id`     | 预分配事务 ID，当前最大事务 ID+1（因为事务 ID 是自增的） |
 | `creator_trx_id` | ReadView 创建者的事务 ID                                 |
 
-<img src="img/image-20220228213240595.png">
+<div align="center"><img src="img/image-20220228213240595.png"></div>
 
 <span style="color:red">不同的隔离级别，生成 ReadView 的时机不同：</span>
 
@@ -3969,15 +3968,15 @@ ReadView（读视图）是快照读 SQL 执行时 MVCC 提取数据的依据，<
 
 Read Committed 隔离级别下，在事务中每一次执行快照读时生成 ReadView。
 
-<img src="img/image-20220228213421031.png">
+<div align="center"><img src="img/image-20220228213421031.png"></div>
 
 上面的这两次事务，在读取的时候提取的到底是那个版本？【<span style="color:orange">其实规则很简单，快照读只能读取到最近一条已经提交事务的数据或者是这个未提交的事务就是自己</span>】
 
-<img src="img/image-20220228213526500.png">
+<div align="center"><img src="img/image-20220228213526500.png"></div>
 
 最上边那条事务 `m_ids:{3,4,5} 这个` 将 undo log 中的记录与右边的比较规则进行比较，发现当记录为 `30 3 A30 2` 时，符合右边的规则。所以读取到的记录是 `30 3 A30 2` 
 
-<img src="img/image-20220228213636400.png">
+<div align="center"><img src="img/image-20220228213636400.png"></div>
 
 下边那条事务 `m_ids:{4,5} 这个` 将 undo log 中的记录与右边的比较规则进行比较，发现当记录为 `30 3 A30 2` 时，符合右边的规则。所以读取到的记录是 `30 3 A30 2`。
 
@@ -3985,7 +3984,7 @@ Read Committed 隔离级别下，在事务中每一次执行快照读时生成 R
 
 > 汇总图
 
-<img src="img/image-20220228213708058.png">
+<div align="center"><img src="img/image-20220228213708058.png"></div>
 
 MySQL 事务的隔离级别默认是可重复读。
 
@@ -4031,8 +4030,3 @@ update\delete 等操作先回到 buffer pool 里，然后把变化写入到 redo
 查下高性能 MySQL。
 
 大致意思是，为数据库表新增一行 `version` 来记录数据更新的版本号。每次更新数据时将 version 作为条件，并且每次更新时 version+1。
-
-## 代码实现
-
-下次补~~~
-

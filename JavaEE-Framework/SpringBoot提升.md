@@ -161,8 +161,8 @@ Spring-Boot-Layers-Index: BOOT-INF/layers.idx
 - BOOT-INF/lib：存放应用依赖的 jar 包
 - META-INF/：存放应用相关元信息，如 MANIFEST.MF 文件。
 - org/：存放 Spring Boot 相关的 class 文件
-- <b>Main-Class: org.springframework.boot.loader.JarLauncher</b> 指定了这是 jar 运行
-- <b>Main-Class: org.springframework.boot.loader.WarLauncher</b> 指定了这是 war 运行
+- <b>Main-Class：org.springframework.boot.loader.JarLauncher</b> 指定了这是 jar 运行
+- <b>Main-Class：org.springframework.boot.loader.WarLauncher</b> 指定了这是 war 运行
 - 这两个类是 jar / war 的启动器，都是 org.springframework.boot.loader 中的类。
 - <b>Start-Class：com.example.demo.DemoApplication</b> Main-Class 运行后会加载 Start-Class 中的类
 
@@ -172,7 +172,7 @@ Spring-Boot-Layers-Index: BOOT-INF/layers.idx
 
 <div align="center"><img src="img/boot/image-20220309213230506.png"></div>
 
- MANIFEST.MF 中有 Main-Class 和 Start-Class 属性。Main-Class 填写一个固定的类，Start-Class 填写我们写的加了@SpringBootApplication 注解的类。
+ MANIFEST.MF 中有 Main-Class 和 Start-Class 属性。Main-Class 填写一个固定的类，Start-Class 填写我们写的加了 @SpringBootApplication 注解的类。
 
 我们解压 jar 包，使用 java 命令运行 `org.springframework.boot.loader.JarLauncher`。
 
@@ -279,9 +279,9 @@ public class SpringbootApplication {
 
 `@SpringBootApplication` annotation can be used to enable those three features, that is:
 
-- `@EnableAutoConfiguration`: enable [Spring Boot’s auto-configuration mechanism](https://docs.spring.io/spring-boot/docs/current/reference/html/using.html#using.auto-configuration)
-- `@ComponentScan`: enable `@Component` scan on the package where the application is located (see [the best practices](https://docs.spring.io/spring-boot/docs/current/reference/html/using.html#using.structuring-your-code))
-- `@SpringBootConfiguration`: enable registration of extra beans in the context or the import of additional configuration classes. An alternative to Spring’s standard `@Configuration` that aids [configuration detection](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.testing.spring-boot-applications.detecting-configuration) in your integration tests.
+- `@EnableAutoConfiguration：`enable [Spring Boot’s auto-configuration mechanism](https://docs.spring.io/spring-boot/docs/current/reference/html/using.html#using.auto-configuration)
+- `@ComponentScan：`enable `@Component` scan on the package where the application is located (see [the best practices](https://docs.spring.io/spring-boot/docs/current/reference/html/using.html#using.structuring-your-code))
+- `@SpringBootConfiguration：`enable registration of extra beans in the context or the import of additional configuration classes. An alternative to Spring’s standard `@Configuration` that aids [configuration detection](https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.testing.spring-boot-applications.detecting-configuration) in your integration tests.
 
 我们来仔细看下 @SpringBootApplication 注解：它是一个复合注解，由 @SpringBootConfiguration、@EnableAutoConfiguration 和 @ComponentScan 组成。而 @SpringBootConfiguration 只是 @Configuration 的一个别名。
 
@@ -295,8 +295,7 @@ public class SpringbootApplication {
 ), @Filter(
     type = FilterType.CUSTOM,
     classes = {AutoConfigurationExcludeFilter.class}
-)}
-)
+)})
 public @interface SpringBootApplication {
     // some code
 }

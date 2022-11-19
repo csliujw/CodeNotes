@@ -10,13 +10,13 @@ Windows 上安装 MySQL 相对来说会较为简单，最新版本可以在 [MyS
 
 ![图片说明](https://uploadfiles.nowcoder.com/images/20191011/334190970_1570776164052_48B5E330CE1ABB26B5756AD0ADE1DD24)
 
-下载完后，我们将 zip 包解压到相应的目录，这里我将解压后的文件夹放在 **C:\web\mysql-8.0.11** 下。
+下载完后，我们将 zip 包解压到相应的目录，这里我将解压后的文件夹放在 <b>C:\web\mysql-8.0.11</b> 下。
 
-**接下来我们需要配置下 MySQL 的配置文件**
+<b>接下来我们需要配置下 MySQL 的配置文件</b>
 
-打开刚刚解压的文件夹 **C:\web\mysql-8.0.11** ，在该文件夹下创建 **my.ini** 配置文件，编辑 **my.ini** 配置以下基本信息：
+打开刚刚解压的文件夹 <b>C:\web\mysql-8.0.11</b>，在该文件夹下创建 <b>my.ini</b> 配置文件，编辑 <b>my.ini</b> 配置以下基本信息：
 
-```
+```shell
 [client]
 # 设置mysql客户端默认字符集
 default-character-set=utf8
@@ -36,7 +36,7 @@ character-set-server=utf8
 default-storage-engine=INNODB
 ```
 
-**接下来我们来启动下 MySQL 数据库：**
+<b>接下来我们来启动下 MySQL 数据库：</b>
 
 以管理员身份打开 cmd 命令行工具，切换目录：
 
@@ -58,7 +58,7 @@ mysqld --initialize --console
 ...
 ```
 
-**APWCY5ws&hjQ** 就是初始密码，后续登录需要用到，你也可以在登陆后修改密码。[ikOws<oyi7Gg]
+<b>APWCY5ws&hjQ</b> 就是初始密码，后续登录需要用到，你也可以在登陆后修改密码。[ikOws<oyi7Gg]
 
 输入以下安装命令：
 
@@ -72,7 +72,7 @@ mysqld install
 net start mysql
 ```
 
-**注意**: 在 5.7 需要初始化 data 目录：
+<span style="color:red">注意：在 5.7 需要初始化 data 目录：</span>
 
 ```
 cd C:\web\mysql-8.0.11\bin 

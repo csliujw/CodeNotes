@@ -4,6 +4,8 @@ non-blocking io 非阻塞 IO
 
 [《Unix 网络编程》笔记汇总 - CoolGin - 博客园 (cnblogs.com)](https://www.cnblogs.com/Sherry4869/p/16723105.html)
 
+[Netty堆外内存泄露排查 - 美团技术团队 (meituan.com)](https://tech.meituan.com/2018/10/18/netty-direct-memory-screening.html)
+
 ## 说明
 
 > 笔记来源

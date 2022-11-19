@@ -32,13 +32,13 @@ Java Virtual Machine，JAVA 程序的运行环境（JAVA 二进制字节码的�
 
 > 常见的 JVM
 
-<div align="center"><img src="jvm_image/JVM_Version.png"></div>
+<div align="center"><img src="img/JVM_Version.png"></div>
 
 > 比较：JVM JRE JDK 的区别
 
-<div align="center"><img src="jvm_image/JVM_JRE_JDK.png" style="width:70%"></div>
+<div align="center"><img src="img/JVM_JRE_JDK.png" style="width:70%"></div>
 
 > <b>学习路线</b>
 
-<div align="center"><img src="jvm_image/JVM_Study.png" style="width:70%"></div>
+<div align="center"><img src="img/JVM_Study.png" style="width:70%"></div>
 

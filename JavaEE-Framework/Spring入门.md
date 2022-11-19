@@ -93,9 +93,9 @@ ApplicationContext 是 BeanFactory 的子接口，也被称为应用上下文，
 
 依赖注入（Dependency Injection，简称 DI）与控制反转（IoC）的含义相同，只不过这两个称呼是从两个角度描述的同一个概念。
 
-<b>控制反转</b>：不再是自己实例化对象，而是交给 Spring 容器来创建对象，控制权发生了反转。
+<b>控制反转：</b>不再是自己实例化对象，而是交给 Spring 容器来创建对象，控制权发生了反转。
 
-<b>依赖注入</b>：A 类和 B 类，如果 A 要用到 B，就是 A 依赖了 B。Spring 的 IOC 容器会为 A 初始化这个 B 对象，即注入这个依赖。
+<b>依赖注入：</b>A 类和 B 类，如果 A 要用到 B，就是 A 依赖了 B。Spring 的 IOC 容器会为 A 初始化这个 B 对象，即注入这个依赖。
 
 > Spring 的依赖注入的方式有如下两种
 
@@ -107,6 +107,8 @@ ApplicationContext 是 BeanFactory 的子接口，也被称为应用上下文，
 - 如果有多个构造方法，但是没有无参数的，那么会报错。
 - 报错了，怎么办？为某个构造方法加上 Autowired，就会使用那个构造方法进行初始化。
 - 如果需要根据不同的情况来实例化对象怎么办？请看下面的多构造实例化代码
+
+3️⃣注解注入
 
 setter 注入（需要加上 Autowired 注解）和构造方法注入（无需加注解）
 
@@ -222,13 +224,10 @@ public class SpringConfig {
 @Scope(value = "prototype")
 public class User {
     public UserP p;
-
     public UserPTwo t;
-
     public Object o;
 
-    public User() {
-    }
+    public User() {}
 	
     // @Autowired 指定使用这个构造方法初始化
     @Autowired
@@ -593,7 +592,6 @@ import org.example.configuration.MainConfiguration;
 import org.junit.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-
 public class ScanTest {
 
     @Test
@@ -669,7 +667,7 @@ public class ScopeConfigurationTest {
 
 ## 懒加载
 
-- @Lazy ，针对单实例容器启动时不创建对象，第一次获取 bean 时再进行初始化。
+- @Lazy，针对单实例容器启动时不创建对象，第一次获取 bean 时再进行初始化。
 - 验证代码如下
 
 ```java
@@ -707,13 +705,11 @@ public @interface Conditional {
 	 * in order for the component to be registered.
 	 */
 	Class<? extends Condition>[] value();
-
 }
 
 // 再看Class<? exntends Condition>[] 中的Condition
 @FunctionalInterface
 public interface Condition {
-
 	/**
 	 * Determine if the condition matches.
 	 * @param context the condition context
@@ -930,7 +926,7 @@ class MyImportSelector implements ImportSelector {
 
 ### Import的高级用法二
 
-ImportBeanDefinitionRegistrar 接口，这个接口的功能比 ImportSelector 接口要更为强大，可以拿到 所有 bean 的定义信息（BeanDefinitionRegistry）。
+ImportBeanDefinitionRegistrar 接口，这个接口的功能比 ImportSelector 接口要更为强大，可以拿到所有 bean 的定义信息（BeanDefinitionRegistry）。
 
 ```java
 public interface ImportBeanDefinitionRegistrar {
@@ -1333,16 +1329,16 @@ after close
 
 一旦返回 null，跳出 for 循环，不会执行后面的 BeanPostProcess.postProcessors
 
-
-
  BeanPostProcessor 的大致执行流程
 
- populateBean(beanName, mbd, instanceWrapper); 给 bean 进行属性赋值
- initializeBean{
- applyBeanPostProcessorsBeforeInitialization //for 循环得到全部 beanPost
- invokeInitMethods(beanName, wrappedBean, mbd); //初始化方法
- applyBeanPostProcessorsAfterInitialization //for 循环得到全部 beanPost
+```java
+populateBean(beanName, mbd, instanceWrapper); 给 bean 进行属性赋值
+    initializeBean{
+    applyBeanPostProcessorsBeforeInitialization //for 循环得到全部 beanPost
+        invokeInitMethods(beanName, wrappedBean, mbd); //初始化方法
+    applyBeanPostProcessorsAfterInitialization //for 循环得到全部 beanPost
 }
+```
 
 # 属性赋值
 

@@ -131,8 +131,7 @@ string 是 C++ 标准库的一个重要部分，主要用于字符串的处理�
 struct 是由一系列相同或不同的数据类型组成的数据集合，也称结构体，是一种复合型的数据类型。
 
 ```cpp
-struct struct_name
-{
+struct struct_name{
     memberList
 }varList
 ```
@@ -2686,7 +2685,6 @@ void visited(){
     for (int i = 0; i < count; i++){
         cout<<v1[i]<<"=="<<v1.at(i)<<endl;
     }
-    
 }
 ```
 
@@ -3087,8 +3085,6 @@ void getType(){
     map<string,int>::mapped_type mapType;
 }
 ```
-
-
 
 ### 栈和队列
 

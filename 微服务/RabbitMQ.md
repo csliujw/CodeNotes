@@ -50,7 +50,7 @@
 
 Broker 是一个像数据总线一样的东西，所有的服务要接收数据和发送数据都发到这个总线上，这个总线就像协议一样，让服务间的通讯变得标准和可控。类似于一个有协议的队列，生产者向里面放数据，消费者从里面拿数据。
 
-> <b>好处：</b>
+> <b>好处</b>
 
 - 提升吞吐量：无需等待订阅者处理完成，响应更快速
 
@@ -59,7 +59,7 @@ Broker 是一个像数据总线一样的东西，所有的服务要接收数据�
 - 耦合度极低，每个服务都可以灵活插拔，可替换
 - 流量削峰：不管发布事件的流量波动多大，都由 Broker 接收，订阅者可以按照自己的速度去处理事件
 
-> <b>缺点：</b>
+> <b>缺点</b>
 
 - 架构复杂了，业务没有明显的流程线，不好管理
 - 需要依赖于 Broker 的可靠、安全、性能
@@ -149,7 +149,7 @@ A系统/生产者-->中间件/消息队列-->B系统/消费者
 
 <img src="img/image-20221010153525277.png">
 
-加入消息队列后，用户点击完下单按钮后，只需等待 25ms 就能得到下单响应 (20 + 5 = 25ms)。提升用户体验和系统吞吐量（单位时间内处理请求的数目）。
+加入消息队列后，用户点击完下单按钮后，只需等待 25ms 就能得到下单响应 (20+5=25ms)。提升用户体验和系统吞吐量（单位时间内处理请求的数目）。
 
 <img src="img/image-20221010153740378.png">
 
@@ -185,11 +185,11 @@ A 系统处理完业务，通过 MQ 给 B、C、D 三个系统发消息数据，
 
 ### 使用MQ的条件
 
-① 生产者不需要从消费者处获得反馈。引入消息队列之前的直接调用，其接口的返回值应该为空，这才让明明下层的动作还没做，上层却当成动作做完了继续往后走，即所谓异步成为了可能。
+①生产者不需要从消费者处获得反馈。引入消息队列之前的直接调用，其接口的返回值应该为空，这才让明明下层的动作还没做，上层却当成动作做完了继续往后走，即所谓异步成为了可能。
 
-② 容许短暂的不一致性。
+②容许短暂的不一致性。
 
-③ 确实是用了有效果。即解耦、提速、削峰这些方面的收益，超过加入 MQ，管理 MQ 这些成本。
+③确实是用了有效果。即解耦、提速、削峰这些方面的收益，超过加入 MQ，管理 MQ 这些成本。
 
 ## RabbitMQ
 
@@ -205,13 +205,13 @@ AMQP，即 Advanced Message Queuing Protocol（高级消息队列协议），是
 
 <img src="img/image-20221010155703332.png">
 
-- <b>Broker</b>：接收和分发消息的应用，RabbitMQ Server 就是 Message Broker
-- <b>Virtual host</b>：出于多租户和安全因素设计的，把 AMQP 的基本组件划分到一个虚拟的分组中，类似于网络中的 namespace 概念。当多个不同的用户使用同一个 RabbitMQ server 提供的服务时，可以划分出多个 vhost，每个用户在自己的 vhost 创建 exchange／queue 等 
-- <b>Connection</b>：publisher／consumer 和 broker 之间的 TCP 连接
-- <b>Channel</b>：如果每一次访问 RabbitMQ 都建立一个 Connection，在消息量大的时候建立 TCP Connection 的开销将是巨大的，效率也较低。Channel 是在 connection 内部建立的逻辑连接，如果应用程序支持多线程，通常每个 thread 创建单独的 channel 进行通讯，AMQP method 包含了channel id 帮助客户端和 message broker 识别 channel，所以 channel 之间是完全隔离的。Channel 作为轻量级的 Connection  极大减少了操作系统建立 TCP connection 的开销
-- <b>Exchange</b>：message 到达 broker 的第一站，根据分发规则，匹配查询表中的 routing key，分发消息到 queue 中去。常用的类型有：direct (point-to-point), topic (publish-subscribe) and fanout (multicast)
-- <b>Queue</b>：消息最终被送到这里等待 consumer 取走
-- <b>Binding</b>：exchange 和 queue 之间的虚拟连接，binding 中可以包含 routing key。Binding 信息被保存到 exchange 中的查询表中，用于 message 的分发依据。
+- <b>Broker：</b>接收和分发消息的应用，RabbitMQ Server 就是 Message Broker
+- <b>Virtual host：</b>出于多租户和安全因素设计的，把 AMQP 的基本组件划分到一个虚拟的分组中，类似于网络中的 namespace 概念。当多个不同的用户使用同一个 RabbitMQ server 提供的服务时，可以划分出多个 vhost，每个用户在自己的 vhost 创建 exchange／queue 等 
+- <b>Connection：</b>publisher／consumer 和 broker 之间的 TCP 连接
+- <b>Channel：</b>如果每一次访问 RabbitMQ 都建立一个 Connection，在消息量大的时候建立 TCP Connection 的开销将是巨大的，效率也较低。<span style="color:orange">Channel 是在 connection 内部建立的逻辑连接，如果应用程序支持多线程，通常每个 thread 创建单独的 channel 进行通讯，</span>AMQP method 包含了channel id 帮助客户端和 message broker 识别 channel，所以 channel 之间是完全隔离的。<span style="color:orange">Channel 作为轻量级的 Connection  极大减少了操作系统建立 TCP connection 的开销</span>
+- <b>Exchange：</b>message 到达 broker 的第一站，根据分发规则，匹配查询表中的 routing key，分发消息到 queue 中去。常用的类型有：direct (point-to-point), topic (publish-subscribe) and fanout (multicast)
+- <b>Queue：</b>消息最终被送到这里等待 consumer 取走
+- <b>Binding：</b>exchange 和 queue 之间的虚拟连接，binding 中可以包含 routing key。Binding 信息被保存到 exchange 中的查询表中，用于 message 的分发依据。
 
 ### RabbitMQ工作模式
 
@@ -258,11 +258,28 @@ RabbitMQ 提供了 6 种工作模式：简单模式、work queues、Publish/Subs
 
 <div align="center"><img src="assets/image-20210717162628635.png"></div>
 
-MQ 的基本结构：
+或直接使用 docker
+
+```shell
+# 拉取 mq
+docker pull rabbitmq:3-management
+# 启动 mq
+docker run \
+ -e RABBITMQ_DEFAULT_USER=itcast \ # 设置管理员账号
+ -e RABBITMQ_DEFAULT_PASS=123321 \ # 设置管理员密码
+ --name mq \
+ --hostname mq1 \
+ -p 15672:15672 \ # 管理信息页面
+ -p 5672:5672 \  # 通信端口
+ -d \
+ rabbitmq:3-management
+```
+
+MQ 的基本结构
 
 <div align="center"><img src="assets/image-20210717162752376.png"></div>
 
-> RabbitMQ 中的一些角色：
+> RabbitMQ 中的一些角色
 
 - publisher：生产者
 - consumer：消费者
@@ -288,8 +305,8 @@ RabbitMQ 官方提供了 5 个不同的 Demo 示例，对应了不同的消息�
 
 <div align="center"><img src="img/image-20221010163258712.png"></div>
 
-- <b>Work Queues</b>：与入门程序的简单模式相比，多了一个或一些消费端，多个消费端共同消费同一个队列中的消息。在一个队列中如果有多个消费者，那么消费者之间对于同一个消息的关系是竞争的关系。(消息获取的线程安全性由消息队列自身保证吗？)
-- <b>应用场景</b>：对于任务过重或任务较多情况使用工作队列可以提高任务处理的速度。
+- <b>Work Queues：</b>与入门程序的简单模式相比，多了一个或一些消费端，多个消费端共同消费同一个队列中的消息。在一个队列中如果有多个消费者，那么消费者之间对于同一个消息的关系是竞争的关系。(消息获取的线程安全性由消息队列自身保证吗？)
+- <b>应用场景：</b>对于任务过重或任务较多情况使用工作队列可以提高任务处理的速度。
 
 ### Public/Sub订阅模式
 
@@ -313,7 +330,7 @@ RabbitMQ 官方提供了 5 个不同的 Demo 示例，对应了不同的消息�
 <b>总结</b>
 
 - 交换机需要与队列进行绑定，绑定之后；一个消息可以被多个消费者都收到。
-- 发布订阅模式与工作队列模式的区别：
+- 发布订阅模式与工作队列模式的区别
     - 工作队列模式不用定义交换机，而发布/订阅模式需要定义交换机
     - 发布/订阅模式的生产方是面向交换机发送消息，工作队列模式的生产方是面向队列发送消息(底层使用默认交换机)
     - 发布/订阅模式需要设置队列和交换机的绑定，工作队列模式不需要设置，实际上工作队列模式会将队列绑定到默认的交换机
@@ -386,6 +403,16 @@ Topic 主题模式可以实现 Pub/Sub 发布与订阅模式和 Routing 路由�
 - queue：消息队列，负责接受并缓存消息
 - consumer：订阅队列，处理队列中的消息
 
+导入依赖
+
+```xml
+<dependency>
+    <groupId>com.rabbitmq</groupId>
+    <artifactId>amqp-client</artifactId>
+    <version>5.16.0</version>
+</dependency>
+```
+
 ### publisher实现
 
 思路：
@@ -396,48 +423,48 @@ Topic 主题模式可以实现 Pub/Sub 发布与订阅模式和 Routing 路由�
 - 发送消息
 - 关闭连接和 Channel
 
-代码实现：
-
 ```java
-package cn.itcast.mq.helloworld;
+package com.ex.rabbitmq.quick_test;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
+import java.nio.charset.StandardCharsets;
 
 public class PublisherTest {
-    @Test
-    public void testSendMessage() throws IOException, TimeoutException {
-        // 1.建立连接
+    static Logger log = LoggerFactory.getLogger("publisher");
+    static String queueName = "simple.queue";
+
+    public static void main(String[] args) throws Exception {
         ConnectionFactory factory = new ConnectionFactory();
-        // 1.1.设置连接参数，分别是：主机名、端口号、vhost、用户名、密码
-        factory.setHost("192.168.150.101");
+        factory.setHost("127.0.0.1");
         factory.setPort(5672);
-        factory.setVirtualHost("/");
         factory.setUsername("itcast");
+        factory.setVirtualHost("/");
         factory.setPassword("123321");
-        // 1.2.建立连接
-        Connection connection = factory.newConnection();
-
-        // 2.创建通道Channel
-        Channel channel = connection.createChannel();
-
-        // 3.创建队列
-        String queueName = "simple.queue";
-        channel.queueDeclare(queueName, false, false, false, null);
-
-        // 4.发送消息
-        String message = "hello, rabbitmq!";
-        channel.basicPublish("", queueName, null, message.getBytes());
-        System.out.println("发送消息成功：【" + message + "】");
-
-        // 5.关闭通道和连接
-        channel.close();
-        connection.close();
+        Connection connection = null;
+        Channel channel = null;
+        try {
+            connection = factory.newConnection();
+            log.debug(String.valueOf(connection));
+            channel = connection.createChannel();
+            // 创建队列（debug 执行完此语句后，队列 simple.queue 队列成功创建）
+            channel.queueDeclare(queueName, false, false, false, null);
+            for (int i = 0; i < 10; i++) {
+                channel.basicPublish("", queueName, null, "hello rabbitmq".getBytes(StandardCharsets.UTF_8));
+                log.debug("消息{}发送成功", "hello rabbitmq");
+            }
+        } finally {
+            if (channel != null) {
+                channel.close();
+            }
+            if (connection != null) {
+                connection.close();
+            }
+        }
     }
 }
 ```
@@ -449,50 +476,59 @@ public class PublisherTest {
 - 声明队列
 - 订阅消息
 
-代码实现：
-
 ```java
-package cn.itcast.mq.helloworld;
+package com.ex.rabbitmq.quick_test;
 
 import com.rabbitmq.client.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class ConsumerTest {
+    static Logger log = LoggerFactory.getLogger("consumerTest");
+    static String queueName = "simple.queue";
 
-    public static void main(String[] args) throws IOException, TimeoutException {
-        // 1.建立连接
+    public static void main(String[] args) throws IOException, TimeoutException, InterruptedException {
+        // 设置消息队列参数
         ConnectionFactory factory = new ConnectionFactory();
-        // 1.1.设置连接参数，分别是：主机名、端口号、vhost、用户名、密码
-        factory.setHost("192.168.150.101");
+        factory.setHost("127.0.0.1");
         factory.setPort(5672);
-        factory.setVirtualHost("/");
         factory.setUsername("itcast");
+        factory.setVirtualHost("/");
         factory.setPassword("123321");
-        // 1.2.建立连接
-        Connection connection = factory.newConnection();
 
-        // 2.创建通道Channel
-        Channel channel = connection.createChannel();
+        Connection connection = null;
+        Channel channel = null;
+        try {
+            // 建立连接并创建通道
+            connection = factory.newConnection();
+            channel = connection.createChannel();
+            channel.queueDeclare(queueName, false, false, false, null);
 
-        // 3.创建队列
-        String queueName = "simple.queue";
-        channel.queueDeclare(queueName, false, false, false, null);
+            Channel finalChannel = channel;
+            // 消费消息
+            channel.basicConsume(queueName, new DefaultConsumer(finalChannel) {
+                @Override
+                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                    String message = new String(body);
+                    log.debug("接收到消息:{}", message);
+                    // 设置 ack 回复，表示接收到了消息
+                    finalChannel.basicAck(envelope.getDeliveryTag(), false);
+                }
+            });
+            log.debug("waiting for message");
 
-        // 4.订阅消息
-        channel.basicConsume(queueName, true, new DefaultConsumer(channel){
-            @Override
-            public void handleDelivery(String consumerTag, Envelope envelope,
-                                       AMQP.BasicProperties properties, byte[] body) throws IOException {
-                // 5.处理消息
-                String message = new String(body);
-                System.out.println("接收到消息：【" + message + "】");
-            }
-        });
-        System.out.println("等待接收消息。。。。");
+        } finally {
+            TimeUnit.SECONDS.sleep(50);
+            channel.close();
+            connection.close();
+        }
     }
 }
+
 ```
 
 ## 总结
@@ -594,7 +630,7 @@ public class SpringAmqpTest {
 
 ### 消息接收
 
-首先配置 MQ 地址，在 consumer 服务的 application.yml 中添加配置：
+首先配置 MQ 地址，在 consumer 服务的 application.yml 中添加配置
 
 ```yaml
 spring:
@@ -606,7 +642,7 @@ spring:
     password: 123321 # 密码
 ```
 
-然后在 consumer 服务的 `cn.itcast.mq.listener` 包中新建一个类 SpringRabbitListener，代码如下：
+然后在 consumer 服务的 `cn.itcast.mq.listener` 包中新建一个类 SpringRabbitListener，代码如下
 
 ```java
 package cn.itcast.mq.listener;
@@ -634,7 +670,7 @@ Work queues，也被称为（Task queues），任务模型。简单来说就是<
 
 <div align="center"><img src="assets/image-20210717164238910.png" width="70%"></div>
 
-当消息处理比较耗时的时候，可能生产消息的速度会远远大于消息的消费速度。长此以往，消息就会堆积越来越多，无法及时处理。此时就可以使用 work 模型，多个消费者共同处理消息处理，速度就能大大提高了。
+<span style="color:orange">当消息处理比较耗时的时候，可能生产消息的速度会远远大于消息的消费速度。长此以往，消息就会堆积越来越多，无法及时处理。此时就可以使用 work 模型，多个消费者共同处理消息处理，速度就能大大提高了。</span>
 
 ### 消息发送
 
@@ -712,14 +748,14 @@ Work 模型的使用：
 
 - Publisher：生产者，也就是要发送消息的程序，但是不再发送到队列中，而是发给 X（交换机）
 - Exchange：交换机，图中的 X。一方面，接收生产者发送的消息。另一方面，知道如何处理消息，例如递交给某个特别队列、递交给所有队列、或是将消息丢弃。到底如何操作，取决于 Exchange 的类型。
-- Exchange 有以下3种类型：
-  - Fanout：广播，将消息交给所有绑定到交换机的队列
-  - Direct：定向，把消息交给符合指定 routing key 的队列
-  - Topic：通配符，把消息交给符合 routing pattern（路由模式） 的队列
+- <b style="color:red">Exchange 有以下 3 种类型：</b>
+  - <span style="color:orange">Fanout：广播，将消息交给所有绑定到交换机的队列</span>
+  - <span style="color:orange">Direct：定向，把消息交给符合指定 routing key 的队列</span>
+  - <span style="color:orange">Topic：通配符，把消息交给符合 routing pattern（路由模式） 的队列</span>
 - Consumer：消费者，与以前一样，订阅队列，没有变化
 - Queue：消息队列也与以前一样，接收消息、缓存消息。
 
-<b>Exchange（交换机）只负责转发消息，不具备存储消息的能力</b>，因此如果没有任何队列与 Exchange 绑定，或者没有符合路由规则的队列，那么消息会丢失！
+<b style="color:red">Exchange（交换机）只负责转发消息，不具备存储消息的能力</b>，因此如果没有任何队列与 Exchange 绑定，或者没有符合路由规则的队列，那么消息会丢失！
 
 ## Fanout
 
@@ -849,19 +885,19 @@ public void listenFanoutQueue2(String msg) {
 
 <div align="center"><img src="assets/image-20210717170041447.png"></div>
 
- 在 Direct 模型下：
+ <b>在 Direct 模型下</b>
 
 - 队列与交换机的绑定，不能是任意绑定了，而是要指定一个`RoutingKey`（路由 key）
 - 消息的发送方在，向 Exchange 发送消息时，也必须指定消息的 `RoutingKey`。
 - Exchange 不再把消息交给每一个绑定的队列，而是根据消息的 `Routing Key` 进行判断，只有队列的 `Routingkey` 与消息的 `Routing key` 完全一致，才会接收到消息
 
-<b>案例需求如下</b>：
+<b>案例需求如下</b>
 
 1. 利用 @RabbitListener 声明 Exchange、Queue、RoutingKey
 
 2. 在 consumer 服务中，编写两个消费者方法，分别监听 direct.queue1 和 direct.queue2
 
-3. 在 publisher 中编写测试方法，向 itcast. direct 发送消息
+3. 在 publisher 中编写测试方法，向 itcast.direct 发送消息
 
 <div align="center"><img src="assets/image-20210717170223317.png"></div>
 
@@ -924,30 +960,30 @@ public void testSendDirectExchange() {
 
 `Topic` 类型的 `Exchange` 与 `Direct` 相比，都是可以根据 `RoutingKey` 把消息路由到不同的队列。只不过 `Topic` 类型 `Exchange` 可以让队列在绑定 `Routing key` 的时候使用通配符！
 
-`Routingkey` 一般都是有一个或多个单词组成，多个单词之间以”.”分割，例如： `item.insert`
+`Routingkey` 一般都是有一个或多个单词组成，多个单词之间以 `.` 分割，例如： `item.insert`
 
  通配符规则：
 
 `#`：匹配一个或多个词
 
-`*`：匹配不多不少恰好1个词
+`*`：匹配不多不少恰好 1 个词
 
 举例：
 
-`item.#`：能够匹配 `item.spu.insert` 或者 `item.spu`
+`item.#`，能够匹配 `item.spu.insert` 或者 `item.spu`
 
-`item.*`：只能匹配 `item.spu`
+`item.*`，只能匹配 `item.spu`
 
 图示：
 
 <div align="center"><img src="assets/image-20210717170705380.png"></div>
 
-解释：
-
 - Queue1：绑定的是 `china.#` ，因此凡是以 `china.` 开头的 `routing key` 都会被匹配到。包括 china.news 和 china.weather
 - Queue2：绑定的是 `#.news` ，因此凡是以 `.news` 结尾的 `routing key` 都会被匹配。包括 china.news 和 japan.news
 
 案例需求：
+
+xxxxxx
 
 实现思路如下：
 
@@ -1049,7 +1085,7 @@ public void testSendMap() throws InterruptedException {
 
 ### 配置JSON转换器
 
-显然，JDK 序列化方式并不合适。我们希望消息体的体积更小、可读性更高，因此可以使用JSON方式来做序列化和反序列化。
+显然，JDK 序列化方式并不合适。我们希望消息体的体积更小、可读性更高，因此可以使用 JSON 方式来做序列化和反序列化。
 
 在 publisher 和 consumer 两个服务中都引入依赖：
 
@@ -1167,7 +1203,7 @@ public void testConfirm(){
 * 当Exchange路由到queue失败后,就会执行这个ReturnCallBack方法
 *
 * 步骤:
-* 1.开启回退模式:     publisher-returns: true
+* 1.开启回退模式: publisher-returns: true
 * 2.设置ReturnCallBack
 * 3,设置Exchange处理的消息的模式
 * 1.如果消息没有路由到Queue中,则丢弃消息(默认)
@@ -1199,12 +1235,10 @@ public void testReturn() {
         }
     });
 
-    //发送消息,
     /*
-     测试1:
-         使用正确的Exchange与routingKey执行成功,不会执行我们的ReturnCallBack回退方法
-     测试2:
-         使用正确的Exchange与错误的不存在的routingKey,就会执行我们的ReturnCallBack回退方法
+    发送消息,
+     测试1: 使用正确的Exchange与routingKey执行成功,不会执行我们的ReturnCallBack回退方法
+     测试2: 使用正确的Exchange与错误的不存在的routingKey,就会执行我们的ReturnCallBack回退方法
     */
     rabbitTemplate.convertAndSend("test_Exchange_Confirm", "testConfirm111", "testConfirm~~~发送消息,测试回退模式");
 }
@@ -1288,7 +1322,7 @@ public class AckListener {
 
 - 在 `rabbit:listener-container` 标签中设置 `acknowledge` 属性，设置 ack 方式 none：自动确认，manual：手动确认
 - 如果在消费端没有出现异常，则调用 channel.basicAck(deliveryTag,false); 方法确认签收消息
-- 如果出现异常，则在 catch 中调用 basicNack或 basicReject，拒绝消息，让 MQ 重新发送消息。
+- 如果出现异常，则在 catch 中调用 basicNack 或 basicReject，拒绝消息，让 MQ 重新发送消息。
 
 <b>消息可靠性总结</b>
 
@@ -1304,7 +1338,7 @@ public class AckListener {
 
 <img src="img/image-20221010154111483.png">
 
-进行限量的时候，确认 ack 的设置要设置成手动确认，配置限流的方式和<span style="color:red">“消息确认ack”</span>一样。
+进行限量的时候，确认 ack 的设置要设置成手动确认，配置限流的方式和<span style="color:red">“消息确认 ack” </span>一样。
 
 ```yml
 listener:
@@ -1369,7 +1403,6 @@ public class RabbitMQConfigTTL {
 	/**
      * TTL:过期时间
      * 1. 队列统一过期
-     *
      * 2. 消息单独过期
      * 结果:
      * 如果设置了消息的过期时间，也设置了队列的过期时间，它以时间短的为准。
@@ -1435,12 +1468,12 @@ public class RabbitMQConfigTTL {
 <b>消息成为死信的三种情况</b>
 
 - 队列消息长度到达限制；
-- 消费者拒接消费消息，basicNack/basicReject,并且不把消息重新放入原目标队列,requeue=false；
+- 消费者拒接消费消息，basicNack/basicReject, 并且不把消息重新放入原目标队列, requeue=false；
 - 原队列存在消息过期设置，消息到达超时时间未被消费；
 
 <b>队列绑定死信交换机</b>
 
-- 给队列设置参数： x-dead-letter-exchange 和 x-dead-letter-routing-key
+- 给队列设置参数：x-dead-letter-exchange 和 x-dead-letter-routing-key
 
 <b>代码逻辑</b>
 
@@ -1468,14 +1501,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /*
-死信队列
 死信队列：
-            1. 声明正常的队列(test_queue_dlx)和正常交换机(test_exchange_dlx)
-            2. 声明死信队列(queue_dlx)和死信交换机(exchange_dlx)
-            3. 正常队列绑定死信交换机
-                设置两个参数：
-                    * x-dead-letter-exchange：死信交换机名称
-                    * x-dead-letter-routing-key：发送给死信交换机的routingkey
+	1. 声明正常的队列(test_queue_dlx)和正常交换机(test_exchange_dlx)
+	2. 声明死信队列(queue_dlx)和死信交换机(exchange_dlx)
+    3. 正常队列绑定死信交换机
+    	设置两个参数：
+        	* x-dead-letter-exchange：死信交换机名称
+        	* x-dead-letter-routing-key：发送给死信交换机的routingkey
  */
 @Configuration
 public class RabbitMQDeadMessageConfig {

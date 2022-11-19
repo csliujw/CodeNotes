@@ -7,7 +7,7 @@ JDK 中包含了 JVM 和“屏蔽操作系统差异的组件”
 - JVM 各个操作系统之上是一致的
 - “屏蔽操作系统差异的组件：在各个 PC 上各不相同（回忆下载 JDK，不同系统需要下载不同版本的 JDK；<b>JDK 不同，但是 JDK 提供的操作方式是一致的,屏蔽了操作系统之间的差异！JVM 牛！</b>）
 
-<div align="center"><img src="JVM_image/1568186168727.png"></div>
+<div align="center"><img src="img/1568186168727.png"></div>
 
 # 零零散散
 
@@ -60,7 +60,7 @@ Java 堆的内存可能是规整的，也可能不是规整的。规整的堆，
 
     下图的 GC Roots 无法到达 obj5、6、7 所以 5 6 7 是可以被回收的~
 
-<div align="center"><img src="JVM_image/JVM_gc.jpg"></div>
+<div align="center"><img src="img/JVM_gc.jpg"></div>
 
 想深入的话，可能需要去看看专门讲垃圾回收算法的书籍。
 
@@ -273,7 +273,7 @@ public class MyClassLoader {
 
    - 都是抽象类 java.lang.ClassLoader 的子类
 
-<div align="center"><img src="JVM_image/1571541215432.png"></div>
+<div align="center"><img src="img/1571541215432.png"></div>
 
 双亲委派：当一个加载器要加载类的时候，自己先不加载，而是逐层向上交由双亲去加载；当双亲中的某一个加载器加载成功后，再向下返回成功。<b>如果所有的双亲和自己都无法加载，则报异常。</b>
 
@@ -789,7 +789,7 @@ public class Math {
 
 <b>运行结果：</b>
 
-<div align="center"><img src="JVM_image/1571816579201.png"></div>
+<div align="center"><img src="img/1571816579201.png"></div>
 
 <b>原因：</b>根据双亲委派， 越上层的加载器越优先执行。最顶层的加载器是根加载器，根加载器就会加载 rt.jar 中的类。因此 rt.jar 中的 Math 会被优先加载。 即程序最终加载的是不是我们自己写的 Math，而是 JDK/rt.jar 中内置的 Math; 而内置的 Math 根本没有提供 main() 方法，因此报无法找到 main()。
 
@@ -914,7 +914,7 @@ java.lang.NoClassDefFoundError: com/yanqun/parents/Y
 ---
 ```
 
-<div align="center"><img src="JVM_image/1571824096839.png"></div>
+<div align="center"><img src="img/1571824096839.png"></div>
 
 如果存在继承关系： 继承的双方（父类、子类）都必须是同一个加载器，否则出错；
 
@@ -926,7 +926,7 @@ java.lang.NoClassDefFoundError: com/yanqun/parents/Y
 
 如果想实现各个加载器之间的自定义依赖，可以使用 ogsi 规范
 
-<img src="JVM_image/1572660850713.png">
+<img src="img/1572660850713.png">
 
 OSGi：
 
@@ -993,7 +993,7 @@ Java线程3<-->工作内存3<-->Save和Load操作
 - <b>Store：</b>将工作内存中变量副本的值，传递到主内存中【工作内存----->主内存】
 - <b>Write：</b>将变量副本作为一个主内存中的变量进行存储【把工作内存读到的数据，存入主内存，store 拿到要存的数据，write 存数据】
 
-<img src="JVM_image/1568776570724.png" >
+<img src="img/1568776570724.png" >
 
 ### 针对long和double型变量的特殊规则
 
@@ -1202,7 +1202,7 @@ Java 提供了更高层的字节码指令 monitorenter 和 monitorexit 保证更
 
 将 JVM 在运行时的内存，划分为了 5 个部分，如图所示。
 
-<img src="JVM_image/1568883650128.png" style="float:left">
+<img src="img/1568883650128.png" style="float:left">
 
 ### 程序计数器
 
@@ -1255,13 +1255,13 @@ public static void main(String[] args) {
 
 先在操作数栈中放 10，在把 10 传递到局部变量表中。
 
-<img src="JVM_image/1568887498037.png" style="float:left">
+<img src="img/1568887498037.png" style="float:left">
 
 ### 堆
 
 从回收内存的角度看，由于现代垃圾收集器大部分都是基于分代收集理论设计的，所以 Java 堆中经常会出现“新生代”、“老年代”、“永久代”、“Eden 空间”、“From Survivor 空间”、“To Survivor 空间”等名词.
 
-<img src="JVM_image/1568940940376.png" style="float:left">
+<img src="img/1568940940376.png" style="float:left">
 
 - 存放对象实例（数组、对象）
 
@@ -1283,7 +1283,7 @@ public static void main(String[] args) {
 
   新生代、老生代中年龄：MinorGC 回收新生代中的对象。<b>如果 Eden 区中的对象在一次回收后仍然存活，就会被转移到 s 区中；之后，如果 MinorGC 再次回收，已经在 s 区中的对象仍然存活，则年龄 +1。如果年龄增长一定的数字，则对象会被转移到老生代中。</b>简言之：在新生代中的对象，每经过一次 MinorGC，有三种可能：1 从 eden --> s 区   2.（已经在 s 区中）年龄 +1  3.转移到老生代中
 
-  <img src="JVM_image/1568946567405.png">
+  <img src="img/1568946567405.png">
 
   
 
@@ -1342,7 +1342,7 @@ gc：类的元数据（描述类的信息）、常量池
 
 图：方法区与其他区域的调用关系【<不是很明白】
 
-<img src="JVM_image/1568949355998.png">
+<img src="img/1568949355998.png">
 
 常量池：存放编译期间产生的 字面量("abc")、<b>符号引用</b>。【字符串常量池只是其中的一部分】
 

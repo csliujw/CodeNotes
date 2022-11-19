@@ -16325,6 +16325,18 @@ public class WorkStealingPool {
 
 设计模式：解决特定类问题的一种方法。<span style="color:red">将易变的事物与不变的事物分开。</span>设计模式的目标是隔离代码中的更改。例如：迭代器允许你编写通用代码，该代码对序列中的所有元素执行操作，而不考虑序列的构建方式。
 
+### 模式分类
+
+“设计模式” 一书讨论了 23 种不同的模式，分为以下三种类别
+
+- <b style="color:green">创建型：</b>如何创建对象。这通常涉及隔离对象创建的细节，这样你的代码就不依赖于具体的对象的类型，因此在添加新类型的对象时不会更改。单例模式（Singleton） 被归类为创作模式
+- <b style="color:green">构建型：</b>设计对象以满足特定的项目约束。它们处理对象与其他对象连接的方式，以确保系统中的更改不需要更改这些连接
+- <b style="color:green">行为型：</b>处理程序中特定类型的操作的对象。这些封装要执行的过程，例如解释语言、实现请求、遍历序列 (如在迭代器中) 或实现算法。（观察者、访问者模式）
+
+### 构建应用程序框架
+
+重用现有类中的大部分代码，并根据需要覆盖一个或多个方法来定制应用程序。
+
 ### 单例模式
 
 只允许有一个实例对象。
@@ -16364,17 +16376,53 @@ public class Singleton {
 }
 ```
 
-### 模式分类
+### 策略模式
 
-“设计模式” 一书讨论了 23 种不同的模式，分为以下三种类别
+策略模式定义了一系列的算法，并将每一个算法封装起来，使它们可以相互替换。策略模式通常包含以下角色：
 
-- <b style="color:green">创建型：</b>如何创建对象。这通常涉及隔离对象创建的细节，这样你的代码就不依赖于具体的对象的类型，因此在添加新类型的对象时不会更改。单例模式（Singleton） 被归类为创作模式
-- <b style="color:green">构建型：</b>设计对象以满足特定的项目约束。它们处理对象与其他对象连接的方式，以确保系统中的更改不需要更改这些连接
-- <b style="color:green">行为型：</b>处理程序中特定类型的操作的对象。这些封装要执行的过程，例如解释语言、实现请求、遍历序列 (如在迭代器中) 或实现算法。（观察者、访问者模式）
+- 抽象策略（Strategy）类：定义了一个公共接口，各种不同的算法以不同的方式实现这个接口，环境角色使用这个接口调用不同的算法，一般使用接口或抽象类实现。
+- 具体策略（Concrete Strategy）类：实现了抽象策略定义的接口，提供具体的算法实现。
+- 环境（Context）类：持有一个策略类的引用，最终给客户端调用。
 
-### 构建应用程序框架
+```java
+public interface Strategy {
+    void issue(Object...args);
+}
 
-重用现有类中的大部分代码，并根据需要覆盖一个或多个方法来定制应用程序。
+public class Food implements Strategy {
+    @Override
+    public void issue(Object... args) {
+        System.out.format("Food %s", Arrays.toString(args));
+    }
+}
+
+public class Hotel implements Strategy {
+    @Override
+    public void issue(Object... args) {
+        System.out.format("Hotel %s", Arrays.toString(args));
+    }
+}
+
+public class Main {
+    public void execute(Strategy strategy, Object... type) {
+        strategy.issue(type);
+    }
+
+    public static void main(String[] args) {
+        Main execute = new Main();
+        execute.execute(new Food(), "apple", "rice");
+        execute.execute(new Hotel(), "apple", "rice");
+    }
+}
+```
+
+### 适配器模式
+
+适配器模式：将一个类的接口转换成客户希望的另外一个接口，使得原本由于接口不兼容而不能一起工作的那些类能一起工作。适配器模式包含以下主要角色：
+
+- 目标（Target）接口：当前系统业务所期待的接口，它可以是抽象类或接口。
+- 适配者（Adaptee）类：它是被访问和适配的现存组件库中的组件接口。
+- 适配器（Adapter）类：它是一个转换器，通过继承或引用适配者的对象，把适配者接口转换成目标接口，让客户按目标接口的格式访问适配者。
 
 ## 其他-网络编程
 

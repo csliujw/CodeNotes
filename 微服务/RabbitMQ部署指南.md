@@ -8,7 +8,7 @@
 
 方式一：在线拉取
 
-``` sh
+``` shell
 docker pull rabbitmq:3-management
 ```
 

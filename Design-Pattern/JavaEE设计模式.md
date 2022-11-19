@@ -1,6 +1,6 @@
 # JavaEE设计模式
 
-JavaEE设计模式！！JavaEE设计模式！！不是GoF23种设计模式！！
+JavaEE 设计模式！！JavaEE 设计模式！！不是 GoF 23 种设计模式！！
 
 # 表达层体系结构
 
@@ -10,8 +10,8 @@ JavaEE设计模式！！JavaEE设计模式！！不是GoF23种设计模式！！
     - 为整个表达层提供了一种能把状态、表达和行为清晰分离开来的体系结构
 - `前端控制器（Front Controller）模式`
     - 阐示了基于请求的环境中如何集中访问。
-    - 如Spring MVC的前端控制器模式。
-        - 前端控制器负责接收请求，然后决定派发给那个Controller进行处理。
+    - 如 Spring MVC 的前端控制器模式。
+        - 前端控制器负责接收请求，然后决定派发给那个 Controller 进行处理。
 - 装饰器（Decorator）模式
     - 描述了如何将功能动态地添加给一个控制器
 
@@ -34,12 +34,12 @@ MVC 模式的关键在于每个组件都很简单且是自包含的，带有良�
 
 ### 数据模型
 
-模型的设计以数据为中心。JavaEE 中，模型通常就是 JavaBean：无公共变量，访问属性使用setXXX、getXXX方法。
+模型的设计以数据为中心。JavaEE 中，模型通常就是 JavaBean：无公共变量，访问属性使用 setXX、getXX 方法。
 
 JavaBean 可拆成两部分：存取方法、业务方法。
 
 - 存取方法：setXXX、getXXX
-- 业务方法：计算JavaBean中数据的值，如销售税率。
+- 业务方法：计算 JavaBean 中数据的值，如销售税率。
 
 ----
 
@@ -47,16 +47,16 @@ JavaBean 可拆成两部分：存取方法、业务方法。
 
 控制器的工作
 
-- 读取请求：HttpServletRequest请求
+- 读取请求：HttpServletRequest 请求
 - 协调到模型的访问：
 - 存储用于视图的模型信息：request.setAttribute("key","value")
-- 将控制转给视图：RequestDispatcher对象转移控制权。
+- 将控制转给视图：RequestDispatcher 对象转移控制权。
 
 ### 视图
 
-视图：写入到HTTP响应的任何东西。可以是servlet、jsp或常规html文件。
+视图：写入到 HTTP 响应的任何东西。可以是 servlet、jsp 或常规 html 文件。
 
-视图是没有状态的。每次被调用的时候，必须读取模型数据并把它们转换为HTML页面的格式。
+视图是没有状态的。每次被调用的时候，必须读取模型数据并把它们转换为 HTML 页面的格式。
 
 ## 前端控制器模式
 
@@ -81,12 +81,12 @@ JavaBean 可拆成两部分：存取方法、业务方法。
 
 > 一般性写法
 
-前端控制器一般用servlet来实现。
+前端控制器一般用 servlet 来实现。
 
-此处将前端控制器将被实现为一个请求截获servlet。
+此处将前端控制器将被实现为一个请求截获 servlet。
 
-- 前端控制器 url映射为`/page/*`，是为了避免拦截所有请求。如果拦截了所有请求，那么forward请求这些也会被拦截，会造成无限的forward。递归，一层套一层。
-- 此处设置了一个前缀 `/项目名/page/`，`req.getRequestURI()`后把前缀去除，就是单纯的请求路径了，这样就好处理了。
+- 前端控制器 url映射为`/page/*`，是为了避免拦截所有请求。如果拦截了所有请求，那么 forward 请求这些也会被拦截，会造成无限的 forward。递归，一层套一层。
+- 此处设置了一个前缀 `/项目名/page/`，`req.getRequestURI()` 后把前缀去除，就是单纯的请求路径了，这样就好处理了。
 
 ```java
 package org.example;
@@ -136,7 +136,7 @@ public class DispatcherServlet extends HttpServlet {
 
 一种更为优雅的写法是采用过滤器。
 
-不做记录，请自行写Demo。
+不做记录，请自行写 Demo。
 
 ## 装饰器模式
 
@@ -210,7 +210,7 @@ public class FilterChain implements Filter {
 - 视图助手
     - 将一个视图中的相关功能封装进一个单独的可重用的对象。（<span style="color:green">不理解</span>）
 - 复合视图
-    - 将视图分割为多个子视图。（MVC中的多个视图解析器）
+    - 将视图分割为多个子视图。（MVC 中的多个视图解析器）
 
 ## 服务工作者模式
 
@@ -220,7 +220,7 @@ public class FilterChain implements Filter {
 
 一个大页面中有若干个小页面。其中包含一个导航栏。导航栏中有链接到其中一个小页面的链接。
 
-在其他大页面中，也需要这样的导航栏。但是由于导航栏中有链接到XX页面的链接，导致我们无法重用这个导航栏，只能重新写过。后期如果要做相同的更改，工作量也显得特别大。
+在其他大页面中，也需要这样的导航栏。但是由于导航栏中有链接到 XX 页面的链接，导致我们无法重用这个导航栏，只能重新写过。后期如果要做相同的更改，工作量也显得特别大。
 
 > 服务工作者模式简介
 
@@ -238,7 +238,7 @@ public class FilterChain implements Filter {
     - 简单调度器：从请求中获取一些参数，根据参数进行动作和视图的挑选。可直接作为前端控制器的一个方法。
     - 复杂调度器：除了挑选动作、视图外，还进行当前页面、用户权限、输入信息有效性等因素。这类调度器一般以一个单独的类的形式实现。
 
-> 服务工作者模式UML图
+> 服务工作者模式 UML 图
 
 <img src="img\EE\image-20210525173000575.png">
 
@@ -250,11 +250,11 @@ public class FilterChain implements Filter {
 
 降低视图特殊性的机制。一个视图助手相当于模型和视图之间的中介，读取特定的业务数据并进行转换。
 
-SpringMVC的ModelAndView这部分的内容算视图助手模式吗？返回值会进行数据转换，`Object-->JSON`
+SpringMVC的ModelAndView 这部分的内容算视图助手模式吗？返回值会进行数据转换，`Object-->JSON`
 
 `View <--->Hepler<--->Model`
 
-Helper 充当 View 和 Model之间的中间，将输出处理成对方需要格式后再进行传输。书中举的例子是自定义标签库（JSP标签）。这快没明白，用另一本书作为补充。
+Helper 充当 View 和 Model 之间的中间，将输出处理成对方需要格式后再进行传输。书中举的例子是自定义标签库（JSP 标签）。这快没明白，用另一本书作为补充。
 
 ## 复合视图模式
 

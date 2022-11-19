@@ -767,7 +767,7 @@ public class LoginInterceptor implements HandlerInterceptor{
     
     public boolean preHandle(xxx){
         // some code...
-        // map 转 对象
+        // map 转对象
         UserDTO userDTO = BeanUtil.fillBeanWithMap(userMap, new UserDTO(), false);
         // some code...
     }
@@ -4252,7 +4252,7 @@ Hash 结构与 Redis 中的 Zset 非常类似：
 因此，Hash 底层采用的编码与 Zset 基本一致，只需要把排序有关的 SkipList 去掉即可。
 
 - Hash 结构默认采用 ZipList 编码，节省内存。ZipList 中相邻的两个 entry 分别保存 field 和 value。
-- 当数据量交大时，Hash 结构会转为 HT 编码，触发条件有两个
+- 当数据量较大时，Hash 结构会转为 HT 编码，触发条件有两个
     - ZipList 中的元素数量超过了 hash-max-ziplist-entries（默认 512）
     - ZipList 中的任意 entry 大小超过了 hash-max-ziplist-value（默认 64 字节）
 
