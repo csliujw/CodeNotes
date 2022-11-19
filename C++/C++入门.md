@@ -2878,7 +2878,25 @@ C++11 提供，单链表实现。不支持 insert() 函数和 erase() 函数，�
 
 ### 关联容器
 
-set 集合和 map 集合。
+关联容器中的元素是按关键字来保存和访问的，典型的关联容器有 set 集合和 map 集合。map 与 set 的功能与 Java 中 map、set 的功能基本一致。
+
+C++ 标准库提供了 8 个关联容器。名字包含 multi 的允许重复的关键字，没有包含的则不允许包含重复的关键字。不保持关键字按顺序存储的容器的名字都以单词 unordered 开头。例如：unordered_multi_set 是一个允许重复关键字，元素无序保存的集合。
+
+类型 map 和 multimap 定义在头文件 map 中；set 和 multiset 定义在头文件 set 中；无序容器则定义在头文件 unordered_map 和 unordered_set 中。
+
+| <b>按关键字有序保存元素</b> | -                           |
+| --------------------------- | --------------------------- |
+| map                         | 关联数组：保存 key-value 对 |
+| set                         | 只保存关键字                |
+| multimap                    | key 可重复的 map            |
+| multiset                    | 关键字（key）可重复的 set   |
+| <b>无序集合</b>             | -                           |
+| unordered_map               | 哈希函数组织的 map          |
+| unordered_set               | 哈希函数组织的 set          |
+| unordered_multimap          | 关键字可重复出现的 set      |
+| unordered_multiset          | 关键字可重复出现的 map      |
+
+#### 简单示例
 
 <b>set 和 multiset</b>
 
@@ -2934,6 +2952,143 @@ a       11
 a       1
 */
 ```
+
+#### 使用关联容器
+
+> 使用 map 对字符出现的次数进行计数
+
+当从 map 中提取一个元素时，会得到一个 pair 类型的对象。pair 是一个模板类型，保存两个名为 first 和 second 的（公有）数据成员。map 所使用的 pair 用 first 成员保存关键字，用 second 成员保存对应的值。因此，输出语句的效果是打印每个字符及其关联的计数器。
+
+```cpp
+void count(){
+    // map 统计字符计数。
+    string content = "Hello Hello ollo";
+    map<char, int> word_count;
+    for (size_t i = 0; i < content.length(); i++){
+        ++word_count[content[i]];
+    }
+    for(const auto &w: word_count){
+        cout<<w.first<<":"<<w.second<<endl;
+    }
+}
+/*
+ :2
+H:2
+e:2
+l:6
+o:4
+*/
+```
+
+> 使用 set 统计未在 set 中出现的字符
+
+```cpp
+void count(){
+    string content = "Hello oollH";
+    map<char, size_t> word_count;
+    set<char> exclude = {' ', 'H'};
+    for (size_t i = 0; i < content.size(); i++){
+        if(exclude.find(content[i]) == exclude.end()){
+            // 不存在则统计
+            ++word_count[content[i]];
+        }
+    }
+
+    for (const auto &w : word_count){
+        cout<<w.first<<":"<<w.second<<endl;
+    }    
+}
+/*
+e:1
+l:4
+o:3
+*/
+```
+
+#### 关联容器概述
+
+> 定义关联容器
+
+定义一个 map/set 时，必须既指明数据类型。每个关联容器都定义了一个默认构造函数，它创建一个指定类型的空容器。我们也可以将关联容器初始化为另一个同类型容器的拷贝，或是从一个值范围来初始化关联容器，只要这些值可以转化为容器所需类型就可以。在新标准下，我们也可以对关联容器进行值初始化：
+
+```cpp
+map<char, int> word_count; // 空容器
+set<string> exclude = {'H', ' '};
+map<string, string> authors = {
+    {"name", "Jack"},
+    {"age", "18"}
+};
+```
+
+当初始化一个 map 时，必须提供关键字类型和值类型。将每个 key-value 对包围在花括号中 `{key, value}`
+
+> 初始化 multimap/multiset
+
+map/set 的关键字唯一，而 multimap/multiset 的关键字可以有多个。比如 multimap 可以同时保存。
+
+```cpp
+#include<iostream>
+#include<map>
+#include<string>
+using namespace std;
+
+int main(){
+    multimap<string,string> map;
+    map.insert(make_pair("name","kkx"));
+    map.insert(make_pair("name","kkx2"));
+    map.insert({"name","kkx3"});
+
+    for(auto const &w : map){
+        cout<<w.first<<":"<<w.second<<endl;
+    }
+}
+/*
+name:kkx
+name:kkx2
+name:kkx3
+*/
+```
+
+也可以使用其他容器的内容来进行初始化，此处就用 set 作为示例。multiset 也是一样的。
+
+```cpp
+#include<iostream>
+#include<vector>
+#include<set>
+using namespace std;
+
+void test(){
+    vector<int> vec;
+    for (size_t i = 0; i < 10; i++){
+        vec.push_back(i);
+    }
+
+    set<int> unique(vec.begin(),vec.end());
+    multiset<int> no_unique(vec.begin(),vec.end());
+    for(auto const &w : no_unique){
+        cout<<w<<endl;
+    }
+}
+```
+
+> 习题
+
+- 定义一个 map，关键字是家庭的姓，值是一个 vector，保存家中孩子（们）的名。编写代码，实现添加新的家庭以及向已有家庭中添加新的孩子。
+- 编写一个程序，在一个 vector 而不是一个 set 中保存不重复的单词。使用 set 的优点是什么？
+
+#### 关联容器操作
+
+> 获取关联容器的 keyType 和 valueType
+
+```cpp
+void getType(){
+    map<string,int>::key_type mpaKeyType;
+    map<string,int>::value_type mpaKeyType;
+    map<string,int>::mapped_type mapType;
+}
+```
+
+
 
 ### 栈和队列
 

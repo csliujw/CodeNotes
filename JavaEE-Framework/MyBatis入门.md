@@ -2489,7 +2489,7 @@ CustomerDaoImpl 类继承了 SqlSessionDaoSupport 类，并实现了 CustomerDao
 
 事务的四大特性 ACID
 
-不考虑隔离性会产生的3个问题
+不考虑隔离性会产生的 3 个问题
 
 解决办法：四种隔离级别
 
@@ -2507,13 +2507,15 @@ MapperRegister 类的 getMapper 方法
 
 ```java
 public <T> T getMapper(Class<T> type, SqlSession sqlSession) {
-    // 从hashmap中看是否有此类型的，有就可以创建，无就抛出异常。
+    // 从 hashmap 中看是否有此类型的，有就可以创建，无就抛出异常。
+    // knownMappers 中以 Class 为 key，MapperProxyFactory 为 value 存储数据。
+    // 因为可能不是每个 Mapper 都会被使用，因此 value 存储的是 Factory
     final MapperProxyFactory<T> mapperProxyFactory = (MapperProxyFactory<T>) knownMappers.get(type);
     if (mapperProxyFactory == null) {
         throw new BindingException("Type " + type + " is not known to the MapperRegistry.");
     }
     try {
-        // 通过sqlSession创建代理对象
+        // 通过 sqlSession 创建代理对象<==查看源码
         return mapperProxyFactory.newInstance(sqlSession);
     } catch (Exception e) {
         throw new BindingException("Error getting mapper instance. Cause: " + e, e);
@@ -2670,3 +2672,6 @@ public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds r
     return query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
 }
 ```
+
+## MyBatis原理
+

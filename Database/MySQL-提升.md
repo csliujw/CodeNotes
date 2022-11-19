@@ -2,7 +2,7 @@
 
 ## 常见面试题
 
-- <b>什么是事务,以及事务的四大特性</b>
+- <b>什么是事务，以及事务的四大特性</b>
 - <b>事务的隔离级别有哪些, MySQL 默认是哪个</b>
     - <span style="color:orange">读未提交、读已提交、可重复读、可串行化。MySQL 默认是可重复读。</span>
 - <b>内连接与左外连接的区别是什么 </b>
@@ -25,13 +25,13 @@
 - <b>什么是回表查询</b>
     - <span style="color:orange">回表查询是指，当我们使用非聚集索引时，需要索引中没有完全包含我们需要检索的字段，需要根据当前索引查询到的主键 id，进行回表，通过主键 id 再查询一次数据库。</span>
 - <b>什么是 MVCC</b>
-    - <span style="color:orange">全称 Multi-Version Concurrency Control，即多版本并发控制，主要是为了提高数据库的并发性能。以下文章都是围绕InnoDB 引擎来讲，因为 MyLASM 不支持事务。</span>
+    - <span style="color:orange">全称 Multi-Version Concurrency Control，即多版本并发控制，主要是为了提高数据库的并发性能。以下文章都是围绕 InnoDB 引擎来讲，因为 MyLASM 不支持事务。</span>
     - <span style="color:orange">MVCC 是“维持一个数据的多个版本，使读写操作没有冲突”的一个抽象概念。</span>
     - <span style="color:orange">它的实现原理主要是版本链，undo 日志，Read View 来实现的。</span>
 - <b>MySQL 主从复制的原理是什么</b>
     - 主从复制中分为<b>「主服务器（master）「和」从服务器（slave）」，「主服务器负责写，而从服务器负责读」</b>，MySQL 的主从复制的过程是一个「异步的过程」。这样读写分离的过程能够是整体的服务性能提高，即使写操作时间比较长，也不影响读操作的进行。
     - 主从复制中主要有三个线程：master(binlog dump thread )、slave(I/O thread、SQL thread)，Master 一条线程，Slave 两条线程。
-    - master 的 binlog dump thread 负责主库中有数据更新是，按照 binlong 格式将更新的事件类型写入到主库。并且 Master 会乘积 log dump 线程通知 Slave 主库存在数据更新。Slave 中会创建 IO thread 用于请求 Master 的 binlog，将信息更新到 relay log 中。当 Slave 发现 relay log 有更新是，就创建 SQL 线程将更新的内容同步到 Slave 数据库中。
+    - master 的 binlog dump thread 负责主库中有数据更新时，按照 binlong 格式将更新的事件类型写入到主库。并且 Master 会趁机 log dump 线程通知 Slave 主库存在数据更新。Slave 中会创建 IO thread 用于请求 Master 的 binlog，将信息更新到 relay log 中。当 Slave 发现 relay log 有更新是，就创建 SQL 线程将更新的内容同步到 Slave 数据库中。
 - <b>主从复制之后的读写分离如何实现</b>
 - <b>数据库的分库分表如何实现</b>
 
@@ -86,20 +86,20 @@
 
 数据库管理系统：Database Management System，操纵和管理数据库的大型软件，简称 DBMS。
 
-- 关系型数据库（RDBMS）
+> 关系型数据库（RDBMS）
 
-    - 概念： 关系型数据库，是建立在关系模型基础上，由多张相互连接的二维表组成的数据库。 
+- 概念：关系型数据库，是建立在关系模型基础上，由多张相互连接的二维表组成的数据库。 
 
-    - 特点： 
-        1. 使用表存储数据，格式统一，便于维护 ；
+- 特点： 
+    1. 使用表存储数据，格式统一，便于维护 ；
 
-        2. 使用 SQL 语句操作，标准统一，使用方便； 
-        3. 数据存储在磁盘中，安全
+    2. 使用 SQL 语句操作，标准统一，使用方便； 
+    3. 数据存储在磁盘中，安全
 
-- 非关系型数据库 (NoSQL)
+> 非关系型数据库 (NoSQL)
 
-    - 概念：Not-Only SQL，泛指非关系型数据库，是对关系型数据库的补充。 
-    - 特点： 1. 数据结构灵活；2. 伸缩性强
+- 概念：Not-Only SQL，泛指非关系型数据库，是对关系型数据库的补充。 
+- 特点： 1. 数据结构灵活；2. 伸缩性强
 
 
 SQL：操作关系型数据库的编程语言，是一套标准。
@@ -158,7 +158,7 @@ net stop mysql80
 
 ### DDL
 
-<div align="center"><b>数据库操作</b></div>
+>数据库操作
 
 | 操作                     | 解释                        |
 | ------------------------ | --------------------------- |
@@ -168,7 +168,7 @@ net stop mysql80
 | select database();       | 查询当前数据库名称          |
 | drop databases 数据库名  | 删除数据库                  |
 
-<div align="center"><b>表操作</b></div>
+>表操作
 
 | 操作                                             | 解释                     |
 | ------------------------------------------------ | ------------------------ |
@@ -240,7 +240,7 @@ create table tb_user(
 
 MySQL 中的数据类型有很多，主要分为三类：数值类型、字符串类型、日期时间类型。
 
-<div style="text-align:center;"><h3>数值类型</h3></div>
+<div style="text-align:center;"><h4>数值类型</h4></div>
 
 | 分类           | 类型     | 大小                                                  | 有符号(SIGNED)范围                                         | 无符号(UNSIGNED)范围 | 描述               |
 | -------------- | -------- | ----------------------------------------------------- | ---------------------------------------------------------- | -------------------- | ------------------ |
@@ -253,7 +253,7 @@ MySQL 中的数据类型有很多，主要分为三类：数值类型、字符�
 | DOUBLE         | 8  bytes | (-1.7976931348623157 E+308，1.7976931348623157 E+308) | 0 和  (2.2250738585072014 E-308，1.7976931348623157 E+308) | 双精度浮点数值       | 双精度浮点数值     |
 | DECIMAL        |          | 依赖于 M (精度)和 D (标度)的值                        | 依赖于 M (精度)和 D (标度)的值                             | 小数值(精确定点数)   | 小数值(精确定点数) |
 
-<div style="text-align:center;"><h3>字符串类型</h3></div>
+<div style="text-align:center;"><h4>字符串类型</h4></div>
 
 | 分类       | 类型                  | 大小                          | 描述                          |
 | ---------- | --------------------- | ----------------------------- | ----------------------------- |
@@ -321,7 +321,7 @@ create table tb_emp(
 
 <img src="img/image-20220131163452393.png">
 
-删除字段：`alter table 表名 drop 字段名`;
+删除字段：`alter table 表名 drop 字段名;`
 `alter table tb_emp drop username;`
 
 修改表名：`alter table 表名 rename to 新表名;`
@@ -335,7 +335,7 @@ create table tb_emp(
 
 表删除的效率比较
 
-- drop：删除内容和定义，释放空间。简单来说就是<b>把整个表去掉</b>。以后要新增数据是不可能的,除非新增一个表
+- drop：删除内容和定义，释放空间。简单来说就是<b>把整个表去掉</b>。以后要新增数据是不可能的，除非新增一个表
 - truncate：只是清空表数据，会保留表的数据结构。
 - delete：是删除整个表的数据，但是是系统一行一行地删，效率比 truncate 低。delete 语句每次删除一行，会在事务日志中为所删除的每行记录一项。所以可以对 delete 操作进行 roll back，效率也低。
 
@@ -367,7 +367,7 @@ insert into 表名 (字段名 1, 字段名 2,...) values(值 1, 值 2,...), (值
 
 `update 表名 set 字段名1=值1, 字段名2=值2,.... [where 条件];`
 
-<b style="color:red">注意：</b>修改语句的条件可以有，也可以没有，如果没有条件，则会修改整张表的所有数据。
+<b style="color:red">注意：</b>修改语句的条件可以有，也可以没有，如果没有条件，则会修改整张表的所有数据。删除数据时可能会造成页合并，因此可采用逻辑删除的方法，然后启动定时任务，定时删除那些逻辑删除的数据。
 
 #### 删除数据
 
@@ -420,11 +420,22 @@ select name from tb_emp;
 select 字段列表 from 表名 where 条件列表;
 ```
 
-<div style="text-align:center;"><h3>条件</h3></div>
+<div style="text-align:center;"><h4>条件</h4></div>
 
-<img src="img/image-20220131170613284.png">
-
-![image-20220131170637473](img/image-20220131170637473.png)
+| 比较运算符          | 功能                                       |
+| ------------------- | ------------------------------------------ |
+| >, >=               | 大于，大于等于                             |
+| <, <=               | 小于，小于等于                             |
+| =                   | 等于                                       |
+| <> 或 !=            | 不等于                                     |
+| between ... and ... | 在某个范围之内（含最小、最大值）           |
+| in (...)            | 在 in 之后的列表中的值，多选一             |
+| like 占位符         | 模糊匹配（_ 匹配单个字符，% 匹配任意字符） |
+| is null             | 是 null                                    |
+| <b>逻辑运算符</b>   | <b>功能</b>                                |
+| and 或 &&           | 并且（多个条件同时成立）                   |
+| or 或 \|\|          | 或者（多个条件任意一个成立）               |
+| not 或 !            | 非，不是                                   |
 
 > 示例
 
@@ -504,13 +515,13 @@ select * from emp where name like '%X';
 
 #### count函数
 
-- COUNT(字段) 会统计该字段在表中出现的次数，<span style="color:orange">忽略字段为 null 的情况。</span>即不统计字段为 null 的记录，每次会判断下字段是否为 null？。 
+- COUNT(字段) 会统计该字段在表中出现的次数，<span style="color:orange">忽略字段为 null 的情况。</span>即不统计字段为 null 的记录，每次会判断下字段是否为 null。 
 - COUNT(\*) 则不同，它执行时返回检索到的行数的计数，<span style="color:orange">不管这些行是否包含 null 值，即不会额外判断是否为 null。</span>
-- COUNT(1) 跟 COUNT(\*) 类似，不将任何列是否 null 列入统计标准，仅用 1 代表代码行，所以在统计结果的时候，不会忽略列值为 NULL 的行，即不会判断是否为 null。
+- COUNT(1) 跟 COUNT(\*) 类似，在统计结果的时候，不会忽略列值为 NULL 的行，即不会判断字段是否为 NULL。
 
-COUNT(字段) 会有一个 null 判断，效率低。COUNT(1) 和 COUNT(\*) 没有这个判断，效率高。又 COUNT(\*) 是 SQL92 定义的标准统计数的语法，<b>建议使用 COUNT(\*)。</b>
+COUNT(字段) 会有一个 NULL 判断，效率低。COUNT(1) 和 COUNT(\*) 没有这个判断，效率高。又 COUNT(\*) 是 SQL92 定义的标准统计数的语法，<b>建议使用 COUNT(\*)。</b>
 
-<b>效率</b>：COUNT(\*) ≈ COUNT(1) > COUNT(字段)
+<b>效率：</b>COUNT(\*) ≈ COUNT(1) > COUNT(字段)
 
 #### 分组查询
 
@@ -540,9 +551,7 @@ select workaddress,count(*) as address_count from emp where age<45 group by work
 
 `select 字段列表 from 表名 order by 字段1 排序方式1，字段2 排序方式2;`
 
-- 排序方式
-    - ASC：升序（默认值）
-    - DESC：降序
+- 排序方式：ASC：升序（默认值）；DESC：降序
 - 注意：如果是多字段排序，当第一个字段值相同时，才会根据第二个字段进行排序。
 
 #### 分页查询
@@ -640,13 +649,11 @@ select * from emp where sex='男' and age between 20 and 40 order by age asc,ent
 
 DCL 英文全称是 Data Control Language (数据控制语言)，用来管理数据库用户 、控制数据库的访问权限。
 
-- 用户管理
-    - `create user '用户'@'主机名' identified by '密码';`
-    - `alter user '用户'@'主机名' identified  with mysql_native_password by '密码';`
-    - `drop user '用户'@'主机名';`
-- 权限控制
-    - `grant 权限列表 on 数据库名.表名 to '用户'@'主机名';`
-    - `revoke 权限列表 on 数据库名.表名 from '用户'@'主机名';`
+| 用户管理命令                                                 | 权限控制命令                                             |
+| ------------------------------------------------------------ | -------------------------------------------------------- |
+| `create user '用户'@'主机名' identified by '密码';`          | `grant 权限列表 on 数据库名.表名 to '用户'@'主机名';`    |
+| `alter user '用户'@'主机名' identified  with mysql_native_password by '密码';` | `revoke 权限列表 on 数据库名.表名 from '用户'@'主机名';` |
+| `drop user '用户'@'主机名';`                                 |                                                          |
 
 #### 管理用户
 
@@ -725,14 +732,12 @@ revoke all on demo.* to 'user2'@'%';
 
 ## 函数
 
-- 字符串函数
-    - `concat,lower,upper,lpad,rpad,trim,substring`
-- 数值函数
-    - `ceil,floor,mod,rand,round`
-- 日期函数
-    - `curdate,curtime,now,year,month,day,date_add,datediff`
-- 流程函数
-    - `if,ifnull,case[...] when... then... else... end`
+| 函数分类   | 常见函数                                               |
+| ---------- | ------------------------------------------------------ |
+| 字符串函数 | `concat,lower,upper,lpad,rpad,trim,substring`          |
+| 数值函数   | `ceil,floor,mod,rand,round`                            |
+| 日期函数   | `curdate,curtime,now,year,month,day,date_add,datediff` |
+| 流程函数   | `if,ifnull,case[...] when... then... else... end`      |
 
 ### 字符串函数
 
@@ -850,16 +855,16 @@ mysql> select LPAD(ROUND(rand()*1000000),6,'0');
 
 ### 日期函数
 
-| 函数                              | 功能                                                |
-| --------------------------------- | --------------------------------------------------- |
-| CURDATE()                         | 返回当前日期                                        |
-| CURTIME()                         | 返回当前时间                                        |
-| NOW()                             | 返回当前日期和时间                                  |
-| YEAR(date)                        | 获取指定 date 的年份                                |
-| MONTH(date)                       | 获取指定 date 的月份                                |
-| DAY(date)                         | 获取指定 date 的日期                                |
-| DATE_ADD(date,INTERVAL expr type) | 返回一个日期 时间值加上一个时间间隔 expr 后的时间值 |
-| DATEDIFF(date1,date2)             | 返回起始时间 date1 和 结束时间 data2 之间的天数     |
+| 函数                              | 功能                                               |
+| --------------------------------- | -------------------------------------------------- |
+| CURDATE()                         | 返回当前日期                                       |
+| CURTIME()                         | 返回当前时间                                       |
+| NOW()                             | 返回当前日期和时间                                 |
+| YEAR(date)                        | 获取指定 date 的年份                               |
+| MONTH(date)                       | 获取指定 date 的月份                               |
+| DAY(date)                         | 获取指定 date 的日期                               |
+| DATE_ADD(date,INTERVAL expr type) | 返回一个日期时间值加上一个时间间隔 expr 后的时间值 |
+| DATEDIFF(date1,date2)             | 返回起始时间 date1 和结束时间 data2 之间的天数     |
 
 ```SQL
 mysql> select curdate();
@@ -978,9 +983,10 @@ mysql> select ifnull(null,'Default');
 -- case when then else end
 -- 查询emp表的员工，姓名和工作地址(北京/上海 ---> 一线城市，其他 ---> 二线城市)
 select name,
-	(case workaddress when '北京' then '一线城市'
-	when '上海' then '一线城市'
-	else '二线城市' end) as 工作地址
+	(case workaddress 
+     	when '北京' then '一线城市'
+		when '上海' then '一线城市'
+		else '二线城市' end) as 工作地址
 from emp;
 ```
 
@@ -997,9 +1003,9 @@ create table score(
     chinese int comment '语文'
 );
 insert into score(id,name,math,english,chinese) 
-values(1,'tom',67,88,95),
-(2,'rose',23,66,90),
-(3,'jack',56,98,76);
+  values(1,'tom',67,88,95),
+        (2,'rose',23,66,90),
+        (3,'jack',56,98,76);
 
 select id,
 name,
@@ -1011,18 +1017,17 @@ from score;
 
 ## 约束
 
-- 非空约束： NOT NULL 
-- 唯一约束： UNIQUE 
-- 主键约束： PRIMARY KEY (自增: AUTO_INCREMENT)
--  默认约束： DEFAULT 
-- 检查约束： CHECK 
+- 非空约束：NOT NULL 
+- 唯一约束：UNIQUE 
+- 主键约束：PRIMARY KEY (自增：AUTO_INCREMENT)
+-  默认约束：DEFAULT 
+- 检查约束：CHECK 
 - 外键约束：FOREIGN KEY
 
 ### 概念
 
 - 概念：约束是作用于表中字段上的规则，用于限制存储在表中的数据。
 - 目的：保证数据库中数据的正确、有效性和完整性。
-- 分类：
 
 | 约束                     | 描述                                                     | 关键字      |
 | ------------------------ | -------------------------------------------------------- | ----------- |
@@ -1033,27 +1038,27 @@ from score;
 | 检测约束(8.0.16版本之后) | 保证字段值满足某一个条件                                 | CHECK       |
 | 外键约束                 | 用来让两张表的数据之间建立连接，保证数据的一致性和完整性 | FOREIGN KEY |
 
-<span style="color:red"><b>注意：约束是作用于表中字段上的，可以在创建表/修改表的时候添加约束。<b></span>
+<span style="color:red"><b>注意：约束是作用于表中字段上的，可以在创建表/修改表的时候添加约束。</b></span>
 
 ### 演示
 
 根据需求，完成表结构的创建
 
-| 字段名 | 字段含义    | 字段类型    | 约束条件                  |
-| ------ | ----------- | ----------- | ------------------------- |
-| id     | ID 唯一标识 | int         | 主键，且自动增长          |
-| name   | 姓名        | varchar(10) | 不为空，且唯一            |
-| age    | 年龄        | int         | 大于0，并且小于等于120    |
-| status | 状态        | char(1)     | 如果没有指定该值，默认为1 |
-| gender | 性别        | char(2)     | 无                        |
+| 字段名 | 字段含义    | 字段类型    | 约束条件                   |
+| ------ | ----------- | ----------- | -------------------------- |
+| id     | ID 唯一标识 | int         | 主键，且自动增长           |
+| name   | 姓名        | varchar(10) | 不为空，且唯一             |
+| age    | 年龄        | int         | 大于 0，并且小于等于 120   |
+| status | 状态        | char(1)     | 如果没有指定该值，默认为 1 |
+| gender | 性别        | char(2)     | 无                         |
 
 ```sql
 create table tb_user(
-id int AUTO_OMCRE,EMT PRIMARY KEY COMMENT '',
-name varchar(10) NOT NULL UNIQUE COMMENT '',
-age int check(age>0 && age<=120) COMMENT '',
-status char(1) default '1' COMMENT '',
-gender char(1) COMMENT ''
+    id int AUTO_OMCRE,EMT PRIMARY KEY COMMENT '',
+    name varchar(10) NOT NULL UNIQUE COMMENT '',
+    age int check(age>0 && age<=120) COMMENT '',
+    status char(1) default '1' COMMENT '',
+    gender char(1) COMMENT ''
 );
 ```
 
@@ -1079,7 +1084,13 @@ alter table 表名 add constraint 外键名称 foreign key(外键字段名) refe
 alter table 表名 drop foreign key 外键名称;
 ```
 
-<img src="img/image-20220201154122979.png">
+| 行为        | 说明                                                         |
+| ----------- | ------------------------------------------------------------ |
+| NO ACTION   | 当在父表中删除/更新对应记录时。首先检查是否有对应外键，如果有则不允许删除/更新（与 RESTRICT 一致） |
+| RESTRICT    | 当在父表中删除/更新对应记录时。首先检查是否有对应外键，如果有则不允许删除/更新（与 NO ACTION 一致） |
+| CASCADE     | 当在父表中删除/更新对应记录时。首先检查是否有对应外键，如果有，则也删除/更新外键在子表中的记录 |
+| SET NULL    | 当在父表中删除对应记录时，首先检查该记录是否有对应外键，如果有则设置子表中该外键值为 null（这要求允许外键为 null） |
+| SET DEFAULT | 父表有变更时，子表将外键列设置成一个默认的值（Innodb 不支持） |
 
 ```sql
 alter table 表名 add constraint 外键名称 foreign key(外键字段名) references 主表(主表字段名)
@@ -1209,44 +1220,50 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 
 ## 多表查询
 
-- 多表关系：一对一、一对多、多对多
-- 多表查询
-    - 笛卡儿积：两个集合的所有的组合情况。
-    - 连接查询：
-        - 左外连接：查询左表所有数据，以及两张表交集部分数据
-        - 右外连接：查询右表所有数据，以及两张表交集部分数据
-        - 自连接：当前表与自身的连接查询，自连接必须使用表别名
-        - 内连接：相当于查询 A、B 交集部分数据
+多表关系：一对一、一对多、多对多
+
+多表查询
+- 笛卡儿积：两个集合的所有的组合情况。
+- 连接查询：
+    - 左外连接：查询左表所有数据，以及两张表交集部分数据
+    - 右外连接：查询右表所有数据，以及两张表交集部分数据
+    - 自连接：当前表与自身的连接查询，自连接必须使用表别名
+    - 内连接：相当于查询 A、B 交集部分数据
+
 - 子查询：标量子查询（子查询结果为单个值）；列子查询(子查询结果为一列)；行子查询(子查询结果为一行)；表子查询(子查询结果为多行多列)
 
  ### 多表关系
 
-项目开发中，在进行数据库表结构设计时，会根据业务需求及业务模块之间的关系，分析并设计表结构，由于业务之间相互关联，所以各个表结构之间也存在着各种联系，基本上分为三种：
-
-- 一对多(多对一) 
-- 多对多 
-- 一对一
+项目开发中，在进行数据库表结构设计时，会根据业务需求及业务模块之间的关系，分析并设计表结构，由于业务之间相互关联，所以各个表结构之间也存在着各种联系，基本上分为三种：一对多(多对一) ；多对多；一对一。
 
 > 一对多（多对一）
 
-➢ 案例: 部门与员工的关系 
-➢ 关系: 一个部门对应多个员工，一个员工对应一个部门 
-➢ 实现: 在多的一方建立外键，指向一的一方的主键
+案例：部门与员工的关系。
+
+关系：一个部门对应多个员工，一个员工对应一个部门。
+
+实现：在多的一方建立外键，指向一的一方的主键。
+
 <img src="img/image-20220201162055837.png">
 
 > 多对多
 
-案例: 学生与课程的关系 
-➢ 关系: 一个学生可以选修多门课程，一门课程也可以供多个学生选择 
-➢ 实现: 建立第三张中间表，中间表至少包含两个外键，分别关联两方主键
+案例：学生与课程的关系 
+
+关系：一个学生可以选修多门课程，一门课程也可以供多个学生选择 
+
+实现：建立第三张中间表，中间表至少包含两个外键，分别关联两方主键
 
 <img src="img/image-20220201162206455.png">
 
 > 一对一
 
-➢ 案例: 用户与用户详情的关系 
-➢ 关系: 一对一关系，多用于单表拆分，将一张表的基础字段放在一张表中，其他详情字段放在另一张表中，以提升操作效率 
-➢ 实现: 在任意一方加入外键，关联另外一方的主键，并且设置外键为唯一的(UNIQUE)
+案例：用户与用户详情的关系 
+
+关系：一对一关系，多用于单表拆分，将一张表的基础字段放在一张表中，其他详情字段放在另一张表中，以提升操作效率
+
+实现：在任意一方加入外键，关联另外一方的主键，并且设置外键为唯一的 (UNIQUE)
+
 <img src="img/image-20220201162313709.png">
 
 ### 多表查询概述
@@ -1287,7 +1304,7 @@ from table1 LEFT [INNER] JOIN table2
 ON 连接条件...;
 ```
 
-<span style="color:red">相当于查询表1(左表)的所有数据 包含 表1和表2交集部分的数据</span>
+<span style="color:red">相当于查询表 1 (左表)的所有数据包含表 1 和表 2 交集部分的数据</span>
 
 右外连接
 
@@ -1297,7 +1314,7 @@ from table1 RIGHT [INNER] JOIN table2
 ON 连接条件...;
 ```
 
-<span style="color:red">相当于查询表2(右表)的所有数据 包含 表1和表2交集部分的数据</span>
+<span style="color:red">相当于查询表 2 (右表)的所有数据包含表1 和表 2 交集部分的数据</span>
 
 ### 自连接
 
@@ -1320,7 +1337,7 @@ UNION [ALL]
 select 字段列表 from tableB...;
 ```
 
-对于联合查询的多张表的列数必须保持一致，字段类型也需要保持一致。 union all 会将全部的数据直接合并在一起；union 会对合并之后的数据去重。
+对于联合查询的多张表的列数必须保持一致，字段类型也需要保持一致。 union all 会将全部的数据直接合并在一起；union 会对合并之后的数据去重。union 去重操作（distanct）的开销比较大，可以的话就不要进行去重了。
 
 ### 子查询 
 
@@ -1615,16 +1632,18 @@ insert into account(id,name,momeny) value(null,'张三',2000),(null,'李四',200
 ### 事务四大特性(ACID)
 
 - 原子性（Atomicity）：事务是不可分割的最小操作单元，要么全部成功，要么全部失败。 
-- 一致性（Consistency）：事务完成时，必须使所有的数据都保持一致状态。 
+- <span style="color:orange">一致性（Consistency）：隔离执行事务时（就是说没有其他事务并发执行的情况下）使所有的数据都保持一致状态。</span>
 - <span style="color:orange">隔离性（Isolation）：数据库系统提供的隔离机制，保证事务在不受外部并发操作影响的独立环境下运行。</span> 
 - 持久性（Durability）：事务一旦提交或回滚，它对数据库中的数据的改变就是永久的。（一般，事务提交后，会把数据持久化到磁盘里，这个持久化时机是可以设置的）
+
+感觉一致性是事务的最终目的，原子性、隔离性、持久性都是为了实现一致性。
 
 ### 并发事务问题
 
 | 问题       | 描述                                                         |
 | ---------- | ------------------------------------------------------------ |
 | 脏读       | 一个事务读到另一个事务还没提交的数据                         |
-| 不可重复读 | 一个事务先后读取同一条记录，但两次读取的数据不同，称之为不可重复读。<br>事务 A 多次读取同一数据，事务 B 在事务 A 多次读取的过程中，对数据作了<b>更新并提交事务</b>，<b>导致事务 A 多次读取同一数据时，结果不一致。</b>MySQL默认采用的是可重复读，通过快照实现的可重复读。 |
+| 不可重复读 | 一个事务先后读取同一条记录，但两次读取的数据不同，称之为不可重复读。<br>事务 A 多次读取同一数据，事务 B 在事务 A 多次读取的过程中，对数据作了<b>更新并提交事务</b>，<b>导致事务 A 多次读取同一数据时，结果不一致。</b><br>MySQL默认采用的是可重复读，通过快照实现的可重复读。 |
 | 幻读       | 一个事务按照条件查询数据时，没有对应的数据行，但是在插入数据时，又发现这行数据已经存在，好像出现了幻影 。 |
 
 <img src="img/image-20220201164120794.png">
@@ -1633,7 +1652,7 @@ insert into account(id,name,momeny) value(null,'张三',2000),(null,'李四',200
 
 <img src="img/image-20220201164216281.png">
 
-<b>总结</b>：不可重复读的和幻读很容易混淆，<b>不可重复读侧重于修改，幻读侧重于新增或删除</b>
+<b>总结：</b>不可重复读的和幻读很容易混淆，<b>不可重复读侧重于修改，幻读侧重于新增或删除</b>
 
 ### 事务隔离级别
 
@@ -1644,7 +1663,7 @@ insert into account(id,name,momeny) value(null,'张三',2000),(null,'李四',200
 
 [彻底搞懂 MySQL 事务的隔离级别-阿里云开发者社区 (aliyun.com)](https://developer.aliyun.com/article/743691)
 
-| 5隔离级别                    | 脏读 | 不可重复读 | 幻读 |
+| 隔离级别                     | 脏读 | 不可重复读 | 幻读 |
 | ---------------------------- | ---- | ---------- | ---- |
 | Read uncommitted             | √    | √          | √    |
 | Read committed (Oracle 默认) | ×    | √          | √    |
@@ -1760,7 +1779,7 @@ https://downloads.mysql.com/archives/community/
 
 ### 创建目录,并解压
 
-```
+```shell
 mkdir mysql
 
 tar -xvf mysql-8.0.26-1.el7.x86_64.rpm-bundle.tar -C mysql
@@ -1790,31 +1809,27 @@ rpm -ivh  mysql-community-server-8.0.26-1.el7.x86_64.rpm
 
 ### 启动MySQL服务
 
-```
+```shell
 systemctl start mysqld
-```
 
-```
 systemctl restart mysqld
-```
 
-```
 systemctl stop mysqld
 ```
 
 ### 查询自动生成的root用户密码
 
-```
+```shell
 grep 'temporary password' /var/log/mysqld.log
 ```
 
 命令行执行指令 :
 
-```
+```shell
 mysql -u root -p
 ```
 
-然后输入上述查询到的自动生成的密码, 完成登录 .
+然后输入上述查询到的自动生成的密码, 完成登录。
 
 ### 修改root用户密码
 
@@ -1924,6 +1939,7 @@ show ENGINES;
     - 行级锁，提高并发访问性能
     - 支持 FOREIGN KEY 约束，保证数据的完整性和正确性；
 - 文件：xxx.ibd 中的 xxx 代表的是表名，innoDB 引擎的每张表都会对应这样一个表空间文件，存储该表的表结构（frm、sdi）、数据和索引。 参数：innodb_file_per_table
+- 表空间由一个一个的段组成，而段又由区组成。一个区（Extent）默认大小是 1MB，Extent 又由 Page 组成，一个 Page 的大小为 16KB。
 
 <img src="img/image-20220122175230096.png">
 
@@ -1943,7 +1959,18 @@ show ENGINES;
 
 文件 xxx.sdi 中存储表结构信息
 
-<img src="img/image-20220122175842514.png">
+| 特点                                        | InnoDB             | MyISAM | Menory |
+| ------------------------------------------- | ------------------ | ------ | ------ |
+| <span style="color:red">存储引擎</span>     | 64 TB              | 有     | 有     |
+| <span style="color:red">事务安全</span>     | 支持               | -      | -      |
+| <span style="color:red">锁机制</span>       | 行锁               | 表锁   | 表锁   |
+| <span style="color:red">B+tree 索引</span>  | 支持               | 支持   | 支持   |
+| <span style="color:red">Hash 索引</span>    | -                  | -      | 支持   |
+| <span style="color:red">全文索引</span>     | 支持（5.6 版本后） | 支持   | -      |
+| <span style="color:red">空间使用</span>     | 高                 | 低     | N/A    |
+| <span style="color:red">内存使用</span>     | 高                 | 低     | 中等   |
+| <span style="color:red">批量插入速度</span> | 低                 | 高     | 高     |
+| <span style="color:red">支持外键</span>     | 支持               | -      | -      |
 
 <b style="color:orange">InnoDB 与 MyISAM 之间的区别：InnoDB 支持事务、锁机制为行级锁、支持外键。</b>
 
@@ -1970,7 +1997,7 @@ MEMORY：将所有数据保存在内存中，访问速度快，通常用于临�
 
 ## 索引
 
-- <span style="color:orange">索引概述：高效获取数据的数据结构</span>
+- <span style="color:orange">索引概述：高效查询数据的数据结构</span>
 
 - 索引结构：MySQL 中索引用到的数据结构主要是 B+Tree、Hash
 
@@ -2060,7 +2087,9 @@ B+Tree 索引如果不是按照索引最左列开始查找，则无法使用索�
 
 <img src="img/image-20220202103833246.png">
 
-哈希索引只有精确匹配索引所有列的查询才有效。对于每一行数据，存储引擎都会对所有的索引列计算一个哈希码，哈希码是一个较小的值，且不同键值的行计算出的哈希码也不一样。哈希索引将所有的哈希码存储在索引中，同时在哈希表中保存指向每个数据行的指针。
+哈希索引只有精确匹配索引所有列的查询才有效。对于每一行数据，存储引擎都会对所有的索引列计算一个哈希码，哈希码是一个较小的值，且不同键值的行计算出的哈希码也不一样。
+
+哈希索引将所有的哈希码存储在索引中，同时在哈希表中保存指向每个数据行的指针。
 
 哈希索引查找的例子：`select lname from testhash where fname='Peter'`
 
@@ -2079,7 +2108,7 @@ MySQL 先计算 Peter 的哈希值，并使用该值查找对应的记录指针�
 
 ### 问题辨析
 
-<b>为什么 InnoDB 存储引擎选择使用 B+tree 索引结构？</b>
+<b style="color:red">为什么 InnoDB 存储引擎选择使用 B+tree 索引结构？</b>
 
 ①相对于二叉树，层级更少，搜索效率高； 
 
@@ -2106,10 +2135,10 @@ MySQL 先计算 Peter 的哈希值，并使用该值查找对应的记录指针�
 
 <span style="color:red">在 InnoDB 存储引擎中，根据索引的存储形式，又可以分为以下两种：</span>
 
-| 分类                       | 含义                                                       | 特点                |
-| -------------------------- | ---------------------------------------------------------- | ------------------- |
-| 聚集索引 (Clustered Index) | 将数据存储与索引放到了一块，索引结构的叶子节点保存了行数据 | 必须有,而且只有一个 |
-| 二级索引 (Secondary Index) | 将数据与索引分开存储，索引结构的叶子节点关联的是对应的主键 | 可以存在多个        |
+| 分类                       | 含义                                                       | 特点                 |
+| -------------------------- | ---------------------------------------------------------- | -------------------- |
+| 聚集索引 (Clustered Index) | 将数据存储与索引放到了一块，索引结构的叶子节点保存了行数据 | 必须有，而且只有一个 |
+| 二级索引 (Secondary Index) | 将数据与索引分开存储，索引结构的叶子节点关联的是对应的主键 | 可以存在多个         |
 
 > <b>聚集索引选取规则</b>
 >
@@ -2290,7 +2319,7 @@ show profile cpu for query query_id;
 
 > <b style="color:red">explain 执行计划【重点掌握】</b>
 
-EXPLAIN 或者 DESC 命令获取 MySQL 如何执行 SELECT 语句的信息，包括在 SELECT 语句执行过程中<span style="color:orange">表如何连接</span>和<span style="color:orange">连接的顺序</span>。
+EXPLAIN 或者 DESC 命令获取 MySQL 如何执行 SELECT 语句的信息，包括在 SELECT 语句执行过程中<span style="color:orange">表如何连接和连接的顺序</span>。
 
 ```mysql
 explain select xxx from xxx; # 分析 SQL 语句的性能
@@ -2330,7 +2359,7 @@ EXPLAIN 执行计划各字段含义：
 
 #### 最左前缀法则
 
-如果索引了多列（联合索引），要遵守最左前缀法则。<span style="color:red">最左前缀法则指的是查询从索引的最左列开始，并且不跳过索引中的列。 如果跳跃某一列，索引将部分失效 (后面的字段索引失效)。</span>如果你并没有跳索引中的列，只是摆放的顺序不一样，索引并不会失效
+如果索引了多列（联合索引），要遵守最左前缀法则。<span style="color:red">最左前缀法则指的是查询从索引的最左列开始，并且不跳过索引中的列。 如果跳跃某一列，索引将部分失效 (后面的字段索引失效)。</span>如果你并没有跳索引中的列，只是摆放的顺序不一样，索引并不会失效。
 
 ```mysql
 # 索引全部有效
@@ -2452,7 +2481,7 @@ SQL 提示，是优化数据库的一个重要手段，简单来说，就是在 
 
 如果有多个索引可以满足需求，会自动选择一个合适的索引。我们可以自己指定索引，给 MySQL 提示，用那个索引。
 
-<span style="color:orange">use index：告诉数据库，建议使用我们提供的索引，只是建议，可能不会接收我们的建议。</span>
+<span style="color:orange">use index：告诉数据库，建议使用我们提供的索引，只是建议，可能不会接受我们的建议。</span>
 
 ```mysql
 explain select * from tb_user use index(idx_user_pro) where profession = '软件工程'
@@ -2476,8 +2505,8 @@ explain select * from tb_user force index(idx_user_pro) where profession = '软�
 
 <b>注意：</b>
 
-- <span style="color:red">using index condition ：查找使用了索引，但是需要回表查询数据 using where;</span> 
-- using index ：查找使用了索引，但是需要的数据都在索引列中能找到，所以不需要回表查询数据。
+- <span style="color:red">using index condition：查找使用了索引，但是需要回表查询数据 using where;</span> 
+- using index：查找使用了索引，但是需要的数据都在索引列中能找到，所以不需要回表查询数据。
 
 ### 思考
 
@@ -2491,19 +2520,19 @@ explain select * from tb_user force index(idx_user_pro) where profession = '软�
 
 当字段类型为字符串（varchar，text 等）时，<span style="color:orange">有时候需要索引很长的字符串，这会让索引变得很大，查询时，浪费大量的磁盘 IO， 影响查询效率。</span>此时可以只将字符串的一部分前缀，建立索引，这样可以大大节约索引空间，从而提高索引效率。<span style="color:red">（解决索引字段体积过于庞大的问题）</span>
 
-- 语法：
+语法：
 
-  ```mysql
-  create index idx_xxx on table_name(column(n));
-  ```
+```mysql
+create index idx_xxx on table_name(column(n));
+```
 
-- 前缀长度：可以根据索引的选择性来决定，而选择性是指不重复的索引值（基数）和数据表的记录总数的比值，索引选择性越高则查询效率越高，唯一索引的选择性是 1，这是最好的索引选择性，性能也是最好的。
+前缀长度：可以根据索引的选择性来决定，而选择性是指不重复的索引值（基数）和数据表的记录总数的比值，索引选择性越高则查询效率越高，唯一索引的选择性是 1，这是最好的索引选择性，性能也是最好的。
 
-  ```mysql
-  # 查看选择性。
-  select count(distinct email)/count(*) from tb_user;
-  select count(distinct substring(email,1,5))/count(*) from tb_user;
-  ```
+```mysql
+# 查看选择性。
+select count(distinct email)/count(*) from tb_user;
+select count(distinct substring(email,1,5))/count(*) from tb_user;
+```
 
 > 前缀索引查询流程
 
@@ -2533,11 +2562,11 @@ explain select * from tb_user force index(idx_user_pro) where profession = '软�
 - ④如果是字符串类型的字段，字段的长度较长，可以针对于字段的特点，建立前缀索引。 
 - ⑤尽量使用联合索引，减少单列索引，查询时，联合索引很多时候可以覆盖索引，节省存储空间，避免回表，提高查询效率。 
 - ⑥要控制索引的数量，索引并不是多多益善，索引越多，维护索引结构的代价也就越大，会影响增删改的效率。 
-- ⑦如果索引列不能存储 NULL 值，请在创建表时使用 NOT NULL 约束它。当优化器知道每列是否包含 NULL 值时，它可以更好地确定哪 个索引最有效地用于查询。
+- ⑦如果索引列不能存储 NULL 值，请在创建表时使用 NOT NULL 约束它。当优化器知道每列是否包含 NULL 值时，它可以更好地确定哪个索引最有效地用于查询。
 
 ## SQL优化
 
-所用的数据表[索引语法](###索引语法)
+所用的数据表[索引语法](###索引语法)。优化的思路是，减少通信开销和磁盘 IO 次数。
 
 - <span style="color:orange">插入数据</span>：insert 批量插入、手动控制事务、主键顺序插入避免页分裂、大批量插入使用 `load data local infile`
 - <span style="color:orange">主键优化</span>：主键长度尽量短、尽量顺序插入，推荐 auto_increment 而不是使用 UUID。auto_increment 可以避免页分裂。
@@ -2598,13 +2627,15 @@ load data local infile '/xx/xx/xx/sql.log' into table 'tb_user' fields terminate
 
 ### primary key
 
-<b>数据的组织方式</b>：在 InnoDB 存储引擎中，表数据都是根据主键顺序组织存放的，这种存储方式的表称为索引组织表（<span style="color:red">index organized table IOT</span>）
+> 数据的组织方式
+
+在 InnoDB 存储引擎中，表数据都是根据主键顺序组织存放的，这种存储方式的表称为索引组织表（<span style="color:red">index organized table IOT</span>）
 
 主键顺序插入对比乱序插入，可以尽量避免页分裂。
 
 > 主键设计原则
 
-- 满足业务需求的情况下，尽量降低主键的长度。 主键较长的话，若二级索引过多（二级索引中存了主键）会导致索引占大量的磁盘，查询的时候会进行大量 I/O。
+- 满足业务需求的情况下，尽量降低主键的长度。主键较长的话，若二级索引过多（二级索引中存了主键）会导致索引占大量的磁盘，查询的时候会进行大量 I/O。
 - 插入数据时，尽量选择顺序插入，选择使用 AUTO_INCREMENT 自增主键。乱序插入会导致页分裂。
 - 尽量不要使用 UUID 做主键或者是其他自然主键，如身份证号。ID 长，I/O 也多，乱序插入也容易导致页分裂。
 - 业务操作时，避免对主键的修改。
@@ -2689,14 +2720,19 @@ explain select age,count(*) from tb_user where profession='软件工程' group b
 select * from tb_user limit 2400000,20; # 查询耗时 1.3s~1.4s
 ```
 
-<span style="color:orange">官方给的优化方案是，通过<b>覆盖索引+子查询</b>的方式进行优化。</span>
+<span style="color:orange">官方给的优化方案是：尽可能地使用索引覆盖扫描，而不是查询所有的列。然后再根据需要做一次关联操作再返回需要的列。即通过<b>覆盖索引+子查询</b>的方式进行优化。</span>
 
 先顺序拿到需要查询的 id，然后将查询的结果作为一个表，进行连表查询。
 
 ```mysql
 # 比直接 limit 快一点。
-explain select * from tb_user t,(select id from tb_user order by id limit 2000000,10) a where t.id = a.id;
+explain 
+select * 
+from tb_user t,(select id from tb_user order by id limit 2000000,10) a 
+where t.id = a.id;
 ```
+
+我们来分析下上面的 SQL 为什么可以减少扫描的页面。子查询 `select id from tb_user order by id limit 2000000,10` 是只查询了主键的信息，而主键索引所占据的页面数量与所有数据所占据的页面数量相比小非常多。然后再结合子查询的结果对需要的数据进行条件筛选，这样也可以减少扫描的页面。
 
 如果 id 是有序的，可以先拿到最小的 id，然后 where id > limit 10.
 
@@ -2713,7 +2749,7 @@ explain select count(*) from tb_user;
 - MyISAM 引擎把一个表的总行数存在了磁盘上，因此执行 count(*) 的时候会直接返回这个数，效率很高;
 - InnoDB 引擎就麻烦了，它执行 count(*) 的时候，需要把数据一行一行地从引擎里面读出来，然后累积计数。
 
-<b>优化思路：自己计数，再内存中维护计数器，计算有多少条数据。(Redis 缓存)</b>
+<b>优化思路：自己计数，再内存中维护计数器，计算有多少条数据(Redis 缓存)；如果只是需要一个大致的数不必太准确，可以使用 explain `explian select count(*) from xxx `。</b>
 
 > count 的几种用法
 
@@ -2760,7 +2796,8 @@ create table student(
     name varchar(10) comment '姓名',
     no varchar(10) comment '学号'
 ) comment '学生表';
-insert into student values (1, '站五个', '2000100108'),(11, '黛绮丝', '2000100101'),(10, '谢逊', '2000100102'),(25, '殷天正', '2000100103'),(15, '韦一笑', '2000100104');
+insert into student values (1, '站五个', '2000100108'),(11, '黛绮丝', '2000100101'),
+						   (10, '谢逊', '2000100102'),(25, '殷天正', '2000100103'),(15, '韦一笑', '2000100104');
 ```
 
 #### 介绍
@@ -2774,7 +2811,7 @@ insert into student values (1, '站五个', '2000100108'),(11, '黛绮丝', '200
 > 创建视图
 
 ```mysql
-- 要替换视图的话就假设 OR REPLACE
+-- 要替换视图的话就假设 OR REPLACE
 create [OR REPLACE] VIEW 视图名称(列名列表) AS SELECT 语句 [WITH [ CASCADED | LOCAL ] CHECK OPTION ]
 
 create view stu_v_1 as select id from tb_user;
@@ -2784,8 +2821,8 @@ create view stu_v_2 as select phone from tb_user;
 > 查询，和查基本表一样。
 
 ```mysql
-查看创建视图语句：SHOW CREATE VIEW 视图名称;
-查看视图数据：SELECT * FROM 视图名称......;
+-- 查看创建视图语句：SHOW CREATE VIEW 视图名称;
+-- 查看视图数据：SELECT * FROM 视图名称......;
 
 create or replace view stu_v_1 as select * from tb_user where id<100;
 select * from stu_v_1;
@@ -2809,12 +2846,11 @@ insert into stu_v_1(id,name,phone,email) values(209,"23","11","11");
 > 修改
 
 ```mysql
-法一，直接替换视图：CREATE [OR REPLACE] VIEW 视图名称(列名列表) AS SELECT 语句 [WITH [ CASCADED | LOCAL ] CHECK OPTION ]
-法二，修改视图：ALTER VIEW 视图名称(列名列表) AS SELECT 语句 [WITH [ CASCADED | LOCAL ] CHECK OPTION ]
+-- 法一，直接替换视图：CREATE [OR REPLACE] VIEW 视图名称(列名列表) AS SELECT 语句 [WITH [ CASCADED | LOCAL ] CHECK OPTION ]
+-- 法二，修改视图：ALTER VIEW 视图名称(列名列表) AS SELECT 语句 [WITH [ CASCADED | LOCAL ] CHECK OPTION ]
 
 create or replace view stu_v_1 as select id,name from tb_user where id<100;
 select * from stu_v_1;
-
 ```
 
 > 删除
@@ -2853,7 +2889,7 @@ insert into v3 (id, name) values (2,"nb2"); # 插入失败，满足 v3，不满�
 insert into v3 (id, name) values (17,"nb2"); # 插入成功，不满足 v3 因为 v3 没有加检查选项，没得事，满足 v2，v1
 ```
 
-> <b style="color:orange">LOCAL：只会检查是否满足加了 local 的视图。如果父类加了条件，那么也会检擦</b>
+> <b style="color:orange">LOCAL：只会检查是否满足加了 local 的视图。如果父类加了条件，那么也会检查</b>
 
 <span style="color:red">只有带 with xx 的才会检查，不带的不会检查。v2 加了 local 检查，v1 没有加检查，所以在 v2 插入的时候只会检查是否 >=10；v3 插入的时候</span>
 
@@ -2892,10 +2928,10 @@ insert into v3 (id, name) values (17,"nb2"); # 插入成功，满足 v2 即可
 
 #### 作用
 
-- <b style="color:red">简单</b>：视图不仅可以简化用户对数据的理解，也可以简化他们的操作。那些被经常使用的查询可以被定义为视图，从而使得用户不必为以后的操作每次指定全部的条件。
-- <b style="color:red">安全</b>：数据库可以授权，但不能授权到数据库特定行和特定的列上。通过视图用户只能查询和修改他们所能见到的数据。
-- <b style="color:red">数据独立</b>：视图可帮助用户屏蔽真实表结构变化带来的影响。
-- <b style="color:red">效率低</b>：如果是多表组成的视图的话，基本是对视图的一个简单查询，也会涉及到多表联查，这样会降低查询效率。
+- <b style="color:red">简单：</b>视图不仅可以简化用户对数据的理解，也可以简化他们的操作。那些被经常使用的查询可以被定义为视图，从而使得用户不必为以后的操作每次指定全部的条件。
+- <b style="color:red">安全：</b>数据库可以授权，但不能授权到数据库特定行和特定的列上。通过视图用户只能查询和修改他们所能见到的数据。
+- <b style="color:red">数据独立：</b>视图可帮助用户屏蔽真实表结构变化带来的影响。
+- <b style="color:red">效率低：</b>如果是多表组成的视图的话，基本是对视图的一个简单查询，也会涉及到多表联查，这样会降低查询效率。
 
 > 案例
 
@@ -2906,9 +2942,7 @@ insert into v3 (id, name) values (17,"nb2"); # 插入成功，满足 v2 即可
 
 #### 介绍
 
-<span style="color:orange">存储过程是事先经过编译并存储在数据库中的一段 SQL 语句的集合</span>，调用存储过程可以简化应用开发人员的很多工作，减少数据在数据库和应用服务器之间的传输，对于提高数据处理的效率是有好处的。 
-
-存储过程思想上很简单，就是数据库 SQL 语言层面的代码封装与重用。
+<span style="color:orange">存储过程是事先经过编译并存储在数据库中的一段 SQL 语句的集合</span>，调用存储过程可以简化应用开发人员的很多工作，减少数据在数据库和应用服务器之间的传输，对于提高数据处理的效率是有好处的。 存储过程思想上很简单，就是数据库 SQL 语言层面的代码封装与重用。
 
 <b>特点</b>
 
@@ -2931,14 +2965,15 @@ create procedure p1()
 begin
     select * from student;
 end;
-
-call p1();
 ```
 
 调用
 
 ```mysql
 call 名称([参数]);
+
+# 示例
+call p1();
 ```
 
 查看
@@ -2995,7 +3030,7 @@ select @@ [session|global] 系统变量名=值;
 set session autocommit=0 -- 关闭自动提交
 ```
 
-**注意：**
+<b>注意</b>
 
 如果没有指定 SESSION/GLOBAL，默认是 SESSION，会话变量。
 
@@ -3210,7 +3245,7 @@ call p6(13);u
 
 #### while
 
-while 循环是有条件的循环控制语句。满足条件后，再执行循环体中的SQL语句。具体语法为：
+while 循环是有条件的循环控制语句。满足条件后，再执行循环体中的 SQL 语句。具体语法为：
 
 ```mysql
 # 先判定条件，如果条件为 true，则执行逻辑，否则，不执行逻辑
@@ -3245,7 +3280,7 @@ repeat 是有条件的循环控制语句，当满足条件的时候退出循环�
 ```mysql
 -- 先执行一次逻辑，然后判定逻辑是否满足，如果满足，则退出，如果不满足，则继续下一次循环。
 repeat
-	SQL逻辑...
+	SQL 逻辑...
 	UNTIL 条件
 end repeat;
 ```
@@ -3593,15 +3628,15 @@ MySQL 中的锁，按照锁的粒度分，分为以下三类：
 
 - 全局锁：锁定数据库中的所有表。 
 - 表级锁：每次操作锁住整张表。 
-- 行级锁：每次操作锁住对应的行数据
+- 行级锁：每次操作锁住对应的行数据。
 
 ### 全局锁
 
-全局锁就是对整个数据库实例加锁，加锁后整个实例就处于只读状态，后续的 DML 的写语句，DDL 语句，已经更新操作的事务提交语句都将被阻塞。 其典型的使用场景是做全库的逻辑备份，对所有的表进行锁定，从而获取一致性视图，保证数据的完整性。
+全局锁就是对整个数据库实例加锁，加锁后整个实例就处于只读状态，后续的 DML 的写语句，DDL 语句，已经更新操作的事务提交语句都将被阻塞。典型的使用场景是做全库的逻辑备份，对所有的表进行锁定，从而获取一致性视图，保证数据的完整性。
 
 <img src="img/image-20220228172657764.png">
 
-从备份开始到结束，其他了互动只能读数据。
+从备份开始到结束，只能读数据。
 
 > 演示
 
@@ -3646,9 +3681,14 @@ mysqldump --single-transaction -uroot -p123456 demo>demo.sql
 
 MDL 加锁过程是系统自动控制，无需显式使用，在访问一张表的时候会自动加上。MDL 锁主要作用是维护表元数据的数据一致性，在表上有活动事务的时候（有事务未提交时，不允许更改表结构），不可以对元数据进行写入操作（<b>就是不允许修改表结构，不允许修改表字段，用来维护表结构的一致性</b>）。为了避免 DML 与 DDL 冲突，保证读写的正确性。
 
-在 MySQL5.5 中引入了 MDL，当对一张表进行增删改查的时候，加 MDL 读锁(共享)；当对表结构进行变更操作的时候，加 MDL 写锁(排他)。
+在 MySQL5.5 中引入了 MDL，当对一张表进行增删改查的时候，加 MDL 读锁(共享锁)；当对表结构进行变更操作的时候，加 MDL 写锁(排他锁)。
 
-<img src="img/image-20220228175118144.png">
+| 对应 SQL                                      | 锁类型                                  | 说明                                                 |
+| --------------------------------------------- | --------------------------------------- | ---------------------------------------------------- |
+| lock tables xxx read / write                  | shared_read_only / shared_no_read_write |                                                      |
+| select、select ... lock in share mode         | shared_read                             | 与 shared_read、shared_write 兼容，与 exclusive 互斥 |
+| insert、update、delete、select ... for update | shared_write                            | 与 shared_read、shared_write 兼容，与 exclusive 互斥 |
+| alter table ...                               | exclusive                               | 与其他的 MDL 都互斥                                  |
 
 #### 意向锁
 
@@ -3669,9 +3709,9 @@ select object_schema,object_name,index_name,lock_type,lock_mode,lock_data from p
 
 行级锁，每次操作锁住对应的行数据。锁定粒度最小，发生锁冲突的概率最低，并发度最高。应用在 InnoDB 存储引擎中。
 
-InnoDB 的数据是基于索引组织的，行锁是通过对索引上的索引项加锁来实现的，而不是对记录加的锁。对于行级锁，主要分为以下三类： 
+InnoDB 的数据是基于索引组织的，行锁是对索引上的索引项加锁，而非对记录加锁。对于行级锁，主要分为以下三类： 
 
-- 行锁（Record Lock）：锁定单个行记录的锁，防止其他事务对此行进行update和delete。在 RC、RR 隔离级别下都支持，(RC：Read Commit，RR：Read Read Repate)。
+- 行锁（Record Lock）：锁定单个行记录的锁，防止其他事务对此行进行 update 和 delete。在 RC、RR 隔离级别下都支持，(RC：Read Commit，RR：Read Repate)。
 - 间隙锁（Gap Lock）：锁定索引记录间隙（不含该记录），确保索引记录间隙不变，防止其他事务在这个间隙进行 insert，产生幻读。在 RR 隔离级别下都支持。 
 - 临键锁（Next-Key Lock）：行锁和间隙锁组合，同时锁住数据，并锁住数据前面的间隙 Gap。在 RR 隔离级别下支持。可简单理解为<b>行锁+间隙锁</b>
 
@@ -3684,16 +3724,51 @@ InnoDB 实现了以下两种类型的行锁：
 - 共享锁（S）：允许一个事务去读一行，阻止其他事务获得相同数据集的排它锁。 
 - 排他锁（X）：允许获取排他锁的事务更新数据，阻止其他事务获得相同数据集的共享锁和排他锁。
 
-<img src="img/image-20220228183042891.png">
+| 当前锁类型(下方) \ 请求锁类型(右侧) | S（共享锁） | X（排它锁） |
+| ----------------------------------- | ----------- | ----------- |
+| S（共享锁）                         | 兼容        | 冲突        |
+| X（排它锁）                         | 冲突        | 冲突        |
 
-<img src="img/image-20220228183126387.png">
+----
+
+| SQL                           | 行锁类型   | 说明                                        |
+| ----------------------------- | ---------- | ------------------------------------------- |
+| INSERT ...                    | 排它锁     | 自动加锁                                    |
+| UPDATE ...                    | 排它锁     | 自动加锁                                    |
+| DELETE ...                    | 排它锁     | 自动加锁                                    |
+| SELECT (正常)                 | 不加任何锁 |                                             |
+| SELECT ... LOCK IN SHARE MODE | 共享锁     | 需要手动在 SELECT 之后加 LOCK IN SHARE MODE |
+| SELECT ... FOR UPDATE         | 排它锁     | 需要手动在 SELECT 之后加 FOR UPDATE         |
+
+> <b>行锁的变种--MVCC</b>
+
+为了提升并发性能，许多数据库都实现了 MVCC，可以认为 MVCC 是行级锁的一个变种，但是它在很多情况下都避免了加锁操作，开销更低。
+
+MVCC 的实现，是通过保存数据在某个时间点的快照来实现的。也就是说，不管需要执行多长时间，每个事务看到的数据都是一致的。根据事务开始的时间不同，每个事务对同一张表，同一时刻看到的数据可能是不一样的。
+
+不同存储引擎的 MVCC 实现是不同的，典型的有乐观（optimistic）并发控制和悲观（pessimistic）并发控制。
+
+<u>InnoDB 的 MVCC，是通过在每行记录后面保存两个隐藏的列来实现的。这两个列，一个保存了行的创建时间，一个保存行的过期时间（或删除时间）。当然存储的并不是实际的时间值，而是系统版本号（system version number）。每开始一个新的事务，系统版本号都会自动递增。事务开始时刻的系统版本号会作为事务的版本号，用来和查询到的每行记录的版本号进行比较。</u>
+
+在 REPEATABLE READ 隔离级别下，MVCC 具体的操作如下：
+
+| 操作   | 说明                                                         |
+| ------ | ------------------------------------------------------------ |
+| SELECT | InnoDB 会根据以下两个条件检查每行记录<br>①InnoDB 只查找版本早于当前事务版本的数据行（也就是，行的系统版本号小于或等于事务的系统版本号），这样可以确保事务读取的行，要么是在事务开始前已经存在的，要么是事务自身插入或者修改过的。<br>②行的删除版本要么未定义，要么大于当前事务版本号。这可以确保事务读取到的行，在事务开始之前未被删除。<br>只有符合上述两个条件的记录，才能返回作为查询结果。 |
+| INSERT | InnoDB 为新插入的每一行保存当前系统版本号作为行版本号。      |
+| DELETE | InnoDB 为删除的每一行保存当前系统版本号作为行删除标识。      |
+| UPDATE | InnoDB 为插入一行新记录，保存当前系统版本号作为行版本号，同时保存当前系统版本号到原来的行作为行删除标识。 |
+
+保存这两个额外系统版本号，使大多数读操作都可以不用加锁。这样设计使得读数据操作很简单，性能很好，并且也能保证只会读取到符合标准的行。不足之处是每行记录都需要额外的存储空间，需要做更多的行检查工作，以及一些额外的维护工作。
+
+MVCC 只在 REPEATABLE READ 和 READ COMMITTED 两个隔离级别下工作。其他两个隔离级别都和 MVCC 不兼容，因为 READ UNCOMMITTED 总是读取最新的数据行，而不是符合当前事务版本的数据行。而 SERIALIZABLE 则会对所有读取的行都加锁。
 
 #### 行锁-演示
 
 默认情况下，InnoDB 在 REPEATABLE READ 事务隔离级别运行，InnoDB 使用 next-key 锁进行搜索和索引扫描，以防止幻读。 
 
 - 针对唯一索引进行检索时，对已存在的记录进行等值匹配时，将会自动优化为行锁。 
-- InnoDB 的行锁是针对于索引加的锁，不通过索引条件检索数据，那么InnoDB 将对表中的所有记录加锁，此时 就会升级为表锁。
+- InnoDB 的行锁是针对于索引加的锁，不通过索引条件检索数据，那么 InnoDB 将对表中的所有记录加锁，此时就会升级为表锁。
 
 可以通过以下 SQL，查看意向锁及行锁的加锁情况：
 
@@ -3701,13 +3776,19 @@ InnoDB 实现了以下两种类型的行锁：
 select object_schema,object_name,index_name,lock_type,lock_mode,lock_data from performance_schema.data_locks;
 ```
 
+> <b>再复习下脏读和幻读</b>
+
+<b>脏读：</b>脏读就是指当一个事务正在访问数据，并且对数据进行了修改，而这种修改还没有提交到数据库中，这时，另外一个事务也访问这个数据，然后使用了这个数据。<span style="color:red">读到了未提交事务的数据。</span>
+
+<b>幻读：</b>幻读指的是当某个事务在读取某个范围内的记录时，另一个事务又在该范围内插入了新的记录，当之前的事务再次读取该范围的记录时会产生幻行。InnoDB 通过 MVCC 解决了幻读的问题。
+
 #### 间隙锁/临键锁-演示
 
 默认情况下，InnoDB 在 REPEATABLE READ 事务隔离级别运行，InnoDB 使用 next-key 锁进行搜索和索引扫描，以防止幻读。 
 
-- 索引上的等值查询(唯一索引)，给不存在的记录加锁时, 优化为间隙锁 。
+- 索引上的等值查询(唯一索引)，给不存在的记录加锁时，优化为间隙锁 。
 - 索引上的等值查询(普通索引)，向右遍历时最后一个值不满足查询需求时，next-key lock 退化为间隙锁。 
-- 索引上的范围查询(唯一索引)--会访问到不满足条件的第一个值为止。
+- 索引上的范围查询(唯一索引) -- 会访问到不满足条件的第一个值为止。
 
 <img src="img/image-20220228183635482.png">
 
@@ -3759,7 +3840,7 @@ MySQL5.5 版本开始，默认使用 InnoDB 存储引擎，它擅长事务处理
 
 #### 后台线程
 
-Master Thread 核心后台线程，负责调度其他线程，还负责将缓冲池中的数据异步刷新到磁盘中, 保持数据的一致性， 还包括脏页的刷新、合并插入缓存、undo页的回收 。
+Master Thread 核心后台线程，负责调度其他线程，还负责将缓冲池中的数据异步刷新到磁盘中, 保持数据的一致性， 还包括脏页的刷新、合并插入缓存、undo 页的回收。
 
 IO Thread 在 InnoDB 存储引擎中大量使用了 AIO 来处理 IO 请求, 这样可以极大地提高数据库的性能，而 IO Thread 主要负责这些 IO 请求的回调。
 
@@ -3770,7 +3851,7 @@ IO Thread 在 InnoDB 存储引擎中大量使用了 AIO 来处理 IO 请求, 这
 | Log thread           | 1        | 负责将日志缓冲区刷新到磁盘   |
 | Insert buffer thread | 1        | 负责将写缓冲区内容刷新到磁盘 |
 
-Purge Thread 主要用于回收事务已经提交了的 undo log，在事务提交之后， undo log可能不用了，就用它来回收。 
+Purge Thread 主要用于回收事务已经提交了的 undo log，在事务提交之后， undo log 可能不用了，就用它来回收。 
 
 Page Cleaner Thread，协助 Master Thread 刷新脏页到磁盘的线程，它可以减轻 Master Thread 的工作压力，减少阻塞。
 
@@ -3783,7 +3864,7 @@ Page Cleaner Thread，协助 Master Thread 刷新脏页到磁盘的线程，它�
 <b>事务的特点</b>
 
 - <span style="color:red">原子性（Atomicity）：事务是不可分割的最小操作单元，要么全部成功，要么全部失败。</span> 
-- <span style="color:red">一致性（Consistency）：事务完成时，必须使所有的数据都保持一致状态。</span>
+- <span style="color:red">一致性（Consistency）：隔离执行事务时（就是说没有其他事务并发执行的情况下）使所有的数据都保持一致状态。</span>
 - <span style="color:red">隔离性（Isolation）：数据库系统提供的隔离机制，保证事务在不受外部并发操作影响的独立环境下运行。</span>
 - <span style="color:red">持久性（Durability）：事务一旦提交或回滚，它对数据库中的数据的改变就是永久的。</span>
 
@@ -3795,9 +3876,9 @@ Page Cleaner Thread，协助 Master Thread 刷新脏页到磁盘的线程，它�
 
 #### redo log实现持久性
 
-<span style="color:red">redo log 重做日志，记录的是事务提交时数据页的物理修改，是用来实现事务的持久性。</span>
+<span style="color:red">redo log 重做日志，记录了事务提交时需要对那些数据页进行物理修改。如果事务提示提交成功，但是磁盘写入时失败（不等待磁盘写入数据成功后再提示事务提交成功是为了提高数据库的性能），可以使用 redo log 中记录的内容再次写入数据，确保事务的持久性。</span>
 
-该日志文件由两部分组成：重做日志缓冲（redo log buffer）以及重做日志文件（redo log file）,前者是在内存中，后者在磁盘中。当事务提交之后会把所有修改信息都存到该日志文件中, 用于在刷新脏页到磁盘,发生错误时, 进行数据恢复使用。
+该日志文件由两部分组成：重做日志缓冲（redo log buffer）以及重做日志文件（redo log file），前者是在内存中，后者在磁盘中。当事务提交之后会把所有修改信息都存到该日志文件中。在刷新脏页到磁盘，发生错误时，可以用日志文件进行数据恢复。【redo log file 的写入速度会比直接写磁盘快很多，因为是顺序写入，不用花费大量的时间查找写入的位置，直接追加写入就行】
 
 <img src="img/image-20220228211850982.png">
 
@@ -3805,11 +3886,11 @@ Buffer Pool 缓存了数据页的信息。进行 update 时，会先操纵缓存
 
 如果脏页中的数据在同步到磁盘的时候出错了，而你此时显示事务提交成功，这样就会丢失数据。（你不能写完数据在提示事务成功了吗？如果这样做的话，执行完一个事务就需要比较长的时间，性能低。那有什么其他的办法吗？--> 使用 redo log）
 
-数据记录在 redolog buffer 中。事务提交时，把 redolog buffer 数据页变化的数据写入到磁盘。这样，进行脏页刷新时，如果出错了就可以通过 redolog 进行恢复。
+数据记录在 redo log buffer 中。事务提交时，把 redo log buffer 数据页变化的数据写入到磁盘。这样，进行脏页刷新时，如果出错了就可以通过 redo log 进行恢复。
 
-<span style="color:orange">直接把脏页刷进磁盘的话，性能较低。因为你插入的数据它要维持索引的一个有序性，且插入的记录还是多条，是随机磁盘 IO，IO 压力比较大。采用 redolog 的话，数据是直接追加写入到 redolog 里的，是顺序磁盘 IO，磁盘的 IO 压力较小。</span>
+<span style="color:orange">直接把脏页刷进磁盘的话，性能较低。因为你插入的数据它要维持索引的一个有序性，且插入的记录还是多条，是随机磁盘 IO，IO 压力比较大。采用 redo log 的话，数据是直接追加写入到 redo log 里的，是顺序磁盘 IO，磁盘的 IO 压力较小。</span>
 
-当脏页的数据顺利刷新到磁盘的话（写入数据库表），redolog 中记录的数据变更也就不需要了，我们每隔一段时间会清理 redolog，且 redolog 是循环写的，并不需要我们手动清理。
+当脏页的数据顺利刷新到磁盘的话（写入数据库表），redo log 中记录的数据变更也就不需要了，我们每隔一段时间会清理 redo log，且 redo log 是循环写的，并不需要我们手动清理。
 
 #### undo log实现原子性
 
@@ -3825,9 +3906,9 @@ Undo log 存储：undo log 采用段的方式进行管理和记录，存放在�
 
 #### 基本概念
 
-<b>当前读</b>：读取的是记录的最新版本，读取时还要保证其他并发事务不能修改当前记录，会对读取的记录进行加锁。对于我们日常的操作，如：<span style="color:orange">select ... lock in share mode(共享锁)，select ... for update、update、insert、delete (排他锁) 都是一种当前读。</span>
+<b>当前读：</b>读取的是记录的最新版本，读取时还要保证其他并发事务不能修改当前记录，会对读取的记录进行加锁。对于我们日常的操作，如：<span style="color:orange">select ... lock in share mode(共享锁)，select ... for update、update、insert、delete (排他锁) 都是一种当前读。</span>
 
-<b>快照读</b>：简单的 select（不加锁）就是快照读，快照读，读取的是记录数据的可见版本，有可能是历史数据，不加锁，是非阻塞读。
+<b>快照读：</b>简单的 select（不加锁）就是快照读，快照读，读取的是记录数据的可见版本，有可能是历史数据，不加锁，是非阻塞读。
 
 - Read Committed：每次 select，都生成一个快照读。
 - Repeatable Read：开启事务后第一个 select 语句才是快照读的地方。 
@@ -3890,7 +3971,7 @@ Read Committed 隔离级别下，在事务中每一次执行快照读时生成 R
 
 <img src="img/image-20220228213421031.png">
 
-上面的这两次事务，在读取的时候提取的到底是那个版本？【其实规则很简单，快照读只能读取到最近一条已经提交事务的数据或者是这个未提交的事务就是自己】
+上面的这两次事务，在读取的时候提取的到底是那个版本？【<span style="color:orange">其实规则很简单，快照读只能读取到最近一条已经提交事务的数据或者是这个未提交的事务就是自己</span>】
 
 <img src="img/image-20220228213526500.png">
 
@@ -3943,7 +4024,7 @@ update\delete 等操作先回到 buffer pool 里，然后把变化写入到 redo
 - ①分布式锁使用者位于不同的机器中，锁获取成功后，才可以对共享资源进行操作。
 - ②锁具有重入的功能，一个使用者可以多次获取同一个锁。
 - ③锁具有超时的功能，在指定的时间内去尝试获取锁，超过了时间，如果还未获取到锁，则获取失败，不在尝试获取锁。
-- ④具备自动容错的机制。如：A 机器获取锁 lockA 之后，在释放 lockA 之前，A机器挂了，导致锁 lockA 为释放，这样 lockA 会一直被 A 机器占有；遇到这种情况，分布式锁要可以自动解决（限时持有，超过了时间就自动释放锁）
+- ④具备自动容错的机制。如：A 机器获取锁 lockA 之后，在释放 lockA 之前，A 机器挂了，导致锁 lockA 为释放，这样 lockA 会一直被 A 机器占有；遇到这种情况，分布式锁要可以自动解决（限时持有，超过了时间就自动释放锁）
 
 ## 乐观锁
 

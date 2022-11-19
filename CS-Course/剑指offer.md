@@ -31,7 +31,7 @@ graph LR
 head-->node1-->node2-->node3-->node4-->node5
 ```
 
-e[0] = node1, en[0]=node2 -- en[0] 表示结点 e[0] 的 next 指针指向的结点。如果是空的话，就存储一个特殊值。暂时不记。
+e[0] = node1, en[0] = node2 -- en[0] 表示结点 e[0] 的 next 指针指向的结点。如果是空的话，就存储一个特殊值。暂时不记。
 
 ## 单调栈\队列
 
@@ -40,7 +40,7 @@ e[0] = node1, en[0]=node2 -- en[0] 表示结点 e[0] 的 next 指针指向的结
 
 ### 单调栈
 
-给定一个长度为 N 的整数数列，输出每个数左边第一个比它小的数，如果不存在则输出 −1。
+给定一个长度为 N 的整数数列，输出每个数左边第一个比它小的数，如果不存在则输出 -1。
 
 ```
 输入
@@ -155,7 +155,6 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Queue;
-
 
 // 用双端队列维护一个单调递减的序列。队头的就是 max。如果入队的元素大于前一个元素，则前一个元素出队。（单调队列）
 public class MaxQueue {
@@ -519,7 +518,7 @@ int main(){
 
 如果下标涉及到 i-1，i 最好是从 1 开始。
 
-$DP 时间复杂度 = 状态数量 * 转移的计算量$
+DP 时间复杂度 = 状态数量 \* 转移的计算量
 
 #### 最长上升子序列
 
@@ -800,7 +799,7 @@ state1-->属性:数量
 
 注意
 
-整数除法的结果应当截去（truncate）其小数部分，例如：truncate(8.345) = 8 以及 truncate(-2.7335) = -2
+整数除法的结果应当截去（truncate）其小数部分，例如：truncate(8.345)=8 以及 truncate(-2.7335)=-2
 假设我们的环境只能存储 32 位有符号整数，其数值范围是 [$−2^{31}$, $2^{31}$−1]。本题中，如果除法结果溢出，则返回 $2^{31} − 1$
 
 #### 解题思路
@@ -871,7 +870,7 @@ class Solution {
 
 给定两个 01 字符串 `a` 和 `b` ，请计算它们的和，并以二进制字符串的形式输出。
 
-输入为 **非空** 字符串且只包含数字 `1` 和 `0`。
+输入为 <b>非空</b> 字符串且只包含数字 `1` 和 `0`。
 
 #### 解题思路
 
@@ -963,7 +962,7 @@ class Solution {
 
 ### 只出现一次的数字
 
-给你一个整数数组 `nums` ，除某个元素仅出现**一次**外，其余每个元素都恰出现**三次 。**请你找出并返回那个只出现了一次的元素。
+给你一个整数数组 `nums` ，除某个元素仅出现一次外，其余每个元素都恰出现三次 。请你找出并返回那个只出现了一次的元素。
 
 #### 解题思路
 
@@ -1228,9 +1227,13 @@ class Solution {
 双指针的思路，求出双指针范围内数组的乘积。right-left+1
 
 比如某次遍历符合题意的子数组为 ABCX，那么在该条件下符合条件的有 X，CX，BCX，ABCX 共四个（可以进行多个例子，发现个数符合 right-left+1）
+
 我们可能会有疑问：AB，BC 也算，为什么不算进去？
+
 记住一点我们是以最右边的 X 为必要条件，进行计算符合条件的子数组，否则会出现重复的！
-比如在X为右侧边界时（ABCX），我们把 BC 算进去了，可是我们在 C 为最右侧时（ABC），BC 已经出现过，我们重复加了 BC 这个子数组两次！
+
+比如在 X 为右侧边界时（ABCX），我们把 BC 算进去了，可是我们在 C 为最右侧时（ABC），BC 已经出现过，我们重复加了 BC 这个子数组两次！
+
 换言之，我们拆分子数组时，让 num[right] 存在，能避免重复计算。
 
 #### 代码
@@ -1327,7 +1330,7 @@ class Solution {
 
 #### 解题思路
 
-先求出数组的总和 sum。然后在遍历一次数组，统计当前遍历过的数字的总和 curSum，如果 curSum-cur = sum - curSum，则找到了中心下标。 
+先求出数组的总和 sum。然后在遍历一次数组，统计当前遍历过的数字的总和 curSum，如果 curSum-cur=sum - curSum，则找到了中心下标。 
 
 #### 代码
 
@@ -1465,15 +1468,13 @@ acwing 830 839 模板题
 
 [剑指 Offer 59 - I. 滑动窗口的最大值 - 力扣（LeetCode）](https://leetcode.cn/problems/hua-dong-chuang-kou-de-zui-da-zhi-lcof/)
 
-
-
 ## 字符串
 
 ### 字符串中的变位词
 
 给定两个字符串 `s1` 和 `s2`，写一个函数来判断 `s2` 是否包含 `s1` 的某个变位词。
 
-换句话说，第一个字符串的排列之一是第二个字符串的 **子串** 。
+换句话说，第一个字符串的排列之一是第二个字符串的子串。
 
 ```shell
 输入: s1 = "ab" s2 = "eidbaooo"
@@ -1721,8 +1722,7 @@ class Solution {
 
 #### 解题思路
 
-这个题的思路是：找到每个可能是回文串的中心点，发散开来找回文串。
-如：以 index=0 为中心的找回文串，以 index=1 为中心的找回文串，以 index=2 为中心的找回文串...
+这个题的思路是：找到每个可能是回文串的中心点，发散开来找回文串。如：以 index=0 为中心的找回文串，以 index=1 为中心的找回文串，以 index=2 为中心的找回文串...
 
 #### 代码
 
@@ -6538,8 +6538,7 @@ public ListNode FindKthToTail(ListNode head,int k) {
 ```
 ## 反转链表
 
-- [x] 头插法
-    - [ ] 头插法主要是要拿到 next 节点，然后把这个 next 节点从链表中移除。
+- [x] 头插法：头插法主要是要拿到 next 节点，然后把这个 next 节点从链表中移除。
 
 ```java
 public ListNode ReverseList(ListNode head) {
@@ -6556,8 +6555,7 @@ public ListNode ReverseList(ListNode head) {
 }
 ```
 
-- [x] 不用 dummy 节点，直接两两交换
-    - [ ] 需要注意，在两两交换前需要将 pre 的 next 指针置空，避免循环指针（将头节点的置 null 即可，后面的节点，next 指针在反转过程中不会出现循环链表）
+- [x] 不用 dummy 节点，直接两两交换。需要注意，在两两交换前需要将 pre 的 next 指针置空，避免循环指针（将头节点的置 null 即可，后面的节点，next 指针在反转过程中不会出现循环链表）
 
 ```mermaid
 graph LR
@@ -6666,8 +6664,6 @@ public class Offer041MedianFinder {
 }
 ```
 
-
-
 ## 从上往下打印二叉树
 
 - [x] 层序遍历
@@ -6730,7 +6726,7 @@ public boolean Verify(int[] sequence, int start, int end) {
 我是看不懂他到底想求什么结点的下一个结点。
 也没有提输入输出。
 
-最后还是看懂了。方法中给出的参数A，我们要求的就是A的下一个结点
+最后还是看懂了。方法中给出的参数 A，我们要求的就是 A 的下一个结点
 下面是结构体
 
 ```java
@@ -6746,10 +6742,10 @@ public class TreeLinkNode {
 }
 ```
 - [x] 解法一
-- 先获得根结点。再求中序遍历。假如我们要求A的下一个结点
-- 设置temp = null 标识有没有发现A
-- 在中序遍历时，发现结点A，我们用temp=A
-- 在出栈时发现temp!=null,则当前出栈的结点就是我们要的结点。
+- 先获得根结点。再求中序遍历。假如我们要求 A 的下一个结点
+- 设置 temp = null 标识有没有发现 A
+- 在中序遍历时，发现结点 A，我们用 temp=A
+- 在出栈时发现 temp!=null, 则当前出栈的结点就是我们要的结点。
 - [x] 解法二
 实际上 最后两种情况是一样的。
 ```java
@@ -6798,11 +6794,9 @@ TreeLinkNode GetNext(TreeLinkNode node) {
 	return null; // 退到了根节点仍没找到，则返回null
 }
 ```
->**PS 我想不到解法二 太强了！**
-
 ## 最小的k个数
 
-- [x] 优先队列 == Max(O(KlongN),O(N)) 建堆时间最优是O(N)
+- [x] 优先队列 == Max(O(KlongN),O(N)) 建堆时间最优是 O(N)
 - [x] 先快排 在输出 == NlongN + K
 ```java
 public ArrayList<Integer> GetLeastNumbers_Solution(int [] input, int k) {
@@ -6900,8 +6894,6 @@ class Solution {
     }
 }
 ```
-
-
 
 # CodeTop
 
@@ -7057,8 +7049,6 @@ public class _804_UniqueMorseRepresentations {
 }
 ```
 
-
-
 ## 统计各位数字都不同的数字的个数
 
 [357. 统计各位数字都不同的数字个数 - 力扣（LeetCode） (leetcode-cn.com)](https://leetcode-cn.com/problems/count-numbers-with-unique-digits/)
@@ -7144,8 +7134,6 @@ public class _357_CountNumbersWithUniqueDigits {
     }
 }
 ```
-
-
 
 ## 写字符串需要的行数
 
@@ -7409,8 +7397,6 @@ class Solution {
     }
 }
 ```
-
-
 
 ## 字符串的最短距离
 
@@ -8844,7 +8830,5 @@ class Solution {
 输入：groupSizes = [2,1,3,3,3,2]
 输出：[[1],[0,5],[2,3,4]]
 ```
-
-
 
 DP 不能确定那个集合里有最优解，贪心可以确当那个集合里有最优解。
