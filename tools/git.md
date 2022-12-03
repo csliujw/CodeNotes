@@ -824,15 +824,6 @@ $ git fetch <远程仓库的别名>
 $ git fetch <远程主机名> <分支名>
 ```
 
-### git merge
-
-合并分支。
-
-```ruby
-# 把指定的分支合并到当前所在的分支下
-$ git merge <分支名称>
-```
-
 ### git diff
 
 比较版本之间的差异。
@@ -897,7 +888,7 @@ $ git log -<指定的数量>
 
 ### git reset
 
-还原提交记录。
+还原提交记录。还原点之后提交的 commit 都会消失。比如一共 100 个 commit，执行了 git reset 第 50 个 commit，则后面 51~100 的 commit 都会消失。
 
 ```ruby
 # 重置暂存区，但文件不受影响
@@ -920,11 +911,37 @@ $ git reset --hard <commit ID>
 
 ### git revert
 
-生成一个新的提交来撤销某次提交，此次提交之前的所有提交都会被保留。
+生成一个新的提交来撤销某次提交，此次提交之前的所有提交都会被保留，相当于生成一个新的内容，然后将新的内容提交过去。
 
 ```ruby
 # 生成一个新的提交来撤销某次提交
 $ git revert <commit ID>
+```
+
+### git rebase
+
+合并 commit。只推荐合并本地的 commit，如果要合并远程的 commit，需要确保合并的 commit 不是别人使用的分支，否则容易造成错误。
+
+```bash
+$ git rebase -i <commit ID> # 从这个 ID 开始
+$ git rebase -i HEAD~100 # 从当前开始，向前找 100 个 commit
+```
+
+如果是远程 commit 合并，则按照提示 rebase 后需要执行
+
+```bash
+$ git push -f origin 分支名称 # 强制提交过去
+```
+
+因为要强制提交才可以合并远程的分支，使用不当容易造成混乱，因此不推荐远程 commit 合并。
+
+### git merge
+
+合并分支。
+
+```ruby
+# 把指定的分支合并到当前所在的分支下
+$ git merge <分支名称>
 ```
 
 ### git tag
