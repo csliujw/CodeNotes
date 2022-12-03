@@ -32,6 +32,10 @@ foreach (file ${files})
 endforeach ()
 ```
 
+### ASCII 表
+
+`a --> 97`，`a --> 65`，`0 --> 48`，`空字符 --> 32`
+
 ### 简单的C++程序
 
 返回值 -1 通常被当作程序错误的标识。重新编译并运行你的程序，观察你的系统如何处理main返回的错误标识。将 main 函数的返回值修改为 -1，观察结果。
@@ -99,6 +103,32 @@ int main(){
 */
 ```
 
+使用 setprecision 设置输出的精度，在头文件 `iomanip` 中。刷题要求输出限制精度的时候常用，当然直接用 C 的 `%.4f` 这种限制位数的更直接。
+
+```cpp
+#include <stdio.h>
+#include<iostream>
+#include<iomanip>
+
+using namespace std;
+
+int main() {
+    double dv = 10.2356452;
+    printf("%.4f", dv); // 10.2356
+    cout << setprecision(5) << dv << endl; // 10.236
+    // fixed 取小数点后xx位                                                 
+    cout << fixed << setprecision(2) << dv << endl; // 10.23
+}
+```
+
+> C 语言输入输出的控制符
+
+`int: %d`
+`float: %f`
+`double: %lf`
+`char %c`
+`long long %lld`
+
 ### 注释
 
 两种注释，单行注释和多行注释
@@ -162,20 +192,20 @@ C++ 定义了一套包括算术类型（arithmetic type）和空类型（void）
 
 #### 算术类型
 
-| 类型        | 含义              | 最小尺寸     |
-| ----------- | ----------------- | ------------ |
-| bool        | 布尔类型          | 未定义       |
-| char        | 字符              | 8 位         |
-| wchar_t     | 宽字符 16         | _位          |
-| char16_t    | Unicode 字符 16   | _位          |
-| char32_t    | Unicode 字符 32   | _位          |
-| short       | 短整型 16         | _位          |
-| int         | 整型 16           | _位          |
-| long        | 长整型 32         | _位          |
-| long long   | 长整型 64         | _位          |
-| float       | 单精度浮点数      | 6 位有效数字 |
-| double      | 双精度浮点数 10   | _位有效数字  |
-| long double | 扩展精度浮点数 10 | _位有效数字  |
+| 类型        | 含义              | 最小尺寸         |
+| ----------- | ----------------- | ---------------- |
+| bool        | 布尔类型          | 未定义           |
+| char        | 字符              | 8 位             |
+| wchar_t     | 宽字符 16         | _位              |
+| char16_t    | Unicode 字符 16   | _位              |
+| char32_t    | Unicode 字符 32   | _位              |
+| short       | 短整型 16         | _位              |
+| int         | 整型 16           | _位              |
+| long        | 长整型 32         | _位              |
+| long long   | 长整型 64         | _位              |
+| float       | 单精度浮点数      | 6-7 位有效数字   |
+| double      | 双精度浮点数 10   | 15-16 位有效数字 |
+| long double | 扩展精度浮点数 10 | _位有效数字      |
 
 #### 类型转换
 
@@ -308,6 +338,38 @@ void test4(){
 | 42ULL    | 无符号整型字面值，类型 unsigned long long              |
 | 1E-3F    |                                                        |
 | 3.14158L | long double 类型                                       |
+
+#### 取整规则
+
+向零取整。
+
+```cpp
+#include<iostream>
+
+using namespace std;
+
+int main() {
+    double dv = 10.23;
+    // 10
+    cout << (int) dv << endl;
+}
+```
+
+int 类型的除法也是向零取整
+
+```cpp
+#include<iostream>
+
+using namespace std;
+
+int main() {
+    int n1 = 5;
+    int n2 = -5;
+    // 向 0 取整
+    cout << n1 / 2 << endl; // 2.5 --> 2
+    cout << n2 / 2 << endl; // -2.5 --> -2
+}
+```
 
 ### 变量
 
