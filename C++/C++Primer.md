@@ -5346,7 +5346,7 @@ int main() {
 
 <b>容器的选取</b>
 
-- 除非你有很好的理由选择其他容器，否则应使用 vector。
+- <span style="color:red">除非有很好的理由选择其他容器，否则应使用 vector。</span>
 - 如果程序有很多小的元素，且空间的额外开销很重要，则不要使用 list 或 forward_list。
 - 如果程序要求随机访问元素，应使用 vector 或 deque。
 - 如果程序要求在容器的中间插入或删除元素，应使用 list 或 forward_list。
@@ -5354,27 +5354,853 @@ int main() {
 
 <span style="color:red">如果你不确定应该使用哪种容器，那么可以在程序中只使用 vector 和 list 公共的操作：使用迭代器，不使用下标操作，避免随机访问。这样，在必要时选择使用 vector 或 list 都很方便。</span>
 
+### 概览
+
+大多数的容器都实现了某些通用的功能，少数方法是个别容器特有的。此处先介绍所有容器的通用功能。
+
+<b>容器初始化的限制</b>
+
+声明一个指定类型容器的大小时要确保该类型的对象可以被默认初始化，否则会报错。因为指定了容器大小时，需要用该类型的数据对容器进行填充。
+
+```cpp
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+class noDefault {
+public:
+    noDefault(int i) {
+        cout << "noDefault " << i << endl;
+    }
+};
+
+class Default {
+public:
+    Default() = default;
+};
+
+void initVector() {
+    // 正确，指定初始大小为0，并给与默认值 0 填充。
+    vector<int> vec(10);
+    for (auto w: vec) {
+        cout << w << "\t";
+    }
+    // 错误，无法对 noDefault 进行默认初始化，它没有默认构造方法
+    // vector<noDefault> vecC(10);
+    // 正确，提供了noDefualt 构造方法需要的参数，可以进行隐式类型转换
+	vector<noDefault> vecC(10,10);
+    // 正确，可以对 Default 进行默认初始化，有默认构造方法
+    vector<Default> vecC2(10);
+}
+
+
+int main() {
+    initVector();
+    return 0;
+}
+```
+
+<div align="center"><h6>容器的通用操作</h6></div>
+
+| 类型别名           | 说明                                                         |
+| ------------------ | ------------------------------------------------------------ |
+| iterator           | 容器类型的迭代器类型                                         |
+| const_iterator     | 可读取元素，但是不可修改元素的迭代器                         |
+| size_type          | 无符号整数，容器最大的大小                                   |
+| difference_type    | 带符号整数，保存两个迭代器直接的拒了                         |
+| value_type         | 元素类型                                                     |
+| reference          | 元素的左值；与 value_type 含义相同                           |
+| const_reference    | 元素的 const 左值类型，即 const_value_type&                  |
+| <b>构造函数</b>    | <b>说明</b>                                                  |
+| C c;               | 默认构造函数，初始化一个空容器                               |
+| C c1(c2)           | 用 c2 的元素初始化 c1，如果 c2 中的数据是对象，会触发对象的拷贝构造 |
+| C c(b, e)          | 将迭代器 begin 和 end 范围内的元素拷贝给 c                   |
+| CC{a, b, c, ...}   | 列表初始化，也会触发拷贝构造，如 vector\<Default\> v{Default()}; <br>会先构造出 Default 对象，再把 Default 对象拷贝给容器 |
+| <b>赋值与 swap</b> | <b>说明</b>                                                  |
+| c1 = c2            | 用容器 c2 中的元素初始化 c1，会触发拷贝构造                  |
+| c1 = {a, b, c};    | 列表初始化，会触发拷贝构造                                   |
+| a.swap(b)          | 交换容器 a 和 b 内部的数据结构，不会触发容器内元素的拷贝构造 |
+| swap(a, b)         | 同上                                                         |
+
+> 测试 vector 初始化、赋值、swap 的代码
+
+```cpp
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+class Default {
+public:
+    Default() = default;
+
+    Default(const Default &obj) {
+        cout << "触发拷贝构造" << endl;
+    };
+};
+
+void initVector() {
+    vector<Default> vec1(2);
+    //触发拷贝构造
+    // vector<Default> vec2(vec1);
+    // 触发拷贝构造
+    vector<Default> vec3{Default()};
+}
+
+void swapVector(){
+    vector<Default> c1(1);
+    // 触发拷贝构造
+    // vector<Default> c2 = c1;
+    // 触发拷贝构造
+    // vector<Default> c3 = {Default()};
+    vector<Default>c4(2);
+    // 只是交换内部的数据结构，不会触发容器中对象的拷贝
+    c4.swap(c1);
+    cout<<c4.size()<<endl; //1
+    swap(c1,c4);
+    cout<<c4.size()<<endl; //1
+}
+
+
+int main() {
+    swapVector();
+    return 0;
+}
+```
+
+| 添加/删除元素              | 说明                                                         |
+| -------------------------- | ------------------------------------------------------------ |
+| c.insert(position, args)   | 将 args 拷贝</b>进 c<br>如果是对象的隐式类型转换<span style="color:red">会触发拷贝构造</span> |
+| c.emplace(position, inits) | 将 inits 拷贝进 c<br>如果是对象的隐式类型转换<span style="color:red">不会触发拷贝构造</span> |
+| c.erase(start, end)        | 删除指定区间的元素，左闭右开                                 |
+| c.clear()                  | 删除 c 中的所有元素，返回 void                               |
+| <b>关系运算符</b>          | <b>说明</b>                                                  |
+| ==, !=                     | 所有容器都支持                                               |
+| <, <=, >, >=               | 无需关联容器不支持                                           |
+| <b>获取迭代器</b>          | <b>说明</b>                                                  |
+| c.begin(), c.end()         | 指向首元素和尾部元素之后位置的迭代器                         |
+| c.cbegin(), c.cend()       | 返回 const_iterator                                          |
+| <b>反向容器</b>            | <b>说明，不支持 forward_list</b>                             |
+| reverse_iterator           | 按逆序寻址元素的迭代器                                       |
+| const_reverse_iterator     | const                                                        |
+| c.rbegin(), c.rend()       | 返回指向 c 的尾部元素和首元素之前位置的迭代器                |
+| c.crbegin(), c.crend()     | 返回 const_reverse_iterator                                  |
+
+> 测试添加删除元素的代码
+
+```cpp
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+class Default {
+public:
+    Default() = default;
+
+    Default(int i) {}
+
+    Default(const Default &obj) {
+        cout << "触发拷贝构造" << endl;
+    };
+
+    ~Default() {
+        cout << "析构" << endl;
+    }
+};
+
+
+void insertVector() {
+    vector<Default> c1(1);
+    vector<Default> c2(3);
+    // 触发两次拷贝构造
+    c1.insert(c1.end(), c2[0]);
+    c1.emplace(c1.end(), c2[1]);
+    cout << c1.size() << endl; // 3
+
+    cout << "=================" << endl;
+    // 左闭右开，触发了两个对象的析构
+    c1.erase(c1.begin(), c1.begin() + 2);
+    cout << "=================" << endl;
+
+    cout << c1.size() << endl; // 1
+    // 不触发拷贝构造
+    c1.emplace(c1.end(), 1);
+    c1.insert(c1.end(), 1);
+
+    cout << "=================" << endl;
+    // 触发三次析构，三个对象都被 delete 了
+    c1.clear();
+    cout << "=================" << endl;
+}
+
+
+int main() {
+    insertVector();
+    return 0;
+}
+```
+
+#### 迭代器
+
+用迭代器指定迭代范围时，遍历的区间是左闭右开。
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <list>
+
+using namespace std;
+
+
+int main() {
+    vector<int> vec{1, 2, 3, 4, 5, 6, 7};
+    vector<int>::iterator beg = vec.begin();
+    vector<int>::iterator end = vec.end();
+    cout << "==========" << endl;
+    // vector 的内存空间是连续的，没问题，但是不推荐
+    // 推荐用 beg!=end
+    while (beg < end) {
+        cout << *beg++ << endl;
+    }
+    cout << "===== != =====" << endl;
+
+
+    list<int> lst1;
+    auto liter1 = lst1.begin();
+    auto liter2 = lst1.end();
+    // 错误，list 的内存空间不是连续的，不能这样比较
+    // list 内部的迭代器无法用 < > 比较
+    while (liter1<liter2){
+
+    }
+    return 0;
+}
+```
+
+除了迭代器，容器内部还有许多其他的类型成员：size_type, iterator, const_iterator, difference_type 等。
+
+#### 容器定义和初始化
+
+每个容器类型都定义了一个默认构造函数，除了 array 之外，其他容器的默认构造函数都会创建一个指定类型的空容器，而 array 创建时需要指定大小。
+
+| 定义和初始化     | 说明                                                         |
+| ---------------- | ------------------------------------------------------------ |
+| C c;             | 默认构造函数，初始化一个空容器                               |
+| C c1(c2)         | 用 c2 的元素初始化 c1，如果 c2 中的数据是对象，会触发对象的拷贝构造 |
+| C c(b, e)        | 将迭代器 begin 和 end 范围内的元素拷贝给 c                   |
+| CC{a, b, c, ...} | 列表初始化，也会触发拷贝构造，如 vector\<Default\> v{Default()}; <br>会先构造出 Default 对象，再把 Default 对象拷贝给容器 |
+| c1 = c2          | 用容器 c2 中的元素初始化 c1，会触发拷贝构造，array 还要求两个容器大小一样。 |
+| c1 = {a, b, c};  | 列表初始化，会触发拷贝构造                                   |
+| C seq(n)         | --                                                           |
+| C seq(n, t)      | --                                                           |
+
+<b>array 具有固定的大小</b>
+
+```cpp
+array<int, 40> arr; // 容量为 40，保存 int 类型的数据
+array<int, 40>::size_type; // array 的类型成员
+array<int>::size_type; // 错误！需要指定容量！
+```
+
+<span style="color:red">容量大小是 array 的一部分。</span>
+
+#### 赋值和swap
+
+需要注意下 array 的赋值操作。
+
+```cpp
+array<int, 10> a1 = {0,1};
+array<int, 10> a2 = {0};
+a1 = a2; // 用 a2 的元素替换 a1 的元素
+a2 = {0}; // 错误，不能将一个花括号列表赋予数组。测试了下，正常运行，，
+```
+
+> 容器赋值运算
+
+由于右边运算对象的大小可能和左边运算对象的大小不一样，因此 array 类型不支持 assign，也不允许使用花括号包围的值列表进行赋值。<span style="color:orange">我本地测的是可以用花括号~的。不知是不是 C++ 版本的问题。</span>
+
+```cpp
+#include <iostream>
+#include <array>
+
+using namespace std;
+
+
+int main() {
+    array<int, 8> a;
+    a = {1, 2, 3, 4, 5};
+    // 1 2 3 4 5 0 0 0 
+    for (auto w: a) cout << w << "\t";
+    return 0;
+}
+```
+
+| <b>赋值与 swap</b> | <b>说明</b>                                                  |
+| ------------------ | ------------------------------------------------------------ |
+| c1 = c2            | 用容器 c2 中的元素初始化 c1，会触发拷贝构造                  |
+| c1 = {a, b, c};    | 列表初始化，会触发拷贝构造                                   |
+| a.swap(b)          | 交换容器 a 和 b 内部的数据结构，不会触发容器内元素的拷贝构造 |
+| swap(a, b)         | 同上                                                         |
+| seq.assign(b, e)   | 将 seq 中的元素替换为迭代器 b 和 e 所表示的范围中的元素。b 和 e 不能指向 seq 中的元素。<span style="color:red">array 无 assign 方法。</span> |
+| seq.assign(l1)     | 将 seq 中的元素替换为 l1 中的元素                            |
+| seq.assign(n, t)   | 将 seq 中的元素替换为 n 个值为 t 的元素                      |
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <list>
+#include <array>
+
+using namespace std;
+
+int main() {
+    vector<int> vec{1, 2, 3, 4, 5};
+    array<int, 5> avec{11, 21, 31, 41, 51};
+
+    vec.assign(avec.begin(), avec.end());
+    // 11 21 31 41 51
+    for (auto w: vec) cout << w << "\t";
+    return 0;
+}
+```
+
+swap 操作只是交换两个容器内部的数据结构，元素本身并未交换，因此速度非常快。<span style="color:orange">元素不会被移动意味着，指向容器的迭代器、引用和指针再 swap 操作后都不会失效，它们仍然指向之前的元素（失效只是说指针的指向改变了？）</span>
+
+但是，swap 对 array 进行操作时，swap 会对元素进行拷贝、删除或插入！
+
+> 书中的内容，目前不是很明白
+
+元素不会被移动的事实意味着，除 string 外，指向容器的迭代器、引用和指针在 swap 操作之后都不会失效。它们仍指向 swap 操作之前所指向的那些元素。但是，在 swap 之后，这些元素已经属于不同的容器了。例如，假定 iter 在 swap 之前指向 svec1[3] 的 string，那么在 swap 之后它指向 svec2[3] 的元素。与其他容器不同，对一个 string 调用 swap 会导致迭代器、引用和指针失效。
+
+与其他容器不同，swap 两个 array 会真正交换它们的元素。因此，交换两个 array 所需的时间与 array 中元素的数目成正比。
+
+因此，对于 array，在 swap 操作之后，指针、引用和迭代器所绑定的元素保持不变，但元素值已经与另一个 array 中对应元素的值进行了交换。
+
 ### 操作
+
+顺序容器的增删改查操作。介绍的都是顺序容器特有的操作。
+
+#### 添加元素
+
+除 array 外，所有标准库容器都提供灵活的内存管理。在运行时可以动态添加或删除元素来改变容器大小。
+
+这些操作会改变容器的大小，因此 array 不支持这些操作。
+
+forward_list 有自己专有版本的 insert 和 emplace。
+
+forward_list 不支持 push_back 和 emplace_back。
+
+vector 和 string 不支持 push_front 和 emplace_front。
+
+| 操作                                     | 说明                                                         |
+| ---------------------------------------- | ------------------------------------------------------------ |
+| c.push_back(t)<br>c.emplace_back(args)   | 在 c 的尾部创建一个值为 t 或由 args 创建的元素（特征隐式类型转换）。返回 void。 |
+| c.push_front(t)<br>c.emplace_front(args) | 在 c 的头部创建一个值为 t 或由 args 创建的元素。返回 void。  |
+| c.insert(p, t)<br>c.emplace(p, args)     | 在迭代器 p 指向的元素之前创建一个值为 t 或由 args 创建的元素。返回指向新添加的元素的迭代器。 |
+| c.insert(p, n, t)                        | 在迭代器 p 指向的元素之前插入 n 个值为 t 的元素。返回指向新添加的第一个元素的迭代器：若 n 为 0，则返回 p |
+| c.insert(p, b, e)                        | 将迭代器 b 和 e 指定的范围内的元素插入到迭代器 p 指向的元素之前。b 和 e 不能指向 c 中的元素。返回指向新添加的第一个元素的迭代器；若范围为空，则返回 p |
+| c.insert(p, il)                          | il 是一个花括号包围的元素值列表。将这些给定值插入到迭代器 p 指向的元素之前。返回指向新添加的第一个元素的迭代器；若列表为空，则返回 p |
+
+
+
+向一个 vector、string 或 deque 插入元素会使所有指向容器的迭代器、引用和指针失效。这个什么意思呢？这个和 Java ArrayList 一边遍历一边遍删除/新增类似。
+
+```cpp
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+int main() {
+    vector<int> ivec = {1, 2, 3, 4, 5, 6};
+    // 迭代器失效。
+    for (auto beg = ivec.begin(), last = ivec.end(); beg != last;) {
+        cout << *beg++ << endl;
+        ivec.insert(ivec.begin() + 2, 10);
+    }	
+    return 0;
+}
+```
+
+[C++ Primer：vector插入元素时迭代器失效问题_北冥有鱼wyh的博客-CSDN博客](https://blog.csdn.net/qq_34801642/article/details/105142401)
+
+insert 操作会触发拷贝构造，而 emplace 操作可以避免这种拷贝。
+
+```cpp
+vector<strConstructor> c;
+c.emplace_back("elel"); // 通过传入的参数构造出对象，放入容器中。不会触发拷贝构造
+c.push_back("eee"); // 会先构造出一个临时对象，然后在进行拷贝构造放入容器中
+```
+
+emplace 函数的参数根据元素类型而变化，参数必须与元素类型的构造函。
+
+<span style="color:red">注意：emplace 函数在容器中直接构造元素。传递给 emplace 函数的参数必须与元素类型的构造函数相匹配。</span>
+
+#### 访问元素
+
+at 和下标操作只适用于 string、vector、deque 和 array
+
+| 操作      | 说明                                                         |
+| --------- | ------------------------------------------------------------ |
+| c.back()  | 返回 c 中尾元素的引用。若 c 为空，函数行为未定义。           |
+| c.front() | 返回 c 中首元素的引用。若 c 为空，函数行为未定义。           |
+| c[n]      | 返回 c 中下标未 n 的元素的引用，n 为 无符号整数。若 n>=c.size()，函数行为为未定义 |
+| c.at(n)   | 返回下标为 n 的元素的引用。如果下标越界，则抛出一个 out_of_range 异常 |
+
+不要对一个空容器调用 front 和 back。
+
+<b> 注意，这些访问元素的方式返回的都是引用</b>
+
+```cpp
+auto &v = c.back(); // 获取尾部元素的引用
+```
+
+#### 删除元素
+
+这些操作会改变容器的大小，因此不适用于 array
+
+forward_list 有特定版本的 erase
+
+forward_list 不支持 pop_back; vector 和 string 不支持 pop_front
+
+| 操作          | 说明                                                         |
+| ------------- | ------------------------------------------------------------ |
+| c.pop_back()  | 删除 c 中尾元素。若 c 为空，则函数行为未定义。函数返回 void。 |
+| c.pop_front() | 删除 c 中首元素。若 c 为空，则函数行为未定义。函数返回 void。 |
+| c.erase(p)    | 删除迭代器 p 所指定的元素，返回一个指向被删元素之后元素的迭代器，若 p 指向尾元素，则返回尾后迭代器。若 p 是尾后迭代器，则函数行为未定义。 |
+| c.erase(b, e) | 删除迭代器 b 和 e 所指定范围内的元素。返回一个指向最后一个被删元素之后元素的迭代器，若 e 本身就是尾后迭代器，则函数也返回尾后迭代器 |
+| c.clear()     | 删除 c 中的所有元素，返回 void                               |
+
+删除 deque 中除首尾位置之外的任何元素都会使所有迭代器、引用和指针失效。<span style="color:red">指向 vector 或 string 中删除点之后位置的迭代器、引用和指针都会失效。</span>
+
+如果我们希望删除 vector 中的偶数，并且希望使用迭代器操作，删除一个元素后需要修改迭代器指针。
+
+```cpp
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+int main() {
+    vector<int> ivec = {1, 2, 3, 4, 5, 6};
+    // 因为删除了元素，因此尾指针也失效了。
+    for (auto beg = ivec.begin(); beg != ivec.end();) {
+        if (*beg % 2 == 0) {
+            beg = ivec.erase(beg);
+        } else {
+            beg++;
+        }
+    }
+    cout << ivec.size() << endl;
+    return 0;
+}
+```
+
+#### forward_list 操作
+
+| 操作               | 说明 |
+| ------------------ | ---- |
+| lst.before_begin() |      |
+|                    |      |
+|                    |      |
+|                    |      |
+
+#### 改变容器大小
+
+使用 resize 来修改容器的大小。
+
+```cpp
+list<int> st(10,42); // 10 个元素，每个元素值为 42
+st.resize(15); // 容量扩容为 15，填充元素 0
+st.resize(25, -1); // 容量扩容为 25，填充元素 -1
+st.resize(5); // 缩容为 5，会删除尾部多余的元素
+```
+
+#### 失效的迭代器★
+
+<span style="color:orange">向容器中添加元素和从容器中删除元素的操作可能会使指向容器元素的指针、引用或迭代器失效。一个失效的指针、引用或迭代器将不再表示任何元素。使用失效的指针、引用或迭代器是一种严重的程序设计错误，很可能引起与使用未初始化指针一样的问题。</span>
+
+在向容器添加元素后
+
+- 如果容器是 vector 或 string，且存储空间被重新分配，则指向容器的迭代器、指针和引用都会失效。如果存储空间未重新分配，指向插入位置之前的元素的迭代器、指针和引用仍有效，但指向插入位置之后元素的迭代器、指针和引用将会失效。
+- 对于 deque，插入到除首尾位置之外的任何位置都会导致迭代器、指针和引用失效。如果在首尾位置添加元素，迭代器会失效，但指向存在的元素的引用和指针不会失效.
+- 对于 list 和 forward_list，指向容器的迭代器（包括尾后迭代器和首前迭代器）、指针和引用仍有效。
+
+当我们从一个容器中删除元素后，指向被删除元素的迭代器、指针和引用会失效，这应该不会令人惊讶。毕竟，这些元素都已经被销毁了。当我们删除一个元素后
+
+- 对于 list 和 forward_list，指向容器其他位置的迭代器（包括尾后迭代器和首前迭代器）、引用和指针仍有效
+- 对于 deque，如果在首尾之外的任何位置删除元素，那么指向被删除元素外其他元素的迭代器、引用或指针也会失效。如果是删除 deque 的尾元素，则尾后迭代器也会失效，但其他迭代器、引用和指针不受影响；如果是删除首元素，这些也不会受影响。
+- 对于vector和string，指向被删元素之前元素的迭代器、引用和指针仍有效。注意：当我们删除元素时，尾后迭代器总是会失效。
+
+<b>管理好迭代器</b>
+
+当你使用迭代器（或指向容器元素的引用或指针）时，最小化要求迭代器必须保持有效的程序片段是一个好的方法。
+
+由于向迭代器添加元素和从迭代器删除元素的代码可能会使迭代器失效，因此必须保证每次改变容器的操作之后都正确地重新定位迭代器。尤其是对 vector、string 和 deque。
+
+<b>编写正确的程序</b>
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <list>
+#include <array>
+
+using namespace std;
+
+void test() {
+    vector<int> vi = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+    auto iter = vi.begin();
+    while (iter != vi.end()) {
+        if (*iter % 2 == 0) {
+            // 复制偶数
+            // insert 会返回指向新添加的第一个元素的迭代器
+            iter = vi.insert(iter, *iter);
+            iter += 2; // 向前移动，跳过当前元素和插入到它之前的元素。
+        } else {
+            // 删除奇数
+            // iter 此时指向我们删除的元素之后的元素
+            iter = vi.erase(iter);
+        }
+    }
+    for (auto w: vi) cout << w << " ";
+}
+int main(){
+    test();
+    return 0;
+}
+```
+
+在调用 insert 和 erase 后都需要更新迭代器，因为两者都会使迭代器失效。
+
+在调用 erase 后，不必递增迭代器，因为 erase 返回的迭代器已经指向序列中下一个元素。调用 insert 后，需要递增迭代器两次。记住，insert 在给定位置之前插入新元素，然后返回指向新插入元素的迭代器。因此，在调用 insert 后，iter 指向新插入元素，位于我们正在处理的元素之前。我们将迭代器递增两次，恰好越过了新添加的元素和正在处理的元素，指向下一个未处理的元素。
+
+<b>不要保存 end 返回的迭代器</b>
+
+当我们添加/删除 vector 或 string 的元素后，或在 deque 中首元素之外任何位置添加/删除元素后，原来 end 返回的迭代器总是会失效。因此，添加或删除元素的循环程序必须反复调用 end，而不能在循环之前保存 end 返回的迭代器，一直当作容器末尾使用。通常 C++ 标准库的实现中 end() 操作都很快，部分就是因为这个原因。
+
+<b>一个错误的写法</b>
+
+```cpp
+void error() {
+    vector<int> vi = {0, 1, 2, 3, 4, 5, 6, 7, 8};
+
+    auto beg = vi.begin(), last = vi.end();
+    // 
+    while (beg!=last){ // error exit code 11
+        ++beg; //
+        beg = vi.insert(beg,42); // 插入新值
+        ++beg; //
+    }
+}
+```
 
 ### vector增长策略
 
+为了尽可能的减少内存分配的次数，vector 分配内存时会多分配一些空间。与 Java 的 ArrayList 类似，但是在缩容策略上，如果我们调用 vector 缩容（去除不必要的内容空间）的函数，这只是提供一个建议，C++ 不一定真的会缩容内存空间。
+
+shrink_to_fit 只适用于 vector、string 和 deque。
+
+capacity 和 reserve 只适用于 vector 和 string。
+
+| 操作              | 说明                                             |
+| ----------------- | ------------------------------------------------ |
+| c.shrink_to_fit() | 请求将 capacity 减少到和 size() 一样大           |
+| c.capacity()      | 不重新分配内存空间的话，c 可以保存的最大元素个数 |
+| c.reserve(n)      | 分配至少能容纳 n 个元素的内存空间                |
+
+<span style="color:red">reserve 并不改变容器中元素的数量，它仅影响 vector 预先分配多大的内存空间。而且只有当前容量不足时，reserve 调用才会改变 vector 的容量。如果当前容量不足，reserve至少分配与需求一样大的内存空间（可能更大）</span>
+
+<span style="color:orange">我们可以调用 shrink_to_fit 来要求 deque、vector 或 string 退回不需要的内存空间。此函数指出我们不再需要任何多余的内存空间。但是，调用 shrink_to_fit 也并不保证一定退回内存空间，编译器不一定会缩容</span>
+
+一般来说扩容的规则是扩容到原先的 2 倍。
+
 ### string的操作
+
+<span style="color:red">我的建议是，快速过一遍，用到时再查。</span>
+
+除了顺序容器共同的操作之外，string 类型还提供了一些额外的操作。这些操作中的大部分要么是提供 string 类和 C 风格字符数组之间的相互转换，要么是增加了允许我们用下标代替迭代器的版本。
+
+#### 构造string的其他方法
+
+| 操作                     | 说明                                                |
+| ------------------------ | --------------------------------------------------- |
+| string s(cp, n)          | cp 的前 n 个字符构成字符串 s。                      |
+| string s(s1, pos2)       | 从 string s1 的下标 pos2 开始拷贝 pos2~末尾的字符。 |
+| string s(s2, pos2, len2) | 从 string s1 的下标 pos2 开始，拷贝 len2 个字符。   |
+
+这些构造函数接受一个 string 或一个 const char* 参数，还接受（可选的）指定拷贝多少个字符的参数。当我们传递给它们的是一个 string 时，还可以给定一个下标来指出从哪里开始拷贝。
+
+#### substr操作
+
+拷贝 string 中的一部分字符。
+
+| 操作             | 说明                                                         |
+| ---------------- | ------------------------------------------------------------ |
+| s.substr(pos, n) | 从 pos 开始，拷贝 n 个字符。pos 的默认值为 0，n 的默认值为 s.size() - pos，即拷贝从 pos 开始的所有字符。 |
+
+#### 修改string的其他方法
+
+string 类型支持顺序容器的赋值运算符以及 assign、insert 和 erase 操作，除此之外，它还定义了额外的 insert 和 erase 版本。
+
+```cpp
+s.insert(s.size(), 5, '!'); // s 末尾插入 5 个 !
+s.erase(s.size()-5, 5); // 删除最后 5 个字符
+```
+
+利用 assign 替换 s 的内容
+
+```cpp
+const char *cp = "Stately, plum Buck";
+s.assign(cp, 7); // s == "Stately"
+s.insert(s.size(), cp+7); // s = "Stately, plum Buck"
+```
+
+<b>append 和 replace</b>
+
+append 在末尾追加字符。重点是 replace。
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+
+void testStr() {
+    string str("hello world");
+    // 从 0 开始的两个字符被替换为 c
+    str.replace(0, 2, "c"); // cllo world
+    cout << str << endl;
+
+    // 将 cllo 替换为 hello
+    // 找到 cllo 的起始位置，然后把 cllo 4 个字符替换为 hello
+    str.replace(str.find("cllo"), 4, "hello");
+    cout << str << endl;
+
+    // c++ 未提供 replace all 的功能奥
+}
+
+int main() {
+    testStr();
+    return 0;
+}
+```
+
+实现一个 replaceAll 的功能
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+string &replaceAll(string &str, const string &old, const string &news);
+
+void testStr() {
+    string str("hello world");
+    replaceAll(str, "l", "kkx");
+    cout << str << endl;
+}
+
+string &replaceAll(string &str, const string &old, const string &news) {
+    // 把 old 都替換為 news
+    int index = -1;
+    int start = 0;
+    while (-1 != (index = str.find(old, start))) {
+        str.replace(index, old.size(), news);
+        start = index - old.size() + news.size();
+    }
+    return str;
+}
+
+int main() {
+    testStr();
+    return 0;
+}
+```
+
+#### string搜索操作
+
+string 类提供了 6 个不同的搜索函数，每个函数都有 4 个重载版本，此处只记录个人认为重要的。
+
+| 操作                      | 说明                                                         |
+| ------------------------- | ------------------------------------------------------------ |
+| s.find(args)              | 查找 args 第一次出现的位置                                   |
+| s.find(args, start)       | 以 start 为起点，查找 args 第一次出现的位置，start 为 size_type 类型。 |
+| s.rfind(args)             | 查找 s 中 args 最后一次出现的位置                            |
+| s.find_first_of(args)     | 在 s 中 args 任何一个字符第一次出现的位置                    |
+| s.find_last_of(args)      | 在 s 中 args 任何一个字符最后一次出现的位置                  |
+| s.find_first_not_of(args) | 在 s 中查找第一个不在 args 中的字符                          |
+| s.find_last_not_of(args)  | 在 s 中查找最后一个不在 args 中的字符                        |
+
+#### 数值转换
+
+| 操作            | 说明                                       |
+| --------------- | ------------------------------------------ |
+| to_string(val)  | 将 val 变为 string                         |
+| stoi(s, p, b)   | 返回 s p~b 字符范围内表示的数值 i 表示 int |
+| stol(s, p, b)   | l 表示 long                                |
+| stoul(s, p, b)  | ul 表示 unsigned long                      |
+| stoll(s, p, b)  | ll 表示 long long                          |
+| stoull(s, p, b) | ull 表示 unsigned long long                |
+| stof(s, p)      | f 表示 float                               |
+| stod(s, p)      | od 表示 double                             |
+| stold(s, p)     | old 表示 long double                       |
 
 ### 容器适配器
 
-stack、queue、priorty_queue
+stack、queue、priorty_queue。
+
+除了顺序容器外，标准库还定义了三个顺序容器适配器：stack、queue和 priority_queue。简单来说，适配器就是让 vector 表现的像 stack 一样。例如，stack 适配器接受一个顺序容器（除 array 或 forward_list 外），并使其操作起来像一个 stack 一样。
+
+<span style="color:red">看代码像是用的装饰模式</span>
+
+| 类型和操作              | 说明                                                         |
+| ----------------------- | ------------------------------------------------------------ |
+| size_type               | 一般是无符号 int                                             |
+| value_type              | 容器中所存储元素的类型                                       |
+| container_type          | 实现适配器的底层容器类型                                     |
+| A a;                    | 创建一个名为 a 的空适配器                                    |
+| A a(c)                  | 创建一个名为 a 的适配器，并拷贝容器 c 中的元素               |
+| 关系运算符              | ==、!=、<、<=、>、>=                                         |
+| a.empty()               | 无元素返回 true，反之 false                                  |
+| a.size()                | a 中元素的个数                                               |
+| swap(a, b)<br>a.swap(b) | 交换 a 和 b 的内容，a 和 b 必须有相同类型，包括底层容器类型也必须相同。 |
+
+#### 定义适配器
+
+每个适配器都定义两个构造函数：默认构造函数创建一个空对象，接受一个容器的构造函数拷贝该容器来初始化适配器。例如，假定 deq 是一个 deque\<int\>，我们可以用 deq 来初始化一个新的 stack
+
+```cpp
+#include <iostream>
+#include <deque>
+#include <stack>
+
+using namespace std;
+
+void testAdapter() {
+    deque<int> dq = {1, 2, 3, 4, 5};
+    stack<int> s(dq);
+}
+
+int main() {
+    testAdapter();
+    return 0;
+}
+```
+
+也可以通过泛型来指定用何种容器初始化一个新的 stack
+
+```cpp
+#include <iostream>
+#include <stack>
+#include <vector>
+
+using namespace std;
+
+void testAdapter() {
+    // 在 vector 上实现空栈
+    stack<int, vector<int>> int_stk;
+
+    int_stk.push(1);
+    int_stk.push(2);
+    int_stk.push(3);
+    int_stk.push(4);
+    cout << int_stk.top() << endl; // 4
+    
+    // 在 vector 上实现栈，并用 int_stk 中的元素进行初始化
+    stack<int, vector<int>> int_stk2(int_stk);
+    cout << int_stk2.size() << endl; // 4
+}
+
+int main() {
+    testAdapter();
+    return 0;
+}
+```
+
+对于一个给定的适配器，可以使用哪些容器是有限制的。所有适配器都要求容器具有添加和删除元素的能力。因此，适配器不能构造在 array 之上。类似的，我们也不能用 forward_list 来构造适配器，因为所有适配器都要求容器具有添加、删除以及访问尾元素的能力。stack 只要求 push_back、pop_back 和 back 操作，因此可以使用除 array 和 forward_list 之外的任何容器类型来构造 stack。queue 适配器要求 back、push_back、front 和 push_front，因此它可以构造于 list 或 deque 之上，但不能基于 vector 构造。priority_queue 除了 front、push_back 和 pop_back 操作之外还要求随机访问能力，因此它可以构造于 vector 或 deque 之上，但不能基于 list 构造。
+
+#### 栈适配器
+
+栈默认基于 deque 实现，也可以用 list 或 vector 实现。 stack 适配器定义在 stack 头文件中。
+
+```cpp
+stack<int> initStack;
+```
+
+| 操作                            | 说明                                                         |
+| ------------------------------- | ------------------------------------------------------------ |
+| s.pop()                         | 删除栈顶元素，返回 void                                      |
+| s.push(item)<br>s.emplace(args) | 元素入栈，通过拷贝或移动 item 而来，由 args 构造元素，入栈，不发生拷贝构造 |
+| s.top()                         | 返回栈顶元素，不会将元素出栈                                 |
+
+#### 队列适配器
+
+queue 和 priority_queue适配器定义在 queue 头文件中。
+
+| 操作                            | 说明                                                         |
+| ------------------------------- | ------------------------------------------------------------ |
+| q.pop()                         | 返回 queue 的首元素或 priority_queue 的最高优先级的元素      |
+| q.front()                       | 返回首元素                                                   |
+| q.back()                        | 返回尾元素，只适用于 queue                                   |
+| q.top()                         | 返回优先级最高的元素，只适用于 priority_queue                |
+| q.push(item)<br>q.emplace(args) | 在 queue 尾部或 priority_queue 中恰当的位置创建一个元素。值为 item，或者由 args 构造 |
+
+自定义 priority_queue 的比较器。
+
+- 入队的元素可比较（重载了操作符）
+- 自定义比较函数模板★
+- 定义友院操作类重载函数
+
+```cpp
+// 自定义比价函数模板
+#include <iostream>
+#include <queue>
+
+using namespace std;
+
+struct cmp {
+    bool operator()(const int &a, const int &b) {
+        return a - b;
+    }
+};
+
+void testAdapter() {
+    // 默认大根堆
+    // 利用 greater 改成小根堆
+    priority_queue<int, vector<int>, greater<int>> heap;
+    heap.push(1);
+    heap.push(3);
+    heap.push(6);
+    cout << heap.top() << endl;
+    
+    // 自定义比较器改成小根堆
+    priority_queue<int, vector<int>, cmp> heap2;
+    heap.push(1);
+    heap.push(3);
+    heap.push(6);
+    cout << heap.top() << endl;
+}
+
+int main() {
+    testAdapter();
+    return 0;
+}
+```
 
 ## 第十章-泛型算法
 
 ### 概述
 
-大多数算法定义在头文件 algorithm 中，部分在 numeric 中，这些算法不直接操作容器，而是遍历两个迭代器指定的一个元素范围来进行操作。
+大多数算法定义在头文件 `algorithm` 中，部分在 `numeric` 中，这些算法不直接操作容器，而是遍历两个迭代器指定的一个元素范围来进行操作。因为没有限定具体的操作元素类型，因此称为泛型算法。
 
 算法不会改变容器的大小。
 
 ### 初识泛型算法
 
-标准库提供了超过100个算法。
+标准库提供了超过 100 个算法。
 
 标准库算法都对一个范围内的元素进行操作，此元素范围称为“输入范围”
 
@@ -5406,7 +6232,7 @@ stack、queue、priorty_queue
 | fill_n(vec.begin(),vec.size(),0)                 | 将 vec 的所有元素重置为0                                     |
 | for_each(vec.begin(),vec.end(),'可调用对象');    | 对输入范围内的每一个元素执行可调用对象的内容。注意：可调用对象是一元谓词，参数类型是迭代器指向的类型 |
 
-> <b>插入迭代器</b>
+<b>插入迭代器</b>
 
 插入迭代器是一种向容器中添加元素的迭代器。
 
@@ -5426,7 +6252,7 @@ auto it = back_inserter(vec);//it 即为vec新加的插入迭代器
 fill_n(back_inserter(vec),10,0);//添加 10 个元素到 vec
 ```
 
-> <b>拷贝算法</b>
+<b>拷贝算法</b>
 
 ```cpp
 //把数组 a1 的内容拷贝给 a2，返回的是目的位置迭代器（递增后）的值
@@ -5439,28 +6265,467 @@ replace(ilst.begin(),ilst.end(),0,42);
 replace_copy(ilst.begin(),ilst.end(),dest,0,42);
 ```
 
-> <b>重排容器算法</b>
+#### 重排容器算法
+
+消除重复单词，先对容器进行排序（sort 函数），然后使用 unique 函数，将相邻的重复项“消除”，并返回一个指向不重复值范围末尾的迭代器。
 
 ```cpp
 //默认按字典序从小到达排列输入范围内的元素。重复的元素会相邻
 sort(words.begin(),words.end());
 
-//将输入范围内的元素重排，将重复的元素里不是第一次出现的元素都放到序列的后端。返回指向序列后端重复元素中的第一个重复元素的迭代器。
+// 将重复的元素放到末尾，并且返回第一个重复元素的迭代器。
 auto end_unique = unique(words.begin(),words.end());
 
 //删除重复的元素。erase()函数可以接受两个相等的迭代器作为参数。
 words.erase(end_unique,words.end());
 ```
 
+完整的案例
+
+```cpp
+#include <vector>
+#include <iostream>
+#include <algorithm>
+
+using namespace std;
+
+int main() {
+    vector<string> svec{"hello", "world", "hello", "hello", "c++"};
+    sort(svec.begin(), svec.end());
+
+    auto unique_result = unique(svec.begin(), svec.end());
+    svec.erase(unique_result, svec.end());
+    for (auto w: svec) cout << w << endl;
+    return 0;
+}
+```
+
+### 定制操作
+
+如果算法本身不满足我们的需求，我们可以将自己的需求封装成函数，然后传递给算法，让他按这个需求进行操作 <span style="color:red">==> 定制操作</span>
+
+#### 向算法传递函数
+
+定制操作的过程是向函数传递一个谓词，由这个谓词进行条件判断。比如符合返回 true，不符合返回 false。函数 sort 就可以实现这种定制操作，通过向 sort 传递一个谓词，由谓词进行大小比较的判断。
+
+那什么是谓词？谓词是一个可调用的表达式，返回结果是一个可以作为条件的值，如返回一个 bool 值。
+
+谓词的参数类型必须是元素类型可以转换到的类型。谓词的实参是输入序列的元素（是元素本身不是迭代器）
+
+谓词分为一元谓词和二元谓词，分别接受一个参数和两个参数。不同的标准库算法会接受不同的谓词作为参数。
+
+```cpp
+#include <vector>
+#include <iostream>
+#include <algorithm>
+
+using namespace std;
+
+// 比价函数，按长度排序
+bool isShorter(const string &s1, const string &s2){
+    return s1.size() < s2.szie();
+}
+
+int main() {
+    vector<string> svec{"hello", "world", "hello", "hello", "c++"};
+    // 使用 stabl_sort. 稳定的排序。
+    stable_sort(svec.begin(), svec.end(), isShorter);
+    for (auto w: svec) cout << w << endl;
+	return 0;
+}
+```
+
+#### lambda表达式
+
+根据算法接受一元谓词还是二元谓词，我们传递给算法的谓词必须严格接受一个或两个参数。但是，有时我们希望进行的操作需要更多参数，超出了算法对谓词的限制。
+
+lambda 表达式适合那种只在一两个地方使用的简单操作。
+
+我们可以向一个算法传递任何类别的可调用对象。而一共有四种可调用对象：函数、函数指针、重载了函数调用运算符的类、lambda 表达式。
+
+<b>lambda 的基本使用</b>
+
+<span style="color:red">lambda 表达式组成部分：捕获列表、参数列表、返回类型、函数体。</span>
+
+```cpp
+[capture list](parameter list)->return type {function body}
+```
+
+捕获列表的内容为 lambda 所在函数中定义的<span style="color:orange">局部变量</span>（直接写局部变量的名字即可，通常为空）。捕获列表只用于局部非 static 变量。
+
+参数列表和返回类型都可以省略。如果忽略返回类型，则根据 return 语句推断返回类型（此时函数体必须只有 return 语句）。
+
+```cpp
+auto f = [] { return 42; };
+cout<< f() <<endl; // 调用 lambda
+```
+
+<b>向 lambda 传递参数</b>
+
+```cpp
+// 定义一个比较字符串长度的 lambda 表达式
+[](const stirng &s1, const string &s2)
+	{ return s1.size()<s2.size(); }
+```
+
+空捕获列表表明此 lambda 不使用它所在函数中的任何局部变量。
+
+自定义字符串的排序规则，字符串越长的越大。
+
+```cpp
+#include<iostream>
+#include<vector>
+#include <algorithm>
+
+using namespace std;
+
+void defineSortedRules() {
+    vector<string> svec = {"hello", "ni", "paidaixing"};
+
+    sort(svec.begin(), svec.end()); // 默认字典升序
+    for (auto const &w: svec)cout << w << endl;
+
+    // 返回 true 的为真，默认从 小-->大
+    // s1 < s2, s1 在前，即 size 小的在前。
+    auto rules = [](const string &s1, const string &s2) { return s1.size() < s2.size(); };
+    sort(svec.begin(), svec.end(), rules);
+    for (auto const &w: svec)cout << w << endl;
+
+}
+
+int main() {
+    defineSortedRules();
+}
+```
+
+<b>lambda 的捕获列表</b>
+
+lambda 可以使用那些在捕获列表中指定了的局部遍历。
+
+```cpp
+void localVariable() {
+    int sz = 100;
+    // 捕获局部遍历 sz 并使用。sz 的传递是值传递。
+    auto lambda = [sz](const string &s1) {
+        return s1.size() > sz;
+    };
+    cout << lambda("hello") << endl;
+}
+```
+
+使用捕获列表，捕获局部变量参数，查找容器中第一个长度大于 sz 的元素。注意，此处用的值捕获，在创建 lambda 的一瞬间，lambda 内就保存好了 sz 的副本值 5，即后面可以认为 sz 就是一个固定的值 5。
+
+```cpp
+void returnContainerVariable() {
+    int sz = 5;
+    auto lambda = [sz](const string &s1) {
+        return s1.size() > sz;
+    };
+    vector<string> svec{"ni", "hao", "kimmis"};
+    // 拿到指向查找到元素的迭代器指针
+    auto str = find_if(svec.begin(), svec.end(), lambda);
+    cout << *str << endl;
+}
+```
+
+<b>for_each 算法</b>
+
+遍历容器，并使用指定的谓词对遍历的每个元素进行操作。
+
+```cpp
+void returnContainerVariable() {
+    int sz = 5;
+    auto lambda = [sz](const string &s1) {
+        return s1.size() > sz;
+    };
+    vector<string> svec{"ni", "hao", "kimmis"};
+    auto str = find_if(svec.begin(), svec.end(), lambda);
+    cout << *str << endl;
+
+    for_each(svec.begin(), svec.end(), [sz](string &str) {
+        if (str.size() >= sz) {
+            str.replace(0, 0, "long_str:");
+        }
+        cout << str << endl;
+    });
+}
+```
+
+<span style="color:red">捕获列表只用于局部非 static 变量， lambda 可以直接使用局部 static 变量和在它所在函数之外声明的名字。为什么？因为局部变量存在静态段，不会因为函数调用完就消失吗？</span>
+
+#### lambda捕获和返回值
+
+lmabda 和普通函数一样，可以进行值捕获和引用捕获，但是在使用引用捕获的时候有诸多注意事项。<span style="color:orange">使用引用捕获时要确保捕获的引用在 lambda 调用时还存在。但是这种往往不好判断，因此尽量不要使用引用捕获。</span>
+
+<b>值捕获的用法</b>
+
+```cpp
+int sz = 5;
+// 没有引用符号，值捕获。
+auto lambda = [sz](const string &s1) {
+    return s1.size() > sz;
+};
+```
+
+<b>引用捕获的用法</b>
+
+```cpp
+int sz = 5;
+// 加了引用符，引用捕获。
+auto lambda = [&sz](const string &s1) {
+    return s1.size() > sz;
+};
+```
+
+如果我们采用引用方式捕获一个变量，就必须确保被引用的对象在 lambda 执行的时候是存在的。lambda 捕获的都是局部变量，这些变量在函数结束后就不复存在了。如果 lambda 可能在函数结束后执行，捕获的引用指向的局部变量已经消失。
+
+引用捕获存在的必要性：有些数据不允许拷贝构造，此时只能使用引用捕获，如 ostream。我们不能拷贝 ostream 对象，因此捕获 os 的唯一方法就是捕获其引用。
+
+<b>变量捕获的建议</b>
+
+- 尽量采用简单的值捕获。
+- 如果我们捕获一个指针或迭代器，或采用引用捕获方式，就必须确保在 lambda 执行时，绑定到迭代器、指针或引用的对象仍然存在。
+- 应该尽量减少捕获的数据量，来避免潜在的捕获导致的问题。而且，如果可能的话，应该避免捕获指针或引用。
+
+<b>隐式捕获</b>
+
+除了显式列出我们希望使用的来自所在函数的变量之外，还可以让编译器根据 lambda 体中的代码来推断我们要使用哪些变量。
+
+- [=] 表示，lambda 内部使用的局部变量使用值捕获
+- [&] 表示，lambda 内部使用的局部变量使用引用捕获
+
+也可以混合使用显示捕获和隐式捕获。
+
+- [=, &sz]，sz 使用引用捕获，其他的使用值捕获
+- [&, sz]，sz 使用值捕获，其他的使用引用捕获
+
+<b>可变 lambda</b>
+
+lambda 不会改变一个值拷贝的变量，如果希望可以改变它，需要在参数列表首加上关键字 mutable。
+
+```cpp
+size_t sz = 10;
+auto f = [sz]() mutable { return ++sz; };
+cout<< f() <<endl; // 11
+```
+
+<b>返回值</b>
+
+如果 lambda 内部只有 return 语句可以不用指定返回类型，可以自动进行类型推断。如果有其他语句，需要我们显示指定返回类型。
+
+```cpp
+void testReturn() {
+    vector<int> ivec{1, 2, 3, 4, 5, 6};
+    auto map = [](vector<int> &i) -> vector<int> {
+        // ele % 2 == 1 则 ele+=1 , 即奇数变偶数
+        for (auto &ele: i) if (ele % 2) ele += 1;
+        return i;
+    };
+    map(ivec);
+    for (auto ele: ivec) cout << ele << endl;
+}
+```
+
+#### 参数绑定
+
+再次强调，lambda 适用于那些简单的操作。
+
+如果 lambda 的捕获列表为空，既可以使用函数也可以使用 lambda。如果捕获列表不为空，使用函数的话需要将使用到的捕获列表的参数传递给函数，要多一个形式参数，而 lambda 则可以直接用捕获列表捕获，然后直接使用，形式参数的数量不用改变。
+
+但是，对于捕获局部变量的 lambda，用函数来替换它就不是那么容易了。例如，我们用在 find_if 调用中的 lambda 比较一个 string 和一个给定大小。我们可以很容易地编写一个完成同样工作的函数
+
+```cpp
+// 为函数传递两个参数
+bool check_size(const string &s, string::size_type sz){
+    return s.size() >= sz;
+}
+```
+
+但是我们不能把这个函数传递给 find_if，因为它接受的是一元谓词，因此传递过去的函数必须是单一形参。如何解决这个问题呢？可以使用 C++ 提供的 bind 函数。
+
+<b>标准库中的 bind 函数</b>
+
+bind 函数位于 functional 头文件中。我们可以将 bind 函数看作一个通用的函数适配器，它接受一个可调用对象，生成一个新的可调用对象来“适应”原对象的参数列表。
+
+```cpp
+auto newCallable = bind(callable, arg_list);
+```
+
+arg_list 如果是 \_1 \_2 这种表示占位符。下面来看一个具体的例子来理解 arg_list
+
+```cpp
+// _1(_ 开头的)表示这是一个占位符，即它需要再传递过去一个实参。
+auto check = bind(check_size, _1, 6);
+```
+
+此 bind 调用只有一个占位符，表示 check 只接受单一参数。这样就将 check_size 转换为了一个只接收单一实参的函数了。
+
+```cpp
+#include <functional>
+#include<iostream>
+#include<vector>
+#include <algorithm>
+
+using namespace std;
+
+void testBind(int sz) {
+    vector<string> svec{"ni", "hao", "kimmis"};
+    auto str = find_if(svec.begin(), svec.end(), bind(check_size, std::placeholders::_1, sz));
+    cout << *str << endl;
+}
+
+int main() {
+    testBind(3);
+}
+```
+
+这样就解决形参数量的问题。
+
+<b>placeholders 名字</b>
+
+名字_n 都定义在一个名为 placeholders 的命名空间中，而这个命名空间本身定义在 std 命名空间。
+
+对每个占位符名字，我们都必须提供一个单独的 using 声明，很繁琐。我们可以使用另外一种不同形式的 using 语句
+
+```cpp
+using namespace namespace_names;
+
+using namespace std::placeholders;
+```
+
+这样 placeholders 中定义的所有名字就都可用了。
+
+<b>用 bind 重排参数</b>
+
+我们可以用 bind 修正参数的值。也可以用 bind 调整函数的参数顺序。例如，假定 binds 是一个可调用对象，它有 3 个参数，则下面对 bind 的调用。
+
+```cpp
+#include<iostream>
+#include<vector>
+#include <algorithm>
+#include <functional>
+
+using namespace std;
+
+void binds(int a, int b, int c) {
+    cout << "0:" << a << endl;
+    cout << "1:" << b << endl;
+    cout << "2:" << c << endl;
+}
+
+void testBinds() {
+    // _2 表示第二个形式参数
+    // _1 表示第一个形式参数
+    auto bds = bind(binds, 
+                    0, 
+                    std::placeholders::_2, 
+                    std::placeholders::_1);
+    bds(2, 1);
+    // std::placeholders::_2 对应第二个参数 1
+    // std::placeholders::_1 对应第一个参数 2
+    // 最后就是
+    // binds(0,1,2) 输出 0:0 1:1 2:2
+}
+/*
+0:0
+1:1
+2:2
+*/
+```
+
+确实有点绕，，，
+
+<b>bind 绑定引用参数</b>
+
+bind 不能直接绑定引用参数，需要使用 ref
+
+```cpp
+ostream &print(ostream &os, const string &s, char c){
+    return os<< s <<c;
+}
+// 错误，不能拷贝 os
+for_each(words.begin(), words.end(), bind(print, os, _1, ' '));
+// 使用标准库 ref 函数
+for_each(words.begin(), words.end(), bind(print, ref(os), _1, ' '));
+```
+
+<span style="color:orange">函数 ref 返回一个对象，包含给定的引用，此对象是可以拷贝的。标准库中还有一个 cref 函数，生成一个保存 const 引用的类。与 bind 一样，函数 ref 和 cref 也定义在头文件 functional 中。</span>
+
+### 再探迭代器
+
+除了为每个容器定义的迭代器之外，标准库在头文件 iterator 中还定义了额外几种迭代器。
+
+- 插入迭代器（insert iterator）：这些迭代器被绑定到一个容器上，可用来向容器插入元素。
+- 流迭代器（stream iterator）：这些迭代器被绑定到输入或输出流上，可用来遍历所关联的 IO 流。
+- 反向迭代器（reverse iterator）：这些迭代器向后而不是向前移动。除了 forward_list 之外的标准库容器都有反向迭代器。
+- 移动迭代器（move iterator）：这些专用的迭代器不是拷贝其中的元素，而是移动它们。
+
+感觉还用不上，只简单过一遍。
+
+### 泛型算法结构
+
+不同的泛型算法要求迭代器提供功能也不一样。但是算法要求的迭代器操作可以分为 5 个迭代器类别。
+
+| 迭代器类型     | 说明                                 |
+| -------------- | ------------------------------------ |
+| 输入迭代器     | 只读，不写；单遍扫描，只能递增       |
+| 输出迭代器     | 只写，不读；单遍扫描，只能递增       |
+| 前向迭代器     | 可读写；多遍扫描，只能递增           |
+| 双向迭代器     | 可读写；多遍扫描，可递增递减         |
+| 随机访问迭代器 | 可读写；多遍扫描，支持全部迭代器运算 |
+
+#### 算法形参模式
+
+在任何其他算法分类之上，还有一组参数规范。通过理解参数的含义，我们可以将注意力集中在算法所做的操作上。大多数算法具有如下4种形式之一
+
+```cpp
+alg(beg, end, other args);
+alg(beg, end, dest, other args);
+alg(beg, end, beg2, other args);
+alg(beg, end, beg2, end2, other args);
+```
+
+其中 alg 是算法的名字，beg 和 end 表示算法所操作的输入范围。几乎所有算法都接受一个输入范围，是否有其他参数依赖于要执行的操作。这里列出了常见的一种—— dest、beg2 和 end2，都是迭代器参数。顾名思义，如果用到了这些迭代器参数，它们分别承担指定目的位置和第二个范围的角色。除了这些迭代器参数，一些算法还接受额外的、非迭代器的特定参数。
+
+#### 算法命名规范
+
+除了参数规范，算法还遵循一套命名和重载规范。这些规范处理诸如：如何提供一个操作代替默认的 < 或 == 运算符以及算法是将输出数据写入输入序列还是一个分离的目的位置等问题。
+
+<b>一些算法使用重载形式传递一个谓词</b>
+
+接受谓词参数来代替 < 或 == 运算符的算法
+
+```cpp
+unique(beg, end);		// 使用 == 运算符比较原始
+unique(beg, end, comp);	// 使用 comp 比较元素
+```
+
+<b>\_if 版本的算法</b>
+
+接受一个元素值的算法通常有另一个不同名的（不是重载的）版本，该版本接受一个谓词代替元素值。接受谓词参数的算法都有附加的 _if 前缀
+
+<div align="center"><img src="img/image-20221205175727788.png"></div>
+
+```cpp
+find(beg, end, val); // 查找 val 第一次出现位置
+find_if(beg, end, pred); // 查找第一个令 pred 为真的元素
+```
+
+<b>区分拷贝元素的版本和不拷贝的版本</b>
+
+\_copy 结尾的都是将结果存储在新的内存空间，不会修改原有数据。
+
+<div align="center"><img src="img/image-20221205175955899.png"></div>
+
 ### 特定容器算法
 
-链表类型 list 和 forward_list 定义了几个成员函数形式的算法。它们定义了独有的 sort, merge, remove, reverse 和 unique。
+和其他容器不一样，链表类型 list 和 forward_list 定义了几个成员函数形式的算法。它们定义了独有的 sort, merge, remove, reverse 和 unique。
 
 通用版本的 sort 要求随机访问迭代器，而 list 和 forward_list 分别提供双向迭代器和前向迭代器，因此不能用于 list 和 forward_list。
 
 其他链表类型定义的算法的通用版本可以用于链表，但是性能差很多，应该优先使用成员函数版本的算法。
 
-> <b>成员函数版本的算法</b>
+<b>成员函数版本的算法</b>
 
 ```cpp
 lst.merge(lst2); // 将 lst2 的元素合并入 lst。两者必须都是有序的，合并后 lst2 将变为空。使用 < 比较元素。
@@ -5478,7 +6743,7 @@ lst.unique(); // 调用 erase 删除同一个值的连续拷贝。
 lst.unique(pred); // pred 是个二元谓词，删除使 pred 为真的连续拷贝。
 ```
 
-> <b>splice 算法</b>
+<b>splice 算法</b>
 
 链表类型定义了 splice 算法，此算法是链表特有的，没有通用版本。
 
@@ -5568,7 +6833,7 @@ o:3
 */
 ```
 
-### 概述
+### 关联容器概述
 
 #### 定义关联容器
 
@@ -5589,7 +6854,7 @@ map<string, string> authors = {
 
 当初始化一个 map 时，必须提供关键字类型和值类型。将每个 key-value 对包围在花括号中 `{key, value}`
 
-> <b>初始化 multimap/multiset</b>
+<b>初始化 multimap/multiset</b>
 
 map/set 的关键字唯一，而 multimap/multiset 的关键字可以有多个。比如 multimap 可以同时保存。
 
@@ -5638,7 +6903,7 @@ void test(){
 }
 ```
 
-> <b>习题</b>
+<b>习题</b>
 
 - 定义一个 map，关键字是家庭的姓，值是一个 vector，保存家中孩子（们）的名。编写代码，实现添加新的家庭以及向已有家庭中添加新的孩子。
 - 编写一个程序，在一个 vector 而不是一个 set 中保存不重复的单词。使用 set 的优点是什么？
@@ -5664,7 +6929,7 @@ multiset<Sales_data,decltype(comp)*> bookstore(comp);
 
 pair 类型定义在头文件 utility 中，也是一个模板。
 
-> <b>pair 的定义</b>
+<b>pair 的定义</b>
 
 pair 的默认构造函数对数据成员进行值初始化，因此 string，vector 等类型会默认为空，int 会默认为 0。
 
@@ -5679,7 +6944,7 @@ pair<string, int> p = {"LiLin", 17};
 auto p = make_pari(v1, v2);//pair 的类型根据 v1 和 v2 的类型推断。
 ```
 
-> <b>pair 的操作</b>
+<b>pair 的操作</b>
 
 ```cpp
 p.first  //返回 p 的第一个成员
@@ -5690,7 +6955,7 @@ p1 == p2;//当 first 和 second 成员都相等时，两个 pair 相等。
 p1 != p2;
 ```
 
-> <b>创建 pair 类型的返回值</b>
+<b>创建 pair 类型的返回值</b>
 
 如果一个函数返回一个 pair，可以对返回值进行列表初始化或隐式构造返回值。
 
@@ -5703,41 +6968,63 @@ pair<string,int> process(bool a){
 }
 ```
 
-### 操作
+### 关联容器操作
 
 关联容器除了上面列出的类型别名，还有如下三种
 
-```cpp
-'类型别名'
-//关键字类型
-key_type
-//每个关联的类型，只适用于 map
-mapped_type
-    
-//对于 set，与 key_type 相同，
-// 对于 map，为 pair<const key_type,mapped_type>
-value_type 
-```
+| 关键字类型  | 说明                                                         |
+| ----------- | ------------------------------------------------------------ |
+| key_type    | 关键字类型                                                   |
+| mapped_type | 关联的类型，只适用于 map                                     |
+| value_type  | 对于 set，与 key_type 相同<br>对于 map，为 pair<const key_type,mapped_type> |
 
 <span style="color:red">注意：set 的 key_type 类型不是常量，pair 的 first 成员也不是常量，只有 map 的 value_type 中的 first 成员是常量。</span>
 
+只有 map 类型（unordered_map、unordered_multimap、multimap 和 map）才定义了 mapped_type
+
 #### 迭代器
 
-解引用关联容器迭代器得到的是 value_type 的引用。
+解引用关联容器迭代器得到的是 value_type 的引用。map 对应的就是 pair。pair 可以通过 first 得到 key 的值，通过 second 得到 value 的值。
 
-> set 的迭代器
+```cpp
+#include<iostream>
+#include<map>
+
+using namespace std;
+
+void testMapIter() {
+    map<int, string> maps = {
+            {1, "value1"},
+            {2, "value2"},
+            {3, "value3"},
+    };
+    auto beg = maps.begin();
+    while (beg != maps.end()) {
+        cout << "key=" << beg->first << "\t value=" << beg->second << endl;
+        beg++;
+    }
+}
+
+int main() {
+    testMapIter();
+}
+```
+
+<b>set 的迭代器是 const 的</b>
 
 set 的关键值与 map 的关键值一样，都是不能改变的。可以用 set 的迭代器读取元素值，但不能修改。
 
-> 关联容器和算法
+<b>关联容器和算法</b>
 
 当对关联容器使用泛型算法时，一般要么把它作为源序列，要么把它作为目的序列。比如从关联容器拷贝元素，向关联容器插入元素等。
 
+<span style="color:orange">在使用算法时，优先使用关联容器定义的专用算法，速度会更快。</span>
+
 #### 添加元素
 
-插入容器中已存在的元素对 map 和 set 没有影响。
+<span style="color:red">插入容器中已存在的元素对 map 和 set 没有影响。</span>
 
-> <b>使用 insert 添加元素</b>
+<b>使用 insert 添加元素</b>
 
 关联容器添加元素一般使用 insert 成员，可以添加一个元素也可以添加一个元素范围，或者初始化列表。
 
@@ -5753,7 +7040,7 @@ s.insert({1, 2, 3});
 s.insert(iter, 10);
 ```
 
-> <b>向 map 添加临时构造的元素</b>
+<b>向 map 添加临时构造的元素</b>
 
 ```cpp
 map<string, int> m;
@@ -5764,7 +7051,7 @@ m.insert(pair<string, int>(str, 1)); //pair 类型直接定义
 m.insert(map<string, int>::value_type(str, 1));
 ```
 
-> <b>使用 emplace 添加元素</b>
+<b>使用 emplace 添加元素</b>
 
 ```cpp
 //args用来构造一个元素，其他和 s.insert(10) 相同
@@ -5795,7 +7082,7 @@ int main() {
 }
 ```
 
- `emplace` 相较于 `insert`，`emplace` 的语法看起来比较特别，*后面两个参数自动用来构造* `vector` 内部的 `Foo` 对象。这是因为其内部利用了 C++11 的两个新特性 —— 变参模板和完美转发。
+ `emplace` 相较于 `insert`，`emplace` 的语法看起来比较特别，<u>后面两个参数自动用来构造</u> `vector` 内部的 `Foo` 对象。这是因为其内部利用了 C++11 的两个新特性 —— 变参模板和完美转发。
 
 - [变参模板] 使得 `emplace` 可以接受任意参数，这样就可以适用于任意对象的构建。
 - [完美转发] 使得接收下来的参数能够原样完美地传递给对象的构造函数，这带来另一个方便性就是即使是构造函数声明为 `explicit` 它还是可以正常工作，因为它不存在临时变量和隐式转换。
@@ -5820,7 +7107,7 @@ int main(void){
 }
 ```
 
-> <b>检测 insert 的返回值</b>
+<b>检测 insert 的返回值</b>
 
 注意 insert 返回的值不是固定的，依赖于容器类型和参数
 
@@ -5837,11 +7124,202 @@ while(cin>>word){
 }
 ```
 
-> <b>向 multiset 或 multimap 添加元素</b>
+<b>向 multiset 或 multimap 添加元素</b>
 
 在 multiset 或 multimap 上调用 insert 总会插入元素。插入单个元素的 insert 返回一个指向新元素的迭代器。
 
+```cpp
+multimap<string, string> authors;
+authors.insert({"Barth, John", "Sot"});
+authors.insert({"Barth, John", "Sot th"});
+```
+
+#### 删除元素
+
+关联容器定义了三个版本的 erase
+
+| 操作          | 说明                                                         |
+| ------------- | ------------------------------------------------------------ |
+| c.erase(k)    | 从 c 中删除每个关键字为 k 的元素，返回一个 size_type，指出删除的元素的数量。 |
+| c.erase(p)    | 从 c 中删除迭代器 p 指定的元素。p 必须指向 c 中一个真实元素，不能等于 c.end()。返回一个指向 p 之后元素的迭代器，若 p 指向 c 中的尾元素，则返回 c.end() |
+| c.erase(b, e) | 删除迭代器 b 和 e 范围内的元素，返回 e。                     |
+
+#### 访问元素
+
+map 可以直接使用下标来访问指定 key 的 value。出了 map 的下标访问外，关联容器还提供多种查找一个指定元素的方法
+
+| 操作             | 说明                                                         |
+| ---------------- | ------------------------------------------------------------ |
+| c.find(k)        | 查找第一个关键字为 k 的元素，并返回一个指向该元素的迭代器，如果 k 不在容器中则返回尾后迭代器。 |
+| c.count(k)       | 返回关键字等于 k 的元素的数量。                              |
+| c.lower_bound(k) | 返回一个迭代器，指向第一个关键字不小于 k 的元素。            |
+| c.upper_bound(k) | 返回一个迭代器，指向第一个关键字大于 k 的元素。              |
+| c.equal_range(k) | 返回一个迭代器 pair，表示关键字等于 k 的元素的范围。若 k 不存在，pair 的两个成员均等于 c.end() |
+
+<span style="color:orange">lower_bound 和 upper_bound 不适用于无序容器.</span>
+
+<span style="color:orange">下标和 at 操作只适用于非 const 的 map 和 unordered_map.</span>
+
+```cpp
+#include<iostream>
+#include<map>
+
+using namespace std;
+
+void testMapVisitor() {
+    using address = string;
+    map<string, address> name2addr{
+            {"小明", "北京"},
+            {"小红", "上海"},
+            {"小蓝", "南昌"},
+    };
+    // 根据 key 找 value
+    auto ans = name2addr.find("小明");
+    cout << ans->first << "==" << ans->second << endl;
+    auto ansC = name2addr.count("小明");
+    cout << ansC << endl;
+}
+
+int main() {
+    testMapVisitor();
+}
+```
+
+<b>在 multimap 或 multiset 中查找元素</b>
+
+最直观的方法是使用 find 和 count。
+
+```cpp
+#include<iostream>
+#include<map>
+
+using namespace std;
+
+void travelMulti() {
+    multimap<string, string> test = {{"小明", "北京"},
+                                     {"小红", "上海1"},
+                                     {"小红", "上海2"},
+                                     {"小红", "上海3"},
+                                     {"小蓝", "南昌"},};
+    auto ans = test.find("小红");
+    auto count = test.count("小红");
+    while (count) {
+        cout << ans->first << ":" << ans->second << endl;
+        count--;
+        ans++;
+    }
+}
+
+int main() {
+    travelMulti();
+}
+/*
+小红:上海1
+小红:上海2
+小红:上海3
+*/
+```
+
+<b>一种不同的，面向迭代器的解决方法</b>
+
+```cpp
+void travelMulti2() {
+    multimap<string, string> test = {{"小明", "北京"},
+                                     {"小红", "上海1"},
+                                     {"小红", "上海2"},
+                                     {"小红", "上海3"},
+                                     {"小蓝", "南昌"},};
+    for (auto beg = test.lower_bound("小红"),
+                 end = test.upper_bound("小红"); beg != end; beg++) {
+        cout << beg->second << endl;
+    }
+}
+```
+
+<b>equals_range 函数</b>
+
+解决此问题的最后一种方法是三种方法中最直接的：不必再调用 upper_bound 和 lower_bound，直接调用 equal_range 即可。
+
+此函数接受一个关键字，<u>返回一个迭代器 pair。</u>若关键字存在，则第一个迭代器指向第一个与关键字匹配的元素，第二个迭代器指向最后一个匹配元素之后的位置。若未找到匹配元素，则两个迭代器都指向关键字可以插入的位置。
+
+```cpp
+void travelMulti3() {
+    multimap<string, string> test = {{"小明", "北京"},
+                                     {"小红", "上海1"},
+                                     {"小红", "上海2"},
+                                     {"小红", "上海3"},
+                                     {"小蓝", "南昌"},};
+    for (auto pos = test.equal_range("小红");
+         pos.first != pos.second; ++pos.first) {
+        cout << pos.first->second << endl;
+    }
+}
+```
+
 ### 无序容器
+
+新标准定义了 4 个无序关联容器（unordered associative container）。这些容器不是使用比较运算符来组织元素，而是使用一个哈希函数（hash function）和关键字类型的 == 运算符。
+
+在关键字类型的元素没有明显的序关系的情况下，无序容器是非常有用的。在某些应用中，维护元素的序代价非常高昂，此时无序容器也很有用。
+
+<b>使用无序容器</b>
+
+使用方式和常规容器一样。
+
+```cpp
+#include<unordered_map>
+
+void unOrderMap() {
+    unordered_map<string, string> test = {{"小明", "北京"},
+                                          {"小红", "上海1"},
+                                          {"小红", "上海2"},
+                                          {"小红", "上海3"},
+                                          {"小蓝", "南昌"},};
+    for (auto pos = test.equal_range("小红");
+         pos.first != pos.second; ++pos.first
+            ) {
+        cout << pos.first->second << endl;
+    }
+}
+// 上海1
+```
+
+<b>管理哈希桶</b>
+
+无序容器在存储上组织为一组桶，每个桶保存零个或多个元素。
+
+```mermaid
+graph LR
+访问元素-->|计算哈希值|定位搜索那个桶-->|搜索|元素
+```
+
+无序容器提供了一组管理桶的函数，这些成员函数允许我们查询容器的状态以及在必要时强制容器进行重组。
+
+<div align="center"><img src="img/image-20221205185020033.png"></div>
+
+<b>无序容器对关键字类型的要求</b>
+
+默认情况下，无序容器使用关键字类型的 == 运算符来比较元素，它们还使用一个 hash<key_type> 类型的对象来生成每个元素的哈希值。
+
+标准库为内置类型（包括指针）提供了 hash 模板。还为一些标准库类型，包括 string 和智能指针类型定义了 hash。因此，我们可以直接定义关键字是内置类型（包括指针类型）、string 还是智能指针类型的无序容器。
+
+如果我们像用自己定义的数据类型作为 key，那么需要自定以 hash 模板和重载 eqOp 函数。
+
+```cpp
+size_t  hasher(const Sales_data &sd){
+    return hash<string>()(sd.isbn());
+}
+bool eqOp(const Sales_data &lhs, const Sales_data &rhs){
+    return lhs.isbn() == rhs.isbn();
+}
+
+using SD_multiset = unordered_multiset<Sales_data, 
+										decltype(hasher)*,
+										decltype(eqOp)*>;
+SD_multiset bookStore(42, hasher, eqOp);
+```
+
+后期再补补。
 
 ### 温故知新
 
@@ -6931,3 +8409,20 @@ std::ostream &print(std::ostream &os, const QueryResult &qr){
 ```
 
 # 第Ⅲ部分-类设计者的工具
+
+## 拷贝控制
+
+- 拷贝、赋值和销毁
+- 拷贝控制和资源管理
+- 交换操作
+- 拷贝控制示例
+- 动态内存管理
+- 对象移动
+
+在本章中，我们还将学习类如何控制该类型对象拷贝、赋值、移动或销毁时做什么。<span style="color:orange">类通过一些特殊的成员函数控制这些操作，包括：拷贝构造函数、移动构造函数、拷贝赋值运算符、移动赋值运算符以及析构函数。</span>
+
+一个类通过定义五种特殊的成员函数来控制这些操作，包括：拷贝构造函数（copy constructor）、拷贝赋值运算符（copy-assignment operator）、移动构造函数（move constructor）、移动赋值运算符（move-assignment operator）和析构函数（destructor）。
+
+- 拷贝和移动构造函数定义了当用同类型的另一个对象初始化本对象时做什么。
+- 拷贝和移动赋值运算符定义了将一个对象赋予同类型的另一个对象时做什么。
+- 析构函数定义了当此类型对象销毁时做什么。我们称这些操作为拷贝控制操作（copy control）

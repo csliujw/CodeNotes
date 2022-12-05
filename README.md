@@ -24,6 +24,8 @@
 
 [VS Code 编写C++代码, 没有语法检查解决办法_thats_what_I_thought的博客-CSDN博客](https://blog.csdn.net/qq_43197644/article/details/124025823)
 
+[《Linux内核设计与实现》读书笔记 (kerneltravel.net)](http://www.kerneltravel.net/note/)
+
 ## 📝期刊论文
 
 [从顶会层面看科研！计算机顶级会议大盘点（下） - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/397937922)
