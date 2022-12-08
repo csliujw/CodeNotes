@@ -2081,7 +2081,7 @@ int ia[2][2] = {0,1,2,3};
 
 ```cpp
 // 其他未列出的元素执行默认值初始化
-int ia[3][4] = {{0}, {4}, {8}};
+int ia[3][4] = { {0}, {4}, {8}};
 ```
 
 > <b>多维数组的下标引用</b>
@@ -7196,7 +7196,7 @@ int main() {
 using namespace std;
 
 void travelMulti() {
-    multimap<string, string> test = {{"小明", "北京"},
+    multimap<string, string> test = { {"小明", "北京"},
                                      {"小红", "上海1"},
                                      {"小红", "上海2"},
                                      {"小红", "上海3"},
@@ -7224,7 +7224,7 @@ int main() {
 
 ```cpp
 void travelMulti2() {
-    multimap<string, string> test = {{"小明", "北京"},
+    multimap<string, string> test = { {"小明", "北京"},
                                      {"小红", "上海1"},
                                      {"小红", "上海2"},
                                      {"小红", "上海3"},
@@ -7244,7 +7244,7 @@ void travelMulti2() {
 
 ```cpp
 void travelMulti3() {
-    multimap<string, string> test = {{"小明", "北京"},
+    multimap<string, string> test = { {"小明", "北京"},
                                      {"小红", "上海1"},
                                      {"小红", "上海2"},
                                      {"小红", "上海3"},
@@ -7270,7 +7270,7 @@ void travelMulti3() {
 #include<unordered_map>
 
 void unOrderMap() {
-    unordered_map<string, string> test = {{"小明", "北京"},
+    unordered_map<string, string> test = { {"小明", "北京"},
                                           {"小红", "上海1"},
                                           {"小红", "上海2"},
                                           {"小红", "上海3"},
@@ -8426,3 +8426,10 @@ std::ostream &print(std::ostream &os, const QueryResult &qr){
 - 拷贝和移动构造函数定义了当用同类型的另一个对象初始化本对象时做什么。
 - 拷贝和移动赋值运算符定义了将一个对象赋予同类型的另一个对象时做什么。
 - 析构函数定义了当此类型对象销毁时做什么。我们称这些操作为拷贝控制操作（copy control）
+
+```latex
+  D_{JS}\left ( x_i^t \right ) &= \frac{1}{2}KL(\textbf{F}_m(x_i^t|\theta)||\textbf{M}) + 
+                         \frac{1}{2}KL(\textbf{F}_a(x_i^t|\theta)||\textbf{M})&= -\frac{1}{2}\sum_{j=1}^C \textbf{F}_m^j(x_i^t|\theta) \log \frac{\textbf{M}^j}{\textbf{F}_a^j(x_i^t|\theta)} -
+       \frac{1}{2}\sum_{j=1}^C \textbf{F}_a^j(x_i^t|\theta) \log \frac{\textbf{M}^j}{\textbf{F}_m^j(x_i^t|\theta)}
+```
+

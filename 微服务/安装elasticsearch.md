@@ -25,7 +25,7 @@ docker network create es-net
 docker load -i es.tar
 ```
 
-同理还有`kibana`的tar包也需要这样做。
+同理还有 `kibana` 的 tar 包也需要这样做。
 
 ## 运行
 
@@ -47,22 +47,20 @@ elasticsearch:7.12.1
 
 命令解释：
 
-- `-e "cluster.name=es-docker-cluster"`：设置集群名称
-- `-e "http.host=0.0.0.0"`：监听的地址，可以外网访问
-- `-e "ES_JAVA_OPTS=-Xms512m -Xmx512m"`：内存大小
-- `-e "discovery.type=single-node"`：非集群模式
-- `-v es-data:/usr/share/elasticsearch/data`：挂载逻辑卷，绑定es的数据目录
-- `-v es-logs:/usr/share/elasticsearch/logs`：挂载逻辑卷，绑定es的日志目录
-- `-v es-plugins:/usr/share/elasticsearch/plugins`：挂载逻辑卷，绑定es的插件目录
-- `--privileged`：授予逻辑卷访问权
-- `--network es-net` ：加入一个名为es-net的网络中
-- `-p 9200:9200`：端口映射配置
+- `-e "cluster.name=es-docker-cluster"` 设置集群名称
+- `-e "http.host=0.0.0.0"` 监听的地址，可以外网访问
+- `-e "ES_JAVA_OPTS=-Xms512m -Xmx512m"` 内存大小
+- `-e "discovery.type=single-node"` 非集群模式
+- `-v es-data:/usr/share/elasticsearch/data` 挂载逻辑卷，绑定 es 的数据目录
+- `-v es-logs:/usr/share/elasticsearch/logs` 挂载逻辑卷，绑定 es 的日志目录
+- `-v es-plugins:/usr/share/elasticsearch/plugins` 挂载逻辑卷，绑定 es 的插件目录
+- `--privileged` 授予逻辑卷访问权
+- `--network es-net`  加入一个名为 es-net 的网络中
+- `-p 9200:9200` 端口映射配置
 
 在浏览器中输入：http://192.168.150.101:9200 即可看到 elasticsearch 的响应结果：
 
 <div align="center"><img src="assets/image-20210506101053676.png"></div>
-
-
 
 # 部署kibana
 
@@ -81,17 +79,17 @@ docker run -d \
 kibana:7.12.1
 ```
 
-- `--network es-net` ：加入一个名为 es-net 的网络中，与 elasticsearch 在同一个网络中
-- `-e ELASTICSEARCH_HOSTS=http://es:9200"`：设置 elasticsearch 的地址，因为 kibana 已经与 elasticsearch 在一个网络，因此可以用容器名直接访问 elasticsearch
-- `-p 5601:5601`：端口映射配置
+- `--network es-net` 加入一个名为 es-net 的网络中，与 elasticsearch 在同一个网络中
+- `-e ELASTICSEARCH_HOSTS=http://es:9200"` 设置 elasticsearch 的地址，因为 kibana 已经与 elasticsearch 在一个网络，因此可以用容器名直接访问 elasticsearch
+- `-p 5601:5601` 端口映射配置
 
-kibana 启动一般比较慢，需要多等待一会，可以通过命令：
+kibana 启动一般比较慢，需要多等待一会，可以通过命令
 
 ```sh
 docker logs -f kibana
 ```
 
-查看运行日志，当查看到下面的日志，说明成功：
+查看运行日志，当查看到下面的日志，说明成功
 
 <div align="center"><img src="assets/image-20210109105135812.png"></div>
 
@@ -148,7 +146,7 @@ docker volume inspect es-plugins
 ]
 ```
 
-说明 plugins 目录被挂载到了：`/var/lib/docker/volumes/es-plugins/_data  `这个目录中。
+说明 plugins 目录被挂载到了 `/var/lib/docker/volumes/es-plugins/_data` 这个目录中。
 
 ### 2）解压缩分词器安装包
 
@@ -158,7 +156,7 @@ docker volume inspect es-plugins
 
 ### 3）上传到es容器的插件数据卷中
 
-也就是 `/var/lib/docker/volumes/es-plugins/_data `：
+也就是 `/var/lib/docker/volumes/es-plugins/_data`
 
 <div align="center"><img src="assets/image-20210506110704293.png"></div>
 
@@ -178,9 +176,9 @@ docker logs -f es
 
 IK 分词器包含两种模式：
 
-* `ik_smart`：最少切分，粗粒度切分，占用的内存空间少，但是匹配到的概率小些。
+* `ik_smart` 最少切分，粗粒度切分，占用的内存空间少，但是匹配到的概率小些。
 
-* `ik_max_word`：最细切分，细粒度切分，占用的内存空间多，但是匹配到的概率大些。
+* `ik_max_word` 最细切分，细粒度切分，占用的内存空间多，但是匹配到的概率大些。
 
 ```json
 GET /_analyze
@@ -471,7 +469,7 @@ networks:
     driver: bridge
 ```
 
-Run `docker-compose` to bring up the cluster:
+Run `docker-compose` to bring up the cluster
 
 ```shell
 docker-compose up

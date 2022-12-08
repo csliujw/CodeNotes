@@ -1,4 +1,4 @@
-Git分布式版本控制工具
+# Git分布式版本控制工具
 
 [Git学习笔记 | Kisugi Takumi](https://kisugitakumi.com/2022/01/18/Git学习笔记/#Git学习笔记)
 
@@ -161,7 +161,7 @@ export LC_ALL="zh_CN.UTF-8"
 
 Git 工作目录下对于文件的<b>修改</b>(增加、删除、更新)会存在几个状态，这些<b>修改</b>的状态会随着我们执行 Git 的命令而发生变化。
 
-<img src="img\image-20220118144908667.png">
+<img src="img/image-20220118144908667.png">
 
 使用命令来控制这些状态之间的转换
 
@@ -209,7 +209,6 @@ commit 后，再次查看状态，暂存区中已经没有东西了。
     - pretty=oneline 将提交信息显示为一行
     - abbrev-commit 使得输出的commitId更简短
     - graph 以图的形式显示
-
 
 <img src="img/image-20220402212637414.png">
 
@@ -1069,8 +1068,6 @@ git clone -b 分支名称 地址
 
 你的本地仓库由 git 维护的三棵“树”组成。第一个是你的 `工作目录`，它持有实际文件；第二个是 `暂存区 (Index) `，它像个缓存区域，临时保存你的改动；最后是 `HEAD`，它指向你最后一次提交的结果。
 
-[![img](https://cdn.jsdelivr.net/gh/lexinhu/Image/img/2021/20210124195758.png)](https://cdn.jsdelivr.net/gh/lexinhu/Image/img/2021/20210124195758.png)
-
 ### 添加和提交
 
 你可以提出更改 (把它们添加到暂存区) ，使用如下命令
@@ -1109,8 +1106,6 @@ git remote add origin <server>
 ### 分支
 
 分支是用来将特性开发绝缘开来的。在你创建仓库的时候，master 是“默认的”分支。在其他分支上进行开发，完成后再将它们合并到主分支上。
-
-[![img](https://cdn.jsdelivr.net/gh/lexinhu/Image/img/2021/20210124195725.png)](https://cdn.jsdelivr.net/gh/lexinhu/Image/img/2021/20210124195725.png)
 
 创建一个叫做 `feature_x` 的分支，并切换过去
 

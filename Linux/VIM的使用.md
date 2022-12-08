@@ -1,6 +1,6 @@
 # 基本配置
 
-- 配置 Vim 的table 默认缩进
+- 配置 Vim 的 table 默认缩进
 
   ```shell
   vim ~/.vimrc
@@ -12,6 +12,4 @@
   set shiftwidth=4 # 表示每一级缩进的长度，一般设置成和softtabstop长度一样
   set autoindent # 表示自动缩进
   ```
-
-  
 

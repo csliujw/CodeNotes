@@ -1,6 +1,6 @@
 # 概述
 
-MyBatis 框架，ORM（Object/Relational Mapping，即对象关系映射）框架。ORM 框架描述乐 Java 对象与数据库表之间的映射关系，可以自动将 Java 应用程序中的对象持久化到关系型数据库的表中。
+MyBatis 框架，ORM（Object/Relational Mapping，即对象关系映射）框架。ORM 框架描述了 Java 对象与数据库表之间的映射关系，可以自动将 Java 应用程序中的对象持久化到关系型数据库的表中。
 
 PS：MyBatis 3.4x 版本，把它内部需要的三方 jar 都整合在一起了。
 
@@ -23,7 +23,7 @@ MyBatis 框架在操作数据库时，大体经过了 8 个步骤
 - （2）加载映射文件 Mapper.xml。Mapper.xml 文件是 SQL 映射文件，该文件中配置了操作数据库的 SQL 语句，需要在 mybatis-config.xml 中加载才能执行。mybatis-config.xml 可以加载多个配置文件，每个配置文件对应数据库中的一张表。
 - （3）构建会话工厂。通过 MyBatis 的环境等配置信息构建会话工厂 SqlSessionFactory。
 - （4）创建 SqlSession 对象。由会话工厂创建 SqlSession 对象，该对象中包含了执行 SQL 的所有方法。
-- （5）MyBatis 底层定义了一个 Executor 接口来操作数据库，它会根据 SqlSession 传递的参数<span style="color:orange">动态生成需要执行的 SQL 语句</span>，同时负责查询缓存的维护。
+- （5）MyBatis 底层定义了一个 Executor 接口来操作数据库，<span style="color:orange">它会根据 SqlSession 传递的参数动态生成需要执行的 SQL 语句</span>，同时负责查询缓存的维护。
 - （6）在 Executor 接口的执行方法中，包含一个 MappedStatement 类型的参数，该参数是对映射信息的封装，用于存储要映射的 SQL 语句的 id、参数等。Mapper.xml 文件中一个 SQL 对应一个 MappedStatement 对象，SQL 的 id 即是 MappedStatement 的 id。
 - （7）输入参数映射。在执行方法时，MappedStatement 对象会对用户执行 SQL 语句的输入参数进行定义（可以定义为 Map、List 类型、基本类型和 POJO 类型），Executor 执行器会通过 MappedStatement 对象在执行 SQL 前，将输入的 Java 对象映射到 SQL 语句中。这里对输入参数的映射过程就类似于 JDBC 编程中对 preparedStatement 对象设置参数的过程。
 - （8）输出结果映射。在数据库中执行完 SQL 语句后，MappedStatement 对象会对 SQL 执行输出的结果进行定义（可以定义为 Map 和 List 类型、基本类型、POJO 类型）, Executor 执行器会通过 MappedStatement 对象在执行 SQL 语句后，将输出结果映射至 Java 对象中。这种将输出结果映射到 Java 对象的过程就类似于 JDBC 编程中对结果的解析处理过程。
@@ -49,15 +49,20 @@ MyBatis 框架在操作数据库时，大体经过了 8 个步骤
 
 相对路径 `src/java/main/文件名.xml`
 
-读配置文件 ① 用类加载器，读类路径下的；② 用 `Servlet Context` 对象的 `getRealPath`
+读配置文件
+
+① 用类加载器，读类路径下的；
+
+② 用 `Servlet Context` 对象的 `getRealPath`
 
 创建工程 `MyBatis` 用了构建者模式。告诉需求，根据需求创建我们想要的。
 
 ```java
-build.build(in) // in 形式下创建的工厂，多了几个类，操作看起来麻烦了，但是组合更加灵活的。
+// in 形式下创建的工厂，多了几个类，操作看起来麻烦了，但是组合更加灵活的。
+build.build(in) 
 ```
 
-生成 `SqlSession` 用了工厂模式
+生成 `SqlSession` 用了工厂模式，解耦对象的创建过程。
 
 创建 `Dao` 接口实现类用了代理模式
 
@@ -178,7 +183,7 @@ maven 的 pom 文件
     <!-- com/bbxx/dao/UserDao.xml是mavenresouce目录下的哦！ -->
     <mappers>
         <mapper resource="com/bbxx/dao/UserDao.xml"/>
-        <!-- 如果是用的注解SQL，则采用,因为注解方式不用Mapper文件！ -->
+        <!-- 如果是用的注解SQL，则采用接口全名,因为注解方式不用Mapper文件！ -->
         <mapper class="com.bbxx.dao.IUserDao"/>
     </mappers>
 </configuration>
@@ -191,7 +196,7 @@ mapper 文件示例
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<!-- namespace是接口的类全名 resultType是返回类型的类全民，可通过配置简写 -->
+<!-- namespace是接口的类全名 resultType是返回类型的类全名，可通过配置简写 -->
 <mapper namespace="cn.mapper.UserMapper">
     <select id="selectAll" resultType="cn.pojo.User">
         select * from users
@@ -269,10 +274,11 @@ public class DataSourceDruid extends UnpooledDataSourceFactory {
         PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
+    <!-- 配置pojo的别名 -->
     <typeAliases>
         <package name="com.bbxx.pojo"/>
     </typeAliases>
-    <!-- 配置 mybatis 的环境 -->
+    <!-- 配置 mybatis 的环境 可以通过 <environments\> 元素配置多种数据源，即配置多种数据库。-->
     <environments default="mysql">
         <!-- 配置 mysql 的环境 -->
         <environment id="mysql">
@@ -308,7 +314,7 @@ public class DataSourceDruid extends UnpooledDataSourceFactory {
 
 log4j 的日志放在 resources 下。
 
-<b>`log4j`日志配置</b>
+<b>`log4j` 日志配置</b>
 
 ```properties
 #log4j基本配置
@@ -329,7 +335,7 @@ log4j.appender.file.layout=org.apache.log4j.PatternLayout     #布局器
 log4j.appender.file.layout.ConversionPattern=%c-%m%n   #布局器格式
 ```
 
-<b>`log4j`仅打印`SQL`语句</b>
+<b>`log4j` 仅打印 `SQL` 语句</b>
 
 ```properties
 # 全局日志配置
@@ -393,6 +399,24 @@ maven 项目下，所有的非 `*.java` 文件都要放在 resources 目录下�
 <div align="center"><img src="img/ibatis/maven.png"></div>
 
 mybatis 多对多是由两个一对一组成的，如：user 一对多 role，role 一对多 user，这样 user 和 role 就是多对多关系了。 数据库的多对多需要一个中间表来描述两表的多对多关系。
+
+<b style="color:orange">如果需要 xml 文件和接口文件存储在一个路径下，则需要为 maven 配置下面这个属性</b>
+
+```xml
+<bulid>        
+    <resources>
+        <resource>
+            <directory>src/main/java</directory>
+            <includes>
+                <include>**/*.xml</include>
+            </includes>
+            <filtering>true</filtering>
+        </resource>
+    </resources>
+</build>
+```
+
+[mave resource 属性详解](https://blog.csdn.net/liaowenxiong/article/details/122698452#:~:text=Maven Java Web 项目默认的编译目录 target%2Fclasses 。,两种配置文件 src%2Fmain%2Fresources、src%2Ftest%2Fresources， Maven 默认只关注 src%2Fmain%2Fresources 目录下的配置文件，其他目录下的配置文件会被忽略。)
 
 <a href="https://github.com/csliujw/MyBatis-Study">项目地址</a>
 
@@ -569,7 +593,7 @@ InputStream in = Resources.getResourceAsStream("配置文件路径");
 SqlSessionFactory sf = new SqlSessionFactoryBuilder().build(in);
 ```
 
-SqlSessionFactory 对象是线程安全的，它一旦被创建，在整个应用执行期间都会存在。如果我们多次地创建同一个数据库的SqlSessionFactory，那么此数据库的资源将很容易被耗尽。为了解决此问题，通常每一个数据库都会只对应一个 SqlSessionFactory，所以在构建 SqlSessionFactory 实例时，建议使用单列模式。
+<b style="color:purple">SqlSessionFactory 对象是线程安全的，它一旦被创建，在整个应用执行期间都会存在。如果我们多次地创建同一个数据库的 SqlSessionFactory，那么此数据库的资源将很容易被耗尽。为了解决此问题，通常每一个数据库都会只对应一个 SqlSessionFactory，所以在构建 SqlSessionFactory 实例时，建议使用单例模式。</b>
 
 #### SqlSession
 
@@ -581,59 +605,59 @@ SqlSession 是 MyBatis 中的一个接口，它的子类 DefaultSqlSession 存�
 
 > SqlSessionManager 和 SqlSessionTemplate
 
-SqlSessionManager 和 SqlSessionTemplate  是怎么保证 SqlSession 线程安全的呢？避免多个线程并发使用同一个 DefaultSqlSession 实例即可。
+SqlSessionManager 和 SqlSessionTemplate 是怎么保证 SqlSession 线程安全的呢？避免多个线程并发使用同一个 DefaultSqlSession 实例即可。
 
 SqlSessionManager 内部通过维护一个 ThreadLocal 变量，记录一个与当前线程绑定的 SqlSession。当通过 SqlSessionFactory 创建 SqlSession 时就从这个 ThreadLocal 里取。
 
 ```java
 public class SqlSessionManager implements SqlSessionFactory, SqlSession {
 
-  private final SqlSessionFactory sqlSessionFactory;
-  private final SqlSession sqlSessionProxy;
-  // ThreadLocal 用来记录一个与当前线程绑定的 SqlSession
-  private final ThreadLocal<SqlSession> localSqlSession = new ThreadLocal<>();
+    private final SqlSessionFactory sqlSessionFactory;
+    private final SqlSession sqlSessionProxy;
+    // ThreadLocal 用来记录一个与当前线程绑定的 SqlSession
+    private final ThreadLocal<SqlSession> localSqlSession = new ThreadLocal<>();
 
-  private SqlSessionManager(SqlSessionFactory sqlSessionFactory) {
-    this.sqlSessionFactory = sqlSessionFactory;
-    // 对 sqlSessionFactory 对象进行代理，所有的操作都是由代理对象完成
-    this.sqlSessionProxy = (SqlSession) Proxy.newProxyInstance(
-        SqlSessionFactory.class.getClassLoader(),
-        new Class[]{SqlSession.class},
-        new SqlSessionInterceptor()); // 仔细看下 SqlSessionInterceptor 中的方法可以发现，是从 localSqlSession 中获取 Session
-  }
-
-  @Override
-  public SqlSession openSession(Connection connection) {
-    return sqlSessionFactory.openSession(connection);
-  }
-
-  private class SqlSessionInterceptor implements InvocationHandler {
-	// some code
+    private SqlSessionManager(SqlSessionFactory sqlSessionFactory) {
+        this.sqlSessionFactory = sqlSessionFactory;
+        // 对 sqlSessionFactory 对象进行代理，所有的操作都是由代理对象完成
+        this.sqlSessionProxy = (SqlSession) Proxy.newProxyInstance(
+            SqlSessionFactory.class.getClassLoader(),
+            new Class[]{SqlSession.class},
+            // 仔细看下 SqlSessionInterceptor 中的方法可以发现，是从 localSqlSession 中获取 Session
+            new SqlSessionInterceptor());
+    }
 
     @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-      final SqlSession sqlSession = SqlSessionManager.this.localSqlSession.get();
-      if (sqlSession != null) {
-        try {
-          return method.invoke(sqlSession, args);
-        } catch (Throwable t) {
-          throw ExceptionUtil.unwrapThrowable(t);
-        }
-      } else {
-        try (SqlSession autoSqlSession = openSession()) {
-          try {
-            final Object result = method.invoke(autoSqlSession, args);
-            autoSqlSession.commit();
-            return result;
-          } catch (Throwable t) {
-            autoSqlSession.rollback();
-            throw ExceptionUtil.unwrapThrowable(t);
-          }
-        }
-      }
+    public SqlSession openSession(Connection connection) {
+        return sqlSessionFactory.openSession(connection);
     }
-  }
 
+    private class SqlSessionInterceptor implements InvocationHandler {
+        // some code
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            final SqlSession sqlSession = SqlSessionManager.this.localSqlSession.get();
+            if (sqlSession != null) {
+                try {
+                    return method.invoke(sqlSession, args);
+                } catch (Throwable t) {
+                    throw ExceptionUtil.unwrapThrowable(t);
+                }
+            } else {
+                try (SqlSession autoSqlSession = openSession()) {
+                    try {
+                        final Object result = method.invoke(autoSqlSession, args);
+                        autoSqlSession.commit();
+                        return result;
+                    } catch (Throwable t) {
+                        autoSqlSession.rollback();
+                        throw ExceptionUtil.unwrapThrowable(t);
+                    }
+                }
+            }
+        }
+    }
 }
 ```
 
@@ -662,12 +686,12 @@ private class SqlSessionInterceptor implements InvocationHandler {
                                               SqlSessionTemplate.this.executorType, SqlSessionTemplate.this.exceptionTranslator);
         try {
             Object result = method.invoke(sqlSession, args);
-			//...
+            //...
             return result;
         } catch (Throwable t) {
-		   //...
+            //...
         } finally {
-		   // ...
+            // ...
         }
     }
 }
@@ -805,7 +829,7 @@ jdbc.password=root
 ```xml
 <typeAliases>
     <!-- 使用自动扫描包来配置别名 -->
-	<oackage  name="xx.it.po"/>
+	<package  name="xx.it.po"/>
 </typeAliases>
 ```
 
@@ -820,7 +844,7 @@ typeHandler（类型处理器）将预处理语句中传入的参数从 javaType
 
 MyBatis 提供的一些默认的类型处理器。如果需要定义类型处理器可以通过实现 TypeHandler 接口或者继承 BaseTypeHandle 类来定义
 
-<img src="img/ibatis/epub_22655629_95.jpg">
+<div align="center"><img src="img/ibatis/epub_22655629_95.jpg"></div>
 
 注册类型处理器
 
@@ -833,23 +857,23 @@ MyBatis 提供的一些默认的类型处理器。如果需要定义类型处理
 
 #### objectFactory
 
-每次 MyBatis 创建<span style="color:orange">结果对象</span>的新实例时，它都会使用一个对象工厂（ObjectFactory）实例来完成实例化工作。 默认的对象工厂需要做的仅仅是实例化目标类，要么通过默认无参构造方法，要么通过存在的参数映射来调用带有参数的构造方法。 如果想覆盖对象工厂的默认行为，可以通过创建自己的对象工厂来实现。<span style="color:red">(了解即可)</span>
+<span style="color:orange">每次 MyBatis 创建结果对象的新实例时，它都会使用一个对象工厂（ObjectFactory）实例来完成实例化工作。</span>默认的对象工厂需要做的仅仅是实例化目标类，要么通过默认无参构造方法，要么通过存在的参数映射来调用带有参数的构造方法。 如果想覆盖对象工厂的默认行为，可以通过创建自己的对象工厂来实现。<span style="color:red">(了解即可)</span>
 
 ```java
 // ExampleObjectFactory.java
 public class ExampleObjectFactory extends DefaultObjectFactory {
-  public Object create(Class type) {
-    return super.create(type);
-  }
-  public Object create(Class type, List<Class> constructorArgTypes, List<Object> constructorArgs) {
-    return super.create(type, constructorArgTypes, constructorArgs);
-  }
-  public void setProperties(Properties properties) {
-    super.setProperties(properties);
-  }
-  public <T> boolean isCollection(Class<T> type) {
-    return Collection.class.isAssignableFrom(type);
-  }
+    public Object create(Class type) {
+        return super.create(type);
+    }
+    public Object create(Class type, List<Class> constructorArgTypes, List<Object> constructorArgs) {
+        return super.create(type, constructorArgTypes, constructorArgs);
+    }
+    public void setProperties(Properties properties) {
+        super.setProperties(properties);
+    }
+    public <T> boolean isCollection(Class<T> type) {
+        return Collection.class.isAssignableFrom(type);
+    }
 }
 ```
 
@@ -862,7 +886,7 @@ public class ExampleObjectFactory extends DefaultObjectFactory {
 
 #### plugins
 
-MyBatis 允许在已映射语句执行过程中的某一点进行拦截调用，这种拦截调用是通过插件来实现的。\<plugins\> 元素的作用就是配置用户所开发的插件。
+MyBatis 允许在已映射语句执行过程中的某一点，进行拦截调用。这种拦截调用是通过插件来实现的。\<plugins\> 元素的作用就是配置用户所开发的插件。
 
 MyBatis 允许使用插件来拦截的方法调用有：
 
@@ -871,7 +895,7 @@ MyBatis 允许使用插件来拦截的方法调用有：
 - ResultSetHandler (handleResultSets, handleOutputParameters)
 - StatementHandler (prepare, parameterize, batch, update, query)
 
-编写插件时，只需实现 Interceptor 接口，并指定想要拦截的方法签名即可。
+编写插件时，只需实现 Interceptor 接口，并指定想要拦截的方法签名即可。【MyBatis 功能拓展】
 
 ```java
 // ExamplePlugin.java
@@ -907,7 +931,7 @@ public class ExamplePlugin implements Interceptor {
 可以通过 \<environments\> 元素配置多种数据源，即配置多种数据库。
 
 ```xml
-<environments default="development">
+<environments default="development"> <!-- 默认使用1 -->
     <environment id="development">
         <!-- 使用 JDBC 事务管理 -->
         <transactionManager type="JDBC" />
@@ -917,6 +941,18 @@ public class ExamplePlugin implements Interceptor {
             <property name="url" value="${url}"/>
             <property name="username" value="${username}"/>
             <property name="password" value="${password}"/>
+        </dataSource>
+    </environment>
+    <!-- 配置第二种数据源 -->
+    <environment id="development2">
+        <!-- 使用 JDBC 事务管理 -->
+        <transactionManager type="JDBC" />
+        <!-- 配置数据源 -->
+        <dataSource type="POOLED">
+            <property name="driver" value="${driver2}"/>
+            <property name="url" value="${url2}"/>
+            <property name="username" value="${username2}"/>
+            <property name="password" value="${password2}"/>
         </dataSource>
     </environment>
 </environments>
@@ -1022,7 +1058,7 @@ xml 示例文件
 </mapper>
 ```
 
-## 参数取值
+## 参数取值★
 
 ### 基本用法
 
@@ -1139,10 +1175,10 @@ public User getTwoAnnotation(@Param("findName") String name, @Param("findSex") S
 - 基本类型：取值用 #{随便写}
 - 传入 POJO：取值用 #{POJO 字段名称}，是使用 OGNL 表达式语言来实现的
 
-2）多个参数：
+2）多个参数
 
 - public Employee getXXX(Integer id, String name)，取值：#{参数名}是无效了
-- 可以用：0，1（参数索引）或 param1,param2（第几个参数paramN）来取值，#{arg0},#{arg1} / #{param1},#{param2}
+- 可以用：0，1（参数索引）或 param1,param2（第几个参数 paramN）来取值，#{arg0}, #{arg1} / #{param1}, #{param2}
 - 原因：只要传入了多个参数；MyBatis 会自动的将这些参数封装在一个 map 中；封装时使用的 key 就是参数的索引和参数的第几个表示
 
 ```java
@@ -1165,15 +1201,15 @@ String empName ==> #{param2}
 Employee employee（取出它的email）==> #{param3.email}
 ```
 
-无论传入什么参数都要能正确的取出值；
+> 无论传入什么参数都要能正确的取出值；
 
 - #{key/属性名}
 - id=#{id, JdbcType=INT}
     - javaType、jdbcType、mode、numericScale、resultMap、typeHandler
-    - 只有jdbcType才可能需要被指定；
-    - 默认不指定  jdbcType 的话：mysql 没问题；oracle 没问题；但是万一传入的数据是 null，mysql 插入 null 没问题；oracle 不知道 null 到底是什么类型！会出问题！
+    - 只有 jdbcType 才可能需要被指定；
+    - 默认不指定 jdbcType 的话：mysql 没问题；oracle 没问题；但是万一传入的数据是 null，mysql 插入 null 没问题；oracle 不知道 null 到底是什么类型！会出问题！
 
-mybatis 的取值方式可分为两类：
+> mybatis 两类取值方式的区别
 
 - <span style="color:red">#{属性名}：是参数预编译的方式，参数的位置都是用？替代，参数后来都是预编译设置进去的，安全，不会有 sql 注入问题。</span>
 - ${属性名}：不是参数预编译，而是直接和 sql 语句进行拼串，不安全
@@ -1353,13 +1389,13 @@ id：唯一标识符，让别名在后面引用
 
 动态 SQL 是 MyBatis 的强大特性之一，MyBatis 3 采用 OGNL 表达式来实现的动态 SQL。
 
-| 元素                        | 说明                                                         |
-| --------------------------- | ------------------------------------------------------------ |
-| <if>                        | 判断语句，用于单条件分支判断                                 |
-| <choose>(<when><otherwise>) | 相当于 Java 中得 switch...case...default 语句，<br>用于多分支判断 |
-| <where>、<trim>、<set>      | 辅助元素，处理 SQL 拼接和特殊字符问题                        |
-| <foreach>                   | 循环语句，常用于 in 语句等列举条件中                         |
-| <bind>                      | 从 OGBL 表达式中创建一个变量，将其绑定到上下文，<br/>常用于模糊查询得 sql 中。 |
+| 元素                              | 说明                                                         |
+| --------------------------------- | ------------------------------------------------------------ |
+| \<if\>                            | 判断语句，用于单条件分支判断                                 |
+| \<choose\>(\<when\>\<otherwise\>) | 相当于 Java 中得 switch...case...default 语句，<br>用于多分支判断 |
+| \<where\>、\<trim\>、\<set\>      | 辅助元素，处理 SQL 拼接和特殊字符问题                        |
+| \<foreach\>                       | 循环语句，常用于 in 语句等列举条件中                         |
+| \<bind\>                          | 从 OGBL 表达式中创建一个变量，将其绑定到上下文，<br/>常用于模糊查询得 sql 中。 |
 
 ### 标签学习
 
@@ -1370,10 +1406,10 @@ id：唯一标识符，让别名在后面引用
 ```xml
 <select id="xxx" resultType='User'>
 	select * from t_user where 1=1
-    <if test="name!=null and name!=''">
+    <if test=" name!=null and name!='' ">
     	and name like concat('%d',#{name},'%')
     </if>
-    <if test="jobs!=null and jobs!=''">
+    <if test=" jobs!=null and jobs!='' ">
     	and jobs=#{jobs}
     </if>
 </select>
@@ -1755,22 +1791,24 @@ resultMap 元素中，包含了一个 association 子元素，通过该元素可
 
 ```sql
 USE mybatis;
+
 # 创建一个名称为tb_idcard的表
 CREATE TABLE  tb_idcard(
-                           id INT PRIMARY KEY AUTO_INCREMENT,
-                           CODE VARCHAR(18)
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    CODE VARCHAR(18)
 );
 # 插入两条数据
 INSERT INTO tb_idcard(CODE) VALUES('152221198711020624');
 INSERT INTO tb_idcard(CODE) VALUES('152201199008150317');
+
 # 创建一个名称为tb_person的表
 CREATE TABLE  tb_person(
-                           id INT PRIMARY KEY AUTO_INCREMENT,
-                           name VARCHAR(32),
-                           age INT,
-                           sex VARCHAR(8),
-                           card_id INT UNIQUE,
-                           FOREIGN KEY(card_id) REFERENCES tb_idcard(id)
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(32),
+    age INT,
+    sex VARCHAR(8),
+    card_id INT UNIQUE,
+    FOREIGN KEY(card_id) REFERENCES tb_idcard(id)
 );
 # 插入两条数据
 INSERT INTO tb_person(name, age, sex, card_id) VALUES('Rose',29, '女',1);
@@ -1803,7 +1841,7 @@ public interface IdCardMapper {
     IdCard findCardById(int id);
 }
 
-// 一对多查询
+// 一对一查询
 public interface PersonMapper {
     Person findPersonById(int id);
 }
@@ -1880,11 +1918,13 @@ public class TestAssociation {
     where p.card_id = idcard.id
     and p.id = #{id}
 </select>
+
 <resultMap id="findPersonByIdResult2" type="Person">
     <id column="id" property="id"/>
     <result column="name" property="name"/>
     <result column="age" property="age"/>
     <result column="sex" property="sex"/>
+    
     <association property="card" javaType="IdCard">
         <id column="card_id" property="id"/>
         <result column="code" property="code"/>
@@ -1896,7 +1936,7 @@ public class TestAssociation {
 
 ### 一对多查询
 
-MyBatis 通过 collection 来实现一对多关联查询。collection 元素与 association 元素基本相同，但 collection 保护一个特殊的属性 ofType。ofType属性与javaType属性对应，它用于指定实体对象中集合类属性所包含的元素类型。
+MyBatis 通过 collection 来实现一对多关联查询。collection 元素与 association 元素基本相同，但 collection 保护一个特殊的属性 ofType。ofType 属性与 javaType 属性对应，它用于指定实体对象中集合类属性所包含的元素类型。
 
 <b>collection：定义集合元素的封装</b>
 
@@ -1918,22 +1958,24 @@ MyBatis 通过 collection 来实现一对多关联查询。collection 元素与 
 
 ```mysql
 use mybatis;
+
 # 创建一个名称为tb_user的表
 CREATE TABLE tb_user (
-                         id int(32) PRIMARY KEY AUTO_INCREMENT,
-                         username varchar(32),
-                         address varchar(256)
+    id int(32) PRIMARY KEY AUTO_INCREMENT,
+    username varchar(32),
+    address varchar(256)
 );
 # 插入3条数据
 INSERT INTO tb_user VALUES ('1', '詹姆斯', '克利夫兰');
 INSERT INTO tb_user VALUES ('2', '科比', '洛杉矶');
 INSERT INTO tb_user VALUES ('3', '保罗', '洛杉矶');
+
 # 创建一个名称为tb_orders的表
 CREATE TABLE tb_orders (
-                           id int(32) PRIMARY KEY AUTO_INCREMENT,
-                           number varchar(32) NOT NULL,
-                           user_id int(32) NOT NULL,
-                           FOREIGN KEY(user_id) REFERENCES tb_user(id)
+    id int(32) PRIMARY KEY AUTO_INCREMENT,
+    number varchar(32) NOT NULL,
+    user_id int(32) NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES tb_user(id)
 );
 # 插入3条数据
 INSERT INTO tb_orders VALUES ('1', '1000011', '1');
@@ -1974,9 +2016,9 @@ public interface UsersMapper {
     <select id="findById" resultType="cn.pojo.Users" resultMap="findByIdMap">
         select u.*, o.id as order_id, o.number as order_number
         from tb_user as u,
-             tb_orders as o
+        tb_orders as o
         where u.id = o.user_id
-          and u.id = #{id}
+        and u.id = #{id}
     </select>
 
     <resultMap id="findByIdMap" type="Users">
@@ -2017,11 +2059,11 @@ public class TestAssociationOne2Mu {
 }
 ```
 
-JavaType 和 OfType：`JavaType `和 `ofType` 都是用来指定对象类型的，但是 `JavaType` 是用来指定 `pojo` 中属性的类型，而 `ofType` 指定的是映射到 list 集合属性中 `pojo` 的类型。
+JavaType 和 OfType：`JavaType` 和  `ofType` 都是用来指定对象类型的，但是 `JavaType` 是用来指定 `pojo` 中属性的类型，而 `ofType` 指定的是映射到 list 集合属性中 `pojo` 的类型。
 
 ### 多对多查询
 
-典型的多对多例子：一个订单可以包含多种商品，而一种商品又可以属于多个订单，订单和商品就属于多对多的关联关系。
+典型的多对多例子：一个订单可以包含多种商品，而一种商品又可以属于多个订单，订单和商品就属于多对多的关联关系。<span style="color:orange">其实只是 SQL 语句和一对多的不一样，MyBatis 中用到的标签还是和一对多一样的。</span>
 
 <span style="color:orange">而多对多查询的意思是，我们如何从这个多对多的关系中查询到我们想要的数据：如查询某个订单表的信息，包括订单表中涉及到的所有的商品信息。</span>
 
@@ -2036,10 +2078,10 @@ graph LR
 
 - 如，多订单表执行一对多的查询，然后再将订单表中存在的那些商品再次进行多对多查询。
 
-    ```mermaid
-    graph LR
-    订单表-->一对多查询-->拿到查询到的商品-->对商品进行一对多查询
-    ```
+```mermaid
+graph LR
+订单表-->一对多查询-->拿到查询到的商品-->对商品进行一对多查询
+```
 
 - 使用 MyBatis 的嵌套查询，进行多对多嵌套查询，通过执行另一条 SQL 映射语句来返回预期的特殊类型。
 
@@ -2086,10 +2128,10 @@ VALUES ('3', '3', '3');
 
 # 创建一个名称为tb_orders的表，如果之前没有创建的话
 CREATE TABLE tb_orders (
-                           id int(32) PRIMARY KEY AUTO_INCREMENT,
-                           number varchar(32) NOT NULL,
-                           user_id int(32) NOT NULL,
-                           FOREIGN KEY(user_id) REFERENCES tb_user(id)
+    id int(32) PRIMARY KEY AUTO_INCREMENT,
+    number varchar(32) NOT NULL,
+    user_id int(32) NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES tb_user(id)
 );
 # 插入3条数据
 INSERT INTO tb_orders VALUES ('1', '1000011', '1');
@@ -2256,7 +2298,7 @@ Product{id=3, name='SSM框架整合实战', price=50.0, orders=null}
 
 ### 延迟加载
 
-使用嵌套查询方式进行关联查询映射时，使用 延迟加载在一定程度上可以降低运行消耗并提高查询效率。<span style="color:red">MyBatis 默认没有开启延迟加载，可以在核心配置文件 mybatis-config.xml 中的  \<settings\> 元素内进行全局配置</span>，具体配置方式如下
+使用嵌套查询方式进行关联查询映射时，使用延迟加载在一定程度上可以降低运行消耗并提高查询效率。<span style="color:red">MyBatis 默认没有开启延迟加载，可以在核心配置文件 mybatis-config.xml 中的  \<settings\> 元素内进行全局配置</span>，具体配置方式如下
 
 ```xml
 <settings>
@@ -2328,9 +2370,9 @@ Product{id=3, name='SSM框架整合实战', price=50.0, orders=null}
 延迟加载指定属性
 
 ```xml
-    <association fetchType="lazy" property="card"
-                 column="card_id" javaType="IdCard" 
-                 select="cn.mapper.IdCardMapper.findCardById"/>
+<association fetchType="lazy" property="card"
+             column="card_id" javaType="IdCard" 
+             select="cn.mapper.IdCardMapper.findCardById"/>
 ```
 
 ## 缓存机制
@@ -2339,7 +2381,7 @@ Product{id=3, name='SSM框架整合实战', price=50.0, orders=null}
 
 MyBatis 缓存机制：Map；能保存查询出的一些数据；
 
-- 一级缓存：线程级别的缓存；本地缓存；SqlSession 级别的缓存，当调用 `SqlSession` 的修改，添加，删除，`commit()，close()`等方法时，就会清空一级缓存。
+- 一级缓存：线程级别的缓存；本地缓存；SqlSession 级别的缓存，当调用 `SqlSession` 的修改，添加，删除，`commit()，close()` 等方法时，就会清空一级缓存。
 - 二级缓存：全局范围的缓存；除过当前线程；SqlSession 能用外其他也可以用。二级缓存是 `mapper` 映射级别的缓存，多个 `SqlSession` 去操作同一个 `Mapper` 映射的 `sql` 语句，多个 `SqlSession` 可以共用二级缓存，二级缓存是跨 `SqlSession` 的
 
 ### 一级缓存失效
@@ -2404,7 +2446,7 @@ MyBatis 提供二级缓存的接口及其实现，缓存实现要求 POJO 实现
 整合的思路比较简单，就是将 MyBatis 的对象交由 Spring 进行关联。
 
 - 将 MyBatis 的 SqlSessionFactory 交给 Spring 管理。SqlSessionFactory 用到的数据库连接池是从 Spring 容器中的。
-- MyBatis 不再管理事务，事务由 Spring 进行管理。
+- MyBatis 不再管理事务，事务由 Spring 进行管理。[Mybatis配置事务管理器 - 腾讯云开发者社区-腾讯云 (tencent.com)](https://cloud.tencent.com/developer/article/1120381)
 
 ### 整合方式
 
@@ -2424,7 +2466,7 @@ public class CDaoImpl extends SqlSessionDaoSupport implements CDao{
 }
 ```
 
-CustomerDaoImpl 类继承了 SqlSessionDaoSupport 类，并实现了 CustomerDao 接口。其中，SqlSessionDaoSupport 类在使用时需要一个 SqlSessionFactory 或一个 SqlSessionTemplate 对象，所以需要通过 Spring 给 SqlSessionDaoSupport 类的子类对象注入一个 SqlSessionFactory 或 SqlSessionTemplate。这样，在子类中就能通过调用 SqlSessionDaoSupport 类的 getSqlSession() 方法来获取  SqlSession 对象，并使用 SqlSession 对象中的方法了。
+CDaoImpl 类继承了 SqlSessionDaoSupport 类，并实现了 CDao 接口。其中，SqlSessionDaoSupport 类在使用时需要一个 SqlSessionFactory 或一个 SqlSessionTemplate 对象，所以需要通过 Spring 给 SqlSessionDaoSupport 类的子类对象注入一个 SqlSessionFactory 或 SqlSessionTemplate。这样，在子类中就能通过调用 SqlSessionDaoSupport 类的 getSqlSession() 方法来获取  SqlSession 对象，并使用 SqlSession 对象中的方法了。
 
 > Mapper 接口方式
 
@@ -2435,12 +2477,12 @@ CustomerDaoImpl 类继承了 SqlSessionDaoSupport 类，并实现了 CustomerDao
 - MapperFactoryBean 是 MyBatis-Spring 团队提供的一个用于根据 Mapper 接口生成 Mapper 对象的类，该类在 Spring 配置文件中使用时可以配置以下参数。
 
     - mapperInterface：用于指定接口，动态代理所需要的接口信息。
-    - SqlSessionFactory：用于指定 SqlSessionFactory
-    - SqlSessionTemplate：用于指定 SqlSessionTemplate。如果与 SqlSessionFactory 同时设定，则只会启用 SqlSessionTemplate。
+    - SqlSessionFactory：用于指定 SqlSessionFactory (创建 SqlSession 的工程)
+    - SqlSessionTemplate：用于指定 SqlSessionTemplate (线程安全)。如果与 SqlSessionFactory 同时设定，则只会启用 SqlSessionTemplate。(是 MyBatis-Spring 的核心，是 MyBatis-Spring 为了接入 Spring 而提供的 Bean，这个类负责管理 MyBatis 的 SqlSession。)
 
     ```xml
     <!-- 示例文件 -->
-    <! -- Mapper代理开发（基于MapperFactoryBean）-->
+    <!-- Mapper代理开发（基于MapperFactoryBean）-->
     <bean id="customerMapper" class="org.mybatis.spring.mapper.MapperFactoryBean">
         <property name="mapperInterface" value="com.itheima.mapper.CustomerMapper" />
         <property name="sqlSessionFactory" ref="sqlSessionFactory" />
@@ -2481,7 +2523,7 @@ CustomerDaoImpl 类继承了 SqlSessionDaoSupport 类，并实现了 CustomerDao
 
 - 配置的位置，主配置文件（此处命名为 SqlConfig.xml）中的 dataSource 标签，type 表示采用何种连接。
 - type 取值
-  - POOLED： 采用传统的 javax.sql.DataSource 规范中的连接池，mybatis 中有针对规范的实现。我们可以用其他连接池替代，如 Druid，type="我们的druid" ，因为 druid 是遵循规范的，所以把类全名加上就行了。
+  - POOLED：采用传统的 javax.sql.DataSource 规范中的连接池，mybatis 中有针对规范的实现。我们可以用其他连接池替代，如 Druid，type="我们的 druid" ，因为 druid 是遵循规范的，所以把类全名加上就行了。
   - UNPOOLED：采用传统的获取连接的方式，虽然也实现 Javax.sql.DataSource接口，但是并没有使用池化的思想。
   - JNDI：采用服务器提供的 JNDI 技术实现，来获取 DataSource 对象，不同的服务器所能拿到 DataSource 是不一样。注意：如果不是 web 或者 maven 的 war 工程，是不能使用的。使用 tomcat 服务器的话，采用连接池就是 dbcp 连接池。
 

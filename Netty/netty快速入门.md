@@ -2613,7 +2613,7 @@ Netty3 write 和 flush 操作时一起的，如果每次只 writeflush 一小部
 
 Netty 实现了一个 SSLEngine。JDK 自身的 SSLEngine 速度比较慢，而 Netty 自己基于 OpenSSL+JNI 实现了一个。性能比较（用简单的 HTTP 请求进行测试的）如下图所示
 
-![image-20221025212952246](C:\development\note\CodeNotes\Netty\img\image-20221025212952246.png)
+<div align="center"><img src="img/image-20221025212952246.png"></div>
 
 JDK 的 SSLEngineImpl 只有 15万 RPS（每秒请求数），而 Netty 自己实现的则有 50万 RPS。
 
@@ -2629,7 +2629,7 @@ OpenSSL 也可以单独使用，它是基于 Apache Tomcat Native 的。
 
 ### JVM与Netty
 
-<b>Netty释放内存</b>
+<b>Netty 释放内存</b>
 
 直接内存管理是通过 JVM 的 finalizer 或 cleaner 来实现的。但是并不好用。因为垃圾回收只有在堆空间耗尽的时候才会进行，但是这样对性能很不友好。
 
@@ -2864,7 +2864,7 @@ public class QuickClient {
 
 事件循环组
 
-EventLoopGroup 是一组 EventLoop，Channel 一般会调用 EventLoopGroup 的 register 方法来绑定其中一个 EventLoop，后续这个 Channel 上的 io 事件都由此 EventLoop 来处理 (保证了 io 事件处理时的线程安全)  
+EventLoopGroup 是一组 EventLoop，Channel 一般会调用 EventLoopGroup 的 register 方法来绑定其中一个 EventLoop，后续这个 Channel 上的 io 事件都由此 EventLoop 来处理 (保证了 io 事件处理时的线程安全)  【把 `Channel` 和其中一个 `EventLoop` 绑定在一起。】
 
 * 继承自 netty 自己的 EventExecutorGroup
     * 实现了 Iterable 接口提供遍历 EventLoop 的能力
@@ -2873,14 +2873,6 @@ EventLoopGroup 是一组 EventLoop，Channel 一般会调用 EventLoopGroup 的 
 * 另一条线是继承自 `netty` 自己的 `OrderedEventExecutor`，
     * 提供了 `boolean inEventLoop(Thread thread)` 方法判断一个线程是否属于此 `EventLoop`
     * 提供了 `parent` 方法来看看自己属于哪个 `EventLoopGroup`
-
-事件循环组
-
-`EventLoopGroup` 是一组 `EventLoop`，Channel 一般会调用 `EventLoopGroup` 的 `register` 方法来绑定其中一个 `EventLoop`，<b>后续这个 `Channel` 上的 `io` 事件都由此 `EventLoop` 来处理 (保证了 `io` 事件处理时的线程安全)  </b>【把 `Channel` 和其中一个 `EventLoop` 绑定在一起。】
-
-* 继承自 `netty` 自己的 `EventExecutorGroup`
-    * 实现了 `Iterable` 接口提供遍历 `EventLoop` 的能力
-    * 另有 `next` 方法获取集合中下一个 `EventLoop`
 
 以一个简单的实现为例：
 
@@ -3139,7 +3131,7 @@ public class TestEventLoop {
 
 #### NioEventLoop 处理 io 事件
 
-服务器端两个 `nio` `worker` 工人
+服务器端两个 `nio worker` 工人
 
 ```java
 new ServerBootstrap()
@@ -3207,7 +3199,7 @@ public static void main(String[] args) throws InterruptedException {
 > 将 boss 与 worker 细分下。调用 group 里接收带两个参数的方法即可。
 
 - 第一个参数是 `boss` 只负责处理 `accept` 事件。
-    - `NioServerSocketChannel` 只有一个，那我们是不是应该把 boss 的 `EventLoopGroup` 设置为1呢？不用的。因为 `NioServerSocketChannel` 只有一个，将来注册事件的时候，也只会在 `EventLoopGroup` 里找一个 `eventLoop` 进行绑定。
+    - `NioServerSocketChannel` 只有一个，那我们是不是应该把 boss 的 `EventLoopGroup` 设置为 1 呢？不用的。因为 `NioServerSocketChannel` 只有一个，将来注册事件的时候，也只会在 `EventLoopGroup` 里找一个 `eventLoop` 进行绑定。
 - 第二个参数是 worker 只负责 `sockerChannel` 上的读写。
 
 EventLoopGroup 本质上是一个线程池，因此 boss 和第一个 NioEventLoopGroup 中的线程绑定，只会绑定一次。
@@ -3478,7 +3470,7 @@ public class ChannelFutureServer {
 
 * 1 处返回的是 ChannelFuture 对象，它的作用是利用 channel() 方法来获取 Channel 对象
 
-<b>注意</b>：connect 方法是异步的，意味着不等连接建立，方法执行就返回了。因此 `channelFuture` 对象中不能【立刻】获得到正确的 Channel 对象
+<b>注意：</b>connect 方法是异步的，意味着不等连接建立，方法执行就返回了。因此 `channelFuture` 对象中不能【立刻】获得到正确的 Channel 对象
 
 实验如下：
 
@@ -3691,7 +3683,7 @@ closeFuture.addListener(new ChannelFutureListener() {
 
 经研究发现，看病可以细分为四个步骤，经拆分后每个步骤需要 5 分钟，如下
 
-![](C:/development/note/CodeNotes/Netty/img/0048.png)
+<div align="center"><img src="img/0048.png"></div>
 
 因此可以做如下优化，只有一开始，医生 2、3、4 分别要等待 5、10、15 分钟才能执行工作，但只要后续病人源源不断地来，他们就能够满负荷工作，并且处理病人的能力提高到了 `4 * 8 * 12` 效率几乎是原来的四倍
 
@@ -3779,7 +3771,7 @@ public class TestNettyFuture {
         });
         System.out.println("等待结果");
 
-//        System.out.println(future.get());
+		// System.out.println(future.get());
         future.addListener(new GenericFutureListener<Future<? super Integer>>() {
             @Override
             public void operationComplete(Future<? super Integer> future) throws Exception {
@@ -5343,7 +5335,7 @@ serverBootstrap.option(ChannelOption.SO_RCVBUF, 10);
 >
 > * 为了解决此问题，引入了窗口概念，窗口大小即决定了无需等待应答而可以继续发送的数据最大值。当最前面的数据响应 (ack)  回来了，窗口就会向后移动。
 >
->     <img src="C:/development/note/CodeNotes/Netty/img/0051.png">
+>     <img src="img/0051.png">
 >
 > * 窗口实际就起到一个缓冲区的作用，同时也能起到流量控制的作用，不至于让数据发送的太快，也不至于向先前一问一答那样发的太慢。
 >
@@ -5789,12 +5781,7 @@ public class Client3 {
 |00000060| 5f 5f 0a 38 38 38 38 38 38 5f 5f 5f 5f 5f 5f 5f |__.888888_______|
 |00000070| 0a 39 39 39 39 39 5f 5f 5f 5f 5f 0a             |.99999_____.    |
 +--------+-------------------------------------------------+----------------+
-<<<<<<< HEAD
 14:08:18 [DEBUG] [nioEventLoopGroup-2-1] i.n.h.l.LoggingHandler - [id: 0x1282d755, L:/192.168.0.103:63641 - R:/192.168.0.103:9090] FLUSH
-=======
-21:50:29.021 io.netty.handler.logging.LoggingHandler [nioEventLoopGroup-2-1] - [id: 0x16c71dae, L:/127.0.0.1:13567 - R:/127.0.0.1:8080] FLUSH
-
->>>>>>> 8ba13810db4028bb31c8aad18209151b3e9a6b81
 ```
 
 服务端输出
@@ -6773,7 +6760,7 @@ public class ChatClient {
                 @Override
                 protected void initChannel(SocketChannel ch) throws Exception {
                     ch.pipeline().addLast(new ProcotolFrameDecoder());
-//                    ch.pipeline().addLast(LOGGING_HANDLER);
+					// ch.pipeline().addLast(LOGGING_HANDLER);
                     ch.pipeline().addLast(MESSAGE_CODEC);
                     ch.pipeline().addLast("client handler", new ChannelInboundHandlerAdapter() {
                         // 接收响应消息

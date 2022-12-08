@@ -14,21 +14,21 @@
 
 按照官网下载插件
 
-下载好后对maven进行调整
+下载好后对 maven 进行调整
 
-Preference-->setting–>界面模式-->修改maven的setting.xml路径，mvn.cmd路径-->
+Preference-->setting–>界面模式-->修改 maven 的 setting.xml 路径，mvn.cmd 路径
 
 # VSCode创建普通JavaWeb的maven工程
 
 ## 创建maven工程
 
-选择maven工程 ---> maven-archetype-webapp
+选择 maven 工程 ---> maven-archetype-webapp
 
 groupId --> 包名
 
 artifactId-->项目名
 
-补齐maven工程的目录
+补齐 maven 工程的目录
 
 src
 
@@ -50,7 +50,7 @@ src
 
 ## 补充pom文件
 
-pom文件中的内容
+pom 文件中的内容
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -135,7 +135,7 @@ pom文件中的内容
 </project>
 ```
 
-**运行命令**
+运行命令
 
 ```powershell
 mvn tomcat7:run
@@ -154,7 +154,7 @@ mvn tomcat7:run
 
 ## doc
 
-快速创建一个html5模板代码
+快速创建一个 html5 模板代码
 
 ```html
 <html lang="en">

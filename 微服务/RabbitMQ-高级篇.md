@@ -2,14 +2,13 @@
 
 消息队列在使用过程中，面临着很多实际问题需要思考：
 
-<img src="assets/image-20210718155003157.png">
+<div><img src="assets/image-20210718155003157.png"></div>
 
 # 消息可靠性
 
 消息从发送，到消费者接收，会经理多个过程：
 
-<img src="assets/image-20210718155059371.png">
-
+<div><img src="assets/image-20210718155059371.png"></div>
 
 
 > <b style="color:red">其中的每一步都可能导致消息丢失，常见的丢失原因包括</b>
@@ -31,11 +30,11 @@
 
 首先，导入课前资料提供的 demo 工程：
 
-<img src="assets/image-20210718155328927.png">
+<div><img src="assets/image-20210718155328927.png"></div>
 
 项目结构如下：
 
-<img src="assets/image-20210718155448734.png">
+<div><img src="assets/image-20210718155448734.png"></div>
 
 
 ## 生产者消息确认
@@ -50,7 +49,7 @@ RabbitMQ 提供了 publisher confirm 机制来避免消息发送到 MQ 过程中
 - publisher-return，发送者回执
   - 消息投递到交换机了，但是没有路由到队列。返回 ACK，及路由失败原因。
 
-<img src="assets/image-20210718160907166.png">
+<div><img src="assets/image-20210718160907166.png"></div>
 
 
 
@@ -172,7 +171,7 @@ public DirectExchange simpleExchange(){
 
 可以在 RabbitMQ 控制台看到持久化的交换机都会带上 `D` 的标示：
 
-<img src="assets/image-20210718164412450.png">
+<div><img src="assets/image-20210718164412450.png"></div>
 
 ### 队列持久化
 
@@ -192,7 +191,7 @@ public Queue simpleQueue(){
 
 可以在 RabbitMQ 控制台看到持久化的队列都会带上`D`的标示：
 
-<img src="assets/image-20210718164729543.png">
+<div><img src="assets/image-20210718164729543.png"></div>
 
 ### 消息持久化
 
@@ -203,7 +202,7 @@ public Queue simpleQueue(){
 
 用 Java 代码指定：
 
-<img src="assets/image-20210718165100016.png">
+<div><img src="assets/image-20210718165100016.png"></div>
 
 默认情况下，SpringAMQP 发出的任何消息都是持久化的，不用特意指定。
 
@@ -276,17 +275,17 @@ spring:
 
 在异常位置打断点，再次发送消息，程序卡在断点时，可以发现此时消息状态为 unack（未确定状态）：
 
-<img src="assets/image-20210718171705383.png">
+<div><img src="assets/image-20210718171705383.png"></div>
 
 抛出异常后，因为 Spring 会自动返回 nack，所以消息恢复至 Ready 状态，并且没有被 RabbitMQ 删除
 
-<img src="assets/image-20210718171759179.png">
+<div><img src="assets/image-20210718171759179.png"></div>
 
 ## 消费失败重试机制
 
 当消费者出现异常后，消息会不断 requeue（重入队）到队列，再重新发送给消费者，然后再次异常，再次 requeue，无限循环，导致 mq 的消息处理飙升，带来不必要的压力：
 
-<img src="assets/image-20210718172746378.png">
+<div><img src="assets/image-20210718172746378.png"></div>
 
 怎么办呢？
 
@@ -422,15 +421,15 @@ public class ErrorMessageConfig {
 
 如图，一个消息被消费者拒绝了，变成了死信：
 
-<img src="assets/image-20210718174328383.png">
+<div><img src="assets/image-20210718174328383.png"></div>
 
 因为 simple.queue 绑定了死信交换机 dl.direct，因此死信会投递给这个交换机：
 
-<img src="assets/image-20210718174416160.png">
+<div><img src="assets/image-20210718174416160.png"></div>
 
 如果这个死信交换机也绑定了一个队列，则消息最终会进入这个存放死信的队列：
 
-<img src="assets/image-20210718174506856.png">
+<div><img src="assets/image-20210718174506856.png"></div>
 
 
 
@@ -441,7 +440,7 @@ public class ErrorMessageConfig {
 
 这样才能确保投递的消息能到达死信交换机，并且正确的路由到死信队列。
 
-<img src="assets/image-20210821073801398.png">
+<div><img src="assets/image-20210821073801398.png"></div>
 
 
 
@@ -451,7 +450,7 @@ public class ErrorMessageConfig {
 
 我们可以给 simple.queue 添加一个死信交换机，给死信交换机绑定一个队列。这样消息变成死信后也不会丢弃，而是最终投递到死信交换机，路由到与死信交换机绑定的队列。
 
-<img src="assets/image-20210718174506856.png">
+<div><img src="assets/image-20210718174506856.png"></div>
 
 我们在 consumer 服务中，定义一组死信交换机、死信队列：
 
@@ -500,7 +499,7 @@ public Binding dlBinding(){
 - 消息所在的队列设置了超时时间
 - 消息本身设置了超时时间
 
-<img src="assets/image-20210718182643311.png">
+<div><img src="assets/image-20210718182643311.png"></div>
 
 ### 接收超时死信的死信交换机
 
@@ -564,11 +563,11 @@ public void testTTLQueue() {
 
 发送消息的日志：
 
-<img src="assets//image-20210718191657478.png">
+<div><img src="assets//image-20210718191657478.png"></div>
 
 查看下接收消息的日志：
 
-<img src="assets/image-20210718191738706.png">
+<div><img src="assets/image-20210718191738706.png"></div>
 
 因为队列的 TTL 值是 10000ms，也就是 10 秒。可以看到消息发送与接收之间的时差刚好是 10 秒。
 
@@ -594,11 +593,11 @@ public void testTTLMsg() {
 
 查看发送消息日志：
 
-<img src="assets/image-20210718191939140.png">
+<div><img src="assets/image-20210718191939140.png"></div>
 
 接收消息日志：
 
-<img src="assets/image-20210718192004662.png">
+<div><img src="assets/image-20210718192004662.png"></div>
 
 这次，发送与接收的延迟只有 5 秒。说明当队列、消息都设置了 TTL 时，任意一个到期就会成为死信。
 
@@ -631,7 +630,7 @@ public void testTTLMsg() {
 
 这个插件就是 DelayExchange 插件。参考 RabbitMQ 的插件列表页面：https://www.rabbitmq.com/community-plugins.html
 
-<img src="assets/image-20210718192529342.png">
+<div><img src="assets/image-20210718192529342.png"></div>
 
 使用方式可以参考官网地址：https://blog.rabbitmq.com/posts/2015/04/scheduling-messages-with-rabbitmq
 
@@ -639,7 +638,7 @@ public void testTTLMsg() {
 
 参考课前资料：
 
-<img src="assets/image-20210718193409812.png">
+<div><img src="assets/image-20210718193409812.png"></div>
 
 ### DelayExchange原理
 
@@ -659,7 +658,7 @@ DelayExchange 需要将一个交换机声明为 delayed 类型。当我们发送
 
 基于注解方式（推荐）：
 
-<img src="assets/image-20210718193747649.png">
+<div><img src="assets/image-20210718193747649.png"></div>
 
 也可以基于 @Bean 的方式：
 
@@ -669,7 +668,7 @@ DelayExchange 需要将一个交换机声明为 delayed 类型。当我们发送
 
 发送消息时，一定要携带 x-delay 属性，指定延迟的时间：
 
-<img src="assets/image-20210718193917009.png">
+<div><img src="assets/image-20210718193917009.png"></div>
 
 ### 总结
 
@@ -684,7 +683,7 @@ DelayExchange 需要将一个交换机声明为 delayed 类型。当我们发送
 
 当生产者发送消息的速度超过了消费者处理消息的速度，就会导致队列中的消息堆积，直到队列存储消息达到上限。之后发送的消息就会成为死信，可能会被丢弃，这就是消息堆积问题。
 
-<img src="assets/image-20210718194040498.png">
+<div><img src="assets/image-20210718194040498.png"></div>
 
 解决消息堆积有两种思路：
 
@@ -720,11 +719,11 @@ rabbitmqctl set_policy Lazy "^lazy-queue$" '{"queue-mode":"lazy"}' --apply-to qu
 
 ### 基于@Bean声明lazy-queue
 
-<img src="assets/image-20210718194522223.png">
+<div><img src="assets/image-20210718194522223.png"></div>
 
 ### 基于@RabbitListener声明LazyQueue
 
-<img src="assets/image-20210718194539054.png">
+<div><img src="assets/image-20210718194539054.png"></div>
 
 ### 总结
 
@@ -766,7 +765,7 @@ RabbitMQ的是基于Erlang语言编写，而Erlang又是一个面向并发的语
 
 结构如图：
 
-<img src="assets/image-20210718220843323.png">
+<div align="center"><img src="assets/image-20210718220843323.png"></div>
 
 ### 部署
 
@@ -784,9 +783,9 @@ RabbitMQ的是基于Erlang语言编写，而Erlang又是一个面向并发的语
 - 所有操作都是主节点完成，然后同步给镜像节点
 - 主宕机后，镜像节点会替代成新的主
 
-结构如图：
+结构如图
 
-<img src="assets/image-20210718221039542.png">
+<div align="center"><img src="assets/image-20210718221039542.png"></div>
 
 ### 部署
 

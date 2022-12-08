@@ -13,7 +13,7 @@ Sentinel实现限流、隔离、降级、熔断等功能，本质要做的就是
 
 
 
-这里的**资源**就是希望被Sentinel保护的业务，例如项目中定义的controller方法就是默认被Sentinel保护的资源。
+这里的<b>资源</b>就是希望被Sentinel保护的业务，例如项目中定义的controller方法就是默认被Sentinel保护的资源。
 
 
 
@@ -141,7 +141,6 @@ public Order queryOrderById(Long orderId) {
 ```
 
 
-
 4）访问
 
 打开浏览器，访问order服务：http://localhost:8080/order/101
@@ -149,8 +148,6 @@ public Order queryOrderById(Long orderId) {
 然后打开sentinel控制台，查看簇点链路：
 
 ![image-20210925113122759](assets/image-20210925113122759.png)
-
-
 
 
 
@@ -489,7 +486,7 @@ private Entry entryWithPriority(ResourceWrapper resourceWrapper, int count, bool
 
 获取ProcessorSlotChain以后会保存到一个Map中，key是ResourceWrapper，值是ProcessorSlotChain.
 
-所以，**一个资源只会有一个ProcessorSlotChain**.
+所以，<b>一个资源只会有一个ProcessorSlotChain</b>.
 
 
 
@@ -629,7 +626,7 @@ public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode 
 
 StatisticSlot负责统计实时调用数据，包括运行信息（访问次数、线程数）、来源信息等。
 
-StatisticSlot是实现限流的关键，其中基于**滑动时间窗口算法**维护了计数器，统计进入某个资源的请求次数。
+StatisticSlot是实现限流的关键，其中基于<b>滑动时间窗口算法</b>维护了计数器，统计进入某个资源的请求次数。
 
 核心代码：
 
@@ -853,7 +850,6 @@ public static void checkSystem(ResourceWrapper resourceWrapper) throws BlockExce
 ```
 
 
-
 ## 2.8.ParamFlowSlot
 
 ParamFlowSlot就是热点参数限流，如图：
@@ -867,7 +863,6 @@ ParamFlowSlot就是热点参数限流，如图：
 - 这里的统计窗口时长，就是统计时长：duration
 
 含义是每隔duration时间长度内，最多生产maxCount个令牌，上图配置的含义是每1秒钟生产2个令牌。
-
 
 
 核心API：
@@ -889,7 +884,6 @@ public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode 
 ```
 
 
-
 ### 2.8.1.令牌桶
 
 热点规则判断采用了令牌桶算法来实现参数限流，为每一个不同参数值设置令牌桶，Sentinel的令牌桶有两部分组成：
@@ -909,12 +903,6 @@ public void entry(Context context, ResourceWrapper resourceWrapper, DefaultNode 
 
 
 
-
-
-
-
-
-
 ## 2.9.FlowSlot
 
 FlowSlot是负责限流规则的判断，如图：
@@ -928,14 +916,14 @@ FlowSlot是负责限流规则的判断，如图：
 
 
 
-三种流控模式，从底层**数据统计**角度，分为两类：
+三种流控模式，从底层<b>数据统计</b>角度，分为两类：
 
 - 对进入资源的所有请求（ClusterNode）做限流统计：直接模式、关联模式
 - 对进入资源的部分链路（DefaultNode）做限流统计：链路模式
 
 
 
-三种流控效果，从**限流算法**来看，分为两类：
+三种流控效果，从<b>限流算法</b>来看，分为两类：
 
 - 滑动时间窗口算法：快速失败、warm up
 - 漏桶算法：排队等待效果
@@ -1064,7 +1052,6 @@ private static boolean passLocalCheck(FlowRule rule, Context context, DefaultNod
 ```
 
 
-
 这里对规则的判断先要通过`FlowRule#getRater()`获取流量控制器`TrafficShapingController`，然后再做限流。
 
 而`TrafficShapingController`有3种实现：
@@ -1076,9 +1063,7 @@ private static boolean passLocalCheck(FlowRule rule, Context context, DefaultNod
 - RateLimiterController：排队等待模式，基于漏桶算法
 
 
-
 最终的限流判断都在TrafficShapingController的canPass方法中。
-
 
 
 ### 2.9.2.滑动时间窗口
@@ -1089,7 +1074,6 @@ private static boolean passLocalCheck(FlowRule rule, Context context, DefaultNod
 - 二是对滑动窗口内的时间区间窗口QPS累加，这个是在FlowRule中调用的
 
 
-
 先来看时间区间窗口的QPS计数功能。
 
 #### 2.9.2.1.时间窗口请求量统计
@@ -1097,7 +1081,6 @@ private static boolean passLocalCheck(FlowRule rule, Context context, DefaultNod
 回顾2.5章节中的StatisticSlot部分，有这样一段代码：
 
 ![image-20210925180522926](assets/image-20210925180522926.png)
-
 
 
 就是在统计通过该节点的QPS，我们跟入看看，这里进入了DefaultNode内部：
@@ -1129,7 +1112,6 @@ public ArrayMetric(int sampleCount, int intervalInMs) {
 ![image-20210925181359203](assets/image-20210925181359203.png)
 
 
-
 接下来，我们进入`ArrayMetric`类的`addPass`方法：
 
 ```java
@@ -1141,7 +1123,6 @@ public void addPass(int count) {
     wrap.value().addPass(count);
 }
 ```
-
 
 
 那么，计数器如何知道当前所在的窗口是哪个呢？
@@ -1166,14 +1147,11 @@ public abstract class LeapArray<T> {
 ```
 
 
-
 LeapArray是一个环形数组，因为时间是无限的，数组长度不可能无限，因此数组中每一个格子放入一个时间窗（window），当数组放满后，角标归0，覆盖最初的window。
 
 ![image-20210925182127206](assets/image-20210925182127206.png)
 
 因为滑动窗口最多分成sampleCount数量的小窗口，因此数组长度只要大于sampleCount，那么最近的一个滑动窗口内的2个小窗口就永远不会被覆盖，就不用担心旧数据被覆盖的问题了。
-
-
 
 
 
@@ -1190,13 +1168,13 @@ public WindowWrap<T> currentWindow(long timeMillis) {
     long windowStart = calculateWindowStart(timeMillis);
 
     /*
-         * 先根据角标获取数组中保存的 oldWindow 对象，可能是旧数据，需要判断.
-         *
-         * (1) oldWindow 不存在, 说明是第一次，创建新 window并存入，然后返回即可
-         * (2) oldWindow的 starTime = 本次请求的 windowStar, 说明正是要找的窗口，直接返回.
-         * (3) oldWindow的 starTime < 本次请求的 windowStar, 说明是旧数据，需要被覆盖，创建 
-         *     新窗口，覆盖旧窗口
-         */
+     * 先根据角标获取数组中保存的 oldWindow 对象，可能是旧数据，需要判断.
+     *
+     * (1) oldWindow 不存在, 说明是第一次，创建新 window并存入，然后返回即可
+     * (2) oldWindow的 starTime = 本次请求的 windowStar, 说明正是要找的窗口，直接返回.
+     * (3) oldWindow的 starTime < 本次请求的 windowStar, 说明是旧数据，需要被覆盖，创建 
+     *     新窗口，覆盖旧窗口
+     */
     while (true) {
         WindowWrap<T> old = array.get(idx);
         if (old == null) {
@@ -1233,7 +1211,6 @@ public WindowWrap<T> currentWindow(long timeMillis) {
 ```
 
 
-
 找到当前时间所在窗口（WindowWrap）后，只要调用WindowWrap对象中的add方法，计数器+1即可。
 
 这里只负责统计每个窗口的请求量，不负责拦截。限流拦截要看FlowSlot中的逻辑。
@@ -1247,7 +1224,6 @@ public WindowWrap<T> currentWindow(long timeMillis) {
 - DefaultController：快速失败，默认的方式，基于滑动时间窗口算法
 - WarmUpController：预热模式，基于滑动时间窗口算法，只不过阈值是动态的
 - RateLimiterController：排队等待模式，基于漏桶算法
-
 
 
 因此，我们跟入默认的DefaultController中的canPass方法来分析：
@@ -1280,7 +1256,6 @@ public boolean canPass(Node node, int acquireCount, boolean prioritized) {
     return true;
 }
 ```
-
 
 
 因此，判断的关键就是`int curCount = avgUsedTokens(node);`
@@ -1366,11 +1341,6 @@ public boolean isWindowDeprecated(long time, WindowWrap<T> windowWrap) {
 ```
 
 
-
-
-
-
-
 ### 2.9.3.漏桶
 
 上一节我们讲过，FlowSlot的限流判断最终都由`TrafficShapingController`接口中的`canPass`方法来实现。该接口有三个实现类：
@@ -1378,7 +1348,6 @@ public boolean isWindowDeprecated(long time, WindowWrap<T> windowWrap) {
 - DefaultController：快速失败，默认的方式，基于滑动时间窗口算法
 - WarmUpController：预热模式，基于滑动时间窗口算法，只不过阈值是动态的
 - RateLimiterController：排队等待模式，基于漏桶算法
-
 
 
 因此，我们跟入默认的RateLimiterController中的canPass方法来分析：
@@ -1439,12 +1408,9 @@ public boolean canPass(Node node, int acquireCount, boolean prioritized) {
 }
 ```
 
-
-
 与我们之前分析的漏桶算法基本一致：
 
 ![image-20210925210716675](assets/image-20210925210716675.png)
-
 
 
 ## 2.10.DegradeSlot
@@ -1454,7 +1420,6 @@ public boolean canPass(Node node, int acquireCount, boolean prioritized) {
 Sentinel的降级是基于状态机来实现的：
 
 ![image-20210925211020881](assets/image-20210925211020881.png)
-
 
 
 对应的实现在DegradeSlot类中，核心API：
@@ -1487,8 +1452,6 @@ void performChecking(Context context, ResourceWrapper r) throws BlockException {
     }
 }
 ```
-
-
 
 ### 2.10.1.CircuitBreaker
 
@@ -1550,7 +1513,6 @@ protected boolean fromOpenToHalfOpen(Context context) {
 ```
 
 
-
 这里出现了从OPEN到HALF_OPEN、从HALF_OPEN到OPEN的变化，但是还有几个没有：
 
 - 从CLOSED到OPEN
@@ -1565,7 +1527,6 @@ protected boolean fromOpenToHalfOpen(Context context) {
 会调用CircuitBreaker的onRequestComplete方法。而CircuitBreaker有两个实现：
 
 ![image-20210925213939035](assets/image-20210925213939035.png)
-
 
 
 我们这里以异常比例熔断为例来看，进入`ExceptionCircuitBreaker`的`onRequestComplete`方法：
@@ -1636,6 +1597,3 @@ private void handleStateChangeWhenThresholdExceeded(Throwable error) {
     }
 }
 ```
-
-
-

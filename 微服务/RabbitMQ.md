@@ -137,31 +137,31 @@ A系统/生产者-->中间件/消息队列-->B系统/消费者
 
 如果库存系统出现问题，那么调用库存系统的订单系统也可能会出现问题，会导致后面无法正常调用支付系统和物流系统。系统耦合度高，一处错误可能导致后面无法正常执行。如果需要增加系统的话，如增加一个 X 系统，那么需要修改订单系统的代码，订单系统的可维护性低。
 
-<img src="img/image-20221010152735753.png">
+<div align="center"><img src="img/image-20221010152735753.png"></div>
 
 使用 MQ 使得应用间解耦，提升容错性和可维护性。订单系统发送消息给 MQ，其他系统订阅 MQ 的消息，拿到消息后就执行。即便库存呢系统执行出错了，也不会影响其他系统的正常执行。而且，库存系统可能只是某几十秒内或几分钟内有问题，后面好了，可以继续从 MQ 中拿到那个未正常消费的消息，重新执行。如果需要增加 X 系统的话，只需要 X 系统从 MQ 中拿消息进行消费即可。
 
-<img src="img/image-20221010153203967.png">
+<div align="center"><img src="img/image-20221010153203967.png"></div>
 
 #### 异步提速
 
 一个下单操作耗时：20 + 300 + 300 + 300 = 920ms。用户点击完下单按钮后，需要等待 920ms 才能得到下单响应，太慢！
 
-<img src="img/image-20221010153525277.png">
+<div align="center"><img src="img/image-20221010153525277.png"></div>
 
 加入消息队列后，用户点击完下单按钮后，只需等待 25ms 就能得到下单响应 (20+5=25ms)。提升用户体验和系统吞吐量（单位时间内处理请求的数目）。
 
-<img src="img/image-20221010153740378.png">
+<div align="center"><img src="img/image-20221010153740378.png"></div>
 
 #### 削峰填谷
 
 在没有消息队列的情况下，如果请求瞬间增大，系统来不及处理可能会崩溃。
 
-<img src="img/image-20221010153929448.png">
+<div align="center"><img src="img/image-20221010153929448.png"></div>
 
 加入消息队列后，请求可以先打在消息队列中，然后系统在逐渐从 MQ 中拉取请求逐个处理。
 
-<img src="img/image-20221010154111483.png">
+<div align="center"><img src="img/image-20221010154111483.png"></div>
 
 <b>削峰填谷</b>
 
@@ -197,13 +197,13 @@ A 系统处理完业务，通过 MQ 给 B、C、D 三个系统发消息数据，
 
 AMQP，即 Advanced Message Queuing Protocol（高级消息队列协议），是一个网络协议，是应用层协议的一个开放标准，为面向消息的中间件设计。基于此协议的客户端与消息中间件可传递消息，并不受客户端/中间件不同产品，不同的开发语言等条件的限制。2006 年，AMQP 规范发布。类比 HTTP。 
 
-<img src="img/image-20221010155442820.png">
+<div align="center"><img src="img/image-20221010155442820.png"></div>
 
 ### RabbitMQ简介
 
 2007年，Rabbit 技术公司基于 AMQP 标准开发的 RabbitMQ 1.0 发布。RabbitMQ 采用 Erlang 语言开发。Erlang 语言由 Ericson 设计，专门为开发高并发和分布式系统的一种语言，在电信领域使用广泛。RabbitMQ 基础架构如下图
 
-<img src="img/image-20221010155703332.png">
+<div align="center"><img src="img/image-20221010155703332.png"></div>
 
 - <b>Broker：</b>接收和分发消息的应用，RabbitMQ Server 就是 Message Broker
 - <b>Virtual host：</b>出于多租户和安全因素设计的，把 AMQP 的基本组件划分到一个虚拟的分组中，类似于网络中的 namespace 概念。当多个不同的用户使用同一个 RabbitMQ server 提供的服务时，可以划分出多个 vhost，每个用户在自己的 vhost 创建 exchange／queue 等 
@@ -561,9 +561,9 @@ SpringAMQP 是基于 RabbitMQ 封装的一套模板，并且还利用 SpringBoot
 
 SpringAMQP 的官方地址：https://spring.io/projects/spring-amqp
 
-<div align="center"><img src="assets/image-20210717164024967.png" width="50%"></div>
+<div align="center"><img src="assets/image-20210717164024967.png" width="50%">
 
-<div align="center"><img src="assets/image-20210717164038678.png" width="50%"></div>
+<div align="center"><img src="assets/image-20210717164038678.png" width="50%">
 
 SpringAMQP 提供了三个功能：
 
@@ -668,7 +668,7 @@ public class SpringRabbitListener {
 
 Work queues，也被称为（Task queues），任务模型。简单来说就是<b>让多个消费者绑定到一个队列，共同消费队列中的消息</b>。
 
-<div align="center"><img src="assets/image-20210717164238910.png" width="70%"></div>
+<div align="center"><img src="assets/image-20210717164238910.png" width="70%">
 
 <span style="color:orange">当消息处理比较耗时的时候，可能生产消息的速度会远远大于消息的消费速度。长此以往，消息就会堆积越来越多，无法及时处理。此时就可以使用 work 模型，多个消费者共同处理消息处理，速度就能大大提高了。</span>
 
@@ -1336,7 +1336,7 @@ public class AckListener {
 
 ### 消费端限流
 
-<img src="img/image-20221010154111483.png">
+<div align="center"><img src="img/image-20221010154111483.png"></div>
 
 进行限量的时候，确认 ack 的设置要设置成手动确认，配置限流的方式和<span style="color:red">“消息确认 ack” </span>一样。
 
@@ -1353,7 +1353,7 @@ listener:
 
 TTL 全称 Time To Live（存活时间/过期时间）。当消息到达存活时间后，还没有被消费，会被自动清除。RabbitMQ 可以对消息设置过期时间，也可以对整个队列（Queue）设置过期时间。
 
-<img src="img/image-20221011135850877.png">
+<div align="center"><img src="img/image-20221011135850877.png"></div>
 
 - 设置队列过期时间使用参数：x-message-ttl，单位：ms(毫秒)，<b>会对整个队列消息统一过期。（如果 0 分钟来了一个消息，5 分钟来了一个消息，队列同意过期时间是 10 分钟，那么 5 分钟进来的这个消息也会过期吗？）</b>
 - 设置消息过期时间使用参数：expiration。单位：ms(毫秒)，<b>当该消息在队列头部时（消费时），会单独判断这一消息是否过期。</b>
@@ -1463,7 +1463,7 @@ public class RabbitMQConfigTTL {
 
 死信队列，英文缩写：DLX 。Dead Letter Exchange（死信交换机），当消息成为 Dead message 后，可以被重新发送到另一个交换机，这个交换机就是 DLX。DLX 也会绑定一个 queue，然后让其他消费者进行消费消息。
 
-<img src="img/image-20221011142144528.png">
+<div align="center"><img src="img/image-20221011142144528.png"></div>
 
 <b>消息成为死信的三种情况</b>
 
@@ -1572,7 +1572,7 @@ public class RabbitMQDeadMessageConfig {
 
 如果采用定时器完成判断用户是否支付的操作，需要定期执行查询操作，查询用户是否支付了，开销大；如果采用延迟队列的方式，每条消息只需要查询一次即可。
 
-<img src="img/image-20221011144450653.png">
+<div align="center"><img src="img/image-20221011144450653.png"></div>
 
 很可惜。RabbitMQ 没有提供延迟队列的功能。但是可以用：<b style="color:red">TTL+死信队列</b>组合实现延迟队列的效果。
 
@@ -1610,12 +1610,12 @@ firehose 的机制是将生产者投递给 rabbitmq 的消息，rabbitmq 投递�
 
 ### 消息补偿
 
-<img src="img/image-20221011163625846.png">
+<div align="center"><img src="img/image-20221011163625846.png"></div>
 
 ### 消息幂等性
 
 幂等性指一次和多次请求某一个资源，对于资源本身应该具有同样的结果。也就是说，其任意多次执行对资源本身所产生的影响均与一次执行的影响相同。<b>在 MQ 中指，消费多条相同的消息，得到与消费该消息一次相同的结果。</b>
 
-<img src="img/image-20221011165027828.png">
+<div align="center"><img src="img/image-20221011165027828.png"></div>
 
 用数据库的乐观锁来保证消息的幂等性。

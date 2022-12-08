@@ -92,11 +92,7 @@ vue ref 属性，setup 方法，onMounted 方法
 
 按照功能分出页面。
 
-![image-20220928160618593](C:\development\note\CodeNotes\Project\img\image-20220928160618593.png)
-
 点击连接，且换页面的功能。用 vue 的 router-view 自动根据地址来变。在  router/index.js 中写好 View 对应的路由，然后导航栏中的 a 链接用 router-link 即可。代码有点问题，拼写错误，自己写的时候要注意。
-
-![image-20220928161005345](C:\development\note\CodeNotes\Project\img\image-20220928161005345.png)
 
 ```js
 {
@@ -108,8 +104,6 @@ vue ref 属性，setup 方法，onMounted 方法
 用白框框住区域。这可以抽象成一个公共区域。内容填充的话用 slot，不同页面的不同内容通过 slot 渲染到页面中。
 
 选中区域高亮，用 vue 的 computed 试试计算。
-
-![image-20220928162914019](C:\development\note\CodeNotes\Project\img\image-20220928162914019.png)
 
 <b>绘制游戏地图</b>
 
@@ -190,8 +184,6 @@ js export default 的组件，引入的时候不用加 {}；没有 default 修�
 
 蛇的运动，尾部不动，在原来头部的位置创建一个虚拟头。然后虚拟头向前移动，其他部分不动。
 
-![image-20220929153848043](C:\development\note\CodeNotes\Project\img\image-20220929153848043.png)
-
 蛇的运动，需要两条蛇都准备好了，然后一起移动，进入下一回合。如何控制？渲染的时候判断两条蛇的状态是不是都好了，都好了就同时更新它们的运动轨迹。
 
 ---
@@ -205,8 +197,6 @@ session 判断用户登录，存在跨域问题。现在用 token 来判断，to
 前后的分离后，session 验证会有跨域的问题，这用 jwt 进行验证。
 
 传统模式，用 session，跨域比较麻烦，不太好处理。比如，一个用户想用一个登录访问多个后端的话，要么把 session 复制多份到多个后端，要么存储到一个公共区域。不太好处理。
-
-![image-20220929181641824](C:\development\note\CodeNotes\Project\img\image-20220929181641824.png)
 
 jwt 很容易实现跨域，且不用在服务器端存储。而且 JWT 比较安全，即便是有人篡改了用户数据，但是他不知道如何更改尾部加密的那部分字符串，这样，再服务器端解密的时候就会出错，身份认证就会出现问题。<span style="color:red">如果 JTW Token 被窃取了怎么办？那信息就泄露了。没法子了。</span>
 

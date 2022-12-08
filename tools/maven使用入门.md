@@ -3,22 +3,22 @@
 ## 前置条件
 - JDK
 - IDE
-- Maven安装包
+- Maven 安装包
 - 安装包自行前往 https://maven.apache.org/download.cgi 下载最新版的 Maven 程序。
-## 1.开始安装
+## 开始安装
 - 将文件解压
 - 新建 MAVEN_HOME, 环境变量，赋值为 mavenbin 所在的父级目录
 - 注意 maven 需要依赖于 JAVA_HOME 这个环境变量，环境变量的 key 是固定的。
   - 如 maven 的目录是 D:\Program Files\Apache\maven;
   - MAVEN_HOME 赋值为 D:\Program Files\Apache\maven;
   - 在系统环境变量 path 中追加 %MAVEN_HOME%\bin\;
-## 2.检查安装结果
+## 检查安装结果
 
 - mvn -v 查看 Maven 信息
 
   如果显示的 jdk 是你按照的本地 jdk 的目录，则完美成功！
 
-## 3.配置Maven本地仓库
+## 配置Maven本地仓库
 - 在任意目录新建 maven-repository 文件夹【名称随意】
 - 打开 maven/conf/settings.xml 文件修改仓库默认位置
 ```xml
@@ -32,11 +32,11 @@ D:\Program Files\Apache\maven-repository。
 当我们从maven中获取jar包的时候，maven首先会在本地仓库中查找，如果本地仓库有则返回；如果没有则从远程仓库中获取包，并在本地库中保存。
 ```
 
-## 4.Maven的常用命令
+## Maven的常用命令
 
-> **maven 的命令，一般高级别的命令包含低级别的命令，maven运行tomcat项目使用的是 ==mvn tomcat:run==**
+> maven 的命令，一般高级别的命令包含低级别的命令，maven 运行 tomcat 项目使用的是 mvn tomcat:run
 
-以下命令都需要进入对于项目的根目录进行。如 spring 为 xx 项目的根目录【其内部包含main】。
+以下命令都需要进入对于项目的根目录进行。如 spring 为 xx 项目的根目录【其内部包含 main】。
 
 ### mvn clean
 
@@ -48,7 +48,7 @@ D:\Program Files\Apache\maven-repository。
 
 ### mvn test
 
-测试命令,或执行 src/test/java/ 下 junit 的测试用例.
+测试命令，或执行 src/test/java/ 下 junit 的测试用例.
 
 ### mvn install 
 

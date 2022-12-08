@@ -6,13 +6,13 @@
 
 
 
-<img src="assets/image-20210409210621117.png">
+<div><img src="assets/image-20210409210621117.png"></div>
 
 其中包含3个nacos节点，然后一个负载均衡器代理3个Nacos。这里负载均衡器可以使用nginx。
 
 我们计划的集群结构：
 
-<img src="assets/image-20210409211355037.png">
+<div><img src="assets/image-20210409211355037.png"></div>
 
 
 
@@ -247,13 +247,13 @@ nacos 在 GitHub 上有下载地址：https://github.com/alibaba/nacos/tags，�
 
 本例中才用1.4.1版本：
 
-<img src="assets/image-20210409212119411.png">
+<div><img src="assets/image-20210409212119411.png"></div>
 
 ## 配置Nacos
 
 将这个包解压到任意非中文目录下，如图：
 
-<img src="assets/image-20210402161843337.png">
+<div><img src="assets/image-20210402161843337.png"></div>
 
 目录说明：
 
@@ -262,7 +262,7 @@ nacos 在 GitHub 上有下载地址：https://github.com/alibaba/nacos/tags，�
 
 进入 nacos 的 conf 目录，修改配置文件 cluster.conf.example，重命名为 cluster.conf：
 
-<img src="assets/image-20210409212459292.png">
+<div><img src="assets/image-20210409212459292.png"></div>
 
 然后添加内容：
 
@@ -288,7 +288,7 @@ db.password.0=123
 
 将nacos文件夹复制三份，分别命名为：nacos1、nacos2、nacos3
 
-<img src="assets/image-20210409213335538.png">
+<div><img src="assets/image-20210409213335538.png"></div>
 
 然后分别修改三个文件夹中的application.properties，
 
@@ -320,11 +320,11 @@ startup.cmd
 
 找到课前资料提供的nginx安装包： 
 
-<img src="assets/image-20210410103253355.png">
+<div><img src="assets/image-20210410103253355.png"></div>
 
 解压到任意非中文目录下：
 
-<img src="assets/image-20210410103322874.png">
+<div><img src="assets/image-20210410103322874.png"></div>
 
 修改 conf/nginx.conf 文件，配置如下：
 

@@ -87,9 +87,9 @@ public class OpBin {
 
 面向对象编程有三大特点：
 
-- <b>①封装</b>：合理封装/暴露类中的内容（即限定使用条件）
-- <b>②继承</b>：利用现成的数据进行“克隆”，再根据情况进行添加和修改。
-- <b>③多态</b>：把一个对象看成它的父类，而不是把它当成具体类；从而做到一种形式多种表现。
+- <b>①封装：</b>合理封装/暴露类中的内容（即限定使用条件）
+- <b>②继承：</b>利用现成的数据进行“克隆”，再根据情况进行添加和修改。
+- <b>③多态：</b>把一个对象看成它的父类，而不是把它当成具体类；从而做到一种形式多种表现。
 
 ### 抽象
 
@@ -2408,10 +2408,12 @@ public class FieldAccess {
                 + ", sub.getSuperField() = " + sub.getSuperField());
     }
 }
+
 class Super {
     public int field = 0;
     public int getField() {return field;}
 }
+
 class Sub extends Super {
     public int field = 1;
     public int getField() {return field;}
@@ -2463,7 +2465,7 @@ Derived dynamicGet()
 
 ### 构造器和多态
 
-通常，构造器不同于其他类型的方法。在涉及多态时也是如此。尽管<span style="color:orange">构造器不具有多态性</span>（实际上是静态方法）那么，在构造器中调用了正在构造的对象的动态绑定方法，会发生什么?
+通常，构造器不同于其他类型的方法。在涉及多态时也是如此。尽管<span style="color:orange">构造器不具有多态性</span>（实际上构造器是静态方法）那么，在构造器中调用了正在构造的对象的动态绑定方法，会发生什么?
 
 在普通的方法中，动态绑定的调用是在运行时解析的，因为对象不知道它属于方法所在的类还是其子类。
 
@@ -2517,7 +2519,7 @@ RoundGlyph.RoundGlyph(), radius = 5
 - 按声明顺序初始化成员。 
 - 最终调用派生类的构造器。
 
-改编题1
+改编题 1
 
 ```java
 class Glyph {
@@ -2561,7 +2563,7 @@ RoundGlyph.RoundGlyph(), radius = 5
 */
 ```
 
-改编题2
+改编题 2
 
 ```java
 class Glyph {
@@ -2605,7 +2607,7 @@ RoundGlyph.RoundGlyph(), radius = 10
 */
 ```
 
-<span style="color:red"><b>警示</b></span>
+<b style="color:red">警示</b>
 
 <span style="color:orange">编写构造器有一条良好规范：做尽量少的事让对象进入良好状态。可能的话，尽量不要调用类中的任何方法。在父类的构造器中能安全调用的只有父类的 final 方法（这也适用于可被看作是 final 的 private 方法）。这些方法不能被重写，因此不会产生意想不到的结果。我们可能无法永远遵循这条规范，但应该朝着它努力。</span>
 
