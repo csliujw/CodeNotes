@@ -30,7 +30,7 @@ yum remove docker \
 
 ## 安装docker
 
-首先需要大家虚拟机联网，安装 yum 工具
+虚拟机联网，安装 yum 工具
 
 ```sh
 yum install -y yum-utils \
@@ -38,7 +38,7 @@ yum install -y yum-utils \
            lvm2 --skip-broken
 ```
 
-然后更新本地镜像源：
+更新本地镜像源
 
 ```shell
 # 设置docker镜像源
@@ -51,17 +51,17 @@ sed -i 's/download.docker.com/mirrors.aliyun.com\/docker-ce/g' /etc/yum.repos.d/
 yum makecache fast
 ```
 
-然后输入命令：
+然后输入命令
 
 ```shell
 yum install -y docker-ce
 ```
 
-docker-ce 为社区免费版本。稍等片刻，docker 即可安装成功。
+docker-ce 为社区免费版本。
 
 ## 启动docker
 
-Docker 应用需要用到各种端口，逐一去修改防火墙设置。非常麻烦，因此建议大家直接关闭防火墙！
+Docker 应用需要用到各种端口，逐一去修改防火墙设置。非常麻烦，因此建议直接关闭防火墙！
 
 启动 docker 前，一定要关闭防火墙后！！
 
@@ -76,7 +76,7 @@ systemctl stop firewalld
 systemctl disable firewalld
 ```
 
-通过命令启动 docker：
+通过命令启动 docker
 
 ```sh
 systemctl start docker  # 启动docker服务
@@ -86,19 +86,18 @@ systemctl stop docker  # 停止docker服务
 systemctl restart docker  # 重启docker服务
 ```
 
-然后输入命令，可以查看 docker 版本：
+输入命令，可以查看 docker 版本
 
-```
+```shell
 docker -v
+
+wsl@cv:/mnt/c/Users/69546$ docker -v
+Docker version 20.10.12, build e91ed57
 ```
-
-如图：
-
-<img src="assets/image-20210418154704436.png"> 
 
 ## 配置镜像加速
 
-docker 官方镜像仓库网速较差，我们需要设置国内镜像服务：
+docker 官方镜像仓库网速较差，需要设置国内镜像服务
 
 参考阿里云的镜像加速文档：https://cr.console.aliyun.com/cn-hangzhou/instances/mirrors
 
@@ -113,15 +112,9 @@ Linux 下需要通过命令下载：
 curl -L https://github.com/docker/compose/releases/download/1.23.1/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose
 ```
 
-如果下载速度较慢，或者下载失败，可以使用课前资料提供的 docker-compose 文件：
-
-<img src="assets/image-20210417133020614.png">
-
-上传到 `/usr/local/bin/` 目录也可以。
-
 ## 修改文件权限
 
-修改文件权限：
+修改文件权限
 
 ```sh
 # 修改权限
@@ -135,7 +128,7 @@ chmod +x /usr/local/bin/docker-compose
 curl -L https://raw.githubusercontent.com/docker/compose/1.29.1/contrib/completion/bash/docker-compose > /etc/bash_completion.d/docker-compose
 ```
 
-如果这里出现错误，需要修改自己的 hosts 文件：
+如果这里出现错误，需要修改自己的 hosts 文件
 
 ```sh
 echo "199.232.68.133 raw.githubusercontent.com" >> /etc/hosts
@@ -168,7 +161,7 @@ docker run -d \
 
 ## 带有图形化界面版本
 
-使用 DockerCompose 部署带有图象界面的 DockerRegistry，命令如下：
+使用 DockerCompose 部署带有图象界面的 DockerRegistry，命令如下
 
 ```yaml
 version: '3.0'
@@ -190,7 +183,7 @@ services:
 
 ## 配置Docker信任地址
 
-我们的私服采用的是 http 协议，默认不被 Docker 信任，所以需要做一个配置：
+我们的私服采用的是 http 协议，默认不被 Docker 信任，所以需要做一个配置
 
 ```sh
 # 打开要修改的文件
@@ -213,11 +206,9 @@ Ubuntu 启动 Docker
 
 ```shell
 su root
-systemctl enable docker # 设置开机自动启用docker服务
-systemctl start docker # #启动docker 服务
+systemctl enable docker # 设置开机自动启用 docker 服务
+systemctl start docker # #启动 docker 服务
 ```
-
-
 
 
 

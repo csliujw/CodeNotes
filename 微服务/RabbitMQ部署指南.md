@@ -12,13 +12,7 @@
 docker pull rabbitmq:3-management
 ```
 
-方式二：从本地加载
-
-在课前资料已经提供了镜像包：
-
-<div><img src="assets/image-20210423191210349.png"></div>
-
-上传到虚拟机中后，使用命令加载镜像即可：
+方式二：从本地加载，使用命令加载镜像
 
 ```sh
 docker load -i mq.tar
@@ -26,11 +20,11 @@ docker load -i mq.tar
 
 ## 安装MQ
 
-执行下面的命令来运行 MQ 容器：
+执行下面的命令来运行 MQ 容器
 
 ```sh
 docker run \
- -e RABBITMQ_DEFAULT_USER=itcast \
+ -e RABBITMQ_DEFAULT_USER=payphone \
  -e RABBITMQ_DEFAULT_PASS=123321 \
  --name mq \
  --hostname mq1 \
@@ -42,8 +36,6 @@ docker run \
 
 # 集群部署
 
-接下来，我们看看如何安装 RabbitMQ 的集群。
-
 ## 集群分类
 
 在 RabbitMQ 的官方文档中，讲述了两种集群的配置方式：
@@ -51,7 +43,7 @@ docker run \
 - 普通模式：普通模式集群不进行数据同步，每个 MQ 都有自己的队列、数据信息（其它元数据信息如交换机等会同步）。例如我们有 2 个 MQ：mq1，和 mq2，如果你的消息在 mq1，而你连接到了 mq2，那么 mq2 会去 mq1 拉取消息，然后返回给你。如果 mq1 宕机，消息就会丢失。
 - 镜像模式：与普通模式不同，队列会在各个 mq 的镜像节点之间同步，因此你连接到任何一个镜像节点，均可获取到消息。而且如果一个节点宕机，并不会导致数据丢失。不过，这种方式增加了数据同步的带宽消耗。
 
-我们先来看普通模式集群。
+先来看普通模式集群。
 
 ## 设置网络
 
@@ -65,4 +57,4 @@ docker run \
 192.168.150.103 mq3
 ```
 
-并在每台机器上测试，是否可以 ping 通对方：
+并在每台机器上测试，是否可以 ping 通对方

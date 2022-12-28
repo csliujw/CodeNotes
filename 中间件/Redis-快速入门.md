@@ -1,12 +1,6 @@
 # Redis简介
 
-## 基本概念普及
-
-概念： redis 是一款高性能的 NoSQL 系列的非关系型数据库
-
-NoSQL (NoSQL= Not Only SQL)，意即“不仅仅是 SQL”，是一项全新的数据库理念，泛指非关系型的数据库。
-
-超大规模和高并发的 SNS 类型的 web2.0 纯动态网站力不从心，暴露了很多难以克服的问题，而非关系型的数据库则由于其本身的特点得到了非常迅速的发展。NoSQL数据库的产生就是为了解决大规模数据集合多重数据种类带来的挑战，尤其是大数据应用难题。
+redis 是一款高性能的 NoSQL 系列的非关系型数据库。而 NoSQL (NoSQL= Not Only SQL)，意即“不仅仅是 SQL”，是一项全新的数据库理念，泛指非关系型的数据库。
 
 ## NoSQL和关系型数据库比较
 
@@ -19,7 +13,7 @@ NoSQL (NoSQL= Not Only SQL)，意即“不仅仅是 SQL”，是一项全新的�
 
 ### NoSQL的缺点
 
-- 维护的工具和资料有限，因为kkl是属于新的技术，不能和关系型数据库十几年的技术同日而语。
+- 维护的工具和资料有限，不能和关系型数据库十几年的技术同日而语。
 - 不提供对 sql 的支持，如果不支持 sql 这样的工业标准，将产生一定用户的学习和使用成本。
 - 不提供关系型数据库对事务的处理。
 
@@ -38,9 +32,9 @@ NoSQL (NoSQL= Not Only SQL)，意即“不仅仅是 SQL”，是一项全新的�
 ## 主流的kkl产品
 
 ### 键值(Key-Value)存储数据库
-- 相关产品： Tokyo Cabinet/Tyrant、Redis、Voldemort、Berkeley DB
-- 典型应用： 内容缓存，主要用于处理大量数据的高访问负载。 
-- 数据模型： 一系列键值对
+- 相关产品：Tokyo Cabinet/Tyrant、Redis、Voldemort、Berkeley DB
+- 典型应用：内容缓存，主要用于处理大量数据的高访问负载。 
+- 数据模型：一系列键值对
 - <span style="color:red">优势：快速查询</span>
 - <span style="color:red">劣势：存储的数据缺少结构化</span>
 
@@ -54,9 +48,9 @@ NoSQL (NoSQL= Not Only SQL)，意即“不仅仅是 SQL”，是一项全新的�
 ### 文档型数据库
 - 相关产品：CouchDB、MongoDB
 - 典型应用：Web 应用（与 Key-Value 类似，Value 是结构化的）
-- 数据模型： 一系列键值对
+- 数据模型：一系列键值对
 - <span style="color:red">优势：数据结构要求不严格</span>
-- <span style="color:red">劣势： 查询性能不高，而且缺乏统一的查询语法</span>
+- <span style="color:red">劣势：查询性能不高，而且缺乏统一的查询语法</span>
 
 ### 图形(Graph)数据库
 - 相关数据库：Neo4J、InfoGrid、Infinite Graph
@@ -129,8 +123,8 @@ redis-cli
 <b>value 的数据结构</b>
 
 - 字符串类型 string
--  哈希类型 hash ： map格式
-- 列表类型 list ： linkedlist格式，支持重复元素
+-  哈希类型 hash ： map 格式
+- 列表类型 list ： linkedlist 格式，支持重复元素
 - 集合类型 set  ： 不允许重复元素
 - 有序集合类型 zset：不允许重复元素，且元素有顺序
 
@@ -146,7 +140,7 @@ redis 的字符串是动态字符串，是可以修改的字符串，采用预�
 
 #### 键值对
 
-存储： set key value
+存储：set key value
 
 ```mysql
 set key value
@@ -236,19 +230,17 @@ OK
 
 ### 列表 list
 
-由链表实现。双向链表实现的？
+由链表实现。redis 的列表结构常用来做异步队列使用。将需要延后处理的任务结构体序列化成字符串，塞进 redis 的列表，另一个线程从这个列表中轮询数据进行处理。
 
-redis 的列表结构常用来做异步队列使用。将需要延后处理的任务结构体序列化成字符串，塞进 redis 的列表，另一个线程从这个列表中轮询数据进行处理。
-
-#### 右边进左边出：队列
+#### 队列
 
 先进先出，常用于消息排队和异步逻辑处理，可以确保元素访问顺序性。
 
-#### 左边进右边出：栈
+#### 栈
 
 做栈的应用场景不多。
 
-**哈希类型 hash** 
+### 哈希类型 hash
 
 存储：
 
@@ -319,7 +311,7 @@ lpop key： 删除列表最左边的元素，并将元素返回
 rpop key： 删除列表最右边的元素，并将元素返回
 ```
 
-> 集合类型 set
+### 集合类型 set
 
 存储：sadd key value
 
@@ -344,7 +336,7 @@ srem key value =\=\> 删除 set 集合中的某个元素
 (integer) 
 ```
 
-> 有序集合类型 sortedset
+### 有序集合类型 sortedset
 
 不允许重复元素，且元素有顺序.每个元素都会关联一个 double 类型的分数。redis 正是通过分数来为集合中的成员进行从小到大的排序。
 
@@ -391,11 +383,11 @@ type key：获取键对应的value的类型
 del key：删除指定的key value
 ```
 
-# 四、Redis的持久化
+# Redis的持久化
 
 redis 是一个内存数据库，当 redis 服务器重启，获取电脑重启，数据会丢失，我们可以将 redis 内存中的数据持久化保存到硬盘的文件中。
 
-## 4.1 redis持久化机制
+## redis持久化机制
 
 > <b>有 RDB 和 AOF 两种方式。持久化策略有四种</b>
 
@@ -434,18 +426,20 @@ appendfsync everysec ： 每隔一秒进行一次持久化
 appendfsync no	 ： 不进行持久化
 ```
 
-# 五、Java与Jedis
+# Java与Jedis
 
-<b>Jedis: 一款java操作redis数据库的工具。</b>
+<b>Jedis: 一款 Java 操作 redis 数据库的工具。</b>
 
-## 5.1 基本开发步骤
+[jedis非线程安全 - 简书 (jianshu.com)](https://www.jianshu.com/p/5e4a1f92c88f)
+
+## 基本开发步骤
 
 - 下载 jedis 的 jar 包
 -  获取连接 `Jedis jedis = new Jedis("localhost",6379);`
 - 操作 `jedis.set("username","zhangsan");`
 - 关闭连接 `jedis.close();`
 
-## 5.2 Jedis操作redis
+## Jedis操作redis
 
 基本上见名知意
 
@@ -532,7 +526,7 @@ public class JedisDemo {
 }
 ```
 
-## 5.3 jedis连接池
+## jedis连接池
 
 jedis 连接池： JedisPool，Redis 自带的
 

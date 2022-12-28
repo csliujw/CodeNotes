@@ -366,3 +366,23 @@ mybatis-plus.configuration.cache-enabled=false
 
 # MyBatis-Plus 高级
 
+## 自定义SQL
+
+配置文件，启用 SqlRunner
+
+```properties
+mybatis-plus.global-config.enable-sql-runner=true
+```
+
+执行代码
+
+```java
+private void updateUserRating(Player one, boolean win) {
+    int rating = win ? 5 : -5;
+    // SqlRunner 无需手动注入
+    SqlRunner.db().update("update user set rating = rating + {0},count=count+1 where id = {1}", rating, one.getId());
+}
+```
+
+
+

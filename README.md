@@ -24,11 +24,15 @@
 
 [VS Code 编写C++代码, 没有语法检查解决办法_thats_what_I_thought的博客-CSDN博客](https://blog.csdn.net/qq_43197644/article/details/124025823)
 
+[理解HTTP幂等性 - Todd Wei - 博客园 (cnblogs.com)](https://www.cnblogs.com/weidagang2046/archive/2011/06/04/idempotence.html)
+
+[CUDA编程入门极简教程 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/34587739)
+
 ## 📝期刊论文
 
 [从顶会层面看科研！计算机顶级会议大盘点（下） - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/397937922)
 
-[(27条消息) 【科研分享】推荐系统SCI顶会及顶级期刊 更新于2022-07-13_JinyuZ1996的博客-CSDN博客_推荐系统期刊](https://blog.csdn.net/qq_39381654/article/details/124019943)
+[推荐系统SCI顶会及顶级期刊 更新于2022-07-13_JinyuZ1996的博客-CSDN博客_推荐系统期刊](https://blog.csdn.net/qq_39381654/article/details/124019943)
 
 ## 🔧工具
 
@@ -77,7 +81,7 @@
 ## ☕️Java
 
 - [基础语法](JavaSE/JavaSE入门.md)
-- [Java编程思想 | On Java](JavaSE/JavaSE基础.md)
+- [Java编程思想&On Java](JavaSE/JavaSE基础.md)
 - [JavaSE加强](JavaSE/JavaSE加强.md)
 - [JavaWeb开发基础](JavaWeb/JavaWeb开发基础.md)
 - [深入分析JavaWeb技术内幕读书笔记](JavaWeb/深入分析JavaWeb技术内幕.md)

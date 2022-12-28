@@ -33,25 +33,25 @@ Spring MVC 是 Spring 提供的一个实现了 Web MVC 设计模式的轻量级 
 
 <div align="center"><img src="img/mvc/springmvc01.jpg"></div>
 
-按照图中所标注的序号，Spring MVC 程序的完整执行流程如下。
+按照图中所标注的序号，Spring MVC 程序的完整执行流程如下
 
-1️⃣用户通过浏览器向服务器发送请求，请求会被 SpringMVC 的前端控制器 DispatcherServlet 所拦截。
+1️⃣用户通过浏览器向服务器发送请求，请求会被 SpringMVC 的前端控制器 DispatcherServlet 所拦截
 
-2️⃣DispatcherServlet 拦截到请求后，会调用 HandlerMapping 处理器映射器。
+2️⃣DispatcherServlet 拦截到请求后，会调用 HandlerMapping 处理器映射器
 
-3️⃣处理器映射器根据请求 URL 找到具体的处理器，生成处理器对象及处理器拦截器（如果有则生成）一并返回给 DispatcherServlet。
+3️⃣处理器映射器根据请求 URL 找到具体的处理器，生成处理器对象及处理器拦截器（如果有则生成）一并返回给 DispatcherServlet
 
-4️⃣DispatcherServlet 会通过返回信息选择合适的 HandlerAdapter（处理器适配器）。
+4️⃣DispatcherServlet 会通过返回信息选择合适的 HandlerAdapter（处理器适配器）
 
-5️⃣HandlerAdapter 会调用并执行 Handler（处理器），这里的处理器指的就是程序中编写的 Controller 类，也被称之为后端控制器。
+5️⃣HandlerAdapter 会调用并执行 Handler（处理器），这里的处理器指的就是程序中编写的 Controller 类，也被称之为后端控制器
 
-6️⃣Controller 执行完成后，会返回一个 ModelAndView 对象，该对象中会包含视图名或包含模型和视图名。
+6️⃣Controller 执行完成后，会返回一个 ModelAndView 对象，该对象中会包含视图名或包含模型和视图名
 
-7️⃣HandlerAdapter 将 ModelAndView 对象返回给 DispatcherServlet。
+7️⃣HandlerAdapter 将 ModelAndView 对象返回给 DispatcherServlet
 
-8️⃣DispatcherServlet 会根据 ModelAndView 对象选择一个合适的 ViewReslover（视图解析器）。
+8️⃣DispatcherServlet 会根据 ModelAndView 对象选择一个合适的 ViewReslover（视图解析器）
 
-9️⃣ViewReslover 解析后，会向 DispatcherServlet 中返回具体的 View（视图）。
+9️⃣ViewReslover 解析后，会向 DispatcherServlet 中返回具体的 View（视图）
 
 🔟DispatcherServlet 对 View 进行渲染（即将模型数据填充至视图中）
 

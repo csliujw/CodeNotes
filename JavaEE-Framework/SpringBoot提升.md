@@ -1282,7 +1282,6 @@ public @interface ConditionalOnClass {
 	 * @return the class names that must be present.
 	 */
 	String[] name() default {};
-
 }
 ```
 
@@ -1299,7 +1298,6 @@ public interface Condition {
 	 * or {@code false} to veto the annotated component's registration
 	 */
 	boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata);
-
 }
 ```
 
@@ -1469,7 +1467,7 @@ public class WebMvcAutoConfiguration {}
 
 > 自定义自动装配流程如下：
 
-- 自定义一个`HelloWorldAutoConfiguration`配置类。
+- 自定义一个 `HelloWorldAutoConfiguration` 配置类。
 
 - 在 `resources` 下新建 `META-INF` 目录，在 `META-INF` 目录下创建文件 `spring.factories`，在该目录下配置自动装配信息
 
@@ -2255,7 +2253,7 @@ public class Hello{
 </plugin>
 ```
 
-<b>小提示</b>：Spring Boot spring-boot-starter-parent 中的 spring-boot-dependencies 有定义各个包需要的版本！
+<b>小提示：</b>Spring Boot spring-boot-starter-parent 中的 spring-boot-dependencies 有定义各个包需要的版本！
 
 `maven命令 [打包]：mvn -Dmaven.test.skpi -u clean package`
 

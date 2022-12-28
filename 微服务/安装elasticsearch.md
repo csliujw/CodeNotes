@@ -12,24 +12,15 @@ docker network create es-net
 
 ## 加载镜像
 
-这里我们采用 elasticsearch 的 7.12.1 版本的镜像，这个镜像体积非常大，接近 1G。不建议大家自己 pull。
+这里采用 elasticsearch 的 7.12.1 版本的镜像，这个镜像体积非常大，接近 1G。
 
-课前资料提供了镜像的 tar 包：
+也可以将现成的镜像上传到虚拟机中，然后运行命令加载 `docker load -i es.tar`
 
-<div align="center"><img src="assets/image-20210510165308064.png"></div>
-
-大家将其上传到虚拟机中，然后运行命令加载即可：
-
-```sh
-# 导入数据
-docker load -i es.tar
-```
-
-同理还有 `kibana` 的 tar 包也需要这样做。
+`kibana` 的 tar 包也需要这样做。
 
 ## 运行
 
-运行 docker 命令，部署单点 es：
+运行 docker 命令，部署单点 es
 
 ```sh
 docker run -d \
@@ -45,7 +36,7 @@ docker run -d \
 elasticsearch:7.12.1
 ```
 
-命令解释：
+<b>命令解释</b>
 
 - `-e "cluster.name=es-docker-cluster"` 设置集群名称
 - `-e "http.host=0.0.0.0"` 监听的地址，可以外网访问
@@ -64,7 +55,7 @@ elasticsearch:7.12.1
 
 # 部署kibana
 
-kibana 可以给我们提供一个 elasticsearch 的可视化界面，便于我们学习。
+kibana 可以提供一个 elasticsearch 的可视化界面，便于学习。
 
 ## 部署
 
@@ -97,7 +88,7 @@ docker logs -f kibana
 
 ## DevTools
 
-kibana 中提供了一个 DevTools 界面：
+kibana 中提供了一个 DevTools 界面
 
 <div align="center"><img src="assets/image-20210506102630393.png"></div>
 
@@ -124,13 +115,13 @@ docker restart elasticsearch
 
 ### 1）查看数据卷目录
 
-安装插件需要知道 elasticsearch 的 plugins 目录位置，而我们用了数据卷挂载，因此需要查看 elasticsearch 的数据卷目录，通过下面命令查看:
+安装插件需要知道 elasticsearch 的 plugins 目录位置，而我们用了数据卷挂载，因此需要查看 elasticsearch 的数据卷目录，通过下面命令查看
 
-```sh
+```shell
 docker volume inspect es-plugins
 ```
 
-显示结果：
+显示结果
 
 ```json
 [
@@ -150,15 +141,11 @@ docker volume inspect es-plugins
 
 ### 2）解压缩分词器安装包
 
-下面我们需要把课前资料中的 ik 分词器解压缩，重命名为 ik
-
-<div align="center"><img src="assets/image-20210506110249144.png"></div>
+将下载到本地的 ik 分词器解压缩，重命名为 ik
 
 ### 3）上传到es容器的插件数据卷中
 
-也就是 `/var/lib/docker/volumes/es-plugins/_data`
-
-<div align="center"><img src="assets/image-20210506110704293.png"></div>
+上传到 `/var/lib/docker/volumes/es-plugins/_data`
 
 ###  4）重启容器
 
@@ -174,7 +161,7 @@ docker logs -f es
 
 ### 5）测试
 
-IK 分词器包含两种模式：
+IK 分词器包含两种模式
 
 * `ik_smart` 最少切分，粗粒度切分，占用的内存空间少，但是匹配到的概率小些。
 
@@ -188,7 +175,7 @@ GET /_analyze
 }
 ```
 
-结果：
+结果
 
 ```json
 {
@@ -266,11 +253,11 @@ GET /_analyze
 
 所以我们的词汇也需要不断的更新，IK 分词器提供了扩展词汇的功能。
 
-1）打开 IK 分词器 config 目录：
+1）打开 IK 分词器 config 目录
 
 <div align="center"><img src="assets/image-20210506112225508.png"></div>
 
-2）在 IKAnalyzer.cfg.xml 配置文件内容添加：
+2）在 IKAnalyzer.cfg.xml 配置文件内容添加
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -320,7 +307,7 @@ GET /_analyze
 
 IK 分词器也提供了强大的停用词功能，让我们在索引时就直接忽略当前的停用词汇表中的内容。
 
-1）IKAnalyzer.cfg.xml 配置文件内容添加：
+1）IKAnalyzer.cfg.xml 配置文件内容添加
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -353,7 +340,7 @@ docker logs -f elasticsearch
 
 日志中已经成功加载 stopword.dic 配置文件
 
-5）测试效果：
+5）测试效果
 
 ```json
 GET /_analyze
@@ -392,7 +379,7 @@ GET /_analyze
 
 # 部署es集群
 
-部署 es 集群可以直接使用 docker-compose 来完成，不过要求你的 Linux 虚拟机至少有 4G 的内存空间
+部署 es 集群可以直接使用 docker-compose 来完成，不过要求 Linux 虚拟机至少有 4G 的内存空间
 
 首先编写一个 docker-compose 文件，内容如下：
 

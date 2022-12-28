@@ -1,4 +1,4 @@
-# 基础篇概述
+# 一、基础篇概述
 
 - 认识微服务
 - 分布式服务架构案例
@@ -208,7 +208,7 @@ cloud-order 表中持有 cloud-user 表中的 id 字段。
 
 <div align="center"><img src="assets/image-20210713213213075.png"></div>
 
-### 案例需求：
+### 案例需求
 
 修改 order-service 中的根据 id 查询订单业务，要求在查询订单的同时，根据订单中包含的 userId 查询出用户信息，一起返回。
 
@@ -260,9 +260,9 @@ public class OrderApplication {
 
 在服务调用关系中，会有两个不同的角色：
 
-<b>服务提供者</b>：一次业务中，被其它微服务调用的服务。（提供接口给其它微服务）
+<b>服务提供者：</b>一次业务中，被其它微服务调用的服务。（提供接口给其它微服务）
 
-<b>服务消费者</b>：一次业务中，调用其它微服务的服务。（调用其它微服务提供的接口）
+<b>服务消费者：</b>一次业务中，调用其它微服务的服务。（调用其它微服务提供的接口）
 
 <div align="center"><img src="assets/image-20210713214404481.png"></div>
 
@@ -281,7 +281,7 @@ public class OrderApplication {
 
 <div align="center"><img src="assets/image-20210713214925388.png"></div>
 
-> <b>思考：</b>
+<b>思考：</b>
 
 - `order-service` 在发起远程调用的时候，该如何得知 `user-service` 实例的 ip 地址和端口？
 - 有多个 `user-service` 实例地址，`order-service` 调用时该如何选择？
@@ -918,7 +918,7 @@ Nacos 和 Eureka 整体结构类似，服务注册、服务拉取、心跳等待
   - Nacos 支持服务列表变更的消息推送模式，服务列表更新更及时。（eureka 是 pull 而 nacos 是 pull+push）
   - Nacos 集群默认采用 AP（强调数据的可用性，服务的可用性）方式，当集群中存在非临时实例时，采用 CP（强调数据的可靠性和一致性）模式；Eureka 采用 AP 方式。
 
-# 实用篇概述
+# 二、实用篇概述
 
 - Nacos 配置管理
 - Feign 远程调用
@@ -1916,7 +1916,7 @@ spring:
             maxAge: 360000 # 这次跨域检测的有效期
 ```
 
-# 高级篇概述
+# 三、高级篇概述
 
 - 微服务保护-Sentinel
     - 流量控制
@@ -2019,7 +2019,7 @@ Sentinel 具有以下特征:
 
 1）下载
 
-sentinel 官方提供了 UI 控制台，方便我们对系统做限流设置。大家可以在 [GitHub](https://github.com/alibaba/Sentinel/releases) 下载 `sentinel-dashboad-x.x.x.jar`。
+sentinel 官方提供了 UI 控制台，方便我们对系统做限流设置。可以在 [GitHub](https://github.com/alibaba/Sentinel/releases) 下载 `sentinel-dashboad-x.x.x.jar`。
 
 2）运行
 
@@ -2055,7 +2055,7 @@ java -Dserver.port=8090 -jar sentinel-dashboard-1.8.1.jar
 
 <div align="center"><img src="img/image-20210715191134448.png"></div>
 
-这是因为我们还没有与微服务整合。
+这是因为还没有与微服务整合。
 
 ### 微服务整合Sentinel
 
@@ -3827,7 +3827,7 @@ XA 是规范，目前主流数据库都实现了这种规范，实现的原理�
     - <span style="color:orange">如果一阶段都成功，则通知所有事务参与者，提交事务</span>
     - <span style="color:orange">如果一阶段任意一个参与者失败，则通知所有事务参与者回滚事务</span>
 
-### Seata的XA模型
+#### Seata的XA模型
 
 Seata 对原始的 XA 模式做了简单的封装和改造，以适应自己的事务模型，基本架构如图（不看 TM 部分和前面说的 XA 模式基本一样，只不过是多了 TM 做整个事务的注册和管理）：
 
@@ -3899,17 +3899,18 @@ AT 模式同样是分阶段提交的事务模型，不过缺弥补了 XA 模型�
 <b>阶段一 RM 的工作：</b>
 
 - 注册分支事务
-- 记录 undo-log（数据快照）
+- 记录 undo-log（数据快照，更新前的数据和更新后的数据）
 - 执行业务 sql 并提交
 - 报告事务状态
 
 <b>阶段二提交时 RM 的工作：</b>
 
-- 删除 undo-log 即可
+- 因为事务已经提交了，此时只需删除 undo-log 即可
+- 这个过程是异步的，因为事务已经提交了，不必急着去删除日志
 
 <b>阶段二回滚时 RM 的工作：</b>
 
-- 根据 undo-log 恢复数据到更新前
+- 根据 undo-log 恢复数据到更新前（恢复时会判断，更新后的快照和当前数据库的值是不是一样，如果一样说明可以恢复，如果不一样，说明中间被人修改了，不能恢复；记录异常，人工恢复）
 
 #### 流程梳理
 
@@ -3976,9 +3977,15 @@ AT 模式下，当前分支事务执行流程如下
 <div align="center"><img src="img/image-20210724181541234.png"></div>
 
 
-解决思路就是引入了全局锁的概念。在释放 DB 锁之前，先拿到全局锁。避免同一时刻有另外一个事务来操作当前数据。
+解决思路就是引入了全局锁的概念。在释放 DB 锁之前，先拿到全局锁，只有持有全局锁的事务才可以拿到记录的执行权。避免同一时刻有另外一个事务来操作当前数据。
 
 <div align="center"><img src="img/image-20210724181843029.png"></div>
+
+全局锁是由 TC 记录的，内部记录下谁在访问，而 XA 的锁是执行完业务不提交，是数据库的锁。数据库的锁，不释放，任何人都无法操作这条数据（无法修改，删除，不加锁的 select 是可以执行的），TC 的锁只是记录操纵这行表的全局事务，由 seata 管理的，如果这个事务不是由 seata 管理的，去操作是不会有影响的。
+
+如果一个由 seata 管理的全局事务操作了 money 字段，一个不由 seata 管理的全局事务也操作了 money 字段，这样就锁不住数据了，会出现问题。
+
+<div align="center"><img src="img/image-20221214162002973.png"></div>
 
 #### 优缺点
 
@@ -3999,20 +4006,20 @@ AT 模式中的快照生成、回滚等动作都是由框架自动完成，没�
 
 只不过，AT 模式需要一个表来记录全局锁、另一张表来记录数据快照 undo_log。
 
-1）导入数据库表，记录全局锁
+<b>1）导入数据库表，记录全局锁</b>
 
-导入课前资料提供的 sql 文件：seata-at.sql，其中 lock_table 导入到 TC 服务关联的数据库，undo_log 表导入到微服务关联的数据库
+导入提供的 sql 文件：seata-at.sql，其中 lock_table 导入到 TC 服务关联的数据库，undo_log 表导入到微服务关联的数据库
 
 <div align="center"><img src="img/image-20210724182217272.png"></div>
 
-2）修改 application.yml 文件，将事务模式修改为 AT 模式即可
+<b>2）修改 application.yml 文件，将事务模式修改为 AT 模式即可</b>
 
 ```yaml
 seata:
   data-source-proxy-mode: AT # 默认就是AT
 ```
 
-3）重启服务并测试
+<b>3）重启服务并测试</b>
 
 ### TCC模式
 
@@ -4023,6 +4030,8 @@ TCC 模式与 AT 模式非常相似，每阶段都是独立事务，不同的是
 - Confirm：完成资源操作业务；要求 Try 成功 Confirm 一定要能成功。
 
 - Cancel：预留资源释放，可以理解为 try 的反向操作。
+
+扣减库存和扣减余额适合用 TCC，新增数据则不适合。<b style="color:red">难</b>
 
 #### 流程分析
 
@@ -4081,6 +4090,16 @@ Seata 中的 TCC 模型依然延续之前的事务架构
 - 软状态，事务是最终一致
 - 需要考虑 Confirm 和 Cancel 的失败情况，做好幂等处理
 
+#### 案例
+
+- 修改 account-service，编写 try、confirm、cancel 逻辑
+- try 业务：添加冻结金额，扣减可用金额
+- confirm 业务：删除冻结金额
+- cancel 业务：删除冻结金额，恢复可用金额
+- 保证 confirm、cancel 接口的幂等性
+- 允许空回滚
+- 拒绝业务悬挂
+
 #### 事务悬挂和空回滚
 
 ##### 1）空回滚
@@ -4089,13 +4108,13 @@ Seata 中的 TCC 模型依然延续之前的事务架构
 
 <div align="center"><img src="img/image-20210724183426891.png"></div>
 
-执行 cancel 操作时，应当判断 try 是否已经执行，如果尚未执行，则应该空回滚。
+<span style="color:orange">执行 cancel 操作时，应当判断 try 是否已经执行，如果尚未执行，则应该空回滚。</span>
 
 ##### 2）业务悬挂
 
 对于已经空回滚的业务，之前被阻塞的 try 操作恢复，继续执行 try，就永远不可能 confirm 或 cancel ，事务一直处于中间状态，这就是<b>业务悬挂</b>。
 
-执行 try 操作时，应当判断 cancel 是否已经执行过了，如果已经执行，应当阻止空回滚后的 try 操作，避免悬挂
+<span style="color:orange">执行 try 操作时，应当判断 cancel 是否已经执行过了，如果已经执行，应当阻止空回滚后的 try 操作，避免悬挂。</span>
 
 #### 实现TCC模式
 
@@ -4119,22 +4138,17 @@ CREATE TABLE `account_freeze_tbl` (
 - freeze_money：用来记录用户冻结金额
 - state：用来记录事务状态
 
-那此时，我们的业务开怎么做呢？
+那此时，我们的业务该怎么做呢？
 
-- Try 业务：
-    - 记录冻结金额和事务状态到 account_freeze 表
-    - 扣减 account 表可用金额
-- Confirm 业务
-    - 根据 xid 删除 account_freeze 表的冻结记录
-- Cancel 业务
-    - 修改 account_freeze 表，冻结金额为 0，state 为 2
-    - 修改 account 表，恢复可用金额
-- 如何判断是否空回滚？
-    - cancel 业务中，根据 xid 查询 account_freeze，如果为 null 则说明 try 还没做，需要空回滚
-- 如何避免业务悬挂？
-    - try 业务中，根据 xid 查询 account_freeze ，如果已经存在则证明 Cancel 已经执行，拒绝执行 try 业务
+| 业务                 | 做法                                                         |
+| -------------------- | ------------------------------------------------------------ |
+| Try 业务             | 记录冻结金额和事务状态到 account_freeze 表<br>扣减 account 表可用金额 |
+| Confirm 业务         | 根据 xid 删除 account_freeze 表的冻结记录                    |
+| Cancel 业务          | 修改 account_freeze 表，冻结金额为 0，state 为 2<br>修改 account 表，恢复可用金额 |
+| 如何判断是否空回滚？ | cancel 业务中，根据 xid 查询 account_freeze，如果为 null 则说明 try 还没做，需要空回滚 |
+| 如何避免业务悬挂？   | try 业务中，根据 xid 查询 account_freeze ，如果已经存在则证明 Cancel 已经执行，拒绝执行 try 业务 |
 
-接下来，我们改造 account-service，利用 TCC 实现余额扣减功能。
+接下来，改造 account-service，利用 TCC 实现余额扣减功能。
 
 ##### 2）声明TCC接口
 
@@ -4152,7 +4166,8 @@ import io.seata.rm.tcc.api.TwoPhaseBusinessAction;
 
 @LocalTCC
 public interface AccountTCCService {
-
+	
+    // 声明 try 方法，deduct
     @TwoPhaseBusinessAction(name = "deduct", commitMethod = "confirm", rollbackMethod = "cancel")
     void deduct(@BusinessActionContextParameter(paramName = "userId") String userId,
                 @BusinessActionContextParameter(paramName = "money")int money);
@@ -4192,9 +4207,18 @@ public class AccountTCCServiceImpl implements AccountTCCService{
 
     @Override
     @Transactional
+    // 做资源检测和预留的。余额用的 unsigned int, 不可能为负，变成负数会报错，自动回滚
     public void deduct(String userId, int money) {
         // 0.获取事务id
-        String xid = RootContext.getXID();
+        String xid = RootContext.getXID();       
+        
+        // 判断 freeze 中是否有冻结记录，如果有，一定是 CANCEL 执行过，要拒绝业务
+        AccountFreeze oldFreeze = freezeMapper.selectById(xid);
+        if(oldFreeze != null){
+            // CANCCEL 执行过，要拒绝业务
+            return;
+        }
+        
         // 1.扣减可用余额
         accountMapper.deduct(userId, money);
         // 2.记录冻结金额，事务状态
@@ -4220,12 +4244,30 @@ public class AccountTCCServiceImpl implements AccountTCCService{
         // 0.查询冻结记录
         String xid = ctx.getXid();
         AccountFreeze freeze = freezeMapper.selectById(xid);
-
+		
+        // 空回滚判断，判断 freeze 是否为 null，为 null 证明 try 没执行，
+        if(freeze == null){
+            freeze = new AccountFreeze();
+            freeze.setUserId(userId);
+            freeze.setFreezeMoney(0);
+            freeze.setState(AccountFreeze.State.CANCEL);
+            freeze.setXid(xid);
+            freezeMapper.insert(freeze);
+            return true;
+        }
+        
+        // 2.幂等判断 只要 CANCEL 执行了状态一定是 CANCEL，可以通过状态值来判断
+        if(freeze.getState() == AccountFreeze.State.CANCEL){
+            // 处理过了 CANCEL，无需处理
+            return true;
+        }
+        
         // 1.恢复可用余额
         accountMapper.refund(freeze.getUserId(), freeze.getFreezeMoney());
         // 2.将冻结金额清零，状态改为CANCEL
         freeze.setFreezeMoney(0);
         freeze.setState(AccountFreeze.State.CANCEL);
+        // 
         int count = freezeMapper.updateById(freeze);
         return count == 1;
     }
@@ -4248,7 +4290,7 @@ Seata 官网对于 Saga 的指南：https://seata.io/zh-cn/docs/user/saga.html
 
 <div align="center"><img src="img/image-20210724184846396.png"></div>
 
-Saga 也分为两个阶段：
+<b>Saga 也分为两个阶段</b>
 
 - 一阶段：直接提交本地事务
 - 二阶段：成功则什么都不做；失败则通过编写补偿业务来回滚
@@ -5559,4 +5601,1555 @@ spring:
         - 192.168.150.101:8001
         - 192.168.150.101:8002
         - 192.168.150.101:8003
+```
+
+# 多级缓存
+
+## 什么是多级缓存
+
+传统的缓存策略一般是请求到达 Tomcat 后，先查询 Redis，如果未命中则查询数据库，如图
+
+<div align="center"><img src="img/image-20210821075259137.png"></div>
+
+存在下面的问题
+
+- 请求要经过 Tomcat 处理，Tomcat 的性能成为整个系统的瓶颈
+- Redis 缓存失效时，会对数据库产生冲击
+
+
+多级缓存就是充分利用请求处理的每个环节，分别添加缓存，减轻 Tomcat 压力，提升服务性能
+
+- 浏览器访问静态资源时，优先读取浏览器本地缓存
+- 访问非静态资源（ajax 查询数据）时，访问服务端
+- 请求到达 Nginx 后，优先读取 Nginx 本地缓存
+- 如果 Nginx 本地缓存未命中，则去直接查询 Redis（不经过 Tomcat）
+- 如果 Redis 查询未命中，则查询 Tomcat
+- 请求进入 Tomcat 后，优先查询 JVM 进程缓存
+- 如果 JVM 进程缓存未命中，则查询数据库
+
+<div align="center"><img src="img/image-20210821075558137.png"></div>
+
+
+在多级缓存架构中，Nginx 内部需要编写本地缓存查询、Redis 查询、Tomcat 查询的业务逻辑，因此这样的 nginx 服务不再是一个反向代理服务器，而是一个编写业务的 Web 服务器了。
+
+
+因此这样的业务 Nginx 服务也需要搭建集群来提高并发，再有专门的 nginx 服务来做反向代理，如图
+
+<div align="center"><img src="img/image-20210821080511581.png"></div>
+
+
+另外，我们的 Tomcat 服务将来也会部署为集群模式
+
+<div align="center"><img src="img/image-20210821080954947.png"></div>
+
+
+可见，多级缓存的关键有两个
+
+- 一个是在 nginx 中编写业务，实现 nginx 本地缓存、Redis、Tomcat 的查询
+
+- 另一个就是在 Tomcat 中实现 JVM 进程缓存
+
+其中 Nginx 编程则会用到 OpenResty 框架结合 Lua 这样的语言。这也是多级缓存的难点和重点。
+
+
+## JVM进程缓存
+
+
+为了演示多级缓存的案例，我们先准备一个商品查询的业务。
+
+### 导入项目
+
+参考课前资料的：《案例导入说明.md》
+
+<div align="center"><img src="img/image-20210821081418456.png"></div> 
+
+
+
+### 初识Caffeine
+
+缓存在日常开发中启动至关重要的作用，由于是存储在内存中，数据的读取速度是非常快的，能大量减少对数据库的访问，减少数据库的压力。我们把缓存分为两类
+
+- 分布式缓存，例如 Redis
+    - 优点：存储容量更大、可靠性更好、可以在集群间共享
+    - 缺点：访问缓存有网络开销
+    - 场景：缓存数据量较大、可靠性要求较高、需要在集群间共享
+- 进程本地缓存，例如 HashMap、GuavaCache
+    - 优点：读取本地内存，没有网络开销，速度更快
+    - 缺点：存储容量有限、可靠性较低、无法共享
+    - 场景：性能要求较高，缓存数据量较小
+
+此处利用 Caffeine 框架来实现 JVM 进程缓存。
+
+
+Caffeine 是一个基于 Java8 开发的，提供了近乎最佳命中率的高性能的本地缓存库。目前 Spring 内部的缓存使用的就是 Caffeine。GitHub 地址：https://github.com/ben-manes/caffeine
+
+Caffeine 的性能非常好，下图是官方给出的性能对比
+
+<div align="center"><img src="img/image-20210821081826399.png"></div>
+
+可以看到 Caffeine 的性能遥遥领先！
+
+缓存使用的基本 API
+
+```java
+@Test
+void testBasicOps() {
+    // 构建cache对象
+    Cache<String, String> cache = Caffeine.newBuilder().build();
+
+    // 存数据
+    cache.put("gf", "迪丽热巴");
+
+    // 取数据
+    String gf = cache.getIfPresent("gf");
+    System.out.println("gf = " + gf);
+
+    // 取数据，包含两个参数：
+    // 参数一：缓存的key
+    // 参数二：Lambda表达式，表达式参数就是缓存的key，方法体是查询数据库的逻辑
+    // 优先根据key查询JVM缓存，如果未命中，则执行参数二的Lambda表达式
+    String defaultGF = cache.get("defaultGF", key -> {
+        // 根据key去数据库查询数据
+        return "柳岩";
+    });
+    System.out.println("defaultGF = " + defaultGF);
+}
+```
+
+
+Caffeine 既然是缓存的一种，肯定需要有缓存的清除策略，不然的话内存总会有耗尽的时候。
+
+Caffeine 提供了三种缓存驱逐策略：
+
+- <b>基于容量：</b>设置缓存的数量上限
+
+    ```java
+    // 创建缓存对象
+    Cache<String, String> cache = Caffeine.newBuilder()
+        .maximumSize(1) // 设置缓存大小上限为 1
+        .build();
+    ```
+
+- <b>基于时间：</b>设置缓存的有效时间
+
+    ```java
+    // 创建缓存对象
+    Cache<String, String> cache = Caffeine.newBuilder()
+        // 设置缓存有效期为 10 秒，从最后一次写入开始计时 
+        .expireAfterWrite(Duration.ofSeconds(10)) 
+        .build();
+    
+    ```
+
+- <b>基于引用：</b>设置缓存为软引用或弱引用，利用 GC 来回收缓存数据。性能较差，不建议使用。
+
+
+> <b>注意：</b>在默认情况下，当一个缓存元素过期的时候，Caffeine 不会自动立即将其清理和驱逐。而是在一次读或写操作后，或者在空闲时间完成对失效数据的驱逐。
+
+
+### 实现JVM进程缓存
+
+#### 需求
+
+<b>利用 Caffeine 实现下列需求</b>
+
+- 给根据 id 查询商品的业务添加缓存，缓存未命中时查询数据库
+- 给根据 id 查询商品库存的业务添加缓存，缓存未命中时查询数据库
+- 缓存初始大小为 100
+- 缓存上限为 10000
+
+
+#### 实现
+
+首先，需要定义两个 Caffeine 的缓存对象，分别保存商品、库存的缓存数据。
+
+在 item-service 的 `com.heima.item.config` 包下定义 `CaffeineConfig` 类
+
+```java
+package com.heima.item.config;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.heima.item.pojo.Item;
+import com.heima.item.pojo.ItemStock;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class CaffeineConfig {
+
+    @Bean
+    public Cache<Long, Item> itemCache(){
+        return Caffeine.newBuilder()
+                .initialCapacity(100)
+                .maximumSize(10_000)
+                .build();
+    }
+
+    @Bean
+    public Cache<Long, ItemStock> stockCache(){
+        return Caffeine.newBuilder()
+                .initialCapacity(100)
+                .maximumSize(10_000)
+                .build();
+    }
+}
+```
+
+
+然后，修改 item-service 中的 `com.heima.item.web` 包下的 ItemController 类，添加缓存逻辑：
+
+```java
+@RestController
+@RequestMapping("item")
+public class ItemController {
+
+    @Autowired
+    private IItemService itemService;
+    @Autowired
+    private IItemStockService stockService;
+
+    @Autowired
+    private Cache<Long, Item> itemCache;
+    @Autowired
+    private Cache<Long, ItemStock> stockCache;
+    
+    // ...其它略
+    
+    @GetMapping("/{id}")
+    public Item findById(@PathVariable("id") Long id) {
+        return itemCache.get(id, key -> itemService.query()
+                .ne("status", 3).eq("id", key)
+                .one()
+        );
+    }
+
+    @GetMapping("/stock/{id}")
+    public ItemStock findStockById(@PathVariable("id") Long id) {
+        return stockCache.get(id, key -> stockService.getById(key));
+    }
+}
+```
+
+
+## Lua语法入门
+
+Nginx 编程需要用到 Lua 语言，因此我们必须先入门 Lua 的基本语法。
+
+### 初识Lua
+
+Lua 是一种轻量小巧的脚本语言，用标准 C 语言编写并以源代码形式开放， 其设计目的是为了嵌入应用程序中，从而为应用程序提供灵活的扩展和定制功能。官网：https://www.lua.org/
+
+<div align="center"><img src="img/image-20210821091437975.png"></div>
+
+
+Lua 经常嵌入到 C 语言开发的程序中，例如游戏开发、游戏插件等。
+
+Nginx 本身也是 C 语言开发，因此也允许基于 Lua 做拓展。
+
+
+### HelloWorld
+
+CentOS7 默认已经安装了 Lua 语言环境，所以可以直接运行 Lua 代码。
+
+1）在 Linux 虚拟机的任意目录下，新建一个 hello.lua 文件
+
+<div align="center"><img src="img/image-20210821091621308.png"></div>
+
+2）添加下面的内容
+
+```lua
+print("Hello World!")  
+```
+
+3）运行
+
+<div align="center"><img src="img/image-20210821091638140.png"></div>
+
+
+### 变量和循环
+
+学习任何语言必然离不开变量，而变量的声明必须先知道数据的类型。
+
+#### Lua的数据类型
+
+Lua 中支持的常见数据类型包括
+
+<div align="center"><img src="img/image-20210821091835406.png"></div>
+
+另外，Lua 提供了 type() 函数来判断一个变量的数据类型
+
+<div align="center"><img src="img/image-20210821091904332.png"></div>
+
+#### 声明变量
+
+Lua 声明变量的时候无需指定数据类型，而是用 local 来声明变量为局部变量
+
+```lua
+-- 声明字符串，可以用单引号或双引号，
+local str = 'hello'
+-- 字符串拼接可以使用 ..
+local str2 = 'hello' .. 'world'
+-- 声明数字
+local num = 21
+-- 声明布尔类型
+local flag = true
+```
+
+
+Lua 中的 table 类型既可以作为数组，又可以作为 Java 中的 map 来使用。数组就是特殊的 table，key 是数组角标而已
+
+```lua
+-- 声明数组 ，key为角标的 table
+local arr = {'java', 'python', 'lua'}
+-- 声明table，类似java的map
+local map =  {name='Jack', age=21}
+```
+
+<span style="color:orange">Lua 中的数组角标是从 1 开始，</span>访问的时候与 Java 中类似
+
+```lua
+-- 访问数组，lua数组的角标从1开始
+print(arr[1])
+```
+
+Lua 中的 table 可以用 key 来访问
+
+```lua
+-- 访问table
+print(map['name'])
+print(map.name)
+```
+
+
+#### 循环
+
+对于 table，我们可以利用 for 循环来遍历。不过数组和普通 table 遍历略有差异。
+
+遍历数组
+
+```lua
+-- 声明数组 key为索引的 table
+local arr = {'java', 'python', 'lua'}
+-- 遍历数组
+for index,value in ipairs(arr) do
+    print(index, value) 
+end
+```
+
+遍历普通 table
+
+```lua
+-- 声明map，也就是table
+local map = {name='Jack', age=21}
+-- 遍历table
+for key,value in pairs(map) do
+   print(key, value) 
+end
+```
+
+### 条件控制、函数
+
+Lua 中的条件控制和函数声明与 Java 类似。
+
+#### 函数
+
+定义函数的语法
+
+```lua
+function 函数名( argument1, argument2..., argumentn)
+    -- 函数体
+    return 返回值
+end
+```
+
+
+例如，定义一个函数，用来打印数组
+
+```lua
+function printArr(arr)
+    for index, value in ipairs(arr) do
+        print(value)
+    end
+end
+```
+
+
+#### 条件控制
+
+类似 Java 的条件控制，例如 if、else 语法
+
+```lua
+if(布尔表达式)
+then
+   --[ 布尔表达式为 true 时执行该语句块 --]
+else
+   --[ 布尔表达式为 false 时执行该语句块 --]
+end
+
+```
+
+
+与 Java 不同，布尔表达式中的逻辑运算是基于英文单词
+
+<div align="center"><img src="img/image-20210821092657918.png"></div>
+
+
+#### 案例
+
+需求：自定义一个函数，可以打印 table，当参数为 nil 时，打印错误信息
+
+
+```lua
+function printArr(arr)
+    if not arr then
+        print('数组不能为空！')
+    end
+    for index, value in ipairs(arr) do
+        print(value)
+    end
+end
+```
+
+## 实现多级缓存
+
+多级缓存的实现离不开 Nginx 编程，而 Nginx 编程又离不开 OpenResty。
+
+### 安装OpenResty
+
+OpenResty® 是一个基于 Nginx 的高性能 Web 平台，用于方便地搭建能够处理超高并发、扩展性极高的动态 Web 应用、Web 服务和动态网关。具备下列特点：
+
+- 具备 Nginx 的完整功能
+- 基于 Lua 语言进行扩展，集成了大量精良的 Lua 库、第三方模块
+- 允许使用 Lua 自定义业务逻辑**、**自定义库
+
+官方网站：https://openresty.org/cn/
+
+<div align="center"><img src="img/image-20210821092902946.png"></div>
+
+
+
+安装 Lua 可以参考课前资料提供的《安装OpenResty.md》：
+
+<div align="center"><img src="img/image-20210821092941139.png"></div> 
+
+### OpenResty快速入门
+
+我们希望达到的多级缓存架构如图：
+
+<div align="center"><img src="img/yeVDlwtfMx.png"></div>
+
+其中：
+
+- windows 上的 nginx 用来做反向代理服务，将前端的查询商品的 ajax 请求代理到 OpenResty 集群
+
+- OpenResty 集群用来编写多级缓存业务
+
+#### 反向代理流程
+
+现在，商品详情页使用的是假的商品数据。不过在浏览器中，可以看到页面有发起 ajax 请求查询真实商品数据。
+
+这个请求如下：
+
+<div align="center"><img src="img/image-20210821093144700.png"></div>
+
+请求地址是 localhost，端口是 80，就被 windows 上安装的 Nginx 服务给接收到了。然后代理给了 OpenResty 集群：
+
+<div align="center"><img src="img/image-20210821094447709.png"></div>
+
+我们需要在 OpenResty 中编写业务，查询商品数据并返回到浏览器。
+
+但是这次，我们先在 OpenResty 接收请求，返回假的商品数据。
+
+#### OpenResty监听请求
+
+OpenResty 的很多功能都依赖于其目录下的 Lua 库，需要在 nginx.conf 中指定依赖库的目录，并导入依赖：
+
+1）添加对 OpenResty 的 Lua 模块的加载
+
+修改 `/usr/local/openresty/nginx/conf/nginx.conf` 文件，在其中的 http 下面，添加下面代码：
+
+```nginx
+#lua 模块
+lua_package_path "/usr/local/openresty/lualib/?.lua;;";
+#c模块     
+lua_package_cpath "/usr/local/openresty/lualib/?.so;;";  
+```
+
+2）监听 /api/item 路径
+
+修改 `/usr/local/openresty/nginx/conf/nginx.conf` 文件，在 nginx.conf 的 server 下面，添加对 /api/item 这个路径的监听：
+
+```nginx
+location  /api/item {
+    # 默认的响应类型
+    default_type application/json;
+    # 响应结果由lua/item.lua文件来决定
+    content_by_lua_file lua/item.lua;
+}
+```
+
+这个监听，就类似于 SpringMVC 中的 `@GetMapping("/api/item")` 做路径映射。
+
+而 `content_by_lua_file lua/item.lua` 则相当于调用 item.lua 这个文件，执行其中的业务，把结果返回给用户。相当于 java 中调用 service。
+
+#### 编写item.lua
+
+1）在 `/usr/loca/openresty/nginx` 目录创建文件夹：lua
+
+<div align="center"><img src="img/image-20210821100755080.png"></div>
+
+2）在 `/usr/loca/openresty/nginx/lua` 文件夹下，新建文件：item.lua
+
+<div align="center"><img src="img/image-20210821100801756.png"></div>
+
+
+3）编写 item.lua，返回假数据
+
+item.lua 中，利用 ngx.say() 函数返回数据到 Response 中
+
+```lua
+ngx.say('{"id":10001,"name":"SALSA AIR","title":"RIMOWA 21寸托运箱拉杆箱 SALSA AIR系列果绿色 820.70.36.4","price":17900,"image":"https://m.360buyimg.com/mobilecms/s720x720_jfs/t6934/364/1195375010/84676/e9f2c55f/597ece38N0ddcbc77.jpg!q70.jpg.webp","category":"拉杆箱","brand":"RIMOWA","spec":"","status":1,"createTime":"2019-04-30T16:00:00.000+00:00","updateTime":"2019-04-30T16:00:00.000+00:00","stock":2999,"sold":31290}')
+```
+
+4）重新加载配置
+
+```sh
+nginx -s reload
+```
+
+刷新商品页面：http://localhost/item.html?id=1001，即可看到效果：
+
+<div align="center"><img src="img/image-20210821101217089.png"></div>
+
+### 请求参数处理
+
+前面在 OpenResty 接收前端请求，返回的是假数据。要返回真实数据，必须根据前端传递来的商品 id，查询商品信息才可以。那么如何获取前端传递的商品参数呢？
+
+#### 获取参数的API
+
+OpenResty 中提供了一些 API 用来获取不同类型的前端请求参数：
+
+<div align="center"><img src="img/image-20210821101433528.png"></div>
+
+#### 获取参数并返回
+
+在前端发起的 ajax 请求如图
+
+<div align="center"><img src="img/image-20210821101721649.png"></div>
+
+可以看到商品 id 是以路径占位符方式传递的，因此可以利用正则表达式匹配的方式来获取ID
+
+
+
+1）获取商品 id
+
+修改 `/usr/loca/openresty/nginx/nginx.conf` 文件中监听 /api/item 的代码，利用正则表达式获取 ID
+
+```nginx
+location ~ /api/item/(\d+) {
+    # 默认的响应类型
+    default_type application/json;
+    # 响应结果由lua/item.lua文件来决定
+    content_by_lua_file lua/item.lua;
+}
+```
+
+2）拼接 ID 并返回
+
+修改 `/usr/loca/openresty/nginx/lua/item.lua` 文件，获取 id 并拼接到结果中返回
+
+```lua
+-- 获取商品id
+local id = ngx.var[1]
+-- 拼接并返回
+ngx.say('{"id":' .. id .. ',"name":"SALSA AIR","title":"RIMOWA 21寸托运箱拉杆箱 SALSA AIR系列果绿色 820.70.36.4","price":17900,"image":"https://m.360buyimg.com/mobilecms/s720x720_jfs/t6934/364/1195375010/84676/e9f2c55f/597ece38N0ddcbc77.jpg!q70.jpg.webp","category":"拉杆箱","brand":"RIMOWA","spec":"","status":1,"createTime":"2019-04-30T16:00:00.000+00:00","updateTime":"2019-04-30T16:00:00.000+00:00","stock":2999,"sold":31290}')
+```
+
+3）重新加载并测试
+
+运行命令以重新加载 OpenResty 配置
+
+```sh
+nginx -s reload
+```
+
+刷新页面可以看到结果中已经带上了 ID
+
+<div align="center"><img src="img/image-20210821102235467.png"></div> 
+
+### 查询Tomcat
+
+拿到商品 ID 后，本应去缓存中查询商品信息，不过目前我们还未建立 nginx、redis 缓存。因此，这里我们先根据商品 id 去 tomcat 查询商品信息。
+
+<div align="center"><img src="img/image-20210821102610167.png"></div>
+
+需要注意的是，我们的 OpenResty 是在虚拟机，Tomcat 是在 Windows 电脑上。两者 IP 一定不要搞错了。
+
+<div align="center"><img src="img/image-20210821102959829.png"></div>
+
+#### 发送http请求的API
+
+nginx 提供了内部 API 用以发送 http 请求
+
+```lua
+local resp = ngx.location.capture("/path",{
+    method = ngx.HTTP_GET,   -- 请求方式
+    args = {a=1,b=2},  -- get方式传参数
+})
+```
+
+返回的响应内容包括
+
+- resp.status：响应状态码
+- resp.header：响应头，是一个 table
+- resp.body：响应体，就是响应数据
+
+注意：这里的 path 是路径，并不包含 IP 和端口。这个请求会被 nginx 内部的 server 监听并处理。
+
+但是我们希望这个请求发送到 Tomcat 服务器，所以还需要编写一个 server 来对这个路径做反向代理
+
+```nginx
+ location /path {
+     # 这里是 windows 电脑的 ip 和 Java 服务端口，需要确保 windows 防火墙处于关闭状态
+     proxy_pass http://192.168.150.1:8081; 
+ }
+```
+
+原理如图
+
+<div align="center"><img src="img/image-20210821104149061.png"></div>
+
+#### 封装http工具
+
+封装一个发送 Http 请求的工具，基于 ngx.location.capture 来实现查询 tomcat。
+
+<b>1）添加反向代理到 windows 的 Java 服务</b>
+
+因为 item-service 中的接口都是 /item 开头，所以我们监听 /item 路径，代理到 windows 上的 tomcat 服务。
+
+修改 `/usr/local/openresty/nginx/conf/nginx.conf` 文件，添加一个 location
+
+```nginx
+location /item {
+    proxy_pass http://192.168.150.1:8081;
+}
+```
+
+以后，只要我们调用 `ngx.location.capture("/item")`，就一定能发送请求到 windows 的 tomcat 服务。
+
+<b>2）封装工具类</b>
+
+之前我们说过，OpenResty 启动时会加载以下两个目录中的工具文件
+
+<div align="center"><img src="img/image-20210821104857413.png"></div>
+
+所以，自定义的 http 工具也需要放到这个目录下。
+
+在 `/usr/local/openresty/lualib` 目录下，新建一个 common.lua 文件
+
+```sh
+vi /usr/local/openresty/lualib/common.lua
+```
+
+内容如下
+
+```lua
+-- 封装函数，发送http请求，并解析响应
+local function read_http(path, params)
+    local resp = ngx.location.capture(path,{
+        method = ngx.HTTP_GET,
+        args = params,
+    })
+    if not resp then
+        -- 记录错误信息，返回404
+        ngx.log(ngx.ERR, "http请求查询失败, path: ", path , ", args: ", args)
+        ngx.exit(404)
+    end
+    return resp.body
+end
+-- 将方法导出
+local _M = {  
+    read_http = read_http
+}  
+return _M
+```
+
+这个工具将 read_http 函数封装到 _M 这个 table 类型的变量中，并且返回，这类似于导出。
+
+使用的时候，可以利用 `require('common')` 来导入该函数库，这里的 common 是函数库的文件名。
+
+<b>3）实现商品查询</b>
+
+最后，我们修改 `/usr/local/openresty/lua/item.lua` 文件，利用刚刚封装的函数库实现对 tomcat 的查询
+
+```lua
+-- 引入自定义common工具模块，返回值是common中返回的 _M
+local common = require("common")
+-- 从 common中获取read_http这个函数
+local read_http = common.read_http
+-- 获取路径参数
+local id = ngx.var[1]
+-- 根据id查询商品
+local itemJSON = read_http("/item/".. id, nil)
+-- 根据id查询商品库存
+local itemStockJSON = read_http("/item/stock/".. id, nil)
+```
+
+这里查询到的结果是 json 字符串，并且包含商品、库存两个 json 字符串，页面最终需要的是把两个 json 拼接为一个 json
+
+<div align="center"><img src="img/image-20210821110441222.png"></div>
+
+
+
+这就需要我们先把 JSON 变为 lua 的 table，完成数据整合后，再转为 JSON。
+
+#### CJSON工具类
+
+OpenResty 提供了一个 cjson 的模块用来处理 JSON 的序列化和反序列化。
+
+官方地址：https://github.com/openresty/lua-cjson/
+
+<b>1）引入 cjson 模块</b>
+
+```lua
+local cjson = require "cjson"
+```
+
+<b>2）序列化</b>
+
+```lua
+local obj = {
+    name = 'jack',
+    age = 21
+}
+-- 把 table 序列化为 json
+local json = cjson.encode(obj)
+```
+
+<b>3）反序列化</b>
+
+```lua
+local json = '{"name": "jack", "age": 21}'
+-- 反序列化 json为 table
+local obj = cjson.decode(json);
+print(obj.name)
+```
+
+#### 实现Tomcat查询
+
+修改之前的 item.lua 中的业务，添加 json 处理功能
+
+```lua
+-- 导入common函数库
+local common = require('common')
+local read_http = common.read_http
+-- 导入cjson库
+local cjson = require('cjson')
+
+-- 获取路径参数
+local id = ngx.var[1]
+-- 根据id查询商品
+local itemJSON = read_http("/item/".. id, nil)
+-- 根据id查询商品库存
+local itemStockJSON = read_http("/item/stock/".. id, nil)
+
+-- JSON转化为lua的table
+local item = cjson.decode(itemJSON)
+local stock = cjson.decode(stockJSON)
+
+-- 组合数据
+item.stock = stock.stock
+item.sold = stock.sold
+
+-- 把item序列化为json 返回结果
+ngx.say(cjson.encode(item))
+```
+
+#### 基于ID负载均衡
+
+刚才的代码中，我们的 tomcat 是单机部署。而实际开发中，tomcat 一定是集群模式
+
+<div align="center"><img src="img/image-20210821111023255.png"></div>
+
+因此，OpenResty 需要对 tomcat 集群做负载均衡。
+
+而默认的负载均衡规则是轮询模式，当我们查询 /item/10001 时
+
+- 第一次会访问 8081 端口的 tomcat 服务，在该服务内部就形成了 JVM 进程缓存
+- 第二次会访问 8082 端口的 tomcat 服务，该服务内部没有 JVM 缓存（因为 JVM 缓存无法共享），会查询数据库
+- ...
+
+因为轮询的原因，第一次查询 8081 形成的 JVM 缓存并未生效，直到下一次再次访问到 8081 时才可以生效，缓存命中率太低了。
+
+怎么办？
+
+如果能让同一个商品，每次查询时都访问同一个 tomcat 服务，那么 JVM 缓存就一定能生效了。也就是说，我们需要根据商品 id 做负载均衡，而不是轮询。
+
+<b>1）原理</b>
+
+nginx 提供了基于请求路径做负载均衡的算法。nginx 可以根据请求路径做 hash 运算，把得到的数值对 tomcat 服务的数量取余，余数是几，就访问第几个服务，实现负载均衡。
+
+例如：
+
+- 我们的请求路径是 /item/10001
+- tomcat 总数为 2 台（8081、8082）
+- 对请求路径 /item/1001 做 hash 运算求余的结果为 1
+- 则访问第一个 tomcat 服务，也就是 8081
+
+只要 id 不变，每次 hash 运算结果也不会变，那就可以保证同一个商品，一直访问同一个 tomcat 服务，确保 JVM 缓存生效。
+
+<b>2）实现</b>
+
+修改 `/usr/local/openresty/nginx/conf/nginx.conf` 文件，实现基于 ID 做负载均衡。
+
+首先，定义 tomcat 集群，并设置基于路径做负载均衡
+
+```nginx 
+upstream tomcat-cluster {
+    hash $request_uri;
+    server 192.168.150.1:8081;
+    server 192.168.150.1:8082;
+}
+```
+
+然后，修改对 tomcat 服务的反向代理，目标指向 tomcat 集群
+
+```nginx
+location /item {
+    proxy_pass http://tomcat-cluster;
+}
+```
+
+重新加载 OpenResty
+
+```sh
+nginx -s reload
+```
+
+<b>3）测试</b>
+
+启动两台 tomcat 服务
+
+<div align="center"><img src="img/image-20210821112420464.png"></div>
+
+同时启动：
+
+<div align="center"><img src="img/image-20210821112444482.png"></div> 
+
+清空日志后，再次访问页面，可以看到不同 id 的商品，访问到了不同的 tomcat 服务
+
+<div align="center"><img src="img/image-20210821112559965.png"></div>
+
+<div align="center"><img src="img/image-20210821112637430.png"></div>
+
+### Redis缓存预热
+
+Redis 缓存会面临冷启动问题：
+
+<b>冷启动：</b>服务刚刚启动时，Redis 中并没有缓存，如果所有商品数据都在第一次查询时添加缓存，可能会给数据库带来较大压力。
+
+<b>缓存预热：</b>在实际开发中，我们可以利用大数据统计用户访问的热点数据，在项目启动时将这些热点数据提前查询并保存到 Redis 中。
+
+我们数据量较少，并且没有数据统计相关功能，目前可以在启动时将所有数据都放入缓存中。
+
+<b>1）利用 Docker 安装 Redis</b>
+
+```sh
+docker run --name redis -p 6379:6379 -d redis redis-server --appendonly yes
+```
+
+<b>2）在 item-service 服务中引入 Redis 依赖</b>
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
+</dependency>
+```
+
+<b>3）配置 Redis 地址</b>
+
+```yaml
+spring:
+  redis:
+    host: 192.168.150.101
+```
+
+<b>4）编写初始化类</b>
+
+缓存预热需要在项目启动时完成，并且必须是拿到 RedisTemplate 之后。
+
+这里利用 InitializingBean 接口来实现，因为 InitializingBean 可以在对象被 Spring 创建并且成员变量全部注入后执行。
+
+```java
+package com.heima.item.config;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.heima.item.pojo.Item;
+import com.heima.item.pojo.ItemStock;
+import com.heima.item.service.IItemService;
+import com.heima.item.service.IItemStockService;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+public class RedisHandler implements InitializingBean {
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private IItemService itemService;
+    @Autowired
+    private IItemStockService stockService;
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        // 初始化缓存
+        // 1.查询商品信息
+        List<Item> itemList = itemService.list();
+        // 2.放入缓存
+        for (Item item : itemList) {
+            // 2.1.item序列化为JSON
+            String json = MAPPER.writeValueAsString(item);
+            // 2.2.存入redis
+            redisTemplate.opsForValue().set("item:id:" + item.getId(), json);
+        }
+
+        // 3.查询商品库存信息
+        List<ItemStock> stockList = stockService.list();
+        // 4.放入缓存
+        for (ItemStock stock : stockList) {
+            // 2.1.item序列化为JSON
+            String json = MAPPER.writeValueAsString(stock);
+            // 2.2.存入redis
+            redisTemplate.opsForValue().set("item:stock:id:" + stock.getId(), json);
+        }
+    }
+}
+```
+
+### 查询Redis缓存
+
+现在，Redis 缓存已经准备就绪，我们可以再 OpenResty 中实现查询 Redis 的逻辑了。如下图红框所示：
+
+<div align="center"><img src="img/image-20210821113340111.png"></div>
+
+当请求进入 OpenResty 之后：
+
+- 优先查询 Redis 缓存
+- 如果 Redis 缓存未命中，再查询 Tomcat
+
+#### 封装Redis工具
+
+OpenResty 提供了操作 Redis 的模块，我们只要引入该模块就能直接使用。但是为了方便，我们将 Redis 操作封装到之前的 common.lua 工具库中。
+
+修改 `/usr/local/openresty/lualib/common.lua` 文件
+
+<b>1）引入 Redis 模块，并初始化 Redis 对象</b>
+
+```lua
+-- 导入redis
+local redis = require('resty.redis')
+-- 初始化redis
+local red = redis:new()
+red:set_timeouts(1000, 1000, 1000)
+```
+
+<b>2）封装函数，用来释放 Redis 连接，其实是放入连接池</b>
+
+```lua
+-- 关闭redis连接的工具方法，其实是放入连接池
+local function close_redis(red)
+    local pool_max_idle_time = 10000 -- 连接的空闲时间，单位是毫秒
+    local pool_size = 100 --连接池大小
+    local ok, err = red:set_keepalive(pool_max_idle_time, pool_size)
+    if not ok then
+        ngx.log(ngx.ERR, "放入redis连接池失败: ", err)
+    end
+end
+```
+
+<b>3）封装函数，根据 key 查询 Redis 数据</b>
+
+```lua
+-- 查询redis的方法 ip和port是redis地址，key是查询的key
+local function read_redis(ip, port, key)
+    -- 获取一个连接
+    local ok, err = red:connect(ip, port)
+    if not ok then
+        ngx.log(ngx.ERR, "连接redis失败 : ", err)
+        return nil
+    end
+    -- 查询redis
+    local resp, err = red:get(key)
+    -- 查询失败处理
+    if not resp then
+        ngx.log(ngx.ERR, "查询Redis失败: ", err, ", key = " , key)
+    end
+    --得到的数据为空处理
+    if resp == ngx.null then
+        resp = nil
+        ngx.log(ngx.ERR, "查询Redis数据为空, key = ", key)
+    end
+    close_redis(red)
+    return resp
+end
+```
+
+<b>4）导出</b>
+
+```lua
+-- 将方法导出
+local _M = {  
+    read_http = read_http,
+    read_redis = read_redis
+}  
+return _M
+```
+
+完整的 common.lua
+
+```lua
+-- 导入redis
+local redis = require('resty.redis')
+-- 初始化redis
+local red = redis:new()
+red:set_timeouts(1000, 1000, 1000)
+
+-- 关闭redis连接的工具方法，其实是放入连接池
+local function close_redis(red)
+    local pool_max_idle_time = 10000 -- 连接的空闲时间，单位是毫秒
+    local pool_size = 100 --连接池大小
+    local ok, err = red:set_keepalive(pool_max_idle_time, pool_size)
+    if not ok then
+        ngx.log(ngx.ERR, "放入redis连接池失败: ", err)
+    end
+end
+
+-- 查询redis的方法 ip和port是redis地址，key是查询的key
+local function read_redis(ip, port, key)
+    -- 获取一个连接
+    local ok, err = red:connect(ip, port)
+    if not ok then
+        ngx.log(ngx.ERR, "连接redis失败 : ", err)
+        return nil
+    end
+    -- 查询redis
+    local resp, err = red:get(key)
+    -- 查询失败处理
+    if not resp then
+        ngx.log(ngx.ERR, "查询Redis失败: ", err, ", key = " , key)
+    end
+    --得到的数据为空处理
+    if resp == ngx.null then
+        resp = nil
+        ngx.log(ngx.ERR, "查询Redis数据为空, key = ", key)
+    end
+    close_redis(red)
+    return resp
+end
+
+-- 封装函数，发送http请求，并解析响应
+local function read_http(path, params)
+    local resp = ngx.location.capture(path,{
+        method = ngx.HTTP_GET,
+        args = params,
+    })
+    if not resp then
+        -- 记录错误信息，返回404
+        ngx.log(ngx.ERR, "http查询失败, path: ", path , ", args: ", args)
+        ngx.exit(404)
+    end
+    return resp.body
+end
+-- 将方法导出
+local _M = {  
+    read_http = read_http,
+    read_redis = read_redis
+}  
+return _M
+```
+
+#### 实现Redis查询
+
+接下来，我们就可以去修改 item.lua 文件，实现对 Redis 的查询了。
+
+查询逻辑是
+
+- 根据 id 查询 Redis
+- 如果查询失败则继续查询 Tomcat
+- 将查询结果返回
+
+1）修改 `/usr/local/openresty/lua/item.lua` 文件，添加一个查询函数：
+
+```lua
+-- 导入common函数库
+local common = require('common')
+local read_http = common.read_http
+local read_redis = common.read_redis
+-- 封装查询函数
+function read_data(key, path, params)
+    -- 查询本地缓存
+    local val = read_redis("127.0.0.1", 6379, key)
+    -- 判断查询结果
+    if not val then
+        ngx.log(ngx.ERR, "redis查询失败，尝试查询http， key: ", key)
+        -- redis查询失败，去查询http
+        val = read_http(path, params)
+    end
+    -- 返回数据
+    return val
+end
+```
+
+2）而后修改商品查询、库存查询的业务：
+
+<div align="center"><img src="img/image-20210821114528954.png"></div>
+
+
+
+3）完整的 item.lua 代码
+
+```lua
+-- 导入common函数库
+local common = require('common')
+local read_http = common.read_http
+local read_redis = common.read_redis
+-- 导入cjson库
+local cjson = require('cjson')
+
+-- 封装查询函数
+function read_data(key, path, params)
+    -- 查询本地缓存
+    local val = read_redis("127.0.0.1", 6379, key)
+    -- 判断查询结果
+    if not val then
+        ngx.log(ngx.ERR, "redis查询失败，尝试查询http， key: ", key)
+        -- redis查询失败，去查询http
+        val = read_http(path, params)
+    end
+    -- 返回数据
+    return val
+end
+
+-- 获取路径参数
+local id = ngx.var[1]
+
+-- 查询商品信息
+local itemJSON = read_data("item:id:" .. id,  "/item/" .. id, nil)
+-- 查询库存信息
+local stockJSON = read_data("item:stock:id:" .. id, "/item/stock/" .. id, nil)
+
+-- JSON转化为lua的table
+local item = cjson.decode(itemJSON)
+local stock = cjson.decode(stockJSON)
+-- 组合数据
+item.stock = stock.stock
+item.sold = stock.sold
+
+-- 把item序列化为json 返回结果
+ngx.say(cjson.encode(item))
+```
+
+### Nginx本地缓存
+
+现在，整个多级缓存中只差最后一环，也就是 nginx 的本地缓存了。如图：
+
+<div align="center"><img src="img/image-20210821114742950.png"></div>
+
+#### 本地缓存API
+
+OpenResty 为 Nginx 提供了 shard dict 的功能，可以在 nginx 的多个 worker 之间共享数据，实现缓存功能。
+
+<b>1）开启共享字典，在 nginx.conf 的 http 下添加配置</b>
+
+```nginx
+ # 共享字典，也就是本地缓存，名称叫做：item_cache，大小150m
+ lua_shared_dict item_cache 150m; 
+```
+
+<b>2）操作共享字典</b>
+
+```lua
+-- 获取本地缓存对象
+local item_cache = ngx.shared.item_cache
+-- 存储, 指定key、value、过期时间，单位s，默认为0代表永不过期
+item_cache:set('key', 'value', 1000)
+-- 读取
+local val = item_cache:get('key')
+```
+
+#### 实现本地缓存查询
+
+<b>1）修改 `/usr/local/openresty/lua/item.lua` 文件，修改 read_data 查询函数，添加本地缓存逻辑</b>
+
+```lua
+-- 导入共享词典，本地缓存
+local item_cache = ngx.shared.item_cache
+
+-- 封装查询函数
+function read_data(key, expire, path, params)
+    -- 查询本地缓存
+    local val = item_cache:get(key)
+    if not val then
+        ngx.log(ngx.ERR, "本地缓存查询失败，尝试查询Redis， key: ", key)
+        -- 查询redis
+        val = read_redis("127.0.0.1", 6379, key)
+        -- 判断查询结果
+        if not val then
+            ngx.log(ngx.ERR, "redis查询失败，尝试查询http， key: ", key)
+            -- redis查询失败，去查询http
+            val = read_http(path, params)
+        end
+    end
+    -- 查询成功，把数据写入本地缓存
+    item_cache:set(key, val, expire)
+    -- 返回数据
+    return val
+end
+```
+
+<b>2）修改 item.lua 中查询商品和库存的业务，实现最新的 read_data 函数</b>
+
+<div align="center"><img src="img/image-20210821115108528.png"></div>
+
+其实就是多了缓存时间参数，过期后 nginx 缓存会自动删除，下次访问即可更新缓存。
+
+这里给商品基本信息设置超时时间为 30 分钟，库存为 1 分钟。
+
+因为库存更新频率较高，如果缓存时间过长，可能与数据库差异较大。
+
+<b>3）完整的 item.lua 文件</b>
+
+```lua
+-- 导入common函数库
+local common = require('common')
+local read_http = common.read_http
+local read_redis = common.read_redis
+-- 导入cjson库
+local cjson = require('cjson')
+-- 导入共享词典，本地缓存
+local item_cache = ngx.shared.item_cache
+
+-- 封装查询函数
+function read_data(key, expire, path, params)
+    -- 查询本地缓存
+    local val = item_cache:get(key)
+    if not val then
+        ngx.log(ngx.ERR, "本地缓存查询失败，尝试查询Redis， key: ", key)
+        -- 查询redis
+        val = read_redis("127.0.0.1", 6379, key)
+        -- 判断查询结果
+        if not val then
+            ngx.log(ngx.ERR, "redis查询失败，尝试查询http， key: ", key)
+            -- redis查询失败，去查询http
+            val = read_http(path, params)
+        end
+    end
+    -- 查询成功，把数据写入本地缓存
+    item_cache:set(key, val, expire)
+    -- 返回数据
+    return val
+end
+
+-- 获取路径参数
+local id = ngx.var[1]
+
+-- 查询商品信息
+local itemJSON = read_data("item:id:" .. id, 1800,  "/item/" .. id, nil)
+-- 查询库存信息
+local stockJSON = read_data("item:stock:id:" .. id, 60, "/item/stock/" .. id, nil)
+
+-- JSON转化为lua的table
+local item = cjson.decode(itemJSON)
+local stock = cjson.decode(stockJSON)
+-- 组合数据
+item.stock = stock.stock
+item.sold = stock.sold
+
+-- 把item序列化为json 返回结果
+ngx.say(cjson.encode(item))
+```
+
+## 缓存同步
+
+大多数情况下，浏览器查询到的都是缓存数据，如果缓存数据与数据库数据存在较大差异，可能会产生比较严重的后果。
+
+所以我们必须保证数据库数据、缓存数据的一致性，这就是缓存与数据库的同步。
+
+### 数据同步策略
+
+缓存数据同步的常见方式有三种：
+
+<b>设置有效期：</b>给缓存设置有效期，到期后自动删除。再次查询时更新
+
+- 优势：简单、方便
+- 缺点：时效性差，缓存过期之前可能不一致
+- 场景：更新频率较低，时效性要求低的业务
+
+<b>同步双写：</b>在修改数据库的同时，直接修改缓存
+
+- 优势：时效性强，缓存与数据库强一致
+- 缺点：有代码侵入，耦合度高；
+- 场景：对一致性、时效性要求较高的缓存数据
+
+<b>异步通知：</b>修改数据库时发送事件通知，相关服务监听到通知后修改缓存数据
+
+- 优势：低耦合，可以同时通知多个缓存服务
+- 缺点：时效性一般，可能存在中间不一致状态
+- 场景：时效性要求一般，有多个服务需要同步
+
+而异步实现又可以基于 MQ 或者 Canal 来实现：
+
+<b>1）基于MQ的异步通知：</b>
+
+<div align="center"><img src="img/image-20210821115552327.png"></div>
+
+解读：
+
+- 商品服务完成对数据的修改后，只需要发送一条消息到 MQ 中。
+- 缓存服务监听 MQ 消息，然后完成对缓存的更新
+
+依然有少量的代码侵入。
+
+<b>2）基于 Canal 的通知：</b>
+
+<div align="center"><img src="img/image-20210821115719363.png"></div>
+
+解读：
+
+- 商品服务完成商品修改后，业务直接结束，没有任何代码侵入
+- Canal 监听 MySQL 变化，当发现变化后，立即通知缓存服务
+- 缓存服务接收到 canal 通知，更新缓存
+
+代码零侵入
+
+### 安装Canal
+
+#### 认识Canal
+
+Canal [kə'næl]，译意为水道/管道/沟渠，canal 是阿里巴巴旗下的一款开源项目，基于 Java 开发。基于数据库增量日志解析，提供增量数据订阅&消费。GitHub 的地址：https://github.com/alibaba/canal
+
+Canal 是基于 mysql 的主从同步来实现的，MySQL 主从同步的原理如下：
+
+<div align="center"><img src="img/image-20210821115914748.png"></div>
+
+- 1）MySQL master 将数据变更写入二进制日志 ( binary log），其中记录的数据叫做 binary log events
+- 2）MySQL slave 将 master 的 binary log events拷贝到它的中继日志 (relay log)
+- 3）MySQL slave 重放 relay log 中事件，将数据变更反映它自己的数据
+
+而 Canal 就是把自己伪装成 MySQL 的一个 slave 节点，从而监听 master 的 binary log 变化。再把得到的变化信息通知给 Canal 的客户端，进而完成对其它数据库的同步。
+
+<div align="center"><img src="img/image-20210821115948395.png"></div>
+
+#### 安装Canal
+
+安装和配置 Canal 参考课前资料文档：
+
+<div align="center"><img src="img/image-20210821120017324.png"></div> 
+
+### 监听Canal
+
+Canal 提供了各种语言的客户端，当 Canal 监听到 binlog 变化时，会通知 Canal 的客户端。
+
+![image-20210821120049024](C:\development\note\CodeNotes\微服务\img\image-20210821120049024.png)
+
+我们可以利用 Canal 提供的 Java 客户端，监听 Canal 通知消息。当收到变化的消息时，完成对缓存的更新。
+
+不过这里我们会使用 GitHub 上的第三方开源的 canal-starter 客户端。地址：https://github.com/NormanGyllenhaal/canal-client
+
+与 SpringBoot 完美整合，自动装配，比官方客户端要简单好用很多。
+
+#### 引入依赖
+
+```xml
+<dependency>
+    <groupId>top.javatool</groupId>
+    <artifactId>canal-spring-boot-starter</artifactId>
+    <version>1.2.1-RELEASE</version>
+</dependency>
+```
+
+#### 编写配置
+
+```yaml
+canal:
+  destination: heima # canal的集群名字，要与安装canal时设置的名称一致
+  server: 192.168.150.101:11111 # canal服务地址
+```
+
+#### 修改Item实体类
+
+通过 @Id、@Column、等注解完成 Item 与数据库表字段的映射
+
+```java
+package com.heima.item.pojo;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+
+import javax.persistence.Column;
+import java.util.Date;
+
+@Data
+@TableName("tb_item")
+public class Item {
+    @TableId(type = IdType.AUTO)
+    @Id
+    private Long id;//商品id
+    @Column(name = "name")
+    private String name;//商品名称
+    private String title;//商品标题
+    private Long price;//价格（分）
+    private String image;//商品图片
+    private String category;//分类名称
+    private String brand;//品牌名称
+    private String spec;//规格
+    private Integer status;//商品状态 1-正常，2-下架
+    private Date createTime;//创建时间
+    private Date updateTime;//更新时间
+    @TableField(exist = false)
+    @Transient
+    private Integer stock;
+    @TableField(exist = false)
+    @Transient
+    private Integer sold;
+}
+```
+
+#### 编写监听器
+
+通过实现 `EntryHandler<T>` 接口编写监听器，监听 Canal 消息。注意两点：
+
+- 实现类通过 `@CanalTable("tb_item")` 指定监听的表信息
+- EntryHandler 的泛型是与表对应的实体类
+
+```java
+package com.heima.item.canal;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.heima.item.config.RedisHandler;
+import com.heima.item.pojo.Item;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import top.javatool.canal.client.annotation.CanalTable;
+import top.javatool.canal.client.handler.EntryHandler;
+
+@CanalTable("tb_item")
+@Component
+public class ItemHandler implements EntryHandler<Item> {
+
+    @Autowired
+    private RedisHandler redisHandler;
+    @Autowired
+    private Cache<Long, Item> itemCache;
+
+    @Override
+    public void insert(Item item) {
+        // 写数据到JVM进程缓存
+        itemCache.put(item.getId(), item);
+        // 写数据到redis
+        redisHandler.saveItem(item);
+    }
+
+    @Override
+    public void update(Item before, Item after) {
+        // 写数据到JVM进程缓存
+        itemCache.put(after.getId(), after);
+        // 写数据到redis
+        redisHandler.saveItem(after);
+    }
+
+    @Override
+    public void delete(Item item) {
+        // 删除数据到JVM进程缓存
+        itemCache.invalidate(item.getId());
+        // 删除数据到redis
+        redisHandler.deleteItemById(item.getId());
+    }
+}
+```
+
+在这里对 Redis 的操作都封装到了 RedisHandler 这个对象中，是我们之前做缓存预热时编写的一个类，内容如下
+
+```java
+package com.heima.item.config;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.heima.item.pojo.Item;
+import com.heima.item.pojo.ItemStock;
+import com.heima.item.service.IItemService;
+import com.heima.item.service.IItemStockService;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+public class RedisHandler implements InitializingBean {
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private IItemService itemService;
+    @Autowired
+    private IItemStockService stockService;
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        // 初始化缓存
+        // 1.查询商品信息
+        List<Item> itemList = itemService.list();
+        // 2.放入缓存
+        for (Item item : itemList) {
+            // 2.1.item序列化为JSON
+            String json = MAPPER.writeValueAsString(item);
+            // 2.2.存入redis
+            redisTemplate.opsForValue().set("item:id:" + item.getId(), json);
+        }
+
+        // 3.查询商品库存信息
+        List<ItemStock> stockList = stockService.list();
+        // 4.放入缓存
+        for (ItemStock stock : stockList) {
+            // 2.1.item序列化为JSON
+            String json = MAPPER.writeValueAsString(stock);
+            // 2.2.存入redis
+            redisTemplate.opsForValue().set("item:stock:id:" + stock.getId(), json);
+        }
+    }
+
+    public void saveItem(Item item) {
+        try {
+            String json = MAPPER.writeValueAsString(item);
+            redisTemplate.opsForValue().set("item:id:" + item.getId(), json);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void deleteItemById(Long id) {
+        redisTemplate.delete("item:id:" + id);
+    }
+}
 ```
