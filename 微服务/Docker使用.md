@@ -9,12 +9,10 @@
 
 ### 问题
 
-大型项目组件较多，运行环境也较为复杂，部署时会碰到一些问题：
+大型项目组件较多，运行环境也较为复杂，部署时会碰到一些问题
 
 - 依赖关系复杂，容易出现兼容性问题
 - 开发、测试、生产环境有差异
-
-<div><img src="assets/image-20210731141907366.png" width="60%"></div>
 
 例如一个项目中，部署时需要依赖于 node.js、Redis、RabbitMQ、MySQL 等，这些服务部署时所需要的函数库、依赖项各不相同，甚至会有冲突。给部署带来了极大的困难。
 
@@ -27,7 +25,7 @@ Docker 为了解决依赖的兼容问题的，采用了两个手段：
 - 将应用的 Libs（函数库）、Deps（依赖）、配置与应用一起打包 (以前只是打包代码，现在是代码+环境一起打包)
 - 将每个应用放到一个隔离<b>容器</b>去运行，避免互相干扰
 
-<div><img src="assets/image-20210731142219735.png" width="60%"></div>
+<div align="center"><img src="assets/image-20210731142219735.png" width="60%"></div>
 
 这样打包好的应用包中，既包含应用本身，也保护应用所需要的 Libs、Deps，无需再操作系统上安装这些，自然就不存在不同应用之间的兼容问题了。
 
@@ -37,7 +35,7 @@ Docker 为了解决依赖的兼容问题的，采用了两个手段：
 
 要解决不同操作系统环境差异问题，必须先了解操作系统结构。以一个 Ubuntu 操作系统为例，结构如下：
 
-<div><img src="assets/image-20210731143401460.png" width="60%"></div>
+<div align="center"><img src="assets/image-20210731143401460.png" width="60%"></div>
 
 结构包括：
 
@@ -55,11 +53,11 @@ Docker 为了解决依赖的兼容问题的，采用了两个手段：
 
 Ubuntu 和 CentOS 都是基于 Linux 内核，无非是系统应用不同，提供的函数库有差异：
 
-<div><img src="assets/image-20210731144304990.png" width="60%"></div>
+<div align="center"><img src="assets/image-20210731144304990.png" width="60%"></div>
 
 此时，如果将一个 Ubuntu 版本的 MySQL 应用安装到 CentOS 系统，MySQL 在调用 Ubuntu 函数库时，会发现找不到或者不匹配，就会报错了：
 
-<div><img src="assets/image-20210731144458680.png" width="60%"></div>
+<div align="center"><img src="assets/image-20210731144458680.png" width="60%"></div>
 
 Docker 如何解决不同系统环境的问题？
 
@@ -68,7 +66,7 @@ Docker 如何解决不同系统环境的问题？
 
 如图：
 
-<div><img src="assets/image-20210731144820638.png" width="60%"></div>
+<div align="center"><img src="assets/image-20210731144820638.png" width="60%"></div>
 
 ### 小结
 
@@ -93,13 +91,13 @@ Docker 可以让一个应用在任何操作系统中非常方便的运行。而�
 
 两者的差异在于：<b>虚拟机</b>（virtual machine）是在操作系统中<b>模拟</b>硬件设备，然后运行另一个操作系统，比如在 Windows 系统里面运行 Ubuntu 系统，这样就可以运行任意的 Ubuntu 应用了。而 <b>Docker</b> 仅仅是封装函数库，并没有模拟完整的操作系统，如图：
 
-<div><img src="assets/image-20210731145914960.png" width="60%"></div>
+<div align="center"><img src="assets/image-20210731145914960.png" width="60%"></div>
 
-对比来看：
-
-<div><img src="assets/image-20210731152243765.png" width="40%"></div>
-
-小结：
+| 特性     | Docker    | 虚拟机    |
+| -------- | --------- | --------- |
+| 特性     | 接近原生  | 性能较差  |
+| 磁盘占用 | 一般为 MB | 一般为 GB |
+| 启动     | 秒级      | 分钟级    |
 
 Docker 和虚拟机的差异：
 
@@ -120,7 +118,7 @@ Docker 和虚拟机的差异：
 - <b>镜像</b>，就是把一个应用在硬盘上的文件、及其运行环境、部分系统函数库文件一起打包形成的文件包。<b>这个文件包是只读的。</b>
 - <b>容器</b>，就是将这些文件中编写的程序、函数加载到内存中运行，形成进程，只不过要隔离起来。因此一个镜像可以启动多次，形成多个容器进程。
 
-<div><img src="assets/image-20210731153059464.png" width="50%"></div>
+<div align="center"><img src="assets/image-20210731153059464.png" width="50%"></div>
 
 例如你下载了一个 QQ，如果我们将 QQ 在磁盘上的运行<b>文件</b>及其运行的操作系统依赖打包，形成 QQ 镜像。然后你可以启动多次，双开、甚至三开 QQ。
 
@@ -134,7 +132,7 @@ Docker 和虚拟机的差异：
 
 我们一方面可以将自己的镜像共享到 DockerHub，另一方面也可以从 DockerHub 拉取镜像：
 
-<div><img src="assets/image-20210731153743354.png" width="65%"></div>
+<div align="center"><img src="assets/image-20210731153743354.png" width="65%"></div>
 
 ### Docker架构
 
@@ -148,7 +146,7 @@ Docker 是一个 CS 架构的程序，由两部分组成：
 
 如图：
 
-<div><img src="assets/image-20210731154257653.png"></div>
+<div align="center"><img src="assets/image-20210731154257653.png"></div>
 
 ### 小结
 
@@ -166,9 +164,7 @@ DockerHub：一个镜像托管的服务器，类似的还有阿里云镜像服�
 
 ## 安装Docker
 
-企业部署一般都是采用 Linux 操作系统，而 CentOS 发行版占比最多，因此我们在 CentOS 下安装 Docker。参考课前资料中的文档：
-
-<div><img src="assets/image-20210731155002425.png"></div>
+企业部署一般都是采用 Linux 操作系统，而 CentOS 发行版占比最多，因此在 CentOS 下安装 Docker。参考文档《安装 Docker》。
 
 ## Ubuntu启动Docker
 
@@ -211,9 +207,7 @@ service --status-all
 - 镜名称一般分两部分组成：[repository]:[tag]。
 - <span style="color:red">在没有指定 tag 时，默认是 latest，代表最新版本的镜像</span>
 
-如图：
-
-<div><img src="assets/image-20210731155141362.png" width="70%"></div>
+<div align="center"><img src="assets/image-20210731155141362.png" width="50%"></div>
 
 这里的 MySQL 就是 repository，5.7 就是 tag，合一起就是镜像名称，代表 5.7 版本的 MySQL 镜像。
 
@@ -221,7 +215,7 @@ service --status-all
 
 常见的镜像操作命令如图：
 
-<div><img src="assets/image-20210731155649535.png" width="75%"></div>
+<div align="center"><img src="assets/image-20210731155649535.png" width="75%"></div>
 
 ### 拉取&查看
 
@@ -229,15 +223,28 @@ service --status-all
 
 1）首先去镜像仓库搜索 nginx 镜像，比如 [DockerHub](https://hub.docker.com/):
 
-<div><img src="assets/image-20210731155844368.png"></div>
+<div align="center"><img src="assets/image-20210731155844368.png"></div>
 
 2）根据查看到的镜像名称，拉取自己需要的镜像，通过命令：docker pull nginx
 
-<div><img src="assets/image-20210731155856199.png"></div>
+```shell
+xxx@cv:/home$ docker pull nginx
+Using default tag: latest
+latest: Pulling from library/nginx
+```
+
+
 
 3）通过命令：docker images 查看拉取到的镜像
 
-<div><img src="assets/image-20210731155903037.png"></div>
+```shell
+xxx@cv:/home$ docker images
+REPOSITORY    TAG            IMAGE ID       CREATED         SIZE
+nginx         latest         1403e55ab369   12 days ago     142MB
+redis         latest         87c26977fd90   9 months ago    113MB
+rabbitmq      3-management   c8817e468079   10 months ago   254MB
+hello-world   latest         feb5d9fea6a5   15 months ago   13.3kB
+```
 
 ### 保存&导入
 
@@ -248,12 +255,15 @@ service --status-all
 例如，查看 save 命令用法，可以输入命令：
 
 ```sh
-docker save --help
+xxx@cv:/home$ docker save --help
+
+Usage:  docker save [OPTIONS] IMAGE [IMAGE...]
+
+Save one or more images to a tar archive (streamed to STDOUT by default)
+
+Options:
+  -o, --output string   Write to a file, instead of STDOUT
 ```
-
-结果：
-
-<div><img src="assets/image-20210731161104732.png"></div>
 
 命令格式：
 
@@ -263,15 +273,12 @@ docker save -o [保存的目标文件名称] [镜像名称]
 
 2）使用 docker save 导出镜像到磁盘 
 
-运行命令：
-
 ```sh
 docker save -o nginx.tar nginx:latest
+xxx@cv:/home$ docker save -o nginx.tar nginx:latest
+xxx@cv:/home$  ls
+nginx.tar
 ```
-
-结果如图：
-
-<div><img src="assets/image-20210731161354344.png"></div>
 
 3）使用 docker load 加载镜像
 
@@ -285,11 +292,9 @@ docker rmi nginx:latest
 
 ```sh
 docker load -i nginx.tar
+xxx@cv:/home$ docker load -i nginx.tar
+Loaded image: nginx:latest
 ```
-
-结果：
-
-<div><img src="assets/image-20210731161746245.png"></div>
 
 ### 练习
 
@@ -323,7 +328,7 @@ docker load -i nginx.tar
 
 容器操作的命令如图：
 
-<div><img src="assets/image-20210731161950495.png" width="90%"></div>
+<div align="center"><img src="assets/image-20210731161950495.png" width="90%"></div>
 
 容器保护三个状态：
 
@@ -343,13 +348,13 @@ docker load -i nginx.tar
 
 ### 案例-创建并运行一个容器
 
-创建并运行 nginx 容器的命令：
+创建并运行 nginx 容器的命令
 
 ```sh
 docker run --name containerName -p 80:80 -d nginx
 ```
 
-命令解读：
+命令解读
 
 - docker run ：创建并运行一个容器
 - --name : 给容器起一个名字，比如叫做 mn
@@ -363,15 +368,15 @@ docker run --name containerName -p 80:80 -d nginx
 
 现在，将容器的 80 与宿主机的 80 关联起来，当我们访问宿主机的 80 端口时，就会被映射到容器的 80，这样就能访问到 nginx 了：
 
-<div><img src="assets/image-20210731163255863.png" width="70%"></div>
+<div align="center"><img src="assets/image-20210731163255863.png" width="70%"></div>
 
 ### 进入容器，修改文件
 
-<b>需求</b>：进入 Nginx 容器，修改 HTML 文件内容，添加“传智教育欢迎您”
+<b>需求：</b>进入 Nginx 容器，修改 HTML 文件内容，添加“传智教育欢迎您”
 
-<b>提示</b>：进入容器要用到 docker exec 命令。
+<b>提示：</b>进入容器要用到 docker exec 命令。
 
-<b>步骤</b>：
+<b>步骤：</b>
 
 1）进入容器。进入我们刚刚创建的 nginx 容器的命令为：
 
@@ -393,11 +398,20 @@ docker exec -it mn bash
 
 容器内部会模拟一个独立的 Linux 文件系统，看起来如同一个 Linux 服务器一样：
 
-<div><img src="assets/image-20210731164159811.png"></div>
+```shell
+xx@cv:/home$ docker run --name mn -p 80:80 -d nginx
+1e3168a57a45d377c1a890b5c815d14fa8a76033f0009745c11ffa0c5a70843f
+
+xx@cv:/home$ docker exec -it mn bash
+root@1e3168a57a45:/# ls
+bin   dev                  docker-entrypoint.sh  home  lib64  mnt  proc  run   srv  tmp  var
+boot  docker-entrypoint.d  etc                   lib   media  opt  root  sbin  sys  usr
+root@1e3168a57a45:/#
+```
 
 nginx 的环境、配置、运行文件全部都在这个文件系统中，包括我们要修改的 html 文件。
 
-查看 DockerHub 网站中的 nginx 页面，可以知道 nginx 的 html 目录位置在`/usr/share/nginx/html`
+查看 DockerHub 网站中的 nginx 页面，可以知道 nginx 的 html 目录位置在 `/usr/share/nginx/html`
 
 我们执行命令，进入该目录：
 
@@ -407,23 +421,35 @@ cd /usr/share/nginx/html
 
  查看目录下文件：
 
-<div><img src="assets/image-20210731164455818.png"></div>
+```shell
+root@1e3168a57a45:/usr/share/nginx/html# ls
+50x.html  index.html
+root@1e3168a57a45:/usr/share/nginx/html#
+```
 
 3）修改 index.html 的内容
 
 容器内没有 vi 命令，无法直接修改，我们用下面的命令来修改：
 
 ```sh
-sed -i -e 's#Welcome to nginx#传智教育欢迎您#g' -e 's#<head>#<head><meta charset="utf-8">#g' index.html
+sed -i -e 's#Welcome to nginx#docker欢迎你！#g' -e 's#<head>#<head><meta charset="utf-8">#g' index.html
 ```
 
 在浏览器访问自己的虚拟机地址，例如我的是：http://192.168.150.101，即可看到结果：
 
-<div><img src="assets/image-20210731164717604.png" width="60%"></div>
+```html
+docker欢迎你！!
+If you see this page, the nginx web server is successfully installed and working. Further configuration is required.
+
+For online documentation and support please refer to nginx.org.
+Commercial support is available at nginx.com.
+
+Thank you for using nginx.
+```
 
 ### 案例-运行 redis
 
-<b>步骤</b>：
+<b>步骤</b>
 
 1）拉取镜像
 
@@ -505,7 +531,7 @@ docker run 命令的常见参数有哪些？
 
 这就是因为容器与数据（容器内文件）耦合带来的后果。
 
-<div><img src="assets/image-20210731172440275.png" width="80%"></div>
+<div align="center"><img src="assets/image-20210731172440275.png" width="80%"></div>
 
 要解决这个问题，必须将数据与容器解耦，这就要用到数据卷了。
 
@@ -513,7 +539,7 @@ docker run 命令的常见参数有哪些？
 
 <b>数据卷（volume）</b>是一个虚拟目录，指向宿主机文件系统中的某个目录。
 
-<div><img src="assets/image-20210731173541846.png" width="70%"></div>
+<div align="center"><img src="assets/image-20210731173541846.png" width="70%"></div>
 
 一旦完成数据卷挂载，对容器的一切操作都会作用在数据卷对应的宿主机目录了。这样，我们操作宿主机的 `/var/lib/docker/volumes/html` 目录，就等于操作容器内的 `/usr/share/nginx/html` 目录了。
 
@@ -546,26 +572,32 @@ docker volume create html
 ② 查看所有数据
 
 ```sh
-docker volume ls
+xx@cv:/home$ docker volume ls
+DRIVER    VOLUME NAME
+local     e588662e987cb0c1627087fc454ab35c800c3039498bd03a8dbea2b04675f09d
+local     html
 ```
-
-结果：
-
-<div><img src="assets/image-20210731173746910.png"></div>
 
 ③ 查看数据卷详细信息卷
 
 ```sh
-docker volume inspect html
+xx@cv:/home$ docker volume inspect html
+[
+    {
+        "CreatedAt": "2023-01-02T22:35:23+08:00",
+        "Driver": "local",
+        "Labels": {},
+        "Mountpoint": "/var/lib/docker/volumes/html/_data",
+        "Name": "html",
+        "Options": {},
+        "Scope": "local"
+    }
+]
 ```
-
-结果：
-
-<div><img src="assets/image-20210731173809877.png"></div>
 
 可以看到，我们创建的 html 这个数据卷关联的宿主机目录为 `/var/lib/docker/volumes/html/_data` 目录。
 
-<b>小结</b>：
+<b>小结</b>
 
 数据卷的作用：
 
@@ -597,13 +629,11 @@ docker run \
 
 ### nginx挂载数据卷
 
-<b>需求</b>：创建一个 nginx 容器，修改容器内的 html目录内的 index.html 内容
+<b>需求：</b>创建一个 nginx 容器，修改容器内的 html目录内的 index.html 内容
 
-<b>分析</b>：上个案例中，我们进入 nginx 容器内部，已经知道 nginx 的 html 目录所在位置 /usr/share/nginx/html ，我们需要把这个目录挂载到 html 这个数据卷上，方便操作其中的内容。
+<b>分析：</b>上个案例中，我们进入 nginx 容器内部，已经知道 nginx 的 html 目录所在位置 /usr/share/nginx/html ，我们需要把这个目录挂载到 html 这个数据卷上，方便操作其中的内容。
 
-<b>提示</b>：运行容器时使用 -v 参数挂载数据卷
-
-步骤：
+<b>提示：</b>运行容器时使用 -v 参数挂载数据卷
 
 ① 创建容器并挂载数据卷到容器内的 HTML 目录
 
@@ -632,18 +662,16 @@ vi index.html
 - 带数据卷模式：宿主机目录 --> 数据卷 ---> 容器内目录
 - 直接挂载模式：宿主机目录 ---> 容器内目录
 
-如图：
+<div align="center"><img src="assets/image-20210731175155453.png" width="70%"></div>
 
-<div><img src="assets/image-20210731175155453.png" width="70%"></div>
-
-<b>语法</b>：
+<b>语法</b>
 
 目录挂载与数据卷挂载的语法是类似的：
 
 - -v [宿主机目录]:[容器内目录]
 - -v [宿主机文件]:[容器内文件]
 
-<b>需求</b>：创建并运行一个 MySQL 容器，将宿主机目录直接挂载到容器
+<b>需求：</b>创建并运行一个 MySQL 容器，将宿主机目录直接挂载到容器
 
 实现思路如下：
 
@@ -689,11 +717,9 @@ docker run 的命令中通过 -v 参数挂载文件或目录到容器中：
 
 ## 镜像结构
 
-镜像是将应用程序及其需要的系统函数库、环境、配置、依赖打包而成。
+镜像是将应用程序及其需要的系统函数库、环境、配置、依赖打包而成。以 MySQL 为例，来看看镜像的组成结构：
 
-我们以 MySQL 为例，来看看镜像的组成结构：
-
-<div><img src="assets/image-20210731175806273.png" width="60%"></div>
+<div align="center"><img src="assets/image-20210731175806273.png" width="60%"></div>
 
 简单来说，<b>镜像就是在系统函数库、运行环境基础上，添加应用程序文件、配置文件、依赖文件等组合，然后编写好启动脚本打包在一起形成的文件</b>。我们要构建镜像，其实就是实现上述打包的过程。
 
@@ -703,9 +729,16 @@ docker run 的命令中通过 -v 参数挂载文件或目录到容器中：
 
 我们只需要告诉 Docker，我们的镜像的组成，需要哪些 Base Image、需要拷贝什么文件、需要安装什么依赖、启动脚本是什么，将来 Docker 会帮助我们构建镜像。而描述上述信息的文件就是 Dockerfile 文件。
 
-<b>Dockerfile </b>就是一个文本文件，其中包含一个个的<b>指令(Instruction)</b>，用指令来说明要执行什么操作来构建镜像。每一个指令都会形成一层 Layer。
+<b>Dockerfile </b>就是一个文本文件，其中包含一个个的<b>指令 (Instruction)</b>，用指令来说明要执行什么操作来构建镜像。每一个指令都会形成一层 Layer。
 
-<div><img src="assets/image-20210731180321133.png" width="70%"></div>
+| 指令       | 说明                                           | 示例                         |
+| ---------- | ---------------------------------------------- | ---------------------------- |
+| FROM       | 指定基础精选                                   | FROM centos:6                |
+| ENV        | 设置环境变量，可在后面指令使用                 | ENV key value                |
+| COPY       | 拷贝本地文件到镜像的指定目录                   | COPY ./mysql-5.7.rpm   /tmp  |
+| RUN        | 执行 Linux 的 shell 命令，一般是安装过程的命令 | RUN yum install gcc          |
+| EXPOSE     | 指定容器运行时监听的端口，是给镜像使用者看的   | EXPOSE 8080                  |
+| ENTRYPOINT | 镜像中应用的启动命令，容器运行时调用           | ENTRYPOINT java -jar xxx.jar |
 
 更新详细语法说明，请参考官网文档： https://docs.docker.com/engine/reference/builder
 
@@ -717,19 +750,19 @@ docker run 的命令中通过 -v 参数挂载文件或目录到容器中：
 
 - ① 新建一个空文件夹 docker-demo
 
-  <div><img src="assets/image-20210801101207444.png"></div>
+  <div align="center"><img src="assets/image-20210801101207444.png"></div>
 
 - ② 拷贝 docker-demo.jar 文件到 docker-demo 这个目录
 
-  <div><img src="assets/image-20210801101314816.png"></div>
+  <div align="center"><img src="assets/image-20210801101314816.png"></div>
 
 - ③ 拷贝 jdk8.tar.gz 文件到 docker-demo 这个目录
 
-  <div><img src="assets/image-20210801101410200.png"></div>
+  <div align="center"><img src="assets/image-20210801101410200.png"></div>
 
 - ④ 拷贝 Dockerfile 到 docker-demo 这个目录
 
-  <div><img src="assets/image-20210801101455590.png"></div>
+  <div align="center"><img src="assets/image-20210801101455590.png"></div>
 
   其中的内容如下：
 
@@ -783,7 +816,7 @@ docker run 的命令中通过 -v 参数挂载文件或目录到容器中：
 
 - ① 新建一个空的目录，然后在目录中新建一个文件，命名为 Dockerfile
 
-- ② 拷贝课前资料提供的 docker-demo.jar 到这个目录中
+- ② 拷贝任意一个 xxx-demo.jar 到这个目录中
 
 - ③ 编写 Dockerfile 文件：
 
@@ -822,8 +855,6 @@ docker run 的命令中通过 -v 参数挂载文件或目录到容器中：
 
 Docker Compose 可以基于 Compose 文件帮我们快速的部署分布式应用，而无需手动一个个创建和运行容器！ 
 
-<div><img src="assets/image-20210731180921742.png"></div>
-
 ## 初识
 
 Compose 文件是一个文本文件，通过指令定义集群中的每个容器如何运行。格式如下：
@@ -859,9 +890,9 @@ DockerCompose 的详细语法参考官网：https://docs.docker.com/compose/comp
 
 ## 部署微服务集群
 
-<b>需求</b>：将之前学习的 cloud-demo 微服务集群利用 DockerCompose 部署
+<b>需求：</b>将之前学习的 cloud-demo 微服务集群利用 DockerCompose 部署
 
-<b>实现思路</b>：
+<b>实现思路</b>
 
 ① 查看课前资料提供的 cloud-demo 文件夹，里面已经编写好了 docker-compose 文件
 
@@ -877,7 +908,7 @@ DockerCompose 的详细语法参考官网：https://docs.docker.com/compose/comp
 
 查看课前资料提供的 cloud-demo 文件夹，里面已经编写好了 docker-compose 文件，而且每个微服务都准备了一个独立的目录：
 
-<div><img src="assets/image-20210731181341330.png"></div>
+<div align="center"><img src="assets/image-20210731181341330.png"></div>
 
 内容如下：
 
@@ -922,15 +953,15 @@ services:
   - `volumes`：数据卷挂载，这里挂载了 mysql 的 data、conf 目录，其中有我提前准备好的数据
 - `userservice`、`orderservice`、`gateway`：都是基于 Dockerfile 临时构建的
 
-查看mysql目录，可以看到其中已经准备好了cloud_order、cloud_user表：
+查看 mysql 目录，可以看到其中已经准备好了 cloud_order、cloud_user 表：
 
-<div><img src="assets/image-20210801095205034.png" width="70%"></div>
+<div align="center"><img src="assets/image-20210801095205034.png" width="70%"></div>
 
 查看微服务目录，可以看到都包含 Dockerfile 文件：
 
-<div><img src="assets/image-20210801095320586.png"></div>
+<div align="center"><img src="assets/image-20210801095320586.png"></div>
 
-内容如下：
+内容如下
 
 ```dockerfile
 FROM java:8-alpine
@@ -979,7 +1010,7 @@ spring:
 
 打包后：
 
-<div><img src="assets/image-20210801095951030.png" width="40%"></div>
+<div align="center"><img src="assets/image-20210801095951030.png" width="40%"></div>
 
 ### 拷贝jar包到部署目录
 
@@ -987,15 +1018,15 @@ spring:
 
 user-service：
 
-<div><img src="assets/image-20210801100201253.png"></div>
+<div align="center"><img src="assets/image-20210801100201253.png"></div>
 
 order-service：
 
-<div><img src="assets/image-20210801100231495.png"></div>
+<div align="center"><img src="assets/image-20210801100231495.png"></div>
 
 gateway：
 
-<div><img src="assets/image-20210801100308102.png"></div>
+<div align="center"><img src="assets/image-20210801100308102.png"></div>
 
 ### 部署
 
@@ -1003,7 +1034,7 @@ gateway：
 
 上传到任意目录：
 
-<div><img src="assets/image-20210801100955653.png"></div>
+<div align="center"><img src="assets/image-20210801100955653.png"></div>
 
 部署：
 
@@ -1017,7 +1048,7 @@ docker-compose up -d
 
 ## 搭建私有镜像仓库
 
-参考课前资料《CentOS7 安装 Docker.md》
+参考《安装 Docker.md》
 
 ## 推送、拉取镜像
 

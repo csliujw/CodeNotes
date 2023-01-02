@@ -16,7 +16,7 @@
 
 <div align="center"><img src="assets/image-20210713202807818.png"></div>
 
-> 单体架构的优缺点如下：
+> <b>单体架构的优缺点如下</b>
 
 <b>优点：</b>
 
@@ -33,7 +33,7 @@
 
 <div align="center"><img src="assets/image-20210713203124797.png"></div>
 
-> 分布式架构的优缺点
+> <b>分布式架构的优缺点</b>
 
 <b>优点：</b>
 
@@ -59,7 +59,7 @@
 - 优点：拆分粒度更小、服务更独立、耦合度更低。
 - 缺点：架构非常复杂，运维、监控、部署难度提高。
 
-> 微服务的架构特征
+> <b>微服务的架构特征</b>
 
 - 单一职责：微服务拆分粒度更小，每一个服务都对应唯一的业务能力，做到单一职责
 - 自治：团队独立、技术独立、数据独立，独立部署和交付
@@ -79,9 +79,15 @@
 - <b>配置中心：</b>统一管理整个微服务群的配置，将来用变更，用通知的方式去让对应的服务监控到配置的服务，实现配置的热更新。
 - <b>服务集群：</b>微服务拆分，形成集群。集群中的服务要遵从单一职责原则，面向服务，对外暴露接口。
 
-> 微服务技术对比
+> <b>微服务技术对比</b>
 
-<div align="center"><img src="assets/image-20210923225225196.png"></div>
+| -              | Dubbo               | SpringCloud               | SpringCloudAlibaba        |
+| -------------- | ------------------- | ------------------------- | ------------------------- |
+| 注册中心       | zookeeper、redis    | Eureka、Consul            | Nacos、Eureka             |
+| 服务远程调用   | dubbo 协议          | Feign（HTTP 协议）        | Dubbo、Feign              |
+| 配置中心       | 无                  | SpringCloudConfig         | SpringCloudConfig、Nacos  |
+| 服务网关       | 无                  | SpringCloud Gateway、Zuul | SpringCloud Gateway、Zuul |
+| 服务监控和保护 | dubbo-admin，功能弱 | Hysitx                    | Sentinel                  |
 
 <div align="center"><img src="assets/image-20210923225454898.png"></div>
 
@@ -121,11 +127,11 @@ Spring Cloud 集成了各种微服务功能组件，并基于 Spring Boot 实现
 
 ## 服务拆分原则
 
-微服务拆分时的几个原则：
+> <b>微服务拆分时的几个原则</b>
 
-- <span style="color:green">不同微服务，不要重复开发相同业务</span>
-- <span style="color:green">微服务数据独立，不要访问其它微服务的数据库</span>
-- <span style="color:green">微服务可以将自己的业务暴露为接口，供其它微服务调用</span>
+- 不同微服务，不要重复开发相同业务
+- 微服务数据独立，不要访问其它微服务的数据库
+- 微服务可以将自己的业务暴露为接口，供其它微服务调用
 
 <div align="center"><img src="assets/image-20210713210800950.png"></div>
 
@@ -148,7 +154,7 @@ cloud-demo：父工程，管理依赖
 
 ### 导入 SQL 语句
 
-首先，将 `cloud-order.sql` 和 `cloud-user.sql `导入到 mysql中：
+首先，将 `cloud-order.sql` 和 `cloud-user.sql` 导入到 mysql 中：
 
 <div align="center"><img src="assets/image-20210713211417049.png"></div>
 
@@ -172,7 +178,7 @@ cloud-order 表中持有 cloud-user 表中的 id 字段。
 
 <div align="center"><img src="assets/image-20210713212656887.png"></div>
 
-导入后，会在IDEA右下角出现弹窗：
+导入后，会在 IDEA 右下角出现弹窗：
 
 <div align="center"><img src="assets/image-20210713212349272.png"></div>
 
@@ -192,21 +198,68 @@ cloud-order 表中持有 cloud-user 表中的 id 字段。
 
 在 order-service 服务中，有一个根据 id 查询订单的接口：
 
-<div align="center"><img src="assets/image-20210713212749575.png"></div>
+```java
+@RestController
+@RequestMapping("order")
+public class OrderController {
 
-根据 id 查询订单，返回值是 Order 对象，如图：
+   @Autowired
+   private OrderService orderService;
 
-<div align="center"><img src="assets/image-20210713212901725.png"></div>
+    @GetMapping("{orderId}")
+    public Order queryOrderByUserId(@PathVariable("orderId") Long orderId) {
+        // 根据id查询订单并返回
+        return orderService.queryOrderById(orderId);
+    }
+}
+```
 
-其中的 user 为 null
+根据 id 查询订单，返回值是 Order 对象，其中的 user 为 null
 
-在 user-service 中有一个根据 id 查询用户的接口：
+```json
+{
+    "id": 101,
+    "price": 699900,
+    "name": "Apple 苹果 iPhone 12",
+    "num": 1,
+    "userId": 1,
+    "user": null
+}
+```
 
-<div align="center"><img src="assets/image-20210713213146089.png"></div>
+在 user-service 中有一个根据 id 查询用户的接口
 
-查询的结果如图：
+```java
+@Slf4j
+@RestController
+@RequestMapping("/user")
+public class UserController {
 
-<div align="center"><img src="assets/image-20210713213213075.png"></div>
+    @Autowired
+    private UserService userService;
+
+    /**
+     * 路径： /user/110
+     * @param id 用户id
+     * @return 用户
+     */
+    @GetMapping("/{id}")
+    public User queryById(@PathVariable("id") Long id, @RequestHeader(value = "Truth", required = false) String truth) {
+        System.out.println(truth);
+        return userService.queryById(id);
+    }
+}
+```
+
+查询的结果如下
+
+```json
+{
+    "id": 1,
+    "username": "xxx",
+    "address": "xxxxxx"
+}
+```
 
 ### 案例需求
 
@@ -224,7 +277,7 @@ cloud-order 表中持有 cloud-user 表中的 id 字段。
 
 ### 注册RestTemplate
 
-首先，我们在 `order-service` 服务中的 `OrderApplication` 启动类中，注册 `RestTemplate` 实例：
+首先，我们在 `order-service` 服务中的 `OrderApplication` 启动类中，注册 `RestTemplate` 实例
 
 ```java
 package cn.itcast.order;
@@ -254,17 +307,38 @@ public class OrderApplication {
 
 修改 `order-service` 服务中的 `cn.itcast.order.service` 包下的 `OrderService` 类中的 `queryOrderById` 方法：
 
-<div align="center"><img src="assets/image-20210713213959569.png"></div>
+```java
+@Service
+public class OrderService {
+
+    @Autowired
+    private OrderMapper orderMapper;
+    @Autowired
+    private RestTemplate restTemplate;
+
+    public Order queryOrderById(Long orderId) {
+        Order order = orderMapper.findById(orderId);
+        String url = "http://localhost:8081/user/" + order.getUserId();
+        // 发起调用
+        User user = restTemplate.getForObject(url, User.class);
+        order.setUser(user);
+        return order;
+    }
+}
+```
 
 ## 提供者与消费者
 
-在服务调用关系中，会有两个不同的角色：
+在服务调用关系中，会有两个不同的角色
 
 <b>服务提供者：</b>一次业务中，被其它微服务调用的服务。（提供接口给其它微服务）
 
 <b>服务消费者：</b>一次业务中，调用其它微服务的服务。（调用其它微服务提供的接口）
 
-<div align="center"><img src="assets/image-20210713214404481.png"></div>
+```mermaid
+graph LR
+服务消费者,&nbsporder-service===>服务提供者,&nbspuser-service
+```
 
 但是，服务提供者与服务消费者的角色并不是绝对的，而是相对于业务而言。
 
@@ -277,7 +351,7 @@ public class OrderApplication {
 
 # Eureka注册中心
 
-假如我们的服务提供者 `user-service` 部署了多个实例，如图：
+假如我们的服务提供者 `user-service` 部署了多个实例
 
 <div align="center"><img src="assets/image-20210713214925388.png"></div>
 
@@ -385,9 +459,7 @@ eureka: # 配置 eureka 的地址信息。
 
 ### 启动服务
 
-启动微服务，然后在浏览器访问：http://127.0.0.1:10086
-
-看到下面结果应该是成功了：
+启动微服务，然后在浏览器访问：http://127.0.0.1:10086，看到下面结果应该是成功了：
 
 <div align="center"><img src="assets/image-20210713222157190.png"></div>
 
@@ -397,7 +469,7 @@ eureka: # 配置 eureka 的地址信息。
 
 ### 引入依赖
 
-在 `user-service` 的 `pom` 文件中，引入下面的 `eureka-client` 依赖：
+在 `user-service` 的 `pom` 文件中，引入下面的 `eureka-client` 依赖
 
 ```xml
 <dependency>
@@ -408,7 +480,7 @@ eureka: # 配置 eureka 的地址信息。
 
 ### 配置文件
 
-在 `user-service` 中，修改 `application.yml` 文件，添加服务名称、`eureka` 地址：
+在 `user-service` 中，修改 `application.yml` 文件，添加服务名称、`eureka` 地址
 
 ```yaml
 spring:
@@ -483,19 +555,54 @@ eureka:
 
 最后，我们要去 `eureka-server` 中拉取 `user-service` 服务的实例列表，并且实现负载均衡。添加注解 @LoadBalanced 即可实现负载均衡。
 
-在 order-service 的 `OrderApplication` 中，给 `RestTemplate` 这个Bean添加一个 `@LoadBalanced` 注解：
+在 order-service 的 `OrderApplication` 中，给 `RestTemplate` 这个 Bean 添加一个 `@LoadBalanced` 注解：
 
-<div align="center"><img src="assets/image-20210713224049419.png"></div>
+```java
+@MapperScan("cn.itcast.order.mapper")
+@SpringBootApplication
+public class OrderApplication {
 
-修改 `order-service` 服务中的 `cn.itcast.order.service` 包下的 `OrderService` 类中的 `queryOrderById` 方法。修改访问的 `url` 路径，用服务名代替 `ip`、端口：
+    public static void main(String[] args) {
+        SpringApplication.run(OrderApplication.class, args);
+    }
 
-<div align="center"><img src="assets/image-20210713224245731.png"></div>
+    @Bean
+    @LoadBalanced
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+}
+```
+
+修改 `order-service` 服务中的 `cn.itcast.order.service` 包下的 `OrderService` 类中的 `queryOrderById` 方法。修改访问的 `url` 路径，用服务名代替 `ip`、端口
+
+```java
+@Service
+public class OrderService {
+
+    @Autowired
+    private OrderMapper orderMapper;
+    @Autowired
+    private RestTemplate restTemplate;
+
+    public Order queryOrderById(Long orderId) {
+        Order order = orderMapper.findById(orderId);
+        
+        // 用服务名替代具体的 ip
+        String url = "http://userservice/user/" + order.getUserId();
+        // 发起调用
+        User user = restTemplate.getForObject(url, User.class);
+        order.setUser(user);
+        return order;
+    }
+}
+```
 
 `spring` 会自动帮助我们从 `eureka-server` 端，根据 `userservice` 这个服务名称，获取实例列表，而后完成负载均衡。<span style="color:orange">而这个服务拉取，不是每次请求服务都要进行的，服务消费者会拉取到服务列表后会进行缓存，后面的一段时间可以直接用缓存的服务列表信息。然后每隔 30 秒更新一次服务列表信息</span>
 
 # Ribbon负载均衡
 
-添加了`@LoadBalanced` 注解，即可实现负载均衡功能，这是什么原理呢？
+添加了 `@LoadBalanced` 注解，即可实现负载均衡功能，这是什么原理呢？
 
 ## 负载均衡原理
 
@@ -570,7 +677,7 @@ eureka:
 
 <div align="center"><img src="assets/image-20210713224724673.png"></div>
 
-基本流程如下：
+> <b>基本流程如下</b>
 
 - 拦截我们的 `RestTemplate` 请求 http://userservice/user/1
 - `RibbonLoadBalancerClient` 会从请求 `url` 中获取服务名称，也就是 user-service
@@ -587,7 +694,7 @@ eureka:
 
 <div align="center"><img src="assets/image-20210713225653000.png"></div>
 
-不同规则的含义如下：
+> <b>不同规则的含义如下</b>
 
 | **内置负载均衡规则类**      | **规则描述**                                                 |
 | --------------------------- | ------------------------------------------------------------ |
@@ -605,7 +712,7 @@ eureka:
 
 通过定义 `IRule` 实现可以修改负载均衡规则，有两种方式：
 
-<span style="color:purple">代码方式</span>：在 <span style="color:red">order-service </span>中的 `OrderApplication` 类中，定义一个新的 `IRule`，<span style="color:green">这样 order-service 在请求服务的时候就会根据我们配置的负载均衡规则进行查找最合适的服务。</span>
+<span style="color:purple">代码方式</span>：在 <span style="color:red">order-service </span>中的 `OrderApplication` 类中，定义一个新的 `IRule`，这样 order-service 在请求服务的时候就会根据我们配置的负载均衡规则进行查找最合适的服务。
 
 ```java
 @Bean
@@ -614,7 +721,7 @@ public IRule randomRule(){
 }
 ```
 
-<span style="color:purple">配置文件方式</span>：在 `order-service` 的 `application.yml` 文件中，添加新的配置也可以修改规则：
+<span style="color:purple">配置文件方式</span>：在 `order-service` 的 `application.yml` 文件中，添加新的配置也可以修改规则
 
 ```yaml
 userservice: # 给某个微服务配置负载均衡规则，这里是userservice服务
@@ -653,11 +760,7 @@ ribbon:
 
 `SpringCloudAlibaba` 推出了一个名为 `Nacos` 的注册中心。
 
-[Nacos](https://nacos.io/) 是阿里巴巴的产品，现在是 [SpringCloud](https://spring.io/projects/spring-cloud) 中的一个组件。相比 [Eureka](https://github.com/Netflix/eureka) 功能更加丰富，在国内受欢迎程度较高。
-
-<div align="center"><img src="assets/image-20210713230444308.png"></div>
-
-安装方式可以参考《Nacos安装指南.md》
+[Nacos](https://nacos.io/) 是阿里巴巴的产品，现在是 [SpringCloud](https://spring.io/projects/spring-cloud) 中的一个组件。相比 [Eureka](https://github.com/Netflix/eureka) 功能更加丰富，在国内受欢迎程度较高。安装方式可以参考《Nacos安装指南.md》
 
 ## 服务注册到 nacos
 
@@ -695,7 +798,7 @@ ribbon:
 
 ### 配置nacos地址
 
-在 `user-service` 和 `order-service` 的 `application.yml` 中添加 `nacos` 地址：
+在 `user-service` 和 `order-service` 的 `application.yml` 中添加 `nacos` 地址
 
 ```yaml
 spring:
@@ -708,19 +811,19 @@ spring:
 
 ### 重启
 
-重启微服务后，登录 `nacos` 管理页面，可以看到微服务信息：
+重启微服务后，登录 `nacos` 管理页面，可以看到微服务信息
 
 <div align="center"><img src="assets/image-20210713231439607.png"></div>
 
 ## 服务分级存储模型
 
-一个<b>服务</b>可以有多个<b>实例</b>，例如我们的 user-service，可以有:
+一个<b>服务</b>可以有多个<b>实例</b>，例如我们的 user-service，可以有
 
 - 127.0.0.1:8081
 - 127.0.0.1:8082
 - 127.0.0.1:8083
 
-假如这些实例分布于全国各地的不同机房，例如：
+假如这些实例分布于全国各地的不同机房，例如
 
 - 127.0.0.1:8081，在上海机房
 - 127.0.0.1:8082，在上海机房
@@ -742,7 +845,7 @@ Nacos 就将同一机房内的实例划分为一个<b>集群</b>。
 
 ### 给 user-service 配置集群
 
-修改 `user-service` 的 `application.yml` 文件，添加集群配置：
+修改 `user-service` 的 `application.yml` 文件，添加集群配置
 
 ```yaml
 spring:
@@ -753,21 +856,21 @@ spring:
         cluster-name: HZ # 集群名称
 ```
 
-重启两个 `user-service` 实例后，我们可以在 `nacos` 控制台看到下面结果：
+重启两个 `user-service` 实例后，我们可以在 `nacos` 控制台看到下面结果
 
 <div align="center"><img src="assets/image-20210713232916215.png"></div>
 
-我们再次复制一个 `user-service` 启动配置，添加属性：
+我们再次复制一个 `user-service` 启动配置，添加属性
 
 ```sh
 -Dserver.port=8083 -Dspring.cloud.nacos.discovery.cluster-name=SH
 ```
 
-配置如图所示：
+配置如图所示
 
 <div align="center"><img src="assets/image-20210713233528982.png"></div>
 
-启动 `UserApplication3` 后再次查看 `nacos` 控制台：
+启动 `UserApplication3` 后再次查看 `nacos` 控制台
 
 <div align="center"><img src="assets/image-20210713233727923.png"></div>
 
@@ -826,7 +929,7 @@ userservice:
 
 <div align="center"><img src="assets/image-20210713235235219.png"></div>
 
-> <b>注意</b>：如果权重修改为 0，则该实例永远不会被访问
+> <b>注意：</b>如果权重修改为 0，则该实例永远不会被访问
 
 可以通过权值配置，在需要进行服务升级时，先将一部分服务器的权值设置为 0，服务神升级后在将升级后的服务器权值设置成 0.1 用小批量用户测下升级后稳不稳定，稳定后再进行大批量的升级。
 
@@ -838,31 +941,29 @@ userservice:
 - `namespace` 下可以有 group、service 等
 - 不同 `namespace` 之间相互隔离，例如不同 `namespace` 的服务互相不可见
 
-<div align="center"><img src="assets/image-20210714000101516.png" width="40%" ></div>
+<div align="center"><img src="assets/image-20210714000101516.png" width="50%" ></div>
 
 ### 创建 namespace
 
-默认情况下，所有 service、data、group都在同一个 `namespace`，名为public：
+默认情况下，所有 service、data、group 都在同一个 `namespace`，名为 public
 
 <div align="center"><img src="assets/image-20210714000414781.png"></div>
 
-我们可以点击页面新增按钮，添加一个 `namespace`：
+我们可以点击页面新增按钮，添加一个 `namespace`
 
 <div align="center"><img src="assets/image-20210714000440143.png"></div>
 
-然后，填写表单：
+然后，填写表单
 
 <div align="center"><img src="assets/image-20210714000505928.png"></div>
 
-就能在页面看到一个新的 `namespace`：
+就能在页面看到一个新的 `namespace`
 
 <div align="center"><img src="assets/image-20210714000522913.png"></div>
 
 ### 给微服务配置 namespace
 
-给微服务配置 namespace 只能通过修改配置来实现。
-
-例如，修改order-service的application.yml文件：
+给微服务配置 namespace 只能通过修改配置来实现。例如，修改 order-service 的 application.yml 文件
 
 ```yaml
 spring:
@@ -874,25 +975,25 @@ spring:
         namespace: 492a7d5d-237b-46a1-a99a-fa8e98e4b0f9 # 命名空间，填ID
 ```
 
-重启 order-service 后，访问控制台，可以看到下面的结果：
+重启 order-service 后，访问控制台，可以看到下面的结果
 
 <div align="center"><img src="assets/image-20210714000830703.png"></div>
 
 <div align="center"><img src="assets/image-20210714000837140.png"></div>
 
-此时访问 order-service，因为 namespace 不同，会导致找不到 userservice，控制台会报错：
+此时访问 order-service，因为 namespace 不同，会导致找不到 userservice，控制台会报错
 
 <div align="center"><img src="assets/image-20210714000941256.png"></div>
 
 ## Nacos 与 Eureka 的区别
 
-Nacos 会把服务实例划分为两种类型：
+Nacos 会把服务实例划分为两种类型
 
 - 一种是临时实例：如果实例宕机超过一定时间，会从服务列表剔除，默认的服务实例类型。对于临时实例，通过心跳机制检测服务的状态与 Eureka 一致。
 
 - 另一种是非临时实例：如果实例宕机，不会从服务列表剔除，只是会将其标记为"不健康"，等待他恢复成健康状态。也可以叫永久实例。
 
-:orange:<span style="color:orange">Eureka 做服务拉取是 30 秒更新/拉取一次服务列表，更新的可能不够及时；而 nacos 中，如果采用的是非临时实例，会有有消息推送，假设 nacos 发现有服务挂了会把主动推送变更消息到消费者那边，让消费者及时更新。但是 nacos 非临时实例的主动检测模式对服务器的压力比较大，一般都是采用临时实例。</span>
+<span style="color:orange">Eureka 做服务拉取是 30 秒更新/拉取一次服务列表，更新的可能不够及时；而 nacos 中，如果采用的是非临时实例，会有有消息推送，假设 nacos 发现有服务挂了会把主动推送变更消息到消费者那边，让消费者及时更新。但是 nacos 非临时实例的主动检测模式对服务器的压力比较大，一般都是采用临时实例。</span>
 
 配置一个服务实例为永久实例：
 
@@ -1010,24 +1111,7 @@ spring:
 
 在 user-service 中的 UserController 中添加业务逻辑，读取 pattern.dateformat 配置：
 
-<div align="center"><img src="assets/image-20210714170337448.png"></div>
-
-完整代码：
-
 ```java
-package cn.itcast.user.web;
-
-import cn.itcast.user.pojo.User;
-import cn.itcast.user.service.UserService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
-@Slf4j
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -1052,15 +1136,33 @@ public class UserController {
 
 ## 配置热更新
 
-我们最终的目的，是修改 nacos 中的配置后，微服务中无需重启即可让配置生效，也就是**配置热更新**。
+我们最终的目的，是修改 nacos 中的配置后，微服务中无需重启即可让配置生效，也就是配置热更新。
 
 Nacos 中的配置文件变更后，微服务无需重启就可以感知，不过需要通过下面两种配置实现：
 
 ### 方式一
 
-在@Value注入的变量所在类上添加注解@RefreshScope：
+在 @Value 注入的变量所在类上添加注解 @RefreshScope
 
-<div align="center"><img src="assets/image-20210714171036335.png"></div>
+```java
+@RestController
+@RequestMapping("/user")
+@RefreshScope // 增加注解
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @Value("${pattern.dateformat}")
+    private String dateformat;
+    
+    @GetMapping("now")
+    public String now(){
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern(dateformat));
+    }
+    // ...略
+}
+```
 
 ### 方式二
 
@@ -1083,28 +1185,9 @@ public class PatternProperties {
 }
 ```
 
-在UserController中使用这个类代替@Value：
-
-<div align="center"><img src="assets/image-20210714171316124.png"></div>
-
-完整代码：
+在 UserController 中使用这个类代替 @Value
 
 ```java
-package cn.itcast.user.web;
-
-import cn.itcast.user.config.PatternProperties;
-import cn.itcast.user.pojo.User;
-import cn.itcast.user.service.UserService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 @Slf4j
 @RestController
 @RequestMapping("/user")
@@ -1113,7 +1196,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @Autowired
+    @Autowired // 替代 @Value
     private PatternProperties patternProperties;
 
     @GetMapping("now")
@@ -1121,7 +1204,6 @@ public class UserController {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern(patternProperties.getDateformat()));
     }
 
-    // 略
 }
 ```
 
@@ -1149,11 +1231,37 @@ public class UserController {
 
 在 user-service 服务中，修改 PatternProperties 类，读取新添加的属性：
 
-<div align="center"><img src="assets/image-20210714173324231.png"></div>
+```java
+@Component
+@Data
+@ConfigurationProperties(prefix = "pattern")
+public class PatternProperties{
+    private String dataformat;
+    private String envSharedValue;
+}
+```
 
-在user-service服务中，修改UserController，添加一个方法：
+在 user-service 服务中，修改 UserController，添加一个方法：
 
-<div align="center"><img src="assets/image-20210714173721309.png"></div>
+```java
+@Slf4j
+@RestController
+@RequestMapping("/user")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private PatternProperties patternProperties;
+    
+    @GetMapping("prop")
+    public PatternProperties prop(){
+        return patternProperties;
+    }
+
+}
+```
 
 ### 运行两个UserApplication，使用不同的profile
 
@@ -1165,15 +1273,25 @@ public class UserController {
 
 这样，UserApplication(8081) 使用的 profile 是 dev，UserApplication2(8082) 使用的 profile 是 test。
 
-启动 UserApplication和UserApplication2
+启动 UserApplication 和 UserApplication2
 
 访问 http://localhost:8081/user/prop，结果：
 
-<div align="center"><img src="assets/image-20210714174313344.png"></div>
+```json
+{
+    "dataformat": "yyyy年MM月dd日 HH:mm:ss",
+    "envSharedValue": "环境共享属性值"
+}
+```
 
 访问 http://localhost:8082/user/prop，结果：
 
-<div align="center"><img src="assets/image-20210714174424818.png"></div>
+```json
+{
+    "dataformat": null,
+    "envSharedValue": "环境共享属性值"
+}
+```
 
 可以看出来，不管是 dev，还是 test 环境，都读取到了 envSharedValue 这个属性的值。
 
@@ -1185,32 +1303,31 @@ public class UserController {
 
 ## 搭建Nacos集群
 
-Nacos 生产环境下一定要部署为集群状态，部署方式参考课前资料中的文档：
-
-<div align="center"><img src="assets/image-20210714174728042.png"></div>
+Nacos 生产环境下一定要部署为集群状态，部署方式参考课前资料中的文档《nacos集群搭建.md》
 
 # Feign远程调用
 
-先前我们利用 RestTemplate 发起远程调用的代码：
+先前我们利用 RestTemplate 发起远程调用的代码
 
-<div align="center"><img src="assets/image-20210714174814204.png"></div>
+```java
+String url = "http://userservice/user/" + order.getUserId();
+User user = restTemplate.getForObject(url, User.class);
+```
 
-但是 RestTemplate 存在下面的问题：
+但是 RestTemplate 存在下面的问题
 
 - 代码可读性差，编程体验不统一
 - 参数复杂 URL 难以维护
 
 Feign 是一个声明式的 http 客户端，官方地址：https://github.com/OpenFeign/feign；其作用就是帮助我们优雅的实现 http 请求的发送，解决上面提到的问题。
 
-<div align="center"><img src="assets/image-20210714174918088.png"></div>
-
 ## Feign替代RestTemplate
 
-Fegin 的使用步骤如下：
+Fegin 的使用步骤如下
 
 ### 引入依赖
 
-我们在 order-service 服务的 pom 文件中引入 feign 的依赖：
+在 order-service 服务的 pom 文件中引入 feign 的依赖：
 
 ```xml
 <dependency>
@@ -1221,13 +1338,24 @@ Fegin 的使用步骤如下：
 
 ### 添加注解
 
-在 order-service 的启动类添加注解开启 Feign 的功能：
+在 order-service 的启动类添加注解开启 Feign 的功能
 
-<div align="center"><img src="assets/image-20210714175102524.png"></div>
+```java
+@MapperScan("cn.itcast.order.mapper")
+@SpringBootApplication
+@EnableFeignClients // 开启 Feign 功能
+public class OrderApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(OrderApplication.class, args);
+    }
+	// ...
+}
+```
 
 ### 编写Feign的客户端
 
-在 order-service 中新建一个接口，内容如下：
+在 order-service 中新建一个接口
 
 ```java
 package cn.itcast.order.client;
@@ -1258,7 +1386,24 @@ public interface UserClient {
 
 修改 order-service 中的 OrderService 类中的 queryOrderById 方法，使用 Feign 客户端代替 RestTemplate；看起来优雅多了。
 
-<div align="center"><img src="assets/image-20210714175415087.png"></div>
+```java
+@Service
+public class OrderService {
+
+    @Autowired
+    private OrderMapper orderMapper;
+    @Autowired
+    private UserClient userClient;
+
+    public Order queryOrderById(Long orderId) {
+        Order order = orderMapper.findById(orderId);
+        // 利用 Feign 发起 HTTP 请求查询用户
+        User user = userClient.findById(order.getUserId());
+        order.setUser(user);
+        return order;
+    }
+}
+```
 
 ### 总结
 
@@ -1274,7 +1419,7 @@ public interface UserClient {
 
 ## 自定义配置
 
-Feign 可以支持很多的自定义配置，如下表所示：
+> <b>Feign 可以支持很多的自定义配置，如下所示</b>
 
 | 类型                      | 作用             | 说明                                                         |
 | ------------------------- | ---------------- | ------------------------------------------------------------ |
@@ -1354,7 +1499,7 @@ Feign 底层发起 http 请求，依赖于其它的框架。其底层客户端�
 
 > 1）引入依赖
 
-在 order-service 的 pom 文件中引入 Apache 的 HttpClient 依赖：
+在 order-service 的 pom 文件中引入 Apache 的 HttpClient 依赖
 
 ```xml
 <!--httpClient的依赖 -->
@@ -1419,11 +1564,23 @@ Debug 方式启动 order-service 服务，可以看到这里的 client，底层�
 
 feign 客户端
 
-<div align="center"><img src="assets/image-20210714190542730.png"></div>
+```java
+@FeignClient("userservice")
+public interface UserClient {
+    @GetMapping("/user/{id}")
+    User findById(@PathVariable("id") Long id);
+}
+```
 
 UserController
 
-<div align="center"><img src="assets/image-20210714190528450.png"></div>
+```java
+@GetMapping("/user/{id}")
+public User queryById(@PathVariable("id") Long id) {
+    System.out.println(truth);
+    return userService.queryById(id);
+}
+```
 
 有没有一种办法简化这种重复的代码编写呢？
 
@@ -1442,12 +1599,12 @@ UserController
 
 <div align="center"><img src="assets/image-20210714190640857.png"></div>
 
-优点：
+<b>优点</b>
 
 - 简单
 - 实现了代码共享
 
-缺点：
+<b>缺点</b>
 
 - 服务提供方、服务消费方紧耦合
 
@@ -1455,7 +1612,7 @@ UserController
 
 ### 抽取方式
 
-:orange:<span style="color:orange">将 Feign 的 Client 抽取为独立模块，并且把接口有关的 POJO、默认的 Feign 配置都放到这个模块中，提供给所有消费者使用。例如，将 UserClient、User、Feign 的默认配置都抽取到一个 feign-api 包中，所有微服务引用该依赖包，即可直接使用。</span>
+<span style="color:orange">将 Feign 的 Client 抽取为独立模块，并且把接口有关的 POJO、默认的 Feign 配置都放到这个模块中，提供给所有消费者使用。例如，将 UserClient、User、Feign 的默认配置都抽取到一个 feign-api 包中，所有微服务引用该依赖包，即可直接使用。</span>
 
 <div align="center"><img src="assets/image-20210714214041796.png"></div>
 
@@ -1463,11 +1620,11 @@ UserController
 
 #### 抽取
 
-首先创建一个 module，命名为 feign-api：
+首先创建一个 module，命名为 feign-api
 
 <div align="center"><img src="assets/image-20210714204557771.png"></div>
 
-项目结构：
+项目结构
 
 <div align="center"><img src="assets/image-20210714204656214.png"></div>
 
@@ -1486,9 +1643,7 @@ UserController
 
 #### 在order-service中使用feign-api
 
-首先，删除 order-service 中的 UserClient、User、DefaultFeignConfiguration 等类或接口。
-
-在 order-service 的 pom 文件中中引入 feign-api 的依赖：
+首先，删除 order-service 中的 UserClient、User、DefaultFeignConfiguration 等类或接口。在 order-service 的 pom 文件中中引入 feign-api 的依赖
 
 ```xml
 <dependency>
@@ -1502,13 +1657,11 @@ UserController
 
 #### 重启测试
 
-重启后，发现服务报错了：
+重启后，发现服务报错了
 
 <div align="center"><img src="assets/image-20210714205623048.png"></div>
 
-这是因为 UserClient 现在在 cn.itcast.feign.clients 包下，
-
-而 order-service 的 @EnableFeignClients 注解是在 cn.itcast.order 包下，不在同一个包，无法扫描到 UserClient。
+这是因为 UserClient 现在在 cn.itcast.feign.clients 包下，而 order-service 的 @EnableFeignClients 注解是在 cn.itcast.order 包下，不在同一个包，无法扫描到 UserClient。
 
 #### 解决扫描包问题
 
@@ -1641,21 +1794,27 @@ spring:
 
 重启网关，访问 http://localhost:10010/user/1时，符合 `/user/**` 规则，请求转发到 uri：http://userservice/user/1，得到了结果
 
-<div align="center"><img src="assets/image-20210714211908341.png"></div>
+```json
+{
+    "id": 1,
+    "username": "xxx",
+    "address": "xxxx"
+}
+```
 
 ### 网关路由的流程图
 
-整个访问的流程如下
+> 整个访问的流程如下
 
 <div align="center"><img src="assets/image-20210714211742956.png"></div>
 
-网关搭建步骤
+> 网关搭建步骤
 
 1. 创建项目，引入 nacos 服务发现和 gateway 依赖
 
 2. 配置 application.yml，包括服务基本信息、nacos 地址、路由
 
-路由配置包括
+> 路由配置包括
 
 1. 路由 id：路由的唯一标示
 
@@ -1693,7 +1852,7 @@ spring:
 
 ## 过滤器工厂
 
-:orange:<span style="color:orange">Gateway Filter 是网关中提供的一种过滤器，可以对进入网关的请求和微服务返回的响应做处理，如添加请求头</span>
+Gateway Filter 是网关中提供的一种过滤器，可以对进入网关的请求和微服务返回的响应做处理，如添加请求头。
 
 <div align="center"><img src="assets/image-20210714212312871.png"></div>
 
@@ -2047,13 +2206,13 @@ java -Dserver.port=8090 -jar sentinel-dashboard-1.8.1.jar
 
 访问 http://localhost:8080 页面，就可以看到 sentinel 的控制台了
 
-<div align="center"><img src="img/image-20210715190827846.png"></div>
+<div align="center"><img src="assets/image-20210715190827846.png"></div>
 
 需要输入账号和密码，默认都是：sentinel
 
 登录后，发现一片空白，什么都没有
 
-<div align="center"><img src="img/image-20210715191134448.png"></div>
+<div align="center"><img src="assets/image-20210715191134448.png"></div>
 
 这是因为还没有与微服务整合。
 
@@ -2101,7 +2260,7 @@ spring:
 
 然后再访问 sentinel 的控制台，查看效果
 
-<div align="center"><img src="img/image-20210715191241799.png"></div>
+<div align="center"><img src="assets/image-20210715191241799.png"></div>
 
 ## 流量控制
 
@@ -2115,7 +2274,7 @@ spring:
 
 例如，刚才访问的 order-service 中的 OrderController 中的端点：/order/{orderId}
 
-<div align="center"><img src="img/image-20210715191757319.png"></div>
+<div align="center"><img src="assets/image-20210715191757319.png"></div>
 
 <span style="color:orange">流控、熔断等都是针对簇点链路中的资源来设置的，因此可以点击对应资源后面的按钮来设置规则</span>
 
@@ -2130,11 +2289,11 @@ spring:
 
 点击资源 /order/{orderId} 后面的流控按钮，就可以弹出表单。
 
-<div align="center"><img src="img/image-20210715191757319.png"></div>
+<div align="center"><img src="assets/image-20210715191757319.png"></div>
 
 表单中可以填写限流规则，如下：
 
-<div align="center"><img src="img/image-20210715192010657.png"></div>
+<div align="center"><img src="assets/image-20210715192010657.png"></div>
 
 其含义是限制 /order/{orderId} 这个资源的单机 QPS 为 1，即每秒只允许 1 次请求，超出的请求会被拦截并报错。针对来源设置为 default 表示一切进来的请求都要被限，一般都是 default。
 
@@ -2144,7 +2303,7 @@ spring:
 
 1）首先在 sentinel 控制台添加限流规则
 
-<div align="center"><img src="img/image-20210715192455429.png"></div>
+<div align="center"><img src="assets/image-20210715192455429.png"></div>
 
 2）利用 jmeter 测试
 
@@ -2152,27 +2311,27 @@ spring:
 
 课前资料提供了编写好的 Jmeter 测试样例：
 
-<div align="center"><img src="img/image-20210715200431615.png"></div>
+<div align="center"><img src="assets/image-20210715200431615.png"></div>
 
 打开 jmeter，导入提供的测试样例
 
-<div align="center"><img src="img/image-20210715200537171.png"></div>
+<div align="center"><img src="assets/image-20210715200537171.png"></div>
 
 选择
 
-<div align="center"><img src="img/image-20210715200635414.png"></div>
+<div align="center"><img src="assets/image-20210715200635414.png"></div>
 
 20 个用户，2 秒内运行完，QPS 是 10，超过了 5.
 
 选中 `流控入门，QPS<5` 右键运行：
 
-<div align="center"><img src="img/image-20210715200804594.png"></div>
+<div align="center"><img src="assets/image-20210715200804594.png"></div>
 
 
 
 > 注意，不要点击菜单中的执行按钮来运行。
 
-<div align="center"><img src="img/image-20210715200853671.png"></div>
+<div align="center"><img src="assets/image-20210715200853671.png"></div>
 
 可以看到，成功的请求每次只有 5 个
 
@@ -2184,7 +2343,7 @@ spring:
 - <b>关联：</b>统计与当前资源相关的另一个资源，触发阈值时，对当前资源限流；即 A、B 两种资源，A 触发了阈值，则对 B 进行限流。
 - <b>链路：</b>统计从指定链路访问到本资源的请求，触发阈值时，对指定链路限流。如 A、B、C 都需要访问资源 D，但是 D 统计请求的时候只统计来自于 D 的请求。
 
-<div align="center"><img src="img/image-20210715201827886.png"></div>
+<div align="center"><img src="assets/image-20210715201827886.png"></div>
 
 
 
@@ -2198,7 +2357,7 @@ spring:
 
 <b>配置规则</b>
 
-<div align="center"><img src="img/image-20210715202540786.png"></div>
+<div align="center"><img src="assets/image-20210715202540786.png"></div>
 
 <b>语法说明：</b>当 /write 资源访问量触发阈值时，就会对 /read 资源限流，避免影响 /write 资源。
 
@@ -2228,35 +2387,35 @@ public String updateOrder() {
 
 重启服务，查看 sentinel 控制台的簇点链路
 
-<div align="center"><img src="img/image-20210716101805951.png"></div>
+<div align="center"><img src="assets/image-20210716101805951.png"></div>
 
 3）配置流控规则
 
 对哪个端点限流，就点击哪个端点后面的按钮。我们是对订单查询 /order/query 限流，因此点击它后面的按钮
 
-<div align="center"><img src="img/image-20210716101934499.png"></div>
+<div align="center"><img src="assets/image-20210716101934499.png"></div>
 
 在表单中填写流控规则
 
-<div align="center"><img src="img/image-20210716102103814.png"></div>
+<div align="center"><img src="assets/image-20210716102103814.png"></div>
 
 4）在 Jmeter 测试
 
 选择《流控模式-关联》：
 
-<div align="center"><img src="img/image-20210716102416266.png"></div>
+<div align="center"><img src="assets/image-20210716102416266.png"></div>
 
 可以看到 1000 个用户，100 秒，因此 QPS 为 10，超过了我们设定的阈值：5
 
 查看 http 请求：
 
-<div align="center"><img src="img/image-20210716102532554.png"></div>
+<div align="center"><img src="assets/image-20210716102532554.png"></div>
 
 请求的目标是 /order/update，这样这个断点就会触发阈值。
 
 但限流的目标是 /order/query，我们在浏览器访问，可以发现：
 
-<div align="center"><img src="img/image-20210716102636030.png"></div>
+<div align="center"><img src="assets/image-20210716102636030.png"></div>
 
 确实被限流了。
 
@@ -2281,7 +2440,7 @@ public String updateOrder() {
 
 如果只希望统计从 /test2 进入到 /common 的请求，则可以这样配置
 
-<div align="center"><img src="img/image-20210716103536346.png"></div>
+<div align="center"><img src="assets/image-20210716103536346.png"></div>
 
 <b>实战案例</b>
 
@@ -2379,13 +2538,13 @@ spring:
 
 重启服务，访问 /order/query 和 /order/save，可以查看到 sentinel 的簇点链路规则中，出现了新的资源：
 
-<div align="center"><img src="img/image-20210716105227163.png"></div>
+<div align="center"><img src="assets/image-20210716105227163.png"></div>
 
 5）添加流控规则
 
 点击 goods 资源后面的流控按钮，在弹出的表单中填写下面信息：
 
-<div align="center"><img src="img/image-20210716105408723.png"></div>
+<div align="center"><img src="assets/image-20210716105408723.png"></div>
 
 只统计从 /order/query 进入 /goods 的资源，QPS 阈值为 2，超出则被限流。
 
@@ -2393,27 +2552,27 @@ spring:
 
 选择《流控模式-链路》
 
-<div align="center"><img src="img/image-20210716105612312.png"></div>
+<div align="center"><img src="assets/image-20210716105612312.png"></div>
 
 可以看到这里 200 个用户，50 秒内发完，QPS 为 4，超过了我们设定的阈值 2
 
 一个 http 请求是访问 /order/save
 
-<div align="center"><img src="img/image-20210716105812789.png"></div>
+<div align="center"><img src="assets/image-20210716105812789.png"></div>
 
 运行的结果
 
-<div align="center"><img src="img/image-20210716110027064.png"></div>
+<div align="center"><img src="assets/image-20210716110027064.png"></div>
 
 完全不受影响。
 
 另一个是访问 /order/query
 
-<div align="center"><img src="img/image-20210716105855951.png"></div>
+<div align="center"><img src="assets/image-20210716105855951.png"></div>
 
 运行结果
 
-<div align="center"><img src="img/image-20210716105956401.png"></div>
+<div align="center"><img src="assets/image-20210716105956401.png"></div>
 
 每次只有 2 个通过。
 
@@ -2431,7 +2590,7 @@ spring:
 
 在流控的高级选项中，还有一个流控效果选项
 
-<div align="center"><img src="img/image-20210716110225104.png"></div>
+<div align="center"><img src="assets/image-20210716110225104.png"></div>
 
 流控效果是指请求达到流控阈值时应该采取的措施，包括三种
 
@@ -2449,7 +2608,7 @@ warm up 也叫预热模式，是应对服务冷启动的一种方案。请求阈
 
 例如，我设置 QPS 的 maxThreshold 为 10，预热时间为 5 秒，那么初始阈值就是  10 / 3 ，也就是 3，然后在 5 秒后逐渐增长到 10.
 
-<div align="center"><img src="img/image-20210716110629796.png"></div>
+<div align="center"><img src="assets/image-20210716110629796.png"></div>
 
 
 
@@ -2459,33 +2618,33 @@ warm up 也叫预热模式，是应对服务冷启动的一种方案。请求阈
 
 1）配置流控规则
 
-<div align="center"><img src="img/image-20210716111012387.png"></div>
+<div align="center"><img src="assets/image-20210716111012387.png"></div>
 
 2）Jmeter测试
 
 选择《流控效果，warm up》
 
-<div align="center"><img src="img/image-20210716111136699.png"></div>
+<div align="center"><img src="assets/image-20210716111136699.png"></div>
 
 QPS 为 10.
 
 刚刚启动时，大部分请求失败，成功的只有 3 个，说明 QPS 被限定在 3
 
-<div align="center"><img src="img/image-20210716111303701.png"></div>
+<div align="center"><img src="assets/image-20210716111303701.png"></div>
 
 随着时间推移，成功比例越来越高
 
-<div align="center"><img src="img/image-20210716111404717.png"></div>
+<div align="center"><img src="assets/image-20210716111404717.png"></div>
 
 
 
 到 Sentinel 控制台查看实时监控
 
-<div align="center"><img src="img/image-20210716111526480.png"></div>
+<div align="center"><img src="assets/image-20210716111526480.png"></div>
 
 一段时间后
 
-<div align="center"><img src="img/image-20210716111658541.png"></div>
+<div align="center"><img src="assets/image-20210716111658541.png"></div>
 
 #### 排队等待
 
@@ -2495,7 +2654,7 @@ QPS 为 10.
 
 例如：QPS=5，意味着每 200ms 处理一个队列中的请求；timeout = 2000，意味着预期等待时长超过 2000ms 的请求会被拒绝并抛出异常。
 
-<div align="center"><img src="img/image-20221211163959954.png"></div>
+<div align="center"><img src="assets/image-20221211163959954.png"></div>
 
 那什么叫做预期等待时长呢？
 
@@ -2506,11 +2665,11 @@ QPS 为 10.
 
 现在，第 1 秒同时接收到 10 个请求，但第 2 秒只有 1 个请求，此时 QPS 的曲线这样的：
 
-<div align="center"><img src="img/image-20210716113147176.png"></div>
+<div align="center"><img src="assets/image-20210716113147176.png"></div>
 
 如果使用队列模式做流控，所有进入的请求都要排队，以固定的 200ms 的间隔执行，QPS 会变的很平滑：
 
-<div align="center"><img src="img/image-20210716113426524.png"></div>
+<div align="center"><img src="assets/image-20210716113426524.png"></div>
 
 
 平滑的 QPS 曲线，对于服务器来说是更友好的。
@@ -2521,13 +2680,13 @@ QPS 为 10.
 
 1）添加流控规则
 
-<div align="center"><img src="img/image-20210716114048918.png"></div>
+<div align="center"><img src="assets/image-20210716114048918.png"></div>
 
 2）Jmeter 测试
 
 选择《流控效果，队列》：
 
-<div align="center"><img src="img/image-20210716114243558.png"></div>
+<div align="center"><img src="assets/image-20210716114243558.png"></div>
 
 QPS 为 15，已经超过了我们设定的 10。
 
@@ -2535,15 +2694,15 @@ QPS 为 15，已经超过了我们设定的 10。
 
 但是我们看看队列模式的运行结果，全部都通过了。
 
-<div align="center"><img src="img/image-20210716114429361.png"></div>
+<div align="center"><img src="assets/image-20210716114429361.png"></div>
 
 再去 sentinel 查看实时监控的 QPS 曲线
 
-<div align="center"><img src="img/image-20210716114522935.png"></div>
+<div align="center"><img src="assets/image-20210716114522935.png"></div>
 
 QPS 非常平滑，一致保持在 10，但是超出的请求没有被拒绝，而是放入队列。因此响应时间（等待时间）会越来越长。当队列满了以后，才会有部分请求失败。
 
-<div align="center"><img src="img/image-20210716114651137.png"></div>
+<div align="center"><img src="assets/image-20210716114651137.png"></div>
 
 #### 总结
 
@@ -2563,17 +2722,17 @@ QPS 非常平滑，一致保持在 10，但是超出的请求没有被拒绝，�
 
 例如，一个根据 id 查询商品的接口
 
-<div align="center"><img src="img/image-20210716115014663.png"></div>
+<div align="center"><img src="assets/image-20210716115014663.png"></div>
 
 访问 /goods/{id} 的请求中，id 参数值会有变化，热点参数限流会根据参数值分别统计 QPS，统计结果：
 
-<div align="center"><img src="img/image-20210716115131463.png"></div>
+<div align="center"><img src="assets/image-20210716115131463.png"></div>
 
 当 id=1 的请求触发阈值被限流时，id 值不为 1 的请求不受影响。
 
 配置示例
 
-<div align="center"><img src="img/image-20210716115232426.png"></div>
+<div align="center"><img src="assets/image-20210716115232426.png"></div>
 
 代表的含义是：对 hot 这个资源的 0 号参数（第一个参数）做统计，每 1 秒相同参数值的请求数不能超过 5
 
@@ -2583,7 +2742,7 @@ QPS 非常平滑，一致保持在 10，但是超出的请求没有被拒绝，�
 
 而在实际开发中，可能部分商品是热点商品，例如秒杀商品，我们希望这部分商品的 QPS 限制与其它商品不一样，高一些。那就需要配置热点参数限流的高级选项了：
 
-<div align="center"><img src="img/image-20210716115717523.png"></div>
+<div align="center"><img src="assets/image-20210716115717523.png"></div>
 
 结合上一个配置，这里的含义是对 0 号的 long 类型参数限流，每 1 秒相同参数的 QPS 不能超过 5，有两个例外：
 
@@ -2605,29 +2764,44 @@ QPS 非常平滑，一致保持在 10，但是超出的请求没有被拒绝，�
 
 给 order-service 中的 OrderController 中的 /order/{orderId} 资源添加注解
 
-<div align="center"><img src="img/image-20210716120033572.png"></div>
+```java
+@RestController
+@RequestMapping("order")
+public class OrderController {
+
+   @Autowired
+   private OrderService orderService;
+
+    @SentinelResource("hot") // 标记资源
+    @GetMapping("{orderId}")
+    public Order queryOrderByUserId(@PathVariable("orderId") Long orderId) {
+        // 根据id查询订单并返回
+        return orderService.queryOrderById(orderId);
+    }
+}
+```
 
 2）热点参数限流规则
 
 访问该接口，可以看到我们标记的 hot 资源出现了
 
-<div align="center"><img src="img/image-20210716120208509.png"></div>
+<div align="center"><img src="assets/image-20210716120208509.png"></div>
 
 这里不要点击 hot 后面的按钮，页面有 BUG
 
 点击左侧菜单中热点规则菜单
 
-<div align="center"><img src="img/image-20210716120319009.png"></div>
+<div align="center"><img src="assets/image-20210716120319009.png"></div>
 
 点击新增，填写表单
 
-<div align="center"><img src="img/image-20210716120536714.png"></div>
+<div align="center"><img src="assets/image-20210716120536714.png"></div>
 
 3）Jmeter 测试
 
 选择《热点参数限流 QPS1》：
 
-<div align="center"><img src="img/image-20210716120754527.png"></div>
+<div align="center"><img src="assets/image-20210716120754527.png"></div>
 
 这里发起请求的 QPS 为 5.
 
@@ -2635,29 +2809,29 @@ QPS 非常平滑，一致保持在 10，但是超出的请求没有被拒绝，�
 
 普通参数，QPS 阈值为 2
 
-<div align="center"><img src="img/image-20210716120840501.png"></div>
+<div align="center"><img src="assets/image-20210716120840501.png"></div>
 
 运行结果：
 
-<div align="center"><img src="img/image-20210716121105567.png"></div>
+<div align="center"><img src="assets/image-20210716121105567.png"></div>
 
 
 例外项，QPS 阈值为 4
 
-<div align="center"><img src="img/image-20210716120900365.png"></div>
+<div align="center"><img src="assets/image-20210716120900365.png"></div>
 
 运行结果：
 
-<div align="center"><img src="img/image-20210716121201630.png"></div>
+<div align="center"><img src="assets/image-20210716121201630.png"></div>
 
 
 例外项，QPS 阈值为 10
 
-<div align="center"><img src="img/image-20210716120919131.png"></div>
+<div align="center"><img src="assets/image-20210716120919131.png"></div>
 
 运行结果：
 
-<div align="center"><img src="img/image-20210716121220305.png"></div>
+<div align="center"><img src="assets/image-20210716121220305.png"></div>
 
 ## 隔离和降级
 
@@ -2665,12 +2839,12 @@ QPS 非常平滑，一致保持在 10，但是超出的请求没有被拒绝，�
 
 线程隔离之前讲到过，调用者在调用服务提供者时，给每个调用的请求分配独立线程池，出现故障时，最多消耗这个线程池内资源，避免把调用者的所有资源耗尽。
 
-<div align="center"><img src="img/image-20210715173215243.png"></div>
+<div align="center"><img src="assets/image-20210715173215243.png"></div>
 
 
 <b>熔断降级：</b>是在调用方这边加入断路器，统计对服务提供者的调用，如果调用的失败比例过高，则熔断该业务，不允许访问该服务的提供者了。
 
-<div align="center"><img src="img/image-20210715173428073.png"></div>
+<div align="center"><img src="assets/image-20210715173428073.png"></div>
 
 
 可以看到，不管是线程隔离还是熔断降级，都是对<b>客户端</b>（调用方）的保护。需要在<b>调用方</b>发起远程调用时做线程隔离、或者服务熔断。而我们的微服务远程调用都是基于 Feign 来完成的，因此我们需要将 Feign 与 Sentinel 整合，在 Feign 里面实现线程隔离和服务熔断。
@@ -2699,7 +2873,7 @@ feign:
 
 <b>步骤一：</b>在 feing-api 项目中定义类，实现 FallbackFactory
 
-<div align="center"><img src="img/image-20210716122403502.png"></div>
+<div align="center"><img src="assets/image-20210716122403502.png"></div>
 
 ```java
 package cn.itcast.feign.clients.fallback;
@@ -2754,7 +2928,7 @@ public interface UserClient {
 
 重启后，访问一次订单查询业务，然后查看 sentinel 控制台，可以看到新的簇点链路
 
-<div align="center"><img src="img/image-20210716123705780.png"></div>
+<div align="center"><img src="assets/image-20210716123705780.png"></div>
 
 #### 总结
 
@@ -2779,7 +2953,7 @@ Feign 整合 Sentinel 的步骤
 
 - 信号量隔离（Sentinel 默认采用）
 
-<div align="center"><img src="img/image-20210716123036937.png"></div>
+<div align="center"><img src="assets/image-20210716123036937.png"></div>
 
 <b>线程池隔离：</b>给每个服务调用业务分配一个线程池，利用线程池本身实现隔离效果
 
@@ -2796,7 +2970,7 @@ Feign 整合 Sentinel 的步骤
 
 <span style="color:orange">在添加限流规则时，可以选择两种阈值类型，选择线程数即开启了舱壁模式。</span>
 
-<div align="center"><img src="img/image-20210716123411217.png"></div>
+<div align="center"><img src="assets/image-20210716123411217.png"></div>
 
 - QPS：就是每秒的请求数，在快速入门中已经演示过
 
@@ -2810,23 +2984,23 @@ Feign 整合 Sentinel 的步骤
 
 选择 feign 接口后面的流控按钮
 
-<div align="center"><img src="img/image-20210716123831992.png"></div>
+<div align="center"><img src="assets/image-20210716123831992.png"></div>
 
 填写表单
 
-<div align="center"><img src="img/image-20210716123936844.png"></div>
+<div align="center"><img src="assets/image-20210716123936844.png"></div>
 
 2）Jmeter 测试
 
 选择《阈值类型-线程数<2》
 
-<div align="center"><img src="img/image-20210716124229894.png"></div>
+<div align="center"><img src="assets/image-20210716124229894.png"></div>
 
 一次发生 10 个请求，有较大概率并发线程数超过 2，而超出的请求会走之前定义的失败降级逻辑。
 
 查看运行结果：
 
-<div align="center"><img src="img/image-20210716124147820.png"></div>
+<div align="center"><img src="assets/image-20210716124147820.png"></div>
 
 发现虽然结果都是通过了，不过部分请求得到的响应是降级返回的 null 信息。
 
@@ -2852,7 +3026,7 @@ Feign 整合 Sentinel 的步骤
 
 断路器控制熔断和放行是通过状态机来完成的：
 
-<div align="center"><img src="img/image-20210716130958518.png"></div>
+<div align="center"><img src="assets/image-20210716130958518.png"></div>
 
 状态机包括三个状态：
 
@@ -2870,7 +3044,7 @@ Feign 整合 Sentinel 的步骤
 
 例如：
 
-<div align="center"><img src="img/image-20210716145934347.png"></div>
+<div align="center"><img src="assets/image-20210716145934347.png"></div>
 
 解读：RT 超过 500ms 的调用是慢调用，统计最近 10000ms 内的请求，如果请求量超过 10 次，并且慢调用比例不低于 0.5，则触发熔断，熔断时长为 5 秒。然后进入 half-open 状态，放行一次请求做测试。
 
@@ -2880,25 +3054,34 @@ Feign 整合 Sentinel 的步骤
 
 1）设置慢调用
 
-修改 user-service 中的 /user/{id} 这个接口的业务。通过休眠模拟一个延迟时间：
+修改 user-service 中的 /user/{id} 这个接口的业务。通过休眠模拟一个延迟时间
 
-<div align="center"><img src="img/image-20210716150234787.png"></div>
+```java
+@GetMapping("/{id}")
+public User queryById(@PathVariable("id") Long id) throws InterruptedException{
+    if(id == 1){
+        // id 为 1 时模拟慢调用
+        Thread.sleep(60);
+    }
+    return userService.queryById(id);
+}
+```
 
 此时，orderId=101 的订单，关联的是 id 为 1 的用户，调用时长为 60ms
 
-<div align="center"><img src="img/image-20210716150510956.png"></div>
+<div align="center"><img src="assets/image-20210716150510956.png"></div>
 
 orderId=102 的订单，关联的是 id 为 2 的用户，调用时长为非常短；
 
-<div align="center"><img src="img/image-20210716150605208.png"></div>
+<div align="center"><img src="assets/image-20210716150605208.png"></div>
 
 2）设置熔断规则
 
 下面，给 feign 接口设置降级规则
 
-<div align="center"><img src="img/image-20210716150654094.png"></div>
+<div align="center"><img src="assets/image-20210716150654094.png"></div>
 
-<div align="center"><img src="img/image-20210716150740434.png"></div>
+<div align="center"><img src="assets/image-20210716150740434.png"></div>
 
 超过 50ms 的请求都会被认为是慢请求
 
@@ -2906,13 +3089,13 @@ orderId=102 的订单，关联的是 id 为 2 的用户，调用时长为非常�
 
 在浏览器访问：http://localhost:8088/order/101，快速刷新 5 次，可以发现
 
-<div align="center"><img src="img/image-20210716150911004.png"></div>
+<div align="center"><img src="assets/image-20210716150911004.png"></div>
 
 触发了熔断，请求时长缩短至 5ms，快速失败了，并且走降级逻辑，返回的 null
 
 在浏览器访问：http://localhost:8088/order/102，竟然也被熔断了
 
-<div align="center"><img src="img/image-20210716151107785.png"></div>
+<div align="center"><img src="assets/image-20210716151107785.png"></div>
 
 #### 异常比例、异常数
 
@@ -2920,13 +3103,13 @@ orderId=102 的订单，关联的是 id 为 2 的用户，调用时长为非常�
 
 例如，一个异常比例设置：
 
-<div align="center"><img src="img/image-20210716131430682.png"></div>
+<div align="center"><img src="assets/image-20210716131430682.png"></div>
 
 解读：统计最近 1000ms 内的请求，如果请求量超过 10 次，并且异常比例不低于 0.4，则触发熔断。
 
 一个异常数设置：
 
-<div align="center"><img src="img/image-20210716131522912.png"></div>
+<div align="center"><img src="assets/image-20210716131522912.png"></div>
 
 解读：统计最近 1000ms 内的请求，如果请求量超过 10 次，并且异常比例不低于 2 次，则触发熔断。
 
@@ -2938,7 +3121,19 @@ orderId=102 的订单，关联的是 id 为 2 的用户，调用时长为非常�
 
 首先，修改 user-service 中的 /user/{id} 这个接口的业务。手动抛出异常，以触发异常比例的熔断
 
-<div align="center"><img src="img/image-20210716151348183.png"></div>
+```java
+@GetMapping("/{id}")
+public User queryById(@PathVariable("id") Long id) throws InterruptedException{
+    if(id == 1){
+        // id 为 1 时模拟慢调用
+        Thread.sleep(60);
+    }else if(id == 2){
+        // 这种应该不能用 try-cache 捕捉，不然框架无法感知到发生了异常是吗，查查资料？
+        throw new RuntimeException("故意抛出异常，触发异常比例熔断");
+    }
+    return userService.queryById(id);
+}
+```
 
 也就是说，id 为 2时，就会触发异常
 
@@ -2946,9 +3141,9 @@ orderId=102 的订单，关联的是 id 为 2 的用户，调用时长为非常�
 
 下面，给 feign 接口设置降级规则
 
-<div align="center"><img src="img/image-20210716150654094.png"></div>
+<div align="center"><img src="assets/image-20210716150654094.png"></div>
 
-<div align="center"><img src="img/image-20210716151538785.png"></div>
+<div align="center"><img src="assets/image-20210716151538785.png"></div>
 
 在 5 次请求中，只要异常比例超过 0.4，也就是有 2 次以上的异常，就会触发熔断。
 
@@ -2956,11 +3151,11 @@ orderId=102 的订单，关联的是 id 为 2 的用户，调用时长为非常�
 
 在浏览器快速访问：http://localhost:8088/order/102，快速刷新 5 次，触发熔断：
 
-<div align="center"><img src="img/image-20210716151722916.png"></div>
+<div align="center"><img src="assets/image-20210716151722916.png"></div>
 
 此时，我们去访问本来应该正常的 103
 
-<div align="center"><img src="img/image-20210716151844817.png"></div>
+<div align="center"><img src="assets/image-20210716151844817.png"></div>
 
 ## 授权规则
 
@@ -2978,7 +3173,7 @@ orderId=102 的订单，关联的是 id 为 2 的用户，调用时长为非常�
 
 点击左侧菜单的授权，可以看到授权规则
 
-<div align="center"><img src="img/image-20210716152010750.png"></div>
+<div align="center"><img src="assets/image-20210716152010750.png"></div>
 
 - 资源名：就是受保护的资源，例如 /order/{orderId}
 
@@ -2988,7 +3183,7 @@ orderId=102 的订单，关联的是 id 为 2 的用户，调用时长为非常�
 
 比如：
 
-<div align="center"><img src="img/image-20210716152349191.png"></div>
+<div align="center"><img src="assets/image-20210716152349191.png"></div>
 
 我们允许请求从 gateway 到 order-service，不允许浏览器访问 order-service，那么白名单中就要填写<b>网关的来源名称（origin）</b>。
 
@@ -3057,19 +3252,19 @@ spring:
 
 接下来，我们添加一个授权规则，放行 origin 值为 gateway 的请求。
 
-<div align="center"><img src="img/image-20210716153250134.png"></div>
+<div align="center"><img src="assets/image-20210716153250134.png"></div>
 
 我们编写的代码，对来自浏览器的请求，由于 Sentinel 无法获取到 origin 的值，会返回 blank，而来自网关的请求可以获取到 origin 的值，其值为 gateway，因此配置如下：
 
-<div align="center"><img src="img/image-20210716153301069.png"></div>
+<div align="center"><img src="assets/image-20210716153301069.png"></div>
 
 现在，我们直接跳过网关，访问 order-service 服务
 
-<div align="center"><img src="img/image-20210716153348396.png"></div>
+<div align="center"><img src="assets/image-20210716153348396.png"></div>
 
 通过网关访问
 
-<div align="center"><img src="img/image-20210716153434095.png"></div>
+<div align="center"><img src="assets/image-20210716153434095.png"></div>
 
 ### 自定义异常结果
 
@@ -3149,11 +3344,19 @@ public class SentinelExceptionHandler implements BlockExceptionHandler {
 
 重启测试，在不同场景下，会返回不同的异常消息
 
-<div align="center"><img src="img/image-20210716153938887.png"></div>
+```json
+{
+    "msg": 请求被限流了, "status": 429
+}
+```
 
 授权拦截时
 
-<div align="center"><img src="img/image-20210716154012736.png"></div>
+```json
+{
+    "msg": 没有权限访问, "status": 401
+}
+```
 
 #### 总结
 
@@ -3177,7 +3380,7 @@ public class SentinelExceptionHandler implements BlockExceptionHandler {
 
 pull 模式：控制台将配置的规则推送到 Sentinel 客户端，而客户端会将配置规则保存在本地文件或数据库中。以后会定时去本地文件或数据库中查询，更新本地规则。
 
-<div align="center"><img src="img/image-20210716154155238.png"></div>
+<div align="center"><img src="assets/image-20210716154155238.png"></div>
 
 因为是定时查询的，因此时效性较差。
 
@@ -3185,7 +3388,7 @@ pull 模式：控制台将配置的规则推送到 Sentinel 客户端，而客�
 
 push 模式：控制台将配置规则推送到远程配置中心，例如 Nacos。Sentinel 客户端监听 Nacos，获取配置变更的推送消息，完成本地配置更新。
 
-<div align="center"><img src="img/image-20210716154215456.png"></div>
+<div align="center"><img src="assets/image-20210716154215456.png"></div>
 
 ### 实现push模式
 
@@ -3223,7 +3426,7 @@ SentinelDashboard 默认不支持 nacos 的持久化，需要修改源码。
 
 1）解压，解压 sentinel 源码，打开项目
 
-<div align="center"><img src="img/image-20210618201412878.png"></div>
+<div align="center"><img src="assets/image-20210618201412878.png"></div>
 
 2）修改 nacos 依赖，在 sentinel-dashboard 源码的 pom 文件中，nacos 的依赖默认的 scope 是 test，只能在测试时使用，这里要去除，修改为
 
@@ -3236,15 +3439,15 @@ SentinelDashboard 默认不支持 nacos 的持久化，需要修改源码。
 
 3）添加 nacos 支持，在 sentinel-dashboard 的 test 包下，已经编写了对 nacos 的支持，我们需要将其拷贝到 main 下
 
-<div align="center"><img src="img/image-20210618201726280.png"></div>
+<div align="center"><img src="assets/image-20210618201726280.png"></div>
 
 4）修改 nacos 地址，然后，还需要修改测试代码中的 NacosConfig 类
 
-<div align="center"><img src="img/image-20210618201912078-16707524486833.png"></div>
+<div align="center"><img src="assets/image-20210618201912078-16707524486833.png"></div>
 
 修改其中的 nacos 地址，让其读取 application.properties 中的配置
 
-<div align="center"><img src="img/image-20210618202047575.png"></div>
+<div align="center"><img src="assets/image-20210618202047575.png"></div>
 
 在 sentinel-dashboard 的 application.properties 中添加 nacos 地址配置
 
@@ -3252,33 +3455,33 @@ SentinelDashboard 默认不支持 nacos 的持久化，需要修改源码。
 nacos.addr=localhost:8848
 ```
 
-5）配置 nacos 数据源，另外，还需要修改com.alibaba.csp.sentinel.dashboard.controller.v2 包下的 FlowControllerV2 类
+5）配置 nacos 数据源，另外，还需要修改 com.alibaba.csp.sentinel.dashboard.controller.v2 包下的 FlowControllerV2 类
 
-<div align="center"><img src="img/image-20210618202322301.png"></div>
+<div align="center"><img src="assets/image-20210618202322301.png"></div>
 
-让我们添加的Nacos数据源生效：
+让我们添加的 Nacos 数据源生效：
 
-<div align="center"><img src="img/image-20210618202334536.png"></div>
+<div align="center"><img src="assets/image-20210618202334536.png"></div>
 
 6）修改前端页面
 
 接下来，还要修改前端页面，添加一个支持 nacos 的菜单。修改 src/main/webapp/resources/app/scripts/directives/sidebar/ 目录下的 sidebar.html 文件
 
-<div align="center"><img src="img/image-20210618202433356.png"></div>
+<div align="center"><img src="assets/image-20210618202433356.png"></div>
 
 将其中的这部分注释打开
 
-<div align="center"><img src="img/image-20210618202449881.png"></div>
+<div align="center"><img src="assets/image-20210618202449881.png"></div>
 
 修改其中的文本
 
-<div align="center"><img src="img/image-20210618202501928.png"></div>
+<div align="center"><img src="assets/image-20210618202501928.png"></div>
 
 7）重新编译、打包项目
 
 运行 IDEA 中的 maven 插件，编译和打包修改好的 Sentinel-Dashboard
 
-<div align="center"><img src="img/image-20210618202701492.png"></div>
+<div align="center"><img src="assets/image-20210618202701492.png"></div>
 
 8）启动，与原先一样
 
@@ -3327,7 +3530,7 @@ java -jar -Dnacos.addr=localhost:8848 sentinel-dashboard.jar
 - 账户服务负责扣减用户余额
 - 库存服务负责扣减商品库存
 
-<div align="center"><img src="img/image-20221211222649918.png"></div>
+<div align="center"><img src="assets/image-20221211222649918.png"></div>
 
 在分布式系统下，一个业务跨越多个服务或数据源，每个服务都是一个分支事务，要保证所有分支事务最终状态一致，这样的事务就是分布式事务。
 
@@ -3337,7 +3540,7 @@ java -jar -Dnacos.addr=localhost:8848 sentinel-dashboard.jar
 
 此时 ACID 难以满足，这是分布式事务要解决的问题
 
-<div align="center"><img src="img/image-20221211222755391.png"></div>
+<div align="center"><img src="assets/image-20221211222755391.png"></div>
 
 ### 演示分布式事务问题
 
@@ -3345,7 +3548,7 @@ java -jar -Dnacos.addr=localhost:8848 sentinel-dashboard.jar
 
 2）导入微服务项目 seata-demo 
 
-<div align="center"><img src="img/image-20210724165729273.png"></div> 
+<div align="center"><img src="assets/image-20210724165729273.png"></div> 
 
 项目结构介绍
 
@@ -3363,9 +3566,7 @@ seata-demo：父工程，负责管理项目依赖
 curl --location --request POST 'http://localhost:8082/order?userId=user202103032042012&commodityCode=100202003032041&count=20&money=200'
 ```
 
-<div align="center"><img src="img/image-20210724170113404.png"></div>
-
-
+<div align="center"><img src="assets/image-20210724170113404.png"></div>
 
 测试发现，当库存不足时，如果余额已经扣减，并不会回滚，出现了分布式事务问题。
 
@@ -3391,7 +3592,7 @@ curl --location --request POST 'http://localhost:8082/order?userId=user202103032
 > - Availability（可用性）
 > - Partition tolerance （分区容错性）
 
-<div align="center"><img src="img/image-20210724170517944.png"></div>
+<div align="center"><img src="assets/image-20210724170517944.png"></div>
 
 它们的第一个字母分别是 C、A、P。
 
@@ -3403,15 +3604,15 @@ Consistency（一致性）：用户访问分布式系统中的任意节点，得
 
 比如现在包含两个节点，其中的初始数据是一致的
 
-<div align="center"><img src="img/image-20210724170704694.png"></div>
+<div align="center"><img src="assets/image-20210724170704694.png"></div>
 
 当我们修改其中一个节点的数据时，两者的数据产生了差异
 
-<div align="center"><img src="img/image-20210724170735847.png"></div>
+<div align="center"><img src="assets/image-20210724170735847.png"></div>
 
 要想保住一致性，就必须实现 node01 到 node02 的数据同步
 
-<div align="center"><img src="img/image-20210724170834855.png"></div>
+<div align="center"><img src="assets/image-20210724170834855.png"></div>
 
 #### 可用性
 
@@ -3419,11 +3620,11 @@ Availability （可用性）：用户访问集群中的任意健康节点，必�
 
 如图，有三个节点的集群，访问任何一个都可以及时得到响应
 
-<div align="center"><img src="img/image-20210724170932072.png"></div>
+<div align="center"><img src="assets/image-20210724170932072.png"></div>
 
 当有部分节点因为网络故障或其它原因无法访问时，代表节点不可用
 
-<div align="center"><img src="img/image-20210724171007516.png"></div>
+<div align="center"><img src="assets/image-20210724171007516.png"></div>
 
 
 
@@ -3431,7 +3632,7 @@ Availability （可用性）：用户访问集群中的任意健康节点，必�
 
 <b>Partition（分区）：</b>因为网络故障或其它原因导致分布式系统中的部分节点与其它节点失去连接，形成独立分区。
 
-<div align="center"><img src="img/image-20210724171041210.png"></div>
+<div align="center"><img src="assets/image-20210724171041210.png"></div>
 
 <b>Tolerance（容错）：</b>在集群出现分区时，整个系统也要持续对外提供服务。
 
@@ -3443,7 +3644,7 @@ Availability （可用性）：用户访问集群中的任意健康节点，必�
 
 当节点接收到新的数据变更时，就会出现问题了
 
-<div align="center"><img src="img/image-20210724171546472.png"></div>
+<div align="center"><img src="assets/image-20210724171546472.png"></div>
 
 如果此时要保证<b>一致性</b>，就必须等待网络恢复，完成数据同步后，整个集群才对外提供服务，服务处于阻塞状态，不可用。
 
@@ -3480,7 +3681,7 @@ BASE 理论是对 CAP 的一种解决思路，包含三个思想
 
 但不管是哪一种模式，都需要在子系统事务之间互相通讯，协调事务状态，也就是需要一个事务协调者 (TC)
 
-<div align="center"><img src="img/image-20210724172123567.png"></div>
+<div align="center"><img src="assets/image-20210724172123567.png"></div>
 
 
 这里的子系统事务，称为<b>分支事务</b>；有关联的各个分支事务在一起称为<b>全局事务</b>。
@@ -3518,7 +3719,7 @@ Seata 是 2019 年 1 月份蚂蚁金服和阿里巴巴共同开源的分布式�
 
 整体的架构如图
 
-<div align="center"><img src="img/image-20210724172326452.png"></div>
+<div align="center"><img src="assets/image-20210724172326452.png"></div>
 
 
 TM 定义全局事务的范围，开启全局事务后，在这个全局事务内的分支事务会注册到 TC（事务协调者，负责维护全局事务和分支事务的状态）中。如果注册到 TC 的事务都执行成功了则提交事务，如果有任何一个分支事务执行失败，则进行事务回滚。（如何设置 xx 事务为某全局事务的分支事务？分支事务的注册和报告的对象是否是分布式机器，如果机器宕机又如何处理？）
@@ -3542,13 +3743,13 @@ TM 定义全局事务的范围，开启全局事务后，在这个全局事务�
 
 在非中文目录解压缩这个 zip 包，其目录结构如下
 
-<div align="center"><img src="img/image-20210622202515014.png"></div>
+<div align="center"><img src="assets/image-20210622202515014.png"></div>
 
 #### 修改配置
 
 修改 conf 目录下的 registry.conf 文件
 
-<div align="center"><img src="img/image-20210622202622874.png"></div>
+<div align="center"><img src="assets/image-20210622202622874.png"></div>
 
 内容如下
 
@@ -3595,7 +3796,7 @@ config {
 
 格式如下：
 
-<div align="center"><img src="img/image-20210622203609227.png"></div>
+<div align="center"><img src="assets/image-20210622203609227.png"></div>
 
 
 配置内容如下：
@@ -3647,7 +3848,7 @@ metrics.exporterPrometheusPort=9898
 
 新建一个名为 seata 的数据库，运行 sql 文件 `seata-tc-server.sql`
 
-<div align="center"><img src="img/image-20210622204145159.png"></div>
+<div align="center"><img src="assets/image-20210622204145159.png"></div>
 
 这些表主要记录全局事务、分支事务、全局锁信息
 
@@ -3703,13 +3904,13 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 进入 bin 目录，运行其中的 seata-server.bat 即可
 
-<div align="center"><img src="img/image-20210622205427318.png"></div>
+<div align="center"><img src="assets/image-20210622205427318.png"></div>
 
 启动成功后，seata-server 应该已经注册到nacos注册中心了。
 
 打开浏览器，访问 nacos 地址：http://localhost:8848，然后进入服务列表页面，可以看到 seata-tc-server 的信息
 
-<div align="center"><img src="img/image-20210622205901450.png"></div>
+<div align="center"><img src="assets/image-20210622205901450.png"></div>
 
 ### 微服务集成Seata
 
@@ -3772,7 +3973,7 @@ seata:
 
 以上四个信息，在刚才的 yaml 文件中都能找到
 
-<div align="center"><img src="img/image-20210724173654258.png"></div>
+<div align="center"><img src="assets/image-20210724173654258.png"></div>
 
 namespace 为空，就是默认的 public。
 
@@ -3810,11 +4011,11 @@ XA 是规范，目前主流数据库都实现了这种规范，实现的原理�
 
 正常情况
 
-<div align="center"><img src="img/image-20210724174102768.png"></div>
+<div align="center"><img src="assets/image-20210724174102768.png"></div>
 
 异常情况
 
-<div align="center"><img src="img/image-20210724174234987.png"></div>
+<div align="center"><img src="assets/image-20210724174234987.png"></div>
 
 <b>一阶段</b>
 
@@ -3831,9 +4032,9 @@ XA 是规范，目前主流数据库都实现了这种规范，实现的原理�
 
 Seata 对原始的 XA 模式做了简单的封装和改造，以适应自己的事务模型，基本架构如图（不看 TM 部分和前面说的 XA 模式基本一样，只不过是多了 TM 做整个事务的注册和管理）：
 
-<div align="center"><img src="img/image-20210724174424070.png"></div>
+<div align="center"><img src="assets/image-20210724174424070.png"></div>
 
-<b>RM 一阶段的工作：</b>
+<b>RM 一阶段的工作</b>
 
 ​	① 注册分支事务到 TC
 
@@ -3841,7 +4042,7 @@ Seata 对原始的 XA 模式做了简单的封装和改造，以适应自己的�
 
 ​	③ 报告执行状态到 TC
 
-<b>TC 二阶段的工作：</b>
+<b>TC 二阶段的工作</b>
 
 - TC 检测各分支事务执行状态
 
@@ -3849,7 +4050,7 @@ Seata 对原始的 XA 模式做了简单的封装和改造，以适应自己的�
 
     b.如果有失败，通知所有 RM 回滚事务
 
-<b>RM 二阶段的工作：</b>
+<b>RM 二阶段的工作</b>
 
 - 接收 TC 指令，提交或回滚事务
 
@@ -3880,7 +4081,7 @@ seata:
 
 本例中是 OrderServiceImpl 中的 create 方法
 
-<div align="center"><img src="img/image-20210724174859556.png"></div>
+<div align="center"><img src="assets/image-20210724174859556.png"></div>
 
 3）重启服务并测试
 
@@ -3892,23 +4093,21 @@ AT 模式同样是分阶段提交的事务模型，不过缺弥补了 XA 模型�
 
 #### Seata的AT模型
 
-基本流程图
+<div align="center"><img src="assets/image-20210724175327511.png"></div>
 
-<div align="center"><img src="img/image-20210724175327511.png"></div>
-
-<b>阶段一 RM 的工作：</b>
+<b>阶段一 RM 的工作</b>
 
 - 注册分支事务
 - 记录 undo-log（数据快照，更新前的数据和更新后的数据）
 - 执行业务 sql 并提交
 - 报告事务状态
 
-<b>阶段二提交时 RM 的工作：</b>
+<b>阶段二提交时 RM 的工作</b>
 
 - 因为事务已经提交了，此时只需删除 undo-log 即可
 - 这个过程是异步的，因为事务已经提交了，不必急着去删除日志
 
-<b>阶段二回滚时 RM 的工作：</b>
+<b>阶段二回滚时 RM 的工作</b>
 
 - 根据 undo-log 恢复数据到更新前（恢复时会判断，更新后的快照和当前数据库的值是不是一样，如果一样说明可以恢复，如果不一样，说明中间被人修改了，不能恢复；记录异常，人工恢复）
 
@@ -3960,7 +4159,7 @@ AT 模式下，当前分支事务执行流程如下
 
 ​	 b）如果有分支事务失败，需要回滚。读取快照数据（`{"id": 1, "money": 100}`），将快照恢复到数据库。此时数据库再次恢复为 100
 
-<div align="center"><img src="img/image-20210724180722921.png"></div>
+<div align="center"><img src="assets/image-20210724180722921.png"></div>
 
 #### AT与XA的区别
 
@@ -3974,18 +4173,18 @@ AT 模式下，当前分支事务执行流程如下
 
 因为“提前”释放了锁，因此在多线程并发访问 AT 模式的分布式事务时，有可能出现脏写问题，如图
 
-<div align="center"><img src="img/image-20210724181541234.png"></div>
+<div align="center"><img src="assets/image-20210724181541234.png"></div>
 
 
 解决思路就是引入了全局锁的概念。在释放 DB 锁之前，先拿到全局锁，只有持有全局锁的事务才可以拿到记录的执行权。避免同一时刻有另外一个事务来操作当前数据。
 
-<div align="center"><img src="img/image-20210724181843029.png"></div>
+<div align="center"><img src="assets/image-20210724181843029.png"></div>
 
 全局锁是由 TC 记录的，内部记录下谁在访问，而 XA 的锁是执行完业务不提交，是数据库的锁。数据库的锁，不释放，任何人都无法操作这条数据（无法修改，删除，不加锁的 select 是可以执行的），TC 的锁只是记录操纵这行表的全局事务，由 seata 管理的，如果这个事务不是由 seata 管理的，去操作是不会有影响的。
 
 如果一个由 seata 管理的全局事务操作了 money 字段，一个不由 seata 管理的全局事务也操作了 money 字段，这样就锁不住数据了，会出现问题。
 
-<div align="center"><img src="img/image-20221214162002973.png"></div>
+<div align="center"><img src="assets/image-20221214162002973.png"></div>
 
 #### 优缺点
 
@@ -4010,7 +4209,7 @@ AT 模式中的快照生成、回滚等动作都是由框架自动完成，没�
 
 导入提供的 sql 文件：seata-at.sql，其中 lock_table 导入到 TC 服务关联的数据库，undo_log 表导入到微服务关联的数据库
 
-<div align="center"><img src="img/image-20210724182217272.png"></div>
+<div align="center"><img src="assets/image-20210724182217272.png"></div>
 
 <b>2）修改 application.yml 文件，将事务模式修改为 AT 模式即可</b>
 
@@ -4041,11 +4240,11 @@ TCC 模式与 AT 模式非常相似，每阶段都是独立事务，不同的是
 
 初始余额
 
-<div align="center"><img src="img/image-20210724182424907.png"></div>
+<div align="center"><img src="assets/image-20210724182424907.png"></div>
 
 余额充足，可以冻结
 
-<div align="center"><img src="img/image-20210724182457951.png"></div>
+<div align="center"><img src="assets/image-20210724182457951.png"></div>
 
 
 此时，总金额 = 冻结金额 + 可用金额，数量依然是 100 不变。事务直接提交无需等待其它事务。
@@ -4054,7 +4253,7 @@ TCC 模式与 AT 模式非常相似，每阶段都是独立事务，不同的是
 
 确认可以提交，不过之前可用金额已经扣减过了，这里只要清除冻结金额就好了
 
-<div align="center"><img src="img/image-20210724182706011.png"></div>
+<div align="center"><img src="assets/image-20210724182706011.png"></div>
 
 此时，总金额 = 冻结金额 + 可用金额 = 0 + 70  = 70元
 
@@ -4062,13 +4261,13 @@ TCC 模式与 AT 模式非常相似，每阶段都是独立事务，不同的是
 
 需要回滚，那么就要释放冻结金额，恢复可用金额：
 
-<div align="center"><img src="img/image-20210724182810734.png"></div>
+<div align="center"><img src="assets/image-20210724182810734.png"></div>
 
 #### Seata的TCC模型
 
 Seata 中的 TCC 模型依然延续之前的事务架构
 
-<div align="center"><img src="img/image-20210724182937713.png"></div>
+<div align="center"><img src="assets/image-20210724182937713.png"></div>
 
 #### 优缺点
 
@@ -4106,7 +4305,7 @@ Seata 中的 TCC 模型依然延续之前的事务架构
 
 当某分支事务的 try 阶段<b>阻塞</b>时，可能导致全局事务超时而触发二阶段的 cancel 操作。在未执行 try 操作时先执行了 cancel 操作，这时 cancel 不能做回滚，就是<b>空回滚</b>。
 
-<div align="center"><img src="img/image-20210724183426891.png"></div>
+<div align="center"><img src="assets/image-20210724183426891.png"></div>
 
 <span style="color:orange">执行 cancel 操作时，应当判断 try 是否已经执行，如果尚未执行，则应该空回滚。</span>
 
@@ -4288,7 +4487,7 @@ Seata 官网对于 Saga 的指南：https://seata.io/zh-cn/docs/user/saga.html
 
 分布式事务执行过程中，依次执行各参与者的正向操作，如果所有正向操作均执行成功，那么分布式事务提交。如果任何一个正向操作执行失败，那么分布式事务会去退回去执行前面各参与者的逆向回滚操作，回滚已提交的参与者，使分布式事务回到初始状态。
 
-<div align="center"><img src="img/image-20210724184846396.png"></div>
+<div align="center"><img src="assets/image-20210724184846396.png"></div>
 
 <b>Saga 也分为两个阶段</b>
 
@@ -4338,7 +4537,7 @@ Seata 的 TC 服务作为分布式事务核心，一定要保证集群的高可�
 
 比如一个 TC 集群在上海，另一个 TC 集群在杭州
 
-<div align="center"><img src="img/image-20210724185240957.png"></div>
+<div align="center"><img src="assets/image-20210724185240957.png"></div>
 
 
 微服务基于事务组（tx-service-group) 与 TC 集群的映射关系，来查找当前应该使用哪个 TC 集群。当 SH 集群故障时，只需要将 vgroup-mapping 中的映射关系改成 HZ。则所有微服务就会切换到 HZ 的 TC 集群了。
@@ -4400,11 +4599,11 @@ seata-server.bat -p 8092
 
 打开 nacos 控制台，查看服务列表
 
-<div align="center"><img src="img/image-20210624151150840.png"></div>
+<div align="center"><img src="assets/image-20210624151150840.png"></div>
 
 点进详情查看
 
-<div align="center"><img src="img/image-20210624151221747.png"></div>
+<div align="center"><img src="assets/image-20210624151221747.png"></div>
 
 #### 将事务组映射配置到nacos
 
@@ -4412,7 +4611,7 @@ seata-server.bat -p 8092
 
 新建一个配置
 
-<div align="center"><img src="img/image-20210624151507072.png"></div>
+<div align="center"><img src="assets/image-20210624151507072.png"></div>
 
 配置的内容如下
 
@@ -4519,17 +4718,26 @@ RDB 持久化在四种情况下会执行：
 
 <b>1）save 命令</b>
 
-执行下面的命令，可以立即执行一次 RDB：
+执行下面的命令，可以立即执行一次 RDB
 
-<div align="center"><img src="../中间件/img/image-20210725144536958.png"></div>
+```shell
+[root@localhost ~]# redis-cli
+127.0.0.1:6379> save # 由 Redis 主进程来执行 RDB, 会阻塞所有命令
+ok
+127.0.0.1:6379>
+```
 
 save 命令会导致主进程执行 RDB，这个过程中其它所有命令都会被阻塞。适合用在 Redis 即将停止时，比如在数据迁移时可能用到。
 
 <b>2）bgsave 命令</b>
 
-下面的命令可以异步执行 RDB：
+下面的命令可以异步执行 RDB
 
-<div align="center"><img src="../中间件/img/image-20210725144725943.png"></div>
+```sh
+[root@localhost ~]# redis-cli
+127.0.0.1:6379> bgsave # 开启子进程来执行 RDB, 避免主进程受到影响
+Background saving started
+```
 
 这个命令执行后会开启独立进程完成 RDB，主进程可以持续处理用户请求，不受影响。
 
@@ -4655,7 +4863,7 @@ $3
 kkx
 ```
 
-三种策略对比：
+> <b>三种策略对比</b>
 
 | 配置项   | 刷盘时机     | 优点                   | 缺点                         |
 | -------- | ------------ | ---------------------- | ---------------------------- |
@@ -4801,12 +5009,12 @@ repl_backlog_histlen:423
 
 <div align="center"><img src="../中间件/img/image-20210725152222497.png"></div>
 
-这里有一个问题，master 如何得知 salve 是第一次来连接呢？？
+这里有一个问题，master 如何得知 slave 是第一次来连接呢？？
 
 有几个概念，可以作为判断依据：
 
-- <b>Replication Id</b>：简称 replid，是数据集的标记，id 一致则说明是同一数据集。每一个 master 都有唯一的 replid，slave 则会继承 master 节点的 replid
-- <b>offset</b>：偏移量，随着记录在 repl_baklog 中的数据增多而逐渐增大。slave 完成同步时也会记录当前同步的 offset。如果 slave 的 offset 小于 master 的 offset，说明 slave 数据落后于 master，需要更新。
+- <b>Replication Id：</b>简称 replid，是数据集的标记，id 一致则说明是同一数据集。每一个 master 都有唯一的 replid，slave 则会继承 master 节点的 replid
+- <b>offset：</b>偏移量，随着记录在 repl_baklog 中的数据增多而逐渐增大。slave 完成同步时也会记录当前同步的 offset。如果 slave 的 offset 小于 master 的 offset，说明 slave 数据落后于 master，需要更新。
 
 因此 slave 做数据同步，必须向 master 声明自己的 replication id  和 offset，master 才可以判断到底需要同步哪些数据。
 
@@ -4820,7 +5028,7 @@ master 会将自己的 replid 和 offset 都发送给这个 slave，slave 保存
 
 <div align="center"><img src="../中间件/img/image-20210725152700914.png"></div>
 
-完整流程描述：
+> 完整流程描述
 
 - slave 节点请求增量同步
 - master 节点判断 replid，发现不一致，拒绝增量同步
@@ -4870,18 +5078,16 @@ slave 与 master 的 offset 之间的差异，就是 slave 需要增量拷贝的
 
 棕色框中的红色部分，就是尚未同步，但是却已经被覆盖的数据。此时如果 slave 恢复，需要同步，却发现自己的 offset 都没有了，无法完成增量同步了。只能做全量同步。
 
-<b style="color:orange">repl_baklog 大小有上限，写满后会覆盖最早的数据。如果 slave 断开时间过久，导致尚未备份的数据被覆盖，则无法基于 log 做增量同步，智能再次全量同步。</b>
-
-<div align="center"><img src="../中间件/img/image-20210725154216392.png"></div>
+<b style="color:orange">repl_baklog 大小有上限，写满后会覆盖最早的数据。如果 slave 断开时间过久，导致尚未备份的数据被覆盖，则无法基于 log 做增量同步，只能再次全量同步。</b>
 
 ### 主从同步优化
 
-> 主从同步可以保证主从数据的一致性，非常重要。可以从以下几个方面来优化 Redis 主从集群（如尽可能的避免全量同步，少做磁盘 IO）：
+> 主从同步可以保证主从数据的一致性，非常重要。可以从以下几个方面来优化 Redis 主从集群（如尽可能的避免全量同步，少做磁盘 IO）
 
 - 在 master 中配置 repl-diskless-sync yes 启用无磁盘复制，<span style="color:orange">（即，不是先在磁盘中生成 RDB 然后再通过网络发送出去，而是直接通过网络发送，不再经过磁盘了。适合磁盘 IO 速度慢，网络速度快。）</span>，避免全量同步时的磁盘 IO。
 - Redis 单节点上的内存占用不要太大，这样 RDB 的文件也就比较小了。有点像用多个小的 RDB 替代一个超大的 RDB（有点 GC 的味道了）。
 
-> 上面两个都是在提高全量同步的性能，下面两点是从减少全量同步出发的。
+> 上面两个都是在提高全量同步的性能，下面两点是从减少全量同步出发的
 
 - 适当提高 repl_baklog 的大小，允许主从数据的差异更大，就可以减少全量同步发生的几率了。发现 slave 宕机时尽快实现故障恢复，尽可能避免全量同步
 - 限制一个 master 上的 slave 节点数量，如果实在是太多 slave，则可以采用主-从-从链式结构，减少 master 压力<span style="color:orange">（后面的 slave 同步中间的 slave 的数据）</span>
@@ -4920,11 +5126,11 @@ slave 节点宕机恢复后可以找 master 节点同步数据，那 master 节�
 
 #### 集群的结构和作用
 
-<b style="color:red">哨兵的作用如下：</b>
+> <b style="color:red">哨兵的作用如下</b>
 
-- <b>监控</b>：Sentinel 会不断检查 master 和 slave 是否按预期工作。
-- <b>自动故障恢复</b>：如果 master 故障，Sentinel 会将一个 slave 提升为 master。当故障实例恢复后也以新的 master 为主。
-- <b>通知</b>：Sentinel 充当 Redis 客户端的服务发现来源，当集群发生故障转移时，会将最新信息推送给 Redis 的客户端。<span style="color:orange">（Redis 客户端找主从服务的时候，是从 Sentinel 中找的，由 Sentinel 告诉客户端主的地址在哪里，从的地址在哪里；此时 Sentinel 就充当了 Redis 客户端服务发现的来源了。）</span>
+- <b>监控：</b>Sentinel 会不断检查 master 和 slave 是否按预期工作。
+- <b>自动故障恢复：</b>如果 master 故障，Sentinel 会将一个 slave 提升为 master。当故障实例恢复后也以新的 master 为主。
+- <b>通知：d</b>Sentinel 充当 Redis 客户端的服务发现来源，当集群发生故障转移时，会将最新信息推送给 Redis 的客户端。<span style="color:orange">（Redis 客户端找主从服务的时候，是从 Sentinel 中找的，由 Sentinel 告诉客户端主的地址在哪里，从的地址在哪里；此时 Sentinel 就充当了 Redis 客户端服务发现的来源了。）</span>
 
 <div align="center"><img src="../中间件/img/image-20210725154528072.png"></div>
 
@@ -4982,8 +5188,7 @@ Sentinel 如何判断一个 redis 实例是否健康？
 <div align="center">
     <img src="../中间件/img/image-20210701215227018.png">
 </div>
-
-三个 sentinel 实例信息如下：
+> 三个 sentinel 实例信息如下
 
 | 节点 |       IP        | PORT  |
 | ---- | :-------------: | :---: |
@@ -5157,7 +5362,7 @@ public LettuceClientConfigurationBuilderCustomizer clientConfigurationBuilderCus
 
 <div align="center"><img src="../中间件/img/image-20210702164116027.png"></div>
 
-这里我们会在同一台虚拟机中开启 6 个 redis 实例，模拟分片集群，信息如下：
+> 这里我们会在同一台虚拟机中开启 6 个 redis 实例，模拟分片集群，信息如下
 
 |       IP        | PORT |  角色  |
 | :-------------: | :--: | :----: |
@@ -5227,7 +5432,7 @@ printf '%s\n' 7001 7002 7003 8001 8002 8003 | xargs -I{} -t sed -i 's/6379/{}/g'
 
 #### 启动
 
-因为已经配置了后台启动模式，所以可以直接启动服务：
+因为已经配置了后台启动模式，所以可以直接启动服务
 
 ```sh
 # 进入/tmp目录
@@ -5236,23 +5441,23 @@ cd /tmp
 printf '%s\n' 7001 7002 7003 8001 8002 8003 | xargs -I{} -t redis-server {}/redis.conf
 ```
 
-通过 ps 查看状态：
+通过 ps 查看状态
 
 ```sh
 ps -ef | grep redis
 ```
 
-发现服务都已经正常启动：
+发现服务都已经正常启动
 
 <div align="center"><img src="../中间件/img/image-20210702174255799.png"></div>
 
-如果要关闭所有进程，可以执行命令：
+如果要关闭所有进程，可以执行命令
 
 ```sh
 ps -ef | grep redis | awk '{print $2}' | xargs kill
 ```
 
-或者（推荐这种方式）：
+或者（推荐这种方式）
 
 ```sh
 printf '%s\n' 7001 7002 7003 8001 8002 8003 | xargs -I{} -t redis-cli -p {} shutdown
@@ -5274,7 +5479,7 @@ yum -y install zlib ruby rubygems
 gem install redis
  ```
 
-然后通过命令来管理集群：
+然后通过命令来管理集群
 
 ```sh
 # 进入 redis 的 src 目录
@@ -5298,16 +5503,16 @@ redis-cli --cluster create --cluster-replicas 1 192.168.150.101:7001 192.168.150
 - `--replicas 1` 或者 `--cluster-replicas 1` ：指定集群中每个 master 的副本个数为 1，此时`节点总数 ÷ (replicas + 1)` 得到的就是 master 的数量。因此节点列表中的前 n 个就是 master，其它节点都是 slave 节点，随机分配到不同 master
 
 
-运行后的样子：
+运行后的样子
 
 <div align="center"><img src="../中间件/img/image-20210702181101969.png"></div>
 
-这里输入 yes，则集群开始创建：
+这里输入 yes，则集群开始创建
 
 <div align="center"><img src="../中间件/img/image-20210702181215705.png"></div>
 
 
-通过命令可以查看集群状态：
+通过命令可以查看集群状态
 
 ```sh
 redis-cli -p 7001 cluster nodes
@@ -5317,7 +5522,7 @@ redis-cli -p 7001 cluster nodes
 
 #### 测试
 
-尝试连接 7001 节点，存储一个数据：
+尝试连接 7001 节点，存储一个数据
 
 ```sh
 # 连接
@@ -5330,17 +5535,17 @@ get num
 set a 1
 ```
 
-结果悲剧了：
+结果悲剧了
 
 <div align="center"><img src="../中间件/img/image-20210702182343979.png"></div>
 
-集群操作时，需要给 `redis-cli` 加上 `-c` 参数才可以：
+集群操作时，需要给 `redis-cli` 加上 `-c` 参数才可以
 
 ```sh
 redis-cli -c -p 7001
 ```
 
-这次可以了：
+这次可以了
 
 <div align="center"><img src="../中间件/img/image-20210702182602145.png"></div>
 
@@ -5348,13 +5553,13 @@ redis-cli -c -p 7001
 
 #### 插槽原理
 
-Redis 会把每一个 master 节点映射到 0~16383 共 16384 个插槽（hash slot）上，查看集群信息时就能看到：
+Redis 会把每一个 master 节点映射到 0~16383 共 16384 个插槽（hash slot）上，查看集群信息时就能看到
 
 <div align="center"><img src="../中间件/img/image-20210725155820320.png"></div>
 
 数据 key 不是与节点绑定，而是与插槽绑定。redis 会根据 key 的有效部分计算插槽值。<span style="color:red">简单说就是根据 key 的哈希映射判断，这个 key 存储在哪里。</span>
 
-key 的有效部分分两种情况：
+> key 的有效部分分两种情况
 
 - key 中包含 "{}"，且 “{}” 中至少包含 1 个字符，“{}” 中的部分是有效部分
 - key 中不包含 “{}”，整个 key 都是有效部分
@@ -5460,7 +5665,7 @@ redis-cli -p 7001 cluster nodes
 
 我们要将 num 存储到 7004 节点，因此需要先看看 num 的插槽是多少：
 
-<div align="center"><img src="../中间件/img/image-20210725161241793"></div>
+<div align="center"><img src="../中间件/img/image-20210725161241793.png"></div>
 
 如上图所示，num 的插槽为 2765.
 
@@ -5540,7 +5745,7 @@ redis-cli -p 7002 shutdown
 
 2）然后是疑似宕机：
 
-<div align="center"><img src="../中间件/img/image-20210725162319490"></div>
+<div align="center"><img src="../中间件/img/image-20210725162319490.png"></div>
 
 3）最后是确定下线，自动提升一个 slave 为新的 master：
 
@@ -5609,7 +5814,7 @@ spring:
 
 传统的缓存策略一般是请求到达 Tomcat 后，先查询 Redis，如果未命中则查询数据库，如图
 
-<div align="center"><img src="img/image-20210821075259137.png"></div>
+<div align="center"><img src="assets/image-20210821075259137.png"></div>
 
 存在下面的问题
 
@@ -5627,7 +5832,7 @@ spring:
 - 请求进入 Tomcat 后，优先查询 JVM 进程缓存
 - 如果 JVM 进程缓存未命中，则查询数据库
 
-<div align="center"><img src="img/image-20210821075558137.png"></div>
+<div align="center"><img src="assets/image-20210821075558137.png"></div>
 
 
 在多级缓存架构中，Nginx 内部需要编写本地缓存查询、Redis 查询、Tomcat 查询的业务逻辑，因此这样的 nginx 服务不再是一个反向代理服务器，而是一个编写业务的 Web 服务器了。
@@ -5635,12 +5840,12 @@ spring:
 
 因此这样的业务 Nginx 服务也需要搭建集群来提高并发，再有专门的 nginx 服务来做反向代理，如图
 
-<div align="center"><img src="img/image-20210821080511581.png"></div>
+<div align="center"><img src="assets/image-20210821080511581.png"></div>
 
 
 另外，我们的 Tomcat 服务将来也会部署为集群模式
 
-<div align="center"><img src="img/image-20210821080954947.png"></div>
+<div align="center"><img src="assets/image-20210821080954947.png"></div>
 
 
 可见，多级缓存的关键有两个
@@ -5661,9 +5866,7 @@ spring:
 
 参考课前资料的：《案例导入说明.md》
 
-<div align="center"><img src="img/image-20210821081418456.png"></div> 
-
-
+<div align="center"><img src="assets/image-20210821081418456.png"></div> 
 
 ### 初识Caffeine
 
@@ -5685,7 +5888,7 @@ Caffeine 是一个基于 Java8 开发的，提供了近乎最佳命中率的高�
 
 Caffeine 的性能非常好，下图是官方给出的性能对比
 
-<div align="center"><img src="img/image-20210821081826399.png"></div>
+<div align="center"><img src="assets/image-20210821081826399.png"></div>
 
 可以看到 Caffeine 的性能遥遥领先！
 
@@ -5840,7 +6043,7 @@ Nginx 编程需要用到 Lua 语言，因此我们必须先入门 Lua 的基本�
 
 Lua 是一种轻量小巧的脚本语言，用标准 C 语言编写并以源代码形式开放， 其设计目的是为了嵌入应用程序中，从而为应用程序提供灵活的扩展和定制功能。官网：https://www.lua.org/
 
-<div align="center"><img src="img/image-20210821091437975.png"></div>
+<div align="center"><img src="assets/image-20210821091437975.png"></div>
 
 
 Lua 经常嵌入到 C 语言开发的程序中，例如游戏开发、游戏插件等。
@@ -5854,7 +6057,7 @@ CentOS7 默认已经安装了 Lua 语言环境，所以可以直接运行 Lua �
 
 1）在 Linux 虚拟机的任意目录下，新建一个 hello.lua 文件
 
-<div align="center"><img src="img/image-20210821091621308.png"></div>
+<div align="center"><img src="assets/image-20210821091621308.png"></div>
 
 2）添加下面的内容
 
@@ -5864,7 +6067,7 @@ print("Hello World!")
 
 3）运行
 
-<div align="center"><img src="img/image-20210821091638140.png"></div>
+<div align="center"><img src="assets/image-20210821091638140.png"></div>
 
 
 ### 变量和循环
@@ -5875,11 +6078,11 @@ print("Hello World!")
 
 Lua 中支持的常见数据类型包括
 
-<div align="center"><img src="img/image-20210821091835406.png"></div>
+<div align="center"><img src="assets/image-20210821091835406.png"></div>
 
 另外，Lua 提供了 type() 函数来判断一个变量的数据类型
 
-<div align="center"><img src="img/image-20210821091904332.png"></div>
+<div align="center"><img src="assets/image-20210821091904332.png"></div>
 
 #### 声明变量
 
@@ -5992,7 +6195,7 @@ end
 
 与 Java 不同，布尔表达式中的逻辑运算是基于英文单词
 
-<div align="center"><img src="img/image-20210821092657918.png"></div>
+<div align="center"><img src="assets/image-20210821092657918.png"></div>
 
 
 #### 案例
@@ -6025,19 +6228,19 @@ OpenResty® 是一个基于 Nginx 的高性能 Web 平台，用于方便地搭�
 
 官方网站：https://openresty.org/cn/
 
-<div align="center"><img src="img/image-20210821092902946.png"></div>
+<div align="center"><img src="assets/image-20210821092902946.png"></div>
 
 
 
 安装 Lua 可以参考课前资料提供的《安装OpenResty.md》：
 
-<div align="center"><img src="img/image-20210821092941139.png"></div> 
+<div align="center"><img src="assets/image-20210821092941139.png"></div> 
 
 ### OpenResty快速入门
 
 我们希望达到的多级缓存架构如图：
 
-<div align="center"><img src="img/yeVDlwtfMx.png"></div>
+<div align="center"><img src="assets/yeVDlwtfMx.png"></div>
 
 其中：
 
@@ -6051,11 +6254,11 @@ OpenResty® 是一个基于 Nginx 的高性能 Web 平台，用于方便地搭�
 
 这个请求如下：
 
-<div align="center"><img src="img/image-20210821093144700.png"></div>
+<div align="center"><img src="assets/image-20210821093144700.png"></div>
 
 请求地址是 localhost，端口是 80，就被 windows 上安装的 Nginx 服务给接收到了。然后代理给了 OpenResty 集群：
 
-<div align="center"><img src="img/image-20210821094447709.png"></div>
+<div align="center"><img src="assets/image-20210821094447709.png"></div>
 
 我们需要在 OpenResty 中编写业务，查询商品数据并返回到浏览器。
 
@@ -6097,11 +6300,11 @@ location  /api/item {
 
 1）在 `/usr/loca/openresty/nginx` 目录创建文件夹：lua
 
-<div align="center"><img src="img/image-20210821100755080.png"></div>
+<div align="center"><img src="assets/image-20210821100755080.png"></div>
 
 2）在 `/usr/loca/openresty/nginx/lua` 文件夹下，新建文件：item.lua
 
-<div align="center"><img src="img/image-20210821100801756.png"></div>
+<div align="center"><img src="assets/image-20210821100801756.png"></div>
 
 
 3）编写 item.lua，返回假数据
@@ -6120,7 +6323,7 @@ nginx -s reload
 
 刷新商品页面：http://localhost/item.html?id=1001，即可看到效果：
 
-<div align="center"><img src="img/image-20210821101217089.png"></div>
+<div align="center"><img src="assets/image-20210821101217089.png"></div>
 
 ### 请求参数处理
 
@@ -6130,13 +6333,13 @@ nginx -s reload
 
 OpenResty 中提供了一些 API 用来获取不同类型的前端请求参数：
 
-<div align="center"><img src="img/image-20210821101433528.png"></div>
+<div align="center"><img src="assets/image-20210821101433528.png"></div>
 
 #### 获取参数并返回
 
 在前端发起的 ajax 请求如图
 
-<div align="center"><img src="img/image-20210821101721649.png"></div>
+<div align="center"><img src="assets/image-20210821101721649.png"></div>
 
 可以看到商品 id 是以路径占位符方式传递的，因此可以利用正则表达式匹配的方式来获取ID
 
@@ -6176,17 +6379,17 @@ nginx -s reload
 
 刷新页面可以看到结果中已经带上了 ID
 
-<div align="center"><img src="img/image-20210821102235467.png"></div> 
+<div align="center"><img src="assets/image-20210821102235467.png"></div> 
 
 ### 查询Tomcat
 
 拿到商品 ID 后，本应去缓存中查询商品信息，不过目前我们还未建立 nginx、redis 缓存。因此，这里我们先根据商品 id 去 tomcat 查询商品信息。
 
-<div align="center"><img src="img/image-20210821102610167.png"></div>
+<div align="center"><img src="assets/image-20210821102610167.png"></div>
 
 需要注意的是，我们的 OpenResty 是在虚拟机，Tomcat 是在 Windows 电脑上。两者 IP 一定不要搞错了。
 
-<div align="center"><img src="img/image-20210821102959829.png"></div>
+<div align="center"><img src="assets/image-20210821102959829.png"></div>
 
 #### 发送http请求的API
 
@@ -6218,7 +6421,7 @@ local resp = ngx.location.capture("/path",{
 
 原理如图
 
-<div align="center"><img src="img/image-20210821104149061.png"></div>
+<div align="center"><img src="assets/image-20210821104149061.png"></div>
 
 #### 封装http工具
 
@@ -6242,7 +6445,7 @@ location /item {
 
 之前我们说过，OpenResty 启动时会加载以下两个目录中的工具文件
 
-<div align="center"><img src="img/image-20210821104857413.png"></div>
+<div align="center"><img src="assets/image-20210821104857413.png"></div>
 
 所以，自定义的 http 工具也需要放到这个目录下。
 
@@ -6298,7 +6501,7 @@ local itemStockJSON = read_http("/item/stock/".. id, nil)
 
 这里查询到的结果是 json 字符串，并且包含商品、库存两个 json 字符串，页面最终需要的是把两个 json 拼接为一个 json
 
-<div align="center"><img src="img/image-20210821110441222.png"></div>
+<div align="center"><img src="assets/image-20210821110441222.png"></div>
 
 
 
@@ -6370,7 +6573,7 @@ ngx.say(cjson.encode(item))
 
 刚才的代码中，我们的 tomcat 是单机部署。而实际开发中，tomcat 一定是集群模式
 
-<div align="center"><img src="img/image-20210821111023255.png"></div>
+<div align="center"><img src="assets/image-20210821111023255.png"></div>
 
 因此，OpenResty 需要对 tomcat 集群做负载均衡。
 
@@ -6431,17 +6634,17 @@ nginx -s reload
 
 启动两台 tomcat 服务
 
-<div align="center"><img src="img/image-20210821112420464.png"></div>
+<div align="center"><img src="assets/image-20210821112420464.png"></div>
 
 同时启动：
 
-<div align="center"><img src="img/image-20210821112444482.png"></div> 
+<div align="center"><img src="assets/image-20210821112444482.png"></div> 
 
 清空日志后，再次访问页面，可以看到不同 id 的商品，访问到了不同的 tomcat 服务
 
-<div align="center"><img src="img/image-20210821112559965.png"></div>
+<div align="center"><img src="assets/image-20210821112559965.png"></div>
 
-<div align="center"><img src="img/image-20210821112637430.png"></div>
+<div align="center"><img src="assets/image-20210821112637430.png"></div>
 
 ### Redis缓存预热
 
@@ -6541,7 +6744,7 @@ public class RedisHandler implements InitializingBean {
 
 现在，Redis 缓存已经准备就绪，我们可以再 OpenResty 中实现查询 Redis 的逻辑了。如下图红框所示：
 
-<div align="center"><img src="img/image-20210821113340111.png"></div>
+<div align="center"><img src="assets/image-20210821113340111.png"></div>
 
 当请求进入 OpenResty 之后：
 
@@ -6713,7 +6916,7 @@ end
 
 2）而后修改商品查询、库存查询的业务：
 
-<div align="center"><img src="img/image-20210821114528954.png"></div>
+<div align="center"><img src="assets/image-20210821114528954.png"></div>
 
 
 
@@ -6764,7 +6967,7 @@ ngx.say(cjson.encode(item))
 
 现在，整个多级缓存中只差最后一环，也就是 nginx 的本地缓存了。如图：
 
-<div align="center"><img src="img/image-20210821114742950.png"></div>
+<div align="center"><img src="assets/image-20210821114742950.png"></div>
 
 #### 本地缓存API
 
@@ -6820,7 +7023,7 @@ end
 
 <b>2）修改 item.lua 中查询商品和库存的业务，实现最新的 read_data 函数</b>
 
-<div align="center"><img src="img/image-20210821115108528.png"></div>
+<div align="center"><img src="assets/image-20210821115108528.png"></div>
 
 其实就是多了缓存时间参数，过期后 nginx 缓存会自动删除，下次访问即可更新缓存。
 
@@ -6912,7 +7115,7 @@ ngx.say(cjson.encode(item))
 
 <b>1）基于MQ的异步通知：</b>
 
-<div align="center"><img src="img/image-20210821115552327.png"></div>
+<div align="center"><img src="assets/image-20210821115552327.png"></div>
 
 解读：
 
@@ -6923,7 +7126,7 @@ ngx.say(cjson.encode(item))
 
 <b>2）基于 Canal 的通知：</b>
 
-<div align="center"><img src="img/image-20210821115719363.png"></div>
+<div align="center"><img src="assets/image-20210821115719363.png"></div>
 
 解读：
 
@@ -6941,7 +7144,7 @@ Canal [kə'næl]，译意为水道/管道/沟渠，canal 是阿里巴巴旗下�
 
 Canal 是基于 mysql 的主从同步来实现的，MySQL 主从同步的原理如下：
 
-<div align="center"><img src="img/image-20210821115914748.png"></div>
+<div align="center"><img src="assets/image-20210821115914748.png"></div>
 
 - 1）MySQL master 将数据变更写入二进制日志 ( binary log），其中记录的数据叫做 binary log events
 - 2）MySQL slave 将 master 的 binary log events拷贝到它的中继日志 (relay log)
@@ -6949,13 +7152,13 @@ Canal 是基于 mysql 的主从同步来实现的，MySQL 主从同步的原理�
 
 而 Canal 就是把自己伪装成 MySQL 的一个 slave 节点，从而监听 master 的 binary log 变化。再把得到的变化信息通知给 Canal 的客户端，进而完成对其它数据库的同步。
 
-<div align="center"><img src="img/image-20210821115948395.png"></div>
+<div align="center"><img src="assets/image-20210821115948395.png"></div>
 
 #### 安装Canal
 
 安装和配置 Canal 参考课前资料文档：
 
-<div align="center"><img src="img/image-20210821120017324.png"></div> 
+<div align="center"><img src="assets/image-20210821120017324.png"></div> 
 
 ### 监听Canal
 

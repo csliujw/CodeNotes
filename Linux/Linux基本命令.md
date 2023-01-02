@@ -171,6 +171,15 @@ nohup java Demo & > ./out.txt # 加上 & 直接在后台运行，不在终端显
     - `>>`是追加模式
     - 如：`echo hello world  > demo.txt` 把左边的输出放到右边的文件中去。
 
+在使用过程中发现 cd 没有权限进入该目录，因为 cd 不是一个应用程序而是 Linux 内建的命令，而 sudo 仅仅只对应用程序起作用。`sudo foo` 只意味着以 root 权限运行 foo 程序。所以，`sudo cd /etc/docker` 会报`sudo: cd：找不到命令`
+
+解决办法是使用 sudo -i 命令提升用户权限。
+
+```shell
+sudo -i
+cd /var/lib/docker/volumes/
+```
+
 ### 创建/拷贝
 
 - mkdir

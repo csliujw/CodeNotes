@@ -1,28 +1,14 @@
 # Nacos源码分析
 
-
-
-
-
 # 1.下载Nacos源码并运行
 
 要研究Nacos源码自然不能用打包好的Nacos服务端jar包来运行，需要下载源码自己编译来运行。
-
-
 
 ## 1.1.下载Nacos源码
 
 Nacos的GitHub地址：https://github.com/alibaba/nacos
 
-课前资料中已经提供了下载好的1.4.2版本的Nacos源码：
-
-![image-20210906105652113](assets/image-20210906105652113.png) 
-
-
-
-如果需要研究其他版本的同学，也可以自行下载：
-
-大家找到其release页面：https://github.com/alibaba/nacos/tags，找到其中的1.4.2.版本：
+找到其release页面：https://github.com/alibaba/nacos/tags，找到其中的1.4.2.版本：
 
 ![image-20210906105157409](assets/image-20210906105157409.png)
 
