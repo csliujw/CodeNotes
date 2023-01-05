@@ -1920,7 +1920,7 @@ class RabbitListenerMessage {
 
 ### 死信
 
-什么是死信？当一个队列中的消息满足下列情况之一时，可以成为死信（dead letter）：
+什么是死信？当一个队列中的消息满足下列情况之一时，可以成为死信（dead letter）
 
 - 消费者使用 basic.reject 或 basic.nack 声明消费失败，并且消息的 requeue 参数设置为 false
 - 消息是一个过期消息，超时无人消费
@@ -2047,7 +2047,7 @@ public class RabbitMQDeadMessageConfig {
 }
 ```
 
-<b>小结</b>
+> <b>小结</b>
 
 什么样的消息会成为死信？
 
@@ -2066,44 +2066,41 @@ TTL 全称 Time To Live（存活时间/过期时间）。当消息到达存活�
 
 <div align="center"><img src="assets/image-20221011135850877.png"></div>
 
-- 设置队列过期时间使用参数：x-message-ttl，单位：ms(毫秒)，这个队列过期时间怎么算的？是队列中每个消息单独计时，还是从第一个消息开始计时？写代码测测。
-- 设置消息过期时间使用参数：expiration。单位：ms(毫秒)，<b>当该消息在队列头部时（消费时），会单独判断这一消息是否过期。</b>
+- 设置队列过期时间使用参数：x-message-ttl，单位 ms(毫秒)，这个队列过期时间怎么算的？是队列中每个消息单独计时的，消息 A 达到队列 10 秒后还未被消费就会过期。即消息 A 1s 到达的队列，则消息 11s 过期；此后消息 B 在 5s 时达到队列，消息 B 会在 15s 时过期。
+- 设置消息过期时间使用参数：expiration。单位 ms(毫秒)，<b>当该消息在队列头部时（消费时），会单独判断这一消息是否过期。</b>
 - 如果两者都进行了设置，以时间短的为准。
 
 <div align="center"><img src="assets/image-20210718182643311.png"></div>
 
 <b>接收超时死信的死信交换机</b>
 
-在 consumer 服务的 SpringRabbitListener 中，定义一个新的消费者，并且声明死信交换机、死信队列
+在 consumer 服务的 ConsumerApplication 中，定义一个新的消费者，并且声明死信交换机、死信队列
 
 ```java
 @RabbitListener(bindings = @QueueBinding(
     value = @Queue(name = "dl.ttl.queue", durable = "true"),
     exchange = @Exchange(name = "dl.ttl.direct"),
-    key = "ttl"
+    key = "dl" // key 不要写错了！
 ))
 public void listenDlQueue(String msg){
     log.info("接收到 dl.ttl.queue的延迟消息：{}", msg);
 }
 ```
 
-<b>声明一个队列，并指定 TTL</b>
-
-要给队列设置超时时间，需要在声明队列时配置 x-message-ttl 属性
+<b>声明一个超时队列，并指定 TTL</b>
 
 ```java
 @Bean
-public Queue ttlQueue(){
+public Queue ttlQueue() {
     return QueueBuilder.durable("ttl.queue") // 指定队列名称，并持久化
-        .ttl(10000) // 设置队列的超时时间，10秒
-        .deadLetterExchange("dl.ttl.direct") // 指定死信交换机
+        .ttl(10000) // 要给队列设置超时时间，需要在声明队列时配置 x-message-ttl 属性，此处设置队列的超时时间，10秒
+        .deadLetterExchange("dl.ttl.direct") // 注意，这个队列设定了死信交换机为 dl.ttl.direct
+        .deadLetterRoutingKey("dl") // 指定死信 RoutingKey
         .build();
 }
 ```
 
-注意，这个队列设定了死信交换机为 `dl.ttl.direct`
-
-声明交换机，将 ttl 与交换机绑定
+<b>声明交换机，并将 ttlQueue 与交换机绑定</b>
 
 ```java
 @Bean
@@ -2116,7 +2113,7 @@ public Binding ttlBinding(){
 }
 ```
 
-发送消息，但是不要指定 TTL
+<b>发送消息，但是不要指定 TTL</b>
 
 ```java
 @Test
@@ -2134,41 +2131,45 @@ public void testTTLQueue() {
 
 发送消息的日志
 
-<div align="center"><img src="assets//image-20210718191657478.png"></div>
+```cmd
+2023-01-05 23:43:19.887  INFO 19644 --- [main] c.mq.publisher.PublisherApplicationTest  : 发送消息成功
+```
 
 查看下接收消息的日志
 
-<div align="center"><img src="assets/image-20210718191738706.png"></div>
+```cmd
+2023-01-05 23:43:29.902  INFO 7172 --- [ntContainer#8-1] ConsumerApplication : 接收到 dl.ttl.queue 的延迟消息：hello, ttl queue
+```
 
 因为队列的 TTL 值是 10000ms，也就是 10 秒。可以看到消息发送与接收之间的时差刚好是 10 秒。
 
 <b>发送消息时，设定 TTL</b>
 
-在发送消息时，也可以指定 TTL
-
 ```java
 @Test
-public void testTTLMsg() {
+public void testTTLMessage() {
     // 创建消息
-    Message message = MessageBuilder
-        .withBody("hello, ttl message".getBytes(StandardCharsets.UTF_8))
-        .setExpiration("5000")
-        .build();
     // 消息ID，需要封装到CorrelationData中
     CorrelationData correlationData = new CorrelationData(UUID.randomUUID().toString());
-    // 发送消息
+    Message message = MessageBuilder.withBody("ttl msg".getBytes(StandardCharsets.UTF_8))
+        .setExpiration("5000")
+        .build();
     rabbitTemplate.convertAndSend("ttl.direct", "ttl", message, correlationData);
-    log.debug("发送消息成功");
+    log.info("发送消息成功");
 }
 ```
 
 查看发送消息日志
 
-<div align="center"><img src="assets/image-20210718191939140.png"></div>
+```cmd
+2023-01-05 23:49:04.075 -- 发送消息成功
+```
 
 接收消息日志
 
-<div align="center"><img src="assets/image-20210718192004662.png"></div>
+```cmd
+2023-01-05 23:49:09.078 -- 接收到 dl.ttl.queue 的延迟消息：ttl msg
+```
 
 这次，发送与接收的延迟只有 5 秒。说明当队列、消息都设置了 TTL 时，任意一个到期就会成为死信。
 
@@ -2184,6 +2185,15 @@ public void testTTLMsg() {
 - 给消息的目标队列指定死信交换机
 - 将消费者监听的队列绑定到死信交换机
 - 发送消息时给消息设置超时时间为 20 秒
+
+如何设置死信队列？消息按条件和 routingKey 逐级传递。
+
+```mermaid
+graph LR
+message-->|routingKey|normal&nbspexchange-->|routingKey|normal&nbspqueue
+normal&nbspqueue-->|routingKey2|dxl&nbspexchange
+dxl&nbspexchange-->|routingKey2|dxl&nbspqueue
+```
 
 ### 延迟队列
 
@@ -2203,7 +2213,7 @@ public void testTTLMsg() {
 
 <div align="center"><img src="assets/image-20221011144450653.png"></div>
 
-较早版本的 RabbitMQ 没有提供延迟队列的功能。但是可以用：<b style="color:red">TTL+死信队列</b>组合实现延迟队列的效果。但是后面因为延迟队列的需求非常多，所以 RabbitMQ 的官方也推出了一个插件，原生支持延迟队列效果。
+较早版本的 RabbitMQ 没有提供延迟队列的功能。但是可以用<b style="color:red">TTL+死信队列</b>组合实现延迟队列的效果。但是后面因为延迟队列的需求非常多，所以 RabbitMQ 的官方也推出了一个插件，原生支持延迟队列效果。
 
 这个插件就是 DelayExchange 插件。参考 RabbitMQ 的插件列表页面：https://www.rabbitmq.com/community-plugins.html
 
@@ -2229,7 +2239,17 @@ DelayExchange 需要将一个交换机声明为 delayed 类型。当我们发送
 
 基于注解方式（推荐）
 
-<div align="center"><img src="assets/image-20210718193747649.png"></div>
+```java
+@RabbitListener(bindings = @QueueBinding(
+    value = @Queue(name = "delay.queue", durable = "true"),
+    											// 设置为延迟队列
+    exchange = @Exchange(name = "delay.direct", delayed = "true"),
+    key = "delay"
+))
+public void listenDelayedQueue(String msg) {
+    log.info("接收到 delay.queue的延迟消息：{}", msg);
+}
+```
 
 也可以基于 @Bean 的方式
 
@@ -2237,9 +2257,21 @@ DelayExchange 需要将一个交换机声明为 delayed 类型。当我们发送
 
 #### 发送消息
 
-发送消息时，一定要携带 x-delay 属性，指定延迟的时间：
+发送消息时，一定要携带 x-delay 属性，指定延迟的时间
 
-<div align="center"><img src="assets/image-20210718193917009.png"></div>
+```java
+@Test
+public void testDelayMessage(){
+    Message message = MessageBuilder.withBody("delay message".getBytes(StandardCharsets.UTF_8))
+        .setHeader("x-delay", 10000)
+        .build();
+    CorrelationData correlationData = new CorrelationData(UUID.randomUUID().toString());
+    rabbitTemplate.convertAndSend("delay.direct","delay",message,correlationData);
+    log.info("发送消息成功");
+}
+```
+
+注意：RabbitMQ 延迟插件不支持 `mandatory=true` 参数，如果启用会同时收到`延迟消息`和`路由失败消息`。建议在路由失败回调方法中加入特判，如果时延迟队列的就不记录。
 
 #### 总结
 
@@ -2247,6 +2279,7 @@ DelayExchange 需要将一个交换机声明为 delayed 类型。当我们发送
 
 - 声明一个交换机，添加 delayed 属性为 true
 - 发送消息时，添加 x-delay 头，值为超时时间
+- RabbitMQ 延迟插件不支持 `mandatory=true` 参数，如果启用会同时收到`延迟消息`和`路由失败消息`。而 mandatory 的作用是，如果 exchange 根据自身类型和消息 routingKey 无法找到一个合适的 queue 存储消息，那么 broker 会调用 basic.return 方法将消息返还给生产者，为 false 时会直接丢弃消息。
 
 ## 惰性队列
 
@@ -2413,7 +2446,7 @@ RabbitMQ 的是基于 Erlang 语言编写，而 Erlang 又是一个面向并发�
 
 ### 部署
 
-参考课前资料：《RabbitMQ 部署指南.md》
+参考资料：《RabbitMQ 部署指南.md》
 
 ## 镜像集群
 
@@ -2433,13 +2466,13 @@ RabbitMQ 的是基于 Erlang 语言编写，而 Erlang 又是一个面向并发�
 
 ### 部署
 
-参考课前资料：《RabbitMQ 部署指南.md》
+参考资料：《RabbitMQ 部署指南.md》
 
 ## 仲裁队列
 
 ### 集群特征
 
-仲裁队列：仲裁队列是 3.8 版本以后才有的新功能，用来替代镜像队列，具备下列特征：
+仲裁队列：仲裁队列是 3.8 版本以后才有的新功能，用来替代镜像队列，具备下列特征
 
 - 与镜像队列一样，都是主从模式，支持主从数据同步
 - 使用非常简单，没有复杂的配置
@@ -2447,7 +2480,7 @@ RabbitMQ 的是基于 Erlang 语言编写，而 Erlang 又是一个面向并发�
 
 ### 部署
 
-参考课前资料：《RabbitMQ 部署指南.md》
+参考资料：《RabbitMQ 部署指南.md》
 
 ### Java代码创建仲裁队列
 
@@ -2469,7 +2502,7 @@ public Queue quorumQueue() {
 spring:
   rabbitmq:
     addresses: 192.168.150.105:8071, 192.168.150.105:8072, 192.168.150.105:8073
-    username: itcast
+    username: payphone
     password: 123321
     virtual-host: /
 ```

@@ -5841,17 +5841,16 @@ spring:
 
 ## 什么是多级缓存
 
-传统的缓存策略一般是请求到达 Tomcat 后，先查询 Redis，如果未命中则查询数据库，如图
+> 传统的缓存策略一般是请求到达 Tomcat 后，先查询 Redis，如果未命中则查询数据库，如图
 
 <div align="center"><img src="assets/image-20210821075259137.png"></div>
 
-存在下面的问题
+> 存在下面的问题
 
 - 请求要经过 Tomcat 处理，Tomcat 的性能成为整个系统的瓶颈
 - Redis 缓存失效时，会对数据库产生冲击
 
-
-多级缓存就是充分利用请求处理的每个环节，分别添加缓存，减轻 Tomcat 压力，提升服务性能
+> 多级缓存就是充分利用请求处理的每个环节，分别添加缓存，减轻 Tomcat 压力，提升服务性能
 
 - 浏览器访问静态资源时，优先读取浏览器本地缓存
 - 访问非静态资源（ajax 查询数据）时，访问服务端
@@ -5893,9 +5892,7 @@ spring:
 
 ### 导入项目
 
-参考课前资料的：《案例导入说明.md》
-
-<div align="center"><img src="assets/image-20210821081418456.png"></div> 
+参考资料：《案例导入说明.md》
 
 ### 初识Caffeine
 
@@ -5921,7 +5918,7 @@ Caffeine 的性能非常好，下图是官方给出的性能对比
 
 可以看到 Caffeine 的性能遥遥领先！
 
-缓存使用的基本 API
+> 缓存使用的基本 API
 
 ```java
 @Test
@@ -6029,7 +6026,7 @@ public class CaffeineConfig {
 ```
 
 
-然后，修改 item-service 中的 `com.heima.item.web` 包下的 ItemController 类，添加缓存逻辑：
+然后，修改 item-service 中的 `com.heima.item.web` 包下的 ItemController 类，添加缓存逻辑
 
 ```java
 @RestController
@@ -6082,21 +6079,26 @@ Nginx 本身也是 C 语言开发，因此也允许基于 Lua 做拓展。
 
 ### HelloWorld
 
-CentOS7 默认已经安装了 Lua 语言环境，所以可以直接运行 Lua 代码。
+CentOS7 默认已经安装了 Lua 语言环境，所以可以直接运行 Lua 代码，Ubuntu 则需要自行安装 `sudo apt install lua5.1`
 
 1）在 Linux 虚拟机的任意目录下，新建一个 hello.lua 文件
 
-<div align="center"><img src="assets/image-20210821091621308.png"></div>
+```shell
+touch hello.lua
+```
 
 2）添加下面的内容
 
 ```lua
-print("Hello World!")  
+print("hello lua!")  
 ```
 
 3）运行
 
-<div align="center"><img src="assets/image-20210821091638140.png"></div>
+```shell
+lua hello.lua
+hello lua!
+```
 
 
 ### 变量和循环
@@ -6107,11 +6109,23 @@ print("Hello World!")
 
 Lua 中支持的常见数据类型包括
 
-<div align="center"><img src="assets/image-20210821091835406.png"></div>
+| 数据类型 | 描述                                                         |
+| -------- | ------------------------------------------------------------ |
+| nil      | 无效值，只有值 nil 属于该类，在条件表达式中相当于 false      |
+| boolean  | 布尔值，包含 true 和 false                                   |
+| number   | 表示双精度类型的实浮点数                                     |
+| string   | 字符串由双引号或单引号表示                                   |
+| function | 由 C 或 lua 编写的函数                                       |
+| table    | Lua 中的表 (table) 其实是一一个"关联数组" (associative arrays)，数组的索引可以是数字、字符串或表类型。<br/>在 Lua 里，table 的创建是通过"构造表达式"来完成，最简单构造表达式是 {}，用来创建一一个空表。 |
 
 另外，Lua 提供了 type() 函数来判断一个变量的数据类型
 
-<div align="center"><img src="assets/image-20210821091904332.png"></div>
+```shell
+> print(type("hello"))
+string
+> print(type(10.4*3))
+number
+```
 
 #### 声明变量
 
@@ -6180,6 +6194,8 @@ for key,value in pairs(map) do
 end
 ```
 
+在 Lua 中 ipairs 函数用于遍历集合，与函数 pairs() 是同胞兄弟。
+
 ### 条件控制、函数
 
 Lua 中的条件控制和函数声明与 Java 类似。
@@ -6218,13 +6234,15 @@ then
 else
    --[ 布尔表达式为 false 时执行该语句块 --]
 end
-
 ```
-
 
 与 Java 不同，布尔表达式中的逻辑运算是基于英文单词
 
-<div align="center"><img src="assets/image-20210821092657918.png"></div>
+| 操作符 | 描述                                                         | 实例                  |
+| ------ | ------------------------------------------------------------ | --------------------- |
+| and    | 逻辑与操作符。若 A 为 false，则返回 A，否则返回 B。          | （A and B）为 false   |
+| or     | 逻辑与操作符。若 A 为 true，则返回 A，否则返回 B。           | （A or B）为 true     |
+| not    | 逻辑非操作符。与逻辑运算结果相反，如果条件为 true，逻辑非为 false。 | not（A and B）为 true |
 
 
 #### 案例
@@ -6259,19 +6277,15 @@ OpenResty® 是一个基于 Nginx 的高性能 Web 平台，用于方便地搭�
 
 <div align="center"><img src="assets/image-20210821092902946.png"></div>
 
-
-
-安装 Lua 可以参考课前资料提供的《安装OpenResty.md》：
-
-<div align="center"><img src="assets/image-20210821092941139.png"></div> 
+安装 Lua 可以参考《安装OpenResty.md》
 
 ### OpenResty快速入门
 
-我们希望达到的多级缓存架构如图：
+我们希望达到的多级缓存架构如图
 
 <div align="center"><img src="assets/yeVDlwtfMx.png"></div>
 
-其中：
+其中
 
 - windows 上的 nginx 用来做反向代理服务，将前端的查询商品的 ajax 请求代理到 OpenResty 集群
 
@@ -6289,17 +6303,15 @@ OpenResty® 是一个基于 Nginx 的高性能 Web 平台，用于方便地搭�
 
 <div align="center"><img src="assets/image-20210821094447709.png"></div>
 
-我们需要在 OpenResty 中编写业务，查询商品数据并返回到浏览器。
-
-但是这次，我们先在 OpenResty 接收请求，返回假的商品数据。
+我们需要在 OpenResty 中编写业务，查询商品数据并返回到浏览器。但是这次，我们先在 OpenResty 接收请求，返回假的商品数据。
 
 #### OpenResty监听请求
 
 OpenResty 的很多功能都依赖于其目录下的 Lua 库，需要在 nginx.conf 中指定依赖库的目录，并导入依赖：
 
-1）添加对 OpenResty 的 Lua 模块的加载
+> 1）添加对 OpenResty 的 Lua 模块的加载
 
-修改 `/usr/local/openresty/nginx/conf/nginx.conf` 文件，在其中的 http 下面，添加下面代码：
+修改 `/usr/local/openresty/nginx/conf/nginx.conf` 文件，在其中的 http 下面，添加下面代码
 
 ```nginx
 #lua 模块
@@ -6308,9 +6320,9 @@ lua_package_path "/usr/local/openresty/lualib/?.lua;;";
 lua_package_cpath "/usr/local/openresty/lualib/?.so;;";  
 ```
 
-2）监听 /api/item 路径
+> 2）监听 /api/item 路径
 
-修改 `/usr/local/openresty/nginx/conf/nginx.conf` 文件，在 nginx.conf 的 server 下面，添加对 /api/item 这个路径的监听：
+修改 `/usr/local/openresty/nginx/conf/nginx.conf` 文件，在 nginx.conf 的 server 下面，添加对 /api/item 这个路径的监听
 
 ```nginx
 location  /api/item {
@@ -6327,16 +6339,15 @@ location  /api/item {
 
 #### 编写item.lua
 
-1）在 `/usr/loca/openresty/nginx` 目录创建文件夹：lua
+> 1）在 `/usr/loca/openresty/nginx` 目录创建文件夹：lua
 
 <div align="center"><img src="assets/image-20210821100755080.png"></div>
 
-2）在 `/usr/loca/openresty/nginx/lua` 文件夹下，新建文件：item.lua
+> 2）在 `/usr/loca/openresty/nginx/lua` 文件夹下，新建文件：item.lua
 
 <div align="center"><img src="assets/image-20210821100801756.png"></div>
 
-
-3）编写 item.lua，返回假数据
+> 3）编写 item.lua，返回假数据
 
 item.lua 中，利用 ngx.say() 函数返回数据到 Response 中
 
@@ -6344,13 +6355,13 @@ item.lua 中，利用 ngx.say() 函数返回数据到 Response 中
 ngx.say('{"id":10001,"name":"SALSA AIR","title":"RIMOWA 21寸托运箱拉杆箱 SALSA AIR系列果绿色 820.70.36.4","price":17900,"image":"https://m.360buyimg.com/mobilecms/s720x720_jfs/t6934/364/1195375010/84676/e9f2c55f/597ece38N0ddcbc77.jpg!q70.jpg.webp","category":"拉杆箱","brand":"RIMOWA","spec":"","status":1,"createTime":"2019-04-30T16:00:00.000+00:00","updateTime":"2019-04-30T16:00:00.000+00:00","stock":2999,"sold":31290}')
 ```
 
-4）重新加载配置
+> 4）重新加载配置
 
 ```sh
 nginx -s reload
 ```
 
-刷新商品页面：http://localhost/item.html?id=1001，即可看到效果：
+刷新商品页面：http://localhost/item.html?id=1001，即可看到效果
 
 <div align="center"><img src="assets/image-20210821101217089.png"></div>
 
@@ -6372,9 +6383,7 @@ OpenResty 中提供了一些 API 用来获取不同类型的前端请求参数�
 
 可以看到商品 id 是以路径占位符方式传递的，因此可以利用正则表达式匹配的方式来获取ID
 
-
-
-1）获取商品 id
+> 1）获取商品 id
 
 修改 `/usr/loca/openresty/nginx/nginx.conf` 文件中监听 /api/item 的代码，利用正则表达式获取 ID
 
@@ -6387,7 +6396,7 @@ location ~ /api/item/(\d+) {
 }
 ```
 
-2）拼接 ID 并返回
+> 2）拼接 ID 并返回
 
 修改 `/usr/loca/openresty/nginx/lua/item.lua` 文件，获取 id 并拼接到结果中返回
 
@@ -6398,7 +6407,7 @@ local id = ngx.var[1]
 ngx.say('{"id":' .. id .. ',"name":"SALSA AIR","title":"RIMOWA 21寸托运箱拉杆箱 SALSA AIR系列果绿色 820.70.36.4","price":17900,"image":"https://m.360buyimg.com/mobilecms/s720x720_jfs/t6934/364/1195375010/84676/e9f2c55f/597ece38N0ddcbc77.jpg!q70.jpg.webp","category":"拉杆箱","brand":"RIMOWA","spec":"","status":1,"createTime":"2019-04-30T16:00:00.000+00:00","updateTime":"2019-04-30T16:00:00.000+00:00","stock":2999,"sold":31290}')
 ```
 
-3）重新加载并测试
+> 3）重新加载并测试
 
 运行命令以重新加载 OpenResty 配置
 
@@ -6665,7 +6674,7 @@ nginx -s reload
 
 <div align="center"><img src="assets/image-20210821112420464.png"></div>
 
-同时启动：
+同时启动
 
 <div align="center"><img src="assets/image-20210821112444482.png"></div> 
 
@@ -6947,8 +6956,6 @@ end
 
 <div align="center"><img src="assets/image-20210821114528954.png"></div>
 
-
-
 3）完整的 item.lua 代码
 
 ```lua
@@ -6994,7 +7001,7 @@ ngx.say(cjson.encode(item))
 
 ### Nginx本地缓存
 
-现在，整个多级缓存中只差最后一环，也就是 nginx 的本地缓存了。如图：
+现在，整个多级缓存中只差最后一环，也就是 nginx 的本地缓存了。
 
 <div align="center"><img src="assets/image-20210821114742950.png"></div>
 
@@ -7142,22 +7149,18 @@ ngx.say(cjson.encode(item))
 
 而异步实现又可以基于 MQ 或者 Canal 来实现：
 
-<b>1）基于MQ的异步通知：</b>
+<b>1）基于MQ的异步通知</b>
 
 <div align="center"><img src="assets/image-20210821115552327.png"></div>
-
-解读：
 
 - 商品服务完成对数据的修改后，只需要发送一条消息到 MQ 中。
 - 缓存服务监听 MQ 消息，然后完成对缓存的更新
 
 依然有少量的代码侵入。
 
-<b>2）基于 Canal 的通知：</b>
+<b>2）基于 Canal 的通知</b>
 
 <div align="center"><img src="assets/image-20210821115719363.png"></div>
-
-解读：
 
 - 商品服务完成商品修改后，业务直接结束，没有任何代码侵入
 - Canal 监听 MySQL 变化，当发现变化后，立即通知缓存服务
@@ -7185,7 +7188,7 @@ Canal 是基于 mysql 的主从同步来实现的，MySQL 主从同步的原理�
 
 #### 安装Canal
 
-安装和配置 Canal 参考课前资料文档：
+安装和配置 Canal 参考资料《安装 Cannal.md》
 
 <div align="center"><img src="assets/image-20210821120017324.png"></div> 
 
@@ -7193,7 +7196,7 @@ Canal 是基于 mysql 的主从同步来实现的，MySQL 主从同步的原理�
 
 Canal 提供了各种语言的客户端，当 Canal 监听到 binlog 变化时，会通知 Canal 的客户端。
 
-![image-20210821120049024](C:\development\note\CodeNotes\微服务\img\image-20210821120049024.png)
+<div align="center"><img src="assets/image-20210821120049024.png"></div>
 
 我们可以利用 Canal 提供的 Java 客户端，监听 Canal 通知消息。当收到变化的消息时，完成对缓存的更新。
 

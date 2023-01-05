@@ -2974,7 +2974,7 @@ public static void main(String[] args) {
 >  信号量，用来限制能同时访问共享资源的线程上限。可用来限流，可以用来多个共享资源的互斥使用。
 
 ```java
- Semaphore s = new Semaphore(2, true);
+Semaphore s = new Semaphore(2, true);
 ```
 
 AQS  AbstractQueueSynchronizer
@@ -3156,7 +3156,7 @@ Semaphore 有点像一个停车场，permits 就好像停车位数量，当线�
 ### 用法
 
 - 计数。初始化数值为多少。然后根据条件进行 countDown()
-- 调用 await 方法，只要计数不是0，await 这个栓就会锁着。直到计数为 0，这个拴才会解锁。
+- 调用 await 方法，只要计数不是 0，await 这个栓就会锁着。直到计数为 0，这个拴才会解锁。
 - 等待多少线程结束，线程结束后做 await 后面的代码。
 
  CountDownLatch 主要有两个方法，当一个或多个线程调用 await 方法时，这些线程会阻塞。
