@@ -45,6 +45,26 @@ MyBatis 框架在操作数据库时，大体经过了 8 个步骤
 - Ctrl + Shift + F10 运行代码
 - Ctrl + W 关闭侧边栏
 
+## 重要配置
+
+<b style="color:orange">如果需要 xml 文件和接口文件存储在一个路径下，则需要为 maven 配置下面这个属性</b>
+
+```xml
+<bulid>        
+    <resources>
+        <resource>
+            <directory>src/main/java</directory>
+            <includes>
+                <include>**/*.xml</include>
+            </includes>
+            <filtering>true</filtering>
+        </resource>
+    </resources>
+</build>
+```
+
+[mave resource 属性详解](
+
 # 设计模式
 
 相对路径 `src/java/main/文件名.xml`

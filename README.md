@@ -8,7 +8,7 @@
 - Spring Boot 温习
 - MySQL 查询加强
 - Spring 加强
-- Redis 加强
+- Redis 加强，黑马那个 Redis 的项目也写一遍。
 
 ## 📝期刊论文
 
