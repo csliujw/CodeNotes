@@ -77,19 +77,21 @@
 
 7️⃣提供了对 JUnit 的支持，方便程序测试。
 
-# Spring核心容器
+# IOC
+
+## 核心容器
 
 Spring 框架的主要功能是通过其核心容器来实现的，而 Spring 框架提供了两种核心容器，分别为 BeanFactory 和 ApplicationContext。
 
-## BeanFactory
+### BeanFactory
 
 BeanFactory 是基础类型的 IoC 容器。简单说，BeanFactory 就是一个管理 Bean 的工厂，它主要负责初始化各种 Bean，并调用它们的生命周期方法。
 
-## ApplicationContext
+### ApplicationContext
 
-ApplicationContext 是 BeanFactory 的子接口，也被称为应用上下文，是另一种常用的 Spring 核心容器。ApplicationContext 里不仅包含了 BeanFactory 的所有功能，还添加了对国际化、资源访问、事件传播等方面的支持。
+ApplicationContext 是 BeanFactory 的子接口，也被称为应用上下文，是另一种常用的 Spring 核心容器。ApplicationContext 里不仅包含了 BeanFactory 的所有功能，还对 BeanFactory 做了功能增强，添加了对国际化、资源访问、事件传播等方面的支持。
 
-## 依赖注入
+### 依赖注入示例
 
 依赖注入（Dependency Injection，简称 DI）与控制反转（IoC）的含义相同，只不过这两个称呼是从两个角度描述的同一个概念。
 
@@ -97,49 +99,114 @@ ApplicationContext 是 BeanFactory 的子接口，也被称为应用上下文，
 
 <b>依赖注入：</b>A 类和 B 类，如果 A 要用到 B，就是 A 依赖了 B。Spring 的 IOC 容器会为 A 初始化这个 B 对象，即注入这个依赖。
 
-> Spring 的依赖注入的方式有如下两种
+> Spring 常用的依赖注入的方式有如下三种
 
-1️⃣setter 方法注入
+1️⃣setter 方法注入，需要在 setter 方法上加上 @Atuowired 注解。
 
 2️⃣构造方法注入：<a href="https://blog.csdn.net/weixin_42128429/article/details/121395148">一篇优质博客</a>
 
-- 如果有多个构造方法，默认会使用无参构造方法进行初始化。
-- 如果有多个构造方法，但是没有无参数的，那么会报错。
-- 报错了，怎么办？为某个构造方法加上 Autowired，就会使用那个构造方法进行初始化。
+- 如果只有一个构造方法，不管是有参还是无参，都可以正常初始化，正常完成 bean 的注入，且不用加 @Autowired 注解。
+- 如果有多个构造方法，没有给任何构造方法加 @Autowired 注解的话，默认会使用无参构造方法进行初始化。
+- 如果有多个构造方法，但是没有无参数的，那么会报错。报错了，怎么办呢？为某个构造方法加上 @Autowired，就会使用那个构造方法进行初始化。
 - 如果需要根据不同的情况来实例化对象怎么办？请看下面的多构造实例化代码
 
-3️⃣注解注入
+3️⃣属性注入，就是在属性上加上注解 @Autowired，大多数时候依赖注入都要结合注解注入来使用的。
 
-setter 注入（需要加上 Autowired 注解）和构造方法注入（无需加注解）
+> 依赖注入示例
+
+所以依赖的 jar 包，导入 spring-context 包后，其他一些包也会自动导入哦~ 即核心容器所依赖的所有环境也会被导入。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.review.spring</groupId>
+    <artifactId>review-spring</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>5.3.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>5.3.3</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.24</version>
+        </dependency>
+    </dependencies>
+
+</project>
+```
+
+相关的 POJO 类 -- 都位于 com.review.spring.pojo 包下
 
 ```java
 @Component
+@Data
 public class User {
-    public UserP p;
+    private UserOne one;
+    private UserTwo two;
 
-    public UserPTwo t;
+//    public User() {
+//        System.out.println("User ~");
+//    }
 
-    public User(UserPTwo t) {
-        this.t = t;
+    //    @Autowired
+    public User(UserTwo two) {
+        this.two = two;
+        System.out.println("User have param two");
     }
 
+//    public User(UserOne one) {
+//        this.one = one;
+//        System.out.println("User have param one");
+//    }
+
     @Autowired
-    public void setP(UserP p){
-        this.p = p;
+    public void setOne(UserOne one) {
+        this.one = one;
     }
 }
 
 @Component
-class UserP {}
+public class UserOne {}
 
 @Component
-class UserPTwo {}
+public class UserTwo {}
+```
+
+Spring 配置扫描包的主体类
+
+```java
+@ComponentScan(basePackages = "com.review.spring")
+public class Main {}
 ```
 
 测试代码
 
 ```java
-import org.junit.Assert;
+import com.review.spring.pojo.User;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -147,110 +214,125 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = SpringConfig.class)
-public class Hello {
+@ContextConfiguration(classes = Main.class)
+public class TestSetterAutowired {
     @Autowired
     User user;
 
     @Test
-    public void f1() {
-        Assert.assertNotNull(user);
-        System.out.println(user.t);
-        System.out.println(user.p);
+    public void testSetter() {
+        System.out.println(user);
     }
 }
 ```
 
-不想使用单元测试的写法
+可以用上述代码依次测试 setter 注入，构造方法注入；可以发现 setter 注入需要配合注解使用不然无法注入；而构造方法注入可以不加注解，如果有多个构造方法，且没有无参的构造，需要通过 @Autowired 标识使用那个构造方法创建对象。
+
+不想使用单元测试的写法，可以采用下面的方式
 
 ```java
-@ComponentScan(basePackages = "cn.study")
-public class SpringConfig {
+import com.review.spring.pojo.User;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
+
+@ComponentScan(basePackages = "com.review.spring")
+public class Main {
     public static void main(String[] args) {
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig.class);
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(Main.class);
         User bean = context.getBean(User.class);
         System.out.println(bean);
     }
 }
 ```
 
-多构造方法指定某个构造方法进行实例化
+如果 Bean 不是单实例的，而是多实例的，那么可以通过在 getBean 中指定构造函数来实例化，不过多实例的 Bean 不由 Spring 进行管理。
 
 ```java
 @Component
-@Scope(value = "prototype")
+@Data
+@Scope(scopeName = "prototype")
+// 修改 User 为多实例
 public class User {
-    public UserP p;
-    public UserPTwo t;
-    public Object o;
-    public User() {}
+    private UserOne one;
+    private UserTwo two;
 
-    public User(UserPTwo t) {
-        this.t = t;
+    public User() {
+        System.out.println("User ~");
     }
 
-    public User(UserP p) {
-        this.p = p;
+    //    @Autowired
+    public User(UserTwo two) {
+        this.two = two;
+        System.out.println("User have param two");
+    }
+
+    public User(UserOne one) {
+        this.one = one;
+        System.out.println("User have param one");
+    }
+
+    //    @Autowired
+    public void setOne(UserOne one) {
+        this.one = one;
     }
 }
 
-@ComponentScan(basePackages = "cn.study")
-public class SpringConfig {
+@ComponentScan(basePackages = "com.review.spring")
+public class Main {
     public static void main(String[] args) {
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(SpringConfig.class);
-        User bean = context.getBean(User.class, new UserP());
-        System.out.println(bean.p);
-
-        User beant = context.getBean(User.class, new UserPTwo());
-        System.out.println(beant.t);
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(Main.class);
+        User bean = context.getBean(User.class, new UserOne());
+        System.out.println(bean);
     }
 }
 ```
 
-## Bean
+### Bean
 
 [(1条消息) Spring源码学习（十）--推断构造方法_从头再来_f的博客-CSDN博客_spring推断构造方法](https://blog.csdn.net/weixin_42128429/article/details/121395148)
 
-### 实例化
+#### 实例化方式
 
 在 Spring 中，要想使用容器中的 Bean，需要实例化 Bean。实例化 Bean 有三种方式，分别为<span style="color:orange">构造器实例化、静态工厂方式实例化和实例工厂方式实例化</span>
 
-### 构造器
+##### 构造器实例化
 
 默认是使用无参构造方法。如果既有无参又有有参，默认使用无参。可以通过 @Autowire 指定使用某个构造方法。
 
 ```java
 @Component
-@Scope(value = "prototype")
+@Data
 public class User {
-    public UserP p;
-    public UserPTwo t;
-    public Object o;
+    private UserOne one;
+    private UserTwo two;
 
-    public User() {}
-	
-    // @Autowired 指定使用这个构造方法初始化
-    @Autowired
-    public User(UserPTwo t) {
-        this.t = t;
+    public User() {
+        System.out.println("User ~");
+    }
+
+	@Autowired
+    public User(UserOne one) {
+        this.one = one;
+        System.out.println("User have param one");
     }
 }
 
+
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = SpringConfig.class)
-public class Hello {
+@ContextConfiguration(classes = Main.class)
+public class TestSetterAutowired {
     @Autowired
     User user;
 
     @Test
     public void f1() {
         Assert.assertNotNull(user);
-        System.out.println(user.t);
+        System.out.println(user.getOne());
     }
 }
 ```
 
-### 静态工厂方法
+##### 静态工厂方法实例化
 
 静态工厂是实例化 Bean 的另一种方式。该方式要求开发者创建一个静态工厂的方法来创建 Bean 的实例。
 
@@ -265,7 +347,7 @@ public class StaticFactoryMethod {
 }
 ```
 
-### 实例工厂
+##### 实例工厂实例化
 
 ```java
 @Configuration
@@ -301,21 +383,21 @@ public class Hello {
 }
 ```
 
-### 作用域
+#### 作用域
 
 通过 Spring 容器创建一个 Bean 的实例时，不仅可以完成 Bean 的实例化，还可以为 Bean 指定特定的作用域。Spring 中为 Bean 的实例定义了 7 种作用域。
 
-| 作用域名称        | 说明                                                         |
-| ----------------- | ------------------------------------------------------------ |
-| singleton（单例） | 使用 singleton 定义的 Bean 在 Spring 容器中将只有一个实例，即单例模型。 |
-| prototype（原型） | 每次通过 Spring 容器获取的 prototype 定义的 Bean 时，容器都将创建一个新的 Bean 实例。 |
-| request           | 在一次 HTTP 请求中，容器会返回一个 Bean 实例，不同的 HTTP 请求会产生不同的 Bean，且仅在当前 HTTP request 内有效。 |
-| session           | 在一次 HTTP Session 中，容器会返回同一个 Bean 实例，且仅在当前 HTTP Session 内有效。 |
-| globalSession     | 在一次 HTTP Session 中，容器会返回一个 Bean 实例，仅在使用 portlet 上下文时有效。 |
-| application       | 为每个 ServletContext 对象创建一个实例。仅在 Web 相关的 ApplicationContext 中生效。 |
-| websocket         | 为每个 websocket 对象创建一个实例。仅在 Web 相关的 ApplicationContext 中生效。 |
+| 作用域名称          | 说明                                                         |
+| ------------------- | ------------------------------------------------------------ |
+| singleton（单实例） | 使用 singleton 定义的 Bean 在 Spring 容器中将只有一个实例，即单例模型。 |
+| prototype（多实例） | 每次通过 Spring 容器获取的 prototype 定义的 Bean 时，容器都将创建一个新的 Bean 实例。 |
+| request             | 在一次 HTTP 请求中，容器会返回一个 Bean 实例，不同的 HTTP 请求会产生不同的 Bean，且仅在当前 HTTP request 内有效。 |
+| session             | 在一次 HTTP Session 中，容器会返回同一个 Bean 实例，且仅在当前 HTTP Session 内有效。 |
+| globalSession       | 在一次 HTTP Session 中，容器会返回一个 Bean 实例，仅在使用 portlet 上下文时有效。 |
+| application         | 为每个 ServletContext 对象创建一个实例。仅在 Web 相关的 ApplicationContext 中生效。 |
+| websocket           | 为每个 websocket 对象创建一个实例。仅在 Web 相关的 ApplicationContext 中生效。 |
 
-### 生命周期
+#### 生命周期
 
 <span style="color:red">Spring 会管理 singleton 作用域的生命周期，不会管理 prototype 作用域的 Bean。在 singleton 作用域下，Spring 能够精确地知道该 Bean 何时被创建，何时初始化完成以及何时被销毁。</span>
 
@@ -323,8 +405,7 @@ public class Hello {
 <div align="center">
     <img src="img/spring/quick_start.png">
 </div>
-
-### 装配方式
+#### 装配方式
 
 Spring 提供了基于 XML 的配置、基于注解的配置和自动装配等。主要讲解基于注解的配置。
 
@@ -333,30 +414,19 @@ Spring 中定义了一系列的注解，常用的注解如下：
 - @Component：可以使用此注解描述 Spring 中的 Bean，但它是一个泛化的概念，仅仅表示一个组件（Bean），并且可以作用在任何层次。使用时只需将该注解标注在相应类上即可。
 - @Repository：用于将数据访问层（DAO 层）的类标识为 Spring 中的 Bean，其功能与 @Component 相同。
 - @Service：通常作用在业务层（Service 层），用于将业务层的类标识为 Spring 中的 Bean，其功能与 @Component 相同。
-- @Controller：通常作用在控制层（如 Spring MVC 的 Controller），用于将控制层的类标识为 Spring 中的 Bean，其功能与 @Component相同。
-- @Autowired：用于对 Bean 的属性变量、属性的 setter 方法及构造方法进行标注，配合对应的注解处理器完成 Bean 的自动配置工作。<span style="color:orange">默认按照 Bean 的类型进行装配。如果按类型匹配发现有多个，且没有指定优先选那个，会报错。</span>
+- @Controller：通常作用在控制层（如 Spring MVC 的 Controller），用于将控制层的类标识为 Spring 中的 Bean，其功能与 @Component 相同。
+- @Autowired：用于对 Bean 的属性变量、属性的 setter 方法及构造方法进行标注，配合对应的注解处理器完成 Bean 的自动配置工作。<span style="color:orange">默认按照 Bean 的类型进行装配。如果按类型匹配发现有多个，就以字段名为 name 进行匹配，如果还没有匹配的 Bean，会报错。</span>
 - @Resource：其作用与 Autowired 一样。其区别在于 @Autowired 默认按照 Bean 类型装配，而 @Resource 默认按照 Bean 实例名称进行装配。@Resource 中有两个重要属性：name 和 type。
     - Spring 将 name 属性解析为 Bean 实例名称，type 属性解析为 Bean 实例类型。
     - 如果指定 name 属性，则按实例名称进行装配；如果指定 type 属性，则按 Bean 类型进行装配；
     - 如果都不指定，则先按 Bean 实例名称装配，如果不能匹配，再按照 Bean 类型进行装配；如果都无法匹配，则抛出 NoSuchBeanDefinitionException 异常。
 - @Qualifier：与 @Autowired 注解配合使用，会将默认的按 Bean 类型装配修改为按 Bean 的实例名称装配，Bean 的实例名称由 @Qualifier 注解的参数指定。
 
-# 组件注解
+## 组件注解
 
-## 导包
+### 组件注入
 
-导入 spring-context 包后，其他一些包也会自动导入哦~ 即核心容器所依赖的所有环境也会被导入。
-
-```xml
-<!-- https://mvnrepository.com/artifact/org.springframework/spring-context -->
-<dependency>
-    <groupId>org.springframework</groupId>
-    <artifactId>spring-context</artifactId>
-    <version>5.3.3</version>
-</dependency>
-```
-
-## xml写法
+#### xml写法
 
 POJO 对象
 
@@ -374,7 +444,6 @@ public class Person {
     }
 	// 省略 setter getter
 }
-
 ```
 
 获取 bean
@@ -399,7 +468,7 @@ public class BeanXMLTest {
 - `xml` 配置文件。在 maven 的 `resrouce` 目录下。resource 目录下的资源最后会变成项目根目录下的文件。所以是直接 `Classxxx("bean.xml")`
 - `JavaSE` 的项目和 `JavaEE` 项目最后的输出路径好像都是 classes，但是 `JavaEE` 里写的路径是 `classpath`！
 
-## 用注解配置类
+#### 注解配置类写法
 
 @Configuration 可以替代 XML，进行类的配置。典型的应用有三方 jar 包，我们需要把它交给 Spring 容器进行管理，于是用 @Configuration 的方式把这个类注入到 Spring 中。
 
@@ -414,9 +483,10 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class MainConfiguration {
-    // 给容器中注册一个Bean  默认是以方法名为bean的名称，如果不想要方法名可以这样 @Bean("person") 或 @Bean({"person1","person2"})
+    // 给容器中注册一个Bean  默认是以方法名为 bean 的名称
+    // 如果不想要方法名可以这样 @Bean("person") 或 @Bean({"person1","person2"})
     // 具体看看源码注释 一目了然。
-    // value 与 name之间 是别名关系
+    // value 与 name 之间 是别名关系
     @Bean("person3")
     public Person person() {
         return new Person();
@@ -453,18 +523,20 @@ public class BeanXMLTest {
 }
 ```
 
-## 包扫描
+### 包扫描
 
 用到的注解有 @Configuration、@ComponentScan，如果是 JDK8，它被设置成了重复注解，可以重复用。
 
-xml 的配置方式
+#### xml 的方式
 
 ```xml
 <!-- 配置包扫描 , 只要标注了@Controller、@Service、@Repository、@Component的都会被自动的扫描加入容器中-->
 <context:component-scan base-package="org.example" />
 ```
 
-注解方式，按指定类型排除
+#### 注解方式
+
+注解方式，根据定类型进行排除
 
 ```java
 // excludeFilters指定排除那些  用@Filter指定排除那些
@@ -536,7 +608,7 @@ public class ScanTest {
 }
 ```
 
-## @Filter自定义过滤规则
+#### @Filter自定义过滤规则
 
 自定义过滤规则的代码
 
@@ -605,9 +677,9 @@ public class ScanTest {
 }
 ```
 
-## Spring单元测试
+### 单元测试
 
-引入依赖，需要的 JUnit 的版本有点高
+引入依赖，需要的 Junit 的版本有点高，如果单元测试出错，可能是 Junit 包的版本出错了。
 
 [Spring测试官方文档](https://docs.spring.io/spring-framework/docs/current/reference/html/testing.html)
 
@@ -617,18 +689,15 @@ public class ScanTest {
     <artifactId>spring-context</artifactId>
     <version>5.3.3</version>
 </dependency>
-
-<dependency>
-    <groupId>junit</groupId>
-    <artifactId>junit</artifactId>
-    <version>4.13.1</version>
-    <scope>test</scope>
-</dependency>
-
 <dependency>
     <groupId>org.springframework</groupId>
     <artifactId>spring-test</artifactId>
     <version>5.3.3</version>
+</dependency>
+<dependency>
+    <groupId>junit</groupId>
+    <artifactId>junit</artifactId>
+    <version>4.13.2</version>
     <scope>test</scope>
 </dependency>
 ```
@@ -657,7 +726,9 @@ public class ScopeConfigurationTest {
 }
 ```
 
-## Bean作用域范围
+### Bean作用域范围
+
+通过 Spring 容器创建一个 Bean 的实例时，不仅可以完成 Bean 的实例化，还可以为 Bean 指定特定的作用域。而常见的作用域范围有下面五种。
 
 - singleton 单例
 - prototype 多例
@@ -665,7 +736,19 @@ public class ScopeConfigurationTest {
 - session
 - global-session
 
-## 懒加载
+完整的 Spring 中 Bean 的 7 种作用域。
+
+| 作用域名称          | 说明                                                         |
+| ------------------- | ------------------------------------------------------------ |
+| singleton（单实例） | 使用 singleton 定义的 Bean 在 Spring 容器中将只有一个实例，即单例模型。 |
+| prototype（多实例） | 每次通过 Spring 容器获取的 prototype 定义的 Bean 时，容器都将创建一个新的 Bean 实例。 |
+| request             | 在一次 HTTP 请求中，容器会返回一个 Bean 实例，不同的 HTTP 请求会产生不同的 Bean，且仅在当前 HTTP request 内有效。 |
+| session             | 在一次 HTTP Session 中，容器会返回同一个 Bean 实例，且仅在当前 HTTP Session 内有效。 |
+| globalSession       | 在一次 HTTP Session 中，容器会返回一个 Bean 实例，仅在使用 portlet 上下文时有效。<br>global session 类似于 HTTP Session 作用域，它只有对 portlet 才有意义。对于 Servlet 的 web 应用就相当于 session。 |
+| application         | 为每个 ServletContext 对象创建一个实例。仅在 Web 相关的 ApplicationContext 中生效。 |
+| websocket           | 为每个 websocket 对象创建一个实例。仅在 Web 相关的 ApplicationContext 中生效。 |
+
+### 懒加载
 
 - @Lazy，针对单实例容器启动时不创建对象，第一次获取 bean 时再进行初始化。
 - 验证代码如下
@@ -688,7 +771,7 @@ public class LazyConfiguration {
 }
 ```
 
-## @Conditional按条件注入
+### @Conditional条件注入
 
 符合条件的 Bean 才会被注册到 IoC 容器中。
 
@@ -809,7 +892,7 @@ class OtherCondition implements Condition {
 }
 ```
 
-## @Import导入另一组件
+### @Import导入其他组件
 
 > 容器注入组件
 
@@ -836,7 +919,7 @@ public @interface Import {
 }
 ```
 
-### Import的基本用法
+#### Import的基本用法
 
 将没有使用 @Component 注解的普通 class 加入到 Spring 容器, 由 Spring 管理。
 
@@ -864,7 +947,9 @@ getColor
 */
 ```
 
-### Import的高级用法一
+#### Import的高级用法
+
+> <b>高级用法一</b>
 
 ImportSelector，最重要的是 selectImports 方法。
 
@@ -924,7 +1009,7 @@ class MyImportSelector implements ImportSelector {
 }
 ```
 
-### Import的高级用法二
+> <b>高级用法二</b>
 
 ImportBeanDefinitionRegistrar 接口，这个接口的功能比 ImportSelector 接口要更为强大，可以拿到所有 bean 的定义信息（BeanDefinitionRegistry）。
 
@@ -989,7 +1074,7 @@ class Red {}
 class Rain {}
 ```
 
-## FactoryBean创建
+### FactoryBean创建
 
 使用 Spring 提供的 FactoryBean
 
@@ -1056,9 +1141,24 @@ public interface BeanFactory {
 }
 ```
 
-# 生命周期
+## 生命周期
 
-## Bean指定初始化和销毁方法
+Bean 的生命周期
+
+```mermaid
+graph LR
+bean创建===>初始化===>销毁过程
+```
+
+容器管理 bean 的生命周期，我们可以自定义初始化和销毁方法；容器在 bean 进行到当前生命周期的时候来调用我们自己定义的初始化和销毁方法。
+
+### Bean的初始化/销毁
+
+#### 指定初始化和销毁方法
+
+单实例的 bean 在容器启动的时候创建对象，多实例的 bean 在每次获取的时候创建对象。对象创建完成，并赋值好（包括依赖注入吗？），调用初始化方法。单实例和多实例都是一样的。
+
+单实例的 bean 在容器关闭的时候调用 destoryMethod，<b>而多实例的 bean 不会调用 destoryMethod。</b>
 
 - @Bean(initMethod = "init", destroyMethod = "destroy")
 
@@ -1079,21 +1179,19 @@ public interface BeanFactory {
 使用 JavaConfig
 
 ```java
-import org.springframework.context.annotation.*;
-
 @Configuration
 public class BeanLifeCycle {
     // 可以在自定义数据源，用init和destroy进行数据源的初始化和关闭
-    @Scope("prototype")
+    // @Scope("prototype")
     @Bean(initMethod = "init", destroyMethod = "destroy")
     public Car car() {
         return new Car();
     }
 
-    public static void main(String[] args) {
-        AnnotationConfigApplicationContext annotationConfigApplicationContext = new AnnotationConfigApplicationContext(BeanLifeCycle.class);
-         Object car = annotationConfigApplicationContext.getBean("car");
-        // annotationConfigApplicationContext.close();
+    public static void main(String[] args) throws IOException {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanLifeCycle.class);
+        Object car = context.getBean("car");
+        context.close();
         // 多实例的bean在获取时才创建对象
     }
 }
@@ -1111,48 +1209,52 @@ class Car {
         System.out.println("car ... destroy");
     }
 }
+/*
+Car constructor...
+car ... init
+car ... destroy
+*/
 ```
 
-## Bean实现接口自定义初始化和销毁
+#### 实现接口自定义初始化和销毁
 
 通过实现接口，自定义初始化和销毁的逻辑
 
 ```java
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.annotation.*;
-
 @Configuration
 public class BeanLifeCycle {
-    @Scope("prototype")
+    // 可以在自定义数据源，用init和destroy进行数据源的初始化和关闭
+    // @Scope("prototype")
     @Bean
-    public Car2 car() {
+    public Car2 car2() {
         return new Car2();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanLifeCycle.class);
-        Object car = context.getBean("car");
+        Object car = context.getBean("car2");
         context.close();
         // 多实例的bean在获取时才创建对象
     }
 }
 
 class Car2 implements InitializingBean, DisposableBean {
-
-    @Override
-    public void destroy() throws Exception {
-        System.out.println("destroy");
+    public Car2() {
+        System.out.println("Car2 constructor...");
     }
 
-    @Override
+    public void destroy() {
+        System.out.println("car2 ... destroy");
+    }
+
+    // 属性设置好后，调用 init-method
     public void afterPropertiesSet() throws Exception {
-        System.out.println("init");
+        System.out.println("car2 ... init");
     }
 }
 ```
 
-## JS250规范定义的注解
+#### JS250注解
 
 - @PostConstruct，在 bean 创建完成并属性赋值完成，来执行初始化方法
 - @PreDestroy，在容器销毁 bean 之前通知我们进行清理操作
@@ -1168,14 +1270,6 @@ class Car2 implements InitializingBean, DisposableBean {
 ```
 
 ```java
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.annotation.*;
-
-import javax.annotation.PostConstruct;W
-import javax.annotation.PreDestroy;
-import java.util.Arrays;
-
 @Configuration
 public class BeanLifeCycle {
     @Bean
@@ -1183,166 +1277,289 @@ public class BeanLifeCycle {
         return new Car3();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanLifeCycle.class);
         Object car = context.getBean("car3");
         context.close();
-        // 多实例的bean在获取时才创建对象
     }
 }
 
 class Car3 {
-    public Car3() {
-        System.out.println("car3 construct");
-    }
-
     @PostConstruct
     public void init() {
-        System.out.println("car3 postConstruct");
+        System.out.println("car3 ... init");
     }
 
     @PreDestroy
     public void destroy() {
-        System.out.println("car3 preDestroy");
+        System.out.println("car3 ... destroy");
     }
 }
 ```
 
-## Bean后置处理器
+### Bean后置处理器
 
 参照官方文档
 
-- interface BeanPostProcessor：bean 的后置处理器；在 bean 初始化前后进行一些处理工作
+- interface BeanPostProcessor：bean 的后置处理器；在 bean 初始化（执行 init 方法）前后进行一些处理工作
   - postProcessBeforeInitialization：初始化之前工作
   - postProcessAfterInitialization：初始化之后工作
 
-### 用法
+可以通过自定义 Bean 后置处理器，对特定的 Bean 进行后处理。
 
-源码注释如下
-
-```java
-public interface BeanPostProcessor {
-
-	/**
-	 * Apply this {@code BeanPostProcessor} to the given new bean instance <i>before</i> any bean
-	 * initialization callbacks (like InitializingBean's {@code afterPropertiesSet} 
-	 * or a custom init-method). The bean will already be populated with property values.
-	 * The returned bean instance may be a wrapper around the original.
-	 * <p>The default implementation returns the given {@code bean} as-is.
-	 * @param bean the new bean instance
-	 * @param beanName the name of the bean
-	 * @return the bean instance to use, either the original or a wrapped one;
-	 * if {@code null}, no subsequent BeanPostProcessors will be invoked
-	 * @throws org.springframework.beans.BeansException in case of errors
-	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet
-	 */
-	@Nullable
-	default Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-		return bean;
-	}
-
-	/**
-	 * Apply this {@code BeanPostProcessor} to the given new bean instance <i>after</i> any bean
-	 * initialization callbacks (like InitializingBean's {@code afterPropertiesSet}
-	 * or a custom init-method). The bean will already be populated with property values.
-	 * The returned bean instance may be a wrapper around the original.
-	 * <p>In case of a FactoryBean, this callback will be invoked for both the FactoryBean
-	 * instance and the objects created by the FactoryBean (as of Spring 2.0). The
-	 * post-processor can decide whether to apply to either the FactoryBean or created
-	 * objects or both through corresponding {@code bean instanceof FactoryBean} checks.
-	 * <p>This callback will also be invoked after a short-circuiting triggered by a
-	 * {@link InstantiationAwareBeanPostProcessor#postProcessBeforeInstantiation} method,
-	 * in contrast to all other {@code BeanPostProcessor} callbacks.
-	 * <p>The default implementation returns the given {@code bean} as-is.
-	 * @param bean the new bean instance
-	 * @param beanName the name of the bean
-	 * @return the bean instance to use, either the original or a wrapped one;
-	 * if {@code null}, no subsequent BeanPostProcessors will be invoked
-	 * @throws org.springframework.beans.BeansException in case of errors
-	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet
-	 * @see org.springframework.beans.factory.FactoryBean
-	 */
-	@Nullable
-	default Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-		return bean;
-	}
-}
+```mermaid
+graph LR
+bean创建===>|执行 bean processor|初始化===>|执行 bean processor|销毁过程
 ```
 
-我测试了一下，`@Configuration 的 @Bean 注解注册的 Bean，用下面实现接口的方式无效`
+bean 的创建应该包括了完成依赖注入？
+
+#### 基本用法
+
+定义后置处理器，为 name 是 getUser1 的 name 字段赋值。
 
 ```java
-package cn.study.ioc.lifecycle;
+@Data
+public class User {
+    private String name;
+    private UserOne one;
+    private UserTwo two;
 
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.Nullable;
-import org.springframework.stereotype.Component;
+    public User() {
+        System.out.println("User ~");
+    }
 
-@Configuration
-@ComponentScan(basePackages = "cn.study.ioc.lifecycle")
-public class BeanBeanPostProcessor {
+    public User(UserTwo two) {
+        this.two = two;
+        System.out.println("User have param two");
+    }
 
-    public static void main(String[] args) {
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanBeanPostProcessor.class);
-        Demo bean = context.getBean(Demo.class);
-        System.out.println("before close");
-        context.close();
-        System.out.println("after close");
+    public User(UserOne one) {
+        this.one = one;
+        System.out.println("User have param one");
+    }
+
+    public void setOne(UserOne one) {
+        this.one = one;
     }
 }
 
+@Configuration
+public class BeanConfig {
+    @Bean
+    public User getUser1() {
+        System.out.println("create getUser1");
+        return new User();
+    }
+
+    @Bean
+    public User getUser2() {
+        System.out.println("create getUser2");
+        return new User();
+    }
+}
+```
+
+自定义的后置处理器
+
+```java
 @Component
-class Demo implements BeanPostProcessor {
-    public Demo() {
-        System.out.println("construct");
+public class TestBeanPostProcessor implements BeanPostProcessor {
+
+    public TestBeanPostProcessor() {
+        System.out.println("construct TestBeanPostProcessor");
     }
 
     @Nullable
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-        System.out.println("demo post process before");
+        if (beanName.equals("getUser1") && bean.getClass() == User.class) {
+            User user = (User) bean;
+            user.setName("hello");
+            System.out.println("postProcessBeforeInitialization == " + bean + " == " + beanName);
+            return user;
+        }
         return bean;
     }
 
+    @Nullable
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-        System.out.println("demo post process after");
+        if (beanName.equals("getUser1")) {
+            System.out.println("postProcessBeforeInitialization == " + bean + " == " + beanName);
+        }
         return bean;
     }
 }
+```
+
+测试代码
+
+```java
+@ComponentScan(basePackages = "com.review.spring")
+public class Main {
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(Main.class);
+    }
+}
 /*
-construct
-demo post process before
-demo post process after
-before close
-after close
+construct TestBeanPostProcessor
+create getUser1
+User ~
+postProcessBeforeInitialization == User(name=hello, one=null, two=null) == getUser1
+postProcessBeforeInitialization == User(name=hello, one=null, two=null) == getUser1
+create getUser2
+User ~
+car3 ... init
 */
 ```
 
-### 原理
+用 @Bean 注册 BeanPostProcessor 也可以。
 
-原理那两个视频没看，记得补 `P16&17`
+```java
+@Configuration
+public class BeanConfig {
+    @Bean
+    public User getUser1() {
+        System.out.println("create getUser1");
+        return new User();
+    }
 
-遍历得到容器中所有的 BeanPostProcessor；挨个执行 beforeInitialization
+    @Bean
+    public User getUser2() {
+        System.out.println("create getUser2");
+        return new User();
+    }
 
-一旦返回 null，跳出 for 循环，不会执行后面的 BeanPostProcess.postProcessors
+    @Bean
+    public TestBeanPostProcessor testBeanPostProcessor() {
+        System.out.println("bean 中创建 TestBeanPostProcessor");
+        return new TestBeanPostProcessor();
+    }
+}
+```
+
+#### 基本原理
+
+在 postProcessBeforeInitialization 方法上打一个断点，然后看方法调用栈，看看都调用了那些方法。然后看看那个方法和 init-method，BeanPostProcessor 有关。
+
+<div align="center"><img src="img/image-20230108005420505.png"></div>
+
+点击调用栈 initializeBean 可以发现，该方法是用来执行 bean 的 init methods 的。查阅 initializeBean 的代码
+
+```java
+protected Object initializeBean(String beanName, Object bean, @Nullable RootBeanDefinition mbd) {
+    // some code ...
+    if (mbd == null || !mbd.isSynthetic()) {
+        // 该方法是用来执行 BeanPostProcessorBeforeInitialization 方法的
+        wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+    }
+
+    try {
+        invokeInitMethods(beanName, wrappedBean, mbd);
+    }
+    // some code ...
+}
+```
+
+继续查阅 applyBeanPostProcessorsBeforeInitialization 的代码发现，该方法循环遍历所有 BeanPostProcessor 挨个执行 postProcessBeforeInitialization，一旦返回 null，跳出 for 循环，不会执行后面的 postProcessBeforeInitialization。
+
+```java
+	public Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName)
+			throws BeansException {
+
+		Object result = existingBean;
+		for (BeanPostProcessor processor : getBeanPostProcessors()) {
+			Object current = processor.postProcessBeforeInitialization(result, beanName);
+			if (current == null) {
+				return result;
+			}
+			result = current;
+		}
+		return result;
+	}
+```
 
  BeanPostProcessor 的大致执行流程
 
 ```java
 populateBean(beanName, mbd, instanceWrapper); 给 bean 进行属性赋值
-    initializeBean{
+initializeBean{
     applyBeanPostProcessorsBeforeInitialization //for 循环得到全部 beanPost
         invokeInitMethods(beanName, wrappedBean, mbd); //初始化方法
     applyBeanPostProcessorsAfterInitialization //for 循环得到全部 beanPost
 }
 ```
 
-# 属性赋值
+#### Spring中的使用
 
-## @Value
+Spring 中大量使用到了 BeanPostProcessor。如 Bean 的赋值，注入其他组件，@Autowired，生命周期注解功能，@Async，xxxBeanPostProcessor。
+
+<div align="center"><img src="img/image-20230108010331463.png"></div>
+
+> Spring 通过 BeanPostProcessor 注入其他组件
+
+ApplicationContextAwareProcessor 可以帮我们在组件中注入 IoC 容器，如果想要在组件中使用 IoC 容器，实现 ApplicationContextAware 接口即可。
+
+```java
+// ApplicationContextAwareProcessor 中的方法，为 ApplicationContextAware 的子类注入 IoC 容器。
+public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+    if (!(bean instanceof EnvironmentAware || bean instanceof EmbeddedValueResolverAware ||
+          bean instanceof ResourceLoaderAware || bean instanceof ApplicationEventPublisherAware ||
+          bean instanceof MessageSourceAware || bean instanceof ApplicationContextAware ||
+          bean instanceof ApplicationStartupAware)) {
+        return bean;
+    }
+
+    AccessControlContext acc = null;
+
+    if (System.getSecurityManager() != null) {
+        acc = this.applicationContext.getBeanFactory().getAccessControlContext();
+    }
+
+    if (acc != null) {
+        AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+            invokeAwareInterfaces(bean);
+            return null;
+        }, acc);
+    }
+    else {
+        invokeAwareInterfaces(bean);
+    }
+
+    return bean;
+}
+
+private void invokeAwareInterfaces(Object bean) {
+	// some code ...
+    // 注入 IoC 容器
+    if (bean instanceof ApplicationContextAware) {
+        ((ApplicationContextAware) bean).setApplicationContext(this.applicationContext);
+    }
+}
+```
+
+如何调试看调用流程呢？和前面一样，在 setApplicationContext 方法打上断点，看方法调用栈
+
+```java
+@Component
+public class UserOne implements ApplicationContextAware {
+    private ApplicationContext context;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.context = applicationContext;
+    }
+}
+```
+
+<div align="center"><img src="img/image-20230108011402182.png"></div>
+
+#### 实用功能
+
+可以利用 Bean 后置处理的特点来自定义 Spring 注解。在 Bean 后置处理器中做相应的注解处理。
+
+## 属性赋值
+
+### @Value
 
 Value 的用法，请看源码注释。这个注解还可作用于字段上。
 
@@ -1414,8 +1631,7 @@ public class ValueConfig {
 // output  Person{name='张三', age=15} 赋值成功
 ```
 
-
-## @propertySource
+### @propertySource
 
 properties 配置文件，在 resource 根目录下
 
@@ -1520,9 +1736,9 @@ public class PropertySourceConfig {
 // Person{name='kkx', age=15}
 ```
 
-# 自动装配
+## 自动装配
 
-## 自动装配概述
+### 自动装配概述
 
 <b>Spring 利用依赖注入（DI），完成对 IOC 容器中各个组件的依赖关系赋值；</b>
 
@@ -1542,7 +1758,7 @@ public class PropertySourceConfig {
  * @Resource：可以和 @Autowired 一样实现自动装配功能；默认是按照组件名称进行装配的；没有能支持 @Primary 的功能以及 @Autowired(required=false) 的功能
  * @Inject（需要导入依赖）：导入 javax.inject 的包，和 Autowired 的功能一样，没有 required=false 的功能
 
-## @Autowired
+### @Autowired
 
 <span style="color:red">先按类型来，找到就赋值；如果找到相同类型的组件，再将属性名作为组件的 id 去容器中查找。</span>
 
@@ -1570,11 +1786,11 @@ class Book {
 }
 ```
 
-## @Qualifier
+### @Qualifier
 
 与 @Autowired 结合，指定装配什么名称的 Bean
 
-## @Primary
+### @Primary
 
 首选的，主要的注解；让 Spring 进行自动装配时，默认使用首选的 Bean
 
@@ -1608,13 +1824,13 @@ class Books {
 }
 ```
 
-## JSR250-@Resource
+### JSR250-@Resource
 
 @Resource 是 Java 规范。
 
 @Resource(name="p1")
 
-## JSR330-@Inject
+### JSR330-@Inject
 
 @Inject 是 Java 规范
 
@@ -1624,7 +1840,7 @@ class Books {
 
 JSR 是会被其他 IOC 框架支持的，使用 JSR 的，脱离了 Spring，换其他 IOC 框架也可。
 
-## 自动装配功能原理
+### 自动装配功能原理
 
 AutowiredAnnotationBeanPostProcessor 解析完成自动装配功能
 
@@ -1648,9 +1864,9 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 }
 ```
 
-## 方法、构造器位置
+### 方法、构造器位置
 
-### 方法
+#### 方法
 
 <b>@Autowired：构造器，参数，方法，属性</b>
 
@@ -1660,7 +1876,7 @@ public class AutowiredAnnotationBeanPostProcessor implements SmartInstantiationA
 
 3️⃣<b>标注在参数位置：</b>从 IOC 容器中获取参数组件的值
 
-### 构造器
+#### 构造器
 
 @Component 注解。
 
@@ -1691,9 +1907,9 @@ public class Boss{
 
 P23 Spring 注解驱动
 
-## Aware注入Spring底层原理
+### Aware注入Spring底层原理
 
-### 概述
+#### 概述
 
 自定义组件想要使用 Spring 容器底层的一些组件时（如：ApplicationContext，BeanFactory，xxx），只需要让自定义组件实现 xxxAware 接口。在创建对象的时候，会调用xxxAware 接口中规定的方法注入相关组件。
 
@@ -1750,7 +1966,7 @@ class Dog implements ApplicationContextAware {
 }
 ```
 
-### 常用的Aware接口
+#### 常用的Aware接口
 
 1️⃣ApplicationContextAware 设置 ApplicationContext 对象
 
@@ -1822,9 +2038,9 @@ class AwareCommonDemo implements ApplicationContextAware, BeanNameAware, Embedde
 }
 ```
 
-## Profile注解
+### Profile注解
 
-### 概述
+#### 概述
 
 可根据当前环境，动态激活和切换一系列组件的功能。环境被激活了，才可用。如何激活？【使用命令参数 】
 
@@ -1849,7 +2065,7 @@ public @interface Profile {
 }
 ```
 
-### 数据源切换
+#### 数据源切换
 
 - 添加 C3P0 数据源
 
@@ -2043,8 +2259,7 @@ class ProfileDemo implements EmbeddedValueResolverAware {
         }
         ```
 
-
-# 带泛型的DI
+## 带泛型的DI
 
 父类类型 com.xxx.xxx.BaseService
 
@@ -2056,9 +2271,9 @@ obj.getClass.getGeneriSuperclass()
 
 泛型依赖注入，注入一个组件的时候，他的泛型也是参考标准。
 
-# IOC小结
+## IOC小结
 
-## 容器
+### 容器
 
 - AnnotationConfigApplicationContext
 - 组件添加
@@ -2093,14 +2308,14 @@ obj.getClass.getGeneriSuperclass()
 - AOP
 - 声明式事务
 
-## 扩展原理
+### 扩展原理
 
 - BeanFactoryPostProcessor
 - BeanDefinitionRegistryPostProcessor
 - ApplicationListener
 - Spring 容器创建过程
 
-## 其他
+### 其他
 
 IOC 是一个容器，棒我们管理所有的组件
 
@@ -2134,18 +2349,6 @@ IOC 是一个容器，棒我们管理所有的组件
 
 # AOP
 
-AOP 的全称是 Aspect-Oriented Programming，即面向切面编程（也称面向方面编程）。它是面向对象编程（OOP）的一种补充。
-
-在传统的业务处理代码中，通常都会进行事务处理、日志记录等操作。虽然使用 OOP 可以通过组合或者继承的方式来达到代码的重用，但如果要实现某个功能（如日志记录），同样的代码仍然会分散到各个方法中。这样，如果想要关闭某个功能，或者对其进行修改，就必须要修改所有的相关方法。增加了开发人员的工作量，提高了代码的出错率。
-
-AOP 采取横向抽取机制，将分散在各个方法中的重复代码提取出来，然后在程序编译或运行时，再将这些提取出来的代码应用到需要执行的地方。
-
-<b>PS：AOP 是横向抽取机制，OOP 是父子关系的纵向的重用。</b>
-
-<div align="center"><img src="img/spring/aop.jpg"></div>
-
-## 概述
-
 AOP：面向切面编程
 
 OOP：面向对象编程
@@ -2160,23 +2363,35 @@ OOP：面向对象编程
 
 ==>事务控制
 
+> 基本概念
+
+AOP 的全称是 Aspect-Oriented Programming，即面向切面编程（也称面向方面编程）。它是面向对象编程（OOP）的一种补充。
+
+在传统的业务处理代码中，通常都会进行事务处理、日志记录等操作。虽然使用 OOP 可以通过组合或者继承的方式来达到代码的重用，但如果要实现某个功能（如日志记录），同样的代码仍然会分散到各个方法中。这样，如果想要关闭某个功能，或者对其进行修改，就必须要修改所有的相关方法。增加了开发人员的工作量，提高了代码的出错率。
+
+AOP 采取横向抽取机制，将分散在各个方法中的重复代码提取出来，然后在程序编译或运行时，再将这些提取出来的代码应用到需要执行的地方。
+
+<b>PS：AOP 是横向抽取机制，OOP 是父子关系的纵向的重用。</b>
+
+<div align="center"><img src="img/spring/aop.jpg"></div>
+
 ## AOP术语
 
 Aspect、Joinpoint、Pointcut、Advice、TargetObject、Proxy 和 Weaving。
 
-1️⃣<b>Aspect（切面）</b>：在实际应用中，切面<span style="color:orange">通常是指封装的用于横向插入系统功能（如事务、日志等）的类。</span>
+1️⃣<b>Aspect（切面）</b>，在实际应用中，切面<span style="color:orange">通常是指封装的用于横向插入系统功能（如事务、日志等）的类。</span>
 
-2️⃣Joinpoint（连接点）：在程序执行过程中的某个阶段点，它实际上是对象的一个操作，例如方法的调用或异常的抛出。<span style="color:orange">在 Spring AOP 中，连接点就是指方法的调用。</span>
+2️⃣Joinpoint（连接点），在程序执行过程中的某个阶段点，它实际上是对象的一个操作，例如方法的调用或异常的抛出。<span style="color:orange">在 Spring AOP 中，连接点就是指方法的调用。</span>
 
-3️⃣<b>Pointcut（切入点）</b>：是指切面与程序流程的交叉点，即那些需要处理的连接点，<span style="color:orange">通常在程序中，切入点指的是类或者方法名，如某个通知要应用到所有以 add 开头的方法中，那么所有满足这一规则的方法都是切入点。</span>
+3️⃣<b>Pointcut（切入点）</b>，是指切面与程序流程的交叉点，即那些需要处理的连接点，<span style="color:orange">通常在程序中，切入点指的是类或者方法名，如某个通知要应用到所有以 add 开头的方法中，那么所有满足这一规则的方法都是切入点。</span>
 
-4️⃣<b>Advice（通知/增强处理）</b>：AOP 框架在特定的切入点执行的增强处理，即在定义好的切入点处所要执行的程序代码。<span style="color:orange">可以将其理解为切面类中的方法，它是切面的具体实现。</span>
+4️⃣<b>Advice（通知/增强处理）</b>，AOP 框架在特定的切入点执行的增强处理，即在定义好的切入点处所要执行的程序代码。<span style="color:orange">可以将其理解为切面类中的方法，它是切面的具体实现。</span>
 
-5️⃣Target Object（目标对象）：是指所有被通知的对象，也称为<span style="color:orange">被增强对象</span>。如果 AOP 框架采用的是动态的 AOP 实现，那么该对象就是一个被代理对象。
+5️⃣Target Object（目标对象），是指所有被通知的对象，也称为<span style="color:orange">被增强对象</span>。如果 AOP 框架采用的是动态的 AOP 实现，那么该对象就是一个被代理对象。
 
-6️⃣Proxy（代理）：将通知应用到目标对象之后，被动态创建的对象。
+6️⃣Proxy（代理），将通知应用到目标对象之后，被动态创建的对象。
 
-7️⃣Weaving（织入）：将切面代码插入到目标对象上，从而<span style="color:orange">生成代理对象的过程</span>
+7️⃣Weaving（织入），将切面代码插入到目标对象上，从而<span style="color:orange">生成代理对象的过程</span>
 
 > 几种通知
 
@@ -2447,9 +2662,7 @@ public class Test {
 
 > <b>如何使用注解 AOP</b>
 
-点进 `@EnableAspectJAutoProxy` 注解里，会发现文档注释里给了很详细的用法！！！
-
-<div align="center"><b>AspectJ </b>注解</div>
+点进 `@EnableAspectJAutoProxy` 注解里，会发现文档注释里给了很详细的用法！！！AspectJ 相关注解如下表。
 
 | 注解            | 描述                                                         |
 | --------------- | ------------------------------------------------------------ |
@@ -2649,8 +2862,6 @@ try{
 
 ## AOP源码解析
 
-### 概述
-
 原理：看给容器中注册了什么组件，这个组件什么时候工作，组件工作时的功能。
 
 - 1）`@EnableAspectJAutoProxy`
@@ -2730,7 +2941,7 @@ class AspectJAutoProxyRegistrar implements ImportBeanDefinitionRegistrar {
 
 # 事务控制
 
-Spring 事务管理有 3 个核心接口：
+Spring 事务管理有 3 个核心接口
 
 1️⃣PlatformTransactionManager：Spring 提供的平台事务管理器，主要用于管理事务。
 
@@ -2746,7 +2957,7 @@ Spring 事务管理有 3 个核心接口：
 
 PlatformTransactionManager 的几个实现类如下
 
-```java
+```txt
 org.springframework.jdbc.datasource.DataSourceTransactionManager
     ：用于配置JDBC数据源的事务管理器
 org.springframework.orm.hibernate4.HibernateTransactionManager
@@ -2798,149 +3009,30 @@ public interface TransactionDefinition {
 上述方法中，事务的传播行为是指在同一个方法中，不同操作前后所使用的事务。传播行为有很多种
 
 ```java
+int PROPAGATION_REQUIRED = 0;
 
-	/**
-	 * Support a current transaction; create a new one if none exists.
-	 * Analogous to the EJB transaction attribute of the same name.
-	 * <p>This is typically the default setting of a transaction definition,
-	 * and typically defines a transaction synchronization scope.
-	 */
-	int PROPAGATION_REQUIRED = 0;
+int PROPAGATION_SUPPORTS = 1;
 
-	/**
-	 * Support a current transaction; execute non-transactionally if none exists.
-	 * Analogous to the EJB transaction attribute of the same name.
-	 * <p><b>NOTE:</b> For transaction managers with transaction synchronization,
-	 * {@code PROPAGATION_SUPPORTS} is slightly different from no transaction
-	 * at all, as it defines a transaction scope that synchronization might apply to.
-	 * As a consequence, the same resources (a JDBC {@code Connection}, a
-	 * Hibernate {@code Session}, etc) will be shared for the entire specified
-	 * scope. Note that the exact behavior depends on the actual synchronization
-	 * configuration of the transaction manager!
-	 * <p>In general, use {@code PROPAGATION_SUPPORTS} with care! In particular, do
-	 * not rely on {@code PROPAGATION_REQUIRED} or {@code PROPAGATION_REQUIRES_NEW}
-	 * <i>within</i> a {@code PROPAGATION_SUPPORTS} scope (which may lead to
-	 * synchronization conflicts at runtime). If such nesting is unavoidable, make sure
-	 * to configure your transaction manager appropriately (typically switching to
-	 * "synchronization on actual transaction").
-	 * @see org.springframework.transaction.support.AbstractPlatformTransactionManager#setTransactionSynchronization
-	 * @see org.springframework.transaction.support.AbstractPlatformTransactionManager#SYNCHRONIZATION_ON_ACTUAL_TRANSACTION
-	 */
-	int PROPAGATION_SUPPORTS = 1;
+int PROPAGATION_MANDATORY = 2;
 
-	/**
-	 * Support a current transaction; throw an exception if no current transaction
-	 * exists. Analogous to the EJB transaction attribute of the same name.
-	 * <p>Note that transaction synchronization within a {@code PROPAGATION_MANDATORY}
-	 * scope will always be driven by the surrounding transaction.
-	 */
-	int PROPAGATION_MANDATORY = 2;
+int PROPAGATION_REQUIRES_NEW = 3;
 
-	/**
-	 * Create a new transaction, suspending the current transaction if one exists.
-	 * Analogous to the EJB transaction attribute of the same name.
-	 * <p><b>NOTE:</b> Actual transaction suspension will not work out-of-the-box
-	 * on all transaction managers. This in particular applies to
-	 * {@link org.springframework.transaction.jta.JtaTransactionManager},
-	 * which requires the {@code javax.transaction.TransactionManager} to be
-	 * made available it to it (which is server-specific in standard Java EE).
-	 * <p>A {@code PROPAGATION_REQUIRES_NEW} scope always defines its own
-	 * transaction synchronizations. Existing synchronizations will be suspended
-	 * and resumed appropriately.
-	 * @see org.springframework.transaction.jta.JtaTransactionManager#setTransactionManager
-	 */
-	int PROPAGATION_REQUIRES_NEW = 3;
+int PROPAGATION_NOT_SUPPORTED = 4;
 
-	/**
-	 * Do not support a current transaction; rather always execute non-transactionally.
-	 * Analogous to the EJB transaction attribute of the same name.
-	 * <p><b>NOTE:</b> Actual transaction suspension will not work out-of-the-box
-	 * on all transaction managers. This in particular applies to
-	 * {@link org.springframework.transaction.jta.JtaTransactionManager},
-	 * which requires the {@code javax.transaction.TransactionManager} to be
-	 * made available it to it (which is server-specific in standard Java EE).
-	 * <p>Note that transaction synchronization is <i>not</i> available within a
-	 * {@code PROPAGATION_NOT_SUPPORTED} scope. Existing synchronizations
-	 * will be suspended and resumed appropriately.
-	 * @see org.springframework.transaction.jta.JtaTransactionManager#setTransactionManager
-	 */
-	int PROPAGATION_NOT_SUPPORTED = 4;
+int PROPAGATION_NEVER = 5;
 
-	/**
-	 * Do not support a current transaction; throw an exception if a current transaction
-	 * exists. Analogous to the EJB transaction attribute of the same name.
-	 * <p>Note that transaction synchronization is <i>not</i> available within a
-	 * {@code PROPAGATION_NEVER} scope.
-	 */
-	int PROPAGATION_NEVER = 5;
+int PROPAGATION_NESTED = 6;
 
-	/**
-	 * Execute within a nested transaction if a current transaction exists,
-	 * behave like {@link #PROPAGATION_REQUIRED} otherwise. There is no
-	 * analogous feature in EJB.
-	 * <p><b>NOTE:</b> Actual creation of a nested transaction will only work on
-	 * specific transaction managers. Out of the box, this only applies to the JDBC
-	 * {@link org.springframework.jdbc.datasource.DataSourceTransactionManager}
-	 * when working on a JDBC 3.0 driver. Some JTA providers might support
-	 * nested transactions as well.
-	 * @see org.springframework.jdbc.datasource.DataSourceTransactionManager
-	 */
-	int PROPAGATION_NESTED = 6;
+int ISOLATION_DEFAULT = -1;
 
+int ISOLATION_READ_UNCOMMITTED = 1;  // same as java.sql.Connection.TRANSACTION_READ_UNCOMMITTED;
 
-	/**
-	 * Use the default isolation level of the underlying datastore.
-	 * All other levels correspond to the JDBC isolation levels.
-	 * @see java.sql.Connection
-	 */
-	int ISOLATION_DEFAULT = -1;
+int ISOLATION_READ_COMMITTED = 2;  // same as java.sql.Connection.TRANSACTION_READ_COMMITTED;
 
-	/**
-	 * Indicates that dirty reads, non-repeatable reads and phantom reads
-	 * can occur.
-	 * <p>This level allows a row changed by one transaction to be read by another
-	 * transaction before any changes in that row have been committed (a "dirty read").
-	 * If any of the changes are rolled back, the second transaction will have
-	 * retrieved an invalid row.
-	 * @see java.sql.Connection#TRANSACTION_READ_UNCOMMITTED
-	 */
-	int ISOLATION_READ_UNCOMMITTED = 1;  // same as java.sql.Connection.TRANSACTION_READ_UNCOMMITTED;
+int ISOLATION_REPEATABLE_READ = 4;  // same as java.sql.Connection.TRANSACTION_REPEATABLE_READ;
 
-	/**
-	 * Indicates that dirty reads are prevented; non-repeatable reads and
-	 * phantom reads can occur.
-	 * <p>This level only prohibits a transaction from reading a row
-	 * with uncommitted changes in it.
-	 * @see java.sql.Connection#TRANSACTION_READ_COMMITTED
-	 */
-	int ISOLATION_READ_COMMITTED = 2;  // same as java.sql.Connection.TRANSACTION_READ_COMMITTED;
-
-	/**
-	 * Indicates that dirty reads and non-repeatable reads are prevented;
-	 * phantom reads can occur.
-	 * <p>This level prohibits a transaction from reading a row with uncommitted changes
-	 * in it, and it also prohibits the situation where one transaction reads a row,
-	 * a second transaction alters the row, and the first transaction re-reads the row,
-	 * getting different values the second time (a "non-repeatable read").
-	 * @see java.sql.Connection#TRANSACTION_REPEATABLE_READ
-	 */
-	int ISOLATION_REPEATABLE_READ = 4;  // same as java.sql.Connection.TRANSACTION_REPEATABLE_READ;
-
-	/**
-	 * Indicates that dirty reads, non-repeatable reads and phantom reads
-	 * are prevented.
-	 * <p>This level includes the prohibitions in {@link #ISOLATION_REPEATABLE_READ}
-	 * and further prohibits the situation where one transaction reads all rows that
-	 * satisfy a {@code WHERE} condition, a second transaction inserts a row
-	 * that satisfies that {@code WHERE} condition, and the first transaction
-	 * re-reads for the same condition, retrieving the additional "phantom" row
-	 * in the second read.
-	 * @see java.sql.Connection#TRANSACTION_SERIALIZABLE
-	 */
-	int ISOLATION_SERIALIZABLE = 8;  // same as java.sql.Connection.TRANSACTION_SERIALIZABLE;
+int ISOLATION_SERIALIZABLE = 8;  // same as java.sql.Connection.TRANSACTION_SERIALIZABLE;
 ```
-
-
 
 | 属性名称                            | 值   | 描述                                                         |
 | ----------------------------------- | ---- | ------------------------------------------------------------ |
@@ -2951,8 +3043,6 @@ public interface TransactionDefinition {
 | PROPAGATION_NOT_SUPPORTED           | 4    | 不支持事务，总是以非事务的状态执行。如果有事务，会先暂停事务，然后执行该方法。 |
 | PROPAGATION_NEVER                   | 5    | 不支持当前事务。如果方法处于事务环境中，会抛出异常。         |
 | PROPAGATION_NESTED                  | 6    | 即使当前执行的方法处于事务环境中，依旧会启动一个新的事务，并且方法在嵌套的事务里执行；如果不在事务环境中，也会启动一个新事务，然后执行方法。（有无事务都会创建新事务，然后在新事务中执行方法） |
-
-
 
 ### TransactionStatus
 
@@ -2966,8 +3056,6 @@ boolean isNewTransaction(); // 获取是否是新事务。
 boolean isRollbackOnly(); // 获取是否回滚
 void setRollbackOnly(); // 设置事务回滚。
 ```
-
-
 
 ## 声明式事务概述
 
@@ -3144,9 +3232,12 @@ public class MulService {
 事务的隔离级别有四种：读未提交、读已提交、可重复的、串行化。
 
 <span style="color:red">数据库事务并发问题有如下三种：</span>
-1️⃣<b>脏读</b>：读到了未提交的数据
-2️⃣<b>不可重复读</b>：两次读取数据不一样（第一次读到了原来的数据；接下来数据更新了；第二次又读了这个数据，数据不一样了，因为更新了）
-3️⃣<b>幻读</b>：多读了，或少读了数据
+
+1️⃣<b>脏读：</b>读到了未提交的数据
+
+2️⃣<b>不可重复读：</b>两次读取数据不一样（第一次读到了原来的数据；接下来数据更新了；第二次又读了这个数据，数据不一样了，因为更新了）
+
+3️⃣<b>幻读：</b>多读了，或少读了数据
 
 事务的隔离级别是需要根据业务的特性进行调整
 
@@ -3156,7 +3247,7 @@ public class MulService {
 
 > 嵌套事务
 
-<div align="center"><img src="img/spring/shiwu.png" width="60%"></div>
+<div align="center"><img src="img/spring/shiwu.png"></div>
 
 本类方法的嵌套调用是一个事务
 
@@ -3217,7 +3308,7 @@ public interface BeanDefinitionRegistryPostProcessor extends BeanFactoryPostProc
 
 postProcessBeanstDefinitionRegistry() 在所有 bean 定义信息将要被加载，bean 实例还未创建的时候执行。
 
-先给结论：
+<b>先给结论</b>
 
 - BeanDefinitionRegistryPostProcessor() 优于 BeanFactoryPostProcessor 执行。
 - 我们可以利用 BeanDefinitionRegistryPostProcessor()` 给容器中再额外添加一些组件。
