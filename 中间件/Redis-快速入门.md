@@ -415,7 +415,7 @@ save 60 10000
 D:\JavaWeb2018\day23_redis\资料\redis\windows-64\redis-2.8.9>redis-server.exe redis.windows.conf	
 ```
 
-AOF：日志记录的方式，可以记录每一条命令的操作。可以每一次命令操作后，持久化数据
+AOF：日志记录的方式，可以记录每一条命令的操作。可以每一次命令操作后，持久化数据。
 
 编辑 redis.windwos.conf 文件
 
@@ -464,11 +464,8 @@ public class JedisDemo {
         jedis = new Jedis("localhost",6379);
     }
 
-    /**
-     * 测试连接
-     */
     @Test
-    public void connection(){
+    public void connection(){ // 测试连接
         jedis.set("111","1");
         // 设置超时时间
         jedis.expire("1111",30);
@@ -477,10 +474,7 @@ public class JedisDemo {
     }
 
     @Test
-    /**
-     * 存储String
-     */
-    public void saveString() throws JsonProcessingException {
+    public void saveString() throws JsonProcessingException { // 存储String
         Person p1 = new Person("kkl1", "18", "nan", 88, "1997-11-11");
         Person p2 = new Person("kkl2", "18", "nan", 88, "1997-11-11");
         Person p3 = new Person("kkl3", "18", "nan", 88, "1997-11-11");
@@ -498,10 +492,7 @@ public class JedisDemo {
     }
 
     @Test
-    /**
-     * 操作List
-     */
-    public void saveList(){
+    public void saveList(){ // 操作List
         jedis.lpush("mylist","a");
         jedis.lpush("mylist","aa");
         jedis.lpush("mylist","aaa");
@@ -512,10 +503,7 @@ public class JedisDemo {
     }
 
     @Test
-    /**
-     * 操作set，不包括重复元素
-     */
-    public void saveSet(){
+    public void saveSet(){ // 操作set，不包括重复元素
         jedis.sadd("setdemo","1","2","3","4");
         jedis.sadd("setdemo","1","5","7","1");
         Set<String> setdemo = jedis.smembers("setdemo");
@@ -528,7 +516,7 @@ public class JedisDemo {
 
 ## jedis连接池
 
-jedis 连接池： JedisPool，Redis 自带的
+jedis 连接池：JedisPool，Redis 自带的
 
 - 创建 JedisPool 连接池对象
 - 调用方法 getResource() 方法获取 Jedis 连接
@@ -555,24 +543,23 @@ import java.util.Properties;
  JedisPool工具类
     加载配置文件，配置连接池的参数
     提供获取连接的方法
-
  */
 public class JedisPoolUtils {
 
     private static JedisPool jedisPool;
 
     static{
-        //读取配置文件
+        // 读取配置文件
         InputStream is = JedisPoolUtils.class.getClassLoader().getResourceAsStream("jedis.properties");
-        //创建Properties对象
+        // 创建Properties对象
         Properties pro = new Properties();
-        //关联文件
+        // 关联文件
         try {
             pro.load(is);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        //获取数据，设置到JedisPoolConfig中
+        // 获取数据，设置到JedisPoolConfig中
         JedisPoolConfig config = new JedisPoolConfig();
         config.setMaxTotal(Integer.parseInt(pro.getProperty("maxTotal")));
         config.setMaxIdle(Integer.parseInt(pro.getProperty("maxIdle")));
@@ -584,9 +571,8 @@ public class JedisPoolUtils {
 
     }
 
-    /**
-     * 获取连接方法
-     */
+
+    // 获取连接方法
     public static Jedis getJedis(){
         return jedisPool.getResource();
     }
