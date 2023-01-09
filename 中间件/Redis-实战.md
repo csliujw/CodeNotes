@@ -1413,20 +1413,23 @@ public Result createVoucherOrder(Long voucherId){
 }
 ```
 
-加大锁的范围，需要注意的是，Spring 的事务是通过代理对象实现的，直接调用 createVoucherOrder 是不会走代理对象的，所以我们需要改成用代理对象调用
+加大锁的范围，需要注意的是，Spring 的事务是通过代理对象实现的，直接调用 createVoucherOrder 是不会走代理对象的，所以我们需要改成用代理对象调用，这样就是走的代理方法了。
 
 ```java
 @Transactional
 public Result createVoucherOrder(Long voucherId){
     Long userId = UserHolder.getUser().getId();
-    // 业务代码
+    // 业务代码，操作数据库。
 }
 
 // 加大锁的范围,让锁锁住事务 Spring 事务失效的几中情况
-public XX KK(){
+public boolean KK(){
     // some code
     Long userId = UserHolder.getUser().getId();
-    // Spring 的事务是通过代理对象实现的，直接调用 createVoucherOrder 是不会走代理对象的，所以我们需要改成用代理对象调用
+    // Spring 的事务是通过代理对象实现的，
+    // 而 KK 方法上面没有加事务注解，因此 KK 方法不会走代理方法增强
+    // 在 KK 方法中直接调用 createVoucherOrder 是不会走代理对象的
+    // 所以我们需要改成用代理对象调用
     synchronized(userId.toString().intern()){
     	IVoucherOrderService proxy = (IVoucherOrderService)AopContext.currentProxy();
         return proxy.createVoucherOrder(userId); // createVoucherOrder 是接口 IVoucherOrderService 中的方法
@@ -1439,6 +1442,31 @@ public XX KK(){
 @SpringBootApplication
 public class XXApplication{
     // some code
+}
+```
+
+2023-1-9 温习 Spring 的时候温习到了事务相关的内容，对上述内容又做了一次实验，确实是会导致事务失效的。测试代码如下
+
+```java
+@Service
+public class UserService {
+    @Autowired
+    UserDao userDao;
+	
+    // 调用 testTX 方法，testAopContext 不会对事务进行回滚！
+    public void testTX() {
+        synchronized (this) {
+            testAopContext();
+        }
+    }
+
+    @Transactional
+    public void testAopContext() {
+        String update = "update tb_u set age = ? where id = ?";
+        userDao.update(update, 30, 1);
+        int i = 1 / 0;
+        userDao.update(update, 30, 2);
+    }
 }
 ```
 

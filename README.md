@@ -4,10 +4,10 @@
 
 - 一周看两篇 CV 相关论文，继续改造项目，每天刷点 leetcode。
 - MQ 常见用法✔️
-- MyBatis-Plus 学习
+- MyBatis-Plus 学习✔️
 - Spring Boot 温习
-- MySQL 查询加强
-- Spring 加强
+- MySQL 45 讲继续学，冲冲冲！
+- Spring 温习✔️
 - Redis 加强，黑马那个 Redis 的项目也写一遍。
 
 ## 📝期刊论文

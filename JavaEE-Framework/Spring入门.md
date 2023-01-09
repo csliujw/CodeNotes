@@ -2795,13 +2795,13 @@ public class Test {
 - 将业务逻辑组件和切面类都加入到容器中，告诉 Spring 哪个是切面类（<span style="color:green">@Aspect 注解标注</span>）
 - 在切面类上的每一个通知方法上标注通知注解，告诉 Spring 何时何地运行（<span  style="color:green">切入点表达式</span>）
     - @After("public int com.cc.ClassName.method(int,int)")
-- 开启基于注解的 `aop` 模式：`@EnableAspectJAutoProxy`
+- 开启基于注解的 `aop` 模式：`@EnableAspectJAutoProxy`，注意，这个是要加载配置类中的，如果主启动类不是配置类，那么加在主启动类上是无效的！
 
 > <b>具体步骤</b>
 
  * 1️⃣导入 AOP 模块：Spring AOP（spring-aspects）
  * 2️⃣定义一个业务逻辑类（MathCalculator），在业务逻辑运行的时候将日志进行打印（方法运行之前，方法运行之后，方法出现异常，xxx）。
- * 3️⃣定义一个日志切面类（LogAspects），切面里面的方法需要动态感知    MathCalculator.div运行到了哪里，然后执行。
+ * 3️⃣定义一个日志切面类（LogAspects），切面里面的方法需要动态感知 MathCalculator.div 运行到了哪里，然后执行。
     * --------通知方法：
     * -----------前置通知 (@Before)：logStart 在目标方法（div）运行之前运行
     * -----------后置通知 (@After)：logEnd 在目标方法（div）运行结束之后运行
@@ -2942,7 +2942,22 @@ public static void sfasf(JoinPoint join, Exception ex){
 
 ## AOP源码解析
 
-原理：看给容器中注册了什么组件，这个组件什么时候工作，组件工作时的功能。
+<b>使用步驟回顾</b>
+
+1. @EnableAspectJAutoProxy 开启基于注解的 aop 模式
+2. @Aspect：定义切面类，切面类里定义通知
+3. @PointCut 切入点，可以写切入点表达式，指定在哪个方法切入
+4. 通知方法
+    - @Before (前置通知)
+    - @After (后置通知)
+    - @AfterReturning (返回通知)
+    - @AfterTrowing (异常通知) 
+    - @Around(环绕通知)
+5. JoinPoint：连接点，是一个类，配合通知使用，用于获取切入的点的信息
+
+### AOP原理导读
+
+<b>原理：我们看的是它给容器中注册了什么组件，这个组件什么时候工作，组件的功能是什么。</b>
 
 - 1）`@EnableAspectJAutoProxy`
 
@@ -2950,38 +2965,436 @@ public static void sfasf(JoinPoint join, Exception ex){
 - 3）`AnnotationAspectJA`
 - 4）`AnnotationAwareAspect`
 
-### @EnableAspectJAutoProxy注解
+<b>AOP 对象的代理流程</b>
 
-加了这个注解才有 AOP，先研究这个。先介绍下大致的阅读思路。
+1. 先在 IoC 容器中创建 Bean 后置处理器，这些后置处理器用来对 Bean 做一些操作，而 AOP 的后置处理器就是对 Bean 做动态代理增强的。
+2. 然后创建普通的 Bean，在创建普通 Bean 的时候会使用后置处理器对符合后置处理器匹配规则的 Bean 做一些处理操作。
+    - 在 AOP 中的体现是，创建 Bean 的时候会先调用这些后置处理器，调用 AOP 后置处理器的时候，会看是否要创建代理对象，需要创建的话就创建出代理对象，然后返回。这样使用的时候用的就是经过增强后的代理对象了。
 
-1️⃣利用 AspectJAutoProxyRegistrar 在容器中注册 bean 的定义信息 AnnotationAwareAspectJAutoProxyCreator
+<b>如何阅读相关源码？</b>
 
-2️⃣AnnotationAwareAspectJAutoProxyCreator 的继承逻辑如下
+1. 写一个最基本的 demo，运行起来。
+2. 在所写代码逻辑/其他你所知道的关键的代码逻辑上打上断点，然后借助 IDE 的断点调试栈看是如何一步一步执行到此处的
+3. 分析方法调用栈中的每一步，借助方法名和类名推断出关键的类和方法，逐个击破。
 
-- AnnotationAwareAspectJAutoProxyCreator 
-    - -->AspectJAwareAdvisorAutoProxyCreator
-        - -->AbstractAdvisorAutoProxyCreator
-            - -->AbstractAutoProxyCreator
-                - implements SmartInstantiationAwareBeanPostProcessor, BeanFactoryAware
-- 关注后置处理器（在 bean 初始化完成前后做事情）、自动装配 BeanFactory。
-- 回想之前写的自定义注解解析的 BeanPostProcessor，做法也是类似的。
-- 相当于 AnnotationAwareAspectJAutoProxyCreator 是一个后置处理器，我们重点分析后置处理器。
-- 为了方便分析后置处理器所作的事情，我们自底向上分析。先从 AbstractAutoProxyCreator 入手分析。
+<b>阅读顺序</b>
 
-3️⃣AbstractAutoProxyCreator 的 setBeanFactory 方法分析
+```mermaid
+graph LR
+EnableAspectJAutoProxy-->AnnotationAwareAspectJAutoProxyCreator-->BeanPostProcessorsAfterInitialization-->CglibAopProxy.intercept
+```
 
-- AbstractAutoProxyCreator.setBeanFactory 只是简单赋值
-- AbstractAutoProxyCreator 的父类 AbstractAdvisorAutoProxyCreator 则是做了方法增强，执行了 initBeanFactory。后面的其他超类就没再对 setBeanFactory 做增强了。
-- 接下来分析后置处理器
+### EnableAspectJAutoProxy
 
-4️⃣AbstractAutoProxyCreator 的后置处理器相关方法分析
+@EnableAspectJAutoProxy 注解是 Spring AOP 开启的标志（即注册 AOP 的后置处理器 AnnotationAwareAspectJAutoProxyCreator），在启动类/配置类上标记此注解，即可加载对应的切面类（这些普通的非后置处理器的 Bean 都是在 BeanPostProcessor 后面注入的）逻辑。
 
-- postProcessAfterInitialization 方法创建一个配置了 interceptors 的代理对象。
-- 其他超类没有在对后置处理方法做增强。
+通过 @Import(AspectJAutoProxyRegistrar.class) 给 spring 容器中导入了一个 AnnotationAwareAspectJAutoProxyCreator 来注册 AOP 后置处理器。通过创建后置处理器，在创建普通 bean 的时候，判断是否需要用 AOP 后置处理器来创建 AOP 代理类，从而实现 AOP 功能增强。
 
-5️⃣重点分析 postProcessAfterInitialization 方法创建代理对象的过程。
+- 1️⃣AspectJAutoProxyRegistrar 类实现了 ImportBeanDefinitionRegistrar 接口，可以手动加载组件。利用 AspectJAutoProxyRegistrar 在容器中注册 bean 的定义信息 AnnotationAwareAspectJAutoProxyCreator。
+- 1️⃣查看 AnnotationAwareAspectJAutoProxyCreator 的继承关系，发现他是一个 bean 后置处理器。
+- 3️⃣回想之前写的自定义注解解析的 BeanPostProcessor，后置处理器在 bean 初始化完成前后做事情，AnnotationAwareAspectJAutoProxyCreator 这个后置处理器被注册到容器后，普通的 Bean 在执行 initMethod 的前后就会去执行这些后置处理器的方法。
 
-- 创建出代理对象，后面执行相应的方法时就是通过代理对象执行的，从而实现方法的增强。
+> @EnableAspectJAutoProxy 注解所作的工作
+
+导入了 AspectJAutoProxyRegistrar 类来注册后置处理器，因此主要关注后置处理器的注册流程。
+
+```mermaid
+graph LR
+AspectJAutoProxyRegistrar-->|执行方法registerBeanDefinitions|注册后置处理器
+```
+
+注册后置处理器用的是 AopConfigUtils 的方法
+
+```java
+public void registerBeanDefinitions(
+    AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+	
+    // 注册后置处理器。
+    AopConfigUtils.registerAspectJAnnotationAutoProxyCreatorIfNecessary(registry);
+
+    AnnotationAttributes enableAspectJAutoProxy =
+        AnnotationConfigUtils.attributesFor(importingClassMetadata, EnableAspectJAutoProxy.class);
+    if (enableAspectJAutoProxy != null) {
+        if (enableAspectJAutoProxy.getBoolean("proxyTargetClass")) {
+            AopConfigUtils.forceAutoProxyCreatorToUseClassProxying(registry);
+        }
+        if (enableAspectJAutoProxy.getBoolean("exposeProxy")) {
+            AopConfigUtils.forceAutoProxyCreatorToExposeProxy(registry);
+        }
+    }
+}
+```
+
+一路跟踪 AopConfigUtils 的方法，发现注册的是 AnnotationAwareAspectJAutoProxyCreator 类，这个类应该就是后置处理器了。
+
+```java
+public static BeanDefinition registerAspectJAnnotationAutoProxyCreatorIfNecessary(
+    BeanDefinitionRegistry registry, @Nullable Object source) {
+	// 注册的是
+    return registerOrEscalateApcAsRequired(AnnotationAwareAspectJAutoProxyCreator.class, registry, source);
+}
+```
+
+把它封装成 BeanDefinition，然后就可以注册到 IoC 容器了。对应的名称为 internalAutoProxyCreator
+
+```java
+private static BeanDefinition registerOrEscalateApcAsRequired(
+    Class<?> cls, BeanDefinitionRegistry registry, @Nullable Object source) {
+
+    Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
+
+    if (registry.containsBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME)) {
+        BeanDefinition apcDefinition = registry.getBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME);
+        if (!cls.getName().equals(apcDefinition.getBeanClassName())) {
+            int currentPriority = findPriorityForClass(apcDefinition.getBeanClassName());
+            int requiredPriority = findPriorityForClass(cls);
+            if (currentPriority < requiredPriority) {
+                apcDefinition.setBeanClassName(cls.getName());
+            }
+        }
+        return null;
+    }
+	
+    // 封装成 bean 定义信息，用与后期注册到 IoC 容器中。
+    RootBeanDefinition beanDefinition = new RootBeanDefinition(cls);
+    beanDefinition.setSource(source);
+    beanDefinition.getPropertyValues().add("order", Ordered.HIGHEST_PRECEDENCE);
+    beanDefinition.setRole(BeanDefinition.ROLE_INFRASTRUCTURE);
+    // AUTO_PROXY_CREATOR_BEAN_NAME = internalAutoProxyCreator
+    registry.registerBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME, beanDefinition);
+    return beanDefinition;
+}
+```
+
+后面就是看 AnnotationAwareAspectJAutoProxyCreator 如何注册到容器，如何发挥作用了。
+
+### AnnotationAwareAspectJAutoProxyCreator的创建
+
+根据前面的分析可以知道 AnnotationAwareAspectJAutoProxyCreator 是个后置处理器，我们需要研究的是它是如何被注册到 IoC 容器的，它后置处理器的相关方法又是如何被调用的。
+
+#### 分析思路
+
+1️⃣查看它的继承关系，可以发现它确实是实现了后置处理器接口，并且对后置处理器接口扩充了一些方法，进行了增强。可以逐步 Debug 看原始的后置处理器方法的作用和增强的方法的作用。
+
+<div align="center"><img src="img/image-20230109191827846.png"></div>
+
+2️⃣查看 AnnotationAwareAspectJAutoProxyCreator 的类继承图可以实现，它实现了 InstantiationAwareBeanPostProcessor 接口，而 InstantiationAwareBeanPostProcessor 也是一个 BeanPostProcessor。它可以拦截 spring 的 Bean 初始化 (Initialization) 前后和实例化 (Initialization) 前后。它还实现了 BeanFactoryAware 接口，用来自动装配 BeanFactory（这个的作用是什么呢？做了那些工作？）。
+
+3️⃣我们关注的是后置处理器相关的方法。自底向上看那些方法和后置处理器、BeanFactory 相关。
+
+- AbstractAutoProxyCreator#setBeanFactory
+- AbstractAutoProxyCreator#postProcessAfterInitialization
+- AbstractAutoProxyCreator#postProcessAfterInitialization
+- AbstractAutoProxyCreator#postProcessBeforeInstantiation
+- AbstractAdvisorAutoProxyCreator#setBeanFactory
+- AbstractAdvisorAutoProxyCreator#initBeanFactory
+- AnnotationAwareAspectJAutoProxyCreator#initBeanFactory
+
+通过猜想，这些方法可能和后置处理器有关的方法上打上断点
+
+#### 源码阅读
+
+我们是希望知道 AOP 的后置处理器如何注册的，而使用它之前就一定要完成注册。因此，我们可以通过调用一个 AOP 增强后的方法，然后查看方法栈的调用流程，逐步分析 Bean 是如何创建处理来的，又是如何使用的。
+
+按照上面的猜想打上断点，逐步 debug 调试。
+
+<b>beanFactory</b>
+
+先是在 setBeanFactory 方法上停了下来，可以通过方法调用栈看看是如何执行到 setBeanFactory 方法的。（我们的最终目的时为了查看后置处理器的创建时机和作用，beanFactory 只是一个切入点！）
+
+<div align="center"><img src="img/image-20230109194930310.png"></div>
+
+流程
+
+1. 传入配置类，创建 IoC 容器
+
+2. 注册配置来，调用 `refresh` 方法刷新容器
+
+    - 容器刷新 refresh 是锁定在了 `registerBeanPostProcessors` 方法上。
+
+3. registerBeanPostProcessors(beanFactory); 方法上的注释是，注册 Bean 的后置处理器，这些后置处理器是用来拦截 Bean 的创建。具体的注册逻辑是在 `PostProcessorRegistrationDelegate#registerBeanPostProcessors`，观察该方法的源码
+
+    - 通过 `beanFactory#getBeanNamesForType` 根据类型拿到所有已经定义了的，需要创建的 BeanPostProcessor 的名称。查看该方法的返回值可以发现，其中一个后置处理器的名称是 org.springframework.aop.config.internalAutoProxyCreator
+
+    - 会优先注册实现了 PriorityOrdered 的后置处理器
+
+    - 再注册实现了 Ordered 的后置处理器
+
+    - 最后再注册普通的后置处理器
+
+    - 如何注册的呢？通过调用 `beanFactory.getBean(ppName, BeanPostProcessor.class)` 尝试获取。但是第一次获取时没有对象，如果发现获取不到就会创建出一个对象。创建的流程如下
+
+        ```mermaid
+        graph LR
+        getBean-->doGetBean-->getSingleton-->getObject-->lambda$doGetBean-->creteBean-->doCreateBean
+        ```
+
+    - 综上所述，注册后置处理器其实就是创建后置处理器对象，保存在容器中。接下来就是看如何创建名为 internalAutoProxyCreator 这个后置处理器。这个创建过程内容较多，暂且把它放到 4 来写。
+
+4. 创建 internalAutoProxyCreator 后处理器的流程。此处，贴出部分代码，并对关键步骤加上注释，省略非关键步骤。
+
+    ```java
+    protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args)
+        throws BeanCreationException {
+    
+        // Instantiate the bean.
+        BeanWrapper instanceWrapper = null;
+        if (mbd.isSingleton()) {
+            instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
+        }
+        if (instanceWrapper == null) {
+            // 创建 bean 实例
+            instanceWrapper = createBeanInstance(beanName, mbd, args);
+        }
+        Object bean = instanceWrapper.getWrappedInstance();
+        Class<?> beanType = instanceWrapper.getWrappedClass();
+        if (beanType != NullBean.class) {
+            mbd.resolvedTargetType = beanType;
+        }
+    
+        // Allow post-processors to modify the merged bean definition.
+        synchronized (mbd.postProcessingLock) {
+            if (!mbd.postProcessed) {
+                try {
+                    applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);
+                }
+                catch (Throwable ex) {
+                    throw new BeanCreationException(mbd.getResourceDescription(), beanName,
+                                                    "Post-processing of merged bean definition failed", ex);
+                }
+                mbd.postProcessed = true;
+            }
+        }
+    
+        // Eagerly cache singletons to be able to resolve circular references
+        // even when triggered by lifecycle interfaces like BeanFactoryAware.
+        boolean earlySingletonExposure = (mbd.isSingleton() && this.allowCircularReferences &&
+                                          isSingletonCurrentlyInCreation(beanName));
+        if (earlySingletonExposure) {
+            if (logger.isTraceEnabled()) {
+                logger.trace("Eagerly caching bean '" + beanName +
+                             "' to allow for resolving potential circular references");
+            }
+            addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
+        }
+    
+        // 创建好了后就在这里初始化
+        Object exposedObject = bean;
+        try {
+            // 给 bean 的各种属性赋值
+            populateBean(beanName, mbd, instanceWrapper);
+            // 初始化 bean，这步非常关键，因为后置处理器就是在 initializaBean 前后工作的。
+            // initializaBean 中调用了方法 invokeAwareMethods、applyBeanPostProcessorsBeforeInitialization、invokeInitMethods、applyBeanPostProcessorsAfterInitialization
+            // invokeAwareMethods 判断类是否实现了 Aware 接口，实习了则为其注入 beanFactory
+            // applyBeanPostProcessorsBeforeInitialization 调用完后返回一个被包装的 bean，拿到所有的后置处理器，调用后置处理器的 postProcessAfterInitialization 
+            // invokeInitMethods 执行初始化方法
+            exposedObject = initializeBean(beanName, exposedObject, mbd);
+        }
+        catch (Throwable ex) {
+            if (ex instanceof BeanCreationException && beanName.equals(((BeanCreationException) ex).getBeanName())) {
+                throw (BeanCreationException) ex;
+            }
+            else {
+                throw new BeanCreationException(
+                    mbd.getResourceDescription(), beanName, "Initialization of bean failed", ex);
+            }
+        }
+    
+        if (earlySingletonExposure) {
+            Object earlySingletonReference = getSingleton(beanName, false);
+            if (earlySingletonReference != null) {
+                if (exposedObject == bean) {
+                    exposedObject = earlySingletonReference;
+                }
+                else if (!this.allowRawInjectionDespiteWrapping && hasDependentBean(beanName)) {
+                    String[] dependentBeans = getDependentBeans(beanName);
+                    Set<String> actualDependentBeans = new LinkedHashSet<>(dependentBeans.length);
+                    for (String dependentBean : dependentBeans) {
+                        if (!removeSingletonIfCreatedForTypeCheckOnly(dependentBean)) {
+                            actualDependentBeans.add(dependentBean);
+                        }
+                    }
+                    if (!actualDependentBeans.isEmpty()) {
+                        throw new BeanCurrentlyInCreationException(beanName,
+                                                                   "Bean with name '" + beanName + "' has been injected into other beans [" +
+                                                                   StringUtils.collectionToCommaDelimitedString(actualDependentBeans) +
+                                                                   "] in its raw version as part of a circular reference, but has eventually been " +
+                                                                   "wrapped. This means that said other beans do not use the final version of the " +
+                                                                   "bean. This is often the result of over-eager type matching - consider using " +
+                                                                   "'getBeanNamesForType' with the 'allowEagerInit' flag turned off, for example.");
+                    }
+                }
+            }
+        }
+    
+        // Register bean as disposable.
+        try {
+            registerDisposableBeanIfNecessary(beanName, bean, mbd);
+        }
+        catch (BeanDefinitionValidationException ex) {
+            throw new BeanCreationException(
+                mbd.getResourceDescription(), beanName, "Invalid destruction signature", ex);
+        }
+    
+        return exposedObject;
+    }
+    ```
+
+    然后误打误撞知道了 `setBeanFactory` 如何执行的了。那我们就顺势看看 setBeanFactory 如何执行的。
+
+5. 阅读 setBeanFactory 的流程，注意是 AnnotationAwareAspectJAutoProxyCreator#initBeanFactory
+
+    ```mermaid
+    graph LR
+    setBeanFactory-->initBeanFactory
+    ```
+
+    ```java
+    protected void initBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+        super.initBeanFactory(beanFactory);
+        if (this.aspectJAdvisorFactory == null) {
+            // 反射的 AspectJ 通知工厂
+            this.aspectJAdvisorFactory = new ReflectiveAspectJAdvisorFactory(beanFactory);
+        }
+        // 通知构建器的适配器
+        this.aspectJAdvisorsBuilder =
+            new BeanFactoryAspectJAdvisorsBuilderAdapter(beanFactory, this.aspectJAdvisorFactory);
+    }
+    ```
+
+6. 至此，AnnotationAwareAspectJAutoProxyCreator 创建成功。后面的流程就是把 BeanPostProcessor 注册到 BeanFactory 中。
+
+    - `beanFactory.addBeanPostProcessor(postProcessor)`
+
+
+
+
+
+未来创建其他组件的时候就可以使用到这些后置处理器。而 AnnotationAwareAspectJAutoProxyCreator 用到的后置处理器是 InstantiationAwareBeanPostProcessor，调用的是 postProcessBeforeInstantiation
+
+<b>注意</b>
+
+BeanPostProcessor 接口定义的方法是
+
+- postProcessBefore<b>Initialization()</b>
+
+- postProcessAfter<b>Initialization()</b>
+
+InstantiationAwareBeanPostProcessor 接口继承了 BeanPostProcessor，另外又增加了两个方法
+
+- postProcessBefore<b>Instantiation()</b>
+
+- postProcessAfter<b>Instantiation()</b>
+
+### AnnotationAwareAspectJAutoProxyCreator的执行
+
+AnnotationAwareAspectJAutoProxyCreator 的 postProcessBeforeInstantiation (bean 实例化前) 会通过调用isInfrastructureClass(beanClass) 来判断被拦截的类是否是基础类型的 Advice、PointCut、Advisor、AopInfrastructureBean，或者是否是切面（@Aspect），若是则放入 adviseBean 集合。
+
+#### 分析思路
+
+AnnotationAwareAspectJAutoProxyCreator 是一个后置处理器，所以我们需要关注的是后置处理器相关的方法。
+
+- AbstractAutoProxyCreator#postProcessAfterInitialization
+- AbstractAutoProxyCreator#postProcessAfterInitialization
+- AbstractAutoProxyCreator#postProcessBeforeInstantiation
+
+#### 源码阅读
+
+在上述几个方法上打上断点，调试运行，代码停在了 `AbstractAutoProxyCreator#postProcessBeforeInstantiation`
+
+注意：这个方法和 `BeanPostProcessor#postProcessBeforeInitialization` 方法名不一样。XXInstantiation 方法是接口 InstantiationAwareBeanPostProcessor 的方法。
+
+为什么会停在 `AbstractAutoProxyCreator#postProcessBeforeInstantiation` 这里呢？我们观察下调用栈可以看到方法的调用流程。
+
+![image-20230109220525973](C:\development\note\CodeNotes\JavaEE-Framework\img\image-20230109220525973.png)
+
+```mermaid
+graph LR
+创建IoC容器-->refresh-->finishBeanFactoryInitialization-->preInstantiateSingletons
+```
+
+finishBeanFactoryInitialization 是用于初始化剩下的单实例 bean，即创建剩下的单实例 bean（BeanPostProcssor 在单实例 bean 之前创建）。
+
+- preInstantiateSingletons -- 遍历获取容器中所有的 bean，依次创建对象。
+
+    ```mermaid
+    graph LR
+    getBean-->doGetBean-->getSingleton-->createBean-->resolveBeforeInstantiation-->|省略其他|postProcessBeforeInstantiation
+    ```
+
+- 创建 bean
+
+    - 先从缓存中获取当前 bean，如果能获取到，说明 bean 是之前被创建过，直接使用，否则就创建。只要被创建好的 Bean 都会被缓存起来。
+
+    - createBean 创建 Bean
+
+        - 拿到要创建的 bean 的定义信息
+
+        - resolveBeforeInstantiation，解析 BeforeInstantiation，给后置处理器一个机会，来返回代理对象来替代 bean 的实例。如果后置处理器没有创建代理对象，则走 doCreateBean。调用 doCreateBean，后面的流程就和 AnnotationAwareAspectJAutoProxyCreator 里说的一样了。
+
+            ```java
+            protected Object resolveBeforeInstantiation(String beanName, RootBeanDefinition mbd) {
+                Object bean = null;
+                if (!Boolean.FALSE.equals(mbd.beforeInstantiationResolved)) {
+                    // Make sure bean class is actually resolved at this point.
+                    if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+                        Class<?> targetType = determineTargetType(beanName, mbd);
+                        if (targetType != null) {
+                            // 这个不就是 AOP 后置处理器里的某个方法吗。注意这个方法不是
+                            // BeanPostProcessor 里的方法。InstantiationAwareBeanPostProcessor 
+                            // 的方法是在创建 Bean 实例之前先尝试用后置处理器返回对象的。
+                            bean = applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);
+                            if (bean != null) {
+                                bean = applyBeanPostProcessorsAfterInitialization(bean, beanName);
+                            }
+                        }
+                    }
+                    mbd.beforeInstantiationResolved = (bean != null);
+                }
+                return bean;
+            }
+            
+            protected Object applyBeanPostProcessorsBeforeInstantiation(Class<?> beanClass, String beanName) {
+                for (InstantiationAwareBeanPostProcessor bp : getBeanPostProcessorCache().instantiationAware) {
+                    Object result = bp.postProcessBeforeInstantiation(beanClass, beanName);
+                    if (result != null) {
+                        return result;
+                    }
+                }
+                return null;
+            }
+            ```
+
+        - 到这里我们就知道 AOP 的后置处理器的执行时机了。
+
+### 创建AOP代理
+
+2023-1-10 再学
+
+### 获取拦截器链
+
+2023-1-10 再学
+
+### 链式调用通知方法
+
+2023-1-10 再学
+
+### BeanPostProcessorsAfterInitialization
+
+AnnotationAwareAspectJAutoProxyCreator 的 BeanPostProcessorsAfterInitialization（bean 初始化后）：
+
+1. 首先找到被拦截的 Bean 的匹配的增强器（通知方法），这里有切入点表达式匹配的逻辑
+2. 将增强器保存到 proxyFactory 中，
+3. 根据被拦截的 Bean 是否实现了接口，spring 自动决定使用 JdkDynamicAopProxy 还是 ObjenesisCglibAopProxy
+4. 最后返回被拦截的 Bean 的代理对象，注册到 spring 容器中
+
+### CglibAopProxy.intercept()
+
+CglibAopProxy.intercept()，代理 Bean 的目标方法执行过程
+
+1. 保存所有的增强器，并处理转换为一个拦截器链
+2. 如果没有拦截器链，就直接执行目标方法
+3. 如果有拦截器链，就将目标方法，拦截器链等信息传入并创建 CglibMethodInvocation 对象，并调用 proceed() 方法获取返回值。proceed 方法内部会依次执行拦截器链。
 
 ### 流程
 
@@ -3058,7 +3471,7 @@ public void refresh() throws BeansException, IllegalStateException {
 - 把 BeanPostProcessor 注册到 BeanFactory 中
     - beanFactory.addBeanPostProcessor
 
-以上就是创建和注册 AnnotationAwareAspectJAutoProxyCreator 的过程。未来创建其他组件的时候就可以使用到这些后置处理器。
+以上就是创建和注册 AnnotationAwareAspectJAutoProxyCreator 的过程。未来创建其他组件的时候就可以使用到这些后置处理器。AnnotationAwareAspectJAutoProxyCreator 用到的后置处理器是 InstantiationAwareBeanPostProcessor，调用的是 postProcessBeforeInstantiation
 
 ```java
 public static void registerBeanPostProcessors(
@@ -3129,7 +3542,40 @@ public static void registerBeanPostProcessors(
 }
 ```
 
-4️⃣finishBeanFactoryInitialization(beanFactory); 初始化剩下的单实例 bean，这里面的有些 bean 会用到后置处理器
+4️⃣finishBeanFactoryInitialization(beanFactory); 完成 BeanFactory 的初始化工作（Spring 是通过 BeanFactory 来创建对象的，为了解决 Spring 的循环依赖），就是创建剩下的单实例 bean，这里面的有些 bean 会用到后置处理器。
+
+- 遍历获取容器中所有的 Bean，依次创建对象
+    - getBean-->doGetBean-->getSingleton-->缓存有直接拿，没有则调用 createBean
+- 创建 bean
+    - 先从缓存中获取，如果能获取到，说明 bean 是之前被创建过的。获取不到则创建 bean。只要创建好的 bean 都会被缓存起来。
+    - createBean，创建 bean。<b>AnnotationAwareAspectJAutoProxyCreator 会在任何 bean 创建之前先尝试返回 bean 的实例。</b>
+        - 拿到要创建的 bean 的定义信息，解析
+        - 使用 resolveBeforeInstantiation 解析 BeforeInstantiation 定义信息，给后置处理器一个机会返回目标对象的代理类。
+        - 如果能返回代理对象就使用代理对象，如果不能则调用 doCreateBean，真正的取创建一个 bean 实例。和3️⃣中创建 bean 实例的流程一样。
+
+resolveBeforeInstantiation 返回目标对象的代理，而动态代理正好是由 AnnotationAwareAspectJAutoProxyCreator 后置处理器创建代理对象，因此后面重点关注 resolveBeforeInstantiation 如何创建代理对象的。
+
+```mermaid
+graph LR
+createBean-->resolveBeforeInstantiation-->|1,尝试调用|applyBeanPostProcessorsBeforeInstantiation
+resolveBeforeInstantiation-->|2,1成功获取到bean尝试调用|applyBeanPostProcessorsAfterInitialization
+```
+
+applyBeanPostProcessorsBeforeInstantiation 拿到所有 InstantiationAwareBeanPostProcessor，尝试创建对象。
+
+```java
+protected Object applyBeanPostProcessorsBeforeInstantiation(Class<?> beanClass, String beanName) {
+   for (InstantiationAwareBeanPostProcessor bp : getBeanPostProcessorCache().instantiationAware) {
+      Object result = bp.postProcessBeforeInstantiation(beanClass, beanName);
+      if (result != null) {
+         return result;
+      }
+   }
+   return null;
+}
+```
+
+InstantiationAwareBeanPostProcessor 是创建 Bean 实例之前用后置处理器返回对象。那么其他后置处理器会用到这些 AOP 增强后的 Bean 吗？可以的！
 
 5️⃣。。。
 
@@ -3669,6 +4115,67 @@ void testTX() {
 
 改为 public 方法或添加配置，但是添加配置的方式不推荐，因此不做记录。
 
+> <b>类内方法调用导致事务失效</b>
+
+Spring 的事务是通过代理类来实现的，而只有加了 @Transactional 注解的方法才会用代理类去调用该方法。下面这种写法会导致事务失效。
+
+```java
+@Service
+public class UserService {
+    @Autowired
+    UserDao userDao;
+
+    public void testTX() {
+        synchronized (this) {
+            testAopContext();
+        }
+    }
+
+    @Transactional
+    public void testAopContext() {
+        String update = "update tb_u set age = ? where id = ?";
+        userDao.update(update, 30, 1);
+        int i = 1 / 0;
+        userDao.update(update, 30, 2);
+    }
+}
+```
+
+因为 testAopContext() 是在没有加 @Transactional 注解的方法 testTX() 内调用的，该方法的调用不会走代理，相当于 this.testAopContext()，没有走代理对象，因此事务会失效。
+
+解决办法是，获取代理对象，使用代理对象调用方法。可以自己注入自己，也可以用 AopContext 获取当前代理对象。
+
+```java
+@Service
+public class UserService {
+    @Autowired
+    UserDao userDao;
+
+    public void testTX() {
+        synchronized (this) {
+            UserService o = (UserService) AopContext.currentProxy();
+            o.testAopContext();
+        }
+    }
+
+    @Transactional
+    public void testAopContext() {
+        String update = "update tb_u set age = ? where id = ?";
+        userDao.update(update, 300, 1);
+        int i = 1 / 0;
+        userDao.update(update, 300, 2);
+    }
+}
+```
+
+### 实现原理
+
+1. @EnableTransactionManagement 利用 TransactionManagementConfigurationSelector 给 spring 容器中导入两个组件：AutoProxyRegistrar 和 ProxyTransactionManagementConfiguration
+2. AutoProxyRegistrar 给 spring 容器中注册一个 InfrastructureAdvisorAutoProxyCreator，而该类实现了 InstantiationAwareBeanPostProcessor,InstantiationAwareBeanPostProcessor 是一个 BeanPostProcessor。它可以拦截 spring 的 Bean 初始化 (Initialization) 前后和实例化 (Initialization) 前后。利用后置处理器机制在被拦截的 bean 创建以后包装该 bean 并返回一个代理对象代理对象执行方法利用拦截器链进行调用（同 Spring AOP 的原理）
+3. ProxyTransactionManagementConfiguration：是一个 spring 的配置类，它为 spring容器注册了一个 BeanFactoryTransactionAttributeSourceAdvisor，是一个事务事务增强器。它有两个重要的字段：AnnotationTransactionAttributeSource 和 TransactionInterceptor。
+    - AnnotationTransactionAttributeSource：用于解析事务注解的相关信息
+    - TransactionInterceptor：事务拦截器，在事务方法执行时，都会调用TransactionInterceptor 的 invoke->invokeWithinTransaction 方法，这里面通过配置的 PlatformTransactionManager 控制着事务的提交和回滚。
+
 ## 编程式事务
 
 ```java
@@ -4064,9 +4571,115 @@ class MyApplicationEvent implements ApplicationListener<ApplicationEvent> {
 
 3️⃣只要容器中有相关事件的发布，我们就能监听到这个事件。
 
+## @EventListener
+
+使用 `@EventListener` 注解监听事件。
+
+标记在方法上，使用 classes 属性声明要监听的事件类型。ApplicationEvent 类型的方法参数可以获得到该事件。
+
+```java
+@Service
+public class UserService {
+
+    @EventListener(classes = {ApplicationEvent.class})
+    public void listener(ApplicationEvent event) {
+        System.out.println("得到事件:" + event);
+    }
+}
+```
+
+使用 `EventListenerMethodProcessor` 处理器来解析方法上的 `@EventListener` 注解。
+
+`EventListenerMethodProcessor` 实现了 `SmartInitializingSingleton` 接口。
+
 ## SmartInitializingSingleton
 
+在所有单实例 bean 都创建完成之后调用，调用的时机类似 `ContextRefreshedEvent`。
+
+```java
+public interface SmartInitializingSingleton {
+	void afterSingletonsInstantiated();
+}
+```
+
+<b>调用过程</b>
+
+1. ioc 创建对象并刷新容器：refresh() 
+2. refresh() 调用 `finishBeanFactoryInitialization()`
+3. finishBeanFactoryInitialization() 初始化剩下的单实例 bean
+    - 遍历所有待创建的单实例 bean，调用 `getBean()` 创建所有的单实例 bean 
+
+1. - 获取所有创建好的单实例 bean，判断是否是 `SmartInitializingSingleton` 类型。
+        如果是该类型，就调用其 `afterSingletonsInstantiated()` 方法 
+
 ## Spring容器的创建过程
+
+Spring 的 `refresh()` 方法进行容器的创建和刷新，进入 `AbstractApplicationcontext` 类的 `refresh()` 方法中。
+
+```java
+public void refresh() throws BeansException, IllegalStateException {
+    synchronized (this.startupShutdownMonitor) {
+        // 1.进行容器的预处理
+        prepareRefresh();
+
+        // 2.获取beanFactory
+        ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
+
+        // 3.进行beanFactory的预处理工作
+        prepareBeanFactory(beanFactory);
+
+        try {
+            // 4.beanFactory准备工作完成之后的后置处理工作
+            postProcessBeanFactory(beanFactory);
+
+            // 5.执行BeanFactoryPostProcessors（包括BeanFactoryPostProcessor 和 BeanDefinitionRegistryPostProcessor）
+            invokeBeanFactoryPostProcessors(beanFactory);
+	         // 6.注册bean后置处理器，拦截bean的创建过程
+            registerBeanPostProcessors(beanFactory);
+
+            // 7.初始化MessageSource，做国际化功能
+            initMessageSource();
+
+            // 8.初始化事件派发器
+            initApplicationEventMulticaster();
+
+            // 9.初始化其他的一些特殊Bean，默认为空实现，留给子类进行自定义重写
+            onRefresh();
+
+            // 10.将所有的ApplicationListener注册进容器中
+            registerListeners();
+
+            // 11.初始化所有剩下的单实例bean
+            finishBeanFactoryInitialization(beanFactory);
+
+            // Last step: publish corresponding event.
+            finishRefresh();
+        }
+
+        catch (BeansException ex) {
+            if (logger.isWarnEnabled()) {
+                logger.warn("Exception encountered during context initialization - " +
+                            "cancelling refresh attempt: " + ex);
+            }
+
+            // Destroy already created singletons to avoid dangling resources.
+            destroyBeans();
+
+            // Reset 'active' flag.
+            cancelRefresh(ex);
+
+            // Propagate exception to caller.
+            throw ex;
+        }
+
+        finally {
+            // Reset common introspection caches in Spring's core, since we
+            // might not ever need metadata for singleton beans anymore...
+            resetCommonCaches();
+        }
+    }
+}
+```
 
 # 源码总结
 
