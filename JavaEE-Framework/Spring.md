@@ -4197,49 +4197,113 @@ public class UserService {
 }
 ```
 
-### 实现原理
-
-1. @EnableTransactionManagement 利用 TransactionManagementConfigurationSelector 给 spring 容器中导入两个组件：AutoProxyRegistrar 和 ProxyTransactionManagementConfiguration
-2. AutoProxyRegistrar 给 spring 容器中注册一个 InfrastructureAdvisorAutoProxyCreator，而该类实现了 InstantiationAwareBeanPostProcessor,InstantiationAwareBeanPostProcessor 是一个 BeanPostProcessor。它可以拦截 spring 的 Bean 初始化 (Initialization) 前后和实例化 (Initialization) 前后。利用后置处理器机制在被拦截的 bean 创建以后包装该 bean 并返回一个代理对象代理对象执行方法利用拦截器链进行调用（同 Spring AOP 的原理）
-3. ProxyTransactionManagementConfiguration：是一个 spring 的配置类，它为 spring容器注册了一个 BeanFactoryTransactionAttributeSourceAdvisor，是一个事务事务增强器。它有两个重要的字段：AnnotationTransactionAttributeSource 和 TransactionInterceptor。
-    - AnnotationTransactionAttributeSource：用于解析事务注解的相关信息
-    - TransactionInterceptor：事务拦截器，在事务方法执行时，都会调用TransactionInterceptor 的 invoke->invokeWithinTransaction 方法，这里面通过配置的 PlatformTransactionManager 控制着事务的提交和回滚。
-
 ## 源码分析
 
-和之前分析 @EnableAspectJAutoProxy 类似。
+### 分析思路
 
-@EnableTransactionManagement 导入一个配置类 `TransactionManagementConfigurationSelector` 我们来看看它的源码。
-
-- 会导入两个组件，AutoProxyRegistrar 和 ProxyTransactionManagementConfiguration
-- AutoProxyRegistrar 用于注册 BeanDefinitions，会给容器注册一个 InfrastructureAdvisorAutoProxyCreator
+和之前分析 @EnableAspectJAutoProxy 类似。为了简单起见，去除多余的 @EnableXX 注解，只开启事务必备的内容。因此，采用的配置类如下
 
 ```java
-public class TransactionManagementConfigurationSelector extends AdviceModeImportSelector<EnableTransactionManagement> {
+@Configuration
+@ComponentScan(basePackages = "com.review.spring.service")
+@EnableTransactionManagement
+public class DruidConfig {
+    @Bean
+    public DataSource dataSource() {
+        DruidDataSource druidDataSource = new DruidDataSource();
+        druidDataSource.setUsername("root");
+        druidDataSource.setPassword("root");
+        druidDataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        druidDataSource.setUrl("jdbc:mysql://localhost:3306/mybatis_plus");
+        return druidDataSource;
+    }
 
-	@Override
-	protected String[] selectImports(AdviceMode adviceMode) {
-		switch (adviceMode) {
-			case PROXY:
-				return new String[] {AutoProxyRegistrar.class.getName(),
-						ProxyTransactionManagementConfiguration.class.getName()};
-			case ASPECTJ:
-				return new String[] {determineTransactionAspectClass()};
-			default:
-				return null;
-		}
-	}
+    @Bean
+    public JdbcTemplate jdbcTemplate() {
+        // 虽然写的是调用 dataSource 方法获取数据源，但是实际上是从 IoC 容器中取的对象
+        return new JdbcTemplate(dataSource());
+    }
 
-	private String determineTransactionAspectClass() {
-		return (ClassUtils.isPresent("javax.transaction.Transactional", getClass().getClassLoader()) ?
-				TransactionManagementConfigUtils.JTA_TRANSACTION_ASPECT_CONFIGURATION_CLASS_NAME :
-				TransactionManagementConfigUtils.TRANSACTION_ASPECT_CONFIGURATION_CLASS_NAME);
-	}
-
+    @Bean
+    public PlatformTransactionManager transactionManager() {
+        return new DataSourceTransactionManager(dataSource());
+    }
 }
 ```
 
-2023-1-11 再学。
+简单看下 @EnableAspectJAutoProxy 这个注解，可以发现它用 @Import 注解导入了一个配置类 `TransactionManagementConfigurationSelector`。在这个配置类中会导入两个组件
+
+- AutoProxyRegistrar，用于注册 BeanDefinitions，会给容器注册一个 InfrastructureAdvisorAutoProxyCreator，该对象对应的 beanName 为 org.springframework.aop.config.internalAutoProxyCreator，也是个后置处理器。
+- ProxyTransactionManagementConfiguration，用于注册启用基于代理的事务管理所需的 bean。如事务拦截器（TransactionInterceptor），用于拦截方法的执行，在方法的执行前后会涉及到事务的相关操作。
+
+我们在这些关键的类上打上断点。简单过一遍执行流程，就可以猜到那些是关键类，那些是关键方法。简单 debug 梳理后可以发现，下面这些类非常关键
+
+- AutoProxyRegistrar#registerBeanDefinitions 方法
+    - AopConfigUtils#registerOrEscalateApcAsRequired 方法
+- ProxyTransactionManagementConfiguration#transactionInterceptor 方法
+- TransactionInterceptor#invoke 方法
+- TransactionAspectSupport#invokeWithinTransaction 方法
+
+<b>实现原理</b>
+
+1. @EnableTransactionManagement 利用 TransactionManagementConfigurationSelector 给 spring 容器中导入两个组件：AutoProxyRegistrar 和 ProxyTransactionManagementConfiguration
+2. AutoProxyRegistrar 给 spring 容器中注册一个 InfrastructureAdvisorAutoProxyCreator，而该类实现了 InstantiationAwareBeanPostProcessor,InstantiationAwareBeanPostProcessor 是一个 BeanPostProcessor。它可以拦截 spring 的 Bean 初始化 (Initialization) 前后和实例化 (Initialization) 前后。利用后置处理器机制在被拦截的 bean 创建以后包装该 bean 并返回一个代理对象代理对象执行方法利用拦截器链进行调用（同 Spring AOP 的原理）
+3. ProxyTransactionManagementConfiguration：是一个 spring 的配置类，它为 spring 容器注册了一个 BeanFactoryTransactionAttributeSourceAdvisor，是一个事务事务增强器。它有两个重要的字段：AnnotationTransactionAttributeSource 和 TransactionInterceptor。
+    - AnnotationTransactionAttributeSource：用于解析事务注解的相关信息
+    - TransactionInterceptor：事务拦截器，在事务方法执行时，都会调用 TransactionInterceptor  的 invoke->invokeWithinTransaction 方法，这里面通过配置的 PlatformTransactionManager 控制着事务的提交和回滚。
+
+### 源码阅读
+
+按照分析思路，对关键的类打上断点。然后分析 AutoProxyRegistrar 和 ProxyTransactionManagementConfiguration 的功能。本质就是利用 AOP 在方法执行前关闭事务自动提交，在方法执行后提交事务/回滚事务。
+
+1️⃣AutoProxyRegistrar
+
+- 给容器注册一个 InfrastructureAdvisorAutoProxyCreator 组件，这个组件是 SmartInstantiationAwareBeanPostProcessor 类型的，也是一个后置处理器。
+- InfrastructureAdvisorAutoProxyCreator 利用后置处理器机制，在对象创建以后包装对象，返回一个代理对象（增强器），代理对象执行方法，利用拦截器链进行调用。和 AOP 的逻辑类似。
+
+2️⃣ProxyTransactionManagementConfiguration
+
+- 利用 @Bean 给容器注册各种组件。
+- 会给容器中注入事务增强器
+    - AnnotationTransactionAttributeSource 解析事务注解
+    - TransactionInterceptor 保存了事务的属性信息，事务管理器，本质上是一个 MethodInterceptor，代理对象要执行目标方法时，拦截器就会开始工作。在目标方法执行的时候执行拦截器链，这个拦截器链中只有一个拦截器，就是事务拦截器。
+    - 事务拦截器：先获取事务属性，再获取 PlatformTranscationManager，如果实现没有指定，最终会从容器中按照类型获取一个 PlatformTranscationManager。然后执行事务方法。
+
+```java
+@Nullable
+protected Object invokeWithinTransaction(Method method, @Nullable Class<?> targetClass,
+                                         final InvocationCallback invocation) throws Throwable {
+	// some code...
+    PlatformTransactionManager ptm = asPlatformTransactionManager(tm);
+    final String joinpointIdentification = methodIdentification(method, targetClass, txAttr);
+
+    if (txAttr == null || !(ptm instanceof CallbackPreferringPlatformTransactionManager)) {
+        // Standard transaction demarcation with getTransaction and commit/rollback calls.
+        TransactionInfo txInfo = createTransactionIfNecessary(ptm, txAttr, joinpointIdentification);
+
+        Object retVal;
+        try {
+			// 对这个方法 debug 发现，它就是执行的 proceed() 方法，逐个执行拦截器链
+            // 中的拦截器。此处拦截器只有一个 TransactionInterceptor。
+            retVal = invocation.proceedWithInvocation();
+        }
+        catch (Throwable ex) {
+            // 拿到事务管理器，进行回滚。
+            completeTransactionAfterThrowing(txInfo, ex);
+            throw ex;
+        }
+        finally {
+            cleanupTransactionInfo(txInfo);
+        }
+		// some code...
+    }
+	// some code...
+}
+```
+
+
+
+
 
 ## 其他
 
@@ -4435,9 +4499,9 @@ public class MulService {
 
 ### 概述
 
-BeanPostProcessor：bean 后置处理器，bean 创建对象初始话前后进行拦截工作的。
+注意与 BeanPostProcessor 进行区分。BeanPostProcessor 是 bean 后置处理器，bean 创建对象初始化前后进行拦截工作的。
 
-BeanFactoryPostProcessor：beanFactory 的后置处理器，可以在 `beanFactory` 初始化后进行一些操作
+BeanFactoryPostProcessor 是 beanFactory 的后置处理器，在 BeanFactory 标准初始化之后调用。根据调用时机的特点，可以在 `beanFactory` 初始化后进行一些操作。
 
 - 在 BeanFactory 标准初始化之后调用；所有的 bean 定义已经保存加载到 beanFactory 中，<b>但是 bean 的实例还未创建。</b>
 
@@ -4465,21 +4529,14 @@ BeanFactoryPostProcessor：beanFactory 的后置处理器，可以在 `beanFacto
 
 ## BeanDefinitionegistryPostProcessor
 
+对标准 {@link BeanFactoryPostProcessor} SPI 的扩展，允许在常规 BeanFactoryPostProcessor 检测开始之前注册更多的 bean 定义。开发者可以通过该类实现扩展，在类初始之前对 beanDefinition 进行修改以及新增注册。
+
 ### 概述
 
 BeanDefinitionegistryPostProcessor 是 BeanFactoryPostProcessor 的子接口
 
 ```java
 public interface BeanDefinitionRegistryPostProcessor extends BeanFactoryPostProcessor {
-
-	/**
-	 * Modify the application context's internal bean definition registry after its
-	 * standard initialization. All regular bean definitions will have been loaded,
-	 * but no beans will have been instantiated yet. This allows for adding further
-	 * bean definitions before the next post-processing phase kicks in.
-	 * @param registry the bean definition registry used by the application context
-	 * @throws org.springframework.beans.BeansException in case of errors
-	 */
 	void postProcessBeanstDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException;
 }
 ```
@@ -4489,23 +4546,12 @@ postProcessBeanstDefinitionRegistry() 在所有 bean 定义信息将要被加载
 <b>先给结论</b>
 
 - BeanDefinitionRegistryPostProcessor() 优于 BeanFactoryPostProcessor 执行。
-- 我们可以利用 BeanDefinitionRegistryPostProcessor()` 给容器中再额外添加一些组件。
+- 我们可以利用 BeanDefinitionRegistryPostProcessor() 给容器中再额外添加一些组件。
 - 可以在如下代码的两个方法中打断点，看看执行流程。
 
 验证代码如下
 
 ```java
-package org.example.configuration.ext;
-
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
-import org.springframework.beans.factory.support.RootBeanDefinition;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 @Configuration
 public class BeanDefinitionRegistryPostProcessorConfig {
 
@@ -4517,8 +4563,10 @@ public class BeanDefinitionRegistryPostProcessorConfig {
     public static void main(String[] args) {
         /**
          * 这个测试流程如下：
-         *  postProcessBeanDefinitionRegistry 获取到的注册的bean数目为 7，有注册一个后 为 8
-         *  postProcessBeanFactory 获取到的注册的bean数目  为 8.
+            postProcessBeanDefinitionRegistry拥有的类数量为 8
+            postProcessBeanDefinitionRegistry又注册了一个bean blue
+            此时postProcessBeanDefinitionRegistry拥有的类数量为 9
+            postProcessBeanFactory拥有的bean数量 9
          *  这说明了  Registry先执行于Factory
          */
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanDefinitionRegistryPostProcessorConfig.class);
@@ -4529,12 +4577,16 @@ public class BeanDefinitionRegistryPostProcessorConfig {
 class MyBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPostProcessor {
 
     @Override
+    // BeanDefinitionRegistry 中保存了 beanDefinition，以后 BeanFactory 就是按照
+    // BeanDefinitionRegistry 里面保存的每一个 bean 定义信息创建 bean 实例
     public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
         System.out.println(String.format("postProcessBeanDefinitionRegistry拥有的类数量为 %d", registry.getBeanDefinitionCount()));
         // 可在这里进行bean的注册
         RootBeanDefinition beanDefinition = new RootBeanDefinition(Blue.class);
         registry.registerBeanDefinition("blue", beanDefinition);
         System.out.println(String.format("postProcessBeanDefinitionRegistry又注册了一个bean %s", "blue"));
+        System.out.println(String.format("此时postProcessBeanDefinitionRegistry拥有的类数量为 %d", registry.getBeanDefinitionCount()));
+
     }
 
     @Override
@@ -4542,6 +4594,13 @@ class MyBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPos
         System.out.println(String.format("postProcessBeanFactory拥有的bean数量 %d", beanFactory.getBeanDefinitionCount()));
     }
 }
+
+/*
+postProcessBeanDefinitionRegistry拥有的类数量为 8
+postProcessBeanDefinitionRegistry又注册了一个bean blue
+此时postProcessBeanDefinitionRegistry拥有的类数量为 9
+postProcessBeanFactory拥有的bean数量 9
+*/
 ```
 
 ### 原理
@@ -4557,6 +4616,8 @@ class MyBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPos
 
 4️⃣再来从容器中找到 BeanFactoryPostProcessor 组件，然后依次触发 postProcessBeanFactory() 方法
 
+为什么他要先于 BeanFactoryPostProcessor 执行呢？为了注册一些 BeanDefinition，做扩展呀。 
+
 ## ApplicationListener
 
 ### 概述
@@ -4571,9 +4632,9 @@ class MyBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPos
 
 - 容器停止事件
 
-要想实现事件监听机制，我们需要这样做：
+要想实现事件监听机制，我们需要这样做，写一个类实现如下监听器接口 
 
-我们要写一个类实现如下监听器接口 public interface ApplicationListener\<E extends ApplicationEvent\> extends EventListener {}
+public interface ApplicationListener\<E extends ApplicationEvent\> extends EventListener {}
 
 这个接口，它所带的泛型就是我们要监听的事件。即它会监听 ApplicationEvent 及下面的子事件。
 
@@ -4636,7 +4697,42 @@ class MyApplicationEvent implements ApplicationListener<ApplicationEvent> {
 
 2️⃣把监听器加入到容器。
 
-3️⃣只要容器中有相关事件的发布，我们就能监听到这个事件。
+3️⃣只要容器中有相关事件的发布，我们就能监听到这个事件，比如监听 ApplicationEvent，监听 ContextClosedEvent 事件。
+
+```java
+
+@Configuration
+public class MyApplicationEvent {
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(MyApplicationEvent.class);
+        context.publishEvent(new ApplicationEvent(new String("hello")) {
+        });
+        context.close();
+    }
+
+    @Bean
+    public ApplicationListener applicationListener() {
+        return new MyApplicationListener();
+    }
+
+    static class MyApplicationListener implements ApplicationListener<ApplicationEvent> {
+
+        @Override
+        public void onApplicationEvent(ApplicationEvent event) {
+            System.out.println("接受到事件=====>" + event);
+        }
+    }
+}
+/*
+接受到事件=====>org.springframework.context.event.ContextRefreshedEvent[source=org.springframework.context.annotation.AnnotationConfigApplicationContext@5383967b]
+接受到事件=====>com.review.spring.ext.MyApplicationEvent$1[source=hello]
+接受到事件=====>org.springframework.context.event.ContextClosedEvent[source=org.springframework.context.annotation.AnnotationConfigApplicationContext@5383967b]
+*/
+```
+
+### 原理
+
+1-12 再学。今天摸鱼去了。
 
 ## @EventListener
 
@@ -4747,8 +4843,6 @@ public void refresh() throws BeansException, IllegalStateException {
     }
 }
 ```
-
-# 源码总结
 
 # Servlet3.0
 
@@ -4992,11 +5086,10 @@ public class SpringServletContainerInitializer implements ServletContainerInitia
 			initializer.onStartup(servletContext);
 		}
 	}
-
 }
 ```
 
-<b>梳理一下：</b>
+<b>梳理一下</b>
 
 1️⃣web 容器在启动的时候，会扫描每个 jar 包下的 META-INFO/services/javax.servlet.ServletContainerInitializer
 
@@ -5408,8 +5501,6 @@ WeblFlux 时一种异步非阻塞框架，Servlet 3.1 开始支持的。核心�
 
 WebFlux 使用函数式编程实现路由请求。（观察者模式，数据发生变化就通知）
 
-### 概述
-
 响应式流规范可以总结为 4 个接口：Publisher、Subscriber、Subscription 和 Processor。Publisher 负责生成数据，并将数据发送给 Subscription（每个 Subscriber 对应一个 Subscription）。Publisher 接口声明了一个方法subscribe()，Subscriber 可以通过该方法向 Publisher 发起订阅。
 
 1️⃣命令式编程，假定有一批数据需要处理，每个数据都需要经过若干步骤才能完成。使用命令式编程模型，每行代码执行一个步骤，按部就班，并且肯定在同一个线程中进行。每一步在执行完成之前都会阻止执行线程执行下一步。
@@ -5442,3 +5533,9 @@ Mono.just("Craig")
 ```
 
 在这个例子中，有 3 个 Mono。just() 操作创建了第一个Mono。map 创建了第二个 Mono，map 创建了第三个 Mono。最后，对第三个 Mono 上的 subscribe() 方法调用时，会接收数据并将数据打印出来。
+
+# Spring扩展点
+
+- [Spring常用扩展点_星夜孤帆的博客-CSDN博客_spring扩展点](https://blog.csdn.net/qq_38826019/article/details/117389466)
+
+- [Spring-MVC配置和扩展 - CodeAntenna](https://codeantenna.com/a/OO1sywTUnO)
