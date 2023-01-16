@@ -1,3 +1,7 @@
+[TOC]
+
+
+
 # 🚀补充
 
 ## 更新了！
@@ -5475,7 +5479,7 @@ public class myxx implements Comparator{
 ### 代码对比
 
 - 传统形式编码
-- Java 8 方法引用
+- Java8 方法引用
 - Lambda 表达式
 
 ### Lambda 表达式
@@ -5490,9 +5494,13 @@ public class myxx implements Comparator{
 - -> 之后的内容都是方法体
 
 <b>[1]</b> 当只用一个参数，可以不需要括号 () 【特例】。
+
 <b>[2]</b> 正常情况使用括号 () 包裹参数。为了保持一致性，也可以使用括号 () 包裹单个参数，虽然这种情况并不常见。
+
 <b>[3]</b> 如果没有参数，则必须使用括号 () 表示空参数列表。
+
 <b>[4]</b> 对于多个参数，将参数列表放在括号 () 中。单行表达式的结果会自动成为 Lambda 表达式的返回值，在单行表达式中使用 return 关键字是非法的。
+
 <b>[5]</b> 如果在 Lambda 表达式中确实需要多行，则必须将这些行放在花括号中。在这种情况下，就需要使用 return。
 
 ```java
@@ -5632,14 +5640,23 @@ class Describe {
 ```
 
 <b>[1]</b> Lambda 要求接口中只有一个方法，且建议用 `@FunctionalInterface` 修饰。 
+
 <b>[2]</b> show() 的签名（参数类型和返回类型）和 Callable 中 call() 的签名一致。 
+
 <b>[3]</b> hello() 的签名也和 call() 的签名一致。 
-<b>[4]</b> help() 也一致，它是静态内部类中的非静态方法。 
+
+<b>[4]</b> help() 也一致，它是静态内部类中的非静态方法。
+
 <b>[5]</b> assist() 是静态内部类中的静态方法。 
+
 <b>[6]</b> 将 Describe 对象的方法引用赋值给 Callable ，它没有 show() 方法，而是 call() 方法。但是，Java 允许这种看似奇怪的赋值，因为方法引用符合 Callable 的 call() 方法的签名。 
+
 <b>[7]</b> 我们现在可以通过调用 call() 来调用 show()，因为 Java 将 call() 映射到 show()。 
+
 <b>[8]</b> 这是一个静态方法引用。 
-<b>[9]</b> 这是 <b>[6]</b> 的另一个版本：对已实例化对象的方法的引用，有时称为绑定方法引 用。 
+
+<b>[9]</b> 这是 <b>[6]</b> 的另一个版本：对已实例化对象的方法的引用，有时称为绑定方法引用。 
+
 <b>[10]</b> 最后，获取静态内部类中静态方法的引用与 <b>[8]</b> 中通过外部类引用相似。
 
 #### Runnable 接口
@@ -5673,7 +5690,7 @@ public class RunnableMethodReference {
 
 #### 未绑定的方法引用
 
-未绑定的方法引用就是，尚未关联到某个对象的普通方法。<b>使用未绑定的方法引用， 我们必须先提供对象，然后才能使用。</b>具体请看代码：
+未绑定的方法引用就是，尚未关联到某个对象的普通方法。<b>使用未绑定的方法引用， 我们必须先提供对象，然后才能使用，</b>具体请看代码
 
 ```java
 class X {
@@ -5828,7 +5845,7 @@ Dog 有三个构造函数，函数式接口内的 make() 方法反映了构造�
 
 ### 函数式接口
 
-Java 8 引入了 java.util.function 包。它包含一组接口，这些接口是 Lambda 表达式和方法引用的目标类型。每个接口都只包含一个抽象方法。在编写接口时，可以使用 @FunctionalInterface 注解强制执行此“函数式方法”模式。
+Java8 引入了 java.util.function 包。它包含一组接口，这些接口是 Lambda 表达式和方法引用的目标类型。每个接口都只包含一个抽象方法。在编写接口时，可以使用 @FunctionalInterface 注解强制执行此“函数式方法”模式。
 
 `如果将一个方法引用或 Lambda 表达式赋值给函数式接口（类型需要匹配），Java 会调整这个赋值，使其匹配目标接口。而在底层，Java 编译器会创建一个实现了目标接口的类的实例，并将我们的方法引用或 Lambda 表达式包裹在其中。`
 
@@ -5867,8 +5884,8 @@ Java 8 引入了 java.util.function 包。它包含一组接口，这些接口�
 
 `Supplier<T>` 接口也被称为生产型接口，如果我们指定了接口的泛型式是什么类型，那么接口中的 get() 方法就会产生什么类型的数据供我们使用！简单说来，他就是一个容器，用来存 Lambda 表达式生成的数据的。可用 get 方法得到这个生成的数据
 
-- `Supplier<T>`：包含一个无参的方法
-- `T get()`：获得结果，该方法不需要参数，它会按照某种实现逻辑（由 Lambda 表达式实现）返回一个数据
+- `Supplier<T>`，包含一个无参的方法
+- `T get()`，获得结果，该方法不需要参数，它会按照某种实现逻辑（由 Lambda 表达式实现）返回一个数据
 
 ```java
 public class Student {
@@ -6329,11 +6346,12 @@ public class ProduceFunction {
 这里，produce() 是高阶函数。 
 
 <b>[1]</b> 使用继承，可以轻松地为专用接口创建别名。 
+
 <b>[2]</b> 使用 Lambda 表达式，可以轻松地在方法中创建和返回一个函数。
 
 #### 消费函数的函数
 
-先看下消费函数。要消费一个函数，消费函数需要在参数列表正确地描述函数类型。代码示例：
+先看下消费函数。要消费一个函数，消费函数需要在参数列表正确地描述函数类型。
 
 ```java
 public class ConsumeFunction {
@@ -6354,21 +6372,6 @@ public class ConsumeFunction {
 先看下 addThen 的代码
 
 ```java
-/**
-* Returns a composed function that first applies this function to
-* its input, and then applies the {@code after} function to the result.
-* If evaluation of either function throws an exception, it is relayed to
-* the caller of the composed function.
-*
-* @param <V> the type of output of the {@code after} function, and of the
-*           composed function
-* @param after the function to apply after this function is applied
-* @return a composed function that first applies this function and then
-* applies the {@code after} function
-* @throws NullPointerException if after is null
-*
-* @see #compose(Function)
-*/
 default <V> Function<T, V> andThen(Function<? super R, ? extends V> after) {
     Objects.requireNonNull(after);
     // 先消费 t 在消费 t 产生的函数
@@ -6449,7 +6452,7 @@ IntSupplier makeFun(final int x) {
 
 做等同 final 效果，Java8 出现的，表示虽然没有明确地声明变量是 final 的，<b>但是因变量值没被改变过而实际有了 final 同等的效果。</b>如果局部变量的初始值永远不会改变，那么它实际上就是 final 的。 
 
-如果 x 和 i 的值在方法中的其他位置发生改变（但不在返回的函数内部），则编译器仍将视其为错误。每个递增操作则会分别产生错误消息。代码示例：
+如果 x 和 i 的值在方法中的其他位置发生改变（但不在返回的函数内部），则编译器仍将视其为错误。每个递增操作则会分别产生错误消息。
 
 ```java
 public class Closure5 {
@@ -6463,7 +6466,7 @@ public class Closure5 {
 }
 ```
 
-通过在闭包中使用 final 关键字提前修饰变量 x 和 i ，我们解决了 Closure5.java 中的问题。代码示例：
+通过在闭包中使用 final 关键字提前修饰变量 x 和 i ，我们解决了 Closure5.java 中的问题。
 
 ```java
 public class Closure6 {
@@ -6592,7 +6595,7 @@ public class AnonymousClosure {
 }
 ```
 
-我们来观察下上述代码的反编译结果：
+我们来观察下上述代码的反编译结果
 
 ```java
 public class AnonymousClosure {

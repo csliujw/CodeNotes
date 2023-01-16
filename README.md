@@ -8,6 +8,8 @@
 - Spring Boot 温习
 - MySQL 45 讲继续学，冲冲冲！
 - Spring 温习✔️
+- MyBatis 温习
+- Spring MVC 温习✔️
 - Redis 加强，黑马那个 Redis 的项目也写一遍。
 
 ## 📝期刊论文

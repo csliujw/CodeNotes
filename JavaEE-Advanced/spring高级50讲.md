@@ -311,7 +311,7 @@ public class TestMethodTemplate {
 
 ### 5) BeanFactory 后处理器
 
-- [x] BeanFactory 后处理器的作用：为 BeanFactory `+提供扩展
+- [x] BeanFactory 后处理器的作用：为 BeanFactory +提供扩展
 - [x] 常见的 BeanFactory 后处理器
 
 #### 演示1 - BeanFactory 后处理器的作用

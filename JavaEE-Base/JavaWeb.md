@@ -1,59 +1,111 @@
 # HTTP协议
 
-HTTP 协议是明文传输，不安全，不适合传输安全性要求高的文件，如密码。
+## 基础知识
 
-HTTPS 是对 HTTP 协议不安全的改进，HTTPS 全称叫安全套接字超文本传输协议，采用了基于 SSL(Secure Sockets Layer) 进行加密，安全性高！SSL 依靠证书来验证服务器的身份，并为浏览器和服务器之间的通信加密。
+> <b>传输协议</b>
 
-> <b>HTTP 和 HTTPS 的对比</b>
+传输协议定义了，客户端和服务器端通信时，发送数据的格式；而 Hyper Text Transfer Protocol 超文本传输协议是一种请求/响应式的协议，定义了“发布和接收 HTML 页面的规则”。
 
-- https 相对于 http 加入了 ssl 层，
-- 需要到 ca 申请收费的证书，SSL 证书需要钱，功能越强大的证书费用越高，个人网站、小网站没有必要一般不会用。
-- 安全但是耗时多，缓存不是很好，HTTPS 协议握手阶段比较费时，会使页面的加载时间延长近 50%，增加 10% 到 20% 的耗电；
-- 注意兼容 http 和 https
+客户端在与服务器端建立连接后，就可以向服务器端发送请求，这种请求被称作 HTTP 请求，服务器端接收到请求后会做出响应，称为 HTTP 响应
+
+```mermaid
+graph LR
+客户端-->|HTTP请求|服务器
+服务器-->|HTTP相应|客户端
+```
+
+> <b>HTTP 协议的特点</b>
+
+- 支持客户端(浏览器就是一种 Web 客户端)/服务器模式。
+- 简单快速：客户端向服务器请求服务时，只需传送请求方式和路径。常用的请求方式有 GET、POST 等，每种方式规定了客户端与服务器联系的类型不同。由于 HTTP 简单，使得 HTTP 服务器的程序规模小，因而通信速度很快。
+- 灵活：HTTP 允许传输任意类型的数据，正在传输的数据类型由 Content-Type 加以标记。
+- 无状态：HTTP 是无状态协议。无状态是指协议对于事务处理没有记忆能力，每次请求之间相互独立，不能交互数据。如果后续处理需要前面的信息，则它必须重传，这样可能导致每次连接传送的数据量增大。
+
+> <b>HTTP 1.0 和 HTTP 1.1</b>
+
+<b style="color:purple">HTTP 1.0</b>
+
+- HTTP 协议是基于请求/响应模型的，一次请求对应一次响应，而较高版本的 tomcat 采用的 NIO（用 Netty 编写的），一次请求对应一个新的线程。
+- 基于 HTTP 1.0 协议的客户端与服务器进行一次完整的通信需要经过建立连接、发送请求信息、回送响应信息、关闭连接 4 个步骤。<span style="color:purple">而客户端与服务器建立连接后，每次只能处理一个 HTTP 请求。后面出现新的请求-响应时会建立新的连接。</span>
+- HTTP 是基于 TCP/IP 的高级协议，默认端口号是 80。
+
+<b style="color:purple">HTTP 1.1</b>
+
+- HTTP 1.1 支持持久连接，也就是说在一个 TCP 连接上可以传送多个 HTTP 请求和响应，从而减少了建立和关闭连接的消耗和延时。不过持久连接需要客户端和服务器端都支持才行，如果有一方不支持持久连接，完成一次请求后就关闭连接，那么另一方也会被迫关闭连接的。
+
+可以思考下如何创建一个 HTTP 连接池复用 HTTP 连接。此处给一些思考：假定处理 A 信息的 HTTP 连接处理完后就存入一个集合中，如果下次还要向 A 发送数据那么就先看集合中是否存有连接到 A 的可用的 HTTP 连接，有的话就直接用集合中的而非重新建立连接。
+
+> <b>HTTPS 介绍</b>
+
+HTTP 协议是明文传输，不安全，不适合传输安全性要求高的文件，如密码。而 HTTPS 是对 HTTP 协议不安全的改进，HTTPS 全称叫安全套接字超文本传输协议，采用了基于 SSL(Secure Sockets Layer) 进行加密，安全性高！SSL 依靠证书来验证服务器的身份，并为浏览器和服务器之间的通信加密。
 
 > <b>SSL</b>
 
-SSL 协议位于 [TCP/IP协议](https://baike.baidu.com/item/TCP%2FIP协议) 与各种[应用层](https://baike.baidu.com/item/应用层)协议之间，为[数据通讯](https://baike.baidu.com/item/数据通讯)提供安全支持。SSL 协议可分为两层： SSL 记录协议（SSL Record Protocol）：它建立在可靠的[传输协议](https://baike.baidu.com/item/传输协议)（如TCP）之上，为高层协议提供[数据封装](https://baike.baidu.com/item/数据封装)、压缩、加密等基本功能的支持。 SSL [握手协议](https://baike.baidu.com/item/握手协议)（SSL Handshake Protocol）：它建立在 SSL 记录协议之上，用于在实际的数据传输开始前，通讯双方进行[身份认证](https://baike.baidu.com/item/身份认证)、协商[加密算法](https://baike.baidu.com/item/加密算法)、交换加密[密钥](https://baike.baidu.com/item/密钥)等。
+SSL 协议位于 [TCP/IP协议](https://baike.baidu.com/item/TCP%2FIP协议) 与各种[应用层](https://baike.baidu.com/item/应用层)协议之间，为[数据通讯](https://baike.baidu.com/item/数据通讯)提供安全支持。
 
-## 基本知识
+SSL 协议可分为两层
 
-概念：Hyper Text Transfer Protocol 超文本传输协议
+- SSL 记录协议（SSL Record Protocol）：它建立在可靠的[传输协议](https://baike.baidu.com/item/传输协议)（如 TCP）之上，为高层协议提供[数据封装](https://baike.baidu.com/item/数据封装)、压缩、加密等基本功能的支持。 
+- SSL [握手协议](https://baike.baidu.com/item/握手协议)（SSL Handshake Protocol）：它建立在 SSL 记录协议之上，用于在实际的数据传输开始前，通讯双方进行[身份认证](https://baike.baidu.com/item/身份认证)、协商[加密算法](https://baike.baidu.com/item/加密算法)、交换加密[密钥](https://baike.baidu.com/item/密钥)等。
 
-传输协议：定义了，客户端和服务器端通信时，发送数据的格式
+><b>HTTP 和 HTTPS 的对比</b>
 
-- 基于 TCP/IP 的高级协议
-- 默认端口号 80
-  - tomcat 端口 8080 
-  - MySQL 端口 3306 
-  - Redis 端口 6379 
-  - 1521 oracle端口
-- 基于请求/响应模型的：一次请求对应一次响应
-  - 较高版本的 tomcat 采用的 NIO，一次请求对应一个新的线程
-- 无状态的：每次请求之间相互独立，不能交互数据
-- 历史版本
-  - 1.0：每一次请求响应都会建立新的连接
-  - 1.1：复用连接
+- https 相对于 http 加入了 ssl 层；
+- 需要到 ca 申请收费的证书，SSL 证书需要钱，功能越强大的证书费用越高，个人网站、小网站没有必要一般不会用；
+- 安全但是耗时多，缓存不是很好，HTTPS 协议握手阶段比较费时，会使页面的加载时间延长近 50%，增加 10% 到 20% 的耗电；
+- 注意兼容 http 和 https
 
 ## 请求消息数据格式
 
-### 请求行
+### 请求状态行
+
+HTTP 协议请求消息的格式如下
 
 - 请求方式 请求 url 请求协议/版本
-  - GET /login.html	HTTP/1.1
 
-- HTTP 协议有 7 种请求方式，常用的有 2 种
-  - GET：请求参数在请求行中，在 url 后；请求的 url 长度有限制的；不太安全。
-  - POST：请求参数在请求体中；请求的 url 长度没有限制的；相对安全。
+- 例如 GET /login.html	HTTP/1.1
 
-### 请求头
+HTTP 协议有 8 种请求方式，GET、POST、HEAD、OPTIONS、DELETE、TRACE、PUT 和 CONNECT（保留到将来使用），而常用的有 2 种
+- GET：请求参数在请求行中，在 url 后；请求的 url 长度有限制的，这种限制是浏览器施加的限制而非协议的限制；不太安全。
+- POST：请求参数在请求体中；请求的 url 长度没有限制的；相对安全。
 
-请求头就是客户端浏览器告诉服务器一些信息，格式==>请求头名称: 请求头值
+### 请求消息头
 
-常见的请求头：
-- User-Agent：浏览器告诉服务器，我访问你使用的浏览器的版本信息；可以在服务器端获取该头的信息，解决浏览器的兼容性问题。
-- Referer：http://localhost/login.html，告诉服务器，我(当前请求)从哪里来？
-  - 可以防盗链
-  - 可以进行统计工作
+请求头就是客户端浏览器告诉服务器一些信息，格式==>请求头名称 : 请求头值
+
+常用请求头字段
+
+| 字段                | 说明                                                         |
+| ------------------- | ------------------------------------------------------------ |
+| Accept              | 指出浏览器可以处理的 MIME 类型，如图片、文件等。             |
+| Accept-Charset      | 告诉服务器，客户端用的字符集                                 |
+| Accept-Enchoding    | 指出客户端能够进行解码的方式。                               |
+| Accept-Language     | 期待服务器端返回的文档的语言，如一个网站既有英文版又有中文版，<br>可以通过该字段指明要那种语言的文档。 |
+| Authorization       | 当客户端访问受口令保护的网页时，Web 服务器会发送 401响应状态码<br/>和 WWW-Authenticate 响应头，要求客户端使用 Authorization 请求头来应答 |
+| Proxy-Authorization | 与 Authorization 类似，不过请求头是服务器端向代理服务器发送的验证消息 |
+| Host                | 指定资源所在的主机名和端口号                                 |
+| Referer             | 告诉服务器，当前请求从哪里来？可以防盗链，可以进行统计工作   |
+| User-Agent          | 浏览器告诉服务器，我访问你使用的浏览器的版本信息；可以在服务器端获取<br>该头的信息，解决浏览器的兼容性问题。 |
+
+一个典型的请求头信息（Edge）。
+
+```http
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Accept-Encoding: gzip, deflate, br
+Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6
+Connection: keep-alive
+Cookie: BAIDUID_BFESS=EEA2C123724C2623344ED:FG=1;
+Host: www.baidu.com
+sec-ch-ua: "Not_A Brand";v="99", "Microsoft Edge";v="109", "Chromium";v="109"
+sec-ch-ua-mobile: ?0
+sec-ch-ua-platform: "Windows"
+Sec-Fetch-Dest: document
+Sec-Fetch-Mode: navigate
+Sec-Fetch-Site: none
+Sec-Fetch-User: ?1
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36 Edg/109.0.1518.52
+```
 
 ### 请求空行
 
@@ -87,65 +139,79 @@ username=zhangsan
 
 响应消息：服务器端发送给客户端的数据
 
-### 响应消息基础知识
+### 响应状态行
 
-* 数据格式：
-* 响应行
-	* 组成：协议/版本 响应状态码 状态码描述 如 HTTP/1.1   200   Ok
-	* 响应状态码：服务器告诉客户端浏览器本次请求和响应的一个状态。
-	* 状态码都是 3 位数字 
+HTTP 响应状态行位于响应消息的第 1 行，共包括 3 部分，协议/版本-响应状态码-状态码描述。如 HTTP/1.1   200   Ok。
 
-- 状态码分类
-  - 1xx：服务器就收客户端消息，但没有接受完成，等待一段时间后，发送 1xx 多状态码
-  - 2xx：成功。代表：200
-  - 3xx：重定向。代表：302(重定向)，304(访问缓存)
-  - 4xx：客户端错误。
-  - 5xx：服务器端错误。
+响应状态码是服务器告诉客户端浏览器本次请求和响应的一个状态。状态代码由 3 位数字组成，表示请求是否被理解或被满足。 
 
-* <b>典型状态码代表：</b>
-	* 404：请求路径没有对应的资源）
-	* 405：请求方式没有对应的 doXxx 方法
-	* 500：服务器内部出现异常
-	* 302：重定向
-	* 304：访问缓存
+- 1xx：服务器就收客户端消息，但没有接受完成，等待一段时间后，发送 1xx 多状态码
+- 2xx：成功。代表：200（请求成功）
+- 3xx：重定向。代表：302 (重定向)，304 (访问缓存)
+- 4xx：客户端错误。代表：401（禁止访问），404（找不到请求资源）
+- 5xx：服务器端错误。
 
-### 常见响应消息
+<b>典型状态码代表</b>
 
-> 格式==>头名称： 值
+* 404：请求路径没有对应的资源）
+* 405：请求方式没有对应的 doXxx 方法
+* 500：服务器内部出现异常
+* 302：重定向
+* 304：访问缓存
 
-- Content-Type：服务器告诉客户端本次响应体数据格式以及编码格式
+### 响应消息头
 
-- Content-disposition：服务器告诉客户端以什么格式打开响应体数据
-  - in-line：默认值，在当前页面内打开【值】
-  - attachment;filename=xxx：以附件形式打开响应体。文件下载【值】
-  
-- 响应空行
+在 HTTP 响应消息中，第 1 行为响应状态行，紧接着的是若干响应消息头，服务器端通过响应消息头向客户端传递附加信息，<b>包括服务程序名、被请求资源需要的认证方式、客户端请求资源的最后修改时间、重定向地址等信息。</b>
 
-- 响应体：传输的数据
+| 字段             | 说明                                                         |
+| ---------------- | ------------------------------------------------------------ |
+| Accept-Range     | 用于说明服务器是否接收客户端使用 Range 请求头字段请求资源    |
+| Age              | 用于指出当前网页文档可以在客户端或代理服务器中缓存的有效时间，设置值为一一个<br/>以秒为单位的时间数 |
+| Location         | 用于通知客户端获取请求文档的新地址，其值为一一个使用绝对路径的 URL 地址 |
+| Retry-After      | 可以与 503 状态码配合使用，告诉客户端在什么时间可以重新发送请求。也可以与任<br/>何一个 3xx 状态码配合使用，告诉客户端处理重定向的最小延时时间。Retry- After<br/>头字段的值可以是 GMT 格式的时间，也可是一个以秒为单位的时间数 |
+| Connection       | 当前的连接状态                                               |
+| Content-Encoding | 内容的编码格式                                               |
+| Content-Type     | 内容的类型和字符集                                           |
+| Date             | 一个通用首部，其中包含了报文创建的日期和时间。可用于判断请求到的数据是否是<br>之前的缓存 |
+| Server           | 服务器软件的产品名                                           |
+| etag             | 用于向客户端传送代表实体内容特征的标记信息，这些标记信息称为实体标签，每个<br/>版本的资源的实体标签是不同的，通过实体标签可以判断在不同时间获得的同一资源<br/>路径下的实体内容是否相同 |
 
-- 响应字符串格式
 
-
-```html
-HTTP/1.1 200 OK
-Content-Type: text/html;charset=UTF-8
-Content-Length: 101
-Date: Wed, 06 Jun 2018 07:08:42 GMT
-
-<html>  
-<body>
-  hello , response
- </body>
-</html>
+```http
+accept-ranges: bytes
+access-control-allow-origin: *
+age: 12602121
+cache-control: max-age=31536000
+content-encoding: br
+content-md5: Y0h9jFDkQTf4ts4qBEB/jw==
+content-type: text/javascript; charset=utf-8
+date: Mon, 16 Jan 2023 08:20:21 GMT
+etag: "63487d8csfsfe2a04407f8f"
+expires: Fri, 26 Aug 2022 11:45:00 GMT
+last-modified: Wed, 17 Aug 2022 03:23:28 GMT
+ohc-cache-hit: jjct64 [2]
+ohc-file-size: 144135
+ohc-global-saved-time: Tue, 23 Aug 2022 11:45:00 GMT
+ohc-response-time: 1 0 0 0 0 0
+ohc-upstream-trace: 182.106.158.64
+server: JSP3/2.0.14
+timing-allow-origin: *
+x-bce-content-crc32: 3238666094
+x-bce-debug-id: Zpe8d8i/Js1pjiyMUmaL9dp/Hvp6gJsfsjWgAJ+ZYw==
+x-bce-request-id: ca25505d-b973-47e4-a41a-9ce38f993e6b
+x-bce-restore-cache: -
+x-bce-restore-tier: -
+x-bce-storage-class: STANDARD
+x-cache-status: HIT
 ```
 
-# tomcat基础知识
+# Tomcat
 
 - web 相关概念
-- web 服务器软件：Tomcat
+- web 服务器软件：Tomcat、Jetty
 - Servlet 入门学习
 
-## web相关概念
+## Web相关概念
 
 <b>软件架构</b>
 
@@ -154,96 +220,161 @@ Date: Wed, 06 Jun 2018 07:08:42 GMT
 
 <b>资源分类</b>
 
-- 静态资源：所有用户访问后，得到的结果都是一样的，称为静态资源.静态资源可以直接被浏览器解析【如：html，css，js】
-- 动态资源：每个用户访问相同资源后，得到的结果可能不一样。称为动态资源。动态资源被访问后，需要先转换为静态资源，在返回给浏览器【如：servlet/jsp，php】
+- 静态资源：所有用户访问后，得到的结果都是一样的，称为静态资源。静态资源可以直接被浏览器解析『如：html，css，js』
+- 动态资源：每个用户访问相同资源后，得到的结果可能不一样。称为动态资源。动态资源被访问后，需要先转换为静态资源，在返回给浏览器『如：servlet/jsp，php』
 
 <b>网络通信三要素</b>
 
-- IP：电子设备(计算机)在网络中的唯一标识。
-- 端口：应用程序在计算机中的唯一标识。 0~65536
-- 传输协议：规定了数据传输的规则；基础协议，TCP【可靠传输协议，三次握手，速度稍慢】UDP【不可靠传输协议。 速度快】
+- IP：电子设备（计算机）在网络中的唯一标识。
+- 端口：应用程序在计算机中的唯一标识，0~65536
+- 传输协议：规定了数据传输的规则；基础协议，TCP『可靠传输协议，三次握手，速度稍慢』UDP『不可靠传输协议。 速度快』
 
-## web服务器软件
+## Web服务器软件
 
-- 服务器：安装了服务器软件的计算机
+- 服务器：安装了服务器软件的计算机。
 - 服务器软件：接收用户的请求，处理请求，做出响应。
 - web 服务器软件：接收用户的请求，处理请求，做出响应。
   - 在 web 服务器软件中，可以部署 web 项目，让用户通过浏览器来访问这些项目。
-- 常见的 Java 相关的 web 服务器软件：
+- 常见的 Java 相关的 web 服务器软件
   - webLogic：oracle 公司，大型的 JavaEE 服务器，支持所有的 JavaEE 规范，收费的。
   - webSphere：IBM 公司，大型的 JavaEE 服务器，支持所有的 JavaEE 规范，收费的。
   - JBOSS：JBOSS 公司的，大型的 JavaEE 服务器，支持所有的 JavaEE 规范，收费的。
   - Tomcat：Apache 基金组织，中小型的 JavaEE 服务器，仅仅支持少量的 JavaEE 规范 servlet/jsp。开源的，免费。
-- JavaEE：Java 语言在企业级开发中使用的技术规范的总和，一共规定了 13 项大的规范
+- JavaEE：Java 语言在企业级开发中使用的技术规范的总和，一共规定了 13 项大的规范。
 
-## Tomcat的安装启动
+## Tomcat
 
 ### 安装
 
 - 下载：http://tomcat.apache.org/
-- 安装：解压压缩包即可。
+- 安装：解压压缩包即可
 - 卸载：删除目录就行了
 - 启动：
-  - bin/startup.bat ,双击运行该文件即可
-  - 访问：浏览器输入，http://localhost:8080 回车访问自己
-  - http://别人的 ip:8080 访问别人
+  - bin/startup.bat，双击运行该文件即可。
+  - 访问：浏览器输入，http://localhost:8080 回车访问本地的服务器。
+  - http://ip:8080 访问其他 IP 地址的服务器。
 
-### 2.3.2 可能遇到的问题：
+> <b>启动可能遇到的问题</b>
 
-- 黑窗口一闪而过：
+- 黑窗口一闪而过如何排除？
 
-  - 原因： 没有正确配置 JAVA_HOME 环境变量，配置下 JAVA_HOME 即可。
+  - 在这种情况下，由于无法查看到错误信息，因此，无法对 Tomcat 进行诊断，分析其出错的原因。这时，可以先启动一个命令行窗口，在这个命令行窗口中进入 Tomcat 安装目录中的 bin 目录，然后在该窗口中执行 startup.bat 命令，就会看到错误信息显示在该窗口中。
+  - 一般原因：没有正确配置 JAVA_HOME 环境变量，配置下 JAVA_HOME 即可。
 
 - 启动报错：
 
-  - 暴力：找到占用的端口号，并且找到对应的进程，杀死该进程【Windows 下用 netstat -ano】
+  - 暴力：找到占用的端口号，并且找到对应的进程，杀死该进程『Windows 下用 netstat -ano 查找占用的网络端口』
 
   - 温柔：修改自身的端口号
 
     ```xml
-    conf/server.xml
+    <!-- conf/server.xml -->
     <Connector port="8888" protocol="HTTP/1.1"
     		               connectionTimeout="20000"
     		               redirectPort="8445" />
     ```
     
 
-一般会将 tomcat 的默认端口号修改为 80。80 端口号是 HTTP 协议的默认端口号。这样在访问时，就不用输入端口号
+一般会将 tomcat 的默认端口号修改为 80。80 端口号是 HTTP 协议的默认端口号。这样在访问时，就不用输入端口号了。
 
 ### 关闭
 
 - 正常关闭：bin/shutdown.bat 或 ctrl+c
 - 强制关闭：点击启动窗口的❌
 
-## 部署项目
+### 目录结构
 
-- 部署方式
+<div align="center"><img src="img/web/image-20230116205057238.png"></div>
 
-  - 1.直接将项目放到 webapps 目录下即可。
-  - 2.配置 conf/server.xml 文件
-  - 3.在 conf\Catalina\localhost 创建任意名称的 xml 文件。在文件中编写
+从图可看出，Tomcat 安装目录中包含一系列的子目录，这些子目录分别用于存放不同功能的文件，接下来针对这些子目录进行简单介绍，具体如下。
 
-- webapps 部署方式
+- bin，存放可执行文件和脚本文件，windows 下的为 .bat 结尾，Linux 下的为 .sh 结尾。
+- config，用于存放 Tomcat 的各种配置文件，如 web.xml、server.xml。
+- lib，用于存放 Tomcat 服务器和所有 Web 应用程序需要访问的 JAR 文件。
+- logs，存放 Tomcat 的日志文件。
+- temp，用于存放 Tomcat 运行时产生的临时文件。
+- webapps，Web 应用程序的主要发布目录，通常将要发布的应用程序放到这个目录下。
+- work，Tomcat 的工作目录，JSP 编译生成的 Servlet 源文件和字节码文件放到这个目录下。
 
-  - 直接将项目放到 webapps 目录下
-  - /hello：项目的访问路径会被映射为虚拟目录
-  - 简化部署：将项目打成一个 war 包，再将 war 包放置到 webapps 目录下。war 包会被自动解压。【war 包的压缩方式和 zip 的压缩方式一样】
+## IDEA搭建Tomcat
 
-- conf/server.xml 部署方式
+[idea 创建 JavaWeb 项目（主要 idea2022） - 腾讯云开发者社区-腾讯云 (tencent.com)](https://cloud.tencent.com/developer/article/2152435#:~:text=配置 Tomcat idea2022（启动界面如下） 第一步 文件 – 新建 –,– New – Project） 第二步 新建项目 – 填入项目名称（自取且不为中文）)
 
-  - 在 \<Host\> 标签体中配置
+- 创建一个普通 Java 项目
 
-    \<Context docBase="D:\hello" path="/hehe" />
+    <div align="center"><img src="img/web/image-20230116215630287.png"></div>
 
-    docBase：项目存放的路径
+- 选中项目，鼠标右击，选择 Add Frameworks Support，选择 Web Application(4.0)
 
-    path：虚拟目录
+- 创建完成后会出现 web 目录。
 
-- conf\Catalina\localhost 配置方式
+- 为项目添加 API 依赖
 
-  - 在 conf\Catalina\localhost 创建任意名称的 xml 文件。在文件中编写 \<Context docBase="D:\hello" />
-  - D:\hello 是项目的绝对路径
-  - 虚拟目录：xml 文件的名称。如 xml 名称为 demo，那么虚拟目录就是 `localhost:8080/demo`
+    <div align="center"><img src="img/web/image-20230116215852367.png"></div>
+
+- 为 IDEA 配置 Tomcat 服务器。
+
+- 编写一个 Servlet，并将 Web 项目和 Tomcat 绑定在一起。
+
+    <div align="center"><img src="img/web/image-20230116220304227.png"></div>
+
+- 启动 Tomcat，部署编写的程序。
+
+    <div align="center"><img src="img/web/image-20230116220106408.png"></div>
+
+## 项目部署
+
+<b>Web 应用</b>
+
+在 Web 服务器上运行的 Web 资源都是以 Web 应用形式呈现的，所谓 Web 应用就是多个 Web 资源的集合，Web 应用通常也称为 Web 应用程序或 Web 工程。Tomcat Web 应用的一般目录结构如下。
+
+```mermaid
+graph
+webapps-->Web应用目录
+Web应用目录-->HTML文件,JSP文件
+Web应用目录-->WEB-INF目录
+WEB-INF目录-->web.xml
+WEB-INF目录-->classes目录-->类的包目录-->各种字节码文件,标签处理器类,Servlet,JavaBean
+WEB-INF目录-->lib目录-->Web应用所需的各种Jar文件
+```
+
+Tomcat \conf 目录下的 web.xml 文件可以修改默认的主页面配置。
+
+```xml
+<welcome-file-list>
+    <!-- 修改主页面 -->
+    <welcome-file>index.html</welcome-file>
+    <welcome-file>index.htm</welcome-file>
+    <welcome-file>index.jsp</welcome-file>
+</welcome-file-list>
+```
+
+<b>部署方式</b>
+
+- 1.将项目打成 war 包，然后将项目放到 webapps 目录下即可。
+- 2.配置 conf/server.xml 文件。
+- 3.在 conf\Catalina\localhost 创建任意名称的 xml 文件。在文件中编写 \<Context docBase="D:\hello" />
+    - D:\hello 是项目的绝对路径。
+    - 虚拟目录：xml 文件的名称。如 xml 名称为 demo，那么虚拟目录就是 `localhost:8080/demo`。
+
+
+<b>webapps 部署方式</b>
+
+- 直接将项目放到 webapps 目录下。
+- /hello：项目的访问路径会被映射为虚拟目录。
+- 简化部署：将项目打成一个 war 包，再将 war 包放置到 webapps 目录下。war 包会被自动解压。『war 包的压缩方式和 zip 的压缩方式一样』。
+
+<b>conf/server.xml 部署方式</b>
+
+- 在 \<Host\> 标签体中配置 \<Context docBase="D:\hello" path="/hehe" />。
+- docBase：项目存放的路径。
+- path：虚拟目录。
+
+<b>conf\Catalina\localhost 配置方式</b>
+
+- 在 conf\Catalina\localhost 创建任意名称的 xml 文件。在文件中编写 \<Context docBase="D:\hello" />。
+- D:\hello 是项目的绝对路径。
+- 虚拟目录：xml 文件的名称。如 xml 名称为 demo，那么虚拟目录就是 `localhost:8080/demo`。
 
 > Web 项目的目录结构
 >
@@ -257,89 +388,330 @@ Date: Wed, 06 Jun 2018 07:08:42 GMT
 >
 > ​		|-- lib 目录：放置依赖的 jar 包
 
-
-
-> <b>URL和URI</b>
+> <b>URL 和 URI</b>
 >
 > - URL：统一资源定位符，用于定位这个资源在哪里。
 > - URI：统一资源标识符，标识这个资源唯一。
 
+<b>问题回顾</b>
+
+- HTTP 1.1 协议的通信过程
+- POST 和 GET 请求的不同（2 点以上）
+    - GET 传递的参数显示在 URL 上，POST 不会。
+    - GET 传递文件的长度有限（浏览器的限制，而非协议本身），POST 没有限制。
+
 # Servlet
 
-> Servlet：server applet。运行在服务器端的小程序。
+Servlet 是 server applet 的简写，是运行在服务器端的小程序。而 Tomcat 中的 Servlet 就是一个接口，定义了 Java 类被浏览器访问到（tomcat 识别）的规则。
 
-Servlet 就是一个接口，定义了 Java 类被浏览器访问到( tomcat 识别)的规则。
+JavaEE 组织定制规范，提供接口，其他厂商根据规范和接口进行实际的功能实现。
 
-Java 定制规范，提供接口，其他厂商根据规范和接口进行实际的功能实现。
+## 概述
 
-## Servlet的配置
+Servlet 是使用 Java 语言编写的运行在服务器端的程序。狭义的 Servlet 是指 Java 语言实现的一个接口，广义的 Servlet 是指任何实现了这个 Servlet 接口的类，一般情况下认为是后者。
 
-> XML 和注解不能同时配置一个 Servlet，不过如果配置的 URL 不一样，那么就没事，是可以的！
+Servlet 由 Servlet 容器提供（如 Tomcat）。Servlet 容器将 Servlet 动态地加载到服务器上。与 HTTP 协议相关的 Servlet 使用 HTTP 请求和 HTTP 响应与客户端进行交互。因此，Servlet 容器支持所有 HTTP 协议的请求和响应。Servlet 应用程序的体系结构如图所示。
+
+```mermaid
+sequenceDiagram
+participant client as 客户端
+participant httpServe as HTTP服务器
+participant ServletContainer as Servlet容器
+participant Servlet as Servlet
+client-->>httpServe:HTTP 请求
+httpServe-->>client:HTTP 响应
+httpServe-->>ServletContainer: 调用
+ServletContainer-->>httpServe: 返回结果
+ServletContainer-->>Servlet: 调用
+Servlet-->>ServletContainer: 返回结果
+```
+
+Servlet 的请求首先会被 HTTP 服务器（如 Apache）接收，HTTP 服务器只负责静态 HTML 页面的解析，对于 Servlet 的请求转交给 Servlet 容器，Servlet 容器会根据 web.xml 文件中的映射关系或注解中的信息，调用相应的 Servlet，Servlet 将处理的结果返回给 Servlet 容器，并通过 HTTP 服务器将响应传输给客户端。
+
+## 接口及其实现类
+
+Servlet 的类关系图如下所示。
+
+<div align="center"><img src="img/web/image-20230116223050322.png"></div>
+
+下表为 Servlet 接口的抽象方法
+
+| 方法声明                                                | 功能描述                                                     |
+| ------------------------------------------------------- | ------------------------------------------------------------ |
+| void init(ServletConfig var1)                           | 容器在创建好 Servlet 对象后，就会调用此方法。该方法接收一个 ServletConfig 类型的参数，Servlet 容器通过这个参数向 Servlet 传递初始化配置信息。 |
+| ServletConfig getServletConfig()                        | 用于获取 Servlet 对象的配置信息，返回 Servlet 的 ServletConfig 对象。 |
+| void service(ServletRequest var1, ServletResponse var2) | 负责响应用户的请求，当容器接收到客户端访问 Servlet 对象的请求时，就会调用此方法。容器会构造一个表示客户端请求信息的 ServletRequest 对象和一个用于响应客户端的 ServletResponse 对象作为参数传递给 service() 方法。在 service() 方法中，可以通过 ServletRequest 对象得到客户端的相关信息和请求信息，在对请求进行处理后，调用 ServletResponse 对象的方法设置响应信息。 |
+| String getServletInfo()                                 | 返回一个字符串，其中包含关于 Servlet 的信息，例如，作者、版本和版权等信息。 |
+| void destroy();                                         | 负责释放 Servlet 对象占用的资源。当服务器关闭或者 Servlet 对象被移除时，Servlet 对象会被销毁，容器会调用此方法。 |
+
+Servlet 有两个子类，GenericServlet 和 HttpServlet。
+
+- GenericServlet 为 Servlet 接口提供了部分实现，但是它并没有实现 HTTP 请求处理，包括 service 方法，也没有实现。
+- HttpServlet 是 GenericServlet 的子类，它继承了 GenericServlet 的所有方法，并且为 HTTP 请求中的 POST、GET、PUT、DELETE 等类型提供了具体的操作方法。
+
+<div align="center"><img src="img/web/image-20230116224456836.png"></div>
+
+<b>HttpServlet 具体的细节可直接查看源码，着重阅读 service 方法即可。</b>
+
+## 运行Servlet
+
+传统的方式是用 xml 的方式来配置，此处简单介绍下 xml 的配置方式，主要还是用注解方式进行配置。
+
+### XML配置
+
+使用 XML 配置文件来做请求方法和 Servlet 的映射。
+
+```java
+public class FirstServlet extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.getWriter().write("hello tomcat 9.0");
+    }
+}
+```
+
+XML 配置文件
 
 ```xml
-在web.xml中配置：[xml解析，servlet-name一样的进行匹配！]
-<!--配置Servlet -->
+<!-- 在web.xml中配置：[xml解析，servlet-name一样的进行匹配！] -->
 <servlet>
-    <servlet-name>demo1</servlet-name>
-    <servlet-class>cn.web.servlet.ServletDemo1</servlet-class>
+    <servlet-name>hello</servlet-name>
+    <servlet-class>com.tomcat.controller.FirstServlet</servlet-class>
 </servlet>
 
 <servlet-mapping>
-    <servlet-name>demo1</servlet-name>
-    <url-pattern>/demo1</url-pattern>
+    <servlet-name>hello</servlet-name>
+    <url-pattern>/hello</url-pattern>
 </servlet-mapping>
 ```
 
-## Servlet执行原理
+注意：XML 和注解不能同时配置一个 Servlet，不过如果配置的 URL 不一样，那么就没事，是可以的。
+
+### 注解方式
+
+使用 @WebServlet 来做请求方法和 Servlet 的映射。
+
+```java
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+@WebServlet(urlPatterns = "/index.do")
+public class FirstServlet extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.getWriter().write("hello tomcat 9.0");
+    }
+}
+```
+
+## 执行原理
 
 - 当服务器接受到客户端浏览器的请求后，会解析请求 URL 路径，获取访问的 Servlet 的资源路径
-- 查找 web.xml 文件，是否有对应的 \<url-pattern\> 标签体内容。
+- 查找 web.xml 文件，是否有对应的 \<url-pattern\> 标签体内容
 - 如果有，则在找到对应的 \<servlet-class\> 全类名
 - tomcat 会将字节码文件加载进内存，并且创建其对象
 - 调用该对象的 service 方法
+- service 方法通过判断请求方法的类型（get、post）来调用对应的请求处理方法。
 
-## Servlet生命周期方法
+## 生命周期
 
-- 创建 Servlet 对象时会执行 init 方法，且只执行一次
+Servlet 的生命周期如下图所示。
 
-  - 默认情况下，第一次被访问时，Servlet 被创建
+```mermaid
+sequenceDiagram
+participant client as 客户端
+participant ServletContainer as Servlet容器
+participant Servlet
+client-->>ServletContainer:1.发送请求
+ServletContainer-->>ServletContainer:2.解析请求
+ServletContainer-->>Servlet:3.创建 Servlet 实例对象
+ServletContainer-->>Servlet:4.调用 init 方法
+ServletContainer-->>Servlet:5.调用 service 方法
+ServletContainer-->>Servlet:6.输出响应消息
+ServletContainer-->>client:7.返回响应
+ServletContainer-->>Servlet:8.调用 destory 方法
+```
 
-  - 可以配置执行 Servlet 的创建时机。
+按照功能的不同，我们可以将 Servlet 的生命周期分为 3 个阶段，分别是初始化阶段、运行阶段和销毁阶段。
 
-    ```xml
-    在<servlet>标签下配置 第一次被访问时，创建
-    <load-on-startup>的值为负数
-    
-    在服务器启动时，创建
-    <load-on-startup>的值为0或正整数
-    ```
-    
+> <b>初始化阶段</b>
 
-- <b>初始化：会执行 init 方法，只执行一次，说明一个 Servlet 在内存中只存在一个对象，Servlet 是单例的</b>
+初始化阶段会执行 init 方法，且只执行一次，且 Servlet 在内存中只存在一个对象，是单实例的。
 
-  - 多个用户同时访问时，可能存在线程安全问题。
-  - 解决：尽量不要在 Servlet 中定义成员变量。即使定义了成员变量，也不要对修改值
+当客户端向 Servlet 容器发出 HTTP 请求要求访问 Servlet 时，Servlet 容器首先会解析请求，检查内存中是否已经有了该 Servlet 对象，如果有直接使用该 Servlet 对象，如果没有就创建 Servlet 实例对象，然后通过调用 init() 方法实现 Servlet 的初始化工作。需要注意的是，在 Servlet 的整个生命周期内，它的 init() 方法只被调用一次。
 
-- 提供服务：每次访问 Servlet 时，service 方法都会被调用一次。
+通过上面的描述可以知道，Servlet 是单例的。多个用户同时访问时，可能存在线程安全问题。所以尽量不要在 Servlet 中定义成员变量。即使定义了成员变量，也不要对修改值。
 
-- 被销毁：执行 destroy 方法，只执行一次
-  - Servlet 被销毁时执行。服务器关闭时，Servlet 被销毁
-  - 只有服务器正常关闭时，才会执行 destroy 方法。
-  - destroy方法在Servlet被销毁之前执行，一般用于释放资源
+> <b>运行阶段</b>
+
+对外提供服务，每次访问 Servlet 时，service 方法都会被调用一次。
+
+Servlet 容器会为这个请求创建代表 HTTP 请求的 ServletRequest 对象和代表 HTTP 响应的 ServletResponse 对象，然后将它们作为参数传递给 Servlet 的 service() 方法。service() 方法从 ServletRequest 对象中获得客户请求信息并处理该请求，通过 ServletResponse 对象生成响应结果。在 Servlet 的整个生命周期内，对于 Servlet 的每一次访问请求，Servlet 容器都会调用一次 Servlet 的 service() 方法，并且创建新的 ServletRequest 和 ServletResponse 对象，也就是说，service() 方法在 Servlet 的整个生命周期中会被调用多次。
+
+> <b>销毁阶段</b>
+
+当服务器关闭或 Web 应用被移除出容器时，Servlet 随着 Web 应用的销毁而销毁。在销毁 Servlet 之前，Servlet 容器会调用 Servlet 的 destroy() 方法，以便让 Servlet 对象释放它所占用的资源。在 Servlet 的整个生命周期中，destroy() 方法也只被调用一次。需要注意的是，Servlet 对象一旦创建就会驻留在内存中等待客户端的访问，直到服务器关闭，或 Web 应用被移除出容器时，Servlet 对象才会销毁。
+
+- Servlet 被销毁时执行。服务器关闭时，Servlet 被销毁。
+- 只有服务器正常关闭时，才会执行 destroy 方法。
+- destroy 方法在 Servlet 被销毁之前执行，一般用于释放资源。
+
+> <b>测试生命周期</b>
+
+```java
+package com.tomcat.controller;
+
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+@WebServlet(urlPatterns = "/life")
+public class TestLifeCycle extends HttpServlet {
+    @Override
+    public void init() {
+        System.out.println("executor init method");
+    }
+
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+        System.out.println("executor service method");
+    }
+
+    @Override
+    public void destroy() {
+        System.out.println("executor destroy method");
+    }
+
+}
+```
+
+访问该 Servlet 两次，然后在 IDEA 控制台正常关闭 tomcat。
+
+```cmd
+http://localhost:8080/tomcat
+executor init method
+executor service method
+executor service method
+16-Jan-2023 23:17:46.035 信息 [Thread-3] org.apache.coyote.AbstractProtocol.pause 暂停ProtocolHandler["http-nio-8080"]
+16-Jan-2023 23:17:47.620 信息 [Thread-3] org.apache.catalina.core.StandardService.stopInternal 正在停止服务[Catalina]
+executor destroy method
+16-Jan-2023 23:17:47.641 信息 [Thread-3] org.apache.coyote.AbstractProtocol.stop 正在停止ProtocolHandler ["http-nio-8080"]
+16-Jan-2023 23:17:47.644 信息 [Thread-3] org.apache.coyote.AbstractProtocol.destroy 正在摧毁协议处理器 ["http-nio-8080"]
+```
+
+> <b>自动加载 Servlet</b>
+
+有时候会希望某些 Servlet 程序可以在 Tomcat 启动时随即启动。例如，当启动一个 Web 项目时，首先需要对数据库信息进行初始化。这时，只需要使用 web.xml 文件中 \<load-on-startup\> 元素或者使用注解 @WebServlet，将初始化数据库的 Servlet 配置为随着 Web 应用启动而启动的 Servlet 即可。
+
+```java
+@WebServlet(urlPatterns = "/one", loadOnStartup = 1)
+public class LoadOnStartupOne extends HttpServlet {
+    @Override
+    public void init() throws ServletException {
+        System.out.println("one 1~");
+    }
+}
+
+@WebServlet(urlPatterns = "/two", loadOnStartup = 10)
+public class LoadOnStartupTwo extends HttpServlet {
+    @Override
+    public void init() throws ServletException {
+        System.out.println("two 10~");
+    }
+}
+```
+
+- 值为负数或者没有设定值，首次请求这个 Servlet 时创建对象；
+- 值为正整数或 0，Servlet 容器将在 Web 应用启动时加载并初始化 Servlet，<b>并且 loadOnStartup 的值越小，它对应的 Servlet 就越先被加载。</b>
+
+```cmd
+one 1~
+16-Jan-2023 23:28:17.915 信息 [main] org.apache.catalina.startup.HostConfig.deployDescriptor 部署描述符[C:\Users\69546\.SmartTomcat\tomcat\tomcat\conf\Catalina\localhost\tomcat.xml]的部署已在[1,955]ms内完成
+16-Jan-2023 23:28:17.919 信息 [main] org.apache.coyote.AbstractProtocol.start 开始协议处理句柄["http-nio-8080"]
+16-Jan-2023 23:28:17.926 信息 [main] org.apache.catalina.startup.Catalina.start [2039]毫秒后服务器启动
+http://localhost:8080/tomcat
+two 10~
+```
+
+## 路径映射
+
+### 多重URL映射
+
+一个 Servlet 可以有多个 url 映射。切记，写 url 路径的时候前面的 `/` 不能省略！
+
+```java
+@WebServlet(urlPatterns = {"/url1", "/url2"})
+public class UrlPattern extends HttpServlet {
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        System.out.println("post~");
+    }
+}
+```
+
+xml 的多重路径映射。
+
+```xml
+<servlet>
+    <servlet-name>urlPatterm</servlet-name>
+    <servlet-class>com.tomcat.controller.UrlPattern</servlet-class>
+</servlet>
+
+<servlet-mapping>
+    <servlet-name>urlPatterm</servlet-name>
+    <url-pattern>/url3</url-pattern>
+</servlet-mapping>
+
+<servlet-mapping>
+    <servlet-name>urlPatterm</servlet-name>
+    <url-pattern>/url4</url-pattern>
+</servlet-mapping>
+```
+
+可以同时对一个 Servlet 使用注解配置和 xml 配置。上面的例子 UrlPattern 有四个映射路径：url1~url4。
+
+### 通配符映射
+
+有时候会希望某个目录下的所有路径都可以访问同一个 Servlet，这时，可以在 Servlet 映射的路径中使用通配符 “*”。通配符的格式有两种，如下所示。
+
+- `*.扩展名` 例如 `*.do` 匹配以 `*.do` 结尾的所有 URL 地址。
+- 格式为 `/*`，例如 `/abc/*` 匹配以 `/abc` 开始的所有 URL 地址。
+- 需要注意，这两种通配符的格式不能混合使用。如 `/abc/*.do` 是不合法的映射路径。
+
+URL 的匹配也是优先进行精准匹配再进行通配符匹配。
+
+如果某个 Servlet 的映射路径仅仅是一个正斜线（/），那么这个 Servlet 就是当前 Web 应用的缺省 Servlet。Servlet 服务器在接收到访问请求时，如果找不到匹配的 URL，就会将访问请求交给缺省 Servlet 处理，可以用于设置 404 页面。
+
+```java
+@WebServlet(urlPatterns = "/")
+public class NotFound extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.getWriter().write("404 not found~~");
+    }
+}
+```
+
+访问应用中没有的路径时就会在页面输出 404 not found~~。
 
 ## Servlet3.0
 
 支持注解配置。可以不需要 web.xml 了。
 
-- 创建 JavaEE 项目，选择 Servlet 的版本 3.0 以上，可以不创建 web.xml
+- 创建 JavaEE 项目，选择 Servlet 的版本 3.0 以上，可以不创建 web.xml。
 
-- 定义一个类，实现 Servlet 接口
+- 定义一个类，实现 Servlet 接口。
 
-- 复写方法
+- 复写方法。
 
-- 在类上使用 @WebServlet 注解，进行配置
+- 在类上使用 @WebServlet 注解，进行配置。
 
-* @WebServlet("资源路径") 注意，name 是指类的名称不是资源路径
+* @WebServlet("资源路径") 注意，name 是指类的名称不是资源路径。
 
 
 ```java
@@ -375,141 +747,10 @@ public @interface WebServlet {
 
 > <b>IDEA 与 tomcat 的相关配置</b>
 
-- IDEA 会为每一个 tomcat 部署的项目单独建立一份配置文件
-- 工作空间项目和 tomcat 部署的 web 项目
-  - tomcat 真正访问的是 “tomcat 部署的 web 项目”，"tomcat 部署的 web 项目"对应着"工作空间项目" 的 web 目录下的所有资源
-  - WEB-INF 目录下的资源不能被浏览器直接访问。
+- IDEA 会为每一个 tomcat 部署的项目单独建立一份配置文件。
+- 工作空间项目和 tomcat 部署的 web 项目。
+  - tomcat 真正访问的是 “tomcat 部署的 web 项目”，"tomcat 部署的 web 项目"对应着"工作空间项目" 的 web 目录下的所有资源。
 - WEB-INF 目录下的资源不能被浏览器直接访问。
-
-## Servlet继承关系
-
-### Servlet的体系结构	
-​	Servlet -- 接口
-​		|
-​	GenericServlet -- 抽象类
-​		|
-​	HttpServlet  -- 抽象类
-
-- GenericServlet：将 Servlet 接口中其他的方法做了默认空实现，只将 service() 方法作为抽象
-  - 将来定义 Servlet 类时，可以继承 GenericServlet，实现 service() 方法即可
-- HttpServlet：对 http 协议的一种封装，简化操作
-  - 定义类，类继承于 HttpServlet
-  - 覆写 doGet/doPost 方法
-
-### Servlet相关配置
-
-- urlpartten：Servlet 访问路径
-
-- 一个 Servlet 可以定义多个访问路径 ： 
-  
-- `@WebServlet(urlPatterns={"/d4","/dd4","/ddd4"})`
-  
-- 路径定义规则：
-  - /xxx：路径匹配
-  - /xxx/xxx:多层路径，目录结构
-  - *.do：扩展名匹配
-  - <span style="color:red">不能混合使用路径匹配和扩展名匹配。</span>
-
-  ```xml
-  <!-- 合法 -->
-  <servlet>
-      <servlet-name>demo1</servlet-name>
-      <servlet-class>cn.servlet</servlet-class>
-  </servlet>
-  
-  <servlet-mapping>
-      <servlet-name>demo1</servlet-name>
-      <url-pattern>/user/demo1</url-pattern>
-  </servlet-mapping>
-  
-  <!-- 合法 -->
-  <servlet>
-      <servlet-name>demo1</servlet-name>
-      <servlet-class>cn.servlet</servlet-class>
-  </servlet>
-  
-  <servlet-mapping>
-      <servlet-name>demo1</servlet-name>
-      <url-pattern>*.action</url-pattern>
-  </servlet-mapping>
-  
-  <!-- 不合法 -->
-  <servlet>
-      <servlet-name>demo1</servlet-name>
-      <servlet-class>cn.servlet</servlet-class>
-  </servlet>
-  
-  <!-- 不合法 -->
-  <servlet-mapping>
-      <servlet-name>demo1</servlet-name>
-      <url-pattern>/user/*.action</url-pattern>
-  </servlet-mapping>
-  ```
-  
-
-### 初始化资源配置
-
-```xml
-<servlet>
-    <servlet-name>demo1</servlet-name>
-    <servlet-class>cn.servlet</servlet-class>
-    <init-param>
-    	<param-name>username</param-name>
-        <param-value>hello</param-value>
-    </init-param>
-    <init-param>
-    	<param-name>config</param-name>
-        <param-value>/WEB-INF/config.xml</param-value>
-    </init-param>
-    <load-on-startup>2</load-on-startup>
-</servlet>
-```
-
-```java
-public void init(ServletConfig config){
-	super.init(config);
-    // 获得参数
-    String username = config.getInitParamenter("username");
-}
-```
-
-## Servlet配置一探究竟
-
-- xml 配置方式测试
-
-  - `/xxx`
-  - `/xx/xx`
-  - `*.do` 匹配以 <b>.do</b> 结尾的
-  - / 不能省略
-- 注解配置方式测试
-
-  - 路径写错会报错
-  - `WebServlet("/demo1")` 正确写法，不能省略 /
-- 注解和 xml 不能同给一个类，配置相同的名字，但是可以配置不同的名字。[同时书写下面的，不会报错]
-
-```java
-@WebServlet("/Servlet3")
-public class Servlet3 extends HttpServlet {
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    }
-
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.getWriter().write("3");
-    }
-}
-```
-
-```xml
-<servlet>
-    <!-- 此处是小写！ -->
-    <servlet-name>servlet3</servlet-name>
-    <servlet-class>com.demo.Servlet3</servlet-class>
-</servlet>
-<servlet-mapping>
-    <servlet-name>servlet3</servlet-name>
-    <url-pattern>/servlet3</url-pattern>
-</servlet-mapping>
-```
 
 # Request&Response
 
@@ -523,14 +764,14 @@ request 对象继承体系结构：
 		|	继承
 	`HttpServletRequest`	-- 接口
 		|	实现
-	`org.apache.catalina.connector.RequestFacade` 类(tomcat)
+	`org.apache.catalina.connector.RequestFacade` 类 (tomcat)
 
 response 对象继承体系结构：	
 	`ServletRequest`		--	接口
 		|	继承
 	`HttpServletResponse`   -- 接口
 		|	实现
-	`org.apache.catalina.connector.ResponseFacade` 类(tomcat)
+	`org.apache.catalina.connector.ResponseFacade` 类 (tomcat)
 
 ## Request功能
 
@@ -559,8 +800,8 @@ response 对象继承体系结构：
 | String getProtocol()                                    | 获取协议及版本        | HTTP/1.1                                     |
 | String getRemoteAddr()                                  | 获取客户机的 IP 地址  |                                              |
 
-- URL：统一资源定位符 [ 不单单定义资源，还定义了如何找资源] ： http://localhost/day14/demo1
-- URI：统一资源标识符 [ 定位资源  ] : /day14/demo1	
+- URL：统一资源定位符 [ 不单单定义资源，还定义了如何找资源]：http://localhost/day14/demo1
+- URI：统一资源标识符 [ 定位资源  ]：/day14/demo1	
 
 > 获取请求头数据
 
@@ -583,7 +824,7 @@ response 对象继承体系结构：
 | 方法                                      | 作用                         | 举例                          |
 | ----------------------------------------- | ---------------------------- | ----------------------------- |
 | String getParameter(String name)          | 根据参数名称获取参数值       |                               |
-| String[] getParameterValues(String name)  | 根据参数名称获取参数值的数组 | hobby=xx&hobby=game【复选框】 |
+| String[] getParameterValues(String name)  | 根据参数名称获取参数值的数组 | hobby=xx&hobby=game『复选框』 |
 | Enumeration\<String\> getParameterNames() | 获取所有请求的参数名称       |                               |
 | Map<String,String[]> getParameterMap()    | 获取所有参数的 map 集合      |                               |
 
@@ -598,7 +839,7 @@ response 对象继承体系结构：
   - 只能转发到当前服务器内部资源中。
   - 转发是一次请求
 
-转发地址的写法！：request.getRequestDispatcher("/requestDemo9").forward(request,response);
+转发地址的写法：request.getRequestDispatcher("/requestDemo9").forward(request,response);
 
 ### 共享数据
 
@@ -630,40 +871,30 @@ ServletInputStream is = request.getInputStream();
 
 完成一次请求后会自动地销毁嘛？
 
-## 中文乱码问题
+### 中文乱码问题
 
-- Get 方式：tomcat 8 已经将 get 方式乱码问题解决了
+此处的中文乱码特质 request 的乱码，不包括 response 的乱码。
+
+- Get 方式：Tomcat 8 已经将 get 方式乱码问题解决了
 - Post 方式：在获取参数前，设置 request 的编码 request.setCharacterEncoding("utf-8");
 
 ```java
-/**
-* Overrides the name of the character encoding used in the body of this
-* request. This method must be called prior to reading request parameters
-* or reading input using getReader(). Otherwise, it has no effect.
-* 
-* @param env <code>String</code> containing the name of
-* the character encoding.
-*
-* @throws UnsupportedEncodingException if this ServletRequest is still
-* in a state where a character encoding may be set,
-* but the specified encoding is invalid
-*/
 public void setCharacterEncoding(String env) throws UnsupportedEncodingException;
 ```
 
-##  表单路径写法
+### 表单路径写法
 
 login.html 中 form 表单的 action 路径的写法
 
 虚拟目录+Servlet 的资源路径
 
-如： /blog/login.do===>项目名为 blog 的 login.do  Servlet
+如：/blog/login.do===>项目名为 blog 的 login.do  Servlet
 
 ## BeanUtils工具类
 
 - setProperty()
 - getProperty()
-- populate(Object obj , Map map):将 map 集合的键值对信息，封装到对应的 JavaBean 对象中
+- populate(Object obj , Map map)：将 map 集合的键值对信息，封装到对应的 JavaBean 对象中
 
 自行看文档
 
@@ -744,7 +975,7 @@ response 流是我们获取出来的，不是 new 出来的。如果是 new 出�
 ```java
 // 在获取流对象之前设置编码，让流以这个编码进行。即设置缓冲区编码为UTF-8编码形式
 response.setCharacterEncoding("utf-8");
-// 告诉浏览器，服务器发送的消息体数据的编码，建议浏览器使用该编码进行解码。【这个建议了，浏览器就会照做】
+// 告诉浏览器，服务器发送的消息体数据的编码，建议浏览器使用该编码进行解码。『这个建议了，浏览器就会照做』
 response.setHeader("content-type","text/html;character=utf-8");
 // 其实写了上面那句，就不用写response.setCharacterEncoding("utf-8");了
 ```
@@ -763,20 +994,82 @@ response.setContentType("text/html;charset=utf-8");
 response.getWriter().write("你好");
 ```
 
-# ServletContext对象
+# ServletConfig
 
-代表整个 web 应用，可以和程序的容器(服务器)来通信
+在 Servlet 运行期间，经常需要一些辅助信息，例如，文件使用的编码。这些信息可以在 web.xml 文件中使用一个或多个 \<init-param\> 元素进行配置，也可以用注解 @WebServlet 中的 initParams 属性来配置。<b>注意 init-param 是配置在 Servlet 上的，因此只有该 Servlet 可以访问这些参数。</b>
 
-ServletContext 官方叫 Servlet 上下文。服务器会为每一个工程创建一个对象，这个对象就是 ServletContext 对象。这个对象全局唯一，而且工程内部的所有 Servlet 都共享这个对象。所以叫全局应用程序共享对象。
+这些相关的配置信息会封装到一个 ServletConfig 对象中，ServletConfig 中定义了一系列获取配置信息的方法。而 Servlet 可以通过调用 init(ServletConfig config) 方法将 ServletConfig 对象传递给 Servlet。
 
-## ServletContext的获取
+ServletConfig 常用方法如下表。
+
+| 方法                                           | 功能描述                                                    |
+| ---------------------------------------------- | ----------------------------------------------------------- |
+| String getServletName();                       | 根据初始化参数名返回对应的初始化参数值                      |
+| ServletContext getServletContext();            | 返回一个 Enumeration 对象，其中包含了所有的初始化参数名     |
+| String getInitParameter(String var1);          | 返回 Servlet 的名字，即 web.xml 中 \<servlet-name> 元素的值 |
+| Enumeration\<String\> getInitParameterNames(); | 返回 Servlet 的名字，即 web.xml 中 \<servlet-name> 元素的值 |
+
+```java
+@WebServlet(initParams = {
+        @WebInitParam(name = "username", value = "kkx"),
+        @WebInitParam(name = "charset", value = "utf8"),
+}, loadOnStartup = 1, urlPatterns = "/")
+public class Config extends HttpServlet {
+    @Override
+    public void init() throws ServletException {
+        System.out.println("Config init");
+    }
+
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        System.out.println(getInitParameter("username")); // kkx
+        System.out.println("Config");
+    }
+}
+```
+
+# ServletContext
+
+ServletContext 官方叫 Servlet 上下文。当 Servlet 容器启动时，会为每个 Web 应用创建一个唯一的 ServletContext 对象代表当前 Web 应用，该对象不仅封装了当前 Web 应用的所有信息，而且实现了多个 Servlet 之间数据的共享。
+
+## 共享数据
+
+在 Web 应用的 XML 中配置初始化参数，供整个应用的 Servlet 共享。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+    <context-param>
+        <param-name>hello</param-name>
+        <param-value>hello-value</param-value>
+    </context-param>
+</web-app>
+```
+
+```java
+@WebServlet(urlPatterns = "/context")
+public class TestServletContext extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        ServletContext servletContext = getServletContext();
+        // hello-value
+        String hello = servletContext.getInitParameter("hello");
+        resp.getWriter().write(hello);
+    }
+}
+```
+
+## 获取ServletContext
 
 - 通过 request 对象获取  request.getServletContext();
 - 通过 HttpServlet 获取  this.getServletContext();
 
 ## ServletContext的功能
 
-- 获取 MIME 类型：
+- 获取 MIME 类型
 
   - MIME 类型：在互联网通信过程中定义的一种文件数据类型
   - 格式：大类型/小类型   text/html  image/jpeg
@@ -869,7 +1162,7 @@ public class DownloadServlet extends HttpServlet {
 }
 ```
 
-### 中文乱码解决思路
+<b>中文乱码解决思路</b>
 
 - 获取客户端使用的浏览器版本信息
 - 根据不同的版本信息，设置 filename 的编码方式不同
@@ -901,7 +1194,7 @@ public class DownLoadUtils {
 
 会话：一次会话中包含多次请求和响应。
 
-> 一次会话：浏览器第一次给服务器资源发送请求，会话建立，直到有一方断开【浏览器关闭了，服务器关掉了】为止
+> 一次会话：浏览器第一次给服务器资源发送请求，会话建立，直到有一方断开『浏览器关闭了，服务器关掉了』为止
 
 客户端会话技术：Cookie
 
@@ -913,27 +1206,31 @@ public class DownLoadUtils {
 
 ## 会话跟踪方式
 
-- 重写 URL
-  - 就是 URL 地址后面附加参数 
-  - `<a href="xxx/xx/xxx?name=zs">`
-  - 其缺点为：URL 地址过长，不同浏览器对 URL 传递参数的限制，安全性差【参数明码传输】，编程繁杂。
-- 隐藏表单字段
-  - 将会话数据放在隐藏域表单元素。简而言之就是 form 表单传递数据。
-  - 其缺点为：安全性差，可以通过查看网页源代码发现保存的会话信息；编程复杂，如果要保存的数据很多，就很麻烦；无法在超链接模式下工作。
-- Cookie
-  - web 服务器保存在客户端的小的文本文件。存储了许多 key，value 对。
-  - Cookie 由服务器创建，存储在客户端中。
-  - <span style="color:red">PS：高版本 tomcat 中 Cookie 不能存储空格</span>
-  - 缺点：
-    - 存储方式单一，只能存储 String 类型【Cookie(String name,String name)】
-    - 存储位置限制，若存储的 Cookie 过多，每次请求都发送 Cookie，网络数据量过大，影响 Web 应用性能。
-    - Cookie 大小受浏览器限制
-    - Cookie 存储在客户端，若客户端禁用 Cookie 则无效。
-- HTTPSession 对象 API
+<b>重写 URL</b>
+
+- 就是 URL 地址后面附加参数 
+- `<a href="xxx/xx/xxx?name=zs">`
+- 其缺点为：URL 地址过长，不同浏览器对 URL 传递参数的限制，安全性差『参数明码传输』，编程繁杂。
+
+<b>隐藏表单字段</b>
+
+- 将会话数据放在隐藏域表单元素。简而言之就是 form 表单传递数据。
+- 其缺点为：安全性差，可以通过查看网页源代码发现保存的会话信息；编程复杂，如果要保存的数据很多，就很麻烦；无法在超链接模式下工作。
+
+<b>Cookie</b>
+
+- web 服务器保存在客户端的小的文本文件。存储了许多 key，value 对。
+- Cookie 由服务器创建，存储在客户端中。
+- <span style="color:red">PS：高版本 tomcat 中 Cookie 不能存储空格</span>
+- 缺点：
+  - 存储方式单一，只能存储 String 类型『Cookie(String name,String name)』
+  - 存储位置限制，若存储的 Cookie 过多，每次请求都发送 Cookie，网络数据量过大，影响 Web 应用性能。
+  - Cookie 大小受浏览器限制
+  - Cookie 存储在客户端，若客户端禁用 Cookie 则无效。
+
+<b>HTTPSession 对象 API</b>
 
 ## Cookie的使用
-
-### 基本API
 
 | 方法                                  | 说明                     |
 | ------------------------------------- | ------------------------ |
@@ -944,12 +1241,12 @@ public class DownLoadUtils {
 
 ## Cookie的生命周期
 
-- 默认，关闭浏览器就消失了
-- 可进行设置【持久化存储】
-  - setMaxAge(int seconds) == cookie.setMaxAge(60 * 60 * 24 * 30); //一个月
-  - 正数：将 Cookie 数据写到硬盘的文件中。持久化存储。并指定 cookie 存活时间，时间到后，cookie 文件自动失效
-  - 负数：默认值
-  - 零：删除 cookie 信息
+默认，关闭浏览器就消失了，但是可进行设置『持久化存储』
+
+- setMaxAge(int seconds) == cookie.setMaxAge(60 * 60 * 24 * 30); //一个月
+- 正数：将 Cookie 数据写到硬盘的文件中。持久化存储。并指定 cookie 存活时间，时间到后，cookie 文件自动失效
+- 负数：默认值
+- 零：删除 cookie 信息
 
 ### Cookie细节
 
@@ -967,7 +1264,7 @@ public class DownLoadUtils {
 
 - 假设在一个 tomcat 服务器中，部署了多个 web 项目，那么在这些 web 项目中 cookie 能不能共享？
   - 默认情况下 cookie 不能共享
-- setPath(String path):设置 cookie 的获取范围。默认情况下，设置当前的虚拟目录
+- setPath(String path)：设置 cookie 的获取范围。默认情况下，设置当前的虚拟目录
   - 如果要共享，则可以将 path 设置为"/"
   - setPath("/") //当前服务器的根目录
   - setPath("/day") //day 项目才可以访问
@@ -975,42 +1272,26 @@ public class DownLoadUtils {
 > 不同的 tomcat 服务器间 cookie 共享问题？
 
 ```java
-/**
-*
-* Specifies the domain within which this cookie should be presented.
-*
-* <p>The form of the domain name is specified by RFC 2109. A domain
-* name begins with a dot (<code>.foo.com</code>) and means that
-* the cookie is visible to servers in a specified Domain Name System
-* (DNS) zone (for example, <code>www.foo.com</code>, but not 
-* <code>a.b.foo.com</code>). By default, cookies are only returned
-* to the server that sent them.
-*
-* @param domain the domain name within which this cookie is visible;
-* form is according to RFC 2109
-*
-* @see #getDomain
-*/
 public void setDomain(String domain) {
     this.domain = domain.toLowerCase(Locale.ENGLISH); // IE allegedly needs this
 }
 ```
 
 - setDomain(String path)：如果设置域名相同，那么多个服务器之间 cookie 可以共享
--  setDomain(".baidu.com")：tieba.baidu.com 和 news.baidu.com 中 cookie 可以共享 【这里应该是设置的一级二级域名相同，则可共享 cookie】
-  - .baidu.com 是一级域名 【此处应该是 com 是一级域名，baidu 是二级域名】
-  - tieba 是二级域名 【tieba 和 news 是三级域名】
+-  setDomain(".baidu.com")：tieba.baidu.com 和 news.baidu.com 中 cookie 可以共享 『这里应该是设置的一级二级域名相同，则可共享 cookie』
+  - .baidu.com 是一级域名 『此处应该是 com 是一级域名，baidu 是二级域名』
+  - tieba 是二级域名 『tieba 和 news 是三级域名』
 
 - 域名的划分
     - mail.cctv.com
     - com 是顶级域名
     - cctv 是二域名
     - mail 是三级域名
-    - 【参考教材：谢希仁《计算机网络》（第六版）】
+    - 『参考教材：谢希仁《计算机网络》（第六版）』
 
 ## Session
 
-> 服务器端会话技术，在一次会话的多次请求间共享数据，将数据保存在服务器端的对象中。HttpSession。
+服务器端会话技术，在一次会话的多次请求间共享数据，将数据保存在服务器端的对象中。
 
 ### Session快速入门
 
@@ -1042,7 +1323,7 @@ public void setDomain(String domain) {
 
 - 客户端不关闭，服务器关闭后，两次获取的 session 是同一个吗？
 
-  - 不是同一个，但是要确保数据不丢失。【tomcat 自动完成以下工作】
+  - 不是同一个，但是要确保数据不丢失。『tomcat 自动完成以下工作』
     - session 的钝化：在服务器正常关闭之前，将 session 对象系列化到硬盘上
     - session 的活化：在服务器启动后，将 session 文件转化为内存中的 session 对象即可。
 
@@ -1052,7 +1333,7 @@ public void setDomain(String domain) {
 
   - session 对象调用 invalidate() 
 
-  - session 默认失效时间 30 分钟【tomcat 的 web.xml 配置文件中】
+  - session 默认失效时间 30 分钟『tomcat 的 web.xml 配置文件中』
 
     ```xml
     <session-config>
@@ -1071,9 +1352,9 @@ public void setDomain(String domain) {
   - session 没有数据大小限制，Cookie 有
   - session 数据安全，Cookie 相对于不安全
 
-> 就 Servlet 规范本身，Servlet 可以再三个不同的作用域存储数据，分别是：
+<b>就 Servlet 规范本身，Servlet 可以再三个不同的作用域存储数据，分别是</b>
 
-- Request 对象、
+- Request 对象
 - Session 对象
 - getServletContext() 方法返回的 servletContext 对象
 
@@ -1098,7 +1379,7 @@ public void setDomain(String domain) {
 
 <b style="color:orange">当访问服务器的资源时，过滤器可以将请求拦截下来，完成一些特殊的功能。</b>
 
-## 应用场景
+典型的应用场景有
 
 - 登录校验
 - 设置统一编码
@@ -1215,7 +1496,7 @@ public class LoginFilter implements Filter {
 
   - 定义的顺序 F3，F2，F1
   - 初始化的时候，F3 2 1 依次入栈
-  - 然后依次出栈执行初始化过程，所以 init 的输出顺序是 1 2 3。初始化好后的又入栈到 doFilter 这个栈中。 1 2 3【栈顶】
+  - 然后依次出栈执行初始化过程，所以 init 的输出顺序是 1 2 3。初始化好后的又入栈到 doFilter 这个栈中。 1 2 3『栈顶』
   - 栈顶元素再一次执行 doFilter 方法。 顺序为  3  2  1.
   - destroy 方法也是如此记忆。顺序为 1 2 3.
 
@@ -1298,7 +1579,7 @@ public class LoginFilter implements Filter {
   ```
 
 - 过滤器先后顺序问题：
-  - 注解配置：按照类名的字符串比较规则比较，值小的先执行；如：AFilter 和 BFilter，AFilter 就先执行了。【字典顺序小的先执行】
+  - 注解配置：按照类名的字符串比较规则比较，值小的先执行；如：AFilter 和 BFilter，AFilter 就先执行了。『字典顺序小的先执行』
   - web.xml 配置：`<filter-mapping>` 谁定义在上边，谁先执行
 
 ## 过滤器案例
@@ -1435,7 +1716,7 @@ pass
 - 代理对象和真实对象实现相同的接口
 - 代理对象 = Proxy.netProxyInstance();
 
-- 使用代理对象调用方法【实现了相同接口，有相同的方法设定】
+- 使用代理对象调用方法『实现了相同接口，有相同的方法设定』
 - 增强方法
 - 增强返回值，如：return "name"，增强后 return “name”+“：price”;
 - 增强参数，对参数进行修改，如：售价打折。
@@ -1596,6 +1877,58 @@ public class Listener implements ServletContextListener {
 }
 ```
 
+# 验证机制
+
+## 验证机制
+
+<b>令牌机制：</b>为了防止客户端重复提交同样的数据（如订单成功提交后，返回再次提交，显然很不合理）。
+
+<b>验证码机制：</b>防止有人恶意适用机器人暴力攻击。
+
+## 令牌机制
+
+令牌是一次性的，用过一次就废弃了，再用需要生成新的令牌。
+
+> 原理
+
+在页面加载时，一个 token 放在 session 中，另一个用 form 提交传递到后台。后台接收到两个 token 进行对比，相同则是第一次提交，token 在使用完毕后需要清除。
+
+> 使用方式
+
+使用方式有很多种。
+
+1）方式一，页面（jsp 页面）生成 token，然后将 token 存入 session，在传递数据到服务器的时候，将生成的 token 一起传入。
+
+服务器接收到页面请求的时候，从 session 中拿出 token，将它和前端页面传递过来的 token 进行比对，相同则进行数据的相关操作（如：新增数据），不同则提示，操作非法。
+
+```java
+ // 判断是否是重复提交:
+String token1 = (String)request.getSession().getAttribute("token");
+String token2 = request.getParameter("token");
+// 清空session中的令牌:
+request.getSession().removeAttribute("token");
+if(!token2.equals(token1)){
+    request.setAttribute("msg", "亲！您已经提交过！请不要重复提交了!");
+    request.getRequestDispatcher("/jsp/msg.jsp").forward(request, response);
+    return;
+}
+```
+
+```jsp
+<h1>添加商品的页面</h1>
+<%
+String token = UUIDUtils.getUUID();
+session.setAttribute("token", token);
+%>
+<form action="${ pageContext.request.contextPath }/ProductAddServlet" method="post">
+    <input type="hidden" name="token" value="${ token }"/>
+</form>
+```
+
+## 验证码机制
+
+用别人的库。
+
 # MVC&三层架构
 
 ## MVC
@@ -1633,7 +1966,7 @@ MVC 是 Web 开发中的通用的设计模式，而三层架构是 JavaWeb/JavaE
 
 ## Ajax
 
-> 概念：Asynchronous JavaScript And XML 异步的 JavaScript 和 xml。【这里说的同步异步与线程关系不大】
+> 概念：Asynchronous JavaScript And XML 异步的 JavaScript 和 xml。『这里说的同步异步与线程关系不大』
 
 ### 原生JavaScript实现
 
@@ -1768,157 +2101,158 @@ $.post("demo.json", {
     // 控制台的输出结果是 '{"a":"hello","b":"world"}
     ```
 
-- 代码案例
 
-  ```js
-  <script>
-  // 1.常规JSON字符串
-  var json1 = {
-       "name": "liujiawei",
-       "age": 18
-  };
-  // 控制台输出 object
-  console.log(typeof(json1));
-  // 控制台输出{name: "liujiawei", age: 18}
-  console.log(json1);
-  
-  var json3 = '{"name":"liujiawei","age":18}';
-  // 控制台输出 string
-  console.log(typeof(json3));
-  // 控制台输出{"name":"liujiawei","age":18}
-  console.log(json3);
-  
-  //2.带数组
-  var json4 = {
-      "name": "liujiawei",
-      "age": 18,
-      "array": [1, 2, 3, 4, 5]
-  };
-  console.log(json4.array[0]);
-  console.log(json4 === eval(json4)); // true
-  
-  //3.复合
-  var json5 = {
-      "name": "liujiawei",
-      "age": 18,
-      "array": [1, 2, 3, 4, 5],
-      "data": {
-          "key1": "value1",
-          "key2": "value2",
-          "key3": "value3"
-      }
-  }
-  console.log(json5.data.key1);
-  
-  // JSON数据的遍历
-  var person = {"name": "张三",age: 23,'gender': true};
-  
-  var ps = [
-      {"name": "张三","age": 23,"gender": true},
-      {"name": "李四","age": 24,"gender": true},
-      {"name": "王五","age": 25,"gender": false}
-  ];
-  console.log("**************")
-  for (var key in person) {
-      // string
-      console.log(typeof(key));
-      // 相当于 person["name"] 
-      // 不过person.key是不行的. 相当于person."name"
-      console.log(person[key]);
-  }
-  console.log("**************")
-  for (var i = 0, len = ps.length; i < len; i++) {
-      var temp = ps[i];
-      for (var t in temp) {
-          console.log(temp[t])
-      }
-  }
-  console.log("**************")
-  // 如果是不规则的数据呢？递归遍历
-  var datas = {
-      "name": "菜是原罪",
-      "age": 18,
-      "friends": [
-          {"name": "小红","age": 18},
-          {"name": "小黑","age": 23},
-          {"name": "小蓝","age": 30,"otherPeople": {"name": "bzd","address": "北京","age": 33}},
-      ]
-  };
-  
-  // 递归,如果是对象 就继续递归遍历,如果不是对象,则遍历到头
-  function travel(data, obj) {
-      // 建立一个对象,用来判断遍历是否需要结束
-      if (obj == null) obj = new Object();
-      // 如果当前遍历到的是对象,则继续递归
-      if (typeof(data) == typeof(obj)) {
-          for (var i in data) {
-              if (typeof(i) != typeof(obj)) console.log(i)
-              travel(data[i], obj);
-          }
-      } 
-      // 如果不是对象,则说明递归到头,输出内容,结束递归.
-      else {
-          console.log(data);
-      }
-  }
-  
-  travel(datas);
-  </script>
-  ```
+代码案例
+
+```js
+<script>
+// 1.常规JSON字符串
+var json1 = {
+     "name": "liujiawei",
+     "age": 18
+};
+// 控制台输出 object
+console.log(typeof(json1));
+// 控制台输出{name: "liujiawei", age: 18}
+console.log(json1);
+
+var json3 = '{"name":"liujiawei","age":18}';
+// 控制台输出 string
+console.log(typeof(json3));
+// 控制台输出{"name":"liujiawei","age":18}
+console.log(json3);
+
+//2.带数组
+var json4 = {
+    "name": "liujiawei",
+    "age": 18,
+    "array": [1, 2, 3, 4, 5]
+};
+console.log(json4.array[0]);
+console.log(json4 === eval(json4)); // true
+
+//3.复合
+var json5 = {
+    "name": "liujiawei",
+    "age": 18,
+    "array": [1, 2, 3, 4, 5],
+    "data": {
+        "key1": "value1",
+        "key2": "value2",
+        "key3": "value3"
+    }
+}
+console.log(json5.data.key1);
+
+// JSON数据的遍历
+var person = {"name": "张三",age: 23,'gender': true};
+
+var ps = [
+    {"name": "张三","age": 23,"gender": true},
+    {"name": "李四","age": 24,"gender": true},
+    {"name": "王五","age": 25,"gender": false}
+];
+console.log("**************")
+for (var key in person) {
+    // string
+    console.log(typeof(key));
+    // 相当于 person["name"] 
+    // 不过person.key是不行的. 相当于person."name"
+    console.log(person[key]);
+}
+console.log("**************")
+for (var i = 0, len = ps.length; i < len; i++) {
+    var temp = ps[i];
+    for (var t in temp) {
+        console.log(temp[t])
+    }
+}
+console.log("**************")
+// 如果是不规则的数据呢？递归遍历
+var datas = {
+    "name": "菜是原罪",
+    "age": 18,
+    "friends": [
+        {"name": "小红","age": 18},
+        {"name": "小黑","age": 23},
+        {"name": "小蓝","age": 30,"otherPeople": {"name": "bzd","address": "北京","age": 33}},
+    ]
+};
+
+// 递归,如果是对象 就继续递归遍历,如果不是对象,则遍历到头
+function travel(data, obj) {
+    // 建立一个对象,用来判断遍历是否需要结束
+    if (obj == null) obj = new Object();
+    // 如果当前遍历到的是对象,则继续递归
+    if (typeof(data) == typeof(obj)) {
+        for (var i in data) {
+            if (typeof(i) != typeof(obj)) console.log(i)
+            travel(data[i], obj);
+        }
+    } 
+    // 如果不是对象,则说明递归到头,输出内容,结束递归.
+    else {
+        console.log(data);
+    }
+}
+
+travel(datas);
+</script>
+```
 
 ### JSON的转换
 
-- JS 对象与 json 格式数据之间的转换
+JS 对象与 json 格式数据之间的转换
 
-  ```javascript
-  var obj = JSON.parse('{"a","hello"}');
-  // 控制台的输出结果是 {a:'hello',b:'world'}
-  var json = JSON.stringifu({a:'hello',b:'world'}); 
-  // 控制台的输出结果是 '{"a":"hello","b":"world"}
-  ```
+```javascript
+var obj = JSON.parse('{"a","hello"}');
+// 控制台的输出结果是 {a:'hello',b:'world'}
+var json = JSON.stringifu({a:'hello',b:'world'}); 
+// 控制台的输出结果是 '{"a":"hello","b":"world"}
+```
 
 ### JSON与Java对象
 
-- <b>JSON 解析器</b>
+<b>JSON 解析器</b>
 
-  - 常见的解析器：Jsonlib，Gson，fastjson，jackson【spring 用的】
+- 常见的解析器：Jsonlib，Gson，fastjson，jackson『spring 用的』
 
-- <b>JSON 转为 Java 对象</b>
+<b>JSON 转为 Java 对象</b>
 
-  - 导入 jackson 的相关 jar 包
-  - 创建 Jackson 核心对象 ObjectMapper
-  - 调用 ObjectMapper 的相关方法进行转换
-    - readValue (json 字符串数据，Class)
+- 导入 jackson 的相关 jar 包
+- 创建 Jackson 核心对象 ObjectMapper
+- 调用 ObjectMapper 的相关方法进行转换
+  - readValue (json 字符串数据，Class)
 
-- <b>Java 对象转换 JSON</b>
+<b>Java 对象转换 JSON</b>
 
-  - 导入 jackson 的相关 jar 包
+- 导入 jackson 的相关 jar 包
 
-  - 创建 Jackson 核心对象 ObjectMapper
+- 创建 Jackson 核心对象 ObjectMapper
 
-  - 调用 ObjectMapper 的相关方法进行转换
+- 调用 ObjectMapper 的相关方法进行转换
 
-    - writeValue(参数1，obj):
+  - writeValue(参数1，obj):
 
-      ```
-      参数1：
-      File：将obj对象转换为JSON字符串，并保存到指定的文件中
-      Writer：将obj对象转换为JSON字符串，并将json数据填充到字符输出流中
-      OutputStream：将obj对象转换为JSON字符串，并将json数据填充到字节输出流
-      ```
+    ```
+    参数1：
+    File：将obj对象转换为JSON字符串，并保存到指定的文件中
+    Writer：将obj对象转换为JSON字符串，并将json数据填充到字符输出流中
+    OutputStream：将obj对象转换为JSON字符串，并将json数据填充到字节输出流
+    ```
 
-    - writeValueAsString(obj)：将对象转为 json 字符串
+  - writeValueAsString(obj)：将对象转为 json 字符串
 
-- <b>注解</b>
+<b>注解</b>
 
-  - @JsonIgnore：排除属性。
-  - @JsonFormat：属性值得格式化
-    - eg：@JsonFormat(pattern = "yyyy-MM-dd")
+- @JsonIgnore：排除属性。
+- @JsonFormat：属性值得格式化
+  - eg：@JsonFormat(pattern = "yyyy-MM-dd")
 
-- <b>复杂 Java 对象转换</b>
+<b>复杂 Java 对象转换</b>
 
-  - List：数组
-  - Map：对象格式一致
+- List：数组
+- Map：对象格式一致
 
 ```java
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -2003,66 +2337,6 @@ public class JsonDemo {
     }
 }
 ```
-
-# 验证机制
-
-## 验证机制
-
-> 令牌机制
-
-为了防止客户端重复提交同样的数据（如订单成功提交后，返回再次提交，显然很不合理）。
-
-> 验证码机制
-
-防止有人恶意适用机器人暴力攻击。
-
-## 令牌机制
-
-令牌是一次性的，用过一次就废弃了，再用需要生成新的令牌。
-
-> 原理
-
-在页面加载时，一个 token 放在 session 中，另一个用 form 提交传递到后台。后台接收到两个 token 进行对比，相同则是第一次提交，token 在使用完毕后需要清除。
-
-> 使用方式
-
-使用方式有很多种。
-
-1）方式一，页面（jsp 页面）生成 token，然后将 token 存入 session，在传递数据到服务器的时候，将生成的 token 一起传入。
-
-服务器接收到页面请求的时候，从 session 中拿出 token，将它和前端页面传递过来的 token 进行比对，相同则进行数据的相关操作（如：新增数据），不同则提示，操作非法。
-
-Java代码
-
-```java
- // 判断是否是重复提交:
-String token1 = (String)request.getSession().getAttribute("token");
-String token2 = request.getParameter("token");
-// 清空session中的令牌:
-request.getSession().removeAttribute("token");
-if(!token2.equals(token1)){
-    request.setAttribute("msg", "亲！您已经提交过！请不要重复提交了!");
-    request.getRequestDispatcher("/jsp/msg.jsp").forward(request, response);
-    return;
-}
-```
-
-JSP 代码
-
-```jsp
-<h1>添加商品的页面</h1>
-<%
-String token = UUIDUtils.getUUID();
-session.setAttribute("token", token);
-%>
-<form action="${ pageContext.request.contextPath }/ProductAddServlet" method="post">
-    <input type="hidden" name="token" value="${ token }"/>
-</form>
-```
-
-## 验证码机制
-
-用别人的库。
 
 # Axios
 

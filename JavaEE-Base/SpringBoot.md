@@ -2,21 +2,28 @@
 
 ## 注解补充
 
-@Inherited 元注解的作用：假定注解 @Demo 被 @Inherited 修饰，类 Father 上有 @Demo 注解，则 Father 的子类 Son 可以继承到这个注解，在解析 Son 上的注解时，可以获取到 @Demo 注解。
+> @Inherited 元注解的作用
+
+假定注解 @Demo 被 @Inherited 修饰
 
 ```java
-import java.lang.annotation.*;
-
 @Inherited
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Demo {}
 ```
 
-```java
-import java.lang.annotation.Annotation;
-import java.util.Arrays;
+类 Father 上有 @Demo 注解，则 Father 的子类 Son 可以继承到这个注解
 
+```java
+@Demo
+class Father{}
+class Son extends Father{}
+```
+
+在解析 Son 上的注解时，可以获取到 @Demo 注解。
+
+```java
 // 测试子类继承注解
 public class ExtendAnnotation {
     public static void main(String[] args) {
@@ -26,26 +33,22 @@ public class ExtendAnnotation {
         // @com.ex.anno.Demo() 子类继承到了父类的注解 @Demo
     }
 }
-
-@Demo
-class Father{}
-class Son extends Father{}
 ```
 
 ## 介绍
 
-Spring Boot 是整合 Spring 技术栈的一站式框架，是简化 Spring 技术栈的快速开发脚手架。，能快速创建出生产级别的 Spring 应用
+Spring Boot 是整合 Spring 技术栈的一站式框架，是简化 Spring 技术栈的快速开发脚手架。能快速创建出生产级别的 Spring 应用。
 
-> 优点
+> <b>优点</b>
 
 - Create stand-alone Spring applications 【创建独立 Spring 应用】
-- Embed Tomcat, Jetty or Undertow directly (no need to deploy WAR files)【内嵌 web 服务器】
+- Embed Tomcat, Jetty or Undertow directly (no need to deploy WAR files)【内嵌 web 服务器，支持 tomcat、jetty 和 undertow。】
 - Provide opinionated 'starter' dependencies to simplify your build configuration【自动 starter 依赖，简化构建配置】
 - Automatically configure Spring and 3rd party libraries whenever possible【自动配置 Spring 以及第三方功能】
 - Provide production-ready features such as metrics, health checks, and externalized configuration【提供生产级别的监控、健康检查及外部化配置】
 - Absolutely no code generation and no requirement for XML configuration【无代码生成、无需编写 XML】
 
-> 缺点
+> <b>缺点</b>
 
 - 迭代快，需要时刻关注变化
 
@@ -55,9 +58,7 @@ Spring Boot 是整合 Spring 技术栈的一站式框架，是简化 Spring 技�
 
 ### IDEA 创建项目
 
-使用 Spring Initializer 快速创建，直接选择它，不选择 maven。
-
-给 maven 的 settings.xml 配置文件的 profiles 标签添加
+使用 Spring Initializer 快速创建，直接选择它，不选择 maven。然后给 maven 的 settings.xml 配置文件的 profiles 标签添加
 
 ```xml
 <parent>
@@ -73,10 +74,9 @@ Spring Boot 是整合 Spring 技术栈的一站式框架，是简化 Spring 技�
 </dependencies>
 ```
 
-编写一个主程序；启动 Spring Boot 应用
+编写一个主程序；启动 Spring Boot 应用，用 @SpringBootApplication 来标注一个主程序类，说明这是一个Spring Boot应用
 
 ```java
-// @SpringBootApplication 来标注一个主程序类，说明这是一个Spring Boot应用
 @SpringBootApplication
 public class HelloWorldMainApplication {
 
@@ -101,7 +101,7 @@ public class HelloController {
 
 运行主程序测试
 
-> 简化部署
+> <b>简化部署</b>
 
 ```xml
 <!-- 这个插件，可以将应用打包成一个可执行的jar包 -->
@@ -115,9 +115,7 @@ public class HelloController {
 </build>
 ```
 
-将这个应用打成 jar 包，直接使用 java -jar 的命令进行执行；
-
-打成 jar 包可以直接用 maven 的 package 命令或者控制台 mvn package
+将这个应用打成 jar 包，直接使用 java -jar 的命令进行执行；打成 jar 包可以直接用 maven 的 package 命令或者控制台 mvn package。
 
 使用 `mvn Spring-boot:run` 启动
 
@@ -158,9 +156,9 @@ public class HelloController {
 
 <div align="center"><img src="img/boot/image-20211122163937408.png"></div>
 
-阿里云地址默认创建的 Spring Boot 工程版本是 <font color="#ff0000"><b>2.4.1</b></font>，所以如果你想更换其他的版本，创建项目后在 pom 文件中手工修改即可，别忘了刷新一下，加载新版本信息。
+阿里云地址默认创建的 Spring Boot 工程版本是 <font color="#ff0000"><b>2.4.1</b></font>，所以如果想更换其他的版本，创建项目后在 pom 文件中手工修改，然后刷新一下，加载新版本信息。
 
-<font color="#ff0000"><b>注意</b></font>：阿里云提供的工程创建地址初始化完毕后和使用 Spring Boot 官网创建出来的工程略有区别，主要是在配置文件的形式上有区别，这个信息在 Spring Boot 程序的执行流程时讲解。
+<b style="color:red">注意：</b>阿里云提供的工程创建地址初始化完毕后和使用 Spring Boot 官网创建出来的工程略有区别，主要是在配置文件的形式上有区别，这个信息在 Spring Boot 程序的执行流程时讲解。
 
 ### 目录结构说明
 
@@ -168,16 +166,19 @@ public class HelloController {
 
 - resources 文件夹中目录结构
     - static：保存静态资源；js css img
-    - templates：保存页面资源；Spring Boot 默认不支持 jsp
-    - mybatis 的配置文件之类的需要放在 resources 文件夹下面。resources 是资源的根路径。可以把 resources 当成编译后的 classes 文件夹。resources 下的文件最终都会被部署到 classpath 文件下
+    - templates：保存页面资源；Spring Boot 默认不支持 jsp 需要进行配置。
+    - mybatis 的配置文件之类的需要放在 resources 文件夹下面。resources 是资源的根路径。可以把 resources 当成编译后的 classes 文件夹。resources 下的文件最终都会被部署到 classpath 文件下。
 
 ### 启动类&热部署设置
 
 > 启动类说明
 
 ```java
-@SpringBootApplication // 标明这是一个引导类。也可以不在这里的，没事。 
-@MapperScan("cn.baobaoxuxu.community.mapper") // 配置MyBatis的Mapper扫描
+@SpringBootApplication
+// 配置MyBatis的Mapper扫描，如果 Mapper 上标注了注解 @Mapper 可以不进行扫描。
+// 使用了 @MapperSacn 就不需要用 @Mapper 了。
+// https://blog.csdn.net/xiaojin21cen/article/details/103273172
+@MapperScan("cn.baobaoxuxu.community.mapper") 
 public class CommunityApplication {
     // 程序的启动入口。
     public static void main(String[] args) {
@@ -186,7 +187,7 @@ public class CommunityApplication {
 }
 ```
 
-热部署( IDEA 进行 Spring Boot 热部署失败的原因是，IDEA 默认情况下不会自动编译，需要对 IDEA 进行自动编译的设置)
+热部署 ( IDEA 进行 Spring Boot 热部署失败的原因是，IDEA 默认情况下不会自动编译，需要对 IDEA 进行自动编译的设置)
 - Settings --> Compiler
 - Ctrl + Shift + Alt + / -->选择 Registry--> compiler.automake.allow.when.app.running ✔
 
@@ -230,7 +231,7 @@ server.port=80
 <b>关闭运行日志图表（banner)</b>
 
 ```properties
-Spring.main.banner-mode=off
+spring.main.banner-mode=off
 ```
 
 <b>设置运行日志的显示级别</b>
@@ -249,7 +250,7 @@ logging.level.root=debug
 
 <font color="#f0f"><b>温馨提示</b></font>
 
-所有的 starter 中都会依赖下面这个 starter，叫做 Spring-boot-starter。这个 starter 是所有的 Spring Boot 的 starter 的基础依赖，里面定义了 Spring Boot 相关的基础配置，关于这个 starter 深入理解请看原理篇。
+所有的 starter 中都会依赖下面这个 starter，叫做 Spring-boot-starter。这个 starter 是所有 Spring Boot starter 的基础依赖，里面定义了 Spring Boot 相关的基础配置，关于这个 starter 深入理解请看原理篇。
 
 ```xml
 <dependency>
@@ -276,20 +277,20 @@ Spring Boot 除了支持 properties 格式的配置文件，还支持另外两�
 
 从知识角度来说，要学，从开发角度来说，不用学。因为 Spring Boot 的配置在 Idea 工具下有提示，跟着提示走就行了。下面列举三种不同文件格式配置相同的属性范例，了解即可。
 
-- application.properties（properties 格式）
+application.properties（properties 格式）
 
 ```properties
 server.port=80
 ```
 
-- application.yml（yml 格式）
+application.yml（yml 格式）
 
 ```YML
 server:
   port: 81
 ```
 
-- application.yaml（yaml 格式）
+application.yaml（yaml 格式）
 
 ```yaml
 server:
@@ -305,7 +306,7 @@ yml 格式和 yaml 格式只是文件名后缀不一样，格式完全一样。<
     - <b>yml</b>（主流格式）
     - yaml
 
-<b>思考</b>：如果三种格式的文件都写了，按什么优先级来？
+<b>思考：</b>如果三种格式的文件都写了，按什么优先级来？
 
 #### 配置文件优先级
 
@@ -331,7 +332,7 @@ server:
   port: 82
 ```
 
-启动后发现目前的启动端口为 80，把 80 对应的文件删除掉，然后再启动，现在端口又改成了 81。现在我们就已经知道了 3 个文件的配置信息使用的优先顺序是什么。
+启动后发现目前的启动端口为 80，把 80 对应的文件删除掉，然后再启动，现在端口又改成了 81。现在我们就已经知道了 3 个文件的配置信息<b>使用</b>的优先顺序是什么。
 
 ```XML
 application.properties  >  application.yml  >  application.yaml
@@ -369,7 +370,7 @@ server:
 
 <b>总结</b>
 
-1. 配置文件间的加载优先级	properties（最高）>  yml  >  yaml（最低）
+1. 配置文件间的加载优先级 properties（最高）>  yml  >  yaml（最低）
 2. 不同配置文件中相同配置按照加载优先级相互覆盖，不同配置文件中不同配置全部保留 
 
 #### 自动提示功能消失解决方案
@@ -421,7 +422,7 @@ YAML（YAML Ain't Markup Language），一种数据序列化格式。具有容�
 - .yml 格式（主流）
 - .yaml 格式
 
-具体的语法格式要求如下：
+> 具体的语法格式要求如下
 
 1. 大小写敏感
 2. 属性层级关系使用多行描述，<b>每行结尾使用冒号结束</b>
@@ -431,7 +432,7 @@ YAML（YAML Ain't Markup Language），一种数据序列化格式。具有容�
 
 上述规则不要死记硬背，按照书写习惯慢慢适应，并且在 Idea 下由于具有提示功能，慢慢适应着写格式就行了。核心的一条规则要记住，<font color="#ff0000"><b>数据前面要加空格与冒号隔开</b></font>。
 
-下面列出常见的数据书写格式，熟悉一下
+> 下面列出常见的数据书写格式，熟悉一下
 
 ```YAML
 boolean: TRUE  						#TRUE,true,True,FALSE,false，False均可
@@ -3208,12 +3209,10 @@ public class LoginInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
-    }
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {}
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-    }
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {}
 }
 
 // 更改部分web组件
@@ -3263,8 +3262,8 @@ mybatis 的 sql 文件
 
 ```properties
 # redis配置信息
-Spring.redis.host=localhost
-Spring.redis.port=6379
+spring.redis.host=localhost
+spring.redis.port=6379
 ```
 
 ```java
@@ -5300,7 +5299,7 @@ java -jar 工程包名.jar
 
 <div align="center"><img src="img/boot/image-20211201094223991.png" alt="image-20211201094223991" style="zoom:67%;" /></div>
 
-要想搞清楚这个问题就要说说.jar文件的工作机制了，知道了这个东西就知道如何避免此类问题的发生了。
+要想搞清楚这个问题就要说说 .jar 文件的工作机制了，知道了这个东西就知道如何避免此类问题的发生了。
 
 搞 java 开发平时会接触很多 jar 包，比如 mysql 的驱动 jar 包，而上面我们打包程序后得到的也是一个 jar 文件。这个时候如果你使用上面的 java -jar 指令去执行 mysql 的驱动 jar 包就会出现上述不可执行的现象，而我们的 Spring Boot 项目为什么能执行呢？其实是因为打包方式不一样。
 
@@ -5327,7 +5326,7 @@ java -jar 工程包名.jar
 
 <div align="center"><img src="img/boot/image-20211201095610270.png" alt="image-20211201095610270" style="zoom:150%;" /></div>
 
-不难看出，带有配置的程序包体积比不带配置的大了30倍。
+不难看出，带有配置的程序包体积比不带配置的大了 30 倍。
 
 大的程序包中除了包含小的程序包中的内容，还有别的东西。都有什么呢？回到 BOOT-INF 目录下，打开 lib 目录，里面显示了很多个 jar 文件。
 
@@ -5386,7 +5385,7 @@ Spring Boot 打出来了包为了能够独立运行，将所有需要使用的�
 
 上述内容搞清楚对我们编程意义并不大，但是对理清楚 Spring Boot 工程独立运行的机制是有帮助的。
 
-<b>总结</b>：Spring-boot-maven-plugin 插件用于将当前程序打包成一个可以独立运行的程序包
+<b>总结：</b>Spring-boot-maven-plugin 插件用于将当前程序打包成一个可以独立运行的程序包
 
 ### 命令行启动常见问题及解决方案
 
@@ -5412,6 +5411,8 @@ taskkill -f -t -im "进程名称"
 - `nohub java -jar xxx.jar > server.log`   后台启动 jar，日志保存在 server.log 里
 - `ps -ef | grep "java -jar"` 搜索包含 “java -jar” 的命令
 - `kill -9 pid编号` 杀死进程
+
+也可以使用 tmux 命令。
 
 ## 配置高级
 
@@ -11308,7 +11309,7 @@ Spring Boot 技术本身就是为了加速 Spirng 程序的开发的，可以大
 
 关于 bean 的加载方式，Spring 提供了各种各样的形式。因为 Spring 管理 bean 整体上来说就是由 Spring 维护对象的生命周期，所以 bean 的加载可以从大的方面划分成 2 种形式。已知类并交给 Spring 管理，和已知类名并交给 Spring 管理。有什么区别？一个给 .class，一个给类名字符串。内部其实都一样，都是通过 Spring 的 BeanDefinition 对象初始化 Spring 的 bean。如果前面这句话看起来有障碍，可以去复习一下 Spring 的相关知识。
 
-<b style="color:orange">参考 B 站满一航老师录制的 Spring 高级课程，链接地址如下：https://www.bilibili.com/video/BV1P44y1N7QG</b>
+<b style="color:orange">参考 B 站满一航老师录制的 Spring 高级课程，链接地址如下：https://www.bilibili.com/video/BV1P44y1N7QG 这个课真的很牛逼！强烈推荐！满老师的其他课也非常棒！</b>
 
 #### 方式一：配置文件+`<bean/>`标签
 

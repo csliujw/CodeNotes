@@ -63,8 +63,6 @@ MyBatis 框架在操作数据库时，大体经过了 8 个步骤
 </build>
 ```
 
-[mave resource 属性详解](
-
 # 设计模式
 
 相对路径 `src/java/main/文件名.xml`
@@ -2557,8 +2555,6 @@ CDaoImpl 类继承了 SqlSessionDaoSupport 类，并实现了 CDao 接口。其�
 
 它是通过 sqlsession 对象的 commit 方法和 rollback 方法实现事务的提交和回滚
 
-# 高级篇
-
 ## MyBatis生成Mapper
 
 测试语句 `select * from users where id=4`
@@ -2734,6 +2730,4 @@ public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds r
     return query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
 }
 ```
-
-## MyBatis原理
 
