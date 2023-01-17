@@ -5,11 +5,15 @@
 - 一周看两篇 CV 相关论文，继续改造项目，每天刷点 leetcode。
 - MQ 常见用法✔️
 - MyBatis-Plus 学习✔️
-- Spring Boot 温习
-- MySQL 45 讲继续学，冲冲冲！
 - Spring 温习✔️
-- MyBatis 温习
+- MyBatis 温习✔️
 - Spring MVC 温习✔️
+- JavaWeb 温习✔️
+- 重拾 JavaSE
+- 重拾 MySQL
+- 重拾 Redis
+- MySQL 45 讲继续学，冲冲冲！
+- Spring Boot 温习
 - Redis 加强，黑马那个 Redis 的项目也写一遍。
 
 ## 📝期刊论文
@@ -67,8 +71,8 @@
 - [剑指offer](CS-Course/剑指offer.md)
 - [计算机网络-谢希仁](CS-Course/计算机网络读书笔记.md)
 - [自顶向下读书笔记-阅读中~](CS-Course/计算机网络-自顶向下方法.md)
-- [操作系统-慕课网](CS-Course/操作系统[慕课].md)
-- [操作系统-汤子瀛](CS-Course/通用操作系统.md)
+- [操作系统-慕课网](CS-Course/计算机操作系统-概述.md)
+- [操作系统-汤子瀛](CS-Course/计算机操作系统.md)
 - [软件工程-张海藩](CS-Course/软件工程.md)
 
 ## 🚀前端
@@ -77,13 +81,18 @@
 
 ## 💾数据库
 
-- [数据库基本用法](Database/数据库基本用法.md)
-- [MySQL必知必会读书笔记](Database/MySQL必知必会.md)
-- [事务控制](Database/事务控制.md)
-- [SQL优化](Database/SQL优化杂记.md)
-- [黑马MySQL-2022](Database/MySQL-提升.md)
+- [MySQL基础](Database/MySQL-基础.md)
+- [MySQL加强](Database/MySQL-加强.md)
 - [MySQL-InnoDB 存储引擎读书笔记](Database/MySQL-InnoDB.md)
 - [MySQL实战45讲笔记](Database/MySQL实战45讲.md)
+- [事务控制](Database/事务控制.md)
+- [SQL优化](Database/SQL优化杂记.md)
+
+## 🤿C++
+
+- [C++快速入门](C++/C++入门.md)
+- [C++Primer读书笔记](C++/C++Primer.md)
+- [后台开发-核心技术与应用实践](C++/后台开发-核心技术与应用实践.md)
 
 ## 🎨设计模式
 
@@ -99,17 +108,8 @@
 ## ☕️Java
 
 - [基础语法](JavaSE/JavaSE入门.md)
-- [Java编程思想&On Java](JavaSE/JavaSE基础.md)
+- [Java编程思想](JavaSE/JavaSE基础.md)
 - [JavaSE加强](JavaSE/JavaSE加强.md)
-- [JavaWeb开发基础](JavaWeb/JavaWeb开发基础.md)
-- [深入分析JavaWeb技术内幕读书笔记](JavaWeb/深入分析JavaWeb技术内幕.md)
-- [Tomcat架构解析-未完成](JavaWeb/Tomcat架构解析.md)
-
-## 😅C++
-
-- [C++快速入门](C++/C++入门.md)
-- [C++Primer读书笔记](C++/C++Primer.md)
-- [后台开发-核心技术与应用实践](C++/后台开发-核心技术与应用实践.md)
 
 ## 🚄并发编程
 
@@ -123,6 +123,15 @@
 - [J.U.C](Java-Multithreading/08-JUC.md)
 - [多线程设计模式](Java-Multithreading/09-多线程设计模式.md)
 
+## 🚄Java虚拟机
+
+- [JVM概述](Java-Virtual-Machine/01-JVM概述.md)
+- [内存结构](Java-Virtual-Machine/02-内存结构.md)
+- [垃圾回收](Java-Virtual-Machine/03-垃圾回收.md)
+- [GC调优](Java-Virtual-Machine/04-GC调优.md)
+- [类加载与字节码技术](Java-Virtual-Machine/05-类加载与字节码技术.md)
+- [内存模型](Java-Virtual-Machine/06-内存模型.md)
+
 ## 📠网络编程
 
 - [IO模型](Netty/IO模型.md)
@@ -130,19 +139,20 @@
 - [Netty](Netty/Netty快速入门.md)
 - [《Unix 网络编程》笔记汇总 - CoolGin - 博客园 (cnblogs.com)](https://www.cnblogs.com/Sherry4869/p/16723105.html)
 
-## ☕️框架
+## ☕️JavaEE基础
 
-- [MyBatis快速入门](JavaEE-Framework/MyBatis入门.md)
-- [Spring入门](JavaEE-Framework/Spring入门)
-- [SpringMVC入门](JavaEE-Framework/SpringMVC入门.md)
-- [SpringBoot入门](JavaEE-Framework/SpringBoot入门.md)
-- [MyBatis-Plus入门](JavaEE-Framework/MyBatis-Plus.md)
+- [JavaWeb](JavaEE-Base/JavaWeb.md)
+- [Spring](JavaEE-Base/Spring.md)
+- [SpringMVC](JavaEE-Base/SpringMVC.md)
+- [MyBatis](JavaEE-Base/MyBatis.md)
+- [MyBatis-Plus](JavaEE-Base/MyBatis-Plus.md)
+- [SpringBoot](JavaEE-Base/SpringBoot.md)
 
 ## 🔧中间件
 
 - [Redis-快速入门](中间件/Redis-快速入门.md)
 - [Redis-设计与实现](中间件/Redis-设计于实现.md)
-- [黑马Redis](中间件/Redis-应用.md)
+- [黑马Redis业务笔记](中间件/Redis-实战.md)
 
 ## ☕️微服务框架
 
