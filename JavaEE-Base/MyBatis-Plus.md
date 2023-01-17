@@ -496,7 +496,7 @@ void testSelectByEntity() {
 
 ```java
 // 参照 SqlCondition 写的小于
-@TableField(value = "ages", condition = "%s&lt;#{%s}")
+@TableField(value = "ages", condition = "%s&lt;#{ %s }")
 private Integer age;
 
 @Test
@@ -892,7 +892,7 @@ public class User extends Model<User> {
     private String userName;
     private String password;
     private String name;
-    @TableField(value = "ages", condition = "%s&lt;#{%s}")
+    @TableField(value = "ages", condition = "%s&lt;#{ %s }")
     private Integer age;
     private String email;
     @TableField(exist = false)
