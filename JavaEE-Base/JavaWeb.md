@@ -752,45 +752,57 @@ public @interface WebServlet {
   - tomcat 真正访问的是 “tomcat 部署的 web 项目”，"tomcat 部署的 web 项目"对应着"工作空间项目" 的 web 目录下的所有资源。
 - WEB-INF 目录下的资源不能被浏览器直接访问。
 
-# Request&Response
+# 请求和响应
+
+Tomcat 用 Request 对象和 Response 对象来处理请求和响应。
+
+如果是 JDK11+，那么可以用 HttpClient 发起 Http 请求进行代码测试，不必用浏览器进行测试。具体用法 HttpClient 的注释里写的非常清楚。
 
 ## 基本原理
 
 - request 和 response 对象是由服务器创建的。
 - request 对象是来获取请求消息，而 response 对象是来设置响应消息
 
-request 对象继承体系结构：	
-	`ServletRequest`		--	接口
-		|	继承
-	`HttpServletRequest`	-- 接口
-		|	实现
-	`org.apache.catalina.connector.RequestFacade` 类 (tomcat)
+request 对象继承体系结构如下图所示，其中 org.apache.catalina.connector.RequestFacade 类是 tomcat 对 HttpServletRequest 的实现类。
 
-response 对象继承体系结构：	
-	`ServletRequest`		--	接口
-		|	继承
-	`HttpServletResponse`   -- 接口
-		|	实现
-	`org.apache.catalina.connector.ResponseFacade` 类 (tomcat)
+```mermaid
+graph
+ServletRequest接口---|继承|HttpServletRequest接口---|实现|org.apache.catalina.connector.RequestFacade
+```
 
-## Request功能
+response 对象继承体系结构，其中 org.apache.catalina.connector.ResponseFacade 类是 Tomcat 对 HttpServletResponse 的实现类。
+
+```mermaid
+graph
+ServletResponse接口---|继承|HttpServletResponse接口---|实现|org.apache.catalina.connector.ResponseFacade
+```
+
+<b>浏览器访问 Servlet 的交互过程如下图所示。</b>
+
+<div align="center"><img src="img/web/reuqest_response.jpg"></div>
+
+在 Web 服务器运行阶段，每个 Servlet 都只会创建一个实例对象。然而，每次 HTTP 请求，Web 服务器都会调用所请求 Servlet 实例的 service(HttpServletRequest request,HttpServletResponse response) 方法，重新创建一个 request 对象和一个 response 对象。即一次请求响应对应一个 request 和 response 对象。
+
+## Request
 
 由 web 容器自动创建。每次 web 服务器接收到 HTTP 请求时，会自动创建 request 对象。web 服务器处理 HTTP 请求，向客户端发送 HTTP 响应后，会自动销毁请求对象。保存在对象中的数据也就消失了。
 
-总结：
+<b>总结</b>
 
 - 服务器接收到 HTTP 请求时创建 request 对象
 - 服务器发送 HTTP 响应结束后销毁 request 对象
 - request 对象仅存活于一次请求转发，请求转发结束后，对象也就销毁了
 
-### 获取请求消息数据
+### HttpServletRequest对象
 
-> 获取请求行数据
+在 Servlet API 中，定义了一个 HttpServletRequest 接口，它继承自 ServletRequest 接口，专门用来封装 HTTP 请求消息。HTTP 请求消息分为请求行、请求消息头和请求消息体 3 部分，在 HttpServletRequest 接口中也定义了获取请求行、请求头和请求消息体的相关方法。
+
+> <b>获取请求行数据</b>
 
 - GET /day14/demo1?name=zhangsan HTTP/1.1
 - 方法
 
-| 方法名                                                  | 作用                  | 举例                                         |
+| 方法名                                                  | 功能描述              | 举例                                         |
 | ------------------------------------------------------- | --------------------- | -------------------------------------------- |
 | String getMethod()                                      | 获取请求方式          | GET                                          |
 | String getContextPath()                                 | 获取虚拟目录          | /day14                                       |
@@ -803,45 +815,149 @@ response 对象继承体系结构：
 - URL：统一资源定位符 [ 不单单定义资源，还定义了如何找资源]：http://localhost/day14/demo1
 - URI：统一资源标识符 [ 定位资源  ]：/day14/demo1	
 
-> 获取请求头数据
+> <b>获取请求头数据</b>
 
-| 方法                                   | 作用                           | 举例 |
-| -------------------------------------- | ------------------------------ | ---- |
-| String getHeader(String name)          | 通过请求头的名称获取请求头的值 |      |
-| Enumeration\<String\> getHeaderNames() | 获取所有的请求头名称           |      |
+| 方法                                   | 功能描述                                                     |
+| -------------------------------------- | ------------------------------------------------------------ |
+| String getHeader(String name)          | 通过请求头的名称获取请求头的值。                             |
+| Enumeration getHeaders(String name)    | 返回一个 Enumeration 集合对象，该集合对象由请求消息中出现的某个指定名称的所有头字段值组成。在多数情况下，一个头字段名在请求消息中只出现一次，但有时候可能会出现多次。 |
+| Enumeration\<String\> getHeaderNames() | 获取所有的请求头名称。                                       |
+| String getContentType()                | 获取 Content-Type 字段的值。                                 |
+| int getContentLength()                 | 获取 Content-Length 字段的值。                               |
+| String getCharacterEncoding()          | 获取请求消息的实体部分的字符集编码，通常是从 Content-Type 头字段中进行提取。 |
 
-> 获取请求体数据
+> <b>获取请求体数据</b>
 
 - 请求体：只有 POST 请求方式，才有请求体，在请求体中封装了 POST 请求的请求参数
 
-| 方法                                | 作用                                 | 举例 |
-| ----------------------------------- | ------------------------------------ | ---- |
-| BufferedReader getReader()          | 获取字符输入流，只能操作字符数据     |      |
-| ServletInputStream getInputStream() | 获取字节输入流，可以操作所有类型数据 |      |
+| 方法                                | 功能描述                             |
+| ----------------------------------- | ------------------------------------ |
+| BufferedReader getReader()          | 获取字符输入流，只能操作字符数据     |
+| ServletInputStream getInputStream() | 获取字节输入流，可以操作所有类型数据 |
 
-> 其他功能
+> <b>其他功能</b>
 
-| 方法                                      | 作用                         | 举例                          |
-| ----------------------------------------- | ---------------------------- | ----------------------------- |
-| String getParameter(String name)          | 根据参数名称获取参数值       |                               |
-| String[] getParameterValues(String name)  | 根据参数名称获取参数值的数组 | hobby=xx&hobby=game『复选框』 |
-| Enumeration\<String\> getParameterNames() | 获取所有请求的参数名称       |                               |
-| Map<String,String[]> getParameterMap()    | 获取所有参数的 map 集合      |                               |
+| 方法                                      | 功能描述                                                     | 举例                          |
+| ----------------------------------------- | ------------------------------------------------------------ | ----------------------------- |
+| String getParameter(String name)          | 根据参数名称获取参数值                                       |                               |
+| String[] getParameterValues(String name)  | 根据参数名称获取参数值的数组                                 | hobby=xx&hobby=game『复选框』 |
+| Enumeration\<String\> getParameterNames() | 获取所有请求的参数名称                                       |                               |
+| Map<String,String[]> getParameterMap()    | 获取所有参数的 map 集合，请求消息中所有参数名和值都返回 map 对象中返回。 |                               |
 
-### 请求转发
+### 获取请求参数
 
-请求转发：一种在服务器内部的资源跳转方式
+| 方法                                      | 功能描述                                                     | 举例                          |
+| ----------------------------------------- | ------------------------------------------------------------ | ----------------------------- |
+| String getParameter(String name)          | 根据参数名称获取参数值                                       |                               |
+| String[] getParameterValues(String name)  | 根据参数名称获取参数值的数组                                 | hobby=xx&hobby=game『复选框』 |
+| Enumeration\<String\> getParameterNames() | 获取所有请求的参数名称                                       |                               |
+| Map<String,String[]> getParameterMap()    | 获取所有参数的 map 集合，请求消息中所有参数名和值都返回 map 对象中返回。 |                               |
 
-- 通过 request 对象获取请求转发器对象：RequestDispatcher#getRequestDispatcher(String path)
-- 使用 RequestDispatcher 对象来进行转发：forward(ServletRequest request, ServletResponse response)
-- <b>特点</b>
-  - 浏览器地址栏路径不发生变化
-  - 只能转发到当前服务器内部资源中。
-  - 转发是一次请求
+分别用 Servlet 的 GET 请求方式和 POST 请求方式获取客户端传递过来的参数。
 
-转发地址的写法：request.getRequestDispatcher("/requestDemo9").forward(request,response);
+```java
+@WebServlet(urlPatterns = "/param")
+public class RequestParam extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String username = req.getParameter("username");
+        resp.getWriter().write("post========>" + username);
+    }
 
-### 共享数据
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        String username = req.getParameter("username");
+        resp.getWriter().write("post========>" + username);
+    }
+}
+```
+
+用 HttpClient 发起请求。发起 Post 请求的时候需要设置 Content-Type 为表单类型，然后为 Post 设置表单参数。
+
+```java
+package com.tomcat.controller.request;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class TestRequestParam {
+    public static void main(String[] args) {
+        testRequestParam();
+    }
+
+    public static void testRequestParam() {
+        HttpRequest get = HttpRequest.newBuilder()
+                .header("Content-Type", "text/html;charset=UTF-8")
+                .version(HttpClient.Version.HTTP_1_1)
+                .uri(URI.create("http://localhost:8080/tomcat/param?username=payphone"))
+                .timeout(Duration.ofMillis(2000))
+                .GET()
+                .build();
+
+        HttpRequest post = HttpRequest.newBuilder()
+                // 设置表单形式提交参数。
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .version(HttpClient.Version.HTTP_1_1)
+                .uri(URI.create("http://localhost:8080/tomcat/param"))
+                .timeout(Duration.ofMillis(2000))
+                // POST 亲求中的表单参数
+                .POST(HttpRequest.BodyPublishers.ofString("username=payphone"))
+                .build();
+        try {
+            HttpResponse<String> getMessage = client.send(get, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> postMessage = client.send(post, HttpResponse.BodyHandlers.ofString());
+            showExecutorResult(getMessage);
+            showExecutorResult(postMessage);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            threadPool.shutdown();
+        }
+
+    }
+
+
+    private static void showExecutorResult(HttpResponse<String> message) {
+        System.out.println("状态码==============>" + message.statusCode());
+        System.out.println("响应体==============>" + message.body());
+    }
+
+    private static ExecutorService threadPool = Executors.newFixedThreadPool(10);
+    private static final HttpClient client = HttpClient
+            .newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
+            .connectTimeout(Duration.ofMillis(2000))
+            .followRedirects(HttpClient.Redirect.NEVER)
+            .executor(threadPool)
+            .build();
+}
+```
+
+> <b>表单路径写法</b>
+
+login.html 中 form 表单的 action 路径的写法
+
+虚拟目录+Servlet 的资源路径
+
+如：/blog/login.do===>项目名为 blog 的 login.do  Servlet
+
+### 解决请求乱码
+
+此处的中文乱码特指 request 请求乱码，不包括 response 响应乱码。
+
+- Get 方式：Tomcat 8 已经将 get 方式乱码问题解决了
+- Post 方式：在获取参数前，设置 request 的编码 request.setCharacterEncoding("utf-8");
+
+```java
+public void setCharacterEncoding(String env) throws UnsupportedEncodingException;
+```
+
+### 传递数据
 
 域对象：一个有作用范围的对象，在其作用范围内可以共享数据
 
@@ -853,6 +969,143 @@ request 域：代表一次请求的范围，一般用于请求转发的多个资
 | Object getAttitude(String name)           | 通过键获取值     |
 | void removeAttribute(String name)         | 通过键移除键值对 |
 
+我们可以使用上述方法在 request 域中填充数据，然后模板引擎中获取 request 域的数据。
+
+```java
+@WebServlet(urlPatterns = "/data")
+public class RequestSaveData extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setAttribute("name", "123");
+    }
+}
+```
+
+JSP 基本不用了，就不给 JSP 读取数据的示例了。
+
+### 防盗链
+
+通过 request#getHeader 获取 referer 信息，禁止非指定站点的请求来访问资源。
+
+```java
+@WebServlet(urlPatterns = "/referer")
+public class RequestReferer extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+
+        String referer = req.getHeader("referer");
+        System.out.println("referer========>" + referer);
+        if (referer == null || referer.contains("127.0.0.1") || referer.contains("localhost")) {
+            resp.getWriter().write("禁止localhost的请求");
+        }
+        resp.getWriter().write("ok");
+    }
+}
+```
+
+### 请求转发
+
+请求转发，一种在服务器内部的资源跳转方式，注意看示例代码中的注释。
+
+- 通过 request 对象获取请求转发器对象：RequestDispatcher#getRequestDispatcher(String path)
+- 使用 RequestDispatcher 对象来进行转发：forward(ServletRequest request, ServletResponse response)
+
+<b>特点</b>
+
+- 浏览器地址栏路径不发生变化
+- 只能转发到当前服务器内部资源中。
+- 转发是一次请求
+
+转发地址的写法：request.getRequestDispatcher("/requestDemo9").forward(request,response);
+
+编写两个 Servlet，一个用于转发请求，一个是转发后到达的 Servlet
+
+```java
+@WebServlet(urlPatterns = "/forward")
+public class RequestFroward extends HttpServlet {
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setAttribute("forward", "来自forward的数据");
+        // 写相对于项目的根目录的地址即可。会自动拼接成
+        // localhost:8080/tomcat/data 这个地址
+        req.getRequestDispatcher("/data").forward(req, resp);
+    }
+}
+
+@WebServlet(urlPatterns = "/data")
+public class RequestSaveData extends HttpServlet {
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        Object forward = req.getAttribute("forward");
+        resp.setContentType("text/html;charset=UTF-8");
+        resp.getWriter().write(forward.toString());
+    }
+}
+```
+
+使用 HttpClient 进行代码测试，需要设置 HttpClient 允许重定向。
+
+```java
+package com.tomcat.controller.request;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class TestRequestParam {
+    public static void main(String[] args) {
+        testForward();
+    }
+
+    public static void testForward() {
+        HttpRequest build = HttpRequest.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .uri(URI.create("http://localhost:8080/tomcat/forward"))
+                .POST(HttpRequest.BodyPublishers.ofString(""))
+                .build();
+        try {
+            showExecutorResult(client.send(build, HttpResponse.BodyHandlers.ofString()));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            threadPool.shutdown();
+        }
+    }
+
+    private static void showExecutorResult(HttpResponse<String> message) {
+        System.out.println("状态码==============>" + message.statusCode());
+        System.out.println("响应体==============>" + message.body());
+    }
+
+    private static ExecutorService threadPool = Executors.newFixedThreadPool(10);
+
+    private static final HttpClient client = HttpClient
+            .newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
+            .connectTimeout(Duration.ofMillis(2000))
+        	// 允许重定向。
+            .followRedirects(HttpClient.Redirect.ALWAYS)
+            .executor(threadPool)
+            .build();
+}
+```
+
+### 上传文件
+
+可以用 request 获取 io 流来上传文件
+
+```java
+ServletInputStream is = request.getInputStream();
+```
+
+完成一次请求后会自动地销毁。
+
 ### 获取ServletContext
 
 ```java
@@ -861,64 +1114,43 @@ ServletContext context = request.getServletContext();
 
 ServletContext 官方叫 Servlet 上下文。服务器会为每一个工程创建一个对象，这个对象就是 ServletContext 对象。这个对象全局唯一，而且工程内部的所有 Servlet 都共享这个对象。所以叫全局应用程序共享对象。
 
-### 获取输入流
+## Response
 
-上传文件
+response 对象由 web 容器创建。web 容器接收到 HTTP 请求，自动创建响应对象，web 容器完成 HTTP 响应，客户端接收完响应后自动销毁对象。前面也用到了 Response 对象的一些 API，如 getWriter。
 
-```java
-ServletInputStream is = request.getInputStream();
-```
-
-完成一次请求后会自动地销毁嘛？
-
-### 中文乱码问题
-
-此处的中文乱码特质 request 的乱码，不包括 response 的乱码。
-
-- Get 方式：Tomcat 8 已经将 get 方式乱码问题解决了
-- Post 方式：在获取参数前，设置 request 的编码 request.setCharacterEncoding("utf-8");
-
-```java
-public void setCharacterEncoding(String env) throws UnsupportedEncodingException;
-```
-
-### 表单路径写法
-
-login.html 中 form 表单的 action 路径的写法
-
-虚拟目录+Servlet 的资源路径
-
-如：/blog/login.do===>项目名为 blog 的 login.do  Servlet
-
-## BeanUtils工具类
-
-- setProperty()
-- getProperty()
-- populate(Object obj , Map map)：将 map 集合的键值对信息，封装到对应的 JavaBean 对象中
-
-自行看文档
-
-## Response功能
-
-response 对象由 web 容器创建。web 容器接收到 HTTP 请求，自动创建响应对象，web 容器完成 HTTP 响应，客户端接收完响应后自动销毁对象。
-
-总结：
+<b>总结</b>
 
 - 服务器接收到 HTTP 请求自动创建
 - 服务器向客户端完成 HTTP 响应，客户端接收完响应后自动销毁。
 
 response 是用来设置响应消息
 
-### 设置响应行
+### 设置状态码
 
 - 格式：HTTP/1.1 200 OK
 - 设置状态码：setStatus(int sc);
+- 设置错误码：setError(int sc); 如 404，500 等，这些也是状态码。不常用。
 
-### 设置响应头
+### 设置响应消息头
 
-- setHeader(String name, String value);
+常见的 API 如下表所示。
 
-### 设置响应体
+| 方法                                                         | 功能描述                                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| void addHeader(String name, String value)<br>void setHeader(String name, String value) | 这两个方法都是用来设置 HTTP 协议的响应头字段，其中，参数 name 用于指定响应头字段的名称，参数 value 用于指定响应头字段的值。<br>不同的是，addHeader() 方法可以增加同名的响应头字段，而 setHeader() 方法则会覆盖同名的头字段。 |
+| void addIntHeader(String name, int value)<br>void setIntHeader(String name, int value) | 这两个方法专门用于设置包含整数值的响应头。避免了使用 addHeader() 与 setHeader() 方法时，需要将int类型的设置值转换为 String 类型的麻烦。 |
+| void setContentLength(int len)                               | 该访法用于设置响应消息的实体内容的大小，单位为字节。对于 HTTP 协议来说，这个方法就是设置 Content-L ength 响应头字段的值。 |
+| void setContentType(String type)                             | 该方法用于设置 Servlet 输出内容的 MIME 类型，常用于下载文件。 |
+| void setLocale(Locale loc)                                   | 该方法用于设置响应消息的本地化信息。对 HTTP 来说，就是设置 Content-Language 响应头字段和 Content-Type 头字段中的字符集编码部分。需要注意的是，如果 HTTP 消息没有设置 Content-Type 头字段，setLocale() 方法设置的字符集编码不会出现在 HTTP 消息的响应头中，如果调用 setCharacterEncoding() 或 setContentType() 方法指定了响应内容的字符集编码，setL ocale() 方法将不再具有指定字符集编码的功能 |
+| void setCharacterEncoding(String charset)                    | 该方法用于设置输出内容使用的字符编码，会覆盖 setContentType 和 setLocale 方法所设置的字符编码表。 |
+
+常用的 API 就 setCharacterEncoding，用于解决 Response 乱码。
+
+```java
+resp.setContentType("text/html;charset=UTF-8");
+```
+
+### 发送响应体消息
 
 - 获取输出流
 
@@ -930,47 +1162,86 @@ response 是用来设置响应消息
   ServletOutputStream os = resp.getOutputStream();
   ```
 
-- 使用输出流，将数据输出到客户端
+- 使用输出流，将数据输出到客户端。虽然是使用流将数据传递给浏览器，但是 response 输出流不手动刷新也可以把数据写出到浏览器。
 
-### 重定向
+response 获取的流在一次响应后会自动关闭流，销毁对象。
 
-重定向是资源跳转的方式，可以用于服务器与服务器之间。浏览器的 URL 会改变。
-
-告诉浏览器重定向：状态码 302
-
-告诉浏览器资源的路径：响应头   ("location","资源的路径")
+编写一个 Servlet 用于向浏览器输出信息。
 
 ```java
-response.setStatus(302);
-response.setHeader("location","/blog/responseDemo.do");
+@WebServlet(urlPatterns = "/msg")
+public class ResponseSend extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.getWriter().write("Hello I am response msg");
+    }
+}
 ```
 
-简单的重定向
+使用 HttpClient 发送请求并接受响应体。
 
 ```java
-response.sendRedirect("/blog/xx.do")
+package com.tomcat.controller.response;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class TestResponseSend {
+    public static void main(String[] args) {
+        testSend();
+    }
+
+    public static void testSend() {
+        HttpRequest msg = HttpRequest.newBuilder()
+                .header("Content-Type", "text/html;charset=UTF-8")
+                .version(HttpClient.Version.HTTP_1_1)
+                .uri(URI.create("http://localhost:8080/tomcat/msg"))
+                .timeout(Duration.ofMillis(2000))
+                .GET()
+                .build();
+        try {
+            HttpResponse<String> send = client.send(msg, HttpResponse.BodyHandlers.ofString());
+            showExecutorResult(send);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            threadPool.shutdown();
+        }
+		/*
+		状态码==============>200
+		响应体==============>Hello I am response msg
+		*/
+    }
+
+    private static void showExecutorResult(HttpResponse<String> message) {
+        System.out.println("状态码==============>" + message.statusCode());
+        System.out.println("响应体==============>" + message.body());
+    }
+
+    private static ExecutorService threadPool = Executors.newFixedThreadPool(10);
+
+    private static final HttpClient client = HttpClient
+            .newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
+            .connectTimeout(Duration.ofMillis(2000))
+            .followRedirects(HttpClient.Redirect.NEVER)
+            .executor(threadPool)
+            .build();
+}
 ```
 
-### 重定向和转发的区别
 
-- 重定向的特点：redirect
-  - 地址栏发生变化
-  - 重定向可以访问其他站点(服务器)的资源
-  - 重定向是两次请求。不能使用 request 对象来共享数据
-- 转发的特点：forward
-  - 转发地址栏路径不变
-  - 转发只能访问当前服务器下的资源
-  - 转发是一次请求，可以使用 request 对象来共享数据
 
-### Response输出
-
-response 获取地流在一次响应后会自动关闭流，销毁对象。
-
-> response 输出流不刷新也可以把数据写出到浏览器
+### 响应乱码
 
 乱码问题
 
-response 流是我们获取出来的，不是 new 出来的。如果是 new 出来的，编码是和当前操作系统一致的。但是现在的流是 tomcat 提供的，和 tomcat 中配置的编码是一样的。 tomcat 默认是 IOS-8859-1。
+response 流是我们获取出来的，不是 new 出来的。如果是 new 出来的，编码是和当前操作系统一致的。但是现在的流是 tomcat 提供的，和 tomcat 中配置的编码是一样的。tomcat 默认是 IOS-8859-1。
 
 ```java
 // 在获取流对象之前设置编码，让流以这个编码进行。即设置缓冲区编码为UTF-8编码形式
@@ -993,6 +1264,133 @@ response.setContentType("text/html;charset=utf-8");
 response.setContentType("text/html;charset=utf-8");
 response.getWriter().write("你好");
 ```
+
+### 重定向
+
+重定向是资源跳转的方式，可以用于服务器与服务器之间。浏览器的 URL 会改变。
+
+告诉浏览器重定向：状态码 302
+
+告诉浏览器资源的路径：响应头   ("location","资源的路径")
+
+```java
+response.setStatus(302);
+response.setHeader("location","/blog/responseDemo.do");
+```
+
+简单的重定向
+
+```java
+response.sendRedirect("/blog/xx.do")
+```
+
+## 转发和重定向
+
+在学习 request 和 response 的时候简单介绍了下转发和重定向，此处再详细介绍下。
+
+当一个 Web 资源收到客户端的请求后，如果希望服务器通知另外一个资源去处理请求，这时，可以使用 sendRedirect() 方法实现请求重定向，也可以通过 RequestDispatcher 接口的实例对象来实现转发。
+
+- 转发是同一个 Web 应用内的操作，可以用 request 域来传递数据；
+- 重定向可以在同一个 Web 应用内也可以在不同 Web 应用内进行跳转，不可以用 request 域传递数据，不过可以考虑用 cookie 来传递数据。
+
+### 请求转发
+
+ServletRequest 接口中定义了一个获取 RequestDispatcher 对象的方法，RequestDispatcher 内有两个方法。
+
+| 方法                                                         | 功能描述                                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| void forward(ServletRequest request, ServletResponse response) | 该方法用于将请求从一一个 Servlet 传递给另外的一个 Web 资源。在 Servlet 中，可以对请求做一个初步处理，然后通过调用这个方法，将请求传递给其他资源进行响应。需要注意的是，该方法必须在响应提交给客户端之前被调用，否则将抛出 llegalStateException 异常 |
+| void include(ServletRequest request, ServletResponse response) | 该方法用于将其他的资源作为当前响应内容包含进来               |
+
+forward() 方法可以实现请求转发，include() 方法可以实现请求包含。
+
+> <b>forward() 请求转发</b>
+
+<div align="center"><img src="img/web/forward.jpg"></div>
+
+```java
+@WebServlet(urlPatterns = "/forward")
+public class RequestFroward extends HttpServlet {
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        req.setAttribute("forward", "来自forward的数据");
+        // 写相对于项目的根目录的地址即可。会自动拼接成
+        // localhost:8080/tomcat/data 这个地址
+        req.getRequestDispatcher("/data").forward(req, resp);
+    }
+}
+```
+
+> <b>include 请求包含，简单说就是 Response 包含了当前 Servlet 的响应消息，也包含了 include 目标资源的响应消息</b>
+
+请求包含指的是使用 include() 方法将 Servlet 请求转发给其他 Web 资源进行处理，与请求转发不同的是，当我们访问 Servlet 时，在响应消息中，既包含了当前 Servlet 的响应消息，也包含了 include 目标 Web 资源所作出的响应消息。
+
+<div align="center"><img src="img/web/include.jpg"></div>
+
+编写两个 Servlet，IncludeOne 和 IncludeTwo，让 IncludeOne 调用 include，且目标路径是 IncludeTwo，然后访问 IncludeOne。
+
+```java
+@WebServlet(urlPatterns = "/include1")
+public class IncludeOne extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.setContentType("text/html;charset=UTF-8");
+        resp.getWriter().println("<b>这是include1添加的内容</b>");
+        // 这样就获取到了 include2 设置的响应消息。
+        req.getRequestDispatcher("/include2").include(req, resp);
+    }
+}
+
+@WebServlet(urlPatterns = "/include2")
+public class IncludeTwo extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        resp.getWriter().println("<b>这是include2添加的内容</b>");
+    }
+}
+// 这是include1添加的内容 这是include2添加的内容。
+```
+
+### 请求重定向
+
+请求重定向是资源跳转的方式，可以用于服务器与服务器之间。浏览器的 URL 会改变。设置重定向的方式用两种。
+
+<b>第一种</b>
+
+- 告诉浏览器要进行重定向：设置状态码为 302
+- 告诉浏览器资源的路径：响应头   ("location","资源的路径")
+
+```java
+response.setStatus(302);
+response.setHeader("location","/blog/responseDemo.do");
+```
+
+<b>第二种</b>
+
+其实就是第一种的简写
+
+```java
+response.sendRedirect("/blog/xx.do")
+```
+
+### 区别
+
+- 重定向的特点：redirect
+  - 地址栏发生变化
+  - 重定向可以访问其他站点(服务器)的资源
+  - 重定向是两次请求。不能使用 request 对象来共享数据
+- 转发的特点：forward
+  - 转发地址栏路径不变
+  - 转发只能访问当前服务器下的资源
+  - 转发是一次请求，可以使用 request 对象来共享数据
+
+## BeanUtils工具类
+
+- setProperty()
+- getProperty()
+- populate(Object obj , Map map)：将 map 集合的键值对信息，封装到对应的 JavaBean 对象中
+
+自行看文档
 
 # ServletConfig
 
@@ -1028,173 +1426,9 @@ public class Config extends HttpServlet {
 }
 ```
 
-# ServletContext
+# 会话技术
 
-ServletContext 官方叫 Servlet 上下文。当 Servlet 容器启动时，会为每个 Web 应用创建一个唯一的 ServletContext 对象代表当前 Web 应用，该对象不仅封装了当前 Web 应用的所有信息，而且实现了多个 Servlet 之间数据的共享。
-
-## 共享数据
-
-在 Web 应用的 XML 中配置初始化参数，供整个应用的 Servlet 共享。
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
-         version="4.0">
-    <context-param>
-        <param-name>hello</param-name>
-        <param-value>hello-value</param-value>
-    </context-param>
-</web-app>
-```
-
-```java
-@WebServlet(urlPatterns = "/context")
-public class TestServletContext extends HttpServlet {
-    @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        ServletContext servletContext = getServletContext();
-        // hello-value
-        String hello = servletContext.getInitParameter("hello");
-        resp.getWriter().write(hello);
-    }
-}
-```
-
-## 获取ServletContext
-
-- 通过 request 对象获取  request.getServletContext();
-- 通过 HttpServlet 获取  this.getServletContext();
-
-## ServletContext的功能
-
-- 获取 MIME 类型
-
-  - MIME 类型：在互联网通信过程中定义的一种文件数据类型
-  - 格式：大类型/小类型   text/html  image/jpeg
-
-- 域对象：共享数据
-
-  - setAttribute(String name,Object value)
-  - getAttribute(String name)
-  - removeAttribute(String name)
-
-- 获取文件的真实(服务器)路径
-
-  - String getRealPath(String path)  
-
-  ```java
-  String b = context.getRealPath("/b.txt");//web目录下资源访问
-  System.out.println(b);
-  
-  String c = context.getRealPath("/WEB-INF/c.txt");//WEB-INF目录下的资源访问
-  System.out.println(c);
-  
-  String a = context.getRealPath("/WEB-INF/classes/a.txt");//src目录下的资源访问
-  System.out.println(a);
-  ```
-
-## 文件的下载
-
-> 需求：点击连接，进行下载
-
-注意：任何文件都要是下载，不能让它被浏览器解析！
-
-```java
-public class DownLoadUtils {
-
-    public static String getFileName(String agent, String filename) throws UnsupportedEncodingException {
-        if (agent.contains("MSIE")) {
-            // IE浏览器
-            filename = URLEncoder.encode(filename, "utf-8");
-            filename = filename.replace("+", " ");
-        } else if (agent.contains("Firefox")) {
-            // 火狐浏览器
-            BASE64Encoder base64Encoder = new BASE64Encoder();
-            filename = "=?utf-8?B?" + base64Encoder.encode(filename.getBytes("utf-8")) + "?=";
-        } else {
-            // 其它浏览器
-            filename = URLEncoder.encode(filename, "utf-8");
-        }
-        return filename;
-    }
-}
-
-@WebServlet("/downloadServlet")
-public class DownloadServlet extends HttpServlet {
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        //1.获取请求参数，文件名称
-        String filename = request.getParameter("filename");
-        //2.使用字节输入流加载文件进内存
-        //2.1找到文件服务器路径
-        ServletContext servletContext = this.getServletContext();
-        String realPath = servletContext.getRealPath("/img/" + filename);
-        //2.2用字节流关联
-        FileInputStream fis = new FileInputStream(realPath);
-
-        //3.设置response的响应头
-        //3.1设置响应头类型：content-type
-        String mimeType = servletContext.getMimeType(filename);//获取文件的mime类型
-        response.setHeader("content-type",mimeType);
-        //3.2设置响应头打开方式:content-disposition
-
-        //解决中文文件名问题
-        //1.获取user-agent请求头、
-        String agent = request.getHeader("user-agent");
-        //2.使用工具类方法编码文件名即可
-        filename = DownLoadUtils.getFileName(agent, filename);
-
-        response.setHeader("content-disposition","attachment;filename="+filename);
-        //4.将输入流的数据写出到输出流中
-        ServletOutputStream sos = response.getOutputStream();
-        byte[] buff = new byte[1024 * 8];
-        int len = 0;
-        while((len = fis.read(buff)) != -1){
-            sos.write(buff,0,len);
-        }
-        fis.close();
-    }
-
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        this.doPost(request,response);
-    }
-}
-```
-
-<b>中文乱码解决思路</b>
-
-- 获取客户端使用的浏览器版本信息
-- 根据不同的版本信息，设置 filename 的编码方式不同
-
-```java
-public class DownLoadUtils {
-
-    public static String getFileName(String agent, String filename) throws UnsupportedEncodingException {
-        if (agent.contains("MSIE")) {
-            // IE浏览器
-            filename = URLEncoder.encode(filename, "utf-8");
-            filename = filename.replace("+", " ");
-        } else if (agent.contains("Firefox")) {
-            // 火狐浏览器
-            BASE64Encoder base64Encoder = new BASE64Encoder();
-            filename = "=?utf-8?B?" + base64Encoder.encode(filename.getBytes("utf-8")) + "?=";
-        } else {
-            // 其它浏览器
-            filename = URLEncoder.encode(filename, "utf-8");
-        }
-        return filename;
-    }
-}
-```
-
-# Cookie&Session
-
-## 会话技术
-
-会话：一次会话中包含多次请求和响应。
-
-> 一次会话：浏览器第一次给服务器资源发送请求，会话建立，直到有一方断开『浏览器关闭了，服务器关掉了』为止
+会话是指浏览器和服务器之间的多次请求和响应。浏览器第一次给服务器资源发送请求，会话建立，直到有一方断开『浏览器关闭了，服务器关掉了』为止。会话技术有两种，分别是 Cookie 和 Session。
 
 客户端会话技术：Cookie
 
@@ -1202,9 +1436,7 @@ public class DownLoadUtils {
 
 ## 会话跟踪
 
-在用户访问的一个会话内，web 服务器保存客户的信息，称为会话跟踪。
-
-## 会话跟踪方式
+<span style="color:orange">在用户访问的一个会话内，web 服务器保存客户的信息，称为会话跟踪。会话跟踪的方式有四种。</span>
 
 <b>重写 URL</b>
 
@@ -1230,16 +1462,29 @@ public class DownLoadUtils {
 
 <b>HTTPSession 对象 API</b>
 
-## Cookie的使用
+## Cookie
 
-| 方法                                  | 说明                     |
-| ------------------------------------- | ------------------------ |
-| new Cookie(String name, String value) | 创建 Cookie              |
-| response.addCookie(Cookie cookie)     | 添加 Cookie              |
-| Cookie[]  request.getCookies()        | 获取 Cookie              |
-| setMaxAge(int seconds)                | 设置 Cookie 的持久化时间 |
+Cookie 是一种会话技术，它用于将会话过程中的数据保存到用户的浏览器中，从而使浏览器和服务器可以更好地进行数据交互。『浏览器发送数据时携带 Cookie，从而实现与服务器进行“有状态”的交互』
 
-## Cookie的生命周期
+### 基本使用
+
+| 方法                                                   | 说明                                                         |
+| ------------------------------------------------------ | ------------------------------------------------------------ |
+| Cookie(String name, String value)                      | 构造方法，创建 Cookie                                        |
+| void response.addCookie(Cookie cookie)                 | 向 response 中添加 Cookie                                    |
+| Cookie[]  request.getCookies()                         | 在 request 中获取 Cookie                                     |
+| void setMaxAge(int seconds)<br>int getMaxAge()         | 设置 Cookie 在浏览器端的持久化时间<br>获取 Cookie 在浏览器端保持有效的秒数 |
+| void setPath(String uri)<br/>String getPath()          | 设置 Cookie 的有效目录路径<br>获取 Cookie 的有效目录路径     |
+| void setDomain(String pattern)<br/>String getDomain()  | 设置 Cookie 的有效域（域名）<br/>获取 Cookie 的有效域        |
+| void setVersion(int v)<br>int getVersion()             | 设置 Cookie 采用的协议版本<br/>获取 Cookie 采用的协议版本    |
+| void setComment(String purpose)<br>String getComment() | 设置 Cookie 项的注解部分<br/>获取 Cookie 项的注解部分        |
+| void setSecure(boolean flag)<br>boolean getSecure()    | 设置 Cookie 项是否只能使用安全的协议传送<br/>获取 Cookie 项是否只能使用安全的协议传送 |
+
+使用起来也比较简单，就不记录用法了，后面要用直接看源码注释即可。
+
+Cookie 可以用来存储用户上次的登录时间；可以存储用户的登录凭证用于无密码登录；可以实现不登录将商品添加进购物车等功能。
+
+### 生命周期
 
 默认，关闭浏览器就消失了，但是可进行设置『持久化存储』
 
@@ -1248,7 +1493,7 @@ public class DownLoadUtils {
 - 负数：默认值
 - 零：删除 cookie 信息
 
-### Cookie细节
+### 易错点
 
 > 高版本 tomcat 的 cookie 不能有空格
 
@@ -1291,9 +1536,9 @@ public void setDomain(String domain) {
 
 ## Session
 
-服务器端会话技术，在一次会话的多次请求间共享数据，将数据保存在服务器端的对象中。
+Session是一种将会话数据保存到服务器端的技术。在一次会话的多次请求间共享数据，将数据保存在服务器端的对象中。
 
-### Session快速入门
+### 基本使用
 
 - 获取 HttpSession 对象：HttpSession session = request.getSession();
 - 使用 HttpSession 对象：
@@ -1302,46 +1547,79 @@ public void setDomain(String domain) {
   - void removeAttribute(String name)
 - 原理：Session 的实现是依赖于 Cookie 的。session 对象创建后，它的 sessionID 会自动选择 Cookie 作为存储地。
 
-### 注意细节
+<b>Session 常用方法如下表所示。</b>
 
-- 当客户端关闭后，服务器不关闭，两次获取 session 是否为同一个？
+| 方法                                         | 功能描述                                                     |
+| -------------------------------------------- | ------------------------------------------------------------ |
+| String getId()                               | 用于返回与当前 HttpSession 对象关联的会话标识号。            |
+| long getCreationTime()                       | 返回 Session 创建的时间，这个时间是创建 Session 的时间与 1970 年 1 月 1 日 00:00:00 之间时间差的毫秒表示形式。 |
+| long getLastAccessedTime()                   | 返回客户端最后一次发送与 Session 相关请求的时间，这个时间是发送请求的时间与 1970 年 1 月 1 日 00:00:00 之间时间差的毫秒表示形式。 |
+| void setMaxInactiveInterval(int interval)    | 用于设置当前 HttpSession 对象可空闲的以秒为单位的最长时间，也就是修改当前会话的默认超时间隔。 |
+| boolean isNew()                              | 判断当前 HttpSession 对象是否是新创建的。                    |
+| void invalidate()                            | 用于强制使 Session 对象无效。                                |
+| ServletContext getServletContext()           | 用于返回当前 HttpSession 对象所属于的 Web 应用程序对象，即代表当前 Web 应用程序的 ServletContext 对象。 |
+| void setAttribute(String name, Object value) | 用于将一个对象与一个名称关联后存储到当前的 HttpSession 对象中。 |
+| String getAttribute()                        | 用于从当前 HttpSession 对象中返回指定名称的属性对象。        |
+| void removeAttribute(String name)            | 用于从当前 HttpSession 对象中删除指定名称的属性。            |
 
-  - 默认情况下。不是。
-  - 如果需要相同，则可以创建 Cookie，键为 JSESSIONID，设置最大存活时间，让 Cookie 持久化保存。
+API 的使用也比较简单，就不一一罗列了，只列举部分应用场景。
 
-  ```java
-  HttpSession session = request.getSession();
-  Cookie c = new Cookie("JSESSIONID",session.getId());
-  c.setMaxAge(60*60);
-  response.addCookie(c);
-  /*
-  浏览器禁用 Cookie 时，如何使用 Session?
-  代码与上面一样，我们手动设置 Session 写入 Cookie中。
-  浏览器没用禁用 Cookie 时，会自动把 Session 的 Id 写入 Cookie的 。
-  */
+### 超时管理
+
+当客户端第 1 次访问某个能开启会话功能的资源时，Web 服务器就会创建一个与该客户端对应的 HttpSession 对象。在一定时间内，如果某个客户端一直没有请求访问，那么，Web 服务器就会认为该客户端已经结束请求，并且将与该客户端会话所对应的 HttpSession 对象变成垃圾对象，等待垃圾收集器将其从内存中彻底清除。反之，如果浏览器超时后，再次向服务器发出请求访问，那么， Web 服务器则会创建一个新的 HttpSession 对象，并为其分配一个新的 ID 属性。
+
+<b>session 默认失效时间 30 分钟『可以在 tomcat 的 web.xml 配置文件中配置』</b>
+
+```xml
+<session-config>
+    <session-timeout>30</session-timeout>
+</session-config>
+```
+
+每次访问页面时，都会重置 Session 的失效时间，即 10 分钟内没有访问会话，第 10 分钟重新访问会话，那么 Session 的有效时间还是 30 分钟。
+
+也可以使用 invalidate 方法强制使会话失效。
+
+### 易错点
+
+> 当客户端关闭后，服务器不关闭，两次获取 session 是否为同一个？
+
+- 默认情况下<b>不是</b>。
+- 如果需要相同，则可以创建 Cookie，键为 JSESSIONID，设置最大存活时间，让 Cookie 持久化保存。
+
+```java
+HttpSession session = request.getSession();
+Cookie c = new Cookie("JSESSIONID",session.getId());
+c.setMaxAge(60*60);
+response.addCookie(c);
+/*
+浏览器禁用 Cookie 时，如何使用 Session?
+代码与上面一样，我们手动设置 Session 写入 Cookie中。
+浏览器没用禁用 Cookie 时，会自动把 Session 的 Id 写入 Cookie的 。
+*/
+```
+
+> 客户端不关闭，服务器关闭后，两次获取的 session 是同一个吗？
+
+- 不是同一个，但是要确保数据不丢失。『tomcat 自动完成以下工作』
+  - session 的钝化：在服务器正常关闭之前，将 session 对象系列化到硬盘上
+  - session 的活化：在服务器启动后，将 session 文件转化为内存中的 session 对象即可。
+
+> session 什么时候被销毁？
+
+- 服务器关闭
+
+- session 对象调用 invalidate() 
+
+- session 默认失效时间 30 分钟『tomcat 的 web.xml 配置文件中』
+
+  ```xml
+  <session-config>
+      <session-timeout>30</session-timeout>
+  </session-config>
   ```
 
-- 客户端不关闭，服务器关闭后，两次获取的 session 是同一个吗？
-
-  - 不是同一个，但是要确保数据不丢失。『tomcat 自动完成以下工作』
-    - session 的钝化：在服务器正常关闭之前，将 session 对象系列化到硬盘上
-    - session 的活化：在服务器启动后，将 session 文件转化为内存中的 session 对象即可。
-
-- session 什么时候被销毁？
-
-  - 服务器关闭
-
-  - session 对象调用 invalidate() 
-
-  - session 默认失效时间 30 分钟『tomcat 的 web.xml 配置文件中』
-
-    ```xml
-    <session-config>
-        <session-timeout>30</session-timeout>
-    </session-config>
-    ```
-
-### 特点
+## 对比
 
 - session 用于存储一次会话的多次请求的数据，存在服务器端
 
@@ -1364,7 +1642,7 @@ public void setDomain(String domain) {
 - Session 它是一个会话范围，相当于一个局部变量，从 Session 第一次创建直到关闭，数据都一直保存，每一个客户都有一个 Session，所以它可以被客户一直访问，只要 Session 没有关闭、超时。
 - ServletContext 它代表了 Servlet 环境的上下文，相当于一个全局变量。只要 web 应用启动了，这个对象就一直都有效的存在，范围最大，存储的数据可以被该应用的所有用户使用，只要服务器不关闭，数据就会一直都存在。
 
-2️⃣优缺点：
+2️⃣优缺点
 
 - request：
     - 好处：用完就仍，不会导致资源占用的无限增长。
@@ -1377,14 +1655,19 @@ public void setDomain(String domain) {
 
 # Filter
 
+Servlet 规范中有两个高级特性：Filter 和 Listener。Filter 用于对 request、response 对象进行修改，Listener 用于对 context、session、request 事件进行监听。这里先介绍 Filter。
+
 <b style="color:orange">当访问服务器的资源时，过滤器可以将请求拦截下来，完成一些特殊的功能。</b>
 
-典型的应用场景有
+Filter 的典型应用场景有
 
 - 登录校验
+- 过滤敏感词
 - 设置统一编码
 
-## 入门代码
+## Filter入门
+
+Filter 被称作过滤器，其基本功能就是对 Servlet 容器调用 Servlet 的过程进行拦截，从而在 Servlet 进行响应处理前后实现一些特殊功能。
 
 - xml 配置
 - 注解配置
@@ -1405,9 +1688,7 @@ public class FilterDemo implements Filter {
 }
 ```
 
-## 过滤器细节
-
-### xml&注解配置
+## xml&注解配置
 
 ```xml
 <filter>
@@ -1454,7 +1735,7 @@ public class LoginFilter implements Filter {
         StringBuffer requestURL = request.getRequestURL();
         HttpSession session = request.getSession();
         if (session.getAttribute("user") == null) {
-            // 统一资源定位符  http://localhost:8080/TomcatDemo/
+            // 统一资源定位符  http://localhost:8080/tomcat/
             String requestURI = request.getRequestURI();
             if (canPass(requestURI)) {
                 chain.doFilter(req, resp);
@@ -1484,7 +1765,7 @@ public class LoginFilter implements Filter {
 }
 ```
 
-### 过滤器执行流程
+## 过滤器执行流程
 
 - 执行过滤器
 
@@ -1495,7 +1776,7 @@ public class LoginFilter implements Filter {
 - 执行的顺序可以理解为一个压栈的过程。
 
   - 定义的顺序 F3，F2，F1
-  - 初始化的时候，F3 2 1 依次入栈
+  - 初始化的时候，F3，F2，F1 依次入栈
   - 然后依次出栈执行初始化过程，所以 init 的输出顺序是 1 2 3。初始化好后的又入栈到 doFilter 这个栈中。 1 2 3『栈顶』
   - 栈顶元素再一次执行 doFilter 方法。 顺序为  3  2  1.
   - destroy 方法也是如此记忆。顺序为 1 2 3.
@@ -1541,15 +1822,17 @@ public class LoginFilter implements Filter {
 
   注解的配置方式有个 bug。
 
-### 生命周期方法
+## 生命周期方法
 
-- init：在服务器启动后，会创建 Filter 对象，然后调用 init 方法。只执行一次。<b>用于加载资源</b>
-- doFilter：每一次请求被拦截资源时，会执行。执行多次
-- destroy：在服务器关闭后，Filter 对象被销毁。如果服务器是正常关闭，则会执行 destroy 方法。只执行一次。<b>用于释放资源</b>
+- init：在服务器启动后，会创建 Filter 对象，然后调用 init 方法。只执行一次，一般是<b>用于加载资源</b>。
+- doFilter：每一次请求被拦截资源时会执行，可执行多次。
+- destroy：在服务器关闭后，Filter 对象被销毁。如果服务器是正常关闭，则会执行 destroy 方法。只执行一次。<b>一般用于释放资源</b>。
 
-### 配置详解
+Filter 和 Servlet 一样也可以预先设置一些参数，然后供当前 Filter 读取使用。Servlet 对应的是 ServletConfig 类，而 Filter 对应的是 FilterConfig 类。用法是类似的，作用域范围也是一样的，都是只有当前 Filter 可以访问。
 
-拦截路径配置
+## 配置详解
+
+Filter 拦截路径的常见配置如下表所示。
 
 | 方式         | 举例       | 说明                                          |
 | ------------ | ---------- | --------------------------------------------- |
@@ -1558,29 +1841,47 @@ public class LoginFilter implements Filter {
 | 后缀名拦截   | *.jsp      | 访问所有后缀名为 jsp 资源时，过滤器都会被执行 |
 | 拦截所有资源 | /*         | 访问所有资源时，过滤器都会被执行              |
 
-拦截方式配置：资源被访问的方式
-- 注解配置 @WebFilter(value = "/index.jsp",dispatcherTypes = DispatcherType.REQUEST)
-  - REQUEST：默认值。浏览器直接请求资源
-  - FORWARD：转发访问资源
-  - INCLUDE：包含访问资源
-  - ERROR：错误跳转资源
-  - @WebFilter(value = "/index.jsp",dispatcherTypes = DispatcherType.FORWARD)
-  - 当 xx 转发到 index.jsp 时，会被过滤器拦截
-- web.xml 配置
-  - 设置 \<dispatcher\>\</dispatcher\> 标签即可
+Filter 中有一个元素可以指定过，当资源被特定的方式访问时才会进行拦截。xml 中是通过 `filter-mapping` 中的 `dispatcher` 来指定；注解配置则是使用 @WebFilter 中的 dispatcherTypes 属性来指定。
 
-### 过滤器链(配置多个过滤器)
+注解配置示例 @WebFilter(value = "/index.jsp",dispatcherTypes = DispatcherType.REQUEST)
 
-- 执行顺序：如果有两个过滤器：Filter1 和 Filter2
+- REQUEST：默认值，浏览器直接请求资源
+- FORWARD：转发访问资源
+- INCLUDE：包含访问资源
+- ERROR：错误跳转资源
+- @WebFilter(value = "/index.jsp",dispatcherTypes = DispatcherType.FORWARD)
+- 当 xx 转发到 index.jsp 时，会被过滤器拦截
 
-  ```mermaid
-  graph LR
-  F1[Filter1]-->F2[Filter2]-->资源放行-->F2'[Filter2]-->F1'[Filter1]
-  ```
+<b>REQUEST</b>
 
-- 过滤器先后顺序问题：
-  - 注解配置：按照类名的字符串比较规则比较，值小的先执行；如：AFilter 和 BFilter，AFilter 就先执行了。『字典顺序小的先执行』
-  - web.xml 配置：`<filter-mapping>` 谁定义在上边，谁先执行
+当用户直接访问页面时，Web 容器将会调用过滤器。如果目标资源是通过 Request Dispatcher 的 include() 或 forward() 方法访问的，那么该过滤器将不会被调用。
+
+<b>INCLUDE</b>
+
+如果目标资源是通过 RequestDispatcher 的 include() 方法访问的，那么该过滤器将被调用。除此之外，该过滤器不会被调用。
+
+<b>FORWARD</b>
+
+如果目标资源是通过 RequestDispatcher 的 forward() 方法访问的，那么该过滤器将被调用。除此之外，该过滤器不会被调用。
+
+<b>ERROR</b>
+
+如果目标资源是通过声明式异常处理机制调用的，那么该过滤器将被调用。除此之外，过滤器不会被调用。
+
+## 过滤器链
+
+在一个 Web 应用程序中可以注册多个 Filter 程序，每个 Filter 程序都可以针对某一个 URL 进行拦截。如果多个 Filter 程序都对同一个 URL 进行拦截，那么这些 Filter 就会组成一个 Filter 链（也叫过滤器链）。
+
+过滤器链的执行顺序：如果有两个过滤器 Filter1 和 Filter2
+
+```mermaid
+graph LR
+浏览器-->|请求|F1[Filter1]-->|请求|F2[Filter2]-->处理资源-->|响应|F2[Filter2]-->|响应|F1[Filter1]-->|响应|浏览器
+```
+
+过滤器先后顺序问题
+- 注解配置：按照类名的字符串比较规则比较，值小的先执行；如：AFilter 和 BFilter，AFilter 就先执行了。『字典顺序小的先执行』
+- web.xml 配置：`<filter-mapping>` 谁定义在上边，谁先执行
 
 ## 过滤器案例
 
@@ -1690,6 +1991,24 @@ public class SensitiveWordsFilter implements Filter {
 }
 ```
 
+### 统一编码
+
+在其他 Servlet 获取数据之前和响应数据之前设置编码格式即可。
+
+```java
+@WebFilter(urlPatterns = "/*")
+public class CharsetFilter implements Filter {
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        request.setCharacterEncoding("UTF-8");
+        response.setContentType("text/html;charset=UTF-8");
+        chain.doFilter(request, response);
+    }
+}
+```
+
+
+
 ## 增强对象的功能
 
 ### 装饰模式
@@ -1774,30 +2093,61 @@ public class ProxyDemo {
         System.out.println(sale);
     }
 }
-/**
-lambda写法
-Proxy.newProxyInstance(lc.getClassLoader(),lc.getInterfaces(),(proxy,method,ags)->{
-            if("sale".equals(method)){
-                // 调用真实对象的方法 obj是执行方法后的返回值
-                System.out.println("该方法执行了");
-                Object invoke = method.invoke(lc, ags);
-                return invoke;
-            }
-            return method.invoke(lc,ags);
-        });
-*/
 ```
 
 # Listener
 
-web 的三大组件之一。
+Listener，JavaWeb 三大组件之一，常用于监听某些事件并对该类事件做出响应。好好理解下这种设计思想，在诸多框架中也提供了类似的功能。
 
-事件监听机制
+## Servlet事件监听
 
-- 事件：一件事情
-- 事件源：事件发生的地方
-- 监听器：一个对象
-- 注册监听：将事件、事件源、监听器代码
+监听器在监听的过程中会涉及几个重要组成部分，具体如下。
+
+- 事件：一件事情；如用户的一个操作，如单击一个按钮、调用一个方法、创建一个对象等。
+- 事件源：产生事件的对象。
+- 监听器：负责监听发生在事件源上的事件。
+- 事件处理器：监听器的成员方法，当事件发生的时候会触发对应的处理器（成员方法）。
+
+Web 应用程序中经常会使用监听器，这些监听器被称为 Servlet 事件监听器。Servlet 事件监听器就是一个实现了特定接口的 Java 程序，专门用于监听 Web 应用程序中 ServletContext、HttpSession 和 ServletRequest 等域对象的创建和销毁过程，监听这些域对象属性的修改以及感知绑定到 HttpSession 域中某个对象的状态。
+
+<b>Servlet 规范中共有 8 种监听器，具体如下表所示。</b>
+
+| 类型                            | 描述                                                         |
+| ------------------------------- | ------------------------------------------------------------ |
+| ServletContextListener          | 用于监听 ServletContext 对象的创建与销毁过程                 |
+| HttpSessionListener             | 用于监听 ServletContext 对象的创建与销毁过程                 |
+| ServletRequestListener          | 用于监听 ServletRequest 对象的创建与销毁过程                 |
+| ServletContextAttributeListener | 用于监听 ServletContext 对象中的属性变更                     |
+| HttpSessionAttributeListener    | 用于监听 HttpSession 对象中的属性变更                        |
+| ServletRequestAttributeListener | 用于监听 ServletRequest 对象中的属性变更                     |
+| HtpSessionBindingListener       | 用于监听 JavaBean 对象绑定到 HttpSession 对象和从 HttpSession 对象解绑的事件 |
+| HttpSessionActivationListener   | 用于监听 HttpSession 中对象活化和钝化的过程                  |
+
+<b>HttpSessionActivationListener 涉及到了活化和钝化的概念。</b>
+
+- HttpSession 对象从内存中转移至硬盘的过程称为钝化。具体的，当服务器正常关闭时，还存活着的 session (在设置时间内没有销毁) 会随着服务器的关闭被以文件 (“SESSIONS.ser”) 的形式存储在 tomcat 的 work 目录下，这个过程叫做 Session 的钝化。
+- HttpSession 对象从持久化的状态变为运行状态的过程被称为活化。具体的，当服务器再次正常开启，服务器会找到之前的 “SESSIONS.ser” 文件，从中恢复之前保存起来的 Session 对象，这个过程叫做 Session 的活化。
+
+[(28条消息) session 对象的绑定、解绑和钝化、活化_thedevilisme888的博客-CSDN博客](https://blog.csdn.net/thedevilisme888/article/details/116549861?spm=1001.2101.3001.6650.2&utm_medium=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromBaidu~Rate-2-116549861-blog-102151762.pc_relevant_recovery_v2&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~BlogCommendFromBaidu~Rate-2-116549861-blog-102151762.pc_relevant_recovery_v2&utm_relevant_index=3)
+
+<b>API 的用法也比较简单，就是实际的应用场景复杂。</b>
+
+```java
+@WebListener
+public class ListenerHttpSession implements HttpSessionListener {
+    @Override
+    public void sessionCreated(HttpSessionEvent se) {
+        System.out.printf("=======>Session 活化 %s%n", se.getSession());
+        HttpSessionListener.super.sessionCreated(se);
+    }
+
+    @Override
+    public void sessionDestroyed(HttpSessionEvent se) {
+        System.out.printf("=======>Session 钝化 %s%n", se.getSession());
+        HttpSessionListener.super.sessionDestroyed(se);
+    }
+}
+```
 
 ## ServletContextListener
 
@@ -1855,7 +2205,7 @@ public void contextInitialized(ServletContextEvent sce) {
 }
 ```
 
-动态添加 Servlet 感觉有点鸡肋（Servlet 3.0+）
+动态添加 Servlet 感觉有点鸡肋（Servlet 3.0+）。不，不鸡肋！Spring MVC 动态添加自己定义的 Servlet 正是采用监听器来完成的！
 
 ```java
 @WebListener(value = "listener1")
@@ -1874,6 +2224,360 @@ public class Listener implements ServletContextListener {
     }
 
     public void contextDestroyed(ServletContextEvent sce) {}
+}
+```
+
+# ServletContext
+
+ServletContext 是一个接口，官方叫 Servlet 上下文。当 Servlet 容器启动时，会为每个 Web 应用创建一个唯一的 ServletContext 对象代表当前 Web 应用，该对象不仅封装了当前 Web 应用的所有信息，而且实现了多个 Servlet 之间数据的共享。
+
+## 获取对象
+
+- 通过 request 对象获取  request.getServletContext();
+- 通过 HttpServlet 获取  this.getServletContext();
+
+## 共享数据
+
+在 Web 应用的 XML 中配置初始化参数，供整个应用的 Servlet 共享。
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+    <context-param>
+        <param-name>hello</param-name>
+        <param-value>hello-value</param-value>
+    </context-param>
+</web-app>
+```
+
+```java
+@WebServlet(urlPatterns = "/context")
+public class TestServletContext extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        ServletContext servletContext = getServletContext();
+        // hello-value
+        String hello = servletContext.getInitParameter("hello");
+        resp.getWriter().write(hello);
+    }
+}
+```
+
+一个 Web 应用中的所有 Servlet 共享同一个 ServletContext 对象，因此，ServletContext 对象的域属性可以被该 Web 应用中的所有 Servlet 访问。在 ServletContext 接口中定义了分别用于增加、删除、设置 ServletContext 域属性的 4 个方法
+
+| 方法说明                                   | 功能描述                                                     |
+| ------------------------------------------ | ------------------------------------------------------------ |
+| Enumeration getAttributeNames()            | 返回一个 Enumeration 对象，该对象包含了所有存放在 ServletContext 中的所有域属性名 |
+| Object getAttribute(String name)           | 根据参数指定的属性名返回一个与之匹配的域属性值               |
+| void removeAttribute(String name)          | 根据参数指定的域属性名，从 ServletContext 中删除匹配的域属性 |
+| void setAttribute(String name, Object obj) | 设置 ServletContext 的域属性，其中 name 是域属性名，obj 是域属性值 |
+
+测试部分 API。编写两个 Servlet 一个用于 setAttribute 一个用于 getAttribute。用 HttpClient 发起 HTTP 请求进行测试。
+
+<b>Servlet 代码</b>
+
+```java
+@WebServlet(urlPatterns = "/setContext")
+public class SetServletContextAttribute extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        ServletContext context = getServletContext();
+        context.setAttribute("context-name", "TestServletContext put name");
+    }
+}
+
+@WebServlet(urlPatterns = "/getContext")
+public class GetServletContextAttribute extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        ServletContext context = getServletContext();
+        Object attribute = context.getAttribute("context-name");
+        resp.getWriter().write(attribute.toString());
+    }
+}
+```
+
+<b>HttpClient 测试代码，先发起 set 请求在 get 属性</b>
+
+```java
+package com.tomcat.controller.context;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class TestContext {
+    public static void main(String[] args) {
+        testMethod();
+    }
+
+    public static void testMethod() {
+        HttpRequest setContext = HttpRequest.newBuilder()
+                .header("Content-Type", "text/html;charset=UTF-8")
+                .version(HttpClient.Version.HTTP_1_1)
+                .uri(URI.create("http://localhost:8080/tomcat/setContext"))
+                .timeout(Duration.ofMillis(2000))
+                .GET()
+                .build();
+
+        HttpRequest getContext = HttpRequest.newBuilder()
+                .header("Content-Type", "text/html;charset=UTF-8")
+                .version(HttpClient.Version.HTTP_1_1)
+                .uri(URI.create("http://localhost:8080/tomcat/getContext"))
+                .timeout(Duration.ofMillis(2000))
+                .GET()
+                .build();
+
+        try {
+            client.send(setContext, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> send = client.send(getContext, HttpResponse.BodyHandlers.ofString());
+            showExecutorResult(send);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            threadPool.shutdown();
+        }
+
+    }
+
+
+    private static void showExecutorResult(HttpResponse<String> message) {
+        System.out.println("状态码==============>" + message.statusCode());
+        System.out.println("响应体==============>" + message.body());
+    }
+
+    private static ExecutorService threadPool = Executors.newFixedThreadPool(10);
+
+    private static final HttpClient client = HttpClient
+            .newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
+            .connectTimeout(Duration.ofMillis(2000))
+            .followRedirects(HttpClient.Redirect.NEVER)
+            .executor(threadPool)
+            .build();
+
+}
+```
+
+## 读取资源文件
+
+我们可以用 ServletContext 来读取 Web 应用下的资源文件。如配置文件、图片等。为此，在 ServletContext 接口中定义了一些读取 Web 资源的方法，这些方法是依靠 Servlet 容器来实现的。Servlet 容器根据资源文件相对于 Web 应用的路径，返回关联资源文件的 IO 流、资源文件在文件系统的绝对路径等。
+
+| 方法                                         | 功能描述                                                     |
+| -------------------------------------------- | ------------------------------------------------------------ |
+| Set getResourcePaths(String path)            | 返回一个 Set 集合，集合中包含资源目录中子目录和文件的路径名称。参数 path 必须以正斜线 `/` 开始，指定匹配资源的部分路径。 |
+| String getRealPath(String path)              | 返回资源文件在服务器文件系统上的真实路径（文件的绝对路径）。参数 path 代表资源文件的虚拟路径，它应该以正斜线 `/` 开始，`/` 表示当前 Web 应用的根目录，如果 Servlet 容器不能将虚拟路径转换为文件系统的真实路径，则返回 null。 |
+| URL getResource(String path)                 | 返回映射到某个资源文件的 URL 对象。参数 path 必须以正斜线 `/` 开始，`/` 表示当前 Web 应用的根目录。 |
+| InputStream getResourceAsStream(String path) | 返回映射到某个资源文件的 InputStream 输入流对象。参数 path 传递规则和 getResource() 方法完全一致。 |
+
+<b>Servlet 代码</b>
+
+```java
+@WebServlet(urlPatterns = "/resource")
+public class ReadResource extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        ServletContext context = req.getServletContext();
+        URL resource = context.getResource("/testFile.txt");
+        String realPath = context.getRealPath("/testFile.txt");
+        // 获取当前 Web 应用根目录下的所有文件，不会递归获取文件！
+        Set<String> resourcePaths = context.getResourcePaths("/"); 
+        InputStream resourceAsStream = context.getResourceAsStream("/testFile.txt");
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("URL=====>").append(resource).append("\n")
+                .append("realPath=====>").append(realPath).append("\n")
+                .append("resourcePaths=====>").append(Arrays.toString(resourcePaths.toArray())).append("\n")
+                .append("resourceAsStream=====>").append(new String(resourceAsStream.readAllBytes())).append("\n");
+        resp.setContentType("text/html;charset=UTF-8");
+        resp.getWriter().write(builder.toString());
+    }
+}
+```
+
+<b>测试代码</b>
+
+```java
+package com.tomcat.controller.context;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+public class TestContext {
+    public static void main(String[] args) {
+        testContextReadSource();
+    }
+
+    // 测试方法。
+    public static void testContextReadSource() {
+        HttpRequest request = HttpRequest.newBuilder()
+                .header("Content-Type", "text/html;charset=UTF-8")
+                .version(HttpClient.Version.HTTP_1_1)
+                .uri(URI.create("http://localhost:8080/tomcat/resource"))
+                .timeout(Duration.ofMillis(2000))
+                .GET().build();
+        try {
+            HttpResponse<String> resp = client.send(request, HttpResponse.BodyHandlers.ofString());
+            showExecutorResult(resp);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            threadPool.shutdown();
+        }
+    }
+
+    private static void showExecutorResult(HttpResponse<String> message) {
+        System.out.println("状态码==============>" + message.statusCode());
+        System.out.println("响应体==============>" + message.body());
+    }
+
+    private static ExecutorService threadPool = Executors.newFixedThreadPool(10);
+
+    private static final HttpClient client = HttpClient
+            .newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
+            .connectTimeout(Duration.ofMillis(2000))
+            .followRedirects(HttpClient.Redirect.NEVER)
+            .executor(threadPool)
+            .build();
+}
+/*
+状态码==============>200
+响应体==============>URL=====>file:/E:/Code/tomcat/web/testFile.txt
+realPath=====>E:\Code\tomcat\web\testFile.txt
+resourcePaths=====>[/index.jsp, /WEB-INF/, /testFile.txt]
+resourceAsStream=====>这是一个测试 ServletContext 读取资源的文件。
+*/
+```
+
+## 添加组件
+
+ServletContext 类还提供了几个方法用于向容器中动态添加 Servlet、Filter、Listener 这三大组件。不过不能在上下文初始好后添加这些组件。因此，可以通过配置 loadOnStartup=正数，在容器启动，但是没有初始化好上下文（ServletContext）的时间将 Servlet 添加进去。
+
+```java
+@WebServlet(urlPatterns = "/add", loadOnStartup = 0)
+public class AddComponent extends HttpServlet {
+    @Override
+    public void init() throws ServletException {
+        ServletContext context = getServletContext();
+        context.addServlet("dym", new HttpServlet() {
+            @Override
+            protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+                resp.setContentType("text/html;charset=UTF-8");
+                resp.getWriter().write("动态添加的 Servlet");
+            }
+        }).addMapping("/dym");
+    }
+}
+```
+
+Spring MVC 也是借用了这个特点来向容器中添加自定义的 Servlet、Filter、Listener 的。
+
+## 文件的下载
+
+需求：完成文件下载功能，需要注意的是，任何文件都要是下载，不能让它被浏览器解析！
+
+进行文件下载时需要指定文件的 MIME 类型。
+
+- MIME 类型：在互联网通信过程中定义的一种文件数据类型
+- 格式：大类型/小类型   text/html  image/jpeg
+
+```java
+public class DownLoadUtils {
+
+    public static String getFileName(String agent, String filename) throws UnsupportedEncodingException {
+        if (agent.contains("MSIE")) {
+            // IE浏览器
+            filename = URLEncoder.encode(filename, "utf-8");
+            filename = filename.replace("+", " ");
+        } else if (agent.contains("Firefox")) {
+            // 火狐浏览器
+            BASE64Encoder base64Encoder = new BASE64Encoder();
+            filename = "=?utf-8?B?" + base64Encoder.encode(filename.getBytes("utf-8")) + "?=";
+        } else {
+            // 其它浏览器
+            filename = URLEncoder.encode(filename, "utf-8");
+        }
+        return filename;
+    }
+}
+
+@WebServlet("/downloadServlet")
+public class DownloadServlet extends HttpServlet {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        //1.获取请求参数，文件名称
+        String filename = request.getParameter("filename");
+        //2.使用字节输入流加载文件进内存
+        //2.1找到文件服务器路径
+        ServletContext servletContext = this.getServletContext();
+        String realPath = servletContext.getRealPath("/img/" + filename);
+        //2.2用字节流关联
+        FileInputStream fis = new FileInputStream(realPath);
+
+        //3.设置response的响应头
+        //3.1设置响应头类型：content-type
+        String mimeType = servletContext.getMimeType(filename);//获取文件的mime类型
+        response.setHeader("content-type",mimeType);
+        //3.2设置响应头打开方式:content-disposition
+
+        //解决中文文件名问题
+        //1.获取user-agent请求头、
+        String agent = request.getHeader("user-agent");
+        //2.使用工具类方法编码文件名即可
+        filename = DownLoadUtils.getFileName(agent, filename);
+
+        response.setHeader("content-disposition","attachment;filename="+filename);
+        //4.将输入流的数据写出到输出流中
+        ServletOutputStream sos = response.getOutputStream();
+        byte[] buff = new byte[1024 * 8];
+        int len = 0;
+        while((len = fis.read(buff)) != -1){
+            sos.write(buff,0,len);
+        }
+        fis.close();
+    }
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        this.doPost(request,response);
+    }
+}
+```
+
+<b>中文乱码解决思路</b>
+
+- 获取客户端使用的浏览器版本信息
+- 根据不同的版本信息，设置 filename 的编码方式不同
+
+```java
+public class DownLoadUtils {
+
+    public static String getFileName(String agent, String filename) throws UnsupportedEncodingException {
+        if (agent.contains("MSIE")) {
+            // IE浏览器
+            filename = URLEncoder.encode(filename, "utf-8");
+            filename = filename.replace("+", " ");
+        } else if (agent.contains("Firefox")) {
+            // 火狐浏览器
+            BASE64Encoder base64Encoder = new BASE64Encoder();
+            filename = "=?utf-8?B?" + base64Encoder.encode(filename.getBytes("utf-8")) + "?=";
+        } else {
+            // 其它浏览器
+            filename = URLEncoder.encode(filename, "utf-8");
+        }
+        return filename;
+    }
 }
 ```
 
@@ -1957,28 +2661,209 @@ MVC 是 Web 开发中的通用的设计模式，而三层架构是 JavaWeb/JavaE
 2. 业务逻辑层：处理业务逻辑的。
 3. 数据访问层：操作数据存储文件。
 
-- `cn.itcast.dao`：这个包中存放的是数据层的相关类，对应着 JavaWeb 三层架构中的数据层；
-- `cn.itcast.domain`：这个包中存放的是 JavaBean 类；
-- `cn.itcast.service`：这个包中存放的是与业务相关的类，对应着 JavaWeb 三层架构中的业务层；
-- `cn.itcast.web.servlet`：这个包中存放的是用来处理请求的 Servlet，对应着 JavaWeb 三层架构的 web 层。
+- `cn.demo.dao`：这个包中存放的是数据层的相关类，对应着 JavaWeb 三层架构中的数据层；
+- `cn.demo.domain`：这个包中存放的是 JavaBean 类；
+- `cn.demo.service`：这个包中存放的是与业务相关的类，对应着 JavaWeb 三层架构中的业务层；
+- `cn.demo.web`：这个包中存放的是用来处理请求的 Servlet，对应着 JavaWeb 三层架构的 web 层。
+
+# JDBC
+
+JDBC 的全称是 Java 数据库连接（Java Database Connectivity），它是一套用于执行 SQL 语句的 Java API。应用程序可通过这套 API 连接到关系型数据库，并使用 SQL 语句来完成对数据库中数据的查询、更新、新增和删除的操作。
+
+```mermaid
+graph
+应用程序-->JDBC
+JDBC-->MySQL驱动-->MySQL
+JDBC-->Oracle驱动-->Oracle
+```
+
+JDBC 在应用程序与数据库之间起到了一个桥梁作用。当应用程序使用 JDBC 访问特定的数据库时，需要通过不同数据库驱动与不同的数据库进行连接，连接后即可对该数据库进行相应的操作。
+
+JDBC 操作不同的数据库，但是操作数据库的 API 都是一样的！
+
+## JDBC常用API
+
+> <b>Driver 接口</b>
+
+Driver 接口是所有 JDBC 驱动程序必须实现的接口，该接口专门提供给数据库厂商使用。在编写 JDBC 程序时，必须要把所使用的数据库驱动程序或类库加载到项目的 classpath 中。
+
+> <b>DriverManager 类</b>
+
+DriverManager 类用于加载 JDBC 驱动并且创建与数据库的连接。在 DriverManager 类中，定义了两个比较重要的静态方法。
+
+| 方法                                               | 功能描述                                                     |
+| -------------------------------------------------- | ------------------------------------------------------------ |
+| registerDriver(Driver driver)                      | 该方法用于向 DriverManager 中注册给定的 JDBC 驱动程序        |
+| getConnection(String url, String user, String pwd) | 该方法用于建立和数据库的连接，并返回表示连接的 Connection 对象 |
+
+> <b>Connection 接口</b>
+
+Connection 接口代表 Java 程序和数据库的连接，只有获得该连接对象后才能访问数据库，并操作数据表。在 Connection 接口中，定义了一系列方法，其常用方法如下表。
+
+| 方法                         | 功能描述                                                     |
+| ---------------------------- | ------------------------------------------------------------ |
+| getMetaData()                | 该方法用于返回表示数据库的元数据的 DatabaseMetaData 对象     |
+| createStatement()            | 用于创建一个 Statement 对象并将 SQL 语句发送到数据库         |
+| prepareStatement(String sql) | 用于创建一个 PreparedStatement 对象并将参数化的 SQL 语句发送到数据库 |
+| prepareCall(String sql)      | 用于创建一个 CallableStatement 对象来调用数据库的存储过程    |
+
+> <b>Statement 接口</b>
+
+Statement 接口用于执行静态的 SQL 语句，并返回一个结果对象，该接口的对象通过 Connection 实例的 createStatement() 方法获得。利用该对象把静态的 SQL 语句发送到数据库编译执行，然后返回数据库的处理结果。在 Statement 接口中，提供了 3 个常用的执行 SQL 语句的方法。但是 Statement 接口操作这些 SQL 语句会过于繁琐，并且存在安全方面的问题。
+
+| 方法                      | 功能描述                                                     |
+| ------------------------- | ------------------------------------------------------------ |
+| execute(String sql)       | 用于执行各种 SQL 语句，该方法返回一个 boolean 类型的值，如果为 true，表示所执行的 SQL 语句有查询结果，可通过 Statement 的 getResultSet() 方法获得查询结果 |
+| executeUpdate(String sql) | 用于执行 SQL 中的 INSERT、UPDATE 和 DELETE 语句。该方法返回一个 int 类型的值，表示数据库中受该 SQL 语句影响的记录条数 |
+| executeQuery(String sql)  | 用于执行 SQL 中的 SEL ECT 语句，该方法返回一个表示查询结果的 ResultSet 对象 |
+
+> <b>PreparedStatement 接口</b>
+
+PreparedStatement是Statement的子接口，用于执行预编译的SQL语句。该接口扩展了带有参数SQL语句的执行操作，应用该接口中的SQL语句可以使用占位符“?”来代替其参数，然后通过setXxx()方法为SQL语句的参数赋值。在PreparedStatement接口中，提供了一些常用方法。
+
+| 方法                                                         | 功能描述                                                     |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| executeUpdate()                                              | 在此 PreparedStatement 对象中执行 SQL 语句，该语句必须是一个 DML 语句或者是无返回内容的 SQL 语句，比如 DDL 语句 |
+| executeQuery()                                               | 在此 PreparedStatement 对象中执行 SQL 查询，该方法返回的是 ResultSet 对象 |
+| setInt(int parameterIndex, int x)                            | 将指定参数设置为给定的 int 值                                |
+| setFloat(int parameterIndex, float x)                        | 将指定参数设置为给定的 float 值                              |
+| setString(int parameterIndex, int x)                         | 将指定参数设置为给定的 String 值                             |
+| setDate(int parameterIndex, Date x)                          | 将指定参数设置为给定的 Date 值                               |
+| addBatch()                                                   | 将一组参数添加到此 PreparedStatement 对象的批处理命令中      |
+| setCharacterStream(int parameterIndex, java.io.Reader reader, int length) | 将指定的输入流写入数据库的文本字段                           |
+| setBinaryStream(int parameterIndex, java.io.InputStream x, int length) | 将二进制的输入流数据写入到二进制字段中                       |
+
+setDate() 方法可以设置日期内容，但参数 Date 的类型是 java.sql.Date，而不是 java.util.Date。
+
+> <b>ResultSet 接口</b>
+
+ResultSet 接口用于保存 JDBC 执行查询时返回的结果集，该结果集封装在一个逻辑表格中。在 ResultSet 接口内部有一个指向表格数据行的游标（或指针），ResultSet 对象初始化时，游标在表格的第 1 行之前，调用  next() 方法可将游标移动到下一行。如果下一行没有数据，则返回 false。在应用程序中经常使用 next() 方法作为 WHILE 循环的条件来迭代 ResultSet 结果集。
+
+| 方法                         | 功能描述                                                     |
+| ---------------------------- | ------------------------------------------------------------ |
+| getString(int columnIndex)   | 用于获取指定字段的 String 类型的值，参数 columnIndex 代表字段的索引 |
+| getString(String columnName) | 用于获取指定字段的 String 类型的值，参数 columnName 代表字段的名称 |
+| getInt(int columnIndex)      | 用于获取指定字段的 int 类型的值，参数 columnIndex 代表字段的索引 |
+| getInt(String columnName)    | 用于获取指定字段的 int 类型的值，参数 columnName 代表字段的名称 |
+| getDate(int columnIndex)     | 用于获取指定字段的 Date 类型的值，参数 columnIndex 代表字段的索引 |
+| getDate(String columnName)   | 用于获取指定字段的 Date 类型的值，参数 columnName 代表字段的名称 |
+| next()                       | 将游标从当前位置向下移一行                                   |
+| absolute(int row)            | 将游标移动到此 ResultSet 对象的指定行                        |
+| afterLast()                  | 将游标移动到此 ResultSet 对象的末尾，即最后一行之后          |
+| beforeFirst()                | 将游标移动到此 ResultSet 对象的开头，即第 1 行之前           |
+| previous()                   | 将游标移动到此 ResultSet 对象的上一行                        |
+| last()                       | 将游标移动到此 ResultSet 对象的最后一行                      |
+
+字段的索引是从 1 开始编号。
+
+## 数据库查询
+
+- 下载 mysql 驱动，[Maven Repository: mysql » mysql-connector-java » 8.0.12 (mvnrepository.com)](https://mvnrepository.com/artifact/mysql/mysql-connector-java/8.0.12)
+- 将 mysql 驱动加入到 web 项目中。
+- 编写代码
+    - 注册驱动，MySQL8.x 不必手动注册驱动了
+    - 通过 DriverManager 获取数据库连接。
+    - 创建 Statement
+    - 执行 SQL
+    - 遍历结果集
+
+```java
+package com.tomcat.controller.db;
+
+import java.sql.*;
+
+public class ConnectedDB {
+    public static void main(String[] args) {
+        String url = "jdbc:mysql://localhost:3306/comments?tb_user&serverTimezone=UTC&useSSL=false";
+        String username = "root";
+        String password = "root";
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
+        try {
+            // mysql 8.x 可以不自己注册驱动，内部会处理好。
+            // DriverManager.registerDriver(new com.mysql.cj.jdbc.Driver());
+            // Class.forName("com.mysql.cj.jdbc.Driver");
+            connection = DriverManager.getConnection(url, username, password);
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery("select * from tb_user");
+            while (resultSet.next()) {
+                String nick_name = resultSet.getString("nick_name");
+                System.out.println(nick_name);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            assert resultSet != null;
+            close(connection, statement, resultSet);
+        }
+    }
+
+    private static void close(Connection connection, Statement statement, ResultSet resultSet) {
+        try {
+            if (resultSet != null) resultSet.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (statement != null) statement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (connection != null) connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+Statement 会有 SQL 注入的问题，用原生 JDBC 做数据库查询的话还是用 PrepareStatement，可以预防 SQL 注入。
+
+```java
+public static void testPrepareStatement() {
+    String url = "jdbc:mysql://localhost:3306/comments?tb_user&serverTimezone=UTC&useSSL=false";
+    String username = "root";
+    String password = "root";
+    Connection connection = null;
+    PreparedStatement prepareStatement = null;
+    ResultSet resultSet = null;
+    try {
+        connection = DriverManager.getConnection(url, username, password);
+        prepareStatement = connection.prepareStatement("select * from tb_user where id>?");
+        prepareStatement.setInt(1, 1000);
+        resultSet = prepareStatement.executeQuery();
+        while (resultSet.next()) {
+            String nick_name = resultSet.getString("id");
+            System.out.println(nick_name);
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    } finally {
+        assert resultSet != null;
+        close(connection, statement, resultSet);
+    }
+}
+```
 
 # Ajax和JSON
 
 ## Ajax
 
-> 概念：Asynchronous JavaScript And XML 异步的 JavaScript 和 xml。『这里说的同步异步与线程关系不大』
+概念：Asynchronous JavaScript And XML 异步的 JavaScript 和 xml。『这里说的同步异步与线程关系不大』
 
 ### 原生JavaScript实现
 
-- 原生 JavaScript 实现方式快速入门 
+原生 JavaScript 实现方式快速入门 
 
 ```html
 <script>
-    var button = document.getElementById("ss");
+    let button = document.getElementById("ss");
     button.onclick = function() {
         console.log(123)
         // 发送异步请求 考虑了浏览器兼容 1.创建核心对象
-        var xmlhttp;
+        let xmlhttp;
         if (window.XMLHttpRequest) {
             xmlhttp = new XMLHttpRequest();
         } else {
@@ -2005,7 +2890,7 @@ MVC 是 Web 开发中的通用的设计模式，而三层架构是 JavaWeb/JavaE
 ---
 
 ```js
-var request = new XMLHttpRequest(); // 创建XMLHttpRequest对象
+let request = new XMLHttpRequest(); // 创建XMLHttpRequest对象
 
 //ajax是异步的，设置回调函数
 request.onreadystatechange = function () { // 状态发生变化时，函数被回调
@@ -2033,8 +2918,7 @@ request.send();	//到这一步，请求才正式发出
 
 > $.ajax实现方式
 
-- 语法：$.ajax({键值对})
-  - 具体参数查 API
+- 语法：$.ajax({键值对})，具体参数查 API
 - 语法：`$.get(url, [data], [callback], [type])`
 - 语法：`$.post(url, [data], [callback], [type])`
   - `url`：请求路径
@@ -2085,29 +2969,29 @@ $.post("demo.json", {
 - 花括号保存对象
 - 方括号保存数组
 
-- JSON 与 JS 对象互转
 
-  - JSON 字符串转为 JS 对象，使用 JSON.parse()
+<b>JSON 与 JS 对象互转</b>
 
-    ```js
-    var obj = JSON.parse('{"a","hello"}');
-    // 控制台的输出结果是 {a:'hello',b:'world'}
-    ```
+JSON 字符串转为 JS 对象，使用 JSON.parse()
 
-  - `JS`对象转换为`JSON`字符串,使用`JSON.stringify()`
+```js
+let obj = JSON.parse('{"a","hello"}');
+// 控制台的输出结果是 {a:'hello',b:'world'}
+```
 
-    ```js
-    var json = JSON.stringifu({a:'hello',b:'world'}); 
-    // 控制台的输出结果是 '{"a":"hello","b":"world"}
-    ```
+`JS` 对象转换为 `JSON` 字符串用 `JSON.stringify()`
+
+```js
+let json = JSON.stringifu({a:'hello',b:'world'}); 
+// 控制台的输出结果是 '{"a":"hello","b":"world"}
+```
 
 
 代码案例
 
 ```js
-<script>
 // 1.常规JSON字符串
-var json1 = {
+let json1 = {
      "name": "liujiawei",
      "age": 18
 };
@@ -2116,14 +3000,14 @@ console.log(typeof(json1));
 // 控制台输出{name: "liujiawei", age: 18}
 console.log(json1);
 
-var json3 = '{"name":"liujiawei","age":18}';
+let json3 = '{"name":"liujiawei","age":18}';
 // 控制台输出 string
 console.log(typeof(json3));
 // 控制台输出{"name":"liujiawei","age":18}
 console.log(json3);
 
 //2.带数组
-var json4 = {
+let json4 = {
     "name": "liujiawei",
     "age": 18,
     "array": [1, 2, 3, 4, 5]
@@ -2132,7 +3016,7 @@ console.log(json4.array[0]);
 console.log(json4 === eval(json4)); // true
 
 //3.复合
-var json5 = {
+let json5 = {
     "name": "liujiawei",
     "age": 18,
     "array": [1, 2, 3, 4, 5],
@@ -2145,15 +3029,15 @@ var json5 = {
 console.log(json5.data.key1);
 
 // JSON数据的遍历
-var person = {"name": "张三",age: 23,'gender': true};
+let person = {"name": "张三",age: 23,'gender': true};
 
-var ps = [
+let ps = [
     {"name": "张三","age": 23,"gender": true},
     {"name": "李四","age": 24,"gender": true},
     {"name": "王五","age": 25,"gender": false}
 ];
 console.log("**************")
-for (var key in person) {
+for (let key in person) {
     // string
     console.log(typeof(key));
     // 相当于 person["name"] 
@@ -2161,15 +3045,15 @@ for (var key in person) {
     console.log(person[key]);
 }
 console.log("**************")
-for (var i = 0, len = ps.length; i < len; i++) {
-    var temp = ps[i];
-    for (var t in temp) {
+for (let i = 0, len = ps.length; i < len; i++) {
+    let temp = ps[i];
+    for (let t in temp) {
         console.log(temp[t])
     }
 }
 console.log("**************")
 // 如果是不规则的数据呢？递归遍历
-var datas = {
+let datas = {
     "name": "菜是原罪",
     "age": 18,
     "friends": [
@@ -2185,7 +3069,7 @@ function travel(data, obj) {
     if (obj == null) obj = new Object();
     // 如果当前遍历到的是对象,则继续递归
     if (typeof(data) == typeof(obj)) {
-        for (var i in data) {
+        for (let i in data) {
             if (typeof(i) != typeof(obj)) console.log(i)
             travel(data[i], obj);
         }
@@ -2197,7 +3081,6 @@ function travel(data, obj) {
 }
 
 travel(datas);
-</script>
 ```
 
 ### JSON的转换
@@ -2215,7 +3098,7 @@ var json = JSON.stringifu({a:'hello',b:'world'});
 
 <b>JSON 解析器</b>
 
-- 常见的解析器：Jsonlib，Gson，fastjson，jackson『spring 用的』
+- 常见的解析器：Jsonlib，Gson，fastjson，jackson『spring 默认用 jackson』
 
 <b>JSON 转为 Java 对象</b>
 
@@ -2232,7 +3115,7 @@ var json = JSON.stringifu({a:'hello',b:'world'});
 
 - 调用 ObjectMapper 的相关方法进行转换
 
-  - writeValue(参数1，obj):
+  - writeValue(参数1，obj)
 
     ```
     参数1：
@@ -2356,9 +3239,7 @@ public class JsonDemo {
 
 `<script src="https://unpkg.com/axios/dist/axios.min.js"></script>`
 
-## 基本用法
-
-### Get请求
+## Get请求
 
 ```js
 // 为给定 ID 的 user 创建请求
@@ -2384,7 +3265,7 @@ axios.get('/user', {
   });
 ```
 
-### Post请求
+## Post请求
 
 ```js
 axios.post('/user', {
@@ -2399,7 +3280,7 @@ axios.post('/user', {
   });
 ```
 
-### 多个并发请求
+## 多个并发请求
 
 ```js
 function getUserAccount() {
