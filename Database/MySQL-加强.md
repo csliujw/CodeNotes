@@ -1,8 +1,13 @@
 # 概览
 
+[TOC]
+
 ## 常见面试题
 
 - <b>什么是事务，以及事务的四大特性</b>
+    - <span style="color:red">事务</span>是一组操作的集合，将所有的操作作为一个整体一起向系统提交或撤销操作请求，即这些操作<span style="color:red">要么同时成功，要么同时失败。</span>
+    - ACID 四大特性。
+
 - <b>事务的隔离级别有哪些, MySQL 默认是哪个</b>
     - <span style="color:orange">读未提交、读已提交、可重复读、可串行化。MySQL 默认是可重复读。</span>
 - <b>内连接与左外连接的区别是什么 </b>
@@ -17,7 +22,7 @@
     - <span style="color:orange">每次我们提交一个 SQL 查询语句给 MySQL，他内核里的查询优化器，都会针对这个 SQL 语句的语义去生成一个执行计划，这个执行计划就代表了，他会怎么查各个表，用哪些索引，如何做排序和分组。</span>
     - <span style="color:orange">可以使用 explain sql 语句或者 desc sql 语句来查看执行计划。</span>
 - <b>索引失效的情况有哪些 </b>
-    - <span style="color:orange">联合索引中，出现范围查询(>,<),范围查询右侧的列索引失效。条件允许的话，尽量用 >=,<=。</span>
+    - <span style="color:orange">联合索引中，出现范围查询 (>,<)，范围查询右侧的列索引失效。条件允许的话，尽量用 >=,<=。</span>
     - <span style="color:orange">用 or 分隔开的条例，如果 or 前面条件中的列有索引，后面的没有索引，那么涉及到的索引都会失效。可以将 or 中的所有字段都设置为索引。</span>
     - <span style="color:orange">字符串类型的字段使用时不加引号，索引会失效。</span>
     - <span style="color:orange">不符合索引的最左前缀法则的话，索引会失效。如  like '%d' 这种模糊匹配。</span>
@@ -44,7 +49,7 @@
 - SQL-DML
 - SQL-DQL
 - SQL-DCL
-- MySQL函数
+- MySQL 函数
 - 约束
 - 多表查询
 - 事务
@@ -86,7 +91,7 @@
 
 数据库管理系统：Database Management System，操纵和管理数据库的大型软件，简称 DBMS。
 
-> 关系型数据库 (RDBMS) 
+<b>关系型数据库 (RDBMS)</b>
 
 - 概念：关系型数据库，是建立在关系模型基础上，由多张相互连接的二维表组成的数据库。 
 
@@ -95,7 +100,7 @@
     2. 使用 SQL 语句操作，标准统一，使用方便； 
     3. 数据存储在磁盘中，安全
 
-> 非关系型数据库 (NoSQL)
+<b>非关系型数据库 (NoSQL)</b>
 
 - 概念：Not-Only SQL，泛指非关系型数据库，是对关系型数据库的补充。 
 - 特点：数据结构灵活；伸缩性强。
@@ -105,18 +110,18 @@ SQL：操作关系型数据库的编程语言，是一套标准。
 
 ### MySQL数据库
 
-> 版本
+<b>版本</b>
 
 MySQL 官方提供了两种不同的版本: 
 
 - 社区版 (MySQL Community Server)  免费，MySQL 不提供任何技术支持
 - 商业版 (MySQL Enterprise Edition)  收费，可以试用 30 天，官方提供技术支持
 
-> 安装
+<b>安装</b>
 
 [MySQL安装指南_技术交流_牛客网 (nowcoder.com)](https://www.nowcoder.com/discuss/825171?type=all&order=recall&pos=&page=1&ncTraceId=&channel=-1&source_id=search_all_nctrack&gio_id=649BB42AA30733488E2E468CA0F7721F-1642732433430)
 
-> 启动与停止
+<b>启动与停止</b>
 
 ```shell
 # 启动
@@ -125,7 +130,7 @@ net start mysql80
 net stop mysql80
 ```
 
-> 客户端连接
+<b>客户端连接</b>
 
 - 用 MySQL 提供的 MySQL 8.0 Command Line Client
 - 用系统自带的命令窗口，执行指令 `mysql -h 127.0.0.1 -P 3306 -u root -p password`
@@ -157,7 +162,7 @@ net stop mysql80
 
 ### DDL
 
->数据库操作
+<b>数据库操作</b>
 
 | 操作                     | 解释                        |
 | ------------------------ | --------------------------- |
@@ -167,7 +172,7 @@ net stop mysql80
 | select database();       | 查询当前数据库名称          |
 | drop databases 数据库名  | 删除数据库                  |
 
->表操作
+<b>表操作</b>
 
 | 操作                                             | 解释                     |
 | ------------------------------------------------ | ------------------------ |
@@ -180,13 +185,13 @@ net stop mysql80
 
 #### 数据库操作
 
-> 查询
+<b>查询</b>
 
 查询所有数据库 `show databases;`
 
 查询当前数据库 `select database();`
 
-> 创建
+<b>创建</b>
 
 ```sql
 create database [IF NOT EXISTS] 数据库名 [DEFAULT CHARSET 字符集] [COLLATE 排序规则];
@@ -195,18 +200,43 @@ create database [IF NOT EXISTS] 数据库名 [DEFAULT CHARSET 字符集] [COLLAT
 create database if not exists demo default charset utf8mb4;
 ```
 
-> 删除
+<b>删除</b>
 
 ```sql
 drop database 数据库名;
 drop database demo;
 ```
 
-> 使用
+<b>使用</b>
 
 ```sql
 use 数据库名;
 use demo;
+```
+
+#### 表操作-创建
+
+```sql
+create table 表名(
+    字段1 字段类型 [comment 字段1注释],
+    字段2 字段类型 [comment 字段2注释],
+)[comment 表注释];
+
+create database demo;
+use demo;
+
+drop table if esists tb_user; # 存在则先删除
+create table `tb_user` (
+    `id` int primary key auto_increment comment '主键',
+    `name` varchar(50) not null comment '用户名',
+    `phone` varchar(11) not null comment '手机号',
+    `email` varchar(100) default null comment '邮箱',
+    `profession` varchar(11) default null comment '专业',
+    `age` tinyint unsigned default null comment '年龄',
+    `gender` char(1) default null comment '性别 , 1: 男, 2: 女',
+    `status` char(1) default null comment '状态',
+    `createtime` datetime default null comment '创建时间',
+)
 ```
 
 #### 表操作-查询
@@ -217,22 +247,22 @@ use demo;
 
 查询指定表的建表语句 `show create table 表名`
 
-<div align="center"><img src="img/image-20220131155715763.png"></div>
-
-#### 表操作-创建
-
-```sql
-create table 表名(
-	字段1 字段类型 [comment 字段1注释],
-	字段2 字段类型 [comment 字段2注释],
-)[comment 表注释];
-
-drop table if esists tb_user; # 存在则先删除
-
-create table tb_user(
-	id int primary key,
-	name varchar(30) not null
-)
+```mysql
+mysql> show create table tb_user\G;
+*************************** 1. row ***************************
+       Table: tb_user
+Create Table: CREATE TABLE `tb_user` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `phone` varchar(11) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '手机号码',
+  `password` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '' COMMENT '密码，加密存储',
+  `nick_name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '' COMMENT '昵称，默认是用户id',
+  `icon` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '' COMMENT '人物头像',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uniqe_key_phone` (`phone`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1010 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=COMPACT
+1 row in set (0.01 sec)
 ```
 
 #### 数据类型
@@ -241,43 +271,43 @@ MySQL 中的数据类型有很多，主要分为三类：数值类型、字符�
 
 <div style="text-align:center;"><h4>数值类型</h4></div>
 
-| 分类           | 类型     | 大小                                                  | 有符号(SIGNED)范围                                         | 无符号(UNSIGNED)范围 | 描述               |
-| -------------- | -------- | ----------------------------------------------------- | ---------------------------------------------------------- | -------------------- | ------------------ |
-| 数值类型       | TINYINT  | 1  byte                                               | (-128，127)                                                | (0，255)             | 小整数值           |
-| SMALLINT       | 2  bytes | (-32768，32767)                                       | (0，65535)                                                 | 大整数值             | 大整数值           |
-| MEDIUMINT      | 3  bytes | (-8388608，8388607)                                   | (0，16777215)                                              | 大整数值             | 大整数值           |
-| INT 或 INTEGER | 4  bytes | (-2147483648，2147483647)                             | (0，4294967295)                                            | 大整数值             | 大整数值           |
-| BIGINT         | 8  bytes | ($-2^{63},2^{63}-1$)                                  | (0，$2^{64}-1$)                                            | 极大整数值           | 极大整数值         |
-| FLOAT          | 4  bytes | (-3.402823466 E+38，3.402823466351 E+38)              | 0 和 (1.175494351  E-38，3.402823466 E+38)                 | 单精度浮点数值       | 单精度浮点数值     |
-| DOUBLE         | 8  bytes | (-1.7976931348623157 E+308，1.7976931348623157 E+308) | 0 和  (2.2250738585072014 E-308，1.7976931348623157 E+308) | 双精度浮点数值       | 双精度浮点数值     |
-| DECIMAL        |          | 依赖于 M (精度)和 D (标度)的值                        | 依赖于 M (精度)和 D (标度)的值                             | 小数值(精确定点数)   | 小数值(精确定点数) |
+| 类型           | 大小     | 有符号(SIGNED)范围                                    | 无符号(UNSIGNED)范围                                       | 描述               |
+| -------------- | -------- | ----------------------------------------------------- | ---------------------------------------------------------- | ------------------ |
+| TINYINT        | 1  byte  | (-128，127)                                           | (0，255)                                                   | 小整数值           |
+| SMALLINT       | 2  bytes | (-32768，32767)                                       | (0，65535)                                                 | 大整数值           |
+| MEDIUMINT      | 3  bytes | (-8388608，8388607)                                   | (0，16777215)                                              | 大整数值           |
+| INT 或 INTEGER | 4  bytes | (-2147483648，2147483647)                             | (0，4294967295)                                            | 大整数值           |
+| BIGINT         | 8  bytes | ($-2^{63},2^{63}-1$)                                  | (0，$2^{64}-1$)                                            | 极大整数值         |
+| FLOAT          | 4  bytes | (-3.402823466 E+38，3.402823466351 E+38)              | 0 和 (1.175494351  E-38，3.402823466 E+38)                 | 单精度浮点数值     |
+| DOUBLE         | 8  bytes | (-1.7976931348623157 E+308，1.7976931348623157 E+308) | 0 和  (2.2250738585072014 E-308，1.7976931348623157 E+308) | 双精度浮点数值     |
+| DECIMAL        | -        | 依赖于 M (精度)和 D (标度)的值                        | 依赖于 M (精度)和 D (标度)的值                             | 小数值(精确定点数) |
 
 <div style="text-align:center;"><h4>字符串类型</h4></div>
 
-| 分类       | 类型                  | 大小                          | 描述                          |
-| ---------- | --------------------- | ----------------------------- | ----------------------------- |
-| 字符串类型 | CHAR                  | 0-255 bytes                   | 定长字符串                    |
-| VARCHAR    | 0-65535 bytes         | 变长字符串                    | 变长字符串                    |
-| TINYBLOB   | 0-255 bytes           | 不超过 255 个字符的二进制数据 | 不超过 255 个字符的二进制数据 |
-| TINYTEXT   | 0-255 bytes           | 短文本字符串                  | 短文本字符串                  |
-| BLOB       | 0-65 535 bytes        | 二进制形式的长文本数据        | 二进制形式的长文本数据        |
-| TEXT       | 0-65 535 bytes        | 长文本数据                    | 长文本数据                    |
-| MEDIUMBLOB | 0-16 777 215 bytes    | 二进制形式的中等长度文本数据  | 二进制形式的中等长度文本数据  |
-| MEDIUMTEXT | 0-16 777 215 bytes    | 中等长度文本数据              | 中等长度文本数据              |
-| LONGBLOB   | 0-4 294 967 295 bytes | 二进制形式的极大文本数据      | 二进制形式的极大文本数据      |
-| LONGTEXT   | 0-4 294 967 295 bytes | 极大文本数据                  | 极大文本数据                  |
+| 分类类型   | 大小                  | 描述                          |
+| ---------- | --------------------- | ----------------------------- |
+| CHAR       | 0-255 bytes           | 定长字符串                    |
+| VARCHAR    | 0-65535 bytes         | 变长字符串                    |
+| TINYBLOB   | 0-255 bytes           | 不超过 255 个字符的二进制数据 |
+| TINYTEXT   | 0-255 bytes           | 短文本字符串                  |
+| BLOB       | 0-65 535 bytes        | 二进制形式的长文本数据        |
+| TEXT       | 0-65 535 bytes        | 长文本数据                    |
+| MEDIUMBLOB | 0-16 777 215 bytes    | 二进制形式的中等长度文本数据  |
+| MEDIUMTEXT | 0-16 777 215 bytes    | 中等长度文本数据              |
+| LONGBLOB   | 0-4 294 967 295 bytes | 二进制形式的极大文本数据      |
+| LONGTEXT   | 0-4 294 967 295 bytes | 极大文本数据                  |
 
 <span style="color:orange">char 性能较好，varchar 性能较差；varchar 需要数一下字符串多长，但是相比 char 更节省空间，varchar 是字符串是多大就用多大的空间，char 是不管字符串多长，都用设定好的大小去存储一个字符串。</span>
 
 <div style="text-align:center;"><h3>时间类型</h3></div>
 
-| 分类      | 类型 | 大小                                       | 范围                      | 格式                     | 描述                     |
-| --------- | ---- | ------------------------------------------ | ------------------------- | ------------------------ | ------------------------ |
-| 日期类型  | DATE | 3                                          | 1000-01-01 至  9999-12-31 | YYYY-MM-DD               | 日期值                   |
-| TIME      | 3    | -838:59:59 至  838:59:59                   | HH:MM:SS                  | 时间值或持续时间         | 时间值或持续时间         |
-| YEAR      | 1    | 1901 至 2155                               | YYYY                      | 年份值                   | 年份值                   |
-| DATETIME  | 8    | 1000-01-01 00:00:00 至 9999-12-31 23:59:59 | YYYY-MM-DD HH:MM:SS       | 混合日期和时间值         | 混合日期和时间值         |
-| TIMESTAMP | 4    | 1970-01-01 00:00:01 至 2038-01-19 03:14:07 | YYYY-MM-DD HH:MM:SS       | 混合日期和时间值，时间戳 | 混合日期和时间值，时间戳 |
+| 类型      | 大小 | 范围                                       | 格式                | 描述                     |
+| --------- | ---- | ------------------------------------------ | ------------------- | ------------------------ |
+| DATE      | 3    | 1000-01-01 至  9999-12-31                  | YYYY-MM-DD          | 日期值                   |
+| TIME      | 3    | -838:59:59 至  838:59:59                   | HH:MM:SS            | 时间值或持续时间         |
+| YEAR      | 1    | 1901 至 2155                               | YYYY                | 年份值                   |
+| DATETIME  | 8    | 1000-01-01 00:00:00 至 9999-12-31 23:59:59 | YYYY-MM-DD HH:MM:SS | 混合日期和时间值         |
+| TIMESTAMP | 4    | 1970-01-01 00:00:01 至 2038-01-19 03:14:07 | YYYY-MM-DD HH:MM:SS | 混合日期和时间值，时间戳 |
 
 #### 习题
 
@@ -305,25 +335,97 @@ create table tb_emp(
 
 #### 表操作-修改
 
-添加字段：`alter table 表名 add 字段名 类型(长度) [comment 注释] [约束];`
-`alter table tb_emp add nickname varchar(20) comment '昵称';` 
+<b>添加字段--add</b>
 
-<div align="center"><img src="img/image-20220131162848796.png"></div>
+`alter table 表名 add 字段名 类型(长度) [comment 注释] [约束];`
 
-修改数据类型：`alter table 表名 modify 字段名 新数据类型(长度);`
-`alter table tb_emp modify nickname int;`
+`alter table tb_emp add nickname varchar(20) comment '昵称';`
 
-<div align="center"><img src="img/image-20220131163101591.png"></div>
+```shell
+mysql> alter table tb_emp add nickname varchar(20) comment "昵称";
+Query OK, 0 rows affected (0.04 sec)
+Records: 0  Duplicates: 0  Warnings: 0
 
-修改字段名和字段类型：`alter table 表名 change 旧字段名 新字段名 类型(长度) [comment 注释] [约束]`
+mysql> desc tb_emp;
++---------------+------------------+------+-----+---------+-------+
+| Field         | Type             | Null | Key | Default | Extra |
++---------------+------------------+------+-----+---------+-------+
+| id            | int              | NO   | PRI | NULL    |       |
+| number        | varchar(10)      | YES  |     | NULL    |       |
+| name          | varchar(10)      | YES  |     | NULL    |       |
+| sex           | char(1)          | YES  |     | NULL    |       |
+| age           | tinyint unsigned | YES  |     | NULL    |       |
+| id_card       | char(18)         | YES  |     | NULL    |       |
+| emyloyee_time | date             | YES  |     | NULL    |       |
+| nickname      | varchar(20)      | YES  |     | NULL    |       |
++---------------+------------------+------+-----+---------+-------+
+8 rows in set (0.00 sec)
+```
+
+<b>修改数据类型--modify</b>
+
+`alter table 表名 modify 字段名 新数据类型(长度);`
+
+`alter table tb_emp modify nickname char;`
+
+```shell
+mysql> alter table tb_emp modify nickname char(20);
+Query OK, 0 rows affected (0.07 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> desc tb_emp;
++---------------+------------------+------+-----+---------+-------+
+| Field         | Type             | Null | Key | Default | Extra |
++---------------+------------------+------+-----+---------+-------+
+| id            | int              | NO   | PRI | NULL    |       |
+| number        | varchar(10)      | YES  |     | NULL    |       |
+| name          | varchar(10)      | YES  |     | NULL    |       |
+| sex           | char(1)          | YES  |     | NULL    |       |
+| age           | tinyint unsigned | YES  |     | NULL    |       |
+| id_card       | char(18)         | YES  |     | NULL    |       |
+| emyloyee_time | date             | YES  |     | NULL    |       |
+| nickname      | char(20)         | YES  |     | NULL    |       |
++---------------+------------------+------+-----+---------+-------+
+8 rows in set (0.00 sec)
+```
+
+<b>修改字段名和字段类型--change</b>
+
+`alter table 表名 change 旧字段名 新字段名 类型(长度) [comment 注释] [约束]`
+
 `alter table tb_emp change nickname username varchar(30) comment '用户名' not null;`
 
-<div align="center"><img src="img/image-20220131163452393.png"></div>
+```shell
+mysql> alter table tb_emp change nickname username varchar(30) comment '用户名' not null;
+Query OK, 0 rows affected (0.06 sec)
+Records: 0  Duplicates: 0  Warnings: 0
 
-删除字段：`alter table 表名 drop 字段名;`
+mysql> desc tb_emp;
++---------------+------------------+------+-----+---------+-------+
+| Field         | Type             | Null | Key | Default | Extra |
++---------------+------------------+------+-----+---------+-------+
+| id            | int              | NO   | PRI | NULL    |       |
+| number        | varchar(10)      | YES  |     | NULL    |       |
+| name          | varchar(10)      | YES  |     | NULL    |       |
+| sex           | char(1)          | YES  |     | NULL    |       |
+| age           | tinyint unsigned | YES  |     | NULL    |       |
+| id_card       | char(18)         | YES  |     | NULL    |       |
+| emyloyee_time | date             | YES  |     | NULL    |       |
+| username      | varchar(30)      | NO   |     | NULL    |       |
++---------------+------------------+------+-----+---------+-------+
+8 rows in set (0.01 sec)
+```
+
+<b>删除字段</b>
+
+`alter table 表名 drop 字段名;`
+
 `alter table tb_emp drop username;`
 
-修改表名：`alter table 表名 rename to 新表名;`
+<b>修改表名</b>
+
+`alter table 表名 rename to 新表名;`
+
 `alter table tb_emp rename emp;`
 
 #### 表操作-删除
@@ -332,11 +434,11 @@ create table tb_emp(
 
 删除指定表，并重新创建该表 `truncate table 表名;`
 
-表删除的效率比较
+表删除效率比较
 
 - drop：删除内容和定义，释放空间。简单来说就是<b>把整个表去掉</b>。以后要新增数据是不可能的，除非新增一个表
 - truncate：只是清空表数据，会保留表的数据结构。
-- delete：是删除整个表的数据，但是是系统一行一行地删，效率比 truncate 低。delete 语句每次删除一行，会在事务日志中为所删除的每行记录一项。所以可以对 delete 操作进行 roll back，效率也低。
+- delete：删除整个表的数据，但是是系统一行一行地删，效率比 truncate 低。delete 语句每次删除一行，会在事务日志中为所删除的每行记录一项。所以可以对 delete 操作进行 roll back，效率也低。
 
 ### DML
 
@@ -350,13 +452,13 @@ Data Manipulation Language (数据操作语言)，用来对数据库中表的数
 
 #### 添加数据
 
-给指定字段添加数据
+<b>给指定字段添加数据</b>
 insert into table_name (字段 1, 字段 2, ...) values (值 1, 值 2);
 
-给全部字段添加数据
+<b>给全部字段添加数据</b>
 insert to 表名 values(值 1,值 2,...)
 
-批量添加
+<b>批量添加</b>
 insert into 表名 (字段名 1, 字段名 2) values(值 1, 值 2), (值 1, 值 2), (值 1,值 2);
 insert into 表名 (字段名 1, 字段名 2,...) values(值 1, 值 2,...), (值 1, 值 2,...), (值 1,值 2,...);
 
@@ -436,7 +538,7 @@ select 字段列表 from 表名 where 条件列表;
 | or 或 \|\|          | 或者 (多个条件任意一个成立)                |
 | not 或 !            | 非，不是                                   |
 
-> 示例
+> <b>示例</b>
 
 ```sql
 # 表数据
@@ -498,7 +600,7 @@ select * from emp where name like '%X';
 
 #### 聚合函数
 
-将一列数据作为一个整体，进行纵向计算 。常见聚合函数如下：
+将一列数据作为一个整体，进行纵向计算。常见聚合函数如下。
 
 | 函数  | 功能     |
 | ----- | -------- |
@@ -510,11 +612,11 @@ select * from emp where name like '%X';
 
 语法：`select 聚合函数(字段列表) from 表名;`
 
-<b style="color:red">注意：</b>null 值不参与聚合函数运算。
+<b style="color:red">注意：null 值不参与聚合函数运算。</b>
 
 #### count函数
 
-- COUNT(字段) 会统计该字段在表中出现的次数，<span style="color:orange">忽略字段为 null 的情况。</span>即不统计字段为 null 的记录，每次会判断下字段是否为 null。 
+- COUNT(字段) 会统计该字段在表中出现的次数，<span style="color:orange">每次会判断下字段是否为 null，不为 null 才会计数。</span>
 - COUNT(\*) 则不同，它执行时返回检索到的行数的计数，<span style="color:orange">不管这些行是否包含 null 值，即不会额外判断是否为 null。</span>
 - COUNT(1) 跟 COUNT(\*) 类似，在统计结果的时候，不会忽略列值为 NULL 的行，即不会判断字段是否为 NULL。
 
@@ -528,15 +630,17 @@ COUNT(字段) 会有一个 NULL 判断，效率低。COUNT(1) 和 COUNT(\*) 没�
 
 <b style="color:red">where 和 having 的区别：</b>
 
-- 执行时机不同：where 是分组之前进行过滤，不满足 where 条件，不参与分组；而 having 是分组之后对结果进行过滤。
+- 执行时机不同：where 是分组之前进行过滤，不满足 where 条件，不参与分组；<u>而 having 是分组之后的结果进行过滤。</u>
 - 判断条件不同：where 不能对聚合函数进行判断，而 having 可以。
 
 ```sql
 -- 分组查询
 -- 1.根据性别分组，统计男性员工和女性员工的数量
 select sex,count(*) from emp group by sex;
+
 -- 2.根据年龄分组，统计男性员工和女性员工的平均年龄
 select sex,avg(age) from emp group by sex;
+
 -- 3.查询年龄小于45的员工，并根据工作地址分组，获取员工数量大于等于3的工作地址
 select workaddress,count(*) as address_count from emp where age<45 group by workaddress having address_count>=3;
 ```
@@ -545,6 +649,19 @@ select workaddress,count(*) as address_count from emp where age<45 group by work
 
 -  执行顺序: where > 聚合函数 > having 。 
 - 分组之后，查询的字段一般为聚合函数和分组字段，查询其他字段无任何意义。
+- “where” 是一个约束声明，使用 where 来约束来自数据库的数据，<u>where 是在结果返回之前起作用的</u>，且 where 中不能使用聚合函数。
+
+    “Having” 是一个过滤声明，是<u>在查询返回结果集以后对查询结果进行的过滤操作</u>，在 having 中可以使用聚合函数。
+
+<b>为什么 where 不能对聚合函数进行判断？</b>
+
+简而言之，聚集函数是针对结果集操作的，而 where 条件不是在查询出结果集之后允许的（是用来筛选出结果集合？）所有聚集函数不能放在 where 条件后。
+
+看看 Linux 管道这部分的内容，感觉非常相似。
+
+聚合函数的实现，是基于完整数据的。例如，求和，统计数据总数，最大值，最小值，必须保证所有列的数据全部用到。如果聚合函数出现在 where 子句中，它就要受到 where 语句的限制，因为这条语句最终是需要对数据进行筛选的，也就是说整条 sql 语句产生的结果将会是在 where 字句过滤后得到的数据的基础上筛选的，而不是全部的完整数据。<u>这与聚合函数实现的前提——完整的所有数据是相悖的，因此，聚合函数不能出现在 where 子句中。</u>
+
+[(28条消息) 在MYSQL数据库中，为什么聚合函数不能出现在where子句中_Huya天涯过客的博客-CSDN博客_聚合不应该出现在where子句中](https://blog.csdn.net/weixin_44734925/article/details/89483264?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2~default~CTRLIST~Rate-1-89483264-blog-7903765.pc_relevant_multi_platform_whitelistv4&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~CTRLIST~Rate-1-89483264-blog-7903765.pc_relevant_multi_platform_whitelistv4&utm_relevant_index=2)
 
 #### 排序查询
 
@@ -564,7 +681,7 @@ select * from emp limit 0,5;
 <b style="color:red">注意：</b>
 
 - 起始索引从 0 开始，起始索引 =  (查询页码 - 1) * 每页显示记录数。
-- 分页查询是数据库的方言，不同的数据库有不同的实现，MySQL 中是 LIMIT。
+- <u>分页查询是数据库的方言，不同的数据库有不同的实现，MySQL 中是 LIMIT。</u>
 - 如果查询的是第一页数据，起始索引可以省略，直接简写为 limit 10。
 
 #### 其他
@@ -631,13 +748,24 @@ select user_id,concat(upper(left(name,1)),lower(right(name,length(name)-1))) nam
 ```sql
 select * from emp where age in(20,21,22,23);
 
-select sex,age,name from emp where sex='男' and (age between 20 and 40) and name like '___';
+select sex,age,name 
+from emp 
+where sex='男' and (age between 20 and 40) and name like '___';
 
-select sex,count(*) from emp where age<60 group by sex;
+select sex,count(*) 
+from emp 
+where age<60 
+group by sex;
 
-select name,age from emp where age<=35 order by age asc,entrydate desc;
+select name,age 
+from emp 
+where age<=35 
+order by age asc,entrydate desc;
 
-select * from emp where sex='男' and age between 20 and 40 order by age asc,entrydate desc limit 0,5;
+select * from emp 
+where sex='男' and age between 20 and 40 
+order by age asc,entrydate desc 
+limit 0,5;
 ```
 
 #### 执行顺序
@@ -707,7 +835,7 @@ MySQL 中定义了很多种权限，<a href="https://dev.mysql.com/doc/refman/8.
 | DROP                | 删除数据库/表/视图 |
 | CREATE              | 创建数据库/表      |
 
-查询权限：
+查询权限
 
 ```sql
 show grants for '用户名'@'主机';
@@ -739,8 +867,6 @@ revoke all on demo.* to 'user2'@'%';
 | 流程函数   | `if,ifnull,case[...] when... then... else... end`      |
 
 ### 字符串函数
-
-常用的字符串函数如下：
 
 | 函数                     | 功能                                                         |
 | ------------------------ | ------------------------------------------------------------ |
@@ -954,16 +1080,16 @@ select name, datediff(curdate(),entrydate) ddiff from emp order by ddiff desc;
 
 ### 流程函数
 
-在 SQL 语句中实现条件筛选，从而提高语句的效率。
+在 SQL 语句中实现条件筛选，从而提高语句的效率。用好流程函数可以极大的简化 SQL 的编写难度。
 
 | 函数                                                       | 功能                                                         |
 | ---------------------------------------------------------- | ------------------------------------------------------------ |
-| IF(value, t, f)                                            | 如果 value 为 true，则返回 t，否则返回 f                     |
+| IF(value, ans1, ans2)                                      | 如果 value 为 true，则返回 ans1，否则返回 ans2               |
 | IFNULL(value1, value2)                                     | 如果 value 不为空，返回 value1，否则返 value2                |
 | CASE WHEN [val1] THEN [res1] ... ELSE [default] END        | 如果 val1 为 true，返回 res1，... 否则返回 default 默认值    |
 | CASE [expr] WHEN [val1] THEN [res1] ... ELSE [default] END | 如果 expr 的值等于 val，返回 res1 ， 否则返回 default 默认值 |
 
-```sql
+```mysql
 mysql> select ifnull('','Default');
 +----------------------+
 | ifnull('','Default') |
@@ -989,7 +1115,7 @@ select name,
 from emp;
 ```
 
-```sql
+```mysql
 - 统计班级各个学员的成绩，展示的规则如下：
 - • >= 85，展示优秀
 - • >= 60，展示及格
@@ -1068,8 +1194,6 @@ create table tb_user(
 <div align="center"><img src="img/image-20220201153732702.png"></div>
 
 注意：目前上述的两张表，在数据库层面，并未建立外键关联，所以是无法保证数据的一致性和完整性的。
-
-语法：
 
 ```sql
 create table 表名(
@@ -1219,9 +1343,10 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 
 ## 多表查询
 
-多表关系：一对一、一对多、多对多
+<b>多表关系：</b>一对一、一对多、多对多
 
-多表查询
+<b>多表查询</b>
+
 - 笛卡儿积：两个集合的所有的组合情况。
 - 连接查询：
     - 左外连接：查询左表所有数据，以及两张表交集部分数据
@@ -1229,13 +1354,13 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
     - 自连接：当前表与自身的连接查询，自连接必须使用表别名
     - 内连接：相当于查询 A、B 交集部分数据
 
-- 子查询：标量子查询 (子查询结果为单个值) ；列子查询(子查询结果为一列)；行子查询(子查询结果为一行)；表子查询(子查询结果为多行多列)
+- 子查询：标量子查询 (子查询结果为单个值) ；列子查询 (子查询结果为一列)；行子查询 (子查询结果为一行)；表子查询 (子查询结果为多行多列)
 
  ### 多表关系
 
 项目开发中，在进行数据库表结构设计时，会根据业务需求及业务模块之间的关系，分析并设计表结构，由于业务之间相互关联，所以各个表结构之间也存在着各种联系，基本上分为三种：一对多(多对一) ；多对多；一对一。
 
-> 一对多 (多对一) 
+<b>一对多 (多对一)</b>
 
 案例：部门与员工的关系。
 
@@ -1245,7 +1370,7 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 
 <div align="center"><img src="img/image-20220201162055837.png"></div>
 
-> 多对多
+<b>多对多</b>
 
 案例：学生与课程的关系 
 
@@ -1255,7 +1380,7 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 
 <div align="center"><img src="img/image-20220201162206455.png"></div>
 
-> 一对一
+<b>一对一</b>
 
 案例：用户与用户详情的关系 
 
@@ -1265,7 +1390,7 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 
 <div align="center"><img src="img/image-20220201162313709.png"></div>
 
-### 多表查询概述
+### 多表查询
 
 多表查询：指从多张表中查询数据 
 
@@ -1277,7 +1402,7 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 
 <b>内连接查询的是两张表交集的部分。</b>
 
-隐式内连接
+隐式内连接，用 where 连接字段
 
 ```sql
 select 字段列表 
@@ -1285,7 +1410,7 @@ from table1,table2
 where 条件...;
 ```
 
-显示外连接
+显示内连接，用 [inner] join 连接字段
 
 ```sql
 select 字段列表 
@@ -1295,7 +1420,7 @@ ON 连接条件...;
 
 ### 外连接 
 
-左外连接
+左外连接，查询左表的所有数据和右表中符合条件的数据。
 
 ```sql
 select 字段列表 
@@ -1317,6 +1442,8 @@ ON 连接条件...;
 
 ### 自连接
 
+自己连接自己进行查询。
+
 ```sql
 select 字段列表
 from tableA 别名A
@@ -1324,7 +1451,7 @@ JOIN tableA 别名B
 ON 条件...;
 ```
 
-<span style="color:red">自连接查询，可以是内连接查询，也可以是外连接查询。</span>
+<span style="color:red">自连接查询的语法，可以是内连接查询，也可以是外连接查询。</span>
 
 ### 联合查询-union,union all
 
@@ -1349,7 +1476,7 @@ where column1 = (select column1 from t2);
 
 子查询外部的语句可以是 INSERT / UPDATE / DELETE / SELECT 的任何一个。
 
-根据子查询结果不同，分为： 
+<b>根据子查询结果不同，可分为四类</b>
 
 - 标量子查询 (子查询结果为单个值) 
 - 列子查询(子查询结果为一列)
@@ -1393,16 +1520,27 @@ where column1 = (select column1 from t2);
 ### 多表查询案例
 
 1 .查询员工的姓名、年龄、职位、部门信息。 
+
 2 .查询年龄小于 30 岁的员工姓名、年龄、职位、部门信息。
+
 3 .查询拥有员工的部门 ID、部门名称。
+
 4 .查询所有年龄大于 40 岁的员工, 及其归属的部门名称; 如果员工没有分配部门, 也需要展示出来。
+
 5 .查询所有员工的工资等级。
+
 6 .查询 "研发部" 所有员工的信息及工资等级。
+
 7 .查询 "研发部" 员工的平均工资。
+
 8 .查询工资比 "灭绝" 高的员工信息。
+
 9 .查询比平均薪资高的员工信息。
+
 10.查询低于本部门平均工资的员工信息。
+
 11.查询所有的部门信息, 并统计部门的员工人数。
+
 12.查询所有学生的选课情况, 展示出学生名称, 学号, 课程名称
 
 ```sql
@@ -1601,7 +1739,7 @@ commit
 回滚事务
 
 ```mysql
-ROLLBAK
+rollbak
 ```
 
 开启事务
@@ -1635,7 +1773,7 @@ insert into account(id,name,momeny) value(null,'张三',2000),(null,'李四',200
 - <span style="color:orange">隔离性 (Isolation) ：数据库系统提供的隔离机制，保证事务在不受外部并发操作影响的独立环境下运行。</span> 
 - 持久性 (Durability) ：事务一旦提交或回滚，它对数据库中的数据的改变就是永久的。 (一般，事务提交后，会把数据持久化到磁盘里，这个持久化时机是可以设置的) 
 
-感觉一致性是事务的最终目的，原子性、隔离性、持久性都是为了实现一致性。
+<b>感觉一致性是事务的最终目的，原子性、隔离性、持久性都是为了实现一致性。</b>
 
 ### 并发事务问题
 
@@ -1883,13 +2021,13 @@ mysql -u root -p
 
 <div align="center"><img src="img/image-20220122173547178.png"></div>
 
-<b>连接层</b>：最上层是一些客户端和链接服务，主要完成一些类似于连接处理、授权认证、及相关的安全方案。服务器也会为安全接入的每个客户端验证它所具有的操作权限。
+<b>连接层：</b>最上层是一些客户端和链接服务，主要完成一些类似于连接处理、授权认证、及相关的安全方案。服务器也会为安全接入的每个客户端验证它所具有的操作权限。
 
-<b>服务层</b>：第二层架构主要完成大多数的核心服务功能，如 SQL 接口，并完成缓存的查询，SQL 的分析和优化，部分内置函数的执行。所有跨存储引擎的功能也在这一层实现，如过程、函数等。 
+<b>服务层：</b>第二层架构主要完成大多数的核心服务功能，如 SQL 接口，并完成缓存的查询，SQL 的分析和优化，部分内置函数的执行。所有跨存储引擎的功能也在这一层实现，如过程、函数等。 
 
-<b>引擎层</b>：存储引擎真正的负责了 MySQL 中数据的存储和提取，服务器通过 API 和存储引擎进行通信。不同的存储引擎具有不同的功能，这样我们可以根据自己的需要，来选取合适的存储引擎。 
+<b>引擎层：</b>存储引擎真正的负责了 MySQL 中数据的存储和提取，服务器通过 API 和存储引擎进行通信。不同的存储引擎具有不同的功能，这样我们可以根据自己的需要，来选取合适的存储引擎。 
 
-<b>存储层</b>：主要是将数据存储在文件系统之上，并完成与存储引擎的交互。
+<b>存储层：</b>主要是将数据存储在文件系统之上，并完成与存储引擎的交互。
 
 >SQL 语句在 MySQL 的各个功能模块中的执行过程。
 
@@ -1925,14 +2063,28 @@ create table tb_user(
 查看当前数据库支持的存储引擎
 
 ```mysql
-show ENGINES;
+show engines;
+
++--------------------+---------+----------------------------------------------------------------+--------------+------+------------+
+| Engine             | Support | Comment                                                        | Transactions | XA   | Savepoints |
++--------------------+---------+----------------------------------------------------------------+--------------+------+------------+
+| MEMORY             | YES     | Hash based, stored in memory, useful for temporary tables      | NO           | NO   | NO         |
+| MRG_MYISAM         | YES     | Collection of identical MyISAM tables                          | NO           | NO   | NO         |
+| CSV                | YES     | CSV storage engine                                             | NO           | NO   | NO         |
+| FEDERATED          | NO      | Federated MySQL storage engine                                 | NULL         | NULL | NULL       |
+| PERFORMANCE_SCHEMA | YES     | Performance Schema                                             | NO           | NO   | NO         |
+| MyISAM             | YES     | MyISAM storage engine                                          | NO           | NO   | NO         |
+| InnoDB             | DEFAULT | Supports transactions, row-level locking, and foreign keys     | YES          | YES  | YES        |
+| BLACKHOLE          | YES     | /dev/null storage engine (anything you write to it disappears) | NO           | NO   | NO         |
+| ARCHIVE            | YES     | Archive storage engine                                         | NO           | NO   | NO         |
++--------------------+---------+----------------------------------------------------------------+--------------+------+------------+
 ```
 
 ### 存储引擎特点
 
-> <b>InnoDB</b>
+<b>InnoDB</b>
 
-- 介绍：InnoDB 是一种兼顾高可靠性和高性能的通用存储引擎，在 MySQL 5.5 之后，InnoDB 是默认的 MySQL 存储引擎。
+- InnoDB 是一种兼顾高可靠性和高性能的通用存储引擎，在 MySQL 5.5 之后，InnoDB 是默认的 MySQL 存储引擎。
 - 特点：
     - DML 操作遵循 ACID 模型，支持事务
     - 行级锁，提高并发访问性能
@@ -1942,21 +2094,19 @@ show ENGINES;
 
 <div align="center"><img src="img/image-20220122175230096.png"></div>
 
-> <b>MyISAM</b>
+<b>MyISAM</b>
 
-介绍：MyISAM 是 MySQL 早期的默认存储引擎。 
+- MyISAM 是 MySQL 早期的默认存储引擎。 
+- 特点：不支持事务，不支持外键，支持表锁，不支持行锁，访问速度快 
+- 文件：xxx.sdi 中存储表结构信息；xxx.MYD 中存储数据；xxx.MYI 中存储索引
 
-特点：不支持事务，不支持外键，支持表锁，不支持行锁，访问速度快 
+<b>Memory</b>
 
-文件：xxx.sdi 中存储表结构信息；xxx.MYD 中存储数据；xxx.MYI 中存储索引
+- Memory 引擎的表数据时存储在内存中的，由于受到硬件问题、或断电问题的影响，只能将这些表作为临时表或缓存使用。
+- 特点：内存存放；默认使用 hash 索引
+- 文件 xxx.sdi 中存储表结构信息
 
-> <b>Memory</b>
-
-介绍：Memory 引擎的表数据时存储在内存中的，由于受到硬件问题、或断电问题的影响，只能将这些表作为临时表或缓存使用。
-
-特点：内存存放；默认使用 hash 索引
-
-文件 xxx.sdi 中存储表结构信息
+<b>存储引擎对比</b>
 
 | 特点                                        | InnoDB             | MyISAM | Menory |
 | ------------------------------------------- | ------------------ | ------ | ------ |
@@ -2016,13 +2166,13 @@ MEMORY：将所有数据保存在内存中，访问速度快，通常用于临�
 
 - 索引设计原则：表、字段、索引。遵循最左前缀法则。
 
-> 索引的优点总结
+<b>索引的优点总结</b>
 
 - 索引大大减少了服务器需要扫描的数据量
 - 索引可以帮助服务器避免排序和临时表
 - 索引可以将随机 I/O 变为顺序 I/O
 
-> 索引的三星原则
+<b>索引的三星原则</b>
 
 - 索引将相关的记录放到一起则获得一星
 - 索引中的数据顺序核查找中的排序顺序一致则获得二星
@@ -2058,13 +2208,17 @@ MEMORY：将所有数据保存在内存中，访问速度快，通常用于临�
 
 红黑树：大数据量情况下，层级较深，检索速度慢。
 
-> B-Tree/B 杠树 (多路平衡查找树) ：以一颗最大度数 (max-degree) 为 5 (5 阶)的 B-tree 为例(每个节点最多存储 4 个 key，5 个指针)
+> <b>B-Tree/B 杠树 (多路平衡查找树) </b>
+
+以一颗最大度数 (max-degree) 为 5 (5 阶)的 B-tree 为例(每个节点最多存储 4 个 key，5 个指针)
 
 <div align="center"><img src="img/image-20220202102904364.png"></div>
 
 <span style="color:orange">B-Tree，相对于二叉树 (二叉排序树，平衡二叉树，红黑树等) ，通过增加内部的节点数据个数来减少磁盘的 IO 操作。</span>具体动态变化的过程可以参考网站: https://www.cs.usfca.edu/~galles/visualization/BTree.html
 
-> B+Tree：以一颗最大度数 (max-degree) 为 4 (4 阶) 的 B+tree 为例：
+> <b>B+Tree</b>
+
+以一颗最大度数 (max-degree) 为 4 (4 阶) 的 B+tree 为例
 
 <div align="center"><img src="img/image-20220202103024493.png"></div>
 
@@ -2072,7 +2226,7 @@ MEMORY：将所有数据保存在内存中，访问速度快，通常用于临�
 
 <div align="center"><img src="img/image-20220202103738086.png"></div>
 
-> B-Tree 和 B+Tree 的区别
+> <b>B-Tree 和 B+Tree 的区别</b>
 
 - B+Tree 所有的数据都会出现在叶子节点
 - 叶子节点形成一个单向链表
@@ -2080,7 +2234,7 @@ MEMORY：将所有数据保存在内存中，访问速度快，通常用于临�
 
 B+Tree 索引如果不是按照索引最左列开始查找，则无法使用索引。如果查询中有某个列的范围查询，则其右边所有列都无法使用索引优化查找，如有查询【假定 last_name，first_name，dob 是一个联合索引】 `where last_name='smith' and first_name like 'j%' and dob='1997-10-23';` 这个查询只能使用到索引的前两列 last_name 和 first_name，因为 like 是一个范围查询，like 后面的无法使用到索引。
 
-> 哈希索引
+> <b>哈希索引</b>
 
 哈希索引，哈希索引就是采用一定的 hash 算法，将键值换算成新的 hash 值，映射到对应的槽位上，然后存储在 hash 表中。 如果两个(或多个)键值，映射到一个相同的槽位上，他们就产生了 hash 冲突 (也称为 hash 碰撞) ，可以通过链表来解决。
 
@@ -2115,7 +2269,7 @@ MySQL 先计算 Peter 的哈希值，并使用该值查找对应的记录指针�
 
 ③相对 Hash 索引，B+tree 支持范围匹配及排序操作；
 
-> B- Tree 不利于范围查找示意图
+<b>B- Tree 不利于范围查找示意图</b>
 
 假设我们要查找 [15,36] 直接的数据，那么需要访问 7 个磁盘块
 
@@ -2179,7 +2333,7 @@ InnoDB 主键索引的 B+tree 高度为多高？
 
 #### 基本语法
 
-> 创建、查看、删除索引
+<b>创建、查看、删除索引</b>
 
 ```sql
 -- 创建索引，如果索引只关联了一个字段，称为单列索引；如果关联了多个字段，称为组合索引。
@@ -2192,7 +2346,7 @@ drop index index_name on table_name;
 
 #### 练习
 
-> 按照如下需求，完成索引的创建
+<b>按照如下需求，完成索引的创建</b>
 
 - name 字段为姓名字段，该字段的值可能会重复，为该字段创建索引。
 - phone 手机号字段的值，是非空，且唯一的，为该字段创建唯一索引。
@@ -2250,7 +2404,7 @@ create index idx_email on tb_user(email);
 
 ### SQL性能分析
 
-> SQL 执行频率
+> <b>SQL 执行频率</b>
 
 MySQL 客户端连接成功后，通过 `show [session|global] status` 命令可以提供服务器状态信息。通过如下指令，可以查看当前数据库的 INSERT、UPDATE、DELETE、SELECT 的访问频次。
 
@@ -2275,7 +2429,7 @@ mysql> show global status like 'Com_______';
 11 rows in set (0.00 sec)
 ```
 
-> 慢查询日志
+> <b>慢查询日志</b>
 
 ```mysql
 show variables like 'slow_query_log' # 查询是否开启慢日志
@@ -2292,7 +2446,7 @@ long_query_time=2
 
 配置完毕之后，通过以下指令重新启动 MySQL 服务器进行测试，查看慢日志文件中记录的信息 `/var/lib/mysql/localhost-slow.log`，Windows 下是 `xx\xx\MySQL\MySQL Server 8.0 的 my.ini`
 
-> profile 详情【了解】
+> <b>profile 详情【了解】</b>
 
 show profiles 能够在做 SQL 优化时帮助我们了解时间都耗费到哪里去了。通过 have_profiling 参数，能够看到当前 MySQL 是否支持
 
@@ -2390,7 +2544,7 @@ explain select * from tb_user where age = 10 and status='0' and profession='软�
 
 假定索引为 `idx_user_pro_age_sta`，共三个字段，顺序为 profession、age、status (`create index on tb_user(profession,age,status)`) 
 
-> 范围查询
+> <b>范围查询</b>
 
 <span style="color:red">联合索引中，出现范围查询 (>,<)，范围查询右侧的列索引失效。</span>
 
@@ -2407,7 +2561,7 @@ explain select * from tb_user where profession='软件工程' and age > 10 and s
 explain select * from tb_user where profession='软件工程' and age >= 10 and status='0'
 ```
 
-> 索引列运算
+> <b>索引列运算</b>
 
 <span style="color:red">不要在索引列上进行运算操作，进行运算的话，索引会失效，如果比较的是最前面的一部分字符呢？也会导致索引失效！<b>只要是运算就会导致索引失效！</b></span>
 
@@ -2419,7 +2573,7 @@ explain select * from users where substring(phone,10,2)='15'
 explain select * from tb_user where  phone like '15%';
 ```
 
-> 字符串不加引号
+> <b>字符串不加引号</b>
 
 字符串类型字段使用时，不加引号， 索引将失效。
 
@@ -2433,7 +2587,7 @@ explain select * from tb_user where  phone = 17799990019;
 explain select * from tb_user where  phone = '17799990019';
 ```
 
-> 模糊查询
+> <b>模糊查询</b>
 
 如果仅仅是尾部模糊匹配，索引不会失效。如果是头部模糊匹配，索引失效。
 
@@ -2445,7 +2599,7 @@ explain select * from tb_user where  tb_user.profession like '%工程';
 explain select * from tb_user where  tb_user.profession like '软件%';
 ```
 
-> or 连接的条件
+> <b>or 连接的条件</b>
 
 用 or 分割开的条件， 如果 or 前的条件中的列有索引，而后面的列中没有索引，那么涉及的索引都不会被用到。
 
@@ -2462,7 +2616,7 @@ create index idx_age on tb_user (age);
 explain select * from tb_user where id=10 or age = 23;
 ```
 
-> 数据分布影响
+> <b>数据分布影响</b>
 
 在执行 MySQL 语句的时候，如果 MySQL 的优化器评估发现，使用索引比全表更慢，则不会使用索引。
 
@@ -2474,7 +2628,7 @@ explain select * from tb_user where phone>='17799990000';
 
 ### 使用规则
 
-> SQL 提示
+> <b>SQL 提示</b>
 
 SQL 提示，是优化数据库的一个重要手段，简单来说，就是在 SQL 语句中加入一些人为的提示来达到优化操作的目的。
 
@@ -2498,11 +2652,11 @@ explain select * from tb_user ignore index(idx_user_pro) where profession = '软
 explain select * from tb_user force index(idx_user_pro) where profession = '软件工程'
 ```
 
-> 覆盖索引
+> <b>覆盖索引</b>
 
 尽量使用覆盖索引 (查询使用了索引，并且需要返回的列，在该索引中已经全部能够找到) ，减少 `select *` 。
 
-<b>注意：</b>
+<b>注意</b>
 
 - <span style="color:red">using index condition：查找使用了索引，但是需要回表查询数据 using where;</span> 
 - using index：查找使用了索引，但是需要的数据都在索引列中能找到，所以不需要回表查询数据。
@@ -2533,7 +2687,7 @@ select count(distinct email)/count(*) from tb_user;
 select count(distinct substring(email,1,5))/count(*) from tb_user;
 ```
 
-> 前缀索引查询流程
+> <b>前缀索引查询流程</b>
 
 先查辅助索引 (截取指定长度的前缀进行匹配) ，前缀匹配了，还要进行回表查询，回表查询拿到数据行后，还要对比 email 的值是否相同。
 
@@ -2626,13 +2780,13 @@ load data local infile '/xx/xx/xx/sql.log' into table 'tb_user' fields terminate
 
 ### primary key
 
-> 数据的组织方式
+> <b>数据的组织方式</b>
 
 在 InnoDB 存储引擎中，表数据都是根据主键顺序组织存放的，这种存储方式的表称为索引组织表 (<span style="color:red">index organized table IOT</span>) 
 
 主键顺序插入对比乱序插入，可以尽量避免页分裂。
 
-> 主键设计原则
+> <b>主键设计原则</b>
 
 - 满足业务需求的情况下，尽量降低主键的长度。主键较长的话，若二级索引过多 (二级索引中存了主键) 会导致索引占大量的磁盘，查询的时候会进行大量 I/O。
 - 插入数据时，尽量选择顺序插入，选择使用 AUTO_INCREMENT 自增主键。乱序插入会导致页分裂。
@@ -2646,7 +2800,7 @@ order by 优化主要是优化数据的排序方式。
 - ①Using filesort，通过表的索引或全表扫描，读取满足条件的数据行，然后在排序缓冲区中完成排序操作，<b>所有不是通过索引直接返回排序结果的排序都叫 filesort 排序。</b>
 - ②Using index，通过有序索引顺序扫描直接返回有序数据，这种情况即为 using index，<b>不需要额外排序，操作效率高。</b>
 
-> order by 语句优化示例
+> <b>order by 语句优化示例</b>
 
 ```mysql
 # 未创建索引进行排序
@@ -2750,7 +2904,7 @@ explain select count(*) from tb_user;
 
 <b>优化思路：自己计数，再内存中维护计数器，计算有多少条数据(Redis 缓存)；如果只是需要一个大致的数不必太准确，可以使用 explain `explian select count(*) from xxx `。</b>
 
-> count 的几种用法
+> <b>count 的几种用法</b>
 
 - count() 是一个聚合函数，对于返回的结果集，一行行地判断，如果 count 函数的参数不是 NULL，累计值就加 1，否则不加，最后返回累计值。 
 - 用法：count(\*)、count(主键)、count(字段)、count(1)
@@ -2807,7 +2961,7 @@ insert into student values (1, '站五个', '2000100108'),(11, '黛绮丝', '200
 
 #### 基本语法
 
-> 创建视图
+> <b>创建视图</b>
 
 ```mysql
 -- 要替换视图的话就假设 OR REPLACE
@@ -2817,7 +2971,7 @@ create view stu_v_1 as select id from tb_user;
 create view stu_v_2 as select phone from tb_user;
 ```
 
-> 查询，和查基本表一样。
+> <b>查询，和查基本表一样。</b>
 
 ```mysql
 -- 查看创建视图语句：SHOW CREATE VIEW 视图名称;
@@ -2842,7 +2996,7 @@ create or replace view stu_v_1 as select * from tb_user where id<100 with cascad
 insert into stu_v_1(id,name,phone,email) values(209,"23","11","11");
 ```
 
-> 修改
+> <b>修改</b>
 
 ```mysql
 -- 法一，直接替换视图：CREATE [OR REPLACE] VIEW 视图名称(列名列表) AS SELECT 语句 [WITH [ CASCADED | LOCAL ] CHECK OPTION ]
@@ -2852,7 +3006,7 @@ create or replace view stu_v_1 as select id,name from tb_user where id<100;
 select * from stu_v_1;
 ```
 
-> 删除
+> <b>删除</b>
 
 ```mysql
 DROP VIEW [IF EXISTS] 视图名称 [,视图名称]
@@ -2932,7 +3086,7 @@ insert into v3 (id, name) values (17,"nb2"); # 插入成功，满足 v2 即可
 - <b style="color:red">数据独立：</b>视图可帮助用户屏蔽真实表结构变化带来的影响。
 - <b style="color:red">效率低：</b>如果是多表组成的视图的话，基本是对视图的一个简单查询，也会涉及到多表联查，这样会降低查询效率。
 
-> 案例
+<b>案例</b>
 
 1. 为了保证数据库表的安全性，开发人员在操作 tb_user 表时，只能看到的用户的基本字段，屏蔽手机号和邮箱两个字段。 
 2. 查询每个学生所选修的课程 (三张表联查) ，这个功能在很多的业务中都有使用到，为了简化操作，定义一个视图。
@@ -3003,7 +3157,7 @@ delimiter $$ # SQL 语句以两个 $ 符号结束
 
 #### 变量
 
-> 系统变量
+><b>系统变量</b>
 
 系统变量是 MySQL 服务器提供，不是用户定义的，属于服务器层面。分为全局变量 (GLOBAL) 、会话变量 (SESSION) 。
 
@@ -3035,7 +3189,7 @@ set session autocommit=0 -- 关闭自动提交
 
 MySQL 服务重新启动之后，所设置的全局参数会失效，要想不失效，可以在 /etc/my.cnf 中配置。
 
-> 用户变量
+> <b>用户变量</b>
 
 用户定义变量是用户根据需要自己定义的变量，用户变量不用提前声明，在用的时候直接用“@变量名”使用就可以。其作用域为当前连接/当前会话。
 
@@ -3068,7 +3222,7 @@ select count(1) into @count from student;
 select @count;
 ```
 
-> 局部变量
+> <b>局部变量</b>
 
 局部变量是根据需要定义的在局部生效的变量，访问之前，需要 DECLARE 声明。可用作存储过程内的局部变量和输入参数，局部变量的范围是在其内声明的 BEGIN ... END 块。
 
@@ -3102,7 +3256,7 @@ call p2();
 
 #### if判断
 
-> if 条件判断
+> <b>if 条件判断</b>
 
 ```mysql
 if 条件1 then
@@ -3362,7 +3516,7 @@ call p10(100);
 
 <span style="color:red">游标 (cursor) 是用来存储查询结果集的数据类型</span>，在存储过程中和函数中可以使用游标对结果集进行循环处理。游标的使用包括游标的声明、open、fetch 和 close。
 
-> 基本语法
+> <b>基本语法</b>
 
 声明游标
 
@@ -3637,11 +3791,11 @@ MySQL 中的锁，按照锁的粒度分，分为以下三类：
 
 从备份开始到结束，只能读数据。
 
-> 演示
+> <b>演示</b>
 
 <div align="center"><img src="img/image-20220228172847492.png"></div>
 
-> 特点
+> <b>特点</b>
 
 数据库中加全局锁，是一个比较重的操作，存在以下问题： 
 
@@ -3660,7 +3814,7 @@ mysqldump --single-transaction -uroot -p123456 demo>demo.sql
 
 #### 分类
 
-> 对于表级锁，主要分为以下三类：
+<b>对于表级锁，主要分为以下三类</b>
 
 - 表锁：表共享读锁 (read lock) ，表独占写锁 (write lock) 
 - 元数据锁 (meta data lock，MDL) 
@@ -3699,7 +3853,8 @@ MDL 加锁过程是系统自动控制，无需显式使用，在访问一张表�
 可以通过以下 SQL，查看意向锁及行锁的加锁情况
 
 ```mysql
-select object_schema,object_name,index_name,lock_type,lock_mode,lock_data from performance_schema.data_locks;
+select object_schema,object_name,index_name,lock_type,lock_mode,lock_data 
+from performance_schema.data_locks;
 ```
 
 ### 行级锁
@@ -3727,6 +3882,8 @@ InnoDB 实现了以下两种类型的行锁：
 | ----------------------------------- | ----------- | ----------- |
 | S (共享锁)                          | 兼容        | 冲突        |
 | X (排它锁)                          | 冲突        | 冲突        |
+
+> <b>数据库语句触发的锁类型</b>
 
 ----
 
@@ -3772,7 +3929,8 @@ MVCC 只在 REPEATABLE READ 和 READ COMMITTED 两个隔离级别下工作。其
 可以通过以下 SQL，查看意向锁及行锁的加锁情况：
 
 ```mysql
-select object_schema,object_name,index_name,lock_type,lock_mode,lock_data from performance_schema.data_locks;
+select object_schema,object_name,index_name,lock_type,lock_mode,lock_data 
+from performance_schema.data_locks;
 ```
 
 > <b>再复习下脏读和幻读</b>
@@ -3917,7 +4075,7 @@ Undo log 存储：undo log 采用段的方式进行管理和记录，存放在�
 
 #### 实现原理
 
-> <span style="color:red">记录中的隐藏字段</span>
+> <b style="color:red">记录中的隐藏字段</b>
 
 <div align="center"><img src="img/image-20220228212433507.png"></div>
 
@@ -3929,14 +4087,14 @@ Undo log 存储：undo log 采用段的方式进行管理和记录，存放在�
 
 我们可以进入 MySQL 存放表空间结构的目录中用命令 `idb2sdi tablename.ibd` 查看表中到底有那些字段。
 
-> <span style="color:red">undo log</span>
+> <b style="color:red">undo log</b>
 
 回滚日志，在 insert、update、delete 操作时产生的便于数据回滚的日志。事务一旦提交或回滚，undo log 日志是可以被删除的，但是不会立即删除。那什么时候可以立即删除，什么时候又不会呢？ 
 
 - 当 insert 的时候，产生的 undo log 日志只在回滚时需要，在事务提交后，可被立即删除。
 - 而 update、delete 的时候，产生的 undo log 日志不仅在回滚时需要，在快照读时也需要，不会立即被删除。【为什么快照读会需要？】
 
-> <span style="color:red">undo log 版本链</span>
+> <b style="color:red">undo log 版本链</b>
 
 在事务中对记录进行操作时，undo log 日志中会记录数据被修改前的内容。事务 `DB_TRX_ID` 会自增。
 
@@ -3946,7 +4104,7 @@ Undo log 存储：undo log 采用段的方式进行管理和记录，存放在�
 
 <b>不同事务或相同事务对同一条记录进行修改，会导致该记录的 undo log 生成一条记录版本链表，链表的头部是最新的旧记录，链表尾部是最早的旧记录。</b>
 
-> readview，决定读取那个版本的历史记录。
+> <b>readview，决定读取那个版本的历史记录。</b>
 
 快照的读取数据的时候，不一定是读最新的数据，也可能读的是历史版本。快照读到底读取那个历史记录是由 ReadView 决定的。
 
@@ -3982,7 +4140,7 @@ Read Committed 隔离级别下，在事务中每一次执行快照读时生成 R
 
 <span style="color:red">RR 隔离级别下，仅在事务中第一次执行快照读时生成 ReadView，后续复用该 ReadView。ReadView 一样，那么查找版本链的时候，查找到的版本数据也是一样的，这样就实现了可重复读。</span>
 
-> 汇总图
+> <b>汇总图</b>
 
 <div align="center"><img src="img/image-20220228213708058.png"></div>
 

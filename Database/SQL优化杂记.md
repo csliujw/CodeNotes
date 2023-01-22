@@ -1,6 +1,6 @@
 <a href="https://mp.weixin.qq.com/s/qi-mBwiQ4cpI7YLpsXhnZA">文章来源</a>
 
-## 全文内容预览：
+## 全文内容预览
 
 <img src="../pics/wechat/mysql/MySQL_optimization.webp">
 
@@ -19,7 +19,7 @@
 
 <b style="color:orange">性能优化原则</b>
 
-无论是主动优化还是被动优化都要符合以下性能优化的原则：
+无论是主动优化还是被动优化都要符合以下性能优化的原则
 
 1. 优化不能改变服务运行的逻辑，要保证服务的<b style="color:orange">正确性</b>；
 2. 优化的过程和结果都要保证服务的<b style="color:orange">安全性</b>；
@@ -198,8 +198,3 @@ slow_query_log =1 slow_query_log_file=/tmp/mysql_slow.log
 - <b>单条 `SQL` 运行慢</b>；
 - <b>部分 `SQL` 运行慢</b>；
 - <b>整个 `SQL` 运行慢</b>。
-
-
-
-
-

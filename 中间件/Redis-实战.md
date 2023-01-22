@@ -156,7 +156,7 @@ Redis 中的 List 类型与 Java 中的 LinkedList 类似，可以看做是一�
 
 ### Set类型
 
-Redis 的 Set 结构与 Java 中的 HashSet 类似，可以看做是一个 value 为 null 的 HashMap。因为也是一个 hash 表，因此具备与 HashSet 类似的特征：
+Redis 的 Set 结构与 Java 中的 HashSet 类似，可以看做是一个 value 为 null 的 HashMap。因为也是一个 hash 表，因此具备与 HashSet 类似的特征。
 
 - 无序
 - 元素不可重复
@@ -656,9 +656,7 @@ public class StringRedisTemplate extends RedisTemplate<String, String> {
 - tb_voucher：优惠券表
 - tb_voucher_order：优惠券的订单表
 
-项目的运行流程如下：
-
-这是一个前后端分离的项目，用 ngnix 进行方向代理，访问 tomcat 集群。Redis 和 MySQL 也有相应的集群。 
+<b>这是一个前后端分离的项目，用 ngnix 进行方向代理，访问 tomcat 集群。Redis 和 MySQL 也有相应的集群。</b> 
 
 <div align="center"><img src="img/image-20220507210207656.png"></div>
 
@@ -720,7 +718,7 @@ end
 
 创建 session 时会自动创建 session id，写到用户浏览器的 cookie 中，每发一次请求就会带着 cookie（session id），这样就可以根据 session id 找到 session，从 session 中取数据。而 session id 客户端自己会维护好。使用 Redis 替代 session 的话，也需要我们自己从 Redis 中查询出是否有该用户的信息（成功登录），让客户端维护一个 Redis 的 key 用于查找数据。
 
-> 存入 Redis 的话需要思考用什么数据类型来保存，用什么作为 key。
+> <b>存入 Redis 的话需要思考用什么数据类型来保存，用什么作为 key。</b>
 
 - 数据类型可以选择 String 或 Hash。对比 String，Hash 可以方便的存取/修改部分字段，此处选择 Hash。
 - key 的话需要保证唯一性，可以使用电话号码作为 key，但是这样不太好，因为前端要存储这个 key，用手机号的话不安全（如数据泄漏），建议使用一个随机字符串，且字符串的长度不要超过 44 字节。
@@ -793,7 +791,7 @@ public class MvcConfig implements WebMvcConfigurer{
 }
 ```
 
-> 为什么选择用 Hash 存储用户数据而非 String？
+> <b>为什么选择用 Hash 存储用户数据而非 String？</b>
 
 保存登录的用户信息，可以用 String 结构，以 JSON 字符串来保存，比较直观。
 
@@ -806,7 +804,7 @@ public class MvcConfig implements WebMvcConfigurer{
 
 <div align="center"><img src="img/image-20220507215602774.png"></div>
 
-> 为什么要用 ThreadLocal 暂存用户信息？
+> <b>为什么要用 ThreadLocal 暂存用户信息？</b>
 
 <span style="color:orange">用户每次操作界面时，都需要重新计算用户 token 在 Redis 中的有效期。在拦截器中每次从 Redis 中获取用户数据，如果存在，则重新设置有效期，然后存入 ThreadLocal。后面的操作如果还要用到用户信息，就直接从 ThreadLocal 中取，无需再次请求 Redis（一个用户的请求可能涉及若干操作，而这些若干操作都是在一个线程中完成的，如果这若干操作中都需要用到用户信息，此时可以直接从 ThreadLocal 中取，无需多次访问 Redis，减小了网络开销，内存消耗也不大，用户请求结束后就会从 ThreadLocal 中移除数据）。</span>
 
@@ -896,7 +894,7 @@ graph LR
 <div align="center"><img src="img/image-20221107173826509.png">
 </div>
 
-> 查询商铺缓存
+> <b>查询商铺缓存</b>
 
 key 设计为 `cache:shop:+id`，因为店铺的信息都是需要用到的，因此这里用 String。
 
@@ -930,7 +928,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 }
 ```
 
-> 修改 ShopTypeController 中的 queryTypeList 方法，添加查询缓存
+> <b>修改 ShopTypeController 中的 queryTypeList 方法，添加查询缓存</b>
 
 key 和 value 的选取，value 可以用 String，也可以用 List。
 
@@ -957,14 +955,14 @@ key 和 value 的选取，value 可以用 String，也可以用 List。
 - <b>Read/Write Through Pattern：</b>缓存与数据库整合为一个服务，由服务来维护一致性。调用者调用该服务，无需关心缓存一致性问题。
 - <b>Write Behind Caching Pattern：</b>调用者只操作缓存，由其他线程异步的将缓存数据持久化到数据库，保证最终一致性 (一致性很难保存，缓存宕机的话数据就永久丢失了，一致性和可靠性都不太好)。
 
-> 操作缓存和数据库时有三个问题需要考虑
+> <b>操作缓存和数据库时有三个问题需要考虑</b>
 
 | 删除缓存还是更新缓存？                             | 如何保证缓存与数据库的操作的同时成功或失败？ | 先操作缓存还是先操作数据库？ |
 | -------------------------------------------------- | -------------------------------------------- | ---------------------------- |
 | 更新缓存：每次更新数据库都更新缓存，无效写操作较多 | 单体系统，将缓存与数据库操作放在一个事务     | 先删除缓存，再操作数据库❌    |
 | 删除缓存：更新数据库时让缓存失效，查询时再更新缓存 | 分布式系统，利用 TCC 等分布式事务方案        | 先操作数据库，再删除缓存✔️    |
 
-> 缓存更新策略的最佳实践方案
+> <b>缓存更新策略的最佳实践方案</b>
 
 1️⃣低一致性需求：使用 Redis 自带的内存淘汰机制
 
@@ -975,7 +973,7 @@ key 和 value 的选取，value 可以用 String，也可以用 List。
 | 缓存命中则直接返回                               | 先写数据库，然后再删除缓存     |
 | 缓存未命中则查询数据库，并写入缓存，设定超时时间 | 要确保数据库与缓存操作的原子性 |
 
-> 给查询商铺的缓存添加超时剔除和主动更新的策略
+> <b>给查询商铺的缓存添加超时剔除和主动更新的策略</b>
 
 修改 ShopController 中的业务逻辑，满足下面的需求：
 
@@ -998,11 +996,11 @@ key 和 value 的选取，value 可以用 String，也可以用 List。
 
 <div align="center"><img src="img/image-20220607115533210.png"></div>
 
-> 缓存穿透产生的原因是什么？
+> <b>缓存穿透产生的原因是什么？</b>
 
 用户请求的数据在缓存中和数据库中都不存在，不断发起这样的请求，给数据库带来巨大压力
 
-> 缓存穿透的解决方案有哪些？
+> <b>缓存穿透的解决方案有哪些？</b>
 
 <div align="center"><img src="img/image-20220607115909900.png"></div>
 
@@ -1286,12 +1284,12 @@ ID 的组成部分
 - snowflake 算法
 - 数据库自增
 
-> Redis 自增 ID 策略：
+> <b>Redis 自增 ID 策略</b>
 
 - 每天一个 key，方便统计订单量
 - ID 构造是时间戳 + 计数器
 
-> 案例：生成全局唯一 ID
+> <b>案例：生成全局唯一 ID</b>
 
 ```java
 public class RedisIdWorker{
@@ -1326,7 +1324,7 @@ tb_seckill_voucher：优惠券的库存、开始抢购时间，结束抢购时�
 
 VoucherController 中提供了一个接口用于添加秒杀优惠券：`VoucherController#addSeckillVoucher`
 
-> 秒杀下单的接口
+> <b>秒杀下单的接口</b>
 
 | -        | 说明                        |
 | -------- | --------------------------- |
@@ -1496,7 +1494,7 @@ public class UserService {
 
 分布式锁的核心是实现多进程之间互斥，而满足这一点的方式有很多，常见的有三种
 
-| ------ | **MySQL**                   | **Redis**                 | **Zookeeper**                    |
+| --     | **MySQL**                   | **Redis**                 | **Zookeeper**                    |
 | ------ | --------------------------- | ------------------------- | -------------------------------- |
 | 互斥   | 利用 mysql 本身的互斥锁机制 | 利用 setnx 这样的互斥命令 | 利用节点的唯一性和有序性实现互斥 |
 | 高可用 | 好                          | 好                        | 好                               |
@@ -1725,7 +1723,7 @@ GitHub 地址： https://github.com/redisson/redisson
 
 为了避免 Redission 里的配置把 SpringBoot 里的覆盖了，这里就采用引入 redisson，自己配置 Redission 的方式。
 
-> 引入依赖
+> <b>引入依赖</b>
 
 ```xml
 <dependency>
@@ -1735,7 +1733,7 @@ GitHub 地址： https://github.com/redisson/redisson
 </dependency>
 ```
 
-> 配置客户端
+> <b>配置客户端</b>
 
 ```java
 @Configuration
@@ -1752,7 +1750,7 @@ public class RedisConfig{
 }
 ```
 
-> 使用 Redisson 分布式锁
+> <b>使用 Redisson 分布式锁</b>
 
 ```java
 @Resource
@@ -1777,7 +1775,7 @@ void testRedisson() throws InterruptedException {
 
 #### 原理
 
-> 可重入锁原理
+> <b>可重入锁原理</b>
 
 与 Java 其他的可重入锁的原理很类似。内部的数据类型如下。
 
@@ -1879,14 +1877,14 @@ Redis 中预先缓存库存，下单前先查库存，库存够才允许下单�
 
 key 的设计 `stock:vid:7`，用 String 即可。一人一单则采用 zset 中存储用户 id，确保唯一，key 的设计为 `order:vid:7`。
 
-> 改进秒杀业务，提高并发性能
+> <b>改进秒杀业务，提高并发性能</b>
 
 - 新增秒杀优惠券的同时，将优惠券信息保存到 Redis 中
 - 基于 Lua 脚本，判断秒杀库存、一人一单，决定用户是否抢购成功
 - 如果抢购成功，将优惠券 id 和用户 id 封装后存入阻塞队列（暂时不写）
 - 开启线程任务，不断从阻塞队列中获取信息，实现异步下单功能（暂时不写）
 
-> 秒杀优化思路
+> <b>秒杀优化思路</b>
 
 - 先利用 Redis 完成库存余量、一人一单判断，完成抢单业务
 - 再将下单业务放入阻塞队列，利用独立线程异步下单
@@ -1916,7 +1914,7 @@ Redis 提供了三种不同的方式来实现消息队列：
 
 消息队列（Message Queue），字面意思就是存放消息的队列。而 Redis 的 list 数据结构是一个双向链表，很容易模拟出队列效果。队列是入口和出口不在一边，因此我们可以利用：LPUSH 结合 RPOP、或者  RPUSH 结合 LPOP 来实现。不过要注意的是，当队列中没有消息时 RPOP 或 LPOP 操作会返回null，并不像 JVM 的阻塞队列那样会阻塞并等待消息。因此这里应该使用 BRPOP 或者 BLPOP 来实现阻塞效果。
 
-> 基于 List 的消息队列有哪些优缺点？
+> <b>基于 List 的消息队列有哪些优缺点？</b>
 
 优点：利用 Redis 存储，不受限于 JVM 内存上限；基于 Redis 的持久化机制，数据安全性有保证；可以满足消息有序性
 
@@ -1932,7 +1930,7 @@ PubSub（发布订阅）是 Redis2.0 版本引入的消息传递模型。顾名�
 
 <div align="center"><img src="img/image-20220611232158788.png"></div>
 
-> 基于 PubSub 的消息队列
+> <b>基于 PubSub 的消息队列</b>
 
 优点：采用发布订阅模型，支持多生产、多消费
 
@@ -2027,7 +2025,7 @@ XREADGROUP GROUP group consumer [COUNT count] [BLOCK milliseconds] [NOACK] STREA
 
 <div align="center"><img src="img/image-20220612212045478.png"></div>
 
-> Stream 消息队列 XREADGROUP 命令特点
+> <b>Stream 消息队列 XREADGROUP 命令特点</b>
 
 - 消息可回溯
 - 可以多消费者争抢消息，加快消费速度
@@ -2063,12 +2061,27 @@ XREADGROUP GROUP group consumer [COUNT count] [BLOCK milliseconds] [NOACK] STREA
 
 ### 发布笔记
 
-探店笔记类似点评网站的评价，往往是图文结合。对应的表有两个：
+探店笔记类似点评网站的评价，往往是图文结合。对应的表有两个。
 
 - tb_blog：探店笔记表，包含笔记中的标题、文字、图片等
 - tb_blog_comments：其他用户对探店笔记的评价
 
-<div align="center"><img src="img/image-20220612214430543.png"></div>
+```mysql
+DROP TABLE IF EXISTS `tb_blog`;
+CREATE TABLE `tb_blog`  (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `shop_id` bigint(20) NOT NULL COMMENT '商户id',
+  `user_id` bigint(20) UNSIGNED NOT NULL COMMENT '用户id',
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '标题',
+  `images` varchar(2048) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '探店的照片，最多9张，多张以\",\"隔开',
+  `content` varchar(2048) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '探店的文字描述',
+  `liked` int(8) UNSIGNED NULL DEFAULT 0 COMMENT '点赞数量',
+  `comments` int(8) UNSIGNED NULL DEFAULT NULL COMMENT '评论数量',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 23 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+```
 
 需要注意部分是文件上传的设置。文件上传的路径要设置好，此处需要设置为 Nginx 目录
 
@@ -2122,7 +2135,16 @@ public class SystemConstants{
 
 关注是 User 之间的关系，是博主与粉丝的关系，在数据库中可以用一张 tb_follow 表来标示
 
-<div align="center"><img src="img/image-20220612225906719.png"></div>
+```mysql
+DROP TABLE IF EXISTS `tb_follow`;
+CREATE TABLE `tb_follow`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id` bigint(20) UNSIGNED NOT NULL COMMENT '用户id',
+  `follow_user_id` bigint(20) UNSIGNED NOT NULL COMMENT '关联的用户id',
+  `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+```
 
 - 关注就新增数据
 - 取关就删除数据
@@ -2284,7 +2306,7 @@ GEO 就是 Geolocation 的简写形式，代表地理坐标。Redis 在 3.2 版�
 | GEOSEARCH      | 在指定范围内搜索 member，并按照与指定点之间的距离排序后返回。范围可以是圆形或矩形。6.2. 新功能 |
 | GEOSEARCHSTORE | 与 GEOSEARCH 功能一致，不过可以把结果存储到一个指定的 key。 6.2. 新功能 |
 
-> 练习
+<b>练习</b>
 
 添加下面几条数据：
 
@@ -2356,9 +2378,20 @@ SpringDataRedis 的 2.3.9 版本并不支持 Redis 6.2 提供的 GEOSEARCH 命�
 
 ### BitMap用法
 
-假如我们用一张表来存储用户签到信息，其结构应该如下：
+假如我们用一张表来存储用户签到信息，其结构应该如下。
 
-<div align="center"><img src="img/image-20220612231356449.png"></div>
+```mysql
+DROP TABLE IF EXISTS `tb_sign`;
+CREATE TABLE `tb_sign`  (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+  `user_id` bigint(20) UNSIGNED NOT NULL COMMENT '用户id',
+  `year` year NOT NULL COMMENT '签到的年',
+  `month` tinyint(2) NOT NULL COMMENT '签到的月',
+  `date` date NOT NULL COMMENT '签到的日期',
+  `is_backup` tinyint(1) UNSIGNED NULL DEFAULT NULL COMMENT '是否补签',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Compact;
+```
 
 假如有 1000 万用户，平均每人每年签到次数为 10 次，则这张表一年的数据量为 1 亿条
 
@@ -2465,13 +2498,13 @@ void testHyperLogLog() {
 }
 ```
 
-> HyperLogLog 的作用
->
-> - 做海量数据的统计工作
-> - HyperLogLog 的优点：内存占用极低；性能非常好
-> - HyperLogLog 的缺点：有一定的误差
+<b>HyperLogLog 的作用</b>
 
-> Pipeline 导入数据
+- 做海量数据的统计工作
+- HyperLogLog 的优点：内存占用极低；性能非常好
+- HyperLogLog 的缺点：有一定的误差
+
+<b>Pipeline 导入数据</b>
 
 如果要导入大量数据到 Redis 中，可以有多种方式：
 
@@ -2865,8 +2898,6 @@ slave 与 master 的 offset 之间的差异，就是 slave 需要增量拷贝的
 
 <b style="color:orange">repl_baklog 大小有上限，写满后会覆盖最早的数据。如果 slave 断开时间过久，导致尚未备份的数据被覆盖，则无法基于 log 做增量同步，智能再次全量同步。</b>
 
-<div align="center"><img src="img/image-20210725154216392.png"></div>
-
 ### 主从同步优化
 
 > 主从同步可以保证主从数据的一致性，非常重要。可以从以下几个方面来优化 Redis 主从集群（如尽可能的避免全量同步，少做磁盘 IO）：
@@ -2949,18 +2980,18 @@ slave 节点宕机恢复后可以找 master 节点同步数据，那 master 节�
 
 #### 小结
 
-Sentinel 的三个作用是什么？
+<b>Sentinel 的三个作用是什么？</b>
 
 - 监控
 - 故障转移
 - 通知
 
-Sentinel 如何判断一个 redis 实例是否健康？
+<b>Sentinel 如何判断一个 redis 实例是否健康？</b>
 
 - 每隔 1 秒发送一次 ping 命令，如果超过一定时间没有相向则认为是主观下线
 - 如果大多数 sentinel 都认为实例主观下线，则判定服务下线
 
-故障转移步骤有哪些？
+<b>故障转移步骤有哪些？</b>
 
 - 首先选定一个 slave 作为新的 master，执行 slaveof no one（自己不再是 slave，要变成 master）
 - 然后让所有节点都执行 slaveof 新 master
@@ -2976,7 +3007,7 @@ Sentinel 如何判断一个 redis 实例是否健康？
     <img src="img/image-20210701215227018.png">
 </div>
 
-三个 sentinel 实例信息如下：
+三个 sentinel 实例信息如下
 
 | 节点 |       IP        | PORT  |
 | ---- | :-------------: | :---: |
@@ -3008,7 +3039,7 @@ sentinel failover-timeout mymaster 60000
 dir "/tmp/s1"
 ```
 
-解读：
+<b>配置说明</b>
 
 - `port 27001`：是当前 sentinel 实例的端口
 - `sentinel monitor mymaster 172.26.26.72 2`：指定主节点信息
@@ -3124,17 +3155,17 @@ public LettuceClientConfigurationBuilderCustomizer clientConfigurationBuilderCus
 
 ### 搭建分片集群
 
-主从和哨兵可以解决高可用、高并发读的问题。但是依然有两个问题没有解决：
+主从和哨兵可以解决高可用、高并发读的问题。但是依然有两个问题没有解决
 
 - 海量数据存储问题
 
 - 高并发写的问题
 
-使用分片集群可以解决上述问题，如图：
+使用分片集群可以解决上述问题，如图
 
 <div align="center"><img src="img/image-20210725155747294.png"></div>
 
-分片集群特征：
+<b>分片集群特征</b>
 
 - 集群中有多个 master，每个 master 保存不同数据
 
@@ -3150,7 +3181,7 @@ public LettuceClientConfigurationBuilderCustomizer clientConfigurationBuilderCus
 
 <div align="center"><img src="img/image-20210702164116027.png"></div>
 
-这里我们会在同一台虚拟机中开启 6 个 redis 实例，模拟分片集群，信息如下：
+这里我们会在同一台虚拟机中开启 6 个 redis 实例，模拟分片集群，信息如下
 
 |       IP        | PORT |  角色  |
 | :-------------: | :--: | :----: |
@@ -3237,7 +3268,15 @@ ps -ef | grep redis
 
 发现服务都已经正常启动：
 
-<div align="center"><img src="img/image-20210702174255799.png"></div>
+```powershell
+[ root@localhost tmp]# ps -ef | grep redis
+root	2362	1	0 09:21 ?	00:00:00 redis-server 0.0.0.0: 7001	[cluster]
+root	2368	1	0 09:21 ?	00:00:00 redis-server 0.0.0.0: 7002	[cluster]
+root	2374	1	0 09:21 ?	00:00:00 redis-server 0.0.0.0: 7003	[cluster]
+root	2380	1	0 09:21 ?	00:00:00 redis-server 0.0.0.0: 8001	[cluster]
+root	2386	1	0 09:21 ?	00:00:00 redis-server 0.0.0.0: 8002	[cluster]
+root	2392	1	0 09:21 ?	00:00:00 redis-server 0.0.0.0: 8003	[cluster]
+```
 
 如果要关闭所有进程，可以执行命令：
 
@@ -3257,7 +3296,7 @@ printf '%s\n' 7001 7002 7003 8001 8002 8003 | xargs -I{} -t redis-cli -p {} shut
 
 我们需要执行命令来创建集群，在 Redis5.0 之前创建集群比较麻烦，5.0 之后集群管理命令都集成到了 redis-cli 中。
 
-> 1）Redis5.0 之前
+> <b>1）Redis5.0 之前</b>
 
 Redis5.0 之前集群命令都是用 redis 安装包下的 src/redis-trib.rb 来实现的。因为 redis-trib.rb 是有 ruby 语言编写的所以需要安装 ruby 环境。
 
@@ -3276,7 +3315,7 @@ cd /tmp/redis-6.2.4/src
 ./redis-trib.rb create --replicas 1 192.168.150.101:7001 192.168.150.101:7002 192.168.150.101:7003 192.168.150.101:8001 192.168.150.101:8002 192.168.150.101:8003
 ```
 
-> 2）Redis5.0 以后
+> <b>2）Redis5.0 以后</b>
 
 我们使用的是 Redis6.2.4 版本，集群管理以及集成到了 redis-cli 中，格式如下：
 
@@ -3453,9 +3492,9 @@ redis-cli -p 7001 cluster nodes
 
 我们要将 num 存储到 7004 节点，因此需要先看看 num 的插槽是多少：
 
-<div align="center"><img src="img/image-20210725161241793"></div>
+<div align="center"><img src="img/image-20210725161241793.png"></div>
 
-如上图所示，num 的插槽为 2765.
+如上图所示，num 的插槽为 2765。
 
 我们可以将 0~3000 的插槽从 7001 转移到 7004，命令格式如下：
 
@@ -3533,7 +3572,7 @@ redis-cli -p 7002 shutdown
 
 2）然后是疑似宕机：
 
-<div align="center"><img src="img/image-20210725162319490"></div>
+<div align="center"><img src="img/image-20210725162319490.png"></div>
 
 3）最后是确定下线，自动提升一个 slave 为新的 master：
 
@@ -3555,15 +3594,13 @@ redis-cli -p 7002 shutdown
 - force：省略了对 offset 的一致性校验
 - takeover：直接执行第 5 歩，忽略数据一致性、忽略 master 状态和其它 master 的意见
 
-<b>案例需求</b>：在 7002 这个 slave 节点执行手动故障转移，重新夺回 master 地位。
+<b>案例需求：</b>在 7002 这个 slave 节点执行手动故障转移，重新夺回 master 地位。
 
 步骤如下：
 
 1）利用 redis-cli 连接 7002 这个节点
 
 2）执行 cluster failover 命令
-
-如图：
 
 <div align="center"><img src="img/image-20210727160037766.png"></div>
 
@@ -3705,7 +3742,6 @@ BigKey 往往都是业务设计不恰当导致的，选择更合适的数据类�
 
 ```shell
 config get hash-max-ziplist-entries # 获取配置的最大值
-
 config set hash-max-ziplist-entries 1000 # 设置最大值为 1000
 ```
 
@@ -3844,11 +3880,23 @@ SDS 之所以叫做动态字符串，是因为它具备动态扩容的能力，�
 
 IntSet 是 Redis 中 set 集合的一种实现方式，基于整数数组来实现，并且具备长度可变、有序等特征。其结构如下：
 
-<div align="center"><img src="img/1653984923322.png"></div>
+```c
+typedef struct intset {
+    uint32_t encoding; /*编码方式，支持存放16位、32位、 64位整数*/
+    uint32_t length; /*元素个数*/
+    int8_t contents[]; /*整数数组,保存集合数据*/
+} intset;
+```
 
 int8_t 中存储的不是元素。因为 Redis 的数组并未使用 C 语言相关的定义，所有的增删改查操作都是自己定义的，所有数组中内容的定义 int8_t 并不是元素的实际类型，元素的编码类型实际上是 encoding 属性来决定的。<span style="color:orange">其中的 encoding 包含三种模式，表示存储的整数大小不同：</span>
 
-<div align="center"><img src="img/1653984942385.png"></div>
+```c
+/* Note that these encodings are ordered, so:
+* INTSET ENC INT16 < INTSET ENC INT32 < INTSET ENC INT64. */
+#define INTSET_ENC_INT16 (sizeof(int16_t)) /* 2字节整数，范围类似java的short*/
+#define INTSET_ENC_INT32 (sizeof(int32_t)) /* 4字节整数，范围类似java的int */
+#define INTSET_ENC_INT64 (sizeof(int64_t)) /* 8字节整数，范围类似java的long */
+```
 
 为了方便查找，Redis 会将 intset 中所有的整数按照升序依次保存在 contents 数组中，结构如图：
 
@@ -3874,9 +3922,59 @@ int8_t 中存储的不是元素。因为 Redis 的数组并未使用 C 语言相
 
 源码如下：
 
-<div align="center"><img src="img/1653985304075.png"></div>
+```c
+intset *intsetAdd(intset *is, int64_t value, uint8_t *success) {
+    uint8_t valenc = _intsetValueEncoding(value);// 获取当前值编码
+    uint32_t pos; //要插入的位置
+    if (success) *success = 1; 
+    //判断编码是不是超过了 当前intset的编码
+    if (valenc > intrev32ifbe(is->encoding)) {
+        //超出编码，需要升级
+        return intsetUpgradeAndAdd(is,value);
+    } else {
+        //在当前intset中查找值与value-样的元素的角标pos
+        if (intsetSearch(is,value,&pos)) {
+            if (success) *success = 0; //如果找到了，则无需插入，直接结束并返回失败
+            return is;
+        }
+        //数组扩容
+        is = intsetResize(is,intrev32ifbe(is->length)+1);
+        //移动数组中pos之后的元素到pos+1,给新元素腾出空间
+        if (pos < intrev32ifbe(is->length)) intsetMoveTail(is,pos,pos+1);
+    }
+    //插入新元素
+    _intsetSet(is,pos,value);
+    //元素长度
+    is->length = intrev32ifbe(intrev32ifbe(is->length)+ 1);
+    return is;
+}
 
-<div align="center"><img src="img/1653985327653.png"></div>
+static intset *intsetUpgradeAndAdd(intset *is, int64_t value) {
+    //获取当前intset编码
+    uint8_t curenc = intrev32ifbe(is->encoding);
+    //获取新编码
+    uint8_t newenc = _intsetValueEncoding(value);
+    //获取元素个数
+    int length = intrev32ifbe(is->length);
+    //判断新元素是大于0还是小于0，小于0插入队首、大于0插入队尾
+    intprepend=value<0?1:0;
+    //重置编码为新编码
+    is->encoding = intrev32ifbe(newenc); 
+    //重置数组大小
+    is = intsetResize(is,intrev32ifbe(is->length)+ 1);
+    //倒序遍历，逐个搬运元素到新的位置，_intsetGetEncoded按照旧编码方 式查找元素
+    while(length--) // intsetSet按照新编码方式插入新元素
+        _intsetSet(is,length+prepend, intsetGetEncoded(is,length,curenc));
+    /*插入新元素，prepend决定是队首还是队尾*/
+    if (prepend)
+        _intsetSet(is,0,value); 
+    else
+        _intsetSet(is,intrev32ifbe(is->length),value);
+    //修改数组长度
+    is->length = intrev32ifbe(intrev32ifbe(is->length)+1);
+    return is;
+}
+```
 
 <b>总结</b>
 
@@ -3890,7 +3988,31 @@ Intset 可以看做是特殊的整数数组，具备一些特点：
 
 Redis 是一个键值型（Key-Value Pair）的数据库，我们可以根据键实现快速的增删改查。而键与值的映射关系正是通过 Dict 来实现的。而 Dict 由三部分组成，分别是：哈希表（DictHashTable）、哈希节点（DictEntry）、字典（Dict）
 
-<div align="center"><img src="img/1653985396560.png"></div>
+```c
+typedef struct dictht {
+    // entry数组
+    //数组中保存的是指向entry的指针
+    dictEntry **table;
+    //哈希表大小
+    unsigned long size;
+    //哈希表大小的掩码，总等于size - 1
+    unsigned long sizemask;
+    // entry个数
+    unsigned long used;
+} dictht; 
+
+typedef struct dictEntry {
+    void *key;//键
+    union {
+        void *val;
+        uint64_t u64;
+        int64_t s64;
+        double d;
+    }v; //值
+    //下一个Entry的指针
+    struct dictEntry *next;
+} dictEntry;
+```
 
 当我们向 Dict 添加键值对时，Redis 首先根据 key 计算出 hash 值（h），然后利用 h & sizemask 来计算元素应该存储到数组中的哪个索引位置。我们存储 k1=v1，假设 k1 的哈希值 h=1，则 1&3=1，因此 k1=v1 要存储到数组角标 1 位置。
 
@@ -3900,9 +4022,49 @@ Redis 是一个键值型（Key-Value Pair）的数据库，我们可以根据键
 
 Dict 由三部分组成，分别是：哈希表（DictHashTable）、哈希节点（DictEntry）、字典（Dict）
 
-<div align="center"><img src="img/1653985570612.png"></div>
+字典结构体
 
-<div align="center"><img src="img/1653985586543.png"></div>
+```c
+typedef struct dict {
+    dictType *type; // dict类型，内置不同的hash函数
+    void *privdata; // 私有数据，在做特殊hash运算时用
+    dictht ht[2]; //一个Dict包含两个哈希表，其中-个是当前数据，另一个般是 空，rehash时使用
+    long rehashidx; // rehash的进度，- 1表示未进行
+    int16_t pauserehash; // rehash是否暂停，1则暂停，0则继续
+} dict;
+```
+
+哈希表结构体
+
+```c
+typedef struct dictht {
+    // entry数组
+    //数组中保存的是指向entry的指针
+    dictEntry **table;
+    //哈希表大小
+    unsigned long size;
+    //哈希表大小的掩码，总等于size - 1
+    unsigned long sizemask;
+    // entry个数
+    unsigned long used;
+} dictht;
+```
+
+哈希节点结构体
+
+```c
+typedef struct dictEntry {
+    void *key; //键
+    union {
+        void *val;
+        uint64_t u64;
+        int64_t s64;
+        double d;
+    }v; //值
+    //下一个Entry的指针
+    struct dictEntry *next;
+} dictEntry;
+```
 
 <div align="center"><img src="img/1653985640422.png"></div>
 
@@ -3913,11 +4075,61 @@ Dict 由三部分组成，分别是：哈希表（DictHashTable）、哈希节�
     - 哈希表的 LoadFactor >= 1，并且服务器没有执行 BGSAVE 或者 BGREWRITEAOF 等后台进程；后台进程对 CPU 的使用非常高，会影响 rehash 操作。
     - 哈希表的 LoadFactor > 5；
 
-<div align="center"><img src="img/1653985716275.png"></div>
+```c
+static int _dictExpandlfNeeded(dict *d){
+    //如果正在rehash,则返回ok
+    if (dictlsRehashing(d)) return DICT_OK;
+    //如果哈希表为空，则初始化哈希表为默认大小: 4
+    if (d->ht[O].size == 0) return dictExpand(d, DICT_HT_INITIAL_SIZE);
+    //负载因子(used/size) 达到1以上，粗当前没有进行bgrewrite等子进程操作
+    //或者负载因子超过5，则进行dictExpand，也就是扩容
+    if (d->ht[0].used >= d->ht[0].size &&
+        (dict_can_resize || d->ht[0].used / d->ht[O].size > dict_force_resize_ratio)){
+        //扩容大小为used + 1,底层会对扩容大小做判断，实际上找的是第一个大于等于used+1的2^n
+        return dictExpand(d, d-> ht[0].used + 1); 
+    }
+    return DICT OK;
+}
+```
 
 Dict 除了扩容以外，每次删除元素时，也会对负载因子做检查，当 LoadFactor < 0.1 时，会做哈希表收缩：
 
-<div align="center"><img src="img/1653985743412.png"></div>
+```c
+//t_ hash.c # hashTypeDeleted()
+if (dictDelete((dict*)o->ptr, field) == C_OK) {
+    deleted = 1;
+    //删除成功后，检查是否需要重置Dict大小，如果需要则调用dictResize重置
+    /* Always check if the dictionary needs a resize after a delete. */
+    if (htNeedsResize(o->ptr)) dictResize(o->ptr); 
+}
+
+// server.c文件
+int htNeedsResize(dict *dict) {
+    long long size, used;
+    //哈希表大小
+    size = dictSlots(dict);
+    // entry数量
+    used =
+        dictSize(dict);
+    // size > 4 (哈希表初识大小)組负载因子低于0.1
+    return (size > DICT HT INITIAL SIZE && (used*100/size <
+                                            HASHTABLE MIN_ FIL));
+}
+
+int dictResize(dict *d){
+    unsigned long minimal;
+    //如果正在做bgsave或bgrewriteof或rehash,则返回错误
+    if (!dict_can_resize || dictlsRehashing(d))
+        return DICT_ERR;
+    //获取used,也就是entry个数
+    minimal = d->ht[0].used;
+    //如果used小于4，则重置为4
+    if (minimal < DICT_HT_INITIAL_SIZE)
+        minimal = DICT_HT_INITIAL_SIZE;
+    //重置大小为minimal,实是第一个大于等 于minimal的2^n
+    return dictExpand(d, minimal);
+}
+```
 
 <b>Dict 的 rehash</b>
 
@@ -4089,9 +4301,50 @@ ZipList 这种特殊情况下产生的连续多次空间扩展操作称之为连
 
 list-compress-depth 默认值为 0，如果中间的节点访问的频率较低，可以开启节点压缩，节省内存空间。
 
-以下是 QuickList 的和 QuickListNode 的结构源码：
+以下是 QuickList 的和 QuickListNode 的结构体：
 
-<div align="center"><img src="img/1653986667228.png"></div>
+```c
+typedef struct quicklist {
+    //头节点指针
+    quicklistNode *head;
+    //尾节点指针
+    quicklistNode *tail;
+    //所有ziplist的entry的数量
+    unsigned long count;
+    // ziplists总数量
+    unsigned long len;
+    // ziplist的entry上限，默认值-2
+    int fill: QL_FILL_BITS;
+    //首尾不压缩的节点数量
+    unsigned int compress : QL_COMP_BITS;
+    //内存重分配时的书签数量及数组，一般用不到
+    unsigned int bookmark_count: QL_BM_BITS;
+    quicklistBookmark bookmarks[];
+} quicklist;
+```
+
+```c
+typedef struct quicklistNode {
+    //前一个节点指针
+    struct quicklistNode *prev;
+    //下一个节点指针
+    struct quicklistNode *next;
+    //当前节点的ZipList指针
+    unsigned char *zl;
+    //当前节点的ZipList的字节大小
+    unsigned int sZ;
+    //当前节点的ZipList的entry个数
+    unsigned int count: 16;
+    //编码方式: 1, ZipList; 2，Izf压缩模式
+    unsigned int encoding : 2;
+    //数据容器类型(预留) : 1，期; 2, ZipList
+    unsigned int container : 2;
+    //是否被解压缩。1:则说明被解压了，将来要重新压缩
+    unsigned int recompress : 1;
+    unsigned int attempted_compress : 1; //测试用
+    unsigned int extra: 10; /*预留字段*/
+} quicklistNode;
+```
 
 我们接下来用一段流程图来描述当前的这个结构
 
@@ -4115,7 +4368,29 @@ list-compress-depth 默认值为 0，如果中间的节点访问的频率较低�
 
 SkipList 的结构体定义如下
 
-<div align="center"><img src="img/1653986813240.png"></div>
+```c
+// t zset.c
+typedef struct zskiplist {
+    // 头尾节点指针
+    struct zskiplistNode *header, *tai;
+    //节点数量
+    unsigned long length;
+    //最大的索引层级，默认是1
+    int level;
+} zskiplist;
+
+typedef struct zskiplistNode {
+    sds ele; //节点存储的值
+    double score://节点分数，排序、查找用
+    struct zskiplistNode *backward; // 前一个节点指针
+        struct zskiplistLevel {
+            struct zskiplistNode *forward;//下一一个节点指针
+            unsigned long span; //索引跨度
+        } level[]; //多级索引数组
+} zskiplistNode;
+```
+
+<div align="center"><img src="img/image-20230118192802549.png"></div>
 
 <div align="center"><img src="img/1653986877620.png"></div>
 
@@ -4255,7 +4530,27 @@ ZSet 也就是 SortedSet，其中每一个元素都需要指定一个 score 值�
 * HT（Dict）：可以键值存储，并且可以根据 key 找 value，但是不能做排序。
 * Redis 是结合了这两种数据结构，而非只用一种。
 
-<div align="center"><img src="img/1653992121692.png"></div>
+```c
+// zset结构
+typedef struct zset {
+    // Dict指针
+    dict *dict;
+    // SkipList指针
+    zskiplist *zsl;
+} zset; 
+
+robj *createZsetObject(void) {
+    zset *zs = zmalloc(sizeof(*zs)); 
+    robj *o;
+    //创建Dict
+    zs->dict = dictCreate(&zsetDictType, NULL);
+    //创建SkipList
+    zs->zsl = zslCreate();
+    o = createObject(OBJ_ZSET, zs);
+    o->encoding = OBJ_ENCODING_SKIPLIST;
+    return o;
+}
+```
 
 ZSET 结构示意图：采用了 dict + skiplist 的模式，如果只是查找元素，直接通过 dict 进行查找，如果需要排序的信息，就先从 skiplist 中查找指定范围内的元素，然后在用 key 从 dict 中查找对应的 value。
 
@@ -4450,9 +4745,29 @@ select 是 Linux 最早是由的 I/O 多路复用技术。简单说，就是我�
 
 [(21条消息) poll函数详解_青季的博客-CSDN博客_poll函数](https://blog.csdn.net/skypeng57/article/details/82743681)
 
-poll 模式对 select 模式做了简单改进，但性能提升不明显，部分关键代码如下：
+poll 模式对 select 模式做了简单改进，但性能提升不明显，部分关键代码如下。
 
-<div align="center"><img src="img/1653900721427.png"></div>
+```c
+// pollfd 中的事件类型
+#define POLLIN //可读事件
+#define POLLOUT //可写事件
+#define POLLERR //错误事件
+#define POLLNVAL // fd未打开
+
+// pollfd结构
+struct pollfd {
+    int fd; /*要监听的fd*/
+    short int events; /* 要监听的事件类型:读、写、异常*/
+    short int revents;/* 实际发生的事件类型*/
+};
+
+// poll函数
+int poll(
+    struct pollfd *fds， // pollfd数组， 可以自定义大小
+    nfds_ t nfds， //数组元素个数
+    int timeout //超时时间
+);
+```
 
 <b>IO 流程</b>
 
@@ -4473,9 +4788,35 @@ epoll 模式是对 select 和 poll 的改进，它提供了三个函数：
 
 第一个是：eventpoll 的函数，他内部包含两个东西：一个是红黑树记录的事要监听的 FD；一个是链表记录的是就绪的 FD。紧接着调用 epoll_ctl 操作，将要监听的数据添加到红黑树上去，并且给每个 fd 设置一个监听函数，这个函数会在 fd 数据就绪时触发，就是准备好了，现在就把 fd 把数据添加到 list_head 中去。
 
-<div align="center"><img src="img/image-20220925193406895.png"></div>
+```c
+struct eventpoll {
+    //...
+    struct rb_root rbr;//一颗红黑树，记录要监听的FD
+    struct list_head rdlist;// 一个链表，记录就绪的FD
+    //...
+};
 
-<div align="center"><img src="img/image-20220925193613832.png"></div>
+// 1.创建-一个epoll实例,内部是event poll,返回对应的句柄epfd
+int epoll_create(int size);
+
+// 2.将- -个FD添加到epoll的红黑树中，并设置ep_ .poll callback
+// callback触发时，就把对应的FD加入到rdlist这个就绪列表中
+int epoll_ctl(
+    int epfd, // epoll实例的句柄
+    int op, // 要执行的操作，包括: ADD、MOD、DEL
+    int fd,//要监听的FD
+    struct epoll_event *event //要监听的事件类型:读、写、异常等
+);
+
+// 3.检查rdlist列表是否为空，不为空则返回就绪的FD的数量
+int epoll wait(
+    int epfd,
+    // epoll实例的句柄
+    struct epoll event *events, //空event数组，用于接收就绪的FD
+    int maxevents, // events数组的最大长度
+    int timeout // 超时时间，-1用不超时; 0不阻塞;大于0为阻塞时间
+)
+```
 
 <div align="center"><img src="img/image-20220925193650606.png"></div>
 
@@ -4499,12 +4840,12 @@ epoll 模式是对 select 和 poll 的改进，它提供了三个函数：
 
 ### epoll中的ET和LT
 
-当 FD 有数据可读时，我们调用 epoll_wait（或者 select、poll）可以得到通知。但是事件通知的模式有两种：
+当 FD 有数据可读时，我们调用 epoll_wait（或者 select、poll）可以得到通知。但是事件通知的模式有两种。
 
 * LevelTriggered：简称 LT，也叫做水平触发。当 FD 中有数据可读时，会重复通知多次，直至数据处理完成。每次调用 epoll_wait 都会得到通知。
 * EdgeTriggered：简称 ET，也叫做边沿触发。当 FD 中有数据可读时，只会通知一次，不管数据是否处理完成。调用 epoll_wait 才会被通知。
 
-举个栗子：
+<b>举个栗子</b>
 
 * 1️⃣假设一个客户端 socket 对应的 FD 已经注册到了 epoll 实例中
 * 2️⃣客户端 socket 发送了 2kb 的数据
@@ -4523,7 +4864,7 @@ epoll 模式是对 select 和 poll 的改进，它提供了三个函数：
 
 <b>LT 模式的缺点</b>
 
-- LT 这种重复的通知对性能有影响（重复读取）；
+- LT 这种重复的通知对性能有影响（重复读取）
 - LT 可能会出现惊群现象。假设有 n 个不同的进程都监听到了 epoll 中的某个 FD，并且它们都在调用 epoll_wait 尝试获取就绪的 FD，此时 FD 就绪了，就会去通知进程。LT 模式下，通知完进程后，FD 还会存在于 list_head 中，这就导致了所有监听 FD 的进程最后都会被通知到。一个 FD 就绪，所有的进程都会被唤醒。真正处理的时候，可能前面的一两个进程就能把 FD 的所有数据处理完，后面的进程其实也就没有必要唤醒了。用 LT 的话相当于多通知了一部分进程，多耗费了资源。而 ET 模式就不会出现这种现象，第一次通知完就移除该 FD，后续的进程也就不会被通知了。
 
 <b>总结</b>
@@ -4605,25 +4946,20 @@ epoll 模式是对 select 和 poll 的改进，它提供了三个函数：
 
 当我们的客户端想要去连接我们服务器，会去先到 IO 多路复用模型去进行排队，会有一个连接应答处理器，他会去接受读请求，然后又把读请求注册到具体模型中去，此时这些建立起来的连接，如果是客户端请求处理器去进行执行命令时，他会去把数据读取出来，然后把数据放入到 client 中， clinet 去解析当前的命令转化为 redis 认识的命令，接下来就开始处理这些命令，从 redis 中的 command 中找到这些命令，然后就真正的去操作对应的数据了，当数据操作完成后，会去找到命令回复处理器，再由他将数据写出。
 
-## 通信协议-RESP协议
+## 通信协议
 
 Redis 是一个 CS 架构的软件，通信一般分两步（不包括 pipeline 和 PubSub）：
 
-客户端（client）向服务端（server）发送一条命令
+- 客户端（client）向服务端（server）发送一条命令
+- 服务端解析并执行命令，返回响应结果给客户端
 
-服务端解析并执行命令，返回响应结果给客户端
+因此客户端发送命令的格式、服务端响应结果的格式必须有一个规范，这个规范就是通信协议。而在 Redis 自定义了一个通信协议称为 RESP（Redis Serialization Protocol）协议：
 
-因此客户端发送命令的格式、服务端响应结果的格式必须有一个规范，这个规范就是通信协议。
+- Redis 1.2 版本引入了 RESP 协议
+- Redis 2.0 版本中成为与 Redis 服务端通信的标准，称为 RESP2
+- Redis 6.0 版本中，从 RESP2 升级到了 RESP3 协议，增加了更多数据类型并且支持 6.0 的新特性--客户端缓存
 
-而在 Redis 中采用的是 RESP（Redis Serialization Protocol）协议：
-
-Redis 1.2 版本引入了 RESP 协议
-
-Redis 2.0 版本中成为与 Redis 服务端通信的标准，称为 RESP2
-
-Redis 6.0 版本中，从 RESP2 升级到了 RESP3 协议，增加了更多数据类型并且支持 6.0 的新特性--客户端缓存
-
-但目前，默认使用的依然是RESP2协议，也是我们要学习的协议版本（以下简称 RESP）。
+但目前，默认使用的依然是 RESP2 协议，也是我们要学习的协议版本（以下简称 RESP）。
 
 在 RESP 中，通过首字节的字符来区分不同数据类型，常用的数据类型包括 5 种：
 
@@ -4645,7 +4981,7 @@ Redis 6.0 版本中，从 RESP2 升级到了 RESP3 协议，增加了更多数�
 
 ### 基于Socket自定义Redis的客户端
 
-Redis 支持 TCP 通信，因此我们可以使用 Socket 来模拟客户端，与 Redis 服务端建立连接：
+Redis 支持 TCP 通信，因此我们可以使用 Socket 来模拟客户端，与 Redis 服务端建立连接。
 
 ```java
 public class Main {
@@ -4745,7 +5081,7 @@ public class Main {
         return list;
     }
 
-    // set name 虎哥
+    // set name payphone
     private static void sendRequest(String ... args) {
         writer.println("*" + args.length);
         for (String arg : args) {
@@ -4755,16 +5091,27 @@ public class Main {
         writer.flush();
     }
 }
-、
 ```
 
-## 内存淘汰策略
+## 内存回收
 
-### 过期key处理
+Redis 内存回收主要有两方面的内容
+
+- Redis key 过期策略，何时删除过期时间的 key
+- Redis 淘汰策略，内存使用到达 maxmemory 上限时触发内存淘汰数据
+
+<b>注意：Redis 的过期策略和内存淘汰策略不是一回事，不要弄混淆了。</b>
+
+### 必要性
 
 Redis 之所以性能强，最主要的原因就是基于内存存储。然而单节点的 Redis 其内存大小不宜过大，会影响持久化或主从同步性能。我们可以通过修改配置文件来设置 Redis 的最大内存：
 
-<div align="center"><img src="img/1653983341150.png"></div>
+```shell
+# 格式
+# maxmemory <bytes>
+# 例如
+maxmemory 1gb
+```
 
 当内存使用达到上限时，就无法存储更多数据了。为了解决这个问题，Redis 提供了一些策略实现内存回收。在学习 Redis 缓存的我们可以通过 expire 命令给 Redis 的 key 设置 TTL（存活时间）
 
@@ -4778,23 +5125,64 @@ Redis 之所以性能强，最主要的原因就是基于内存存储。然而�
     - 为每个 key 设置定义器做判断，如果 key 比较少还好，如果 key 很多就不太现实，开销太大了。
     - redis 采用的是惰性删除和定期删除。
 
-这里需要先谈一下 Redis 的底层结构。Redis 本身是一个典型的 key-value 内存存储数据库，因此所有的 key、value 都保存在之前学习过的 Dict 结构中。不过在其 database 结构体中，有两个 Dict：一个用来记录 key-value；另一个用来记录 key-TTL。
+### 过期key处理
 
-<div align="center"><img src="img/1653983423128.png"></div>
+这里需要先谈一下 Redis 的底层结构。Redis 本身是一个典型的 key-value 内存存储数据库，因此所有的 key、value 都保存在之前学习过的 Dict 结构中。<span style="color:orange">不过在其 database 结构体中，有两个 Dict：一个用来记录 key-value；另一个用来记录 key-TTL。</span>
 
+```c
+typedef struct redisDb {
+    dict *dict;	/* 存放所有key及value的地方，也被称为keyspace*/
+    dict *expires;	/*存放每-个key及其对应的TTL存活时间，只包含设置了TTL的key*/
+    dict *blocking_keys; /* Keys with clients waiting for data (BLPOP)*/
+    dict *ready_keys;	/* Blocked keys that received a PUSH */
+    dict *watched_keys; /* WATCHED keys for MULTI/EXEC CAS */
+    int id;	/* Database ID，0~15 */
+    long long avg_ttl; /* 记录平均TTL时长*/ 
+    unsigned long expires_cursor; /* expire检查时在dict中抽样的索引位置. */
+    list *defrag_later; /* 等待碎片整理的key列表*/
+} redisDb;
+```
 
+下图为 Redis database 结构体的示意图。
 
 <div align="center"><img src="img/1653983606531.png"></div>
 
-<b>惰性删除</b>
+知道了 Redis 如何存储时间了，那么 Redis 是如何处理过期的 key 呢？<u>Redis 对过期 key 的处理策略有：惰性删除、周期删除（这种处理策略有两种模式，分别是 SLOW 模式和 FAST 模式）</u>
+
+#### 惰性删除
 
 惰性删除：顾明思议并不是在 TTL 到期后就立刻删除，而是在访问一个 key 的时候，检查该 key 的存活时间，如果已经过期才执行删除。
 
-<div align="center"><img src="img/1653983652865.png"></div>
+```c
+// 查找一个key执行写操作
+robj *lookupKeyWriteWithFlags(redisDb *db, robj *key, int flags) {
+    //检查key是否过期
+    expirelfNeeded(db,key); 
+    return lookupKey(db,key.flags);
+}
+//查找一 个key执行读操作
+robj tlookupKeyReadWithFlags(redisDb *db, robj *key, int flags) {
+    robj *val;
+    //检查key是否过期
+    if (expireifNeeded(db,key)== 1) {
+        // 略...
+    }
+    return NULL;
+}
 
-<b>周期删除</b>
+int expirelfNeeded(redisDb *db, robj *key) {
+    //判断是否过期，如果未过期直接结束并返回0
+    if (!keylsExpired(db,key)) return 0; 
+    // 略...
+	//删除过期key
+	deleteExpiredKeyAndPropagate(db,key);
+    return 1;
+}
+```
 
-周期删除：顾明思议是通过一个定时任务，周期性的抽样部分过期的 key，然后执行删除。执行周期有两种：
+#### 周期删除
+
+周期删除：顾明思议是通过一个定时任务，周期性的抽样部分过期的 key，然后执行删除。执行周期有两种。
 
 - Redis 服务初始化函数 initServer() 中设置定时任务，按照 server.hz 的频率来执行过期 key 清理，模式为 SLOW (执行时间长，但是频率低)
 - Redis 的每个事件循环前会调用 beforeSleep() 函数，执行过期 key 清理，模式为 FAST
@@ -4813,11 +5201,15 @@ Redis 之所以性能强，最主要的原因就是基于内存存储。然而�
 * 逐个遍历 db，逐个遍历 db 中的 bucket，抽取 20 个 key 判断是否过期
 * 如果没达到时间上限（1ms）并且过期 key 比例大于 10%，再进行一次抽样，否则结束
 
-<b style="color:orange">总结</b>
+#### 从节点过期策略
 
-RedisKey 的 TTL 记录方式：
+从节点不会进行过期扫描，从节点对过期的处理是被动的。主节点在 key 到期时，会在 AOF 文件里增加一条 del 指令，同步到所有的从节点，从节点通过执行这条 del 指令来删除过期 key。
 
-- 在 RedisDB 中通过一个 Dict 记录每个 Key 的 TTL 时间
+因为指令同步是异步进行的，所以如果主节点过期的 key 的 del 指令没有及时同步到从节点，就会出现主从数据不一致，主节点没有的数据在从节点中依旧存在。如果在含有主从集群的 Redis 中设置分布式锁的 id，获取数据时主节点数据过期而从节点没来得及同步就不出现过期的分布式锁。
+
+#### 总结
+
+RedisKey 的 TTL 记录方式：在 RedisDB 中通过一个 Dict 记录每个 Key 的 TTL 时间
 
 过期 key 的删除策略：
 
@@ -4825,34 +5217,59 @@ RedisKey 的 TTL 记录方式：
 - 定期清理：定期抽样部分 key，判断是否过期，如果过期则删除，随着时间的推移，整个数据库都会被抽取到，可以确保所有的过期 key 都可以被清理。
 
 定期清理的两种模式：
-- SLOW 模式执行频率默认为 10，每次不超过 25ms
+- SLOW 模式执行频率默认为 10（每秒执行 10 次），每次不超过 25ms
 - FAST 模式执行频率不固定，但两次间隔不低于 2ms，每次耗时不超过 1ms
 
 ### 内存淘汰策略
 
 内存淘汰：就是当 Redis 内存使用达到设置的上限时，主动挑选部分 key 删除以释放更多内存的流程。执行 Redis 命令之前会检查一下内存够不够，不够则进行清理。Redis 会在处理客户端命令的方法 processCommand() 中尝试做内存淘汰：
 
-<div align="center"><img src="img/1653983978671.png"></div>
+```c
+int processCommand(client *c) {
+    //如果服务器设置了server.maxmemory属性，并且并未有执行lua脚本
+    if (server.maxmemory && !server.lua_timedout) {
+        //尝试进行内存淘汰performEvictions
+        int out of memory = (performEvictions() == EVICT FAIL);
+        // ..
+        if (out_of_memory && reject_cmd_on_oom) {
+            rejectCommand(C, shared.oomerr);
+            return C_OK;
+        }
+        // ....
+    }
+}
+```
 
  <b>Redis 支持 8 种不同策略来选择要删除的 key</b>
 
-* noeviction： 不淘汰任何 key，但是内存满时不允许写入新数据，默认就是这种策略
-* volatile-ttl： 对设置了 TTL 的 key，比较 key 的剩余 TTL 值，TTL 越小越先被淘汰
-* allkeys-random：对全体 key ，随机进行淘汰。也就是直接从 db->dict 中随机挑选
-* volatile-random：对设置了 TTL 的 key ，随机进行淘汰。也就是从 db->expires 中随机挑选。
-* allkeys-lru： 对全体 key，基于 LRU 算法进行淘汰
-* volatile-lru： 对设置了 TTL 的 key，基于 LRU 算法进行淘汰
-* allkeys-lfu： 对全体 key，基于 LFU 算法进行淘汰
-* volatile-lfu： 对设置了 TTL 的 key，基于 LFI 算法进行淘汰
+* <b>noeviction：</b>不淘汰任何 key，但是内存满时不允许写入新数据，默认就是这种策略。
+* <b>volatile-ttl：</b>对设置了 TTL 的 key，比较 key 的剩余 TTL 值，TTL 越小越先被淘汰。
+* <b>allkeys-random：</b>对全体 key ，随机进行淘汰。也就是直接从 db->dict 中随机挑选。
+* <b>volatile-random：</b>对设置了 TTL 的 key ，随机进行淘汰。也就是从 db->expires 中随机挑选。
+* <b>allkeys-lru：</b>对全体 key，基于 LRU 算法进行淘汰。
+* <b>volatile-lru：</b>对设置了 TTL 的 key，基于 LRU 算法进行淘汰。
+* <b>allkeys-lfu：</b>对全体 key，基于 LFU 算法进行淘汰。
+* <b>volatile-lfu：</b>对设置了 TTL 的 key，基于 LFI 算法进行淘汰。
 
 <b>比较容易混淆的有两个</b>
 
 * LRU（Least Recently Used），最少最近使用。用当前时间减去最后一次访问时间，这个值越大则淘汰优先级越高。
 * LFU（Least Frequently Used），最少频率使用。会统计每个 key 的访问频率，值越小淘汰优先级越高。
 
-要想使用 LRU 和 LFU 算法进行 key 的淘汰，我们需要得到 key 最后一次访问的时间/访问的频率，这又从何得知呢？这就需要我们去了解 Redis 如何去统计 key 最近访问的时间和频率了。这涉及到了 Redis 的 RedisObject 结构。Redis 的数据都会被封装为 RedisObject 结构：
+要想使用 LRU 和 LFU 算法进行 key 的淘汰，我们需要得到 key 最后一次访问的时间/访问的频率，这又从何得知呢？这就需要我们去了解 Redis 如何去统计 key 最近访问的时间和频率了。这涉及到了 Redis 的 RedisObject 结构。Redis 的数据都会被封装为 RedisObject 结构。
 
-<div align="center"><img src="img/1653984029506.png"></div>
+```c
+typedef struct redisObject {
+    unsigned type:4; // 对象类型
+    unsigned encoding:4; // 编码方式
+    unsigned lru:LRU_BITS; // LRU:以秒为单位记录最近一次访问时间，长度24bit
+    						//LFU:高16位以分钟为单位记录最近一次访问时间，低8位记录逻辑访问次数
+    int refcount;
+    //引用计数，计数为0则可以回收
+    void *ptr; 
+    //数据指针，指向实数据
+} robj;
+```
 
 <b>LFU 的访问次数之所以叫做逻辑访问次数，是因为并不是每次 key 被访问都计数，而是通过运算</b>
 
@@ -4861,7 +5278,13 @@ RedisKey 的 TTL 记录方式：
 * 如果 R < P ，则计数器 + 1，且最大不超过 255
 * 访问次数会随时间衰减，距离上一次访问时间每隔 lfu_decay_time 分钟，计数器 -1
 
-<div align="center"><img src="img/1653984085095.png"></div>
+<div align="center"><img src="img/image-20230118194050310.png"></div>
+
+### 大对象的删除
+
+del 指令会直接释放对象的内存，大部分情况下这个命令非常快，但是如果被删除的是一个很大的对象，如包含了上千万个元素的 hash，那么这个删除操作会比较慢，导致 Redis 卡顿，降低 QPS。这时可以使用 `unlink key` 指令来删除大 key。
+
+unlink 指令会切断 key 和 Redis 数据库的关系，然后开启一个后台线程异步回收内存。
 
 
 

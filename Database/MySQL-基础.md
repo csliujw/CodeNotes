@@ -2336,9 +2336,9 @@ ROLLBACK;
 
 ### MySQL中的事务
 
-MySQL 数据库中事务默认是自动提交的。MySQL 事务提交有两种方式：
+<b>MySQL 数据库中事务默认是自动提交的，提交有两种方式，自动提交和手动提交。</b>
 
-1️⃣自动提交：MySQL 就是自动提交的，一条 DML (增删改)语句会自动提交一次事务。
+1️⃣自动提交：MySQL 默认是自动提交的，一条 DML (增删改)语句会自动提交一次事务。
 
 2️⃣手动提交：
 
@@ -2346,17 +2346,17 @@ MySQL 数据库中事务默认是自动提交的。MySQL 事务提交有两种�
 - 需要先开启事务，再提交
 -  修改事务的默认提交方式：
   - 查看事务的默认提交方式：`SELECT @@autocommit;` 1 代表自动提交 0 代表手动提交
-  - 修改默认提交方式：`set @@autocommit=0;`	
+  - 修改默认提交方式为手动提交：`set @@autocommit=0;`	
 
 ### 事务的四大特征
 
 原子性（Atomicity）：事务是一个原子操作，是不可分割的最小操作单位，要么同时成功，要么同时失败。
 
-一致性（Consistency）：事务操作前后，数据总量不变。以转账为例，A 给 B 100, B 得到 100，最后的总量是不变的。一致性和原子性是紧密联系在一起的。
-
 隔离性（Isolation）：多个事务之间。相互独立。
 
 持久性（Durability）：当事务提交或回滚后，数据库会持久化的保存数据。
+
+一致性（Consistency）：事务操作前后，数据总量不变。以转账为例，A 给 B 100, B 得到 100，最后的总量是不变的。一致性和原子性是紧密联系在一起的。前面所说的原子性、隔离性、持久性都是为数据一致性服务的。
 
 ### 事务的隔离级别
 
@@ -2370,18 +2370,18 @@ MySQL 数据库中事务默认是自动提交的。MySQL 事务提交有两种�
 
 在 MySQL 中，同一个事务中的数据查询使用的是快照技术。后面的查询都是在快照中进行，所以是可重复读的。而不可重复读是，同一个事务中，每次查询都查询最新的数据（可能被其他事务修改了一部分数据）因此造成了不可重复读。
 
-| 隔离级别         | 说明                              | 产生的问题             |
-| ---------------- | --------------------------------- | ---------------------- |
-| read uncommitted | 读未提交                          | 脏读、不可重复读、幻读 |
-| read committed   | 读已提交 （Oracle）               | 不可重复读、幻读       |
-| repeatable read  | 可重复读 （MySQL 默认的隔离级别） | 幻读                   |
-| serializable     | 串行化                            | 可以解决所有的问题     |
+| 隔离级别         | 说明                                                      | 产生的问题             |
+| ---------------- | --------------------------------------------------------- | ---------------------- |
+| read uncommitted | 读未提交，事务 A 可以读取到事务 B 修改过但未提交的数据    | 脏读、不可重复读、幻读 |
+| read committed   | 读已提交 （Oracle），事务 A 可以读取到事务 B 已提交的数据 | 不可重复读、幻读       |
+| repeatable read  | 可重复读 （MySQL 默认的隔离级别）                         | 幻读                   |
+| serializable     | 串行化                                                    | 可以解决所有的问题     |
 
 注意：隔离级别从小到大安全性越来越高，但是效率越来越低
 
-数据库查询隔离级别：`select @@tx_isolation;`
+数据库查询隔离级别：`select @@tx_isolation;`，MySQL 8.x 用 `select @@transaction_isolation;`，查询全局事务隔离级别或会话事务隔离级别用 @@global.xx 和 @@session.xx。
 
-数据库设置隔离级别：`set global transaction isolation level  级别字符串;`
+数据库设置隔离级别：`set global transaction isolation level 级别字符串(如 repeatable read);`
 ## MySQL8.0特性
 
 - 加入了窗口函数
@@ -2602,13 +2602,12 @@ public static void main(String []agrs){
 
 ## 重要API
 
-> DriverManager：驱动管理对象 
+> <b>DriverManager 是驱动管理对象</b>
 
 - 注册驱动：告诉程序该使用哪一个数据库驱动 jar
-
-  static void registerDriver(Driver driver)：注册与给定的驱动程序 DriverManager。
-  写代码使用：Class.forName("com.mysql.jdbc.Driver");
-  通过查看源码发现：在 com.mysql.jdbc.Driver 类中存在静态代码块
+- static void registerDriver(Driver driver)：注册与给定的驱动程序 DriverManager。
+- 写代码使用：Class.forName("com.mysql.jdbc.Driver");
+- 通过查看源码发现：在 com.mysql.jdbc.Driver 类中存在静态代码块
 
 
 ```java
@@ -2621,16 +2620,16 @@ static {
 }
 ```
 
-- 注意：mysql5 之后的驱动 jar 包可以省略注册驱动的步骤。
+- 注意：mysql5 之后的驱动 jar 包可以省略注册驱动的步骤，建立数据库连接时会判断是否加载了驱动，没加载则会进行加载。
 
-> 获取数据库连接 Connection：
+> <b>获取数据库连接 Connection</b>
 
 - 方法 `static Connection getConnection(String url, String user, String password) `
-- 语法：jdbc:mysql://ip地址(域名):端口号/数据库名称
+- 语法：jdbc:mysql://ip地址:端口号/数据库名称
 - 例子：<b>jdbc:mysql://localhost:3306/db3</b>
 - 细节：如果连接的是本机 mysql 服务器，并且 mysql 服务默认端口是 3306，则 url 可以简写为：jdbc:mysql:///数据库名称
 
-> Connection：数据库连接对象
+> <b>Connection 是数据库连接对象</b>
 
 - 获取执行 sql 的对象
   - `Statement createStatement()`会有 SQL 注入
@@ -2640,15 +2639,14 @@ static {
   - 提交事务：`commit() `
   - 回滚事务：`rollback() `
 
-> Statement：执行 sql 的对象
+> <b>Statement 是执行 sql 的对象</b>
 
-- 执行 sql
-  - boolean execute(String sql) ：可以执行任意的 sql 了解 
-  - `int executeUpdate(String sql) ：执行DML（insert、update、delete）语句、DDL(create，alter、drop)语句`
-  - 返回值：影响的行数，可以通过这个影响的行数判断 DML 语句是否执行成功，`返回值 >0` 的则执行成功，反之，则失败。
-  - ResultSet executeQuery(String sql)  ：执行 DQL(select) 语句
+- boolean execute(String sql) ：可以执行任意的 sql 了解 
+- `int executeUpdate(String sql)：执行DML（insert、update、delete）语句、DDL(create，alter、drop)语句`
+- 返回值：影响的行数，可以通过这个影响的行数判断 DML 语句是否执行成功，`返回值 >0` 的则执行成功，反之，则失败。
+- ResultSet executeQuery(String sql)  ：执行 DQL(select) 语句
 
-> ResultSet：结果集对象,封装查询结果
+> <b>ResultSet 是结果集对象，用于封装查询结果</b>
 
 ```java
 public static void resuleDemo(){
@@ -2669,9 +2667,9 @@ public static void resuleDemo(){
 */
 ```
 
-> PreparedStatement：执行 sql 的对象
+> <b>PreparedStatement 是执行 sql 的对象</b>
 
-- SQL 注入问题：在拼接 sql 时，有一些 sql 的特殊关键字参与字符串的拼接。会造成安全性问题
+- SQL 注入问题：在拼接 sql 时，有一些 sql 的特殊关键字参与字符串的拼接。会造成安全性问题。
   - 输入用户随便，输入密码：a' or 'a' = 'a
   - `select * from user where username = 'fhdsjkf' and password = 'a' or 'a' = 'a' `
 - 解决 sql 注入问题：使用 PreparedStatement 对象来解决
@@ -2735,7 +2733,7 @@ public class JDBCDemo10 {
 
 ## Spring-JDBC
 
-> <b>Spring 框架对 JDBC 的简单封装。提供了一个 JDBCTemplate 对象简化 JDBC 的开发</b>
+> <b>Spring-JDBC 是 Spring 框架对 JDBC 的简单封装。提供了一个 JDBCTemplate 对象简化 JDBC 的开发</b>
 
 1️⃣导入 jar 包
 
@@ -2754,8 +2752,6 @@ public class JDBCDemo10 {
 | queryForObject   | 查询结果，将结果封装为对象                                   | 一般用于聚合函数的查询                                       |
 
 ```java
-package com.bbxx.spring;
-
 import com.alibaba.druid.pool.DruidDataSourceFactory;
 import com.bbxx.nature.Student;
 import org.junit.Assert;
@@ -2920,7 +2916,7 @@ class DataSourceUtils {
   - 归还连接：Connection.close()。如果连接对象 Connection 是从连接池中获取的，那么调用 Connection.close() 方法，则不会再关闭连接了。而是归还连接
 - 常用数据库连接池
   - C3P0：数据库连接池技术
-  - Druid：数据库连接池实现技术，由阿里巴巴提供的【文档垃圾】
+  - Druid：数据库连接池实现技术，由阿里巴巴提供的
 
 #### C3P0
 

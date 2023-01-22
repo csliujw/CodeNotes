@@ -440,7 +440,7 @@ mybatis 多对多是由两个一对一组成的，如：user 一对多 role，ro
 
 ## 简单的CURD
 
-POJO 代码
+<b>POJO 代码</b>
 
 ```java
 public class User {
@@ -457,13 +457,12 @@ public class User {
 }
 ```
 
-Mapper 接口
+<b>Mapper 接口</b>
 
 ```java
 package cn.mapper;
 
 import cn.pojo.User;
-
 import java.util.List;
 
 public interface UserMapper {
@@ -481,6 +480,8 @@ public interface UserMapper {
 }
 ```
 
+<b>XML 文件</b>
+
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
@@ -489,30 +490,30 @@ public interface UserMapper {
 <mapper namespace="cn.mapper.UserMapper">
 	<!-- 如果配置了别名，那么 resultType 就不用写全名了 -->
     <select id="selectAll" resultType="cn.pojo.User">
-        select * from users
+        select * 
+        from users
     </select>
 
     <select id="findByName" resultType="cn.pojo.User">
-        select * from users
+        select * 
+        from users
         where name like concat("%", #{name}, "%")
     </select>
 
     <!--    拿到自增的主键 id-->
     <!--
-            让MyBatis自动地将自增id赋值给传入地 User 对象的id属性。
-            useGeneratedKeys="true";原生jdbc获取自增主键的方法：
-            keyProperty="",将刚才自增的id封装给哪个属性。
+         让MyBatis自动地将自增id赋值给传入地 User 对象的id属性。
+         useGeneratedKeys="true";原生jdbc获取自增主键的方法：
+         keyProperty="",将刚才自增的id封装给哪个属性。
  	-->
     <insert id="insert"  useGeneratedKeys="true" keyProperty="id">
-        insert into users(name, sex)
-        values (#{name}, #{sex} )
+        insert into users(name, sex) values (#{name}, #{sex} )
     </insert>
 
     <!-- parameterType默认可以不写！mybatis会自动判断的 -->
     <update id="update" parameterType="User">
         update users
-        set name=#{name},
-            sex=#{sex}
+        set name=#{name}, sex=#{sex}
         where id = #{id}
     </update>
 
@@ -526,7 +527,6 @@ public interface UserMapper {
         select count(*)
         from users
     </select>
-
 </mapper>
 ```
 
@@ -557,7 +557,7 @@ public class CRUDTest {
         List<User> byName = userDao.findByName("1");
         byName.forEach(System.out::println);
     }
-
+    
     @Test
     void insert() {
         User cqq1 = new User("cqq", "0");
@@ -573,7 +573,6 @@ public class CRUDTest {
         boolean cqq = userDao.update(cqq1);
         Assertions.assertTrue(cqq);
     }
-
 
     @Test
     void deleteById() {
@@ -596,6 +595,8 @@ public class CRUDTest {
 - 配置文件中各个元素的作用
 - 映射文件中常用元素的作用
 
+配置文件和映射文件这部分内容主要是随查随用。
+
 ### 核心对象
 
 在使用 MyBatis 框架时，主要涉及两个核心对象：SqlSessionFactory 和 SqlSession。
@@ -617,11 +618,11 @@ SqlSessionFactory sf = new SqlSessionFactoryBuilder().build(in);
 
 可以将 SqlSession 当作是一个 JDBC 连接，可以用来执行 SQL 语句，里面封装了一些常用的操作数据库的方法，如查询、修改、删除等操作。
 
-> DefaultSqlSession
+> <b>DefaultSqlSession</b>
 
 SqlSession 是 MyBatis 中的一个接口，它的子类 DefaultSqlSession 存在线程安全问题。而 SqlSessionManager 和 SqlSessionTemplate 是线程安全的。
 
-> SqlSessionManager 和 SqlSessionTemplate
+> <b>SqlSessionManager 和 SqlSessionTemplate</b>
 
 SqlSessionManager 和 SqlSessionTemplate 是怎么保证 SqlSession 线程安全的呢？避免多个线程并发使用同一个 DefaultSqlSession 实例即可。
 
@@ -743,7 +744,7 @@ public static SqlSession getSqlSession(SqlSessionFactory sessionFactory, Executo
 }
 ```
 
-> SqlSessionManager 的获取
+> <b>SqlSessionManager 的获取</b>
 
 ```java
 InputStream in = Resources.getResourceAsStream(resourcePath);
@@ -976,11 +977,12 @@ public class ExamplePlugin implements Interceptor {
 </environments>
 ```
 
-- transactionManager，元素用于配置事务管理，它的 type 属性用于指定事务管理的方式，即使用哪种事务管理器
-    - JDBC：直接使用了 JDBC 的提交和回滚设置，它依赖于从数据源得到的连接来管理事务的作用域。
-    - MANAGED：从来不提交或回滚一个连接，而是让容器来管理事务的整个生命周期。在默认情况下，它会关闭连接，但一些容器并不希望这样，为此可以将 closeConnection 属性设置为 false 来阻止它默认的关闭行为。
-    - Spring + MyBatis 的组合无须配置 MyBatis 的事务管理器，会使用 Spring 自带的管理器来实现事务管理。
-- dataSource 元素用于配置数据源，它的 type 属性用于指定使用哪种数据源，如果使用的是外部的数据源，type 属性的值就是 dataSource 的类全名。
+transactionManager，元素用于配置事务管理，它的 type 属性用于指定事务管理的方式，即使用哪种事务管理器
+- JDBC：直接使用了 JDBC 的提交和回滚设置，它依赖于从数据源得到的连接来管理事务的作用域。
+- MANAGED：从来不提交或回滚一个连接，而是让容器来管理事务的整个生命周期。在默认情况下，它会关闭连接，但一些容器并不希望这样，为此可以将 closeConnection 属性设置为 false 来阻止它默认的关闭行为。
+- Spring + MyBatis 的组合无须配置 MyBatis 的事务管理器，会使用 Spring 自带的管理器来实现事务管理。
+
+dataSource 元素用于配置数据源，它的 type 属性用于指定使用哪种数据源，如果使用的是外部的数据源，type 属性的值就是 dataSource 的类全名。
 
 #### mappers
 
@@ -1061,8 +1063,6 @@ resultMap 元素表示结果映射集，是 MyBatis 中最重要也是最强大�
 
 默认情况下，MyBatis 程序在运行时会自动地将查询到的数据与需要返回的对象的属性进行匹配赋值（<span style="color:orange">需要表中的列名与对象的属性名称完全一致</span>）。然而实际开发时，数据表中的列和需要返回的对象的属性可能不会完全一致，这种情况下 MyBatis 是不会自动赋值的。此时，就可以使用 \<resultMap\> 元素进行处理。
 
-xml 示例文件
-
 ```xml
 <mapper namespace="com.xx.mapper.UserMapper">
     <resultMap type="com.xx.po.User" id="resultMap">
@@ -1080,7 +1080,7 @@ xml 示例文件
 
 ### 基本用法
 
-> #{} 和 ${}；#{} 等同于占位符 "?"，\${} 相当于字符串拼接
+> <b>#{} 和 ${}；#{} 等同于占位符 "?"，\${} 相当于字符串拼接</b>
 
 #{} 表示一个占位符号。通过 #{} 可以实现 preparedStatement 向占位符中设置值，自动进行 Java 类型和 jdbc 类型转换，
 
@@ -1110,7 +1110,7 @@ class A{
 
 读取的 key 的名字就是 ”value”，所以我们在绑定参数时就只能叫 value 的名字
 
-> 只有一个形式参数时
+> <b>只有一个形式参数时</b>
 
 ```java
 public User getOne(int id);
@@ -1124,7 +1124,7 @@ public User getOne(int id);
 </select>
 ```
 
-> 有多个形参时：可以用注解取别名，方便拿对应的参数；也可以不取别名，按框架的规则进行取数据
+> <b>有多个形参时：可以用注解取别名，方便拿对应的参数；也可以不取别名，按框架的规则进行取数据</b>
 
 ```java
 // 有多个形参
@@ -1136,7 +1136,8 @@ public User getTwoAnnotation(@Param("findName") String name, @Param("findSex") S
 
 ```xml
 <!--
-     直接用 name，sex 作为 #{} 的话，会报错。
+     直接用 name，sex 作为 #{} 的话，会报错。而且不同版本的 MyBatis 可用的 parameters 还不一样
+	 因此最好还是用 @Param 注解指定名称。
      Caused by: org.apache.ibatis.binding.BindingException:
      Parameter 'id' not found
      Available parameters are [arg0, arg1, param1, param2]
@@ -1156,7 +1157,7 @@ public User getTwoAnnotation(@Param("findName") String name, @Param("findSex") S
 </select>
 ```
 
-> 总结
+> <b>总结</b>
 
 - 要么写 #{arg0} #{arg1} 要么写 #{param1} #{param2}，具体的方式可能会随 MyBatis 版本的变化产生变动。
 - 只有一个形参的话写什么都行 #{asf} #{haha} 都行
@@ -1379,7 +1380,7 @@ public Map<String, User> getAllUser();
 
 ## 自定义结果集
 
-当 JavaBean 中的字段名和数据库表中的列名并非完全一致，且驼峰规则无效时，可以使用自定义 ResultType，将数据库中的字段和 JavaBean 中的进行一一对应。
+当 JavaBean 中的字段名和数据库表中的列名并非完全一致，且驼峰规则无效时，可以使用自定义  ResultType，将数据库中的字段和 JavaBean 中的进行一一对应。
 
 type：指定为哪个 JavaBean 自定义封装规则；全类名。
 
@@ -1760,7 +1761,7 @@ public class Demo {
 }
 ```
 
-## 关联查询&延迟加载
+## 关联查询
 
 关联查询是 MyBatis 针对多表操作提供的关联映射，通过关联映射就可以很好地处理对象与对象之间的关联关系。
 
@@ -2290,6 +2291,8 @@ Product{id=3, name='SSM框架整合实战', price=50.0, orders=null}
 -->
 ```
 
+## 延迟加载
+
 ### 分步查询
 
 ```xml
@@ -2557,7 +2560,7 @@ CDaoImpl 类继承了 SqlSessionDaoSupport 类，并实现了 CDao 接口。其�
 
 ## MyBatis生成Mapper
 
-测试语句 `select * from users where id=4`
+测试语句 `select * from users where id=4;`
 
 方法代码 `List<UserVO> findByCondition(UserVO vo);`
 
