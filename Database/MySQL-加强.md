@@ -1420,7 +1420,11 @@ ON 连接条件...;
 
 ### 外连接 
 
-左外连接，查询左表的所有数据和右表中符合条件的数据。
+<b>使用场景</b>
+
+如果我们需要包含某个表的所有数据时，请使用左外连接。如多表查询所有人的部门信息，即便这个人没有部门。这时候就使用左外连接查询出所有人员，然后查询出右表中的部门信息。
+
+左外连接，查询左表的所有数据和右表中符合条件的数据然后将数据进行连接（如加一列字段信息）。
 
 ```sql
 select 字段列表 
@@ -1479,9 +1483,9 @@ where column1 = (select column1 from t2);
 <b>根据子查询结果不同，可分为四类</b>
 
 - 标量子查询 (子查询结果为单个值) 
-- 列子查询(子查询结果为一列)
-- 行子查询(子查询结果为一行)
-- 表子查询(子查询结果为多行多列)
+- 列子查询 (子查询结果为一列)
+- 行子查询 (子查询结果为一行)
+- 表子查询 (子查询结果为多行多列)
 
 根据子查询位置，分为：WHERE 之后 、FROM 之后、SELECT 之后。
 
@@ -1619,7 +1623,7 @@ select e.name, e.age, e.job, d.name
 from emp e,
      dept d
 where e.dept_id = d.id;
--- 这种不会
+-- 这种不会（查询左表的所有数据，和右表的符合条件的字段信息）
 select e.name, e.age, e.job, d.name
 from emp e left join dept d on d.id = e.dept_id;
 
@@ -1627,41 +1631,57 @@ from emp e left join dept d on d.id = e.dept_id;
 -- 2 .查询年龄小于30岁的员工姓名、年龄、职位、部门信息。
 -- 表: emp , dept
 -- 连接条件: emp.dept_id = dept.id
+-- 左外连接，会完全包含左边表的数据（会使用 where 条件进行过滤，所以左表的数据是所有小于30岁的人员）
 select e.name, e.age, e.job, d.name
 from emp e
-         left join dept d on d.id = e.dept_id where e.age<30;
+left join dept d on d.id = e.dept_id 
+where e.age<30;
 
 -- 3 .查询拥有员工的部门ID、部门名称。
 -- 表: emp , dept
 -- 连接条件: emp.dept_id = dept.id
-select distinct d.id , d.name from emp e , dept d where e.dept_id = d.id;
-select d.* from dept d where d.id in (select emp.dept_id from emp group by emp.dept_id);
+select distinct d.id , d.name 
+from emp e , dept d 
+where e.dept_id = d.id;
+
+select d.* 
+from dept d 
+where d.id in (select emp.dept_id from emp group by emp.dept_id);
 
 
 -- 4 .查询所有年龄大于40岁的员工, 及其归属的部门名称; 如果员工没有分配部门, 也需要展示出来。
 -- 表: emp , dept
 -- 连接条件: emp.dept_id = dept.id
--- 外连接
-select e.*,d.name from emp e left join dept d on d.id = e.dept_id where e.age>40;
+-- 需要用外连接
+select e.*,d.name 
+from emp e 
+left join dept d on d.id = e.dept_id 
+where e.age>40;
 
 
 -- 5 .查询所有员工的工资等级。
 -- 表: emp , salgrade
 -- 连接条件 : emp.salary >= salgrade.losal and emp.salary <= salgrade.hisal
-select e.name,e.salary,s.grade from emp e,salgrade s where e.salary between s.losal and s.hisal;
+select e.name,e.salary,s.grade 
+from emp e,salgrade s 
+where e.salary between s.losal and s.hisal;
 
 
 -- 6 .查询 "研发部" 所有员工的信息及工资等级。
 -- 表: emp , salgrade , dept
 -- 连接条件 : emp.salary between salgrade.losal and salgrade.hisal , emp.dept_id = dept.id
 -- 查询条件 : dept.name = '研发部'
-select e.name,d.name,e.salary,s.grade from  emp e,salgrade s,dept d where e.dept_id=1 and e.dept_id=d.id and (e.salary between s.losal and s.hisal);
+select e.name,d.name,e.salary,s.grade 
+from emp e,salgrade s,dept d 
+where e.dept_id=1 and e.dept_id=d.id and (e.salary between s.losal and s.hisal);
 
 
 -- 7. 查询 "研发部" 员工的平均工资
 -- 表: emp , dept
 -- 连接条件 :  emp.dept_id = dept.id
-select avg(e.salary) from emp e, dept d where e.dept_id = d.id and d.name = '研发部';
+select avg(e.salary) 
+from emp e, dept d 
+where e.dept_id = d.id and d.name = '研发部';
 
 
 -- 8. 查询工资比 "灭绝" 高的员工信息。
@@ -1687,11 +1707,13 @@ select avg(e1.salary) from emp e1 where e1.dept_id = 1;
 select avg(e1.salary) from emp e1 where e1.dept_id = 2;
 
 -- b. 查询低于本部门平均工资的员工信息
-select * from emp e2 where e2.salary < ( select avg(e1.salary) from emp e1 where e1.dept_id = e2.dept_id );
+select * from emp e2 
+where e2.salary < ( select avg(e1.salary) from emp e1 where e1.dept_id = e2.dept_id );
 
 
 -- 11. 查询所有的部门信息, 并统计部门的员工人数
-select d.id, d.name , ( select count(*) from emp e where e.dept_id = d.id ) '人数' from dept d;
+select d.id, d.name , ( select count(*) from emp e where e.dept_id = d.id ) '人数' 
+from dept d;
 
 select count(*) from emp where dept_id = 1;
 ```
@@ -1898,23 +1920,23 @@ MySQL8.0.26-Linux版安装
 
 WSL-Ubuntu 安装 [怎样在 Ubuntu Linux 上安装 MySQL - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/64080934)
 
-### 准备一台Linux服务器
+<b>准备一台 Linux 服务器</b>
 
 云服务器或者虚拟机都可以; 
 
 Linux 的版本为 CentOS 7;
 
-### 下载Linux版MySQL安装包
+<b>下载Linux版MySQL安装包</b>
 
 https://downloads.mysql.com/archives/community/
 
 <div align="center"><img src="img/image-20211031230239760.png"></div>
 
-### 上传MySQL安装包
+<b>上传 MySQL 安装包</b>
 
 <div align="center"><img src="img/image-20211031231930205.png"></div>
 
-### 创建目录,并解压
+<b>创建目录,并解压</b>
 
 ```shell
 mkdir mysql
@@ -1922,7 +1944,7 @@ mkdir mysql
 tar -xvf mysql-8.0.26-1.el7.x86_64.rpm-bundle.tar -C mysql
 ```
 
-### 安装MySQL的安装包
+<b>安装MySQL的安装包</b>
 
 ```shell
 cd mysql
@@ -1944,7 +1966,7 @@ rpm -ivh mysql-community-client-8.0.26-1.el7.x86_64.rpm
 rpm -ivh  mysql-community-server-8.0.26-1.el7.x86_64.rpm
 ```
 
-### 启动MySQL服务
+<b>启动 MySQL 服务</b>
 
 ```shell
 systemctl start mysqld
@@ -1954,13 +1976,13 @@ systemctl restart mysqld
 systemctl stop mysqld
 ```
 
-### 查询自动生成的root用户密码
+<b>查询自动生成的 root 用户密码</b>
 
 ```shell
 grep 'temporary password' /var/log/mysqld.log
 ```
 
-命令行执行指令 :
+命令行执行指令 
 
 ```shell
 mysql -u root -p
@@ -1968,7 +1990,7 @@ mysql -u root -p
 
 然后输入上述查询到的自动生成的密码, 完成登录。
 
-### 修改root用户密码
+<b>修改 root 用户密码</b>
 
 登录到 MySQL 之后，需要将自动生成的不便记忆的密码修改了，修改成自己熟悉的便于记忆的密码。
 
@@ -1985,7 +2007,7 @@ set global validate_password.length = 4;
 
 降低密码的校验规则之后，再次执行上述修改密码的指令。
 
-### 创建用户
+<b>创建用户</b>
 
 默认的 root 用户只能当前节点 localhost 访问，是无法远程访问的，我们还需要创建一个 root 账户，用户远程访问
 
@@ -1993,13 +2015,13 @@ set global validate_password.length = 4;
 create user 'root'@'%' IDENTIFIED WITH mysql_native_password BY '1234';
 ```
 
-### 并给root用户分配权限
+<b>并给 root 用户分配权限</b>
 
 ```
 grant all on *.* to 'root'@'%';
 ```
 
-### 重新连接MySQL
+<b>重新连接 MySQL</b>
 
 ```
 mysql -u root -p
@@ -2033,7 +2055,8 @@ mysql -u root -p
 
 <div align="center"><img src="img/45/45-1.png" width="80%"></div>
 
-- MySQL 可大致分为 Server 层和存储引擎层两部分。
+MySQL 可大致分为 Server 层和存储引擎层两部分。
+
 - <b>连接器：</b>`mysql -h$ip -P$port -u$user -p`，连接上数据库。
     - 用户名或密码不对会提示 `Access denied for user`，连接成功则会到权限表查出用户所拥有的权限。之后，你对数据库的所有操作，都会在这个连接里面进行权限判断，是否允许此操作。
     - 如果修改了用户权限，也不会影响已经存在连接的权限。修改完成后，只有再新建的连接才会使用新的权限设置。
@@ -2041,7 +2064,7 @@ mysql -u root -p
     - 客户端如果太长时间没动静，连接器就会自动将它断开。这个时间是由参数 `wait_timeout` 控制的，默认值是 8 小时。到时间了，会自动断开连接。
     - 建立连接比较费事，建议使用长连接。
     - 长连接的问题： MySQL 在执行过程中临时使用的内存是管理在连接对象里面的。这些资源会在连接断 开的时候才释放。所以如果长连接累积下来，可能导致内存占用太大。需要我们定期断开长连接或通过 `mysql_rese_connection` 来重新初始化连接资源。
-- <b>查询缓存：</b>如果是 SELECT 语句，在解析查询之前，服务器会先检查查询缓存，如果能宅其中找到对应的查询，服务器就不必执行查询解析、优化和执行的整个过程，而是直接返回查询缓存中命中的结果。即有缓存查缓存，没缓存就分析。但是缓存的命中率很低，一般不用。MySQL 8.0 则是直接把缓存模块删除了。
+- <b>查询缓存：</b>如果是 SELECT 语句，在解析查询之前，服务器会先检查查询缓存，如果能在其中找到对应的查询，服务器就不必执行查询解析、优化和执行的整个过程，而是直接返回查询缓存中命中的结果。即有缓存查缓存，没缓存就分析。但是缓存的命中率很低，一般不用。MySQL 8.0 则是直接把缓存模块删除了。
 - <b>分析器：</b>对 SQL 语句做词法分析和语法分析。
 - <b>优化器：</b>分析 SQL 的性能。用关系表达式分析，计算每种方式的计算量，评估后选择一个最优的策略 (数据库系统概论中有计算不同方式的计算量) 
 - <b>执行器：</b>先判断有无权限，有权限则打开表继续执行。打开表的时候，执行器就会根据表的引擎定义，去使用这个引擎提供的接口。
@@ -2156,8 +2179,16 @@ MEMORY：将所有数据保存在内存中，访问速度快，通常用于临�
 
     ```sql
     create [unique] index xxx on xxx(xxx);
+    -- 为 tb_user 表的 name 字段创建索引
+    create index idx_user_name on tb_user(name);
+    
     show index from xxx;
+    -- 显示 tb_user 中的所有索引
+    show index from tb_user;
+    
     drop index xxx on xxxx;
+    -- 删除 tb_user 中的 idx_user_name 索引
+    drop index idx_user_name on tb_user;
     ```
 
 - SQL 性能分析：执行频次、慢查询日志、profile、explain
@@ -2210,7 +2241,7 @@ MEMORY：将所有数据保存在内存中，访问速度快，通常用于临�
 
 > <b>B-Tree/B 杠树 (多路平衡查找树) </b>
 
-以一颗最大度数 (max-degree) 为 5 (5 阶)的 B-tree 为例(每个节点最多存储 4 个 key，5 个指针)
+以一颗最大度数 (max-degree) 为 5 (5 阶) 的 B-tree 为例 (每个节点最多存储 4 个 key，5 个指针)
 
 <div align="center"><img src="img/image-20220202102904364.png"></div>
 
