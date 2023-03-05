@@ -588,6 +588,9 @@ $ git branch -D <分支名称>
 # 删除git服务器上的分支
 git push origin -d BranchName
 git push origin --delete BranchName
+
+# 回溯分支
+git clone --recursive -b 8.2-EA https://github.com/onnx/onnx-tensorrt.git
 ```
 
 ## Git命令大全

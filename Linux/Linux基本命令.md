@@ -263,7 +263,7 @@ scp D:\test.bmp root@114.132.43.225:/root/
 
 ## 安装软件
 
-`wget` : `wget   www.baidu.com`  帮我把百度的首页下载过来了。
+`wget` : `wget www.baidu.com`  帮我把百度的首页下载过来了。
 
 ## 进程管理
 

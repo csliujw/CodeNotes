@@ -1,9 +1,11 @@
-# 设计与实现
+# Redis设计与实现
 
 参考资料：
 
 - 《Redis设计与实现》
 - [Redis设计与实现 - Nyima's Blog (gitee.io)](https://nyimac.gitee.io/2020/11/08/Redis设计与实现/#Redis设计与实现) 基于此博客的内容进行修正，填充，删除。
+- Redis 深度历险
+- Redis 6.2.x 源码
 
 # 数据结构
 
@@ -19,7 +21,7 @@
 
 ### SDS的定义
 
-SDS 又称为简单动态字符串（Simple Dynamic String），SDS 的定义如下图所示
+SDS 又称为简单动态字符串（Simple Dynamic String），SDS 的定义如下图所示。
 
 <img src="img/image-20220202112259425.png">
 
