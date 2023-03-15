@@ -178,6 +178,8 @@ public class OpBin {
 
 所有编程语言都提供抽象机制；汇编语言是对底层机器的轻微抽象。接着出现的“命令式” 语言（如 FORTRAN，BASIC 和 C）是对汇编语言的抽象。而面向对象程序设计是对现实世界事物的抽象。
 
+抽象的目的是提取一个更一般的类，将这个更一般的类作为一个模板来派生出其他类。可以将通用的字段、方法放到这个模板中。Java 的继承可以完成抽象，而抽象类则是比继承更为抽象的类，里面可以只提供方法的占位符，而具体的实现让子类来做。
+
 - <b>万物皆对象</b>。你可以将对象想象成一种特殊的变量。它有属性、有行为，可以用它的属性、行为完成一些相应的操作。
 - 每个对象都有自己的存储空间，可容纳其他对象。
 - 每个对象都有一种类型。
@@ -185,7 +187,7 @@ public class OpBin {
 
 ### 接口
 
-在“问题空间”（问题实际存在的地方）的元素与“方案空间”（对实际问题进行建模的地方，如计算机）的元素之间建立理想的“一对一”的映射关系；即定义规则。具体的规则实现由子类（接口的实现类）负责。 
+在“问题空间”（问题实际存在的地方）的元素与“方案空间”（对实际问题进行建模的地方，如计算机）的元素之间建立理想的“一对一”的映射关系；即定义规则，只描述类应该做什么，具体的规则（做法）由子类（接口的实现类）负责。 
 
 - 一个对象检查所有排版布局的目录；
 - 一个或一组可以识别不同打印机型号的对象展示通用的打印界面；
@@ -16507,6 +16509,176 @@ public class Main {
 - 目标（Target）接口：当前系统业务所期待的接口，它可以是抽象类或接口。
 - 适配者（Adaptee）类：它是被访问和适配的现存组件库中的组件接口。
 - 适配器（Adapter）类：它是一个转换器，通过继承或引用适配者的对象，把适配者接口转换成目标接口，让客户按目标接口的格式访问适配者。
+
+## 第九章-日志
+
+记录程序执行过程中的一些信息。我们可以使用 System.out.println 打印一些我们想看到的信息，如对程序进行调试时，通过 System.out.println 打印信息进行观察。但是如果我们想控制  System.out.println 的打印时机就很麻烦了。而日志恰好可以解决这类问题。日志 API 的优点有
+
+- 可以很容易地取消全部日志记录，或者仅仅取消某个级别以下的日志，而且可以很容易地再次打开日志开关。
+- 可以很简单的禁止日志记录，因此，将这些日志代码保留再程序中的开销很小。
+- 日志记录可以被重定向到不同的处理器，如控制台显示、写至文件，等等。
+- 日志记录器和处理器都可以对记录进行过滤。过滤器可以根据过滤器实习器指定的标准丢弃那些无用的记录项。如通过设置只记录某个级别的日志，来选择性的记录信息。
+- 日志记录可以采用不同的方式格式化（记录日志内容），例如纯文本或 XML
+- 同一个程序可以同时使用多个日志记录器，它们使用与包名类似的有层次结构的名字，如 com.company.app。
+- 日志系统的配置由配置文件控制。
+
+Java 中常用的日志框架有 Log4J 2 和 Logbak，与 Java 原生的日志框架相比，性能更高。需要注意的是 SLF4J 和 Commons Logging 是日志门面，提供了同一的 API 来使用不同的日志框架（Log4J 2，Logbak 等）。
+
+Java 9 中提供了一个单独的轻量级日志系统，不依赖于 java.logging 模块。但是应用程序员不太会用到这个，有兴趣的话后期搜搜资料看看。
+
+### 日志的使用
+
+#### 基本日志
+
+可以使用 java 提供的全局日志记录器（global logger）并调用 info 方法来使用。
+
+```java
+import java.util.logging.Logger;
+
+public class BasicLog {
+    public static void main(String[] args) {
+        Logger.getGlobal().info("hello global info");
+    }
+}
+/*
+3月 15, 2023 9:32:53 下午 enhance.log.BasicLog main
+信息: hello global info
+*/
+```
+
+如果想要禁用 global logger，可以使用下面的代码来禁用。
+
+```java
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class BasicLog {
+    public static void main(String[] args) {
+        Logger.getGlobal().info("hello global info");
+        Logger.getGlobal().setLevel(Level.OFF);
+        Logger.getGlobal().info("close global info");
+    }
+}
+/*
+3月 15, 2023 9:34:35 下午 enhance.log.BasicLog main
+信息: hello global info
+*/
+```
+
+#### 高级日志
+
+实际开发中，我们不会将所有的日志都记录在一个全局日志记录器中，大多数时候需要我们自己定义日志记录器。
+
+```java
+import java.util.logging.Logger;
+
+public class SeniorLog {
+    private static Logger logger = Logger.getLogger("a");
+
+    public static void main(String[] args) {
+        logger.info("hello");
+    }
+}
+```
+
+日志记录器的名字具有层次结构。日志记录器的父与子之间共享某些属性。例如，如果对日志记录器 com.comp 设置了日志级别，它的子日志记录器 com.comp.son 也会继承这个级别 (日志记录器通过名字来区分父子关系)。
+
+```java
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+public class SeniorLog {
+    private static Logger logger = Logger.getLogger("com.comp");
+    private static Logger son = Logger.getLogger("com.comp.son");
+
+    static {
+        logger.setLevel(Level.WARNING);
+    }
+
+    public static void main(String[] args) {
+        logger.info("hello");
+        son.info("son");
+    }
+}
+// 无任何输出
+```
+
+日志级别一般有如下七种：
+
+- SERVER（最严格的级别）
+- WARNING
+- INFO
+- CONFIG
+- FINE
+- FINER
+- FINEST（最松的级别）
+
+如果设置的级别是 INFO，则 INFO、WARNING、SERVER 这三种级别的日志都会记录。
+
+#### 处理器
+
+默认情况下日志记录器将记录发送到 ConsoleHandler，并由它输出到 System.err 流。可以通过以下方式为日志记录器配置一个处理器。下面的代码为记录器 com 配置了两个处理器，一个默认的处理器和一个 myhandler
+
+```java
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+// 日志处理器
+public class HandlerLog {
+    private static Logger logger = Logger.getLogger("com");
+
+    static {
+        logger.setLevel(Level.FINE);
+        var myhandler = new ConsoleHandler();
+        handler.setLevel(Level.FINE);
+        logger.addHandler(myhandler);
+    }
+
+    public static void main(String[] args) {
+        logger.info("hello");
+    }
+}
+/*
+3月 15, 2023 9:58:19 下午 enhance.log.HandlerLog main
+信息: hello
+3月 15, 2023 9:58:19 下午 enhance.log.HandlerLog main
+信息: hello
+*/
+```
+
+可以看到，上面的日志信息经过了两个处理器，打印了两次，如果不想被父处理器（默认处理）打印，可以通过以下代码控制。
+
+```java
+logger.setUseParentHandlers(false);
+```
+
+可以向日志处记录器中追加一个 FileHandler 将日志记录到文本文档中。
+
+```java
+public class HandlerLog {
+    private static Logger logger = Logger.getLogger("com");
+
+    static {
+        logger.setLevel(Level.FINE);
+        FileHandler handler = null;
+        try {
+            handler = new FileHandler();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        handler.setLevel(Level.FINE);
+        logger.addHandler(handler);
+        logger.setUseParentHandlers(false);
+    }
+
+    public static void main(String[] args) {
+        logger.info("hello");
+    }
+}
+```
+
+默认情况下日志会以 XML 的格式记录到主目录中，在 windows 里就是 Window/User/用户名 目录中。文件名词为 java[编号].log，如 java0.log。
 
 ## 其他-网络编程
 
