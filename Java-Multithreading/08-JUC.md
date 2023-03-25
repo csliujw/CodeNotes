@@ -2,11 +2,20 @@
 
 [JUC整理笔记四之梳理VarHandle(上)_Java_JFound_InfoQ写作平台](https://xie.infoq.cn/article/18c57e1a23f347a922547177b)
 
-记住一个非常关键的点：没有获得锁的队列是分两种的，一种是 waitting 队列，主动放弃锁的，一种是阻塞队列没抢到锁被迫阻塞的。当调用类似于 await 方法的时候，是将自己放入 waitting 队列，然后随机唤醒阻塞队列中的一个线程。当调用类似于 signalAll 这些方法时，是唤醒 waitting 队列中的线程，把他们加入阻塞队列，然后等待被唤醒。
+记住一个非常关键的点，没有获得锁的队列是分两种
+
+- 一种是 waitting 队列，主动放弃锁的；
+- 一种是阻塞队列没抢到锁被迫阻塞的。
+
+当调用类似于 await 方法的时候，是将自己（线程）放入 waitting 队列，然后随机唤醒阻塞队列中的一个线程。当调用类似于 signalAll 这些方法时，是唤醒 waitting 队列中的线程，把他们加入阻塞队列，然后等待被唤醒。
 
 ## ReentrantLock
 
-可重入锁，与 `synchroized` 类似，但是可以用 `Condition` 精准唤醒某个线程。并且 J.U.C 下的锁都支持公平锁和非公平锁，而 synchronized 只支持非公平锁。ReentrantLock 还支持限时获取锁，超过时间还没拿到锁就会返回 false。
+可重入锁，与 `synchroized` 类似，但是比 `synchronized` 多出了许多实用的功能。
+
+- 可以用 `Condition` 精准唤醒某个线程。
+- J.U.C 下的锁都支持公平锁和非公平锁，而 synchronized 只支持非公平锁。
+- ReentrantLock 支持限时获取锁，超过时间还没拿到锁就会返回 false，不会一直阻塞。
 
 以多生产者，多消费者为例，演示 ReentrantLock 的使用，假定库存容量为 10。
 
@@ -14,7 +23,7 @@
 public class Resource {
     private int count = 0; // 最多持有10个资源
     private Lock lock = new ReentrantLock();
-    private Condition condition = lock.newCondition();
+    private Condition condition = lock.newCondition(); // 阻塞队列
 
     public void increment() {
         lock.lock();
@@ -74,19 +83,17 @@ public class MainDemo {
 
 ## CountDownLatch
 
-CountDownLatch 用来控制线程之间的等待。
+开发中经常会遇到需要在主线程中开启多个线程去并行执行任务，然后主线程等待所有子线程完毕后再进行汇总的场景（并不会阻塞子线程）。CountDownLatch 真是可以用来解决该类问题的类。典型的应用场景有：多线程下载文件，最后对文件进行合并。
 
-CountDownLatch 维护了一个计数器 cnt，每次调用 countDown() 方法会让计数器的值减 1 且调用 countDown 方法的线程不会阻塞。
+CountDownLatch 维护了一个计数器 cnt，每次调用 countDown() 方法会让计数器的值减 1（调用 countDown 方法的线程不会阻塞） 。当计数器的值变为 0 时，因为 await 方法阻塞的线程会被唤醒，继续执行。
 
-当计数器的值变为 0 时，因 await 方法阻塞的线程会被唤醒，继续执行。
-
-- 通过 countDown() 方法让计数器减 1（`CountDownLatch#Sync#tryReleaseShared` 方法中进行的减操作）。
 - 通过 await() 方法让线程等待。
+- 通过 countDown() 方法让计数器减 1，减到 0 时就会唤醒那些被阻塞的线程（`CountDownLatch#Sync#tryReleaseShared` 方法中进行的减操作）。
 
 ```java
 /**
  * 解释：6个同学陆续离开教室后值班同学才可以关门 
- * main主线程必须要等前面6个线程完成全部工作后，自己才能开干
+ * main 主线程必须要等前面 6 个线程完成全部工作后，自己才能开干
  */
 public class CountDownLatchDemo {
     public static void main(String[] args) throws InterruptedException {
@@ -107,12 +114,15 @@ public class CountDownLatchDemo {
 
 ## CyclicBarrier
 
-用来控制多个线程互相等待，只有当多个线程都到达/满足条件时，这些线程才会继续执行。
+有些网上的文章或书籍会把 CyclicBarrier 和 CountDownLatch 进行比较，容易让人迷糊。实际上 CyclicBarrier 与 CountDownLatch 的目的是完全不一样的。CountDownLatch 的目的是等子线程执行 countDown 让计数器变成 0 唤醒被阻塞的主线程，并不会阻塞子线程。而 CyclicBarrier 的目的则是让所有的子线程再某一时间点（段）同时执行，会阻塞子线程。
+
+<b>综上所述，CyclicBarrier 的目的是：</b>用来控制多个线程互相等待，只有当多个线程都到达/满足条件时，让些线程继续执行。
 
 CyclicBarrier 的字面意思是可循环（Cyclic）使用的屏障（Barrier）。它要做的事情是，<b>让一组线程到达一个屏障（也可以叫同步点）时被阻塞，直到最后一个线程到达屏障时，屏障才会开门</b>，屏障开门后，被屏障拦截的线程才能继续允许。
 
 - 通过 CyclicBarrier 的 await() 方法设置屏障。
 - 通过 CyclicBarrier 的 reset() 方法重置状态，继续使用屏障。例如，设置的 parties 大小是 7，已经有 5 个线程到达了屏障，此时 count 由 7 减到了 2，然后我们调用了 reset 方法，count 被重新赋值为 7，重新计数。
+- 到达 CyclicBarrier 的屏障后，被阻塞的线程会被唤醒继续执行，然后会再次生成一个屏障（自动生成的） 
 
 ```java
 public class UseCyclicBarrier {
@@ -778,6 +788,11 @@ abstract static class Sync extends AbstractQueuedSynchronizer {}
 <div align="center"><img src="juc/AQS03.png"></div>
 
 # 深入理解
+
+想要理解各个类库如何实现的可以先从这两方面入手 ：
+
+- 那些操作会让线程阻塞，从运行到阻塞的流程是什么，有那些关键步骤？
+- 那些操作可以唤醒线程，从阻塞到唤醒的流程是什么，有那些关键步骤？
 
 ## AQS
 
@@ -3237,7 +3252,7 @@ CountDownLatch 使用 AQS 的方式与 Semaphore 很相似：在同步状态中�
 
 ## CyclicBarrier
 
-循环栅栏，用来进行线程写作，等待线程满足某个计数。构造时设置计数个数，每个线程执行到某个需要“同步”的时刻调用 await() 方法进行等待，当等待的线程数满足计数个数时，继续执行。
+循环栅栏，可用于线程协作，等待线程满足某个计数。构造时设置计数个数，每个线程执行到某个需要“同步”的时刻调用 await() 方法进行等待，当等待的线程数满足计数个数时，继续执行。
 
 `CyclicBarrier` 与 `CountDownLatch` 的主要区别在于 `CyclicBarrier` 是可以重用的 `CyclicBarrier` 可以被比喻为『人满发车』
 
@@ -3248,6 +3263,7 @@ CountDownLatch 使用 AQS 的方式与 Semaphore 很相似：在同步状态中�
 <span style="color:red">注意：</span>要清楚线程数和 `CyclicBarrier` 与 `CountDownLatch` 的计数值到底要不要一样。这里的这个 demo 是需要保持一致的，这样才可以确保多次循环时，是这次循环的线程让计数值 -1 的。
 
 ```java
+// 三个线程执行计数 -- 的操作，主线程执行 await 操作，等待计数为 0 时就唤醒等待中的主进程。CountDownLatch 计数用完了就废弃了。无法复用。
 public static void CountDownLatch() throws InterruptedException {
     ExecutorService executor = Executors.newFixedThreadPool(3);
     for (int i = 0; i < 3; i++) {
@@ -3323,6 +3339,25 @@ public static void CyclicBarrier() throws InterruptedException {
 `CyclicBarrier`，回环屏障。让一组线程全部达到一个状态后再全部同时执行。回环的原理是，当所有等待线程执行完毕，并重置 `CyclicBarrier` 的状态后它可以被重用。
 
 await 是对 count（记录栅栏数的）变量进行减一。
+
+```java
+// 主要代码，指定的线程都达到同一个状态时，会执行 nextGeneration，重新设置一个屏障。
+int index = --count;
+if (index == 0) {  // tripped
+    boolean ranAction = false;
+    try {
+        final Runnable command = barrierCommand;
+        if (command != null)
+            command.run();
+        ranAction = true;
+        nextGeneration();
+        return 0;
+    } finally {
+        if (!ranAction)
+            breakBarrier();
+    }
+}
+```
 
 ## 线程安全集合类概述
 

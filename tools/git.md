@@ -11,34 +11,34 @@
 - [x] 熟悉 Git 常用命令
 - [x] 熟悉 IDEA 中 Git 的使用
 
-> Git的作用
+> <b>Git 的作用</b>
 
 - [x] 代码备份：代码备份到 GitHub 上。
 - [x] 代码还原：Git 上记录了代码的提交内容，可以还原任一时间点的代码。
 - [x] 协同开发：多人协作开发项目，通过 Git 协同开发，记录，分享所写代码。
 - [x] 追溯代码问题，编写人和编写时间
 
-> 版本控制方式
+> <b>版本控制方式</b>
 
-- 集中式版本控制工具 集中式版本控制工具
+- 集中式版本控制工具
 
     - 版本库是集中存放在中央服务器的，team 里每个人 work 时从中央服务器下载代码，是必须联网才能工作，局域网或互联网。个人修改后然后提交到中央版本库。
-    -  举例：SVN 和 CVS b
+    -  举例：SVN 和 CVS
 
 - 分布式版本控制工具 
 
-    - 分布式版本控制系统没有“中央服务器”，每个人的电脑上都是一个完整的版本库，这样工作的时候，无 需要联网了，因为版本库就在你自己的电脑上。多人协作只需要各自的修改推送给对方，就能互相看到对方的修改了。
+    - 分布式版本控制系统没有“中央服务器”，每个人的电脑上都是一个完整的版本库，这样工作的时候无需要联网，因为版本库就在你自己的电脑上。多人协作只需要各自的修改推送给对方，就能互相看到对方的修改了。
     -  举例：Git
 
-> Git
+> <b>Git</b>
 
-Git 是分布式的, Git 不需要有中心服务器，我们每台电脑拥有的东西都是一样的。我们使用 Git 并且有个中心服务器，仅仅是为了方便交换大家的修改，但是这个服务器的地位和我们每个人的 PC 是一样的。我们可以把它当做一个开发者的 PC 就可以了，中心服务器就是为了方便大家交换代码。没有它大家一样可以工作，只不过“交换”修改不方便而已。 
+Git 是分布式的，不需要有中心服务器，我们每台电脑拥有的东西都是一样的。我们使用 Git 并且有个中心服务器，中心服务器就是为了方便大家交换代码。没有它大家一样可以工作，只不过“交换”修改不方便而已。 
 
 <span style="color:red">Git 是一个开源的分布式版本控制系统，可以有效、高速地处理从很小到非常大的项目版本管理。</span>
 
 Git 是 Linus Torvalds 为了帮助管理 Linux 内核开发而开发的一个开放源码的版本控制软件。 同生活中的许多伟大事物一样，Git 诞生于一个极富纷争大举创新的年代。Linux 内核开源项目有着为数众多的参与者。 绝大多数的 Linux 内核维护工作都花在了提交补丁和保存归档的繁琐事务上 (1991－2002 年间) 。 到 2002 年，整个项目组开始启用一个专有的分布式版本控制系统 BitKeeper 来管理和维护代 码。 
 
-到了 2005 年，开发 BitKeeper 的商业公司同 Linux 内核开源社区的合作关系结束，他们收回了 Linux 内核社区免费使用 BitKeeper 的权力。 这就迫使 Linux 开源社区 (特别是 Linux 的缔造者 Linus Torvalds) 基于使用 BitKeeper 时的经验教训，开发出自己的版本系统。 他们对新的系统制订 了若干目标： 
+到了 2005 年，开发 BitKeeper 的商业公司同 Linux 内核开源社区的合作关系结束，他们收回了 Linux 内核社区免费使用 BitKeeper 的权力。 这就迫使 Linux 开源社区 (特别是 Linux 的缔造者 Linus Torvalds) 基于使用 BitKeeper 时的经验教训，开发出自己的版本系统。 他们对新的系统制订了若干目标： 
 
 - 速度
 - 简单的设计
@@ -46,13 +46,13 @@ Git 是 Linus Torvalds 为了帮助管理 Linux 内核开发而开发的一个�
 - 完全分布式
 - 有能力高效管理类似 Linux 内核一样的超大规模项目 (速度和数量) 
 
-<img src="img/image-20211217200528119.png">
+<div align="center"><img src="img/image-20211217200528119.png"></div>
 
 ## 工作流程图
 
-<img src="img/image-20211217200735238.png">
+<div align="center"><img src="img/image-20211217200735238.png"></div>
 
-> 命令如下：
+> <b>常见命令如下</b>
 
 - clone (克隆) ：从远程仓库中克隆代码到本地仓库 
 - checkout  (检出) ：从本地仓库中检出一个仓库分支然后进行修订 
@@ -75,13 +75,11 @@ Git 是 Linus Torvalds 为了帮助管理 Linux 内核开发而开发的一个�
 
 下载地址： https://git-scm.com/download
 
-<img src="img/image-20211217201447099.png">
-
 安装时：Use git from git bash only... 其他默认下一步。安装成功后鼠标点击右键可以看到。
 
 <img src="img/image-20211217201824831.png">
 
-备注：
+<b>工具说明</b>
 
 Git GUI：Git 提供的图像界面工具
 
@@ -91,10 +89,10 @@ Git Bash：Git 提供的命令行工具，提供了一些常见的 Linux 命令�
 
 ### 基本配置
 
-- 点击右键 选择 Git bash
+- 点击右键==>选择 Git bash
 - 配置全局变量
-- git config -- global user.name "username" 如：git config -- global user.name "csxx"
-- git config --global user.email "邮箱" 如：git config --global user.email "12312331@qq.com"
+- git config -- global user.name "username" 如：`git config --global user.name "csxx"`
+- git config --global user.email "邮箱" 如：`git config --global user.email "12312331@qq.com"`
 - 查看配置信息
     - git config --global user.name
     - git config --global user.email
@@ -110,12 +108,13 @@ Git Bash：Git 提供的命令行工具，提供了一些常见的 Linux 命令�
 
 - 在 .bashrc 文件中输入如下内容
 
-    ```shell
-    #用于输出git提交日志
-    alias git-log='git log --pretty=oneline --all --graph --abbrev-commit'
-    #用于输出当前目录所有文件及基本信息
-    alias ll='ls -al'
-    ```
+
+```shell
+#用于输出git提交日志
+alias git-log='git log --pretty=oneline --all --graph --abbrev-commit'
+#用于输出当前目录所有文件及基本信息
+alias ll='ls -al'
+```
 
 ### Git乱码
 
@@ -136,9 +135,9 @@ export LC_ALL="zh_CN.UTF-8"
 
 配置 ssh：先在本地配置，发送给远程
 
-输入以下命令 ssh-keygen -t rsa -C 邮箱 如：ssh-keygen -t rsa -C 695466632@qq.com 然后一直回车
+输入以下命令 ssh-keygen -t rsa -C 邮箱 如：`ssh-keygen -t rsa -C 695466632@qq.com` 然后一直回车
 
-打开 github 网站 找到 setting --> new ssh - title任意/key 输入本地生成的 pubkey (公钥) , pubkey 的存放地址请仔细看 Git 控制台的输出。
+打开 github 网站 =\=> 找到 setting =\=> new ssh key，title任意，key 输入本地生成的 pubkey (公钥) , pubkey 的存放地址请仔细看 Git 控制台的输出。
 
 <img src="img/image-20220402210210816.png">
 
@@ -155,7 +154,10 @@ export LC_ALL="zh_CN.UTF-8"
 - 执行命令 git init 
 - 如果创建成功后可在文件夹下看到隐藏的 .git 目录。
 
-<img src="img/image-20220402210715524.png">
+```shell
+$ git init
+Initialized empty Git repository in D:/front/.git/
+```
 
 ### 基础操作指令
 
@@ -165,8 +167,8 @@ Git 工作目录下对于文件的<b>修改</b>(增加、删除、更新)会存�
 
 使用命令来控制这些状态之间的转换
 
-- ① git add (工作区 —> 暂存区)
-- ② git commit (暂存区 —> 本地仓库)
+- ①git add (工作区 —> 暂存区)
+- ②git commit (暂存区 —> 本地仓库)
 
 #### status查看修改状态
 
@@ -253,6 +255,7 @@ git reflog，把所有的操作记录下来了，可以看到已经删除的提�
 # 创建目录 (git_test01) 并在目录下打开gitbash 
 # 初始化git仓库 
 git init 
+
 #####################创建文件并提交##################### 
 # 目录下创建文件 file01.txt 
 # 将修改加入暂存区 
@@ -261,6 +264,7 @@ git add .
 git commit -m 'commit 001' 
 # 查看日志 
 git log 
+
 ####################修改文件并提交###################### 
 # 修改file01的内容为：count=1 
 # 将修改加入暂存区 
@@ -271,6 +275,7 @@ git commit --m 'update file01'
 git log 
 # 以精简的方式显示提交记录 git-log 是配置的别名
 git-log 
+
 ####################将最后一次修改还原################## 
 # 查看提交记录 
 git-log 
@@ -317,13 +322,13 @@ hello world test I am test branch
 >>>>>>> test
 ```
 
-```
+```shell
 <<<<<<< HEAD
 hello world test main branch
 =======
-上面的表示是主分支的内容
+# 上面的表示是主分支的内容
 
-下面的是 test 分支和主分支不一致的内容，选择一个进行保留即可。
+# 下面的是 test 分支和主分支不一致的内容，选择一个进行保留即可。
 hello world test I am test branch
 >>>>>>> test
 ```
@@ -362,7 +367,7 @@ dev
 >>>>>>> dev
 ```
 
-删除掉一些内容即可，然后 git add .
+删除掉一些内容即可，然后 `git add .`
 
 ```text
 master
@@ -457,9 +462,9 @@ GitLab  (地址： https://about.gitlab.com/ ) 是一个用于仓库管理系统
 
 此操作是先初始化本地库，然后与已创建的远程库进行对接。
 
-- 命令：
-    - 远端名称：默认是 origin，取决于远端服务器设置
-    - 仓库地址：从远端服务器获取此 url
+命令格式如下：
+- 远端名称：默认是 origin，取决于远端服务器设置
+- 仓库地址：从远端服务器获取此 url
 
 ```shell
 git remote add <远端名称> <仓库地址>
