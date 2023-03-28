@@ -90,12 +90,29 @@ Git Bash：Git 提供的命令行工具，提供了一些常见的 Linux 命令�
 ### 基本配置
 
 - 点击右键==>选择 Git bash
-- 配置全局变量
-- git config -- global user.name "username" 如：`git config --global user.name "csxx"`
+- 配置全局变量，配置用户信息，这样在提交版本的时候就会记录好是谁进行的这次提交
+- git config --global user.name "username" 如：`git config --global user.name "csxx"`
 - git config --global user.email "邮箱" 如：`git config --global user.email "12312331@qq.com"`
 - 查看配置信息
     - git config --global user.name
     - git config --global user.email
+
+除了 git config --global 外，还有其他的命令
+
+```sh
+git config --local		# local 只对某个仓库有效
+git config --global		# global 对当前用户所有仓库有效
+git config --system		# system 对系统所有登录的用户有效
+```
+
+显示 config 配置，加 --list
+
+```sh
+git config --list 			# 查看所有的 config 配置
+git config --list --local
+git config --list --global
+git config --list --system
+```
 
 
 ### 为常用指令配置别名
@@ -167,17 +184,18 @@ Git 工作目录下对于文件的<b>修改</b>(增加、删除、更新)会存�
 
 使用命令来控制这些状态之间的转换
 
-- ①git add (工作区 —> 暂存区)
-- ②git commit (暂存区 —> 本地仓库)
+- ① git add (工作区 —> 暂存区)，把项目文件纳入 git 的管理。例如本地写了一个版本，先提交到暂存区；然后写了第二个版本，发现版本一更佳，此时可以把版本一回退到本地，然后提交到仓库。
+- ② git commit (暂存区 —> 本地仓库)
 
-#### status查看修改状态
+#### status 查看修改状态
 
 - 作用：查看修改的状态 (暂存区、工作区) 
 - 命令形式：`git status`
 
-#### add添加工作到暂存区
+#### add 添加工作到暂存区
 
 - 作用：添加工作区一个或多个文件的修改到暂存区
+- 场景举例：我们需要修改多个文件以达成一个目的，可以逐个修改，修改好一个后就添加到暂存区，当该功能的所有文件都以修改完毕则统一提交到版本库。
 - 命令形式：git add 单个文件名|通配符
 
 ```shell
@@ -189,34 +207,126 @@ git add . # 将所有新建的文件 和 修改的文件加入暂存区
 
 Changes to be committed 即将被提交，进入了暂存区。
 
-#### commit提交暂存区到本地仓库
+```shell
+git add -u		# 整个工作树中的所有跟踪文件都将更新
+```
+
+#### commit 提交暂存区到本地仓库
 
 - 作用：提交暂存区内容到本地仓库的当前分支
 - 命令形式：git commit -m ‘注释内容’
 
 ```shell
 git commit -m "add test.md"
+git commit -am 'add xxx'  # add 和 commit 一起执行。但是不推荐使用。这种做法工作区的内容直接添加到了版本历史库里了。
 ```
 
 <img src="img/image-20220402212416934.png">
 
 commit 后，再次查看状态，暂存区中已经没有东西了。
 
-#### log查看提交日志
+#### 文件重命名
+
+加入我们想对已经加入仓库的文件进行重命名（readme 修改为 readme.md），该怎么做？
+
+<b>方式一：</b>直接用 mv 对文件重命名。但是会出现下面的情况。git status 变为删除了 readme 文件，然后新增了一个未追踪的文件 readme.md。
+
+下面的执行流程展示了整个操作的过程。可以看出，git 是知道我们进行文件重命名的，但是操作流程却比较繁琐。
+
+```shell
+git init
+Initialized empty Git repository in xxx
+touch readme
+git add readme
+git commit -m"add readme"
+[master (root-commit) 2327a82] add readme
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 readme
+mv readme readme.md
+git status
+On branch master
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        deleted:    readme
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        readme.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
+git add readme.md
+git rm readme
+rm 'readme'
+git status
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+
+        renamed:    readme -> readme.md
+```
+
+git reset --hard 暂存区中所有的工作变更都会被清理掉。(只会清空暂存区的提交，对 commit 无任何影响)
+
+刚刚上面繁琐的文件名变更过程可以用这条命令替代：`git mv readme readme.md`
+
+```shell
+git mv readme readme.md
+git status
+On branch master
+Changes to be committed:
+  (use "git reset HEAD <file>..." to unstage)
+        renamed:    readme -> readme.md
+
+git commit -m "mv readme to readme.md"
+[master e003077] mv readme to readme.md
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ rename readme => readme.md (100%)
+```
+
+#### log 查看提交日志
 
 - 配置的别名 git-log 就包含了这些参数，所以后续可以直接使用指令 git-log
 - 作用：查看提交记录
 - 命令形式：git log [option] 或者 git-log
-    - all 显示所有分支
-    - pretty=oneline 将提交信息显示为一行
-    - abbrev-commit 使得输出的commitId更简短
-    - graph 以图的形式显示
+    - `git log --oneline`，简要的显示每个 log，每个 log 仅占一行。
+    - `git log -n2 --oneline`，只显示最近的两条 log，每个 log 仅占一行。
+    - `git log --all` 显示所有分支的 log
+    - `git log --all --graph` 用图形化的方式显示所有分支的 log
+    - `git log --all --oneline -n4 --graph` 用图形化的方式显示所有分支的前 4 个 log。
+    - `git log --pretty=oneline` 将提交信息显示为一行
+    - `git log --abbrev-commit` 使得输出的 commitId 更简短
+
 
 <img src="img/image-20220402212637414.png">
 
 git log 查看日志信息，可以看到提交记录，谁？什么时间段提交的内容。
 
 <img src="img/image-20220402212913095.png">
+
+git branch -v，查看本地到底有多少分支
+
+```shell
+git branch -v
+* master e003077 mv readme to readme.md
+
+# 为了演示 log 的更多用法，这里创建一个临时的分支
+# 额外加几个 commit 操作
+git log --oneline
+0ccac2a (HEAD -> master) add tmp2 file
+5ae0216 add tmp file
+e003077 mv readme to readme.md
+2327a82 add readme
+
+# 创建临时分支
+git checkout -b temp 5ae0216
+
+git branch -v
+  master 0ccac2a add tmp2 file
+* temp   5ae0216 add tmp file
+```
 
 #### 版本回退
 
@@ -248,7 +358,15 @@ git reflog，把所有的操作记录下来了，可以看到已经删除的提�
 *.a # 以 a 结尾的文件不让 git 管理
 ```
 
-#### 练习：基础操作
+#### 比较差异
+
+可以通过 git diff 来比较两次提交的差异。
+
+```shell
+git diff hash1 hash2
+```
+
+#### 练习
 
 ```shell
 #####################仓库初始化###################### 
@@ -284,7 +402,201 @@ git-log
 git reset commitID --hard
 ```
 
-### 分支
+### .git文件说明
+
+#### 目录说明
+
+.git 文件中包含许多信息
+
+```shell
+ls -al
+total 56
+drwxr-xr-x  8 payphone payphone 4096 Mar 28 14:30 .
+drwxr-xr-x  3 payphone payphone 4096 Mar 28 14:27 ..
+-rw-r--r--  1 payphone payphone   15 Mar 28 14:30 COMMIT_EDITMSG
+-rw-r--r--  1 payphone payphone   21 Mar 28 14:26 HEAD
+-rw-r--r--  1 payphone payphone   41 Mar 28 14:09 ORIG_HEAD
+drwxr-xr-x  2 payphone payphone 4096 Mar 28 11:34 branches
+-rw-r--r--  1 payphone payphone   92 Mar 28 11:34 config
+-rw-r--r--  1 payphone payphone   73 Mar 28 11:34 description
+drwxr-xr-x  2 payphone payphone 4096 Mar 28 11:34 hooks
+-rw-r--r--  1 payphone payphone  209 Mar 28 14:30 index
+drwxr-xr-x  2 payphone payphone 4096 Mar 28 11:34 info
+drwxr-xr-x  3 payphone payphone 4096 Mar 28 11:34 logs
+drwxr-xr-x 14 payphone payphone 4096 Mar 28 14:30 objects
+drwxr-xr-x  4 payphone payphone 4096 Mar 28 11:34 refs
+```
+
+- HEAD，一个指向分支的引用，告诉我们现在工作在那个分支上。
+
+```shell
+cat HEAD
+ref: refs/heads/temp
+```
+
+- config 一些本仓库的配置信息
+
+```shell
+cat config
+[core]
+        repositoryformatversion = 0
+        filemode = true
+        bare = false
+        logallrefupdates = true
+```
+
+- refs，存储指向数据（分支、标签）的提交对象的指针的目录。即，refs 中存储的是指向数据的指针。
+    - heads 对于分支，master 中存储的是 master 指针指向那个 commit
+    - tags 是标签，tags 中存储的是各种 tag，tag 中存储的是 tag 指针指向的那个 哈希值，而哈希值中存储的是 Object，这个 Object 对象是 commit。
+    - git cat-file -t 哈希值，查看类型
+    - git cat-file -p 哈希值，查看内容
+
+```shell
+.git/refs$ tree
+.
+├── heads
+│   ├── master
+│   └── temp
+└── tags
+
+cat master
+0ccac2a08996bae2bdf94c3dc0fb1b820836262e
+git cat-file -t  0ccac2
+commit
+```
+
+#### 对象说明
+
+git 中有三种对象，commit、blob、tree。
+
+只要任何文件的文件内容相同，那么就是唯一的 blob，节省磁盘空间和版本管理的开销==>只同步不同的内容。
+
+commit 包含 tree，tree 包含 blob
+
+```shell
+# 查看前3条记录
+git log -n3 --oneline
+861ca4e (HEAD -> temp) modify tmp.txt
+5ae0216 add tmp file
+e003077 mv readme to readme.md
+
+# 查看文件内容
+git cat-file -p 5ae0216
+tree 8726bf4f81fad6a51d32716c1407660b35205990
+parent e00307759f3af0a68347df402f58b17e244db52f
+author csliujw <695466632@qq.com> 1679984731 +0800
+committer csliujw <695466632@qq.com> 1679984731 +0800
+
+add tmp file
+
+# 查看 tree 的内容
+git cat-file -p 8726bf4
+100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391    readme.md
+100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391    tmp.txt
+
+# 查看 blob 的内容
+git cat-file -p e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+```
+
+新的东西加入到暂存区，git 就会主动把暂存区的东西创建出 blob。`.git/objects` 中会有一个对象。当把暂存区的内容提交到仓库时会创建多个对象。具体的内容可以自行创建文件，添加到暂存区后去 objects 目录看多了那些。commit 后有多了那些。多出的对象是什么类型，对象中的内容是什么。
+
+### 分离头指针
+
+git checkout xx
+
+```shell
+git checkout 5ae0216
+Note: checking out '5ae0216'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by performing another checkout.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:
+
+  git checkout -b <new-branch-name>
+
+HEAD is now at 5ae0216 add tmp file
+```
+
+在分离头指针情况下，可以继续做开发，继续产生 commit，且不会对其他分支有影响。分离头指针的意思是，我们工作在一个没有分支的状态下，做的 commit、变更是不会影响到其他分支的。
+
+想做变更，当时只是尝试性的变更，做的不好想扔掉。扔掉的办法就是后面不再理会这些变更。这时候 checkout 到新的分支就可以了。
+
+比如我们想在 tmp 中加内容。
+
+```shell
+ls -al
+total 12
+drwxr-xr-x 3 payphone payphone 4096 Mar 28 16:12 .
+drwxr-xr-x 3 payphone payphone 4096 Mar 28 11:23 ..
+drwxr-xr-x 8 payphone payphone 4096 Mar 28 16:12 .git
+-rw-r--r-- 1 payphone payphone    0 Mar 28 14:09 readme.md
+-rw-r--r-- 1 payphone payphone    0 Mar 28 16:12 tmp.txt
+
+# 修改 tmp
+vi tmp.txt
+
+# 查看状态
+git status
+HEAD detached at 5ae0216
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   tmp.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+# 提交修改
+git commit -am'attach head'
+[detached HEAD f80e735] attach head
+ 1 file changed, 1 insertion(+)
+
+# 查看日志
+git log --graph
+* commit f80e7354548b70e4ce9ce2b87b894adba2b6077d (HEAD)  # 以前 HEAD 和 分支总是一起出现的，这次这里只有 HEAD，没有分支了。
+| Author: csliujw <695466632@qq.com>
+| Date:   Tue Mar 28 16:15:38 2023 +0800
+|
+|     attach head
+|
+* commit 5ae0216024762e8c7d2c6d7df2d9e465e975895b
+| Author: csliujw <695466632@qq.com>
+| Date:   Tue Mar 28 14:25:31 2023 +0800
+|
+|     add tmp file
+|
+* commit e00307759f3af0a68347df402f58b17e244db52f
+| Author: csliujw <695466632@qq.com>
+| Date:   Tue Mar 28 14:13:42 2023 +0800
+|
+|     mv readme to readme.md
+|
+* commit 2327a82dc944915e1a00d5393f303dad29df1f5e
+  Author: csliujw <695466632@qq.com>
+  Date:   Tue Mar 28 11:34:50 2023 +0800
+
+      add readme
+
+# 如果我们突然切换出去，那么这次的提交就会丢掉。
+git checkout master
+Warning: you are leaving 1 commit behind, not connected to
+any of your branches:
+
+  f80e735 attach head
+
+If you want to keep it by creating a new branch, this may be a good time
+to do so with:
+	git branch <new-branch-name> f80e735
+	
+# 如果想要保存，就按提示走
+```
+
+
+
+### 操作分支
 
 几乎所有的版本控制系统都以某种形式支持分支。 使用分支意味着你可以把你的工作从开发主线上分离开来进行重大的 Bug 修改、开发新的功能，以免影响开发主线。
 
@@ -303,6 +615,14 @@ git reset commitID --hard
 我们还可以直接切换到一个不存在的分支 (创建并切换) 
 
 - 命令：git checkout -b 分支名
+
+#### 拷贝现有分支
+
+我们可以根据现有的分支创建出一个新分支。
+
+`git branch copy master`
+
+`git checkout -b copy2 master`
 
 #### 合并分支
 
@@ -443,6 +763,12 @@ $ git push <远程仓库的别名> <标签名称>
 # 将本地所有的标签全部提交到远程仓库
 $ git push <远程仓库的别名> –tags
 ```
+
+### 理解 HEAD 和 Branch
+
+head 可以指向分支，也可以指向具体的 commit，不和任何分支挂钩。
+
+git diff 比较两个 commit 的差异
 
 ## Git远程仓库
 
