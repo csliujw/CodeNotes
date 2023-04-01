@@ -11,26 +11,26 @@
 - [x] 熟悉 Git 常用命令
 - [x] 熟悉 IDEA 中 Git 的使用
 
-> <b>Git 的作用</b>
+### 版本控制的方式
+
+- 集中式版本控制工具
+
+    - 版本库是集中存放在中央服务器的，team 里每个人 work 时从中央服务器下载代码，是必须联网才能工作，局域网或互联网。个人修改后然后提交到中央版本库。
+    - 举例：SVN 和 CVS
+
+- 分布式版本控制工具 
+
+    - 分布式版本控制系统没有“中央服务器”，每个人的电脑上都是一个完整的版本库，这样工作的时候无需要联网，因为版本库就在你自己的电脑上。多人协作只需要各自的修改推送给对方，就能互相看到对方的修改了。
+    - 举例：Git
+
+### git 的作用
 
 - [x] 代码备份：代码备份到 GitHub 上。
 - [x] 代码还原：Git 上记录了代码的提交内容，可以还原任一时间点的代码。
 - [x] 协同开发：多人协作开发项目，通过 Git 协同开发，记录，分享所写代码。
 - [x] 追溯代码问题，编写人和编写时间
 
-> <b>版本控制方式</b>
-
-- 集中式版本控制工具
-
-    - 版本库是集中存放在中央服务器的，team 里每个人 work 时从中央服务器下载代码，是必须联网才能工作，局域网或互联网。个人修改后然后提交到中央版本库。
-    -  举例：SVN 和 CVS
-
-- 分布式版本控制工具 
-
-    - 分布式版本控制系统没有“中央服务器”，每个人的电脑上都是一个完整的版本库，这样工作的时候无需要联网，因为版本库就在你自己的电脑上。多人协作只需要各自的修改推送给对方，就能互相看到对方的修改了。
-    -  举例：Git
-
-> <b>Git</b>
+### git 简介
 
 Git 是分布式的，不需要有中心服务器，我们每台电脑拥有的东西都是一样的。我们使用 Git 并且有个中心服务器，中心服务器就是为了方便大家交换代码。没有它大家一样可以工作，只不过“交换”修改不方便而已。 
 
@@ -48,7 +48,7 @@ Git 是 Linus Torvalds 为了帮助管理 Linux 内核开发而开发的一个�
 
 <div align="center"><img src="img/image-20211217200528119.png"></div>
 
-## 工作流程图
+### 工作流程图
 
 <div align="center"><img src="img/image-20211217200735238.png"></div>
 
@@ -62,7 +62,7 @@ Git 是 Linus Torvalds 为了帮助管理 Linux 内核开发而开发的一个�
 - pull (拉取) ：从远程库拉到本地库，自动进行合并(merge)，然后放到到工作区，相当于 fetch+merge 
 - push (推送) ：修改完成后，需要和团队成员共享代码时，将代码推送到远程仓库
 
-## 安装
+## 安装 git
 
 ### 常见Linux命令
 
@@ -162,7 +162,7 @@ export LC_ALL="zh_CN.UTF-8"
 
 本地和远程成功通信则可以在 .ssh 中发现 known_hosts 文件，出错就多试几次可能是网络问题。不行就检测建立 ssh 时输入的 pub key。
 
-## Git常用命令
+## 常用命令
 
 ### 获取本地仓库
 
@@ -286,7 +286,7 @@ git commit -m "mv readme to readme.md"
  rename readme => readme.md (100%)
 ```
 
-#### log 查看提交日志
+### 查看提交日志（log）
 
 - 配置的别名 git-log 就包含了这些参数，所以后续可以直接使用指令 git-log
 - 作用：查看提交记录
@@ -328,7 +328,7 @@ git branch -v
 * temp   5ae0216 add tmp file
 ```
 
-#### 版本回退
+### 版本回退（reset）
 
 - 作用：版本切换
 - 命令形式
@@ -350,23 +350,7 @@ git reflog，把所有的操作记录下来了，可以看到已经删除的提�
 
 <img src="img/image-20220402214424143.png">
 
-#### 添加文件至忽略列表
-
-一般我们总会有些文件无需纳入 Git 的管理，也不希望它们总出现在未跟踪文件列表。 通常都是些自动生成的文件，比如日志文件，或者编译过程中创建的临时文件等。 在这种情况下，我们可以在工作目录中创建一个名为 .gitignore 的文件 (文件名称固定) ，列出要忽略的文件模式。
-
-```shell
-*.a # 以 a 结尾的文件不让 git 管理
-```
-
-#### 比较差异
-
-可以通过 git diff 来比较两次提交的差异。
-
-```shell
-git diff hash1 hash2
-```
-
-#### 练习
+<b>练习</b>
 
 ```shell
 #####################仓库初始化###################### 
@@ -402,7 +386,7 @@ git-log
 git reset commitID --hard
 ```
 
-### .git文件说明
+### 文件说明（.git）
 
 #### 目录说明
 
@@ -500,7 +484,7 @@ git cat-file -p e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 
 新的东西加入到暂存区，git 就会主动把暂存区的东西创建出 blob。`.git/objects` 中会有一个对象。当把暂存区的内容提交到仓库时会创建多个对象。具体的内容可以自行创建文件，添加到暂存区后去 objects 目录看多了那些。commit 后有多了那些。多出的对象是什么类型，对象中的内容是什么。
 
-### 分离头指针
+### 分离头指针（HEAD）
 
 git checkout xx
 
@@ -596,7 +580,7 @@ to do so with:
 
 
 
-### 操作分支
+### 操作分支（branch）
 
 几乎所有的版本控制系统都以某种形式支持分支。 使用分支意味着你可以把你的工作从开发主线上分离开来进行重大的 Bug 修改、开发新的功能，以免影响开发主线。
 
@@ -660,6 +644,14 @@ hello world test I am test branch
 git branch -d b1 删除分支时，需要做各种检查
 
 git branch -D b1 不做任何检查，强制删除
+
+#### 修改提交的msg
+
+如果我们想修改 msg 的最新提交，可以用 `git commit --amend` 命令来修改 msg。
+
+如果想修改先前 commit 的 msg，可以使用 [rebase](##变基（rebase）)
+
+
 
 #### 解决冲突
 
@@ -734,7 +726,422 @@ git branch -d dev01
 git-log
 ```
 
-### 标签tag
+### 变基（rebase）
+
+- 我们可以用 rebase 修改之前 commit 的 msg
+- 也可以用 rebase 把连续的 commit 合并成一个。
+- 也可以用 rebase 把不连续的 commit 合并成一个。
+
+不过在讲解之前需要注意，我们可以把 rebase 用在自己负责的分支上，但是如果分支已经被合并了，被其他人所依赖，就不要轻易 rebase 了（会打乱别人的开发） 。
+
+<b>在使用 rebase 前，先阅读下 rebase 相关的文档。</b>
+
+```shell
+# Rebase e95f195..e95f195 onto e95f195 (1 command)
+#
+# Commands:
+# p, pick <commit> = use commit												===> 使用 commit
+# r, reword <commit> = use commit, but edit the commit message				===> 使用 commit, 内容保持不变但是修改 message
+# e, edit <commit> = use commit, but stop for amending						
+# s, squash <commit> = use commit, but meld into previous commit			===> 使用 commit, 但是把 s 标记的都合并到前一个 commit
+# f, fixup [-C | -c] <commit> = like "squash" but keep only the previous
+#                    commit's log message, unless -C is used, in which case
+#                    keep only this commit's message; -c is same as -C but
+#                    opens the editor
+# x, exec <command> = run command (the rest of the line) using shell
+# b, break = stop here (continue rebase later with 'git rebase --continue')
+# d, drop <commit> = remove commit
+# l, label <label> = label current HEAD with a name
+# t, reset <label> = reset HEAD to a label
+# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+# .       create a merge commit using the original merge commit's
+# .       message (or the oneline, if no original merge commit was
+# .       specified); use -c <commit> to reword the commit message
+```
+
+#### 修改 msg
+
+<b>修改之前 commit 的 msg</b>
+
+如果想修改当前 commit 的 msg 我们可以用 `git commit -amend`，如果想修改之前记录的 msg 呢？可以用 rebase，`git rebase -i 选择需要变更提交的父亲`，例如我们需要把 update juc 变更为 update juc note，那么我们需要选择的是 `77deb4` 这个 msg。
+
+```shell
+git log -n3
+commit c8701e8874ed55d611d9a4fcfe0483ccc8705a2e (HEAD -> notes)
+Author: csliujw <695466632@qq.com>
+Date:   Tue Mar 28 22:50:25 2023 +0800
+
+    update this message
+
+commit 7578d051284349dd408eba9f26792b6e3b175d0e
+Author: csliujw <695466632@qq.com>
+Date:   Sat Mar 25 23:23:36 2023 +0800
+
+    update juc
+
+commit 77deb477a80df21162dc3d880cdc3e4d8612c609 (origin/notes, origin/HEAD)
+Author: csliujw <695466632@qq.com>
+Date:   Thu Mar 16 23:05:21 2023 +0800
+
+    update
+```
+
+使用 rebase 来变更 msg
+
+```shell
+git rebase -i 77deb477
+pick 7578d05 update juc				
+pick c8701e8 update this message
+
+# ==> 修改 update juc==> update juc note. 具体的处理策略可以看 git 的提示, 用 r 表示要重新编辑，然后保存
+r 7578d05 update juc				
+pick c8701e8 update this message
+# ==> 弹出页面
+[unix] 30L, 1338B written
+update juc notes	#===>在这里填写变更的内容
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Date:      Sat Mar 25 23:23:36 2023 +0800
+#
+# interactive rebase in progress; onto 77deb47
+
+#==>修改完毕后再看
+git log -n2
+commit e95f195b9c41aad66673f7233badf0b2beb10198 (HEAD -> notes)
+Author: csliujw <695466632@qq.com>
+Date:   Tue Mar 28 22:50:25 2023 +0800
+
+    update this message
+
+commit 4e03c937a7daa0dcf12f66900642fe078757cadc
+Author: csliujw <695466632@qq.com>
+Date:   Sat Mar 25 23:23:36 2023 +0800
+
+    update juc notes			#===>修改成功了
+[detached HEAD 4e03c93] update juc notes #===>可以发现 rebase 其实也是用到了分离头指针的。
+
+# 可以发现，被修改 msg 的提交 7578d05128 不见了，变成了 4e03c937a7
+```
+
+#### 合并连续的 commit
+
+<b>压缩 commit</b>
+
+例如，我们将 77deb47 和它的两个父亲 (0b0bc32 和 ebc7606）合并到一起。这时候选择对 d4e2532（选择那三个的祖先） 进行变基。（变基，变基，可以理解为变更祖先吗？）
+
+```shell
+git log -n6 --oneline
+e95f195 (HEAD -> notes) update this message
+4e03c93 update juc notes
+77deb47 (origin/notes, origin/HEAD) update	#===>合并
+0b0bc32 update								#===>合并
+ebc7606 内容更新							 #===>合并
+d4e2532 整合笔记内容，清理部分无用图片，新增部分读书笔记
+```
+
+```shell
+git rebase -i d4e2532
+
+pick ebc7606 内容更新	  #===>合并		#===>这里面最旧的 commit
+pick 0b0bc32 update		#===>合并
+pick 77deb47 update		#===>合并
+pick 4e03c93 update juc notes
+pick e95f195 update this message		#===>最新的 commit
+```
+
+此处基于 ebc7606 进行合并。
+
+```shell
+pick ebc7606 内容更新	  #===>合并
+s 0b0bc32 update		#===>合并
+s 77deb47 update		#===>合并 s 表示合到前面的 commit
+pick 4e03c93 update juc notes
+pick e95f195 update this message		#===>最新的 commit
+
+
+#===>弹出提示, 为什么要做变更, 进行日志记录
+
+# This is a combination of 3 commits.
+# This is the 1st commit message:
+
+内容更新, 合并提交记录
+
+# This is the commit message #2:
+
+update, 合并提交记录
+
+# This is the commit message #3:
+
+update, 合并提交记录
+```
+
+#### 合并不连续的 commit
+
+操作也很简单，就是选好一个 commit_id 进行 rebase，然后把需要融合的 commit 的 id 写进去，最老的 commit 写在最前面。比如，我们需要把 commit 修改.
+
+```shell
+git log -n6 --oneline
+3bcb25f (HEAD -> notes) update this message
+01f8f98 update juc notes							# 需要合并
+188b96c 内容更新, 合并								# 需要合并
+d4e2532 整合笔记内容，清理部分无用图片，新增部分读书笔记	# 用它作为基地, 合并不连续的 commit
+78f7367 复习并更新mysql笔记						    # 需要合并
+3d2fd52 fix gitpage bug			
+
+git rebase -i d4e2532
+pick 188b96c 内容更新, 合并
+pick 01f8f98 update juc notes
+pick 3bcb25f update this message
+
+##############==>把最老的需要合并的 commits 写在最前面
+pick 78f7367 复习并更新mysql笔记
+pick 188b96c 内容更新, 合并
+pick 01f8f98 update juc notes
+pick 3bcb25f update this message
+
+##############==>进行合并操作
+pick 78f7367 复习并更新mysql笔记
+s 188b96c 内容更新, 合并				#===> 合并到前一个提交 (78f7367)
+s 01f8f98 update juc notes			#===> 合并到前一个提交
+pick 3bcb25f update this message	#===> 最新的提交
+
+
+#############提示有冲突
+error: could not apply 78f7367... 复习并更新mysql笔记
+Resolve all conflicts manually, mark them as resolved with
+"git add/rm <conflicted_files>", then run "git rebase --continue".
+You can instead skip this commit: run "git rebase --skip".
+To abort and get back to the state before "git rebase", run "git rebase --abort".
+Could not apply 78f7367... 复习并更新mysql笔记
+Auto-merging 中间件/Redis-实战.md
+CONFLICT (content): Merge conflict in 中间件/Redis-实战.md
+Auto-merging Database/MySQL-加强.md
+CONFLICT (content): Merge conflict in Database/MySQL-加强.md
+```
+
+### 比较差异（diff）
+
+实际使用的时候，我们需要考虑，到暂存区的东西是不是可以提交过去。这时候需要我们比较下暂存区和最近一次提交之间的差异（diff），来判断下那些是要作为新的提交加入进去的。此外，还可以通过 git diff 来比较下列内容的差异。常用的命令如下：
+
+- 尚未缓存的改动（未添加到暂存区）：`git diff`
+- 查看已缓存的改动（添加到了缓存区的）： `git diff --cached`
+- 查看已缓存的与未缓存的所有改动（add 前后的改动，commit 只会就看不到了）：`git diff HEAD`
+- 显示摘要而非整个 diff：`git diff --stat`
+- 对比两次提交的改动： `git diff [first-branch] ... [second-branch]`，显示 first 和 second 之间的差异。
+- 也可以指定只看某个文件的差异：`git diff -- file1 file2 file3`
+
+```shell
+git diff befcc00 7578d05
+
+# --- 表示 a 提交的
+# +++ 表示 b 提交的
+diff --git a/Solution/git实用技巧.md b/Solution/git实用技巧.md
+index cf1798e..94f4081 100644
+--- a/Solution/git实用技巧.md
++++ b/Solution/git实用技巧.md
+@@ -1,35 +1,8 @@
+-# Why Learn Git
++# Learn Git Branch
+```
+
+#### 暂存区和HEAD
+
+修改某个文件的内容，然后加入暂存区，再比较暂存区和 HEAD 之间的区别。
+
+```shell
+# windows 用 notepad 启动记事本, Linux 可以直接用 vi/vim
+notepad .\好用的符号.md
+git add 好用的符号.md
+git diff --cached 	# 比较暂存区和 HEAD 的区别
+diff --git a/好用的符号.md b/好用的符号.md
+index c42a004..b121d30 100644
+--- a/好用的符号.md
++++ b/好用的符号.md
+@@ -14,4 +14,5 @@
+
+ 『』
+
+-iCloud + Mweb + Typora 还是好用。
+\ No newline at end of file
++iCloud + Mweb + Typora 还是好用。
++OKK，Add some message
+\ No newline at end of file
+
+# git reset --hard 清除暂存区中的内容, 修改的内容也会丢失。
+```
+
+#### 工作区和暂存区
+
+在工作区中修改文件，但是不加入暂存区。(`git diff` 默认比较的就是工作区和暂存区的区别)
+
+```shell
+git diff
+diff --git a/好用的符号.md b/好用的符号.md
+index c42a004..dd993ab 100644
+--- a/好用的符号.md
++++ b/好用的符号.md
+@@ -14,4 +14,5 @@
+
+ 『』
+
+-iCloud + Mweb + Typora 还是好用。
+\ No newline at end of file
++iCloud + Mweb + Typora 还是好用。
++modify
+\ No newline at end of file
+```
+
+#### 不同提交的差异
+
+如果我们想查看两个分支之间的差异或两个分支之间某个文件的差异可以用 `git diff commit_id1, commit_id2 -- file1`
+
+```shell
+git log -n4 --oneline
+8053ebd (HEAD -> notes) lg
+e63db2a update this message
+99fe85a 整合笔记内容，清理部分无用图片，新增部分读书笔记
+78f7367 复习并更新mysql笔记
+
+git diff e63db2a 78f7367 -- C++/调用三方库.md
+diff --git a/C++/调用三方库.md b/C++/调用三方库.md
+deleted file mode 100644
+index d610344..0000000
+--- a/C++/调用三方库.md
++++ /dev/null
+@@ -1,6 +0,0 @@
+-# C++调用三方库
+-
+-- 打包静态/动态连接库
+```
+
+
+
+### 文件恢复（reset）
+
+- 让暂存区恢复成和 HEAD 一样
+- 让工作区的文件恢复成和暂存区一样
+- 取消暂存区部分文件的更改
+
+#### 暂存区恢复成和 HEAD 一样
+
+修改部分文件，添加到暂存区。然后执行下列命令。
+
+```shell
+git add .			#===> 加入暂存区
+	
+git status			#===> 查看状态
+On branch notes
+Your branch and 'origin/notes' have diverged,
+and have 3 and 4 different commits each, respectively.
+  (use "git pull" to merge the remote branch into yours)
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        modified:   README.md
+        
+git reset HEAD		#===> 将暂存区恢复成和 HEAD 一样, 暂存区提交的内容还原到工作区
+Unstaged changes after reset:
+M       README.md
+
+git diff --cached	#===> 暂存区确实和 HEAD 一样了。
+#===> 查看文件, 确实修改还在, 只是不在暂存区了.
+```
+
+#### 工作区的文件恢复成和暂存区一样
+
+有些时候我们做了变更，这部分变更添加到了暂存区，然后工作区继续做变更；但是变更过程中发现工作区的变更不如暂存区好，这时候希望恢复成暂存区的样子。
+
+```shell
+# 变更过一次
+git add .
+
+git diff
+diff --git a/README.md b/README.md
+index 10884a7..4a429bd 100644
+--- a/README.md
++++ b/README.md
+@@ -1,5 +1,5 @@
+ # 内容速查
+-111
++111222^M
+ ## 📚学习计划
+
+# 继续修改
+git status
+On branch notes
+Your branch and 'origin/notes' have diverged,
+and have 3 and 4 different commits each, respectively.
+  (use "git pull" to merge the remote branch into yours)
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        modified:   README.md
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   README.md
+# 工作区希望恢复成暂存区的样子, git 提示我们可以使用 "git restore <file>..." to discard changes
+git restore .\README.md
+
+git diff .\README.md		#===> 对比工作区和暂存区, 没有差异。完美解决。
+```
+
+#### 取消暂存区部分文件的更改
+
+```shell
+git reset HEAD -- 文件名
+```
+
+### 消除最近的几次提交
+
+如果有些 commit 我们确实是完全不想要了，可以使用 reset 消除最近的几次提交（只能消除本地的提交，远程的需要用 revert）
+
+``` shell
+git reset --hard commit_id 	#===> 将暂存区、工作区的状态都恢复到 commit_id 这次提交的内容了。
+```
+
+### 删除文件
+
+`git rm file`，git 会直接把文件的删除情况放到暂存区，就不需要先在工作区删除，在从暂存区删除了。
+
+```shell
+# 删除 git 文件
+#===>直接删除
+rm file
+git status
+
+xxx deleted:	file
+
+git rm file
+
+#===>直接使用 git rm 删除文件, 更方便, 和前面的效果一样
+git rm file
+```
+
+### 临时加塞紧急任务（stash）
+
+假如之前做的工作被添加到暂存区了，然后开始了新的工作。此时，测试人员反馈刚刚添加到暂存区的代码出现了 bug，需要紧急修复。这时候需要我们放下手头的工作去修复 bug。可以先把手头的工作 stash（存放起来）
+
+```shell
+git status
+modified:   README.md
+
+git stash		#===>将手头的工作暂时存放起来，去解决 bug
+Saved working directory and index state WIP on notes: 8053ebd lg
+
+git status
+nothing to commit, working tree clean
+
+git stash apply	#===>将暂存的内容恢复过来, 暂存区的内容会保留
+git stash pop	#===>将暂存的内容恢复过来, 且暂存区中的内容会弹出。
+```
+
+
+
+### 标签（tag）
 
 如果我们的项目达到一个重要的阶段，并希望永远记住那个特别的提交快照，就可以给它打上标签 (tag)。比如，我们想为我们的项目发布一个 "1.0" 版本。 我们给最新一次提交打上 (HEAD) "v1.0" 的标签。标签可以理解为项目里程碑的一个标记，一旦打上了这个标记则，表示当前的代码将不允许提交。
 
@@ -768,7 +1175,84 @@ $ git push <远程仓库的别名> –tags
 
 head 可以指向分支，也可以指向具体的 commit，不和任何分支挂钩。
 
-git diff 比较两个 commit 的差异
+### 回退操作（reset&revert）
+
+如果我们希望 git 回退到某个状态，并且这个状态之后的提交都丢掉，那么可以用 `git reset --hard befcc` 将暂存区和 commit 的内容都恢复到 befcc。 
+
+### 忽略文件（ignore）
+
+一般我们总会有些文件无需纳入 Git 的管理，也不希望它们总出现在未跟踪文件列表。 通常都是些自动生成的文件，比如日志文件，或者编译过程中创建的临时文件等。 在这种情况下，我们可以在工作目录中创建一个名为 .gitignore 的文件 (文件名称固定) ，列出要忽略的文件模式。
+
+```shell
+*.a # 以 .a 结尾的文件不让 git 管理, 如 demo.a 就会被忽略
+*.dSYM/ # 文件夹下的任何文件都不纳入 git 管理, 但是 a.dSYM git 是要管理的。
+
+doc/	# doc 文件夹下的所有文件都不纳入 git 管理
+```
+
+### Git 备份
+
+将 Git 仓库备份到本地。
+
+| 常用协议        | 语法格式                                                     | 说明                     |
+| --------------- | ------------------------------------------------------------ | ------------------------ |
+| 本地协议（1）   | /path/to/repo.git                                            | 哑协议                   |
+| 本地协议（2）   | fil:///path/to/repo.git                                      | 智能协议                 |
+| http/https 协议 | http://git-server.com:port/path/to/repo.git<br>https://git-server.com:port/path/to/repo.git | 平时接触到的都是智能协议 |
+| ssh 协议        | user@git-server.com:path/to/repo.git                         | 工作中最常用的智能协议   |
+
+#### 哑协议与智能协议
+
+直观区别：哑协议传输进度不可见;智能协议传输可见。
+
+传输速度：智能协议比哑协议传输速度快。
+
+#### 仓库备份
+
+- git clone
+- git remote
+- git push
+
+先将当前的参考备份到 back 目录。
+
+```shell
+# 创建备份目录,进入目录执行 clone 备份仓库
+
+#===> 哑协议备份
+PS C:\development\note\back> git clone --bare C:\development\note\learning_git\.git ya.git
+Cloning into bare repository 'ya.git'...
+done.
+
+#===> 智能协议备份
+PS C:\development\note\back> git clone --bare file://C:\development\note\learning_git\.git zhineng.git
+Cloning into bare repository 'zhineng.git'...
+remote: Enumerating objects: 12501, done.
+remote: Counting objects: 100% (12501/12501), done.
+remote: Compressing objects: 100% (7521/7521), done.
+Receiving objects:  100% (12501/12501)
+```
+
+把当前的 learning_git 仓库关联远端仓库，进行同步。
+
+```shell
+PS C:\development\note\learning_git> git remote add zhineng file://C:\development\note\back\zhineng.git
+PS C:\development\note\learning_git> git remote -v
+origin  git@github.com:csliujw/CodeNotes.git (fetch)
+origin  git@github.com:csliujw/CodeNotes.git (push)
+zhineng file://C:\development\note\back\zhineng.git (fetch)
+zhineng file://C:\development\note\back\zhineng.git (push)
+
+# 给参考做一些变更，然后 push 到其他参考做备份。
+PS C:\development\note\learning_git> mkdir aa
+PS C:\development\note\learning_git> git add .
+PS C:\development\note\learning_git> git commit -m "update aa"
+
+PS C:\development\note\learning_git> git push zhineng	#===>将git同步到其他仓库。
+
+To file://C:\development\note\back\zhineng.git
+   8053ebd..dcd0a96  notes -> notes
+PS C:\development\note\learning_git>
+```
 
 ## Git远程仓库
 
@@ -784,6 +1268,8 @@ GitLab  (地址： https://about.gitlab.com/ ) 是一个用于仓库管理系统
 
 ### 操作远程仓库
 
+创建仓库时记得注意选择何种开源协议。
+
 #### 添加远程仓库
 
 此操作是先初始化本地库，然后与已创建的远程库进行对接。
@@ -793,7 +1279,7 @@ GitLab  (地址： https://about.gitlab.com/ ) 是一个用于仓库管理系统
 - 仓库地址：从远端服务器获取此 url
 
 ```shell
-git remote add <远端名称> <仓库地址>
+git remote add <远端名称> <仓库地址>  #===> add 新增远端站点, 一个本地参考可以关联多个远端仓库。
 ```
 
 例如
@@ -816,6 +1302,18 @@ git remote
 git push [-f] [--set-upstream] [远端名称] [本地分支名][:远端分支名]
 ```
 
+查看本地仓库和远程参考都有那些分支
+
+```shell
+git branch -av
+* notes                 dcd0a96 [ahead 4, behind 4] update aa
+  remotes/origin/HEAD   -> origin/notes
+  remotes/origin/notes  77deb47 update
+  remotes/zhineng/notes dcd0a96 update aa
+```
+
+注意：我们操作的其实都是本地分支，操作完毕后把内容 push 到远程分支上。如果本地分支和远程分支发生了冲突，可以将远程分支合并到本地分支，处理完冲突后再 push。
+
 #### 从远程仓库克隆
 
 如果已经有一个远端仓库，我们可以直接 clone 到本地。
@@ -825,6 +1323,84 @@ git clone <仓库地址> [本地目录]
 ```
 
 本地目录可以省略，会自动生成一个目录
+
+#### 同步仓库内容
+
+如果关联本地和远端仓库后，将本地的推送到远端发生了冲突，提示需要 pull xxx，可以用下面的方式解决。
+
+```shell
+git fetch 远端仓库名 分支名
+git push 远端仓库名 分支名
+```
+
+如果发现仓库的分支走向不是线性的，可以通过 merge 的手段合并分支，变成线性的（后面体会）。
+
+### 文件冲突★
+
+此处指的都是两个人开发同一个分支
+
+- 不同文件发生了冲突如何处理
+- 相同的文件，不同内容发生了冲突如何处理
+- 相同的文件，同样的内容发生了冲突如何处理
+- 同时变更了文件名和文件内容如何处理
+- 把同一文件改成了不同的文件名如何处理
+
+有本地分支 a，还有远端分支 a，对本地分支进行修改，然后拉去远程分支，把远程分支和本地分支进行合并，再把本地分支推送到远程。
+
+#### 不同文件的冲突
+
+clone 一个自己的 git 备份项目，模拟下。
+
+- 教程中的做法，clone 一个项目，然后根据远程分支 checkout -b 一个本地分支。
+    - 新 git 项目：git checkout -b feature/add_git_commands origin/feature/add_git_commands。
+    - 老 git 项目：git fetch xxx 拉取远端分支。
+        - git branc -av，可以看到远程分支增加了。
+        - git checkout -b feature/add_git_commands origin/feature/add_git_commands，创建一个本地分支和远程分支关联起来。
+        - 观察下本地分支和远程分支的指向是否一样。
+
+- 把远端分支 fetch 下来，git branch -av 可以发现本地的分支比远端的分支要新，且远端分支比本地多出一个文件。
+- 将本地的分支和远端分支进行合并 merge。（切换到本地分支，然后 git merge xxx/feature/add_git_commands，把远端的合并到本地，然后再 push 到远程分支）
+
+#### 同文件不同区域的内容
+
+相同的文件，同样的内容发生了冲突如何处理？
+
+远端的拉到本地，然后做个 merge，再看下内容是否需要人工介入处理，处理完毕后再 push。
+
+#### 同文件同区域的内容
+
+相同的文件，同样的内容发生了冲突如何处理？
+
+把最新的仓库 pull 下，然后根据 git 的提示来解决冲突（git 会在冲突文件的前后用 `HEAD<<<<<<` `XX>>>>>>>` 表示是这部分文件冲突了），解决冲突后再 commit 并 push 到远端。
+
+#### 有人修改了文件名
+
+A 修改了文件名（index.html --> index.htm）然后提交到了远端。
+
+B 不知道，还在 index.html 中做修改，提交到远端的时候报错了。提示我们要 pull。pull 的时候 git 非常智能的知道了是文件名发生了变化，替我们把本地的 index.html 修改为了 index.htm。而且我们变更的内容也保存到了里面。
+
+如果文件名不同，且内容发生了变更，操作方式和上面的一样。
+
+#### 多人修改同一个文件的文件名
+
+A、B 都改了文件名，A 改成了 index1.htm，B 改成了 index2.htm，此时 git 不会处理，需要双方自己协商，协商完毕后再进行更改。
+
+```shell
+# 一般会提示我们把 index.html (被修改名字的) 删除，然后选择 index1.htm 或 index2.htm 加入暂存区
+git rm index.html
+git add index1.htm
+git rm index2.htm
+git commit -m 'decide to v index to index1'
+```
+
+### 危险命令
+
+- reset、revert、push -f 都是危险命令。
+- 严禁将公共分支拉到本地做 rebase 操作，可能会导致其他协作人员的 fast-forward rebase 前后不一致。
+
+### github
+
+让 git 变得更加好用，用户可以便捷的分享自己的 code。可以方便的检索自己想要的开源项目。
 
 ### 练习
 
@@ -880,6 +1456,20 @@ git pull
 # 从远程仓库中把代码拉过来！
 git pull origin master
 ```
+
+## 使用Github
+
+[GitHub Docs](https://docs.github.com/zh)
+
+### 搜索
+
+有高级搜索功能。[Github高级搜索技巧 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/411634596)
+
+- 按时间。
+- 在搜索栏输入 `git Java CPP in:readme`，在 readme 中搜索包含 Java CPP 的仓库。
+- 在搜索栏输入 `git Java CPP in:readme stars:>1000`，在 readme 中搜索包含 Java CPP 的仓库，且 star 数大于 1000。
+- 在搜索栏输入 `'public'+'static' filename:.Config.java`，搜索带 Config.java 文件的仓库，且文件中包含 public 和 static 字段。
+- 高级搜索也有可视化的搜索界面：https://github.com/search/advanced
 
 ## IDEA中使用Git
 

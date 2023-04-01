@@ -3,18 +3,9 @@
 ## 📚学习计划
 
 - 一周看两篇 CV 相关论文，继续改造项目，每天刷点 leetcode。
-- MQ 常见用法✔️
-- MyBatis-Plus 学习✔️
-- Spring 温习✔️
-- MyBatis 温习✔️
-- Spring MVC 温习✔️
-- JavaWeb 温习✔️
-- 重拾 JavaSE
-- 重拾 MySQL
-- 重拾 Redis
-- MySQL 45 讲继续学，冲冲冲！
-- Spring Boot 温习
-- Redis 加强，黑马那个 Redis 的项目也写一遍。
+- [CPP 视频](https://www.bilibili.com/video/BV1N24y1B7nQ/?spm_id_from=333.999.0.0&vd_source=cb8bc4312b30b416beadaad7244940ac)
+- [编译原理](https://www.bilibili.com/video/BV1m7411d7iS/?spm_id_from=333.337.search-card.all.click)
+- [计算机网络](https://www.bilibili.com/video/BV1JV411t7ow/?spm_id_from=333.337.search-card.all.click)
 
 ## 📝期刊论文
 
@@ -25,6 +16,8 @@
 ## 📒技术博客
 
 [CUDA编程入门极简教程 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/34587739)
+
+[语义分割综述：截止2022，语义分割总结与展望](https://zhuanlan.zhihu.com/p/538050231)
 
 [不可不说的Java“锁”事 - 美团技术团队 (meituan.com)](https://tech.meituan.com/2018/11/15/java-lock.html)
 
