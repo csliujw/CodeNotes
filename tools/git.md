@@ -1,8 +1,10 @@
 # Git分布式版本控制工具
 
+[GitHub Docs](https://docs.github.com/zh)
+
 [Git学习笔记 | Kisugi Takumi](https://kisugitakumi.com/2022/01/18/Git学习笔记/#Git学习笔记)
 
-<img src="img/011500266295799.webp">
+<img src="img/011500266295799.png">
 
 ## 概述
 
@@ -1470,6 +1472,80 @@ git pull origin master
 - 在搜索栏输入 `git Java CPP in:readme stars:>1000`，在 readme 中搜索包含 Java CPP 的仓库，且 star 数大于 1000。
 - 在搜索栏输入 `'public'+'static' filename:.Config.java`，搜索带 Config.java 文件的仓库，且文件中包含 public 和 static 字段。
 - 高级搜索也有可视化的搜索界面：https://github.com/search/advanced
+
+### 工作流
+
+<b>需要考虑的因素</b>
+
+- 团队人员的组成
+- 研发设计能力
+- 输出产品的特征（Sass 服务还 Android App）
+- 项目的难易程度
+
+#### 主干开发
+
+做出的变更会及时的同步到主干分支。
+
+<b>适用于</b>
+
+- 开发团队系统设计和开发能力强。有一套有效的特性切换的实施机制，保证上线后无需修改代码就能够修改系统行为。需要快速迭代，想获得CI/ CD所有好处。
+
+- 组件开发的团队，成员能力强，人员少，沟通顺畅。用户升级组件成本低的环境。
+
+#### git flow
+
+<b>适用于</b>
+
+不具备主干开发能力（操作成本较高）。有预定的发布周期。需要执行严格的发布流程。
+
+#### gitLab Flow
+
+<b>带生产分支，适用于</b>
+
+不具备主干开发能力。无法控制准确的发布时间，但又要求不停地集成。
+
+<b>带环境分支，适用于</b>
+
+不具备主干开发能力。需要逐个通过各个测试环境的验证才能发布。
+
+<b>带发布分支，适用于</b>
+
+不具备主干开发能力。需要对外发布和维护不同版本。（软件要和硬件配合的项目，同一个时间点有多个版本）
+
+### issue
+
+#### 启用 issue
+
+setting --> issues√-->set up templates
+
+可以在项目中启用 issue 功能。
+
+#### 管理
+
+可以启用仓库 Projects 的看板功能，将项目现在在做的，打算做的，做完了的在看板中进行归类。用看板有效的管理任务，推进任务。
+
+[Vue 的看板](https://github.com/vuejs/vue/projects/8)
+
+### CodeReview
+
+设置 Codereview，未经过 CodeView 的代码不能合并到集成分支中，保障代码质量。
+
+项目的 settings=\=\>branches=\=>Apply rule to（设保护规则）
+
+```shell
+# 例如设置 master 不允许直接做 push
+Apply rule t0
+|------------------|
+| master           |
+|------------------|
+# 设置需要几个人 review 才可以通过
+
+# 申请 pull request 后设置指定的 review 人员, 请求他来 review 一下。对应账号的邮箱会收到 review 请求。
+
+# review 人员收到请求后，可以选择不合并，点击 close pull request，选择关闭拉取请求而不将其合并到上游分支
+```
+
+
 
 ## IDEA中使用Git
 

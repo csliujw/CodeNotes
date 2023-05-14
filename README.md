@@ -13,6 +13,10 @@
 
 [推荐系统SCI顶会及顶级期刊 更新于2022-07-13_JinyuZ1996的博客-CSDN博客_推荐系统期刊](https://blog.csdn.net/qq_39381654/article/details/124019943)
 
+[分布式系统领域有哪些经典论文？ - 知乎 (zhihu.com)](https://www.zhihu.com/question/30026369)
+
+[Distributed Systems Reading List (dancres.github.io)](https://dancres.github.io/Pages/)
+
 ## 📒技术博客
 
 [CUDA编程入门极简教程 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/34587739)

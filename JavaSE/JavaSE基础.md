@@ -35,21 +35,22 @@
 
 - 编写 Java 代码，在代码中声明 native 方法
 
-    ```java
-    public class TestCPP{
-        public TestCPP(){}
-    
-        private native int sub(int a,int b);
-        static {
-            System.load("/home/payphone/work/TestCPP.so"); // 写绝对路径
-            // System.loadLibrary("TestCPP.so"); // 写相对路径。我用这个加载失败了
-        }
-        public static void main(String[] args){
-            TestCPP cpp = new TestCPP();
-            System.out.println(cpp.sub(1,10));
-        }
+
+```java
+public class TestCPP{
+    public TestCPP(){}
+
+    private native int sub(int a,int b);
+    static {
+        System.load("/home/payphone/work/TestCPP.so"); // 写绝对路径
+        // System.loadLibrary("TestCPP.so"); // 写相对路径。我用这个加载失败了
     }
-    ```
+    public static void main(String[] args){
+        TestCPP cpp = new TestCPP();
+        System.out.println(cpp.sub(1,10));
+    }
+}
+```
 
 - 执行 `javac -h . TestCPP.java` 命令生成 C++ 头文件
 
@@ -178,11 +179,11 @@ public class OpBin {
 
 - <b>①封装：</b>合理封装/暴露类中的内容（即限定使用条件）
 - <b>②继承：</b>利用现成的数据进行“克隆”，再根据情况进行添加和修改。
-- <b>③多态：</b>把一个对象看成它的父类，而不是把它当成具体类；从而做到一种形式多种表现。
+- <b>③多态：</b>同一种属性或方法在不同的对象上具有不同的实现方式和表现形式（在代码中的体现则是，把一个对象看成它的父类，而不是把它当成具体类；从而做到一种形式多种表现）
 
 ### 抽象
 
-所有编程语言都提供了抽象机制；汇编语言是对底层机器的轻微抽象。接着出现的“命令式” 语言（如 FORTRAN，BASIC 和 C）是对汇编语言的抽象。而面向对象程序设计是对现实世界事物的抽象，将现实世界的事务抽象成一个一个的类。
+所有编程语言都提供了抽象机制，用简单的语言描述复杂的事情。汇编语言是对底层机器的轻微抽象。接着出现的“命令式” 语言（如 FORTRAN，BASIC 和 C）是对汇编语言的抽象。而面向对象程序设计是对现实世界事物的抽象，将现实世界的事物抽象成一个一个的类，用简单的类来表示现实世界的事物，从而转化为计算机程序，更好地被计算机所理解和处理。
 
 抽象的目的是提取一个更一般的类，将这个更一般的类作为一个模板，将通用的字段、方法放到这个模板中，利用模板来派生出其他类。Java 的继承可以完成抽象，而抽象类则是比继承更为抽象的类，里面可以只提供方法的占位符，而具体的实现让子类来做。
 
@@ -238,6 +239,14 @@ Java 有三个显式关键字来设置类中的访问权限：public（公开）
 “异常”（Exception） 是一个从出错点“抛出”（throw）后能被特定类型的异常处理程序捕获 (catch) 的一个对象。它不会干扰程序的正常运行，仅当程序出错的时候才被执行。这让我们的编码更简单：不用再反复检查错误了。另外，如果出现了异常，程序是不会忽略的，异常终究会在某一时刻被处理。
 
 “异常机制” 提供了一种可靠地从错误状况中恢复的方法，使得我们可以编写出更健壮的程序。有时我们只要处理好抛出的异常情况并恢复程序的运行即可，无需退出。
+
+### 继承、抽象类、接口
+
+<b>继承：</b>面向对象语言引入继承的主要目的是为了实现代码的重用和扩展性。通过继承，我们可以在现有类的基础上创建新的类，并且让新类具有现有类的属性和方法，同时还可以添加新的属性和方法，从而实现代码的重用和扩展性。
+
+<b>抽象类：</b>抽象类的主要作用是为了提供一种通用的模板，让子类来实现具体的功能。虽然该功能也可以通过继承来实现，但是如果我们希望重写改写某个方法的细节，但是忘记重写了，麻烦就大了。但是抽象类会在语法层面给我们提供保障，避免出现这种情况。
+
+<b>接口：</b>接口是一种比抽象类更纯粹的抽象，它只包含方法的声明，没有方法的实现（暂不考虑 Java 8 的 default 方法 和 Java 9...）。Java 是单根继承的，只能继承一个类，但是可以实现多个接口，如果我们希望更高层次的、更纯粹的抽象时（定义规则），可以使用接口。或者我们希望抽象出一个通用的模板，但是该类已经继承了一个类，此时可以使用接口来避免 Java 单一继承带来的限制。
 
 ### 快速回顾
 
@@ -335,7 +344,7 @@ static 修饰，属于类本身，随类的加载而加载，因为只有一份�
         - jdk 1.8 及 1.8 以后用元空间实现
     - 1.8 及其以后，方法区中的常量池和静态变量都移动到了 JVM 堆中。具体看 openJDK 的描述 [JEP 122: Remove the Permanent Generation (java.net)](http://openjdk.java.net/jeps/122)
 - 堆中拿到成员方法的地址，通过地址对方法进行调用【回忆组成原理】。
-- 堆将方法区中的成员变量拿到堆中（相当于 copy 一份），对其进行初始化值的操作。【不同对象的成员变量是独立的（非静态成员变量）】
+- 堆将方法区中的成员变量拿到堆中（相当于 copy 一份），对其进行初始化值的操作【不同对象的成员变量是独立的（非静态成员变量）】
 - main 方法中的变量指向堆中的对象，并对对象进行赋值操作。
 - stack--栈，FIFO
 
@@ -550,7 +559,7 @@ API (Application Programming Interface)，应用程序编程接口。
 
 Java 通过构造器完成对象的初始化过程。如果一个类有构造器，那么 Java 会在用户使用对象之前（即对象刚创建完成）自动调用对象的构造器方法，从而保证初始化。
 
-问题在于编译器必须知道构造器方法名称，才能调用构造方法，并且构造器需要避免和类中已有元素命名冲突。Java 的采用的做法是让构造器名称和类名保持一致，且构造方法没有返回值。
+自动调用构造器方法的前提是，编译器必须知道构造器方法名称，并且构造器需要避免和类中已有元素命名冲突。Java 的采用的做法是让构造器名称和类名保持一致，且构造方法没有返回值。
 
 ```java
 class Demo{
@@ -632,7 +641,7 @@ public class Overload {
 - long，8 字节
 - char 0~127，两个字节
 
-②如果传入的参数类型大于方法期望接收的参数类型，你必须首先<b>做向下转型</b>，否则编译器会报错。
+②如果传入的参数类型大于方法期望接收的参数类型，必须<b>做向下转型</b>，否则编译器会报错。
 
 ```java
 public class Overload {
@@ -654,7 +663,7 @@ public class Overload {
 
 #### 返回值的重载
 
-为什么只能通过 [方法名] 和 [参数列表]，不能通过 [方法名] 和 [返回值] 区分方法呢?
+为什么只能通过『方法名』和『参数列表』，不能通过『方法名』和『返回值』区分方法呢?
 
 ```java
 // 直觉上，我们很容易就可以区分出这两个方法
@@ -662,7 +671,7 @@ void f(){}
 int f() { return 1; }
 // 编译器也可以通过接收函数的返回值来判断到底使用那个
 int x = f();
-// 如果不使用返回值呢？如何判断调用的到底是那个 f？无法得知。
+// 如果不使用返回值呢？如何判断调用的到底是那个 f？这就无法得知了。
 f(); 
 ```
 
@@ -670,18 +679,18 @@ f();
 
 ### 无参构造器
 
-一个无参构造器就是不接收参数的构造器，如果你创建了一个类，类中没有构造器，那么编译器就会自动为你创建一个无参构造器。
+无参构造器就是不接收参数的构造器，如果类中没有显示的定义构造器，那么编译器会自动你创建一个无参构造器。
 
 ```java
 class Bird {}
 public class DefaultConstructor {
     public static void main(String[] args) {
-    	Bird bird = new Bird(); // 有默认的构造器
+    	Bird bird = new Bird(); // 有默认的无参构造器
     }
 }
 ```
 
-一旦你显式地定义了构造器（无论有参还是无参），编译器就不会再为你创建无参构造器。
+一旦显式地定义了构造器（无论有参还是无参），编译器就不会再创建无参构造器。
 
 ```java
 class Bird2 {
@@ -806,9 +815,7 @@ public class ClassName{
 
 > 类加载概述
 
-`.class` 文件中的信息最终都需要加载到虚拟机中之后才会被运行和使用。
-
-虚拟机把描述类的数据从 Class 文件加载到内存中，并对数据进行校验、转换解析和初始化，最终形成可以被虚拟机直接使用的 Java 类型，这就是虚拟机的类加载机制。
+`.class` 文件中的信息最终都需要加载到虚拟机中之后才会被运行和使用。虚拟机把描述类的数据从 Class 文件加载到内存中，并对数据进行校验、转换解析和初始化，最终形成可以被虚拟机直接使用的 Java 类型，这就是虚拟机的类加载机制。
 
 <b>类从被加载到虚拟机内存中开始，到卸载出内存为止，它的整个生命周期包括：加载（Loading）、验证（Verification）、准备（Preparation）、解析（Resolution）、初始化（Initialization）、使用（Using）和卸载（Unloading）7 个阶段。</b>
 
@@ -909,7 +916,7 @@ Java 中有垃圾回收机制回收无用对象占用的内存。但 Java 中，
 
 内容来源：[Java使用JNI调用C写的库时，使用malloc分配的内存是由谁来管理？ - 知乎 (zhihu.com)](https://www.zhihu.com/question/28250278)
 
-Java 调用 C/CPP 申请的内存，JVM 本身是管不到的，只能在 C/CPP 端进行回收。回收的方式可以时在 Java 的 finalize 方法里面调用释放内存的方法，这样 Java 对象被回收时会尝试调用 finalize 方法，这样就可以回收内存了。但是 Java 的 finalizer 可能会让对象会复活，因此最好是记录一个 ptr，指向底层对象的指针，判断指针是否还指向了对象，指向了就可以调用释放内存的 C 方法。
+Java 调用 C/CPP 申请的内存，JVM 本身是管不到的，只能在 C/CPP 端进行回收。可以在 Java 的 finalize 方法里面调用释放内存的方法释放内存，这样 Java 对象被回收时会尝试调用 finalize 方法，这样就可以回收内存了。但是 Java 的 finalizer 可能会让对象会复活，因此最好是记录一个 ptr，指向底层对象的指针，判断指针是否还指向了对象，指向了就可以调用释放内存的 C 方法。
 
 上面的做法可以用在内存不紧张的情况下。如果内存紧张，需要及时释放，可以在 Java 端提供一个 close 方法，close 中调用了 C 端释放内存的代码，由程序员手动控制内存的释放。
 
@@ -919,9 +926,9 @@ Java 调用 C/CPP 申请的内存，JVM 本身是管不到的，只能在 C/CPP 
 
 JVM 垃圾收集的同时还会压缩堆中的所有对象，这样可以尽量避免缺页错误（操作系统的分页调度）。为什么说可以尽量避免缺页错误呢？堆内存是连续的，那么我们要使用的那些对象也很可能是连续存放的，这样页面调度时，需要的对象很可能就在同一个页中。如果堆内存不是连续的，对象分散在内存的各个地方，那么使用对象时，就需要从很多页中查找需要的对象，进行多次页面调度。
 
-了解其他系统中垃圾收集的工作方式，有助于我们更好的理解 Java 中的垃圾收集。<b>引用计数</b>是一种简单但缓慢的垃圾收集技术。在这个方案中，每个对象都包含一个引用计数器，并且每次该对象被引用时，引用计数加 1。当引用离开作用域或被置为 <b>null</b> 时，引用计数减 1。管理引用计数是一个在程序整个生命周期中都存在的小而恒定的开销。垃圾回收器会遍历整个对象列表，当发现某个对象的引用计数为 0 时，就释放其占用的空间（不过，引用计数模式经常会在计数为 0 时立即释放对象）。引用计数的缺点是，如果对象之间存在循环引用，那么它们的引用计数都不为 0，就会出现应该被回收但无法被回收的情况。对垃圾回收器而言，定位这样的循环引用需要做大量额外的工作。引用计数常用来解释垃圾收集的工作方式，但似乎从未被应用于任何一种 Java 虚拟机实现中。
+了解其他系统中垃圾收集的工作方式，有助于我们更好的理解 Java 中的垃圾收集。<b>引用计数</b>是一种简单但缓慢的垃圾收集技术。在这个方案中，每个对象都包含一个引用计数器，并且每次该对象被引用时，引用计数加 1。当引用离开作用域或被置为 <b>null</b> 时，引用计数减 1。管理引用计数在程序整个生命周期中的开销小而恒定。垃圾回收器会遍历整个对象列表，当发现某个对象的引用计数为 0 时，就释放其占用的空间（不过，引用计数模式经常会在计数为 0 时立即释放对象）。引用计数的缺点是，如果对象之间存在循环引用，那么它们的引用计数都不为 0，就会出现应该被回收但无法被回收的情况。对垃圾回收器而言，定位这样的循环引用需要做大量额外的工作。引用计数常用来解释垃圾收集的工作方式，但似乎从未被应用于任何一种 Java 虚拟机实现中。
 
-<span style="color:orange">更快的方案不使用引用计数，而是基于这样一个想法：对于任意没有被废弃的对象，一定能追溯到存在于栈或静态存储中的引用。这个引用链条可能会穿过多个对象层次。因此，如果从栈或静态存储区出发，遍历所有的引用，可以找到所有”活”的对象。对于发现的每个引用，必须追踪它所引用的对象，然后是该对象包含的所有引用，如此反复进行，直到找到了源于这个栈或静态存储区中引用的所有对象。你所访问过的对象一定是”存活”的。注意，废弃的自引用对象组就不会产生问题了---它们根本找不到，因此也就被自动回收了。</span>
+<span style="color:orange">Java 虚拟机判断垃圾是否可以被回收是基于这样一个想法：对于任意一个没有被废弃的对象，一定能追溯到存在于栈或静态存储中的引用。这个引用链条可能会穿过多个对象层次。因此，如果从栈或静态存储区出发，遍历所有的引用，可以找到所有“存活”的对象。对于发现的每个引用，继续追踪它所引用的对象，然后是该对象包含的所有引用，如此反复进行，直到找到了源于这个栈或静态存储区中引用的所有对象。你所访问过的对象一定是“存活”的。而废弃的自引用对象组就不会产生问题了，因为它们根本找不到，因此会被自动回收。</span>
 
 在这种方式下，Java 虚拟机采用了一种自适应的垃圾回收技术。至于如何处理找到的存活对象，取决于不同的 Java 虚拟机实现。其中有一种做法叫做”停止-复制“（stop-and-copy）。顾名思义，这需要先暂停程序的运行（不属于后台回收模式），然后将所有存活的对象从当前堆复制到另一个堆，没有复制的就是需要被垃圾回收的。另外，当对象被复制到新堆时，它们是一个挨着一个紧凑排列，然后就可以按照前面描述的那样简单、直接地分配新空间了。
 
@@ -1003,7 +1010,7 @@ public class Counter {
 
 在类的内部，变量定义的先后顺序决定了初始化的顺序。即使变量定义分散在方法定义之间，它们仍旧会先于任何方法（包括构造器）执行初始化。简而言之，构造方法做 new 对象最后的初始化。
 
-PS：static final 修饰的变量初始化的时机有所不同（Hotspot VM）
+PS：static final 所修饰的变量的初始化时机有所不同（Hotspot VM）
 
 ```java
 class Windows {
@@ -1277,9 +1284,9 @@ int[]:class [I
 */
 ```
 
-getClass() 方法时 Object 的一部分，它会时常一个对象的类，当打印这个类时，会看到一个表示该类类型的编码字符串。前导 【 表示这是后面紧随的类型的数组。I 表示基本类型 int。为了再次确认，我在最后一行创建了一个 int 数组并打印了它的类型。这证实了使用可变长参数列表不依赖于自动装箱，这个例子中方法 g 使用的就是基本类型。
+getClass() 方法是 Object 的一部分，它会返回对象所属的类的 Class 对象，当打印这个类时，会看到一个表示该类类型的编码字符串。前导 【 表示这是后面紧随的类型的数组。I 表示基本类型 int。为了再次确认，我在最后一行创建了一个 int 数组并打印了它的类型。这证实了使用可变长参数列表不依赖于自动装箱，这个例子中方法 g 使用的就是基本类型，并未被自动装箱为 Integer。
 
-#### 可变从参数与autobox
+#### 可变长参数与autobox
 
 可变长参数可以与自动装箱机制和谐共处
 
@@ -1293,7 +1300,7 @@ public class AutoboxingVarargs {
     }
 
     public static void main(String[] args) {
-        f(1, 2);
+        f(1, 2);	// 自动装箱会将 int 参数转换为 Integer
         f(4, 5, 6);
     }
 }
@@ -1333,29 +1340,9 @@ public class OverloadingVarargs {
 }
 ```
 
-在每种情况下，编译器都会使用自动装箱来匹配重载的方法，然后调用匹配度最高的方法。<span style="color:red">但是如果调用不含参数的 f() 编译器就无法知道应该调用那个方法。</span>（包装类会出现这种情况）
+在每种情况下，编译器都会使用自动装箱来匹配重载的方法，然后调用匹配度最高的方法。<span style="color:red">但是如果调用不含参数的 f() 编译器就无法知道应该调用那个方法。</span>
 
-```java
-public class OverloadingVarargs2 {
-    static void f(float i, Character... args) {
-        System.out.println("first");
-    }
-
-    static void f(Character... args) {
-        System.out.println("second");
-    }
-
-    public static void main(String[] args) {
-        f(1, 'a'); // 正常执行
-        f('a', 'b'); // error
-    }
-}
-//java: 对f的引用不明确
-// OverloadingVarargs2 中的方法 f(float,java.lang.Character...) 和
-// OverloadingVarargs2 中的方法 f(java.lang.Character...) 都匹配
-```
-
-非包装类
+只有包装类会出现上面无法编译（有歧义）的情况，非包装类不存在这种情况。
 
 ```java
 public class OverloadingVarargs {
@@ -1380,7 +1367,7 @@ public class OverloadingVarargs {
 // 正常执行，打印 first
 ```
 
-对于上述包装类出现的问题，我们可能会视图给某个方法添加非可变参数来解决。
+对于上述包装类出现的问题，我们可能会试图给某个方法添加非可变参数来解决。
 
 ```java
 public class OverloadingVarargs2 {
@@ -1397,6 +1384,10 @@ public class OverloadingVarargs2 {
         f('a', 'b'); // 报错，它和两个f都匹配
     }
 }
+
+//java: 对f的引用不明确
+// OverloadingVarargs2 中的方法 f(float,java.lang.Character...) 和
+// OverloadingVarargs2 中的方法 f(java.lang.Character...) 都匹配
 ```
 
 要想解决上述问题，需要让它只与一个方法匹配
@@ -1422,9 +1413,9 @@ public class OverloadingVarargs2 {
 
 没有名字的对象。好处是用一次后就可以被销毁了，节省内存空间。缺点是只能使用一次。安卓中常用。
 
-### 枚举对象
+### 枚举类型
 
-枚举对象可以更加清楚的表明程序的意义。可以将取值范围限制在枚举类中。
+Java 5 中添加了 enmu 关键字，枚举对象可以更加清楚的表明程序的意义。可以将取值范围限制在枚举类中，让编程变得更加轻松和安全。
 
 ```java
 public class EnumDemo {
@@ -1438,6 +1429,7 @@ public class EnumDemo {
 enum Spiciness {
     NOT, MILD, MEDIUM;
 }
+
 enum Two{
     S
 }
@@ -1470,10 +1462,10 @@ FLAMING:4
 
 - 打印枚举对象时，会自动调用 `toString()` 方法；
 - 枚举的 `values()` 方法 ，会按照 enum 常量的声明顺序，产生由这些常量值构成的数组。
-- 简而言之：看起来 enum 似乎是一种新的数据类型，但是这个关键字只是在生成枚举类时触发了编译器的一些操作。实际上 enum 修饰的类，隐式的继承了 Enum 对象，枚举对象中的枚举实例，本质上是一个对象，最后所有的实例会组成一个数组；values 方法可以拿到这个数组。可以将 enum 视作任何其他类来处理。
+- 简而言之：看起来 enum 似乎是一种新的数据类型，但是这个关键字只是在生成枚举类时触发了编译器的一些操作。实际上 enum 修饰的类，隐式的继承了 Enum 对象，枚举对象中的枚举实例，本质上是一个对象，所有的实例会组成一个数组；values 方法可以拿到这个数组。可以将 enum 视作任何其他类来处理。
     - 代码中 sout value 会自动调用 `toString` 方法，`value.ordinal()` 可以得到它在数组中的顺序（索引）。
 
-enum 可以配合 switch 使用。且 enum 的理念和 switch 只在一组有限的可能值中选择相同。
+enum 可以配合 switch 使用，且 enum 的理念和 switch 只在一组有限的可能值中选择相同，是理想的组合。
 
 ### 局部变量推断
 
@@ -1510,15 +1502,13 @@ NoInference 类显示了使用 var 时的一些限制。我们无法在类的成
 
 ## 第四章-实现隐藏
 
-写了一段代码，过段时间再看这些代码，可能会发现更好的实现方式，这时可以考虑重构这些代码，使之更加可读、易懂，更易维护。但是在修改和完善代码的愿望中，也存在着压力。通常总会有些其他代码依赖于我们写的代码，并且希望所依赖的代码某些方面保持不变（常常时调用方式，传递的参数和返回值的类型、方式等）。我们想改变自己的代码，而他们希望代码保持不变。因此，面向对象设计的一个主要考虑是：”将变化的事物与保持不变的事物分离“。
+写了一段代码，过段时间再看这些代码，可能会发现更好的实现方式，这时可以考虑重构这些代码，使之更加可读、易懂，更易维护。但是在修改和完善代码的过程中，也存在着压力。通常总会有些代码依赖于我们写的代码，并且希望所依赖的代码某些方面保持不变（如，调用方式，传递的参数和返回值的类型、方式等）。我们想改变自己的代码，而他们希望代码保持不变。因此，面向对象设计的一个主要考虑是：“将变化的事物与保持不变的事物分离”。
 
-那么，我们如何界定那些是可变的事物（可用），那些又是不可变的事物（不可用）？为了解决这个问题，Java 提供了访问权限修饰符来允许类库开发人员说明那些对客户程序员是可用的，那些是不可用的。访问控制级别从”最多访问“到”最少访问“依次是：public、protected、包访问（无关键字）、private。
+那么，我们如何约定那些是可变的事物（可用），那些又是不可变的事物（不可用）？为了解决这个问题，Java 提供了访问权限修饰符来允许类库开发人员说明那些对客户程序员是可用的，那些是不可用的。访问控制级别从“最多访问”到“最少访问”依次是：public、protected、包访问（无关键字）、private。
 
 ### package：库单元
 
-一个包（package）包含了一组类，这些类通过同一个命名空间（文件夹）组织在了一起；
-
-包本质上其实就是一个文件夹，用来防止文件重名的，解决潜在的命名冲突。
+一个包（package）包含了一组类，这些类通过同一个命名空间（文件夹）组织在了一起；而“包”本质上其实就是一个文件夹，用来防止文件重名的，解决潜在的命名冲突。
 
 一个 Java 源代码文件就是一个编译单元。每个编译单元必须有一个以 `.java` 结尾的文件名。在编译单元内，可以有一个 public 类，它必须与文件同名（包括大小写，但是不包括 .java 后缀）。每个编译单元中只能有一个 public 类；否则编译器会报错。
 
@@ -1549,7 +1539,7 @@ package 的命名一般使用反向的因特网域名，如：com.jd 可以避�
 
 <b>Java 是如何找到代码文件进行编译的？</b>
 
-早期的 JDK（JDK1.6 之前的）需要设置一个 classpath，让 Java 可以找到系统的一些类库。高版本 JDK（JDK 1.6）不再需要设置 classpath 了，JRE 能自动搜索目录下类文件，并且加载 dt.jar 和 tool.jar 的类（即系统类库）。
+早期的 JDK（JDK 1.6 之前的）需要设置一个 classpath，让 Java 可以找到系统的一些类库。高版本 JDK（JDK 1.6）不再需要设置 classpath 了，JRE 能自动搜索目录下类文件，并且加载 dt.jar 和 tool.jar 的类（即系统类库）。
 
 如果需要使用一些第三方类或者自定义类，也不推荐使用配置 CLASSPATH 的方式，而是推荐在执行代码时使用 -classpath，如下：
 
@@ -1590,7 +1580,7 @@ Java 有四种访问权限：`public` `protected` `包访问权限(不提供访�
     - <span style="color:orange">有时父类希望把特定成员的访问权限赋给子类而不是所有的类，这时候就可以使用 protected。</span>
 - `包访问权限 default` 只能同一个类或同一个包下的进行访问。<span style="color:orange">包访问权限的类，无法被不同包的类继承。比如：类 A 在 xx 包下，访问权限设置的包访问权限，我们无法在 oo 包下继承类 A。</span>
 - `private` 私有的，仅在自己类内部可以访问
-    - 任何可以肯定只会在本类中使用的方法，或者说只是类中的”辅助“方法，辅助实现某些功能，都可以被声明为 private。以确保在包的其他地方不会意外使用它，从而让自己无法再更改或删除。<span style="color:orange">将具体细节用 private 方法封装，用 public 方法暴露调用方式；这样我们就可以在不改变调用方式的基础上修改具体的细节。</span>
+    - 可以肯定只会在本类中使用的方法，或者说只是类中的”辅助“方法，辅助实现某些功能，都可以被声明为 private。以确保在包的其他地方不会意外使用它，从而让自己无法再更改或删除。<span style="color:orange">将具体细节用 private 方法封装，用 public 方法暴露调用方式；这样我们就可以在不改变调用方式的基础上修改具体的细节。</span>
     - 可以用 private 控制对象的创建（单例模式）
 
 > <span style="color:orange">包访问权限  VS  public 构造器</span>
@@ -1649,26 +1639,31 @@ public class Soup1 {
 Java9 引入的模块解决了上面的两个问题：只导入需要的组件；使用模块限制了反射获取类的能力。JDK9 以上模块不能使用反射去访问非公有的成员/成员方法以及构造方法，除非模块标识为 `opens` 去允许反射访问。
 
 ```java
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 
-public class ImportClass {
+// Java 9 模块对反射的限制
+public class LimitOfModule {
     public static void main(String[] args) throws Exception {
-        ArrayList<Object> demo1 = new ArrayList<>();
-        Class<? extends ArrayList> aClass = demo1.getClass();
-        Method grow = aClass.getDeclaredMethod("grow", int.class);
-        grow.invoke(demo1, 10);
-        System.out.println(demo1.size());
+        ArrayList<Integer> list = new ArrayList<>();
+        list.getClass().getDeclaredMethod("grow",int.class).invoke(10);
     }
 }
 /*
 Exception in thread "main" java.lang.IllegalAccessException: 
-	class tij.chapter7.ImportClass cannot access a member of class java.util.ArrayList (in module java.base) with modifiers "private"
+	class tij.chapter4.LimitOfModule cannot access a member of class java.util.ArrayList (in module java.base) with modifiers "private"
 	at java.base/jdk.internal.reflect.Reflection.newIllegalAccessException(Reflection.java:361)
 	at java.base/java.lang.reflect.AccessibleObject.checkAccess(AccessibleObject.java:591)
 	at java.base/java.lang.reflect.Method.invoke(Method.java:558)
-	at tij.chapter7.ImportClass.main(ImportClass.java:14)
+	at tij.chapter4.LimitOfModule.main(LimitOfModule.java:12)
 */
+```
+
+将模块标识为 `opens`
+
+```java
+module my.module {
+    opens com.example.mypackage to another.module;
+}
 ```
 
 ### 总结
@@ -1725,7 +1720,7 @@ Java 中所有的对象都会隐式的继承 Object 类。
 - 关键字 extends
 - 可以获得基类中所有（非 private 修饰的）字段和方法
 - 不可获得父类的构造器
-- 父类也称为基类、超类
+- 父类也称为：基类、超类
 - 子类也称为：派生类
 - 在继承关系中：“子类就是一个父类”。也就是说，子类可以被当成父类看待
 - 例如父类是员工，子类是讲师，那么讲师就是一个员工。 关系 is-a。
@@ -1919,7 +1914,7 @@ public Zi(){
 }
 ```
 
-this 调用构造也是只能调用一个，不能循环调用
+<b>this 调用构造也是只能调用一个，不能循环调用</b>
 
 ```java
 public Zi(int x){
@@ -1928,7 +1923,7 @@ public Zi(int x){
 }
 ```
 
-this 不能循环调用
+<b>this 不能循环调用</b>
 
 ```java
 // 出现了循环调用！这样是错误的！
@@ -1943,7 +1938,7 @@ public Zi(int x){
 }
 ```
 
-super 和 this 不能同时显式调用.
+<b>super 和 this 不能同时显式调用</b>
 
 ```java
 // 报错 因为 super or this都需要放在第一行！
@@ -2049,9 +2044,9 @@ public class SpaceShipDelegation {
 
 #### 清理顺序
 
-在清理方法中，必须注意基类和成员对象清理方法的调用顺序，以防一个子对象依赖于另一个子对象。首先，按与创建的相反顺序执行特定于类的所有清理工作。(一般来说，这要求基类元素仍然是可访问的。) 然后调用基类清理方法。
+在清理方法中，必须注意基类和成员对象清理方法的调用顺序，以防一个子对象依赖于另一个子对象。<b style="color:orange">首先，按与创建的相反顺序执行特定于类的所有清理工作。(一般来说，这要求基类元素仍然是可访问的) 然后调用基类清理方法。</b>
 
-在很多情况下，清理问题不是问题；我们只需要让垃圾收集器来完成这项工作。但是，当我们必须执行显式清理时，就需要多做努力，更加细心，因为在垃圾收集方面没有什么可以依赖的。可能永远不会调用垃圾收集器。如果调用，它可以按照它想要的任何顺序回收对象。除了内存回收外，我们不能依赖垃圾收集来做任何事情。如果希望进行清理，可以使用自己的清理方法，但是不要使用 `finalize()`。
+在很多情况下，清理问题不是问题；我们只需要让垃圾收集器来完成这项工作。但是，当我们必须执行显式清理时，就需要多做努力，更加细心，因为在垃圾收集方面没有什么可以依赖的。在程序运行过程中可能永远都不会调用垃圾收集器。如果调用，它可以按照它想要的任何顺序回收对象。除了内存回收外，我们不能依赖垃圾收集来做其他任何事情。如果希望进行清理，需要使用自己的清理方法，但是不要使用 `finalize()`。
 
 ### 组合与继承
 
@@ -2077,7 +2072,7 @@ public class SpaceShipDelegation {
     - final 修饰引用只能确保引用的指向不被改变，但是对象内部的数据可以改变。
 - final 修饰方法：
     - 锁定方法，以防任何继承类修改它的含义；
-    - JVM 对 final 修饰的方法可能会有优化，消除方法调用的开销。类似于 CPP 的内联函数。
+    - JVM 对 final 修饰的方法<b>可能</b>会有优化，消除方法调用的开销。类似于 CPP 的内联函数。
 - final 修饰类：
     - final 类禁止继承。
 - 类中所有的 private 方法都隐式地指定为 final 的。由于无法取用 private 方法，所以也就无法覆盖它。
@@ -2086,8 +2081,7 @@ public class SpaceShipDelegation {
 
 - [x] 一个永不改变的编译时常量
 - [x] 一个在运行时初始化就不会改变的值
-
-一个被 static 和 final 同时修饰的属性只会占用一段不能改变的存储空间。
+- [x] 一个被 static 和 final 同时修饰的属性只会占用一段不能改变的存储空间。
 
 - [x] fina 修饰基本数据类型，使数值恒定不变；final 修饰对象，使对象引用恒定不变，但对象中的内容是可修改的。
 
@@ -2132,6 +2126,17 @@ public void say(){
 
 final static 修饰的变量初始化。
 
+#### 空白 final
+
+空白 final 是指在声明一个变量时，使用 final 关键字修饰变量，并且不给该变量赋初值，如 `final int num;`
+
+```java
+public class BlankFinal {
+    // Variable 'a' might not have been initialized
+    final int a;
+}
+```
+
 #### final 参数
 
 在参数列表中，将参数声明为 final 意味这在方法中不能改变参数指向的对象或基本变量。（<span style="color:red">只能读取，不能修改</span>）
@@ -2141,6 +2146,7 @@ public class FinalArguments {
     void with(final int a){
         a = 10; // 报错
     }
+    
     void with(final Object obj){
         obj = new Object();// 报错
     }
@@ -2152,7 +2158,7 @@ public class FinalArguments {
 - 给方法上锁，防止子类通过覆写改变方法的行为
 - 出于效率，final 修饰的方法可能会被转为内联函数。可以消除方法调用的开销。
     - 但是如果一个方法很大代码膨胀，也许就看不到内嵌带来的性能提升，因为内嵌调用带来的性能提高被花费在方法里的时间抵消了。(内存页面置换的开销)
-    - <span style="color:red">较高版本的 JVM 可以优化去掉这些效率反而降低的内嵌调用方法。</span>
+    - <span style="color:red">较高版本的 JVM 会去掉这些无法带来效率提升的内联优化。</span>
 - final 可以有效关闭动态绑定，让编译器为 final 方法生成更高效的代码，但是一般不会为了这个而使用 final。
 
 <span style="color:orange">final 修饰的方法是最终方法，不能覆盖重写（override）</span>
@@ -2165,7 +2171,7 @@ public final void method(){}
 
 #### final 和 private
 
-类中所有的 private 方法都隐式地指定为 final 的。由于无法访问 private 方法，所以也就无法覆盖它。可以给 private 方法添加 final 修饰，但是并不能给方法带来额外的含义。
+<b>类中所有的 private 方法都隐式地指定为 final 的。</b>由于无法访问 private 方法，所以也就无法覆盖它。可以给 private 方法添加 final 修饰，但是并不能给方法带来额外的含义。
 
 ```java
 class WithFinals {
@@ -2231,11 +2237,11 @@ public final class FinalDemo {}
 
 ### 类初始化和加载
 
-类的初始化（类，不是对象）：类的代码在首次使用时加载，比如创建了一个对象、调用了类的 static 属性或方法（构造器也是一个 static 方法）。static 的初始化会按照定义的顺序进行。
+类的初始化（类，不是对象）：类在首次使用时加载，比如创建了一个对象、调用了类的 static 属性或方法（构造器也是一个 static 方法）。static 的初始化会按照定义的顺序进行。
 
 #### 继承和初始化
 
-了解包括继承在内的整个初始化过程是有帮助的，这样可以对所发生的一切有全局性的把握。考虑下面的代码：
+了解包括继承在内的初始化过程，对全面了解类为什么会这样执行非常有帮助。考虑下面的代码：
 
 ```java
 // reuse/Beetle.java
@@ -2303,7 +2309,7 @@ j = 39
 
 ### 如何使用抽象类和抽象方法
 
-- 不能直接创建(new)抽象类对象。
+- 不能直接创建 (new) 抽象类对象。
 
 - 必须用一个子类来继承抽象父类。
 
@@ -2312,10 +2318,12 @@ j = 39
 
 - 创建子类对象进行使用。
 
-- <b>PS：Please attention</b>
-- 抽象类有构造方法，可以自己写构造函数
-  - <span style="color:orange">不能直接 new 一个抽象类，只能有子类间接调用父类的构造方法，或子类中使用 super 调用抽象类的构造方法</span>
-  - 如果抽象类只有"有参构造"，那么子类的构造函数一定要显示调用这个有参构造！（子类要用父类的数据、方法，必须确保父类可以正常初始化）
+
+> <b>PS：Please attention</b>
+
+抽象类有构造方法，可以自己写构造函数
+- <span style="color:orange">不能直接 new 一个抽象类，只能由子类间接调用父类的构造方法，或子类中使用 super 调用抽象类的构造方法</span>
+- 如果抽象类只有"有参构造"，那么子类的构造函数一定要显示调用这个有参构造！（子类要用父类的数据、方法，必须确保父类可以正常初始化）
 
 ```java
 public abstract class Animal {
@@ -2371,13 +2379,13 @@ Java 中除了 static 和 final 方法（<span style="color:red">private 方法�
 > extends 继承或 implements 实现是多态性的前提
 
 ```java
-// 多态写法，父类引用指向子类对象
+// 多态写法，父类引用持有子类对象
 Fu obj = new Zi();
 obj.method();
 obj.methodFu();
 ```
 
-> 访问规则
+> <b>访问规则</b>
 >
 > - 变量：编译看左边，运行还看左边
 > - 成员方法：编译看左边，运行看右边
@@ -2385,7 +2393,7 @@ obj.methodFu();
 
 ### 转型
 
-向上转型，把一个对象视为它的自己的类型或者是他的父类类型（向上转型）。那为什么要故意向上转型呢？向上转型是为了编写只与基类（父类）打交道的代码，这样的代码扩展性更强。代码示例如下
+向上转型，把一个对象视为它的自己的类型或者是他的父类类型（向上转型）。那为什么要故意向上转型呢？向上转型是为了编写只与基类（父类）打交道的代码，这样的代码扩展性更强。代码示例如下：
 
 即便需要喂养再多种类的动物，也只需要编写一个 feed 方法。多态可以将变化的事物与不变的事物分离。
 
@@ -2413,7 +2421,7 @@ class Cat extends Animal {
 向上转型一定是安全的，正确的。弊端在于，对象一旦向上转型为父类，就无法调用子类原本持有的内容。向下转型是不安全的，使用时一定要保证他本来是猫才能向下转型变成猫，可以用 instanceof 进行类型判断。
 
 ```java
-if( animal instanceof Dog){
+if(animal instanceof Dog){
 	syso("是狗");
 }
 // 一般先判断是否是该类，是 才进行向下转型！
@@ -2783,7 +2791,7 @@ abstract class AbstractClass2{
 }
 ```
 
-我们无法直接为抽象类创建一个对象，这保证了抽象类的纯粹，不会被误用。如果我们希望一个类不能直接创建对象，那可以将这个类定义为抽象类。
+我们无法直接为抽象类创建一个对象，这保证了抽象类的纯粹，不会被误用。<b><u>如果我们希望一个类不能直接创建对象，那可以将这个类定义为抽象类。</u></b>
 
 ```java
 abstract class AbstractClass2{
@@ -2843,14 +2851,14 @@ public class AbstractConstructed extends Base{
 我们使用 interface 来定义接口。在 Java8 之前，接口中只允许使用抽象方法和 static final 修饰的字段。
 
 ```java
-// java8 之前的接口
+// Java8 之前的接口
 public interface PureInterface {
     int m1(); // 默认就是 public abstract，且只能是 public abstract 修饰
     int a = 10; // 默认就是 public static final，且只能是 public static final 修饰
 }
 ```
 
-在任何版本的 Java 中，接口都能定义抽象方法。格式：public abstract 返回值类型 方法名称(参数列表);
+在任何版本的 Java 中，接口都能定义抽象方法。格式：`public abstract 返回值类型 方法名称(参数列表);`
 
 Java 8 之前，接口中无法提供任何实现，只能描述类应该像什么，做什么，但不能描述怎么做。而在 Java 8 中，接口稍微有些变化， <b>Java 8 允许接口包含默认方法和静态方法</b>
 
@@ -2922,7 +2930,7 @@ public interface JDK8Interface {
 Java8 开始，接口中允许定义静态方法
 
 ```java
-public static 返回值类型 方法名称（参数列表）{}
+// public static 返回值类型 方法名称（参数列表）{}
 
 public interface MyInterface {
     public default void say(){
@@ -2984,7 +2992,7 @@ public interface JDK9Interface {
 }
 ```
 
-<b>接口中可定义常量, 且可省略 public static final，默认就是它，也只能是它！</b>【接口中的常量必须赋值！因为有 final 修饰！】
+<b>接口中可定义常量，且可省略 public static final，默认就是它，也只能是它！</b>【接口中的常量必须赋值！因为有 final 修饰！】
 
 <div align="center"><img src="img/image-20220403162153240.png"></div>
 
@@ -3104,8 +3112,6 @@ public class Sam implements Sam1, Sam2 {
 }
 ```
 
-
-
 #### 接口中的静态方法
 
 Java8 可以在接口中包含静态方法，利用这个特性，我们可以简化模板方法设计模式的代码。
@@ -3167,7 +3173,7 @@ public class AttemptToUseBasic {
 
 #### 修饰符
 
-接口只允许 public 方法，如果不加访问修饰符的话，接口的方法不是 firednly（default） 而是 public。但是，抽象类中是允许所有修饰符的。
+接口只允许 public 方法，如果不加访问修饰符的话，接口的方法不是 firendly（default） 而是 public。但是，抽象类中是允许所有修饰符的。
 
 ```java
 abstract class AbstractAccess {
@@ -3335,10 +3341,10 @@ class FilterAdapter implements Processor{
 
 ```java
 interface CanFight {
-	void fight();
+    void fight();
 }
 interface CanSwim {
-	void swim();
+    void swim();
 }
 class Hero implements CanFight,CanSwin{
     public void fight(){}
@@ -3818,7 +3824,7 @@ public class PrivateInterfaceMethods {
 
 认为接口是好的选择，从而使用接口不用具体类，这具有诱惑性。几乎任何时候， 创建类都可以替代为创建一个接口和工厂。 
 
-很多人都掉进了这个陷阱，只要有可能就创建接口和工厂。这种逻辑看起来像是可\能会使用不同的实现，所以总是添加这种抽象性。这变成了一种过早的设计优化。 
+很多人都掉进了这个陷阱，只要有可能就创建接口和工厂。这种逻辑看起来像是可能会使用不同的实现，所以总是添加这种抽象性。这变成了一种过早的设计优化。 
 
 任何抽象性都应该是由真正的需求驱动的。当有必要时才应该使用接口进行重构， 而不是到处添加额外的间接层，从而带来额外的复杂性。这种复杂性非常显著，如果你让某人去处理这种复杂性，只是因为你意识到“以防万一”而添加新接口，而没有其他具有说服力的原因——这种设计并不是一种良好的设计，需要斟酌。 
 
@@ -3828,7 +3834,7 @@ public class PrivateInterfaceMethods {
 
 一个定义在另一个类中的类，叫作内部类。内部类是一个独立的实体，无法被覆盖。
 
-内部类是一种非常有用的特性，因为它允许你把一些逻辑相关的类组织在一起，并控制位一个类在另一个类内的可见性。在最初，内部类看起来就像是一种代码隐藏机制：将类置于其他类的内部。但，内部类远不止如此，它了解外部类，并能与之通信，而且你用内部类写出的代码更加优雅而清晰。
+内部类是一种非常有用的特性，因为它允许你把一些逻辑相关的类组织在一起，并控制一个类在另一个类内的可见性。在最初，内部类看起来就像是一种代码隐藏机制：将类置于其他类的内部。但，内部类远不止如此，它了解外部类，并能与之通信，而且你用内部类写出的代码更加优雅而清晰。
 
 <b>注意：</b>内部类的使用应该是设计阶段考虑的问题
 
@@ -3885,11 +3891,11 @@ class Main {
 
 ### 链接外部类
 
-当创建一个内部类时，这个内部类的对象中会隐含一个链接，指向用于创建该对象的外围对象。通过该链接，无须任何特殊条件，内部类对象就可以访问外围对象的成员。此外，<b>内部类还拥有其外部类的所有元素的访问权</b>。
+当创建一个内部类时，这个内部类的对象中会隐含一个链接，指向用于创建该对象的外围对象。通过该链接，无须任何特殊条件，内部类对象就可以访问外围对象的成员。此外，<b>内部类还拥有其外部类所有元素的访问权</b>。
 
 内部类自动拥有对其外部类所有成员的访问权。这是如何做到的呢？当某个外部类的对象创建了一个内部类对象时，内部类对象偷偷<b>获取了一个指向那个外部类对象的引用</b>。然后，使用外部类对象的引用来访问外部类的成员。
 
-内部类的对象只能在与其外部类的对象相关联的情况下才能被创建（就像你应该看到的，内部类是非 static 类时）。<span style="color:orange">构建内部类对象时，需要一个指向其外部类对象的引用，如果编译器访问不到这个引用就会报错。</span>
+内部类的对象只能在与其外部类的对象相关联的情况下才能被创建（就像你应该看到的，内部类是非 static 类时）。<u><span style="color:orange">构建内部类对象时，需要一个指向其外部类对象的引用，如果编译器访问不到这个引用就会报错。</span></u>
 
 ```java
 interface Selector {
@@ -4107,7 +4113,9 @@ public void demo() {
 
 > 局部内部类的使用场景
 
-匿名内部类的缺点在于，无法自定义构造函数。请看以下代码，如果我们希望在创建对象的时候，给对象设置一个 name 并打印。使用匿名内部类无法完成这种需求，因为它只有隐式的构造函数。而创建一个可接受 name 并打印的显示的构造函数可以完成此需求。
+匿名内部类的缺点在于，无法自定义构造函数。
+
+请看以下代码，如果我们希望在创建对象的时候，给对象设置一个 name 并打印。使用匿名内部类无法完成这种需求，因为它只有隐式的构造函数。而创建一个可接受 name 并打印的显示的构造函数可以完成此需求。
 
 <b>当隐式的构造函数不能满足我们的需求，需要显示的构造函数时，使用局部内部类而非匿名内部类！</b>
 
@@ -4245,11 +4253,11 @@ public class AnonymityClassWithParam {
 }
 ```
 
-<b>[1]</b> 将合适的参数传递给基类的构造器。
-<b>[2]</b> 匿名内部类末尾的分号，并不是用来标记此内部类结束的。实际上，它标记的是表达式的结束，而该表达式正巧包含了匿名内部类罢了。因此，这与别的地方使用的分号是一致的。
+<b>[1]</b> 将合适的参数传递给父类构造器。
+<b>[2]</b> 匿名内部类末尾的分号，并不是用来标记此内部类结束的。它标记的是表达式的结束，而该表达式正巧包含了匿名内部类罢了。因此，这与别的地方使用的分号是一致的。
 <b>[3]</b> 匿名内部类，要使用一个在其外部定义的对象，那么编译器会要求其参数引用是 final 的。
 
-<span style="color:orange">如果想在匿名内部类中做一些类似构造器的行为，该怎么办呢？在匿名类中不可能有命名构造器（因为它根本没名字！），但通过实例初始化，就能够达到为匿名内部类创建一个构造器的效果，就像这样：</span>
+<span style="color:orange">如果想在匿名内部类中做一些类似构造器的行为，该怎么办呢？在匿名类中不可能有命名构造器（因为它根本没名字！），但通过实例初始化 `{}`，就能够达到为匿名内部类创建一个构造器的效果，就像这样：</span>
 
 ```java
 abstract class Base {
@@ -4262,8 +4270,8 @@ abstract class Base {
 
 public class AnonymousConstructor {
     public static Base getBase(int i) {
-        return new Base(i) {
-            // 实例初始话，达到构造器的目的
+        return new Base(i) { // 这个 i 是传递给父类构造器 Base 的
+            // 实例初始化，达到构造器的目的
             { System.out.println("Inside instance initializer"); }
 
             @Override
@@ -4279,11 +4287,11 @@ public class AnonymousConstructor {
     }
 }
 
-//在此例中，不要求变量一定是 final 的。虽然 i 被传递给了匿名类的基类的构造器，
+// 在此例中，不要求变量一定是 final 的。虽然 i 被传递给了匿名类的基类的构造器，
 // 但是它并不会在匿名类内部被直接使用
 ```
 
-与普通类继承相比，匿名内部类只能扩展一个类或实现一个接口，二者不可兼得。
+与普通类的继承相比，匿名内部类只能扩展一个类或实现一个接口，二者不可兼得。
 
 <b>局部-匿名辨析</b>
 
@@ -4299,7 +4307,7 @@ public class AnonymousConstructor {
 - 要创建嵌套类的对象，并不需要其外部类的对象。 
 - 不能从嵌套类的对象中访问非 static 的外部类对象。
 
-嵌套类与普通的内部类还有一个区别：普通的内部类不能有 static 数据和 static 字段，也不能包含嵌套类。但是嵌套类可以包含所有这些东西：
+<b>嵌套类与普通的内部类还有一个区别：普通的内部类不能有 static 数据和 static 字段，也不能包含嵌套类（static final 却可以）。但是嵌套类可以包含所有这些东西：</b>
 
 ```java
 public class StaticClass {
@@ -4347,6 +4355,8 @@ class DemoSon extends InterfaceStaticClass.Demo {}
 
 <span style="color:orange">闭包（closure）是一个可调用的对象，它保留了来自它被创建时所在的作用域的信息。通过这个定义，可以看出内部类是面向对象的闭包，因为它不仅包含外部类对象（创建内部类的作用域）的信息，还自动拥有一个指向此外部类对象的引用，在此作用域内，内部类有权操作所有的成员，包括 private 成员。</span>
 
+<b>闭包就是指函数能够访问自己的作用域中变量。</b>
+
 在 Java8 之前，内部类是实现闭包的唯一方式。在 Java  中，我们可以使用 Lambda 表达式来实现闭包行为，并且语法更加优雅和简洁。(内部类是面向对象的闭包，而 Lambda 表达式可以简化部分内部类的创建)
 
 > 一个回调的示意代码
@@ -4369,7 +4379,7 @@ class Caller {
 
 #### 内部类与控制框架
 
-模板方法包含算法的基本结构，并且会调 用一个或多个可覆盖的方法，以完成算法的动作。设计模式总是将变化的事物与保持不变的事物分离开，在这个模式中，模板方法是保持不变的事物，而可覆盖的方法就是变化的事物。
+模板方法包含算法的基本结构，并且会调用一个或多个可覆盖的方法，以完成算法的动作。设计模式总是将变化的事物与保持不变的事物分离开，在这个模式中，模板方法是保持不变的事物，而可覆盖的方法就是变化的事物。
 
 GUI 的事件就是用内部类实现的。
 
@@ -4442,7 +4452,7 @@ Egg.Yolk()
 
 既然创建了 BigEgg 的对象，那么所使用的应该是 “覆盖后” 的 Yolk 版本，但从输出中可以看到实际情况并不是这样的。这个例子说明，当继承了某个外部类的时候，内部类并没有发生什么特别神奇的变化。<span style="color:orange">这两个内部类是完全独立的两个实体，在各自的命名空间内。</span>
 
-我们也可以显示的继承内部类。
+我们也可以显示地继承内部类。
 
 ```java
 class Egg2 {
@@ -4497,11 +4507,11 @@ BigEgg2.Yolk 明确的继承了 Egg2.Yolk，且重写了方法 f()。insertYolk(
 
 局部内部类不能有权限修饰符，因为它不是外部类的一部分；但是它可以访问当前代码块内的常量，以及此外部类的所有成员。
 
-定义一个类的时候，权限修饰符规则
+<b>定义一个类的时候，权限修饰符规则</b>
 
-- 外部类： public or default
-- 成员内部类： public protected default private
-- 局部内部类： 什么都不能写！
+- 外部类：public or default
+- 成员内部类：public protected default private
+- 局部内部类：什么都不能写！
 
 ```java
 // 当隐式的构造函数不能满足我们的需求，需要显示的构造函数时，使用局部内部类而非匿名内部类！
@@ -4556,12 +4566,12 @@ public class LocalInnerClass {
 
 那什么时候使用局部内部类，什么时候使用匿名内部类呢？
 
-- 如果我们需要 一个已命名的构造器，或者需要重载构造器，我们需要使用局部内部类。因为匿名内部类只能使用实例初始化。 
+- 如果我们需要一个已命名的构造器，或者需要重载构造器，我们需要使用局部内部类。因为匿名内部类只能使用实例初始化。 
 - 如果我们需要多个内部类对象，那么只能使用局部内部类。
 
 ### 内部类标识符
 
-Java 代码编译后，每个类都会产生一个 .class 文件，其中保存了如何创建该类型对象的全部信息。在加载时，每个类文件会产生一个叫作 Class 对象的元类 <span style="color:orange">meta-class</span>。
+Java 代码编译后，每个类都会产生一个 `.class` 文件，其中保存了如何创建该类型对象的全部信息。在加载时，每个类文件会产生一个叫作 Class 对象的元类 <span style="color:orange">meta-class</span>。
 
 内部类也必须生成一个 .class 文件以包含它们的 Class 对象信息。 
 
@@ -4584,6 +4594,52 @@ LocalInnerClass.class
 - `equals() 方法`
   - 注意，当需要比较对象时，覆写 equals 方法，以便于比较对象的大小。
   - 当需要使用 Arrays 工具类进行大小比较时，需要继承 Comparable。
+
+- System 类
+
+```java
+@Test
+public void fn5(){
+    Properties properties = System.getProperties(); // 获取System的properties对象
+    Enumeration<?> enumeration = properties.propertyNames();// 获得所有的key
+    while(enumeration.hasMoreElements()){ //是否还有元素
+        // 安全的强转
+        Object c = enumeration.nextElement();
+        if(c instanceof String){
+            System.out.println("key:"+(String)c+" ---value:"+System.getProperty((String)c));
+        }
+
+        Object cc = null;
+        if((cc = enumeration.nextElement()) instanceof String){
+            System.out.println("key:"+(String)cc+" ---javavalue:"+System.getProperty((String)cc));
+        }
+    }
+}
+// 回忆迭代器的元素遍历，回忆为什么迭代器遍历元素时可以进行元素移除的操作不会发生异常！
+```
+
+- arraycopy 的使用
+
+```java
+@Test
+public void fn6(){
+    int[] fromArray = {1,2,3,4,5,4};
+    int[] toArray = {50,60,70,80,90};
+    /**
+    * @param      src      源数组
+    * @param      srcPos   源数组的起始位置 
+    * @param      dest     目标数组
+    * @param      destPos  目标数组的开始位置
+    * @param      length   拷贝的长度
+    */
+    System.arraycopy(fromArray,1,toArray,2,2);
+    for (int i = 0; i <toArray.length ; i++) {
+        System.out.println(toArray[i]);
+    }
+}
+```
+
+## 第十一章-日期专题
 
 ### 日期相关
 
@@ -4608,6 +4664,7 @@ public void fn2(){
 ```
 
 Java8 提供的日期类<b>都是 final 修饰的</b>
+
 - Instant——它代表的是时间戳
 - LocalDate——不包含具体时间的日期，比如 2014-01-14。它可以用来存储生日，周年纪念日，入职日期等。
 - LocalTime——它代表的是不含日期的时间
@@ -4639,57 +4696,12 @@ public void fn4(){
     LocalDateTime now2 = now.plusDays(10);
     System.out.println(now2);
 
-    LocalDateTime plus = now.plus(1, ChronoUnit.YEARS);java
+    LocalDateTime plus = now.plus(1, ChronoUnit.YEARS);
     System.out.println(plus);
 }
 ```
 
 - 要用再查 API
-- System 类
-
-```java
-@Test
-public void fn5(){
-    Properties properties = System.getProperties(); // 获取System的properties对象
-    Enumeration<?> enumeration = properties.propertyNames();// 获得所有的key
-    while(enumeration.hasMoreElements()){ //是否还有元素
-        // 安全的强转
-        Object c= enumeration.nextElement();
-        if(c instanceof String){
-            System.out.println("key:"+(String)c+" ---value:"+System.getProperty((String)c));
-        }
-
-        Object cc = null;
-        if((cc = enumeration.nextElement()) instanceof String){
-            System.out.println("key:"+(String)cc+" ---javavalue:"+System.getProperty((String)cc));
-        }
-    }
-}
-**回忆迭代器的元素遍历，回忆为什么迭代器遍历元素时可以进行元素移除的操作不会发生异常！**
-```
-
-- arraycopy 的使用
-
-```java
-@Test
-public void fn6(){
-    int[] fromArray = {1,2,3,4,5,4};
-    int[] toArray = {50,60,70,80,90};
-    /**
-    * @param      src      源数组
-    * @param      srcPos   源数组的其实位置 
-    * @param      dest     目标数组
-    * @param      destPos  目标数组的开始位置
-    * @param      length   拷贝的长度
-    */
-    System.arraycopy(fromArray,1,toArray,2,2);
-    for (int i = 0; i <toArray.length ; i++) {
-        System.out.println(toArray[i]);
-    }
-}
-```
-
-## 第十一章-日期专题
 
 ## 第十二章-集合
 
@@ -4700,8 +4712,6 @@ java.util 库提供了一套相当完整的集合类（collection classes）来�
 使用 Java5 之前（Java5 才出现的泛型）的集合类，编译器允许向集合中插入不正确的类型。以 ArrayList 为例（先把它当作一个可变长的数组）
 
 ```java
-package tij.chapter11;
-
 import java.util.ArrayList;
 
 class Apple {}
@@ -4750,20 +4760,18 @@ JDK 10/11 加入了局部变量推断，也可以用来简化泛型的定义。
 var com = new ArrayList<Apple>();
 ```
 
-
-
 ### 基本概念
 
 Java 集合类库采用“持有对象”（holding objects）的思想，从设计上来说，它可以分为两个不同的概念，表示为类库的两个基本接口。
 
-<b>集合（Collection）</b>：一个由单独元素组成的序列，这些元素要符合一条或多条规则。List 必须以插入的顺序保存元素，Set 不能包含重复元素，Queue 按照排队规则来输出元素。
+<b>集合（Collection）：</b>一个由单独元素组成的序列，这些元素要符合一条或多条规则。List 必须以插入的顺序保存元素，Set 不能包含重复元素，Queue 按照排队规则来输出元素。
 
 - HashSet、TreeSet、LinkedHashSet，仅保存每个相同项中的一个
 - `HashSet` 存储元素的方法复杂，检索元素快
 - `TreeSet` 按比较结果升序保存对象
 - `LinkedHashSet` 按照被添加的先后顺序保存对象
 
-<b>映射（Map）</b>：一组成对的 “键值对” 对象，允许使用键来查找值。
+<b>映射（Map）：</b>一组成对的 “键值对” 对象，允许使用键来查找值。
 
 - `HashMap` 不按插入顺序存储元素。
 - `TreeMap` 按照键的升序来排序。低-->高
@@ -4818,8 +4826,6 @@ public class AddElements {
 Java 集合的 toString 方法被重写过，直接打印集合就可以看到里面的元素。
 
 ```java
-package tij.chapter11;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -5075,7 +5081,7 @@ class Stack<T> {
 }
 ```
 
-如果只需要栈的行为，那么使用继承是不合适的，因为这将产生一个具有 ArrayDeque 的其它所有方法的类（Java 1.0 设计者在创建 java.util.Stack 时，就犯了这个错误）。使用组合，可以选择暴露哪些方法以及如何命名它们。
+如果只需要栈的行为，那么使用继承是不合适的，因为这将产生一个具有 ArrayDeque 所有方法的类（Java 1.0 设计者在创建 java.util.Stack 时，就犯了这个错误）。使用组合，可以选择暴露哪些方法以及如何命名它们。
 
 ### 集合 Set
 
@@ -5128,8 +5134,6 @@ public void fn4(){
 用 TreeSet 对添加的对象进行排序，需要 Comparator 比较器或 TreeSet 中的对象实现 Comparable 接口。
 
 ```java
-package com.bbxx.list;
-
 import java.util.Objects;
 import java.util.TreeSet;
 /**
@@ -5246,7 +5250,7 @@ Map 可以返回由其键组成的 Set ，由其值组成的 Collection ，或�
     - 注意，转为红黑树这种应该是特殊情况，为了防止有人恶意攻击的兜底手段。
 - `HashMap` 的 key 可以存入 null，`HashTable` 的 key 不可为 null。
 
-基本操作：
+基本操作
 
 ```java
 public void fn1(){
@@ -5278,7 +5282,9 @@ public void fn1(){
 }
 ```
 
-`HashMap` 对象的 key、value 值均可为 null。且 `HashMap` 是线程不安全的
+`HashMap` 对象的 key、value 值均可为 null。且 `HashMap` 是线程不安全的。
+
+[为何 ConcurrentHashMap 不支持 null 键和 null 值？ - 简书 (jianshu.com)](https://www.jianshu.com/p/2611e5c44c0c)
 
 `HahTable` 对象的 key、value 值均不可为 null。且 `HashTable` 是线程安全的，put 方法用 synchronized 锁了。好多方法也用 synchronized 锁了。如 remove 这些方法。
 
@@ -5297,6 +5303,7 @@ public void fn1(){
     map.put(1,"DD");
     // 如果key为null时有处理策略的 return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
     map.put(null,null);
+}
 ```
 
 #### TreeMap
@@ -5316,7 +5323,7 @@ public void fn2(){
     while(iterator.hasNext()){
         Map.Entry<String, String> next = iterator.next();
         // 有时候不用泛型 代码返回值就是舒服
-   System.out.println(next.getKey()+":"+next.getValue());
+   		System.out.println(next.getKey()+":"+next.getValue());
     }
 }
 ```
@@ -5351,8 +5358,8 @@ public void fn3(){
 LinkedList 实现了 Queue 接口，并且提供了一些方法以支持队列行为。
 
 - peek / element ===>拿到队首元素，不会移除；peek 拿不到元素返回 null，element 则是直接抛出异常。
-- poll / remove =\=\=\> 移除队首元素，无元素可以移除 poll 返回 null，remove 则是直接抛出异常。
-- offer \=\=\=\> 元素入队
+- poll / remove =\=\=\>移除队首元素，无元素可以移除 poll 返回 null，remove 则是直接抛出异常。
+- offer \=\=\=\>元素入队
 
 #### 优先队列 PriorityQueue
 
@@ -5449,7 +5456,7 @@ public class ArrayIsNotIterable {
 
 #### 适配器方法
 
-如果现在有一个 Iterable 类，你想要添加一种或多种在 for-in 语句中使用这个类的方法，应该怎么做？
+如果现在有一个 Iterable 类，我们想要添加一种或多种在 for-in 语句中使用这个类的方法，应该怎么做？
 
 - 如果直接继承这个类，并重写 iterator() 方法，则只能替换现有的方法。
 - 书中的做法是定义了一个方法，这个方法会返回一个迭代器的对象。
@@ -5782,7 +5789,7 @@ public class RunnableMethodReference {
 
 #### 未绑定的方法引用
 
-未绑定的方法引用就是，尚未关联到某个对象的普通方法。<b>使用未绑定的方法引用， 我们必须先提供对象，然后才能使用，</b>具体请看代码
+未绑定的方法引用就是，尚未关联到某个对象的普通方法。<b>使用未绑定的方法引用， 我们必须先提供对象，然后才能使用，</b>具体请看代码。
 
 ```java
 class X {
@@ -5933,7 +5940,7 @@ public class CtorReference {
 
 Dog 有三个构造函数，函数式接口内的 make() 方法反映了构造函数参数列表（make() 方法名称可以不同）。 
 
-注意我们如何对 [1]，[2] 和 [3] 中的每一个使用 `Dog::new`。这三个构造函数只有一名字：`::new`，但在每种情况下赋值给不同的接口，编译器可以根据接口中的方法推断出使用哪个构造函数。 <span style="color:orange">编译器知道调用函数式方法（本例中为 make()）就相当于调用构造函数。</span>
+注意我们如何对 [1]，[2] 和 [3] 中的每一个使用 `Dog::new`。这三个构造函数只有一名字：`::new`，但在每种情况下赋值给不同的接口，编译器可以根据接口中的方法推断出使用哪个构造函数。<span style="color:orange">编译器知道调用函数式方法（本例中为 make()）就相当于调用构造函数。</span>
 
 ### 函数式接口
 
@@ -6950,7 +6957,7 @@ public class Randoms {
 - sorted() 排序
 - forEach() 遍历输出
 
-> <b>声明式编程</b>：声明了要做什么， 而不是指明（每一步）怎么做
+> <b>声明式编程：</b>声明了要做什么， 而不是指明（每一步）怎么做
 
 ```java
 // 命令式编程
@@ -6984,7 +6991,7 @@ Randoms 是声明式编程，ImperativeRandoms 是命令式编程。必须研究
 
 ### 流的创建
 
-> 创建流的几种方式：非 `kye:value` 的集合可以直接调用 stream 方法生成流，而 key，value 形式的需要间接生成流
+> 创建流的几种方式：非 `key:value` 的集合可以直接调用 stream 方法生成流，而 key，value 形式的需要间接生成流
 
 - Collection 体系的集合可以使用默认方法 stream() 生成流
   - default Stream\<E\>() stream()
@@ -7630,7 +7637,7 @@ AA1BB1AA2BB2
 > 功能需求：从一个整数流开始，然后使用每一个整数去创建更多的随机数。
 
 - `concat()` 以参数顺序组合两个流
-- `IntStream.concat(x,IntStream.of(-1))`随机 Integer 流的末尾添加一个 -1 作为标记。
+- `IntStream.concat(x,IntStream.of(-1))` 随机 Integer 流的末尾添加一个 -1 作为标记。
 
 ```java
 public class StreamOfRandoms {
@@ -7727,34 +7734,34 @@ Option 感觉没啥用，后期再说。
 
 > **匹配与查找**
 
-| 方法名                       | 描述                     |
-| ---------------------------- | ------------------------ |
-| `allMatch(Predicate p)`      | 检查是否匹配所有元素     |
-| `anyMatch(Predicate p)`      | 检查是否至少匹配一个元素 |
-| `noneMatch(Predicate p)`     | 检查是否没有匹配所有元素 |
-| `findFirst` 返回Optional容器 | 返回第一个元素           |
-| `findAny`                    | 返回流中的任意元素       |
-| `count`                      | 返回流中元素总个数       |
-| `max(Comparator c)`          | 返回流中最大值           |
-| `min(Comparator c)`          | 返回流中最小值           |
-| `forEach(Consumer c)`        | 内部迭代                 |
+| 方法名                         | 描述                     |
+| ------------------------------ | ------------------------ |
+| `allMatch(Predicate p)`        | 检查是否匹配所有元素     |
+| `anyMatch(Predicate p)`        | 检查是否至少匹配一个元素 |
+| `noneMatch(Predicate p)`       | 检查是否没有匹配所有元素 |
+| `findFirst` 返回 Optional 容器 | 返回第一个元素           |
+| `findAny`                      | 返回流中的任意元素       |
+| `count`                        | 返回流中元素总个数       |
+| `max(Comparator c)`            | 返回流中最大值           |
+| `min(Comparator c)`            | 返回流中最小值           |
+| `forEach(Consumer c)`          | 内部迭代                 |
 
-> <b>归约操作</b>：根据指定的计算模型将 Stream 中的值计算得到一个最终结果
+> <b>归约操作：</b>根据指定的计算模型将 Stream 中的值计算得到一个最终结果
 
 | 方法名                               | 描述                                                         |
 | ------------------------------------ | ------------------------------------------------------------ |
 | `reduce(T identity, BinaryOperator)` | 将流中的元素反复结合起来，得到一个值。返回 T。会使用 identity 作为其组合的初始值。 |
 | `reduce(BinaryOperator b)`           | 将流中的元素反复结合起来，得到一个值。返回 Optional\<T\>     |
 
-> <b>收集操作</b>：如收集List，Set，Map
+> <b>收集操作：</b>如收集 List，Set，Map
 
 | 方法                   | 描述                                                         |
 | ---------------------- | ------------------------------------------------------------ |
 | `collect(Collector c)` | 将流转为其他形式。接收一个 Collector 接口的实现，用于给 Stream 中元素做汇总的方法 |
 
-Collector接口中方法的实现决定了如何对流执行收集操作。
+Collector 接口中方法的实现决定了如何对流执行收集操作。
 
-Collectors实现类提供了很多静态方法，可以方便地创建常见收集器实例。
+Collectors 实现类提供了很多静态方法，可以方便地创建常见收集器实例。
 
 | 方法           | 返回类型             | 作用                                        |
 | -------------- | -------------------- | ------------------------------------------- |
@@ -7995,7 +8002,7 @@ public class Statistics {
 
 #### 数字流信息
 
-- average() ：求取流元素平均值。 
+- average()：求取流元素平均值。 
 - max() 和 min()：数值流操作无需 Comparator。 
 - sum()：对所有流元素进行求和。 
 - summaryStatistics()：生成可能有用的数据。目前并不太清楚这个方法存在的必要性，因为我们可以用更直接的方法获得需要的数据。
@@ -8425,7 +8432,7 @@ public ArrayDeque(int numElements) {
 不是简单地分配给定的长度，而是调用了 allocateElements。它主要就是在计算应该分配的数组的长度，计算逻辑如下：
 
 - 如果 numElements 小于 8，就是 8。
-- 在 numElements 大于等于8的情况下，分配的实际长度是严格大于 numElements 并且为 2 的整数次幂的最小数。比如，如果 numElements 为 10，则实际分配 16，如果 num-Elements 为 32，则为 64。
+- 在 numElements 大于等于 8 的情况下，分配的实际长度是严格大于 numElements 并且为 2 的整数次幂的最小数。比如，如果 numElements 为 10，则实际分配 16，如果 num-Elements 为 32，则为 64。
 
 2 的幂次数操作高效。
 
@@ -8804,7 +8811,8 @@ JDK 1.8 数组+链表+红黑树（链表长度 >=8 且数组长度 >=64 才会�
 > HashMap 内部几个比较重要的实例变量如下
 
 ```java
-transient Node<K,V>[] table = (Node<K,V>[])EMPTY_TABLE; // 数组 数组中的每个元素指向一个单链表，链表中的每个节点表示一个键值对
+// 数组 数组中的每个元素指向一个单链表，链表中的每个节点表示一个键值对
+transient Node<K,V>[] table = (Node<K,V>[])EMPTY_TABLE;
 transient int size;
 int threshold;
 final float loadFactor;
@@ -9123,7 +9131,7 @@ Java 的基本理念是 “结构不佳的代码不能运行”。
 
 异常往往能降低错误处理代码的复杂度。如果不使用异常，那么就必须检查特定的错误，并在程序中的许多地方去处理它。这样非常麻烦。
 
-异常处理机制可以告诉我们
+<b>异常处理机制可以告诉我们</b>
 
 - 异常类型信息告诉我们什么被抛出了
 - 异常堆栈跟踪告诉我们在哪里抛出了
@@ -9188,11 +9196,11 @@ Throwable initCause(Throwable cause);
 - message 表示异常消息
 - <b style="color:red">cause 触发该异常的其他异常（常用于追踪异常链）</b>
 
-异常可以形成一个异常链，上层的异常由底层异常触发，cause表示底层异常。
+异常可以形成一个异常链，上层的异常由底层异常触发，cause 表示底层异常。
 
 ```mermaid
 graph LR
-1==>2==>3==>4调用cause触发3这个异常
+1-->2-->3-->4调用cause触发3这个异常
 ```
 
 `Throwable` 的某些子类没有带 cause 参数的构造方法，可以通过 `fillInStackTrace()` 来设置，这个方法最多只能被调用一次。`fillInStackTrace` 会将异常栈信息保存下来。
@@ -9244,7 +9252,7 @@ try{
 
 #### 终止与恢复
 
-异常处理理论上有两种基本模型。
+异常处理，理论上有两种基本模型。
 
 > 终止模型，Java 和 C++ 支持的模型
 
@@ -9252,7 +9260,7 @@ try{
 
 > 另一种称为恢复模型
 
-意思是异常处理程序的工作是修正错误，然后重新尝试调用 出问题的方法，并认为第二次能成功。对于恢复模型，通常希望异常被处理之后能继续 执行程序。
+意思是异常处理程序的工作是修正错误，然后重新尝试调用出问题的方法，并认为第二次能成功。对于恢复模型，通常希望异常被处理之后能继续执行程序。
 
 如果想要用 Java 实现类似恢复的行为，那么在遇见错误时就不能抛出异常， 而是调用方法来修正该错误。或者，把 try 块放在 while 循环里，这样就不断地进入 try 块，直到得到满意的结果。 
 

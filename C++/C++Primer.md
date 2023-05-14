@@ -9,9 +9,11 @@
 - 函数
 - 类
 
-## 第一章
+## 第一章-Welcome to C++
 
 一些基础内容，只记录一些必要的。
+
+[最好的C++教程_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1VJ411M7WR/?spm_id_from=333.337.search-card.all.click&vd_source=cb8bc4312b30b416beadaad7244940ac)
 
 [(27条消息) 如何用CLion快乐刷题，避免CMakeLists.txt 文件带来的，建立cpp文件无法编译运行的痛苦_Xurui_Luo的博客-CSDN博客](https://blog.csdn.net/Xurui_Luo/article/details/107738529?spm=1001.2101.3001.6650.2&utm_medium=distribute.pc_relevant.none-task-blog-2~default~CTRLIST~Rate-2-107738529-blog-105904857.pc_relevant_recovery_v2&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2~default~CTRLIST~Rate-2-107738529-blog-105904857.pc_relevant_recovery_v2&utm_relevant_index=3)
 
@@ -184,13 +186,270 @@ Linux 下最后输入 EOF 就可以停止了。
 
 不记
 
+### C++如何工作的
+
+C++ 文件编译的时候，包含进来的文件（头文件）一起被编译了。每个 C++ 文件都被编译成了一个 object file (目标文件)，这些 object file 会被合并成一个可执行文件。
+link 将所有的 obj 文件合并成一个可执行文件。
+
+编译-->链接-->运行。
+
+### 编译是如何工作的
+
+C++ 代码的运行包含这几步：编译-->链接-->运行。而 #include 在编译中的含义则是`复制粘贴`。来看下下面的例子。
+
+#### #include
+
+```cpp
+// EndBrace.h 头文件, 仅包含一个 }
+}
+```
+
+```cpp
+// Math.cpp 文件, 缺少了一个 }, 但是用 #include"EndBrace.h" 引入了头文件中的内容, 正好补上了缺少的括号。
+int Multiply(int a, int b) {
+	int result = a * b;
+	return result;
+
+#include"EndBrace.h"
+```
+
+将 VS 中『项目属性=\=>C/C++=\=\>预处理器=\=\>预处理到文件=\=>是(/P)』 可以看到预编译后的文件结果如下。
+
+```cpp
+#line 1 "C:\\development\\Code\\CPlusPlus\\Video\\Math.cpp"
+int Multiply(int a, int b) {
+	int result = a * b;
+	return result;
+
+#line 1 "C:\\development\\Code\\CPlusPlus\\Video\\EndBrace.h"
+}
+#line 6 "C:\\development\\Code\\CPlusPlus\\Video\\Math.cpp"
+```
+
+从上面的例子可以看出，#include 在编译时候的作用就是告诉编译器，把 #include 的内容复制粘贴过来。
+
+#### 预处理语句
+
+有些代码只在 windows xp 平台有效，有些代码只适用于 windows 10，这种情况我们可以使用预处理语句来进行选择，根据条件来激活相应的代码。
+
+```cpp
+#include<iostream>
+#if 1	// 当这里的判断为真时，被其包裹的代码会被复制粘贴到预处理后的文件中。为 false 则不会包含。
+int say() {
+	std::cout << "this is one" << std::endl;
+}
+#endif
+```
+
+#### 链接后的文件内容
+
+如果我们直接打开 C++ 链接后的二进制文件，会看到一系列的数字。此时我们可以修改项目的属性『项目属性=\=>C/C++=\=\>输出文件=\=\>汇编输出=\=>仅有程序集的列表 (/FA)』。这样就可以看到对应的汇编代码。
+
+现在我们将 Multiply 对应的文件输出为汇编代码。
+
+```asm
+# 可以看到有两次 mov 操作, 因为我们是把结果赋值给了 result 而不是直接返回
+mov	eax, DWORD PTR a$[rbp]
+imul	eax, DWORD PTR b$[rbp]
+mov	DWORD PTR result$[rbp], eax
+
+# 直接返回的汇编结果, 只有两天汇编指令。
+mov	eax, DWORD PTR a$[rbp]
+imul	eax, DWORD PTR b$[rbp]
+```
+
+上述对比结果告诉我们，需要开启代码优化，提高代码的运行速度（调试模型下默认是不开启优化的，但是 release 模式默认是开启的，依旧可以通过`项目属性`进行修改）。
+
+接下来，我们尝试用函数调用函数，看看对应的汇编代码是怎么样的。
+
+```cpp
+const char* Log(const char* message) {
+	return message;
+}
+
+int Multiply(int a, int b) {
+	//int result = a * b;
+	//return result;
+	Log("Print Log");
+	return a * b;
+}
+```
+
+对应的汇编代码如下
+
+```asm
+; Line 8
+	lea	rcx, OFFSET FLAT:??_C@_09IGJOIAJB@Print?5Log@
+	call	?Log@@YAPEBDPEBD@Z			; Log	// 这个就是函数签名, 唯一的定义了函数。
+; Line 9
+	mov	eax, DWORD PTR a$[rbp]
+	imul	eax, DWORD PTR b$[rbp]
+```
+
+链接器就是为了把所有 obj 文件链接在一起，查找函数签名。调用函数时按函数签名来定位对应的函数体。
+
+### 链接是如何工作的
+
+#### 作用
+
+现在，我们来编写两个 C++ 文件，一个 Log.cpp 包含一个打印日志的函数，一个 main.cpp 调用了 Log#log 函数。两个 cpp 文件中的代码如下所示。
+
+```cpp
+// Log 函数用到了输出方法，因此映入了头文件 iostream
+#include<iostream>
+
+void Log(const char* message){
+    std::cout<<message<<std::endl;
+}
+```
+
+```cpp
+#include <iostream>
+// main 中调用了 Log 函数，但是 main 不知道 Log 函数是什么？因此我们需要声明一个 Log 函数。那么在调用 Log 的时候，编译器又是如何找到 Log 函数的函数体的呢？这一切就归功于 Link 了。
+void Log(const char* message); // 告诉编译器，这里有个 Log 函数，你相信我就行。而实际运行的代码（函数体）Link 会帮我们找到。
+int main() {
+    Log("Print Log");
+    std::cout << "Hello, World!" << std::endl;
+    return 0;
+}
+```
+
+我们构建整个工程的时候，所有文件都会编译，Link 会找到正确的 Log 函数的定义在哪里，将函数定义导入到 main.cpp 中的 Log 中，让我们在 main.cpp 中调用。如果找不到会出现 link 错误。
+
+我们将 Log.cpp 中的函数名改为 Logs，这样 main.cpp 在链接的时候就找不到函数了，会出现链接错误。
+
+```shell
+CMakeFiles/C++.dir/main.cpp.obj:C:/Code/C++/main.cpp:6: undefined reference to `Log(char const*)'
+
+xxx无法解析的外部符号（Link无法解析外部符号），Link 的工作是链接函数，但是它找不到对应的函数，报错了。
+```
+
+链接主要聚焦的是找到每个符号和函数在哪里并把他们链接起来。每个文件（\*.cpp \*.c）会被编译成一个单独的目标文件，它们彼此之间没有联系，文件之间不能交互；而链接器可以建立文件之间的联系，这样及时外部文件中没有这个函数，只要他知道函数在哪里，就可以使用。
+
+#### 错误
+
+<b>错误类型</b>
+
+程序运行的时候会出现两种错误，一种是编译错误，一种是链接错误。在 VS 中，编译错误以 C 开头，链接错误以 LNK 开头。
+
+```shell
+error C2143: 语法错误: 缺少“;”(在“std::cin”的前面)
+```
+
+如果我们试图运行一个没有 main 函数（去除项目的 main 函数）的项目会出现链接错误。
+
+```shell
+fatal error LNK1120: 1 个无法解析的外部命令
+```
+
+因为项目默认的执行入口是 main，当然我们也可以指定其他的入口：『项目属性=\=\>链接器=\=\>高级=\=\>入口点』
+
+<b>常见错误一</b>
+
+假定有两个文件 Log.cpp 和 Math.cpp，Math.cpp 中只声明了 Log 函数但是没有函数体。
+
+```cpp
+// Log.cpp
+#include<iostream>
+void Logger(const char* message) {
+	std::cout << message << std::endl;
+}
+
+// Math.cpp
+const char* Log(const char* message) {
+	return message;
+}
+
+int Multiply(int a, int b) {
+	//int result = a * b;
+	//return result;
+	Log("Print Log");
+	return a * b;
+}
+
+int main() {
+	std::cout << "hello" << std::endl;
+}
+```
+
+编译上述代码不会出现错误，链接时会出现错误。虽然我们并没有使用 Multiply 但是它可能会在其他地方被使用，由于找不到这个函数签名的函数体，所以链接的时候报错了。
+
+一个解决办法是将函数声明为 static，这意味着该函数只在这个翻译单元内有效（这个文件内），也就意味着不可能被其他文件使用，可以正常链接、运行。
+
+```cpp
+#include<iostream>
+
+// 正常运行
+const char* Log(const char* message) {
+	return message;
+}
+
+static int Multiply(int a, int b) {
+	//int result = a * b;
+	//return result;
+	Log("Print Log");
+	return a * b;
+}
+
+int main() {
+	std::cout << "hello" << std::endl;
+}
+```
+
+<b>常见错误二</b>
+
+如果相同签名的函数体重复定义，在编译的时候不会出错误，但是在链接的时候编译器会不知道到底该找那个函数体然后报错。虽然这种情况看起来不太可能发生，我们在编写代码的时候会避免发生这种情况，但是由于 #include 复制文件的操作，这种重复的定义函数体是非常有可能的。
+
+```cpp
+// Log.cpp 定义函数
+#include<iostream>
+
+void Logger(const char* message) {
+	std::cout << message << std::endl;
+}
+```
+
+```cpp
+// Math.cpp 引入
+#include<iostream>
+#include"Log.cpp"
+
+int main() {
+	std::cout << "hello" << std::endl;
+}
+```
+
+```cpp
+// Video.cpp 引入
+#include<iostream>
+#include"Log.cpp"
+```
+
+编译结果一切正常，链接报错。
+
+```shell
+1>Math.obj : error LNK2005: "void __cdecl Logger(char const *)" (?Logger@@YAXPBD@Z) 已经在 Log.obj 中定义
+1>Video.obj : error LNK2005: "void __cdecl Logger(char const *)" (?Logger@@YAXPBD@Z) 已经在 Log.obj 中定义
+1>C:\development\Code\CPlusPlus\Debug\Video.exe : fatal error LNK1169: 找到一个或多个多重定义的符号
+```
+
+因为 #include 本质就是把代码复制粘贴过去，两次 #include 函数体，相对于多重定义的。
+
+解决办法有三种
+
+- 将方法声明为 static，这意味着函数被链接的时候只能是内部函数（只在文件内有效，也就不会存在重复定义的问题了）
+- 将方法声明为 inline，这意味着代码会直接被复制到调用它的函数内部，也不存在函数调用开销了。
+- 将函数声明和方法体的定义分开来 .h 文件声明方法，.cpp 文件定义方法。引入的时候只引入 .h 文件。
+
 ## 第二章-变量和基本类型
 
-C++ 定义了一套包括算术类型（arithmetic type）和空类型（void）在内的基本数据类型。其中算术类型包含了字符、整型数、布尔值和浮点数。空类型不对应具体的值，仅用于一些特殊的场合，例如最常见的是，当函数不返回任何值时使用空类型作为返回类型。
+C++ 定义了一套包括算术类型（arithmetic type）和空类型（void）在内的基本数据类型，这些变量存储在堆或者栈中。其中算术类型包含了字符、整型数、布尔值和浮点数。空类型不对应具体的值，仅用于一些特殊的场合，例如最常见的是，当函数不返回任何值时使用空类型作为返回类型。
 
 ### 基本内置类型
 
 #### 算术类型
+
+数据类型的大小取决于编译器。注意，定义 float 类型的变量时要在变量后面加上 `f`。
 
 | 类型        | 含义              | 最小尺寸         |
 | ----------- | ----------------- | ---------------- |
@@ -206,6 +465,17 @@ C++ 定义了一套包括算术类型（arithmetic type）和空类型（void）
 | float       | 单精度浮点数      | 6-7 位有效数字   |
 | double      | 双精度浮点数 10   | 15-16 位有效数字 |
 | long double | 扩展精度浮点数 10 | _位有效数字      |
+
+如果我们想知道当前编译器为每个类型分配多大的字节，可以用 sizeof 关键字。
+
+```cpp
+#include<iostream>
+
+int main() {
+    // 1
+	std::cout << sizeof(bool)<< std::endl;
+}
+```
 
 #### 类型转换
 
@@ -2330,6 +2600,8 @@ string ans = (grade > 90) ? "high pass"
 
 第一个条件检查成绩是否在 90 分以上，如果是，执行符号 ？后面的表达式，得到 "high pass"；如果否，执行符号：后面的分支。这个分支本身又是一个条件表达式，它检查成绩是否在 60 分以下，如果是，得到 "fail" ；否则得到 "pass"。
 
+条件运算执行前会检查条件，然后跳转到内存的不同地方，然后再执行指令，这也意味着更大的开销。许多代码优化策略也会去消除部分 if 操作。
+
 ### 位运算
 
 <div align="center"><h6>位运算</h6></div>
@@ -2731,9 +3003,13 @@ C++ 标准库定义了一组类，用于报告标准库函数遇到的问题。�
 
 ## 第六章-函数
 
+函数：我们写的代码块，被设计用来执行特定的任务。函数具有很好的复用性，可以避免代码重复。
+
+函数有返回值，有参数。
+
 ### 函数基础
 
-函数的调用完成的过程如下
+函数调用的完整过程如下
 
 - 一是用实参初始化函数对应的形参
 - 二是将控制权转移给被调用函数
@@ -2770,6 +3046,10 @@ void f2(void){} // 显式定义空形式参数列表
 ```
 
 大多数类型都能用作函数的返回类型。一种特殊的返回类型是 void，它表示函数不返回任何值。函数的返回类型不能是数组类型或函数类型，<span style="color:red">但可以是指向数组或函数的指针。</span>
+
+<b>函数调用指令</b>
+
+每次调用函数时，编译器会为我们生成一条 call 指令，为了调用函数，需要创建一个堆栈结构，维护各种参数，调用开销大。
 
 #### 局部对象
 
@@ -2846,7 +3126,7 @@ int main() {
 
 [【C++】C++中的分离式编译 - HDWK - 博客园 (cnblogs.com)](https://www.cnblogs.com/HDK2016/p/10591690.html)
 
-随着程序越来越复杂，我们希望把程序的各个部分分别存储在不同文件中。而分离式编译允许我们把程序分割到几个文件中去，每个文件独立编译。
+随着程序越来越复杂，我们希望把程序的各个部分分别存储在不同文件中。而分离式编译允许我们把程序分割到几个文件中去，每个文件独立编译。目标文件链接的时候可以通过函数签名来查找对应的函数体（函数定义）。
 
 而 C++ 的文件一般这样组织：头文件以 .h 为后缀，主要包含类和函数的声明；实现文件以 .cpp/.cc 为后缀。可以这样理解，头文件中包含就是一些接口声明，而实现文件就是对这些接口进行定义。
 
@@ -3334,7 +3614,7 @@ int main() {
 }
 ```
 
-### 返回类型return
+### 返回类型
 
 #### 无返回值函数
 
@@ -4010,6 +4290,75 @@ int main() {
     return EXIT_SUCCESS;
 }
 ```
+
+### 头文件
+
+假定我们自己编写了一个 Log 函数，很多 `.cpp` 文件都需要使用这个函数，这些文件是如何知道 Log 函数确实是存在的，只是定义在别处呢？=\=\>函数声明。函数声明放在哪里呢？=\=\>头文件。
+
+我们使用 #include 预处理器将这些头文件复制粘贴带其他文件，告诉它们，嘿，有 Log 函数，你放心用，链接的时候会找到对应的函数体的。
+
+<b>解决重复引入头文件带来的问题</b>
+
+#include 预处理器会将内容复制粘贴到其他文件中，如果多次引入头文件（有时候文件之间的都包含某个头文件，然后又相互引用，会导致多次引入重复的头文件）这会带来一些意想不到的问题。
+
+```cpp
+// 头文件 Log.h
+void Logger(const char* message);
+
+struct data {
+	char* name;
+	int age;
+} mydata;
+
+// Logger 的定义省略
+```
+
+```cpp
+// Math.cpp 多次引入 Log.h, 编译时会发生错误, data 被重复定义。
+#include<iostream>
+#include"Log.h"
+#include"Log.h"
+
+static int Multiply(int a, int b) {
+	//int result = a * b;
+	//return result;
+	Logger("Print Log");
+	return a * b;
+}
+
+int main() {
+	Multiply(1, 2);
+	std::cout << sizeof(bool)<< std::endl;
+}
+```
+
+为了避免多次引入头文件，可以在头文件的开头加上 `#pragma once` 解决这类问题。
+
+```cpp
+#pragma once
+```
+
+除了 `pragma once` 外还有其他方式可以解决这类问题 =\=\> `#ifndef`
+
+```shell
+#ifndef _LOG_H		// 如果没有定义 _LOG_H 就在编译中包含以下代码。 如果被定义了,则 #define 和 #endif 中的都不会被包含。
+#define _LOG_H		// 定义 _LOG_H
+
+void Log(const char* msg);
+
+#endif				// 结束
+```
+
+#pragma once 被很多主流的编译器所支持。
+
+<b>引入头文件时 `<>` 和 `""` 的区别</b>
+
+- `<>` 搜索 include 路径文件夹下的文件，即只用于编译器 `include` 路径。
+- `""` 包含相对于当前文件的文件，`../xx.h, ../../../oo.h` 都可，`""`可以做一切，但是通常只用它在相对路径。
+
+### 调试技巧
+
+VS 在调试过程中鼠标右击『转到反汇编』可以逐汇编代码调试。如果我们在源代码中无法找到错误原因，此时只能求助于调试 CPU 指令。
 
 ## 第七章-类
 

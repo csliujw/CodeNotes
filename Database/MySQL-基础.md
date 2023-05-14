@@ -115,7 +115,7 @@
 
 > 连接本地数据库
 
-`mysql -uroot -proot` 
+`mysql -uroot -proot`
 
 - -u用户名【用户名为 root】
 - -p密码【用户名为 root】
@@ -193,7 +193,7 @@
 * 创建数据库，判断不存在，再创建：create database if not exists 数据库名称;
 * 创建数据库，并指定字符集：create database 数据库名称 character set 字符集名;
 	
-* 练习： 创建 db4 数据库，判断是否存在，并制定字符集为 gbk
+* 练习：创建 db4 数据库，判断是否存在，并制定字符集为 gbk
 	* create database if not exists db4 character set gbk;
 
 > <b>查询/使用数据库</b>
@@ -290,8 +290,6 @@ mysql> select * from user_copy;
 | 12 | kkx  |
 +----+------+
 3 rows in set (0.00 sec)
-
-mysql>
 ```
 
 仅复制表结构
@@ -336,8 +334,8 @@ SET PASSWORD FOR 'root'@'localhost' = PASSWORD('123');
 
 <b>查询用户</b>
 
--  切换到 mysql 数据库  `USE myql;`
--  查询 user 表  `SELECT * FROM USER;`
+-  切换到 mysql 数据库 `USE myql;`
+-  查询 user 表 `SELECT * FROM USER;`
 -  通配符 % 表示可以在任意主机使用用户登录数据库
 
 <b>权限管理</b>
@@ -371,7 +369,7 @@ SET PASSWORD FOR 'root'@'localhost' = PASSWORD('123');
 8. 启动 mysql 服务
 9. 使用新密码登录。
 
-## DML  数据操作语言
+## DML 数据操作语言
 
 ### 增删改表中数据
 
@@ -386,7 +384,7 @@ SET PASSWORD FOR 'root'@'localhost' = PASSWORD('123');
 - 注意：列名和值要一一对应。
 
 
-- 如果表名后，不定义列名，则默认给所有列添加值 insert into 表名 values(值1,值2,...值n);
+- 如果表名后，不定义列名，则默认给所有列添加值 insert into 表名 values(值1, 值2, ...值n);
 
 - 除了数字类型，其他类型需要使用引号(单双都可以)引起来
 
@@ -394,7 +392,7 @@ SET PASSWORD FOR 'root'@'localhost' = PASSWORD('123');
 
 `insert into user_copy2 select * from user;`
 
-`insert into user_copy2 select id,nickname as name from users;`
+`insert into user_copy2 select id, nickname as name from users;`
 
 > <b>删除数据</b>
 
@@ -417,7 +415,7 @@ SET PASSWORD FOR 'root'@'localhost' = PASSWORD('123');
 
 - 注意：如果不加任何条件，则会将表中所有记录全部修改。为了避免这种意外，我们可以在启动 MySQL 监视器的时候加上 `--safe-updates` 选项，在此选项下，如果列上没有 where 条件就无法执行 update 或 delete。
 
-## DQL  数据查询语言
+## DQL 数据查询语言
 
 需要用到的数据表文件
 

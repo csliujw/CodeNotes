@@ -8,24 +8,31 @@ MapReduce架构的程序能够在大量的普通配置的计算机上实现并�
 
 ## 介绍
 
-​		需求：需要在可接受的时间内处理大量数据的计算。这只能将计算分布在成百上千的主机上。在分布计算的时候如何处理并行计算、如何分发数据、如何处理错误？这个问题是十分复杂的。
-​		将这个复杂的问题抽象为一个模型：MapReduce。我们只要表述我们想要执行的简单运算，不必关心并行计算、容错、数据分布、负载均衡等复杂的细节。
-​		我们大多数的运算都包含这样的操作：在输入数据的“逻辑”记录上应用Map操作得出一个中间 key/value pair集合，然后在所有具有相同key值的value值上应用Reduce操作，从而达到合并中间的数据，得到一个想要的结果的目的。使用MapReduce模型，再结合用户实现的Map和Reduce函数，我们就可以非常容易的实现大规模并行化计算；通过MapReduce模型自带的“再次执行”（re-execution）功 能，也提供了初级的容灾实现方案
-​		这个工作(实现一个MapReduce框架模型)的主要贡献是通过简单的接口来实现自动的并行化和大规模的分布式计算，通过使用MapReduce模型接口实现在大量普通的PC机上高性能计算。
-​		第二部分描述基本的编程模型和一些使用案例。第三部分描述了一个经过裁剪的、适合我们的基于集群的 计算环境的MapReduce实现。第四部分描述我们认为在MapReduce编程模型中一些实用的技巧。第五部 分对于各种不同的任务，测量我们MapReduce实现的性能。第六部分揭示了在Google内部如何使用 MapReduce作为基础重写我们的索引系统产品，包括其它一些使用MapReduce的经验。第七部分讨论相 关的和未来的工作。
+需求：需要在可接受的时间内处理大量数据的计算。这只能将计算分布在成百上千的主机上。在分布计算的时候如何处理并行计算、如何分发数据、如何处理错误？这个问题是十分复杂的。
+
+将这个复杂的问题抽象为一个模型：MapReduce。我们只要表述我们想要执行的简单运算，不必关心并行计算、容错、数据分布、负载均衡等复杂的细节。
+
+我们大多数的运算都包含这样的操作：在输入数据的“逻辑”记录上应用Map操作得出一个中间 key/value pair集合，然后在所有具有相同key值的value值上应用Reduce操作，从而达到合并中间的数据，得到一个想要的结果的目的。使用MapReduce模型，再结合用户实现的Map和Reduce函数，我们就可以非常容易的实现大规模并行化计算；通过MapReduce模型自带的“再次执行”（re-execution）功 能，也提供了初级的容灾实现方案。
+
+这个工作(实现一个MapReduce框架模型)的主要贡献是通过简单的接口来实现自动的并行化和大规模的分布式计算，通过使用MapReduce模型接口实现在大量普通的PC机上高性能计算。
+
+第二部分描述基本的编程模型和一些使用案例。第三部分描述了一个经过裁剪的、适合我们的基于集群的 计算环境的MapReduce实现。第四部分描述我们认为在MapReduce编程模型中一些实用的技巧。第五部 分对于各种不同的任务，测量我们MapReduce实现的性能。第六部分揭示了在Google内部如何使用 MapReduce作为基础重写我们的索引系统产品，包括其它一些使用MapReduce的经验。第七部分讨论相 关的和未来的工作。
 
 ## 编程模型
 
-​		用户自定义的Map函数接受一个输入的key/value pair值，然后产生一个中间key/value pair值的集合。 MapReduce库把所有具有相同中间key值I的中间value值集合在一起后传递给reduce函数。
-​		MapReduce库的用户用两个函数表达这个计算：Map和Reduce。
-​		用户自定义的Map函数接受一个输入的key/value pair值，然后产生一个中间key/value pair值的集合。 MapReduce库把所有具有相同中间key值I的中间value值集合在一起后传递给reduce函数。
-​		用户自定义的Reduce函数接受一个中间key的值I和相关的一个value值的集合。Reduce函数合并这些 value值，形成一个较小的value值的集合。一般的，每次Reduce函数调用只产生0或1个输出value值。 通常我们通过一个迭代器把中间value值提供给Reduce函数，这样我们就可以处理无法全部放入内存中的 大量的value值的集合。
+用户自定义的Map函数接受一个输入的key/value pair值，然后产生一个中间key/value pair值的集合。 MapReduce库把所有具有相同中间key值I的中间value值集合在一起后传递给reduce函数。
+
+MapReduce库的用户用两个函数表达这个计算：Map和Reduce。
+
+用户自定义的Map函数接受一个输入的key/value pair值，然后产生一个中间key/value pair值的集合。 MapReduce库把所有具有相同中间key值I的中间value值集合在一起后传递给reduce函数。
+
+用户自定义的Reduce函数接受一个中间key的值I和相关的一个value值的集合。Reduce函数合并这些 value值，形成一个较小的value值的集合。一般的，每次Reduce函数调用只产生0或1个输出value值。 通常我们通过一个迭代器把中间value值提供给Reduce函数，这样我们就可以处理无法全部放入内存中的 大量的value值的集合。
 
 ### 举例
 
 计算一个大的文档集合中每个单词出现的次数。（是不是每个map计算大文档中的一部分小文档，比如一共有10个key，那么就有10个reduce去计算key，从每个map中拿到的相同的一个key对应的value集合--iterator，对这个Iterator进行累加）
 
-```vim
+```c
 // Map函数输出文档中的每个词、以及这个词的出现次数(在这个简单的例子里就是1)。
 map(String key,String value){
 	// key document name
@@ -107,5 +114,5 @@ master周期性的ping每个worker。如果在一个约定的时间范围内没�
 
 当一个Map任务首先被worker A执行，之后由于worker A失效了又被调度到worker B执行，**这个“重新 执行”的动作会被通知给所有执行Reduce任务的worker**。任何还没有从worker A读取数据的Reduce任 务将从worker B读取数据。
 
-MapReduce可以处理大规模worker失效的情况。比如，在一个MapReduce操作执行期间，在正在运行 的集群上进行网络维护引起80台机器在几分钟内不可访问了，MapReduce master只需要简单的再次执 行那些不可访问的worker完成的工作，之后继续执行未完成的任务，直到最终完成这个MapReduce操 作。
+MapReduce可以处理大规模worker失效的情况。比如，在一个MapReduce操作执行期间，在正在运行 的集群上进行网络维护引起80台机器在几分钟内不可访问了，MapReduce master只需要简单的再次执 行那些不可访问的worker完成的工作，之后继续执行未完成的任务，直到最终完成这个MapReduce操作。
 

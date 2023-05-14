@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRU</title>
+    <style>
+        div {
+            margin-bottom: 20px;
+        }
+
+        input[type=text] {
+            width: 30px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div>
+        <select id="mainFrames"></select>
+        <input type="text" id="limit" value="160" placeholder="limit">
+        <input type="button" value="初始化" id="initBtn">
+        <input type="text" id="key" placeholder="key">
+        <input type="button" value="get" id="getBtn">
+        <input type="button" value="put" id="putBtn">
+        <input type="button" value="remove" id="removeBtn">
+        <input type="button" value="随机值" id="randomBtn">
+    </div>
+    <div id="canvasDiv">
+        <canvas id="main" width="1024" height="400"></canvas>
+    </div>
+    <script>
+        class Node {
+            constructor(obj) {
+                this.key = obj.key || null;
+                this.value = obj.value || null;
+                this.ts = obj.ts || 0;
+            }
+        }
+        class LruCache {
+            constructor(limit) {
+                this.map = new Map();
+                this.limit = limit < 2 ? 2 : limit;
+                this.size = 0;
+                this.samples = [];
+                this.maxSamples = 5;
+            }
+
+            put(key, value, callback) {
+                let node = this.map.get(key);
+                if (node === undefined) {
+                    node = new Node({ key: key, value: value, ts: new Date().getTime() });
+                    this.map.set(key, node);
+                } else {
+                    node.value = value;
+                    node.ts = new Date().getTime();
+                }
+                if (this.map.size > this.limit) {
+                    while (this.samples.length < this.maxSamples) {
+                        this.samples.push(this.#random());
+                    }
+                    this.samples.sort(this.#compare);
+                    let node = this.samples.shift();
+                    if (callback) callback(node);
+                    this.map.delete(node.key);
+                }
+            }
+
+            #random() {
+                let keys = Array.from(this.map.keys());
+                let key = keys[Math.floor(Math.random() * keys.length)];
+                return this.map.get(key);
+            }
+
+            #compare(a, b) {
+                if (a.ts > b.ts) {
+                    return 1;
+                } else if (a.ts < b.ts) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+            }
+
+            #shuffle(arr) {
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+            }
+
+            get(key) {
+                let node = this.map.get(key);
+                if (node === undefined) {
+                    return null;
+                }
+                node.ts = new Date().getTime();
+                return node.value;
+            }
+
+            remove(key) {
+                let node = this.map.get(key);
+                if (node === undefined) {
+                    return null;
+                } else {
+                    return node.value;
+                }
+            }
+
+            forEach(callback) {
+                this.map.forEach((v, k) => {
+                    callback(v, k)
+                })
+            }
+        }
+
+        class Rect {
+            constructor(x, y, w, h, c, v, vx, vy) {
+                this.x = x;     // 大矩形 x
+                this.y = y;     // 大矩形 y
+                this.w = w;     // 大矩形 w
+                this.h = h;     // 大矩形 h
+                this.c = c;     // 大矩形 c
+                this.v = v;     // 大矩形 v 即值
+                this.vx = vx;   // 值 x
+                this.vy = vy;   // 值 y
+            }
+        }
+
+        class Arrow {
+            constructor(fx, fy, tx, ty, c) {
+                this.fx = fx;
+                this.fy = fy;
+                this.tx = tx;
+                this.ty = ty;
+                this.c = c;
+            }
+        }
+
+        class Draw {
+            constructor(selector) {
+                this.canvas = document.querySelector(selector);
+                this.ctx = document.querySelector(selector).getContext('2d');
+                this.frames = [];
+                this.current = 0;
+                this.RECT_WIDTH = 100;
+                this.RECT_HEIGHT = 20;
+                this.SPACEING = 3;
+                this.CANVAS_WIDTH = 1024;
+                this.CANVAS_HEIGHT = 620;
+                this.ARROW_LENGTH = 10;
+            }
+            reset() {
+                this.canvas.width = this.CANVAS_WIDTH;
+                this.canvas.height = this.CANVAS_HEIGHT;
+            }
+            drawArrow(a) {
+                let { fx, fy, tx, ty, c } = { ...a };
+                let theta = 30;
+                let headlen = 10;
+                let angle = Math.atan2(fy - ty, fx - tx) * 180 / Math.PI;
+                let a1 = (angle + theta) * Math.PI / 180;
+                let a2 = (angle - theta) * Math.PI / 180;
+                let topX = headlen * Math.cos(a1);
+                let topY = headlen * Math.sin(a1);
+                let bottomX = headlen * Math.cos(a2);
+                let bottomY = headlen * Math.sin(a2);
+
+                this.ctx.save();
+                this.ctx.lineWidth = .5;
+                this.ctx.beginPath();
+                let ax = fx - topX;
+                let ay = fy - topY;
+
+                this.ctx.moveTo(ax, ay);
+                this.ctx.moveTo(fx, fy);
+                this.ctx.lineTo(tx, ty);
+
+                ax = tx + topX;
+                ay = ty + topY;
+                this.ctx.moveTo(ax, ay);
+                this.ctx.lineTo(tx, ty);
+
+                ax = tx + bottomX;
+                ay = ty + bottomY;
+                this.ctx.lineTo(ax, ay);
+                this.ctx.strokeStyle = c || 'black';
+                this.ctx.stroke();
+
+                this.ctx.restore();
+            }
+            drawFrame(idx) {
+                this.reset();
+                let frame = this.frames[idx];
+                frame.rects.forEach(x => {
+                    this.drawRect(x)
+                })
+                frame.arrows.forEach(x => {
+                    this.drawArrow(x)
+                })
+                frame.circles.forEach(x => {
+                    this.drawCircle(x)
+                })
+                this.current = idx;
+            }
+            drawNextFrame() {
+                if (this.current + 1 < this.frames.length) {
+                    this.drawFrame(++this.current);
+                }
+            }
+            drawPrevFrame() {
+                if (this.current - 1 >= 0) {
+                    this.drawFrame(--this.current);
+                }
+            }
+            drawRect(r) {
+                this.ctx.save();
+                this.ctx.fillStyle = r.c;
+                this.ctx.beginPath();
+                this.ctx.rect(r.x, r.y, r.w, r.h);
+                this.ctx.fill();
+                this.ctx.lineWidth = .25;
+                this.ctx.stroke();
+
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = '0.8em Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(r.v, r.vx, r.vy);
+                this.ctx.restore();
+
+            }
+            drawCircle(r) {
+                this.ctx.save();
+
+                this.ctx.fillStyle = r.c;
+                this.ctx.beginPath();
+                this.ctx.arc(r.x, r.y, r.r, 0, (Math.PI / 180) * 360, false);
+                this.ctx.fill();
+                this.ctx.lineWidth = .25;
+                this.ctx.stroke();
+
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = '1em Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(r.v, r.vx, r.vy);
+
+                this.ctx.restore();
+            }
+            #format(milis) {
+                let d = new Date(milis);
+                let str = "";
+                /* if (d.getHours() < 10) {
+                    str += ("0" + d.getHours());
+                } else {
+                    str += d.getHours();
+                }
+                str += ":"; */
+                if (d.getMinutes() < 10) {
+                    str += ("0" + d.getMinutes());
+                } else {
+                    str += d.getMinutes();
+                }
+                str += ":";
+                if (d.getSeconds() < 10) {
+                    str += ("0" + d.getSeconds());
+                } else {
+                    str += d.getSeconds();
+                }
+                str += ".";
+                if (d.getMilliseconds() < 10) {
+                    str += ("00" + d.getMilliseconds());
+                } else if(d.getMilliseconds() < 100) {
+                    str += ("0" + d.getMilliseconds());
+                } else {
+                    str += d.getMilliseconds();
+                }
+                return str;
+            }
+            addFrame(obj) {
+                let { cache, remove } = { ...obj };
+                const frame = {};
+                frame.rects = [];
+                frame.circles = [];
+                frame.arrows = [];
+                if (cache) {
+                    let x = 0;
+                    let y = 0;
+                    let w = this.RECT_WIDTH;
+                    let i = 1;
+                    let samples = new Set(cache.samples);
+                    cache.forEach((node, key) => {
+                        let h = this.RECT_HEIGHT;
+                        let c = '#26A65B';
+                        let t = node.key;
+                        console.log(node.ts);
+                        if (samples.has(node)) {
+                            c = '#9932CC';
+                            t = t + "(" + this.#format(node.ts) + ")";
+                        }
+                        if (remove === node) {
+                            c = 'black';
+                            t = t + "(" + this.#format(node.ts) + ")";
+                        }
+                        frame.rects.push(new Rect(
+                            x, y, w, h, c,
+                            t, x + w / 2, y + h / 2 + 5
+                        ));
+                        if (i++ % 8 == 0) {
+                            x = 0;
+                            y += (this.RECT_HEIGHT + this.SPACEING);
+                        } else {
+                            x += (this.RECT_WIDTH + this.SPACEING);
+                        }
+                    });
+                } else {
+                    this.CANVAS_WIDTH = 1024;
+                }
+                this.frames.push(frame);
+                addToSelect("mainFrames", this.frames.length - 1, true);
+            }
+            clearFrames() {
+                this.frames = [];
+                this.current = 0;
+                //clearSelect();
+            }
+            playFrames() {
+                if (this.current >= this.frames.length - 1) {
+                    return;
+                }
+                this.drawFrame(++this.current);
+                setTimeout(() => {
+                    this.playFrames();
+                }, 300);
+            }
+        }
+
+        function addToSelect(id, idx, now) {
+            let option = document.createElement("option");
+            option.value = idx;
+            option.innerHTML = idx;
+            let select = document.getElementById(id);
+            select.appendChild(option);
+            if (now === true) {
+                //select.value = idx;
+                select.onchange();
+            }
+        }
+        function clearSelect(id) {
+            document.getElementById(id).innerHTML = "";
+        }
+        document.getElementById("mainFrames").onchange = function () {
+            main.drawFrame(this.value - 0)
+        }
+        document.getElementById("getBtn").onclick = function () {
+            let k = document.getElementById("key").value;
+            cache.get(k);
+            main.addFrame({ cache: cache });
+        }
+
+        document.getElementById("putBtn").onclick = function () {
+            let k = document.getElementById("key").value;
+            cache.put(k, 1, (node) => {
+                main.addFrame({ cache: cache, remove: node });
+            });
+            main.addFrame({ cache: cache });
+        }
+
+        document.getElementById("removeBtn").onclick = function () {
+            let k = document.getElementById("key").value;
+            cache.remove(k);
+            main.addFrame({ cache: cache });
+        }
+
+        document.getElementById("initBtn").onclick = function () {
+            cache = new LruCache(document.getElementById("limit").value - 0);
+            main.addFrame({ cache: cache });
+        }
+
+        document.getElementById("randomBtn").onclick = function () {
+            let limit = document.getElementById("limit").value;
+            init(cache, limit);
+        }
+
+        let main = new Draw("#main");
+        let cache = new LruCache(document.getElementById("limit").value);
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function init(cache, limit) {
+            for (let i = 0; i < limit; i++) {
+                await sleep(1);
+                cache.put(i + "", 1);
+            }
+            main.addFrame({ cache: cache });
+        }
+
+        // let map = new LruCache(99);
+        // init(map, 100);
+
+    </script>
+</body>
+
+</html>

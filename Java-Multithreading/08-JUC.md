@@ -432,6 +432,10 @@ public class UseLockSupport {
 
 <b>缺点</b>：当不断自旋的线程越来越多的时候，会因为执行 while 循环不断的消耗 CPU 资源
 
+## CompletableFuture
+
+待补充
+
 ## 自旋锁
 
 通过 CAS 操作完成自旋锁，A 线程先进来调用 myLock 方法自己持有锁 5 秒，B 随后进来发现当前有线程持有锁，不是 null，所以只能通过自旋等待，直到 A 释放锁后 B 随后抢到锁。
