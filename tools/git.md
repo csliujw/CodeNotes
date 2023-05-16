@@ -765,7 +765,7 @@ git-log
 
 <b>修改之前 commit 的 msg</b>
 
-如果想修改当前 commit 的 msg 我们可以用 `git commit -amend`，如果想修改之前记录的 msg 呢？可以用 rebase，`git rebase -i 选择需要变更提交的父亲`，例如我们需要把 update juc 变更为 update juc note，那么我们需要选择的是 `77deb4` 这个 msg。
+如果想修改当前 commit 的 msg 我们可以用 `git commit --amend`，如果想修改之前记录的 msg 呢？可以用 rebase，`git rebase -i 选择需要变更提交的父亲`，例如我们需要把 update juc 变更为 update juc note，那么我们需要选择的是 `77deb4` 这个 msg。
 
 ```shell
 git log -n3
