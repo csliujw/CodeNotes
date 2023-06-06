@@ -34,6 +34,20 @@ docker run \
  rabbitmq:3-management
 ```
 
+可直接复制粘贴的
+
+```shell
+docker run \
+ -e RABBITMQ_DEFAULT_USER=payphone \
+ -e RABBITMQ_DEFAULT_PASS=123321 \
+ --name mq \
+ --hostname mq1 \
+ -p 15672:15672 \
+ -p 5672:5672 \
+ -d \
+ rabbitmq:3-management
+```
+
 # 安装DelayExchane插件
 
 官方的安装指南地址为：https://blog.rabbitmq.com/posts/2015/04/scheduling-messages-with-rabbitmq

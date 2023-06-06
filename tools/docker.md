@@ -120,7 +120,7 @@ ubuntu       latest   d70eaf7277ea    4 weeks ago   72.9MB
 
 - REPOSITORY：来自于那个仓库
 - TAG：镜像的标签信息，来自统一仓库的不同镜像
-- IMAGE ID：镜像的id，唯一！
+- IMAGE ID：镜像的 id，唯一！
 - CREATED：创建时间
 - SIZE：大小
 

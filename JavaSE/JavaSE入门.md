@@ -99,10 +99,9 @@ a -- 97
 
 ### 数字和字符的对照关系表（编码表）
 
-```java
-ASCII码表：American Standard Code for Information Interchange
-Unicode码表：万国码。也是数字和符号对照关系，开头0-127部分和ASCII完全一样，但是从128开始包含更多字符。
-```
+ASCII 码表：American Standard Code for Information Interchange
+
+Unicode 码表：万国码。也是数字和符号对照关系，开头 0-127 部分和 ASCII 完全一样，但是从128 开始包含更多字符。
 
 ### 易错点
 
@@ -277,24 +276,24 @@ public class TestSwitch {
         String str = "dd";
         byte var3 = -1;
         switch(str.hashCode()) {
-        case 3168:
-            if (str.equals("cc")) {
-                var3 = 1;
-            }
-            break;
-        case 3200:
-            if (str.equals("dd")) {
-                var3 = 0;
-            }
+            case 3168:
+                if (str.equals("cc")) {
+                    var3 = 1;
+                }
+                break;
+            case 3200:
+                if (str.equals("dd")) {
+                    var3 = 0;
+                }
         }
 
         switch(var3) {
-        case 0:
-            System.out.println("odk");
-            break;
-        case 1:
-        default:
-            System.out.println("over!");
+            case 0:
+                System.out.println("odk");
+                break;
+            case 1:
+            default:
+                System.out.println("over!");
         }
     }
 }
@@ -371,15 +370,13 @@ break 跳出一层循环，continue 开启下一次循环。IDEA 点击关键字
 
 方法调用的三种格式
 
-```java
 1.单独调用：方法名称(参数)
 2.打印调用：System.out.println(方法名称(参数))
 3.赋值调用：数据类型 变量名称 = 方法名称(参数)
-```
 
 方法重载 Overload 
 
-- <b>方法重载</b>：指在同一个类中，允许存在一个以上的同名方法，只要它们的参数列表不同即可，与修饰符和返回值类型无关。
+- <b>方法重载：</b>指在同一个类中，允许存在一个以上的同名方法，只要它们的参数列表不同即可，与修饰符和返回值类型无关。
 - 参数列表：个数不同，数据类型不同，顺序不同。
 - 重载方法调用：JVM 通过方法的参数列表，调用不同的方法。
 
@@ -481,7 +478,7 @@ public static int[] calculate(int a,int b){
 - 4.本地方法栈（native method stack）：与操作系统相关
 - 5.寄存器（register）：与 CPU 相关
 
-Java 的垃圾回收，对于提高对象的创建速度，具有明显的效果。Java 从堆空间分配空间的速度，可以和其他语言从堆栈上分配空间的速度相媲美。在某些 Java VM 中，堆的实现截然不同，但是堆内存的分配可以看做：有一个堆指针，简单移动到尚未分配的区域，通过这种方式分配对象内存，其效率比得上 C++ 在栈上分配空间的效率。当然，在实际簿记工作方面，还有少量额外的开销，但是比不上查找可用空间的开销。（<b>Java GC 会清理出可用的空间，堆指针在空用空间中移动，这样就完成了内存的分配。而 C++ 需要遍历查找可用的内存，这个查找开销较大。这样一对比，会发现，Java 分配对象的速度并不比 C++ 慢</b>）
+Java 的垃圾回收，对于提高对象的创建速度，具有明显的效果。Java 从堆空间分配空间的速度，可以和其他语言从堆栈上分配空间的速度相媲美。在某些 Java VM 中，堆的实现截然不同，但是堆内存的分配可以看做：有一个堆指针，简单移动到尚未分配的区域，通过这种方式分配对象内存，其效率比得上 C++ 在栈上分配空间的效率。当然，在实际工作方面，还有少量额外的开销，但是比不上查找可用空间的开销。（<b>Java GC 会清理出可用的空间，堆指针在空间中移动，这样就完成了内存的分配。而 C++ 需要遍历查找可用的内存，这个查找开销较大。这样一对比，会发现，Java 分配对象的速度并不比 C++ 慢</b>）
 
 Java 的 GC 工作的时候，一面回收内存空间，一面使堆中的对象紧凑排列。
 
