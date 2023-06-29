@@ -25,7 +25,7 @@ SDS 又称为简单动态字符串（Simple Dynamic String），SDS 的定义如
 
 <img src="img/image-20220202112259425.png">
 
-如果将一个值为 “Redis” 的字符串放入 SDS 中，它的存储状态如下
+如果将一个值为 “Redis” 的字符串放入 SDS 中，它的存储状态如下。
 
 <img src="img/image-20220202112353642.png">
 
@@ -103,6 +103,11 @@ typedef struct listNode{
     void *value;
 }listNode;
 ```
+
+```mermaid
+```
+
+
 
 <img src="img/image-20220227131316.png">
 

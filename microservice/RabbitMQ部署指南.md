@@ -48,6 +48,12 @@ docker run \
  rabbitmq:3-management
 ```
 
+如果开启后无法进入管理页面，则是需要我们进入容器手动开启管理界面的授权
+
+```bash
+rabbitmq-plugins enable rabbitmq_management
+```
+
 # 安装DelayExchane插件
 
 官方的安装指南地址为：https://blog.rabbitmq.com/posts/2015/04/scheduling-messages-with-rabbitmq

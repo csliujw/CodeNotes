@@ -8776,9 +8776,5 @@ std::ostream &print(std::ostream &os, const QueryResult &qr){
 - 拷贝和移动赋值运算符定义了将一个对象赋予同类型的另一个对象时做什么。
 - 析构函数定义了当此类型对象销毁时做什么。我们称这些操作为拷贝控制操作（copy control）
 
-```latex
-  D_{JS}\left ( x_i^t \right ) &= \frac{1}{2}KL(\textbf{F}_m(x_i^t|\theta)||\textbf{M}) + 
-                         \frac{1}{2}KL(\textbf{F}_a(x_i^t|\theta)||\textbf{M})&= -\frac{1}{2}\sum_{j=1}^C \textbf{F}_m^j(x_i^t|\theta) \log \frac{\textbf{M}^j}{\textbf{F}_a^j(x_i^t|\theta)} -
-       \frac{1}{2}\sum_{j=1}^C \textbf{F}_a^j(x_i^t|\theta) \log \frac{\textbf{M}^j}{\textbf{F}_m^j(x_i^t|\theta)}
-```
+
 

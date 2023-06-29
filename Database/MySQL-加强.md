@@ -667,12 +667,12 @@ select workaddress,count(*) as address_count from emp where age<45 group by work
 
 `select 字段列表 from 表名 order by 字段1 排序方式1，字段2 排序方式2;`
 
-- 排序方式：ASC：升序 (默认值) ；DESC：降序
+- 排序方式：ASC 升序 (默认值) ；DESC 降序
 - 注意：如果是多字段排序，当第一个字段值相同时，才会根据第二个字段进行排序。
 
 #### 分页查询
 
-`select 字段列表 from 表名 limit 起始索引,查询记录数;`
+`select 字段列表 from 表名 limit 起始索引, 查询记录数;`
 
 ```sql
 select * from emp limit 0,5;
@@ -707,7 +707,7 @@ from Employees
 
 [627. 变更性别 - 力扣 (LeetCode)  (leetcode-cn.com)](https://leetcode-cn.com/problems/swap-salary/submissions/)
 
-```java
+```mysql
 update Salary set sex = if(sex ='m','f','m');
 
 update Salary 

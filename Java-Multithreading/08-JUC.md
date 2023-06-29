@@ -1,13 +1,39 @@
-# 基本使用快速入门
+# 快速入门
 
 [JUC整理笔记四之梳理VarHandle(上)_Java_JFound_InfoQ写作平台](https://xie.infoq.cn/article/18c57e1a23f347a922547177b)
 
 记住一个非常关键的点，没有获得锁的队列是分两种
 
-- 一种是 waitting 队列，主动放弃锁的；
-- 一种是阻塞队列没抢到锁被迫阻塞的。
+- 一种是 waitting 队列，主动放弃锁的被放入 waitting 队列；
+- 一种是阻塞队列，没抢到锁被迫阻塞的被放入阻塞队列。
 
 当调用类似于 await 方法的时候，是将自己（线程）放入 waitting 队列，然后随机唤醒阻塞队列中的一个线程。当调用类似于 signalAll 这些方法时，是唤醒 waitting 队列中的线程，把他们加入阻塞队列，然后等待被唤醒。
+
+```mermaid
+graph LR
+subgraph waitting队列
+线程1-->线程2
+end
+subgraph 阻塞队列
+线程3-->线程4
+end
+```
+
+调用 signalAll 后的阻塞队列和 waitting 队列
+
+```mermaid
+graph LR
+subgraph 阻塞队列
+线程3-->线程4-->线程1-->线程2
+end
+```
+
+```mermaid
+graph LR
+subgraph waitting队列
+空,无线程
+end
+```
 
 ## ReentrantLock
 
@@ -17,46 +43,58 @@
 - J.U.C 下的锁都支持公平锁和非公平锁，而 synchronized 只支持非公平锁。
 - ReentrantLock 支持限时获取锁，超过时间还没拿到锁就会返回 false，不会一直阻塞。
 
-以多生产者，多消费者为例，演示 ReentrantLock 的使用，假定库存容量为 10。
+<b>以多生产者，多消费者为例，演示 ReentrantLock 的使用，假定库存容量为 10。</b>
+
+- 先用 while 判断是否需要阻塞自己，while 是为了防止虚假唤醒。
+- 然后操作资源。
+- 将 waiting 队列中的移动到阻塞队列（signalAll），这样，waiting 中的线程才有机会竞争锁。
+  - 注意：在看 ReentrantLock 的源码的时候，会发现 Condition 对应的队列叫 condition 队列；抢锁失败的线程对应的队列叫 sync 队列。
+- 释放锁，让阻塞队列中的线程竞争锁。
 
 ```java
-public class Resource {
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import static java.lang.System.*;
+
+class Resource {
     private int count = 0; // 最多持有10个资源
     private Lock lock = new ReentrantLock();
     private Condition condition = lock.newCondition(); // 阻塞队列
 
+    // 有产品，可以唤醒消费者
     public void increment() {
+        String tName = Thread.currentThread().getName();
         lock.lock();
-        // 有产品，可以唤醒消费者
-        while (count >= 10) {
-            try {
-                // 放弃得到的锁，并把自身阻塞
-                condition.await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        try {
+            // 放弃得到的锁, 并把自身阻塞, while 是为了避免虚假唤醒。
+            while (count >= 10) condition.await();
+            out.printf("当前线程%s，当前count=%d\n", tName, ++count);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            // 唤醒所有进程
+            condition.signalAll();
+            lock.unlock();
         }
-        System.out.printf("当前线程的名字%s，当前count=%d\n", Thread.currentThread().getName(),++count);
-        // 唤醒所有进程
-        condition.signalAll();
-        lock.unlock();
     }
 
+    // 没有产品，无法消费了，唤醒生产者
     public void decrement() {
+        String tName = Thread.currentThread().getName();
         lock.lock();
-        // 没有产品，无法消费了，唤醒生产者
-        while (count <= 0) {
-            try {
-                // 放弃得到的锁，并把自身阻塞
-                condition.await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        try {
+            // 放弃得到的锁, 并把自身阻塞, while 是为了避免虚假唤醒。
+            while (count <= 0) condition.await();
+            out.printf("当前线程%s，当前count=%d\n", tName, --count);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            // 唤醒所有进程
+            condition.signalAll();
+            lock.unlock();
         }
-        System.out.printf("当前线程的名字%s，当前count=%d\n", Thread.currentThread().getName(),--count);
-        // 唤醒所有进程
-        condition.signalAll();
-        lock.unlock();
     }
 }
 
@@ -64,18 +102,18 @@ public class MainDemo {
     public static void main(String[] args) {
         Resource resource = new Resource();
         new Thread(() -> {
-            for (int i = 0; i < 66; i++) resource.increment();
+            for (int i = 0; i < 666666; i++) resource.increment();
         }, "A").start();
 
         new Thread(() -> {
-            for (int i = 0; i < 66; i++) resource.increment();
+            for (int i = 0; i < 666666; i++) resource.increment();
         }, "AA").start();
 
         new Thread(() -> {
-            for (int i = 0; i < 66; i++) resource.decrement();
+            for (int i = 0; i < 666666; i++) resource.decrement();
         }, "B").start();
         new Thread(() -> {
-            for (int i = 0; i < 66; i++) resource.decrement();
+            for (int i = 0; i < 666666; i++) resource.decrement();
         }, "BB").start();
     }
 }
@@ -83,12 +121,13 @@ public class MainDemo {
 
 ## CountDownLatch
 
-开发中经常会遇到需要在主线程中开启多个线程去并行执行任务，然后主线程等待所有子线程完毕后再进行汇总的场景（并不会阻塞子线程）。CountDownLatch 真是可以用来解决该类问题的类。典型的应用场景有：多线程下载文件，最后对文件进行合并。
+开发中经常会遇到需要在主线程中开启多个线程去并行执行任务，<b>然后主线程等待所有子线程完毕后再进行汇总的场景（并不会阻塞子线程）</b>。CountDownLatch 恰好可以用来解决该类问题。典型的应用场景有：多线程下载文件，最后对文件进行合并。
 
-CountDownLatch 维护了一个计数器 cnt，每次调用 countDown() 方法会让计数器的值减 1（调用 countDown 方法的线程不会阻塞） 。当计数器的值变为 0 时，因为 await 方法阻塞的线程会被唤醒，继续执行。
+CountDownLatch 维护了一个计数器 cnt，每次调用 countDown() 方法会让计数器的值减 1（调用 countDown 方法的线程不会阻塞）。当计数器的值变为 0 时，因 await 方法阻塞的线程会被唤醒，继续执行。
 
-- 通过 await() 方法让线程等待。
+- 通过 await() 方法让线程等待，并释放锁。
 - 通过 countDown() 方法让计数器减 1，减到 0 时就会唤醒那些被阻塞的线程（`CountDownLatch#Sync#tryReleaseShared` 方法中进行的减操作）。
+- 使用方式：多个线程同时执行任务 A，执行完毕后调用 countDown；线程 main 调用 await 方法等待其他线程执行完毕后进行汇总。
 
 ```java
 /**
@@ -127,7 +166,6 @@ CyclicBarrier 的字面意思是可循环（Cyclic）使用的屏障（Barrier�
 ```java
 public class UseCyclicBarrier {
     // 集齐七颗龙珠召唤神龙
-
     static class Resource {
         private CyclicBarrier cyclicBarrier;
 
@@ -171,58 +209,62 @@ public class UseCyclicBarrier {
 }
 ```
 
-CyclicBarrier 的调用流程：
+CyclicBarrier#await 的调用流程：
 
 ```mermaid
 graph LR
-await-->doawait-->|执行doawait发现count减为0|barrierComand-->|重置count|nextGeneration
+await-->doawait-->| 执行 doawait 发现 count 减为 0 | barrierComand-->|执行 barrierCommand 后调用 nextGeneration 重置 count|nextGeneration
 ```
 
 ## Semaphore
 
 Semaphore 类似于操作系统中的信号量，可以控制对互斥资源的访问线程数。可用来限流。在信号量上定义了两种操作：
 
-- <b>acquire（获取） </b>当一个线程调用 acquire 操作时，它要么通过成功获取信号量（信号量减 1），要么一直等下去，直到有线程释放信号量或超时
-- <b>release（释放）</b>实际上会将信号量的值加 1，然后唤醒等待的线程。
+- <b>acquire（获取） </b>当一个线程调用 acquire 操作时，它要么通过成功获取信号量（信号量减 1），要么一直等下去，直到有线程释放信号量或超时；
+- <b>release（释放）</b>实际上会将信号量的值加 1，然后唤醒等待的线程；
 - 信号量主要用于两个目的，一个是用于多个共享资源的互斥使用，另一个用于并发线程数的控制。
 
 ```java
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-/**
- * 信号量，控制可以访问的线程数目，可以用来做单机的限流。
- * 示例：10 辆车抢 3 个停车位
- */
+// 信号量，控制可以访问的线程数目，可以用来做单机的限流。
+// 5 辆车抢 2 个停车位
 public class UseSemaphore {
     static class Resource {
+        private int count = 0;
         private Semaphore semaphore;
 
-        public Resource(Semaphore semaphore) {
-            this.semaphore = semaphore;
+        public Resource(int count) {
+            this.count = count;
+            this.semaphore = new Semaphore(count);
         }
 
-        public void parkCar() {
+        public void consumer() {
             try {
-                semaphore.acquire();
-                System.out.format("%s 抢到了一个停车位\n", Thread.currentThread().getName());
-                TimeUnit.SECONDS.sleep(1);
-                semaphore.release();
-            } catch (InterruptedException e) {
+                semaphore.acquire(1);
+                System.out.println("抢到一个");
+                TimeUnit.SECONDS.sleep(new Random(10).nextInt(10));
+                System.out.println("放弃一个");
+            } catch (Exception e) {
                 e.printStackTrace();
+            }finally {
+                semaphore.release(1);
             }
         }
     }
 
     public static void main(String[] args) {
-        ExecutorService threadPools = Executors.newFixedThreadPool(10);
-        Resource resource = new Resource(new Semaphore(3));
-        for (int i = 0; i < 10; i++) {
-            threadPools.execute(resource::parkCar);
-        }
-        threadPools.shutdown();
+        ExecutorService executor = Executors.newFixedThreadPool(5);
+        Resource resource = new Resource(2);
+        executor.execute(resource::consumer);
+        executor.execute(resource::consumer);
+        executor.execute(resource::consumer);
+        executor.execute(resource::consumer);
+        executor.execute(resource::consumer);
     }
 }
 ```
@@ -252,7 +294,7 @@ public class UseExchanger {
             String name = Thread.currentThread().getName();
             System.out.format("线程 %s 持有数据 %s \n", name, message);
             try {
-                // 把自己的数据扔出去，等别人放一个数据和自己交换。
+                // 把自己的数据扔出去，等别人（被阻塞住，直到另一个线程执行 exchange）放一个数据和自己交换。
                 T exchange = exchanger.exchange(message);
                 System.out.format("线程 %s %s -> %s \n", name, message, exchange);
                 this.message = exchange;
@@ -267,10 +309,9 @@ public class UseExchanger {
         Resource<String> ak47 = new Resource<>(ex, "AK47");
         Resource<String> awm = new Resource<>(ex, "AWM");
         ExecutorService executor = Executors.newFixedThreadPool(2);
-        executor.execute(ak47::swapGun);
-        System.out.println();
-        TimeUnit.SECONDS.sleep(3);
-        executor.execute(awm::swapGun);
+        new Thread(ak47::swapGun).start();
+        TimeUnit.SECONDS.sleep(30);
+        new Thread(awm::swapGun).start();
         executor.shutdown();
     }
 }
@@ -278,14 +319,42 @@ public class UseExchanger {
 
 ## Phaser
 
-> 分阶段执行：这个挺难的。
+分阶段执行，没学明白。
 
 ```java
-public class T08_TestPhaser {
-    static Random r = new Random();
-    static MarriagePhaser phaser = new MarriagePhaser();
+package juc;
 
-    static void milliSleep(int milli) {
+import java.util.Random;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.TimeUnit;
+
+class MarriagePhaser extends Phaser {
+    @Override
+    protected boolean onAdvance(int phase, int registeredParties) {
+        // phase 应该是和 arriveAndAwaitAdvance 的执行次数挂钩的。
+        // 第一次执行对应 case 0 依此类推
+        switch (phase) {
+            case 0:
+                System.out.println("所有人到齐了！");
+                return false;
+            case 1:
+                System.out.println("所有人吃完了！");
+                return false;
+            case 2:
+                System.out.println("所有人离开了！");
+                System.out.println("婚礼结束！");
+                return true;
+            default:
+                return true;
+        }
+    }
+}
+
+class Persons {
+    private String name;
+    private static Random r = new Random();
+
+    private void milliSleep(int milli) {
         try {
             TimeUnit.MILLISECONDS.sleep(milli);
         } catch (InterruptedException e) {
@@ -293,68 +362,44 @@ public class T08_TestPhaser {
         }
     }
 
+    public Persons(String name) {
+        this.name = name;
+    }
+
+    public void arrive() {
+        milliSleep(r.nextInt(1000));
+        System.out.printf("%s 到达现场！\n", name);
+    }
+
+    public void eat() {
+        milliSleep(r.nextInt(1000));
+        System.out.printf("%s 吃完!\n", name);
+    }
+
+    public void leave() {
+        milliSleep(r.nextInt(1000));
+        System.out.printf("%s 离开！\n", name);
+    }
+}
+
+public class UsePhaser {
+
     public static void main(String[] args) {
-        phaser.bulkRegister(5);
-        for(int i=0; i<5; i++) {
+        MarriagePhaser phaser = new MarriagePhaser();
+        phaser.bulkRegister(5); // 5 个人都执行到了同一阶段，才可以继续执行下面的动作
+
+        for (int i = 0; i < 5; i++) {
             final int nameIndex = i;
-            new Thread(()->{
-                Person p = new Person("person " + nameIndex);
-                
+            new Thread(() -> {
+                Persons p = new Persons("person " + nameIndex);
                 p.arrive();
                 phaser.arriveAndAwaitAdvance();
-
                 p.eat();
                 phaser.arriveAndAwaitAdvance();
-
                 p.leave();
                 phaser.arriveAndAwaitAdvance();
             }).start();
         }
-    }
-
-    static class MarriagePhaser extends Phaser {
-        @Override
-        protected boolean onAdvance(int phase, int registeredParties) {
-
-            switch (phase) {
-                case 0:
-                    System.out.println("所有人到齐了！");
-                    return false;
-                case 1:
-                    System.out.println("所有人吃完了！");
-                    return false;
-                case 2:
-                    System.out.println("所有人离开了！");
-                    System.out.println("婚礼结束！");
-                    return true;
-                default:
-                    return true;
-            }
-        }
-    }
-
-    static class Person {
-        String name;
-
-        public Person(String name) {
-            this.name = name;
-        }
-
-        public void arrive() {
-            milliSleep(r.nextInt(1000));
-            System.out.printf("%s 到达现场！\n", name);
-        }
-
-        public void eat() {
-            milliSleep(r.nextInt(1000));
-            System.out.printf("%s 吃完!\n", name);
-        }
-
-        public void leave() {
-            milliSleep(r.nextInt(1000));
-            System.out.printf("%s 离开！\n", name);
-        }
-
     }
 }
 ```
@@ -363,8 +408,8 @@ public class T08_TestPhaser {
 
 线程阻塞工具类，可以阻塞当前线程以及唤醒指定被阻塞的线程。与 Thread.suspend() 方法相比，它不会因为 park 和 unpark 方法执行的顺序而死锁。和 Object.wait() 方法相比，它不需要先获得某个对象的锁，也不会抛出 InterruptedException 异常。
 
-- `void park`：<span style="color:green">申请拿许可证，拿不到就阻塞。(阻塞线程)</span>
-- `void unpark`：如果参数 thread 线程没有持有 thread 与 `LockSupport` 类关联的许可证，则让 thread 线程持有。如果 thread 之前因调用 park 而被挂起，则调用 `unpark` 后会被唤醒。<span style="color:green">简单说就是给你许可证（解除阻塞线程）</span>
+- `void park()`：<span style="color:green">申请许可证，拿不到就阻塞。(阻塞线程)</span>
+- `void unpark(thread)`：如果参数 thread 线程没有持有 thread 与 LockSupport 类关联的许可证，则让 thread 线程持有。如果 thread 之前因调用 park 而被挂起，则调用 unpark 后会被唤醒。<span style="color:green">简单说就是给你许可证（解除阻塞线程）</span>
 - `LockSupport` 类使用许可这种概念来做到阻塞和唤醒线程的功能，<span style="color:green">许可（Permit）只有两个值 1 和 0，默认是 0</span>
 
 `LockSupport` 的通知可以在阻塞之前，因为他是按许可证的数量来决定阻塞还是不阻塞的。故可以先唤醒后等待。且 `Park` 无需锁化。归根结底，`LockSupport` 调用的是 `Unsafe` 的 `native` 方法而 `ReentrantLock` 和基本的 wait，notify 则不是这样。他们只能是先有等待的线程，然后唤醒等待的线程。
@@ -376,61 +421,52 @@ import java.util.concurrent.locks.LockSupport;
 
 // 使用 LockSupport 阻塞和唤醒线程。
 public class UseLockSupport {
-    public static final int[] array = {0};
 
     public static void main(String[] args) throws InterruptedException {
+        String tName = Thread.currentThread().getName();
+        Thread th1 = new Thread(() -> {
+            out.format("线程%s被阻塞 \n", tName);
+            LockSupport.park();
+            out.format("线程%s被唤醒 \n", tName);
+        }, "th1");
 
-        Thread hello = new Thread(() -> {
-            while (true) {
-                try {
-                    TimeUnit.SECONDS.sleep(1);
-                    System.out.println("hello");
-                    int nextInt = new Random().nextInt(1000);
-                    if (nextInt > 500) {
-                        System.out.println("线程被阻塞了");
-                        array[0] = 1;
-                        LockSupport.park();
-                        System.out.println("线程被唤醒了");
-                        return;
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        Thread th2 = new Thread(() -> {
+            try {
+                TimeUnit.SECONDS.sleep(5);
+                out.print("唤醒线程th1 \n");
+                LockSupport.unpark(th1);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
-        });
+        }, "th2");
 
-        Thread thread = new Thread(() -> {
-            while (true) {
-                try {
-                    TimeUnit.SECONDS.sleep(1);
-                    if (array[0] == 1) {
-                        System.out.println("准备唤醒线程");
-                        TimeUnit.SECONDS.sleep(5);
-                        System.out.println("唤醒了线程");
-                        LockSupport.unpark(hello);
-                        return;
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        hello.start();
-        thread.start();
+        th1.start();
+        th2.start();
     }
 }
 ```
 
+<b>思考：</b>为什么会出现 LockSupport。
+
+- 最先出现的是 synchronized，利用 wait 和 notify/notifyAll 阻塞（放入等待队列）和唤醒线程（放入阻塞队列，给其重新抢夺锁的机会）。
+- 接着出现了 Condition，利用 await 和 signal/signalAll 阻塞（放入等待队列）和唤醒线程（放入阻塞队列，给其重新抢夺锁的机会）。
+- 然后是当前学习的 LockSupport，利用 park 和 unpark 阻塞和唤醒线程。
+
+<b>回答</b>
+
+- sync 的局限性，wait 和 notify 需要成对出现，且必须是 wait 先执行，notify 后执行，不然会出现线程无法被唤醒。
+- Condition 的局限性与 sync 类似，await 和 signal 需要成对出现，且必须是 await 先执行，signal 后执行，不然会出现线程无法被唤醒。
+- LockSupport，无加锁要求，无唤醒和等待执行顺序的要求。
+
 ## Spinlock
 
-自旋锁：spinlock，是指尝试获取锁的线程不会立即阻塞，而是采用循环的方式去尝试获取锁，这样的好处是减少线程上下文切换的消耗，缺点是循环会消耗 CPU
+自旋锁 spinlock，是指尝试获取锁的线程不会立即阻塞，而是采用循环的方式去尝试获取锁，这样的好处是减少线程上下文切换的消耗，缺点是循环会消耗 CPU。
 
 原来提到的比较并交换，底层使用的就是自旋，自旋就是多次尝试，多次访问，不会阻塞的状态就是自旋。
 
-<b>优点</b>：循环比较获取直到成功为止，没有类似于 wait 的阻塞
+<b>优点：</b>循环比较获取直到成功为止，没有类似于 wait 的阻塞。
 
-<b>缺点</b>：当不断自旋的线程越来越多的时候，会因为执行 while 循环不断的消耗 CPU 资源
+<b>缺点：</b>当不断自旋的线程越来越多的时候，会因为执行 while 循环不断的消耗 CPU 资源。
 
 ## CompletableFuture
 
@@ -515,7 +551,7 @@ t1 invoked myUnlock()
 t2 invoked myUnlock()
 ```
 
-首先输出的是 t1 come in
+首先输出的是 t1 come in，
 
 然后 1 秒后，t2 线程启动，发现锁被 t1 占有，所有不断的执行 compareAndSet 方法，来进行比较，直到 t1 释放锁后，也就是 5 秒后，t2 成功获取到锁，然后释放。
 
@@ -701,6 +737,10 @@ class MyCacheLock {
 }
 ```
 
+## Fork/Join
+
+有个工作窃取算法。A、B 两个线程，A 线程完成了自己的任务的话，回去窃取 B 的任务执行。
+
 ## AQS概述
 
 ### AQS概述
@@ -720,7 +760,7 @@ public abstract class AbstractQueuedSynchronizer
     private static final long serialVersionUID = 7373984972572414691L;
 
     protected AbstractQueuedSynchronizer() { }
-	// 记录了锁的状态
+			// 记录了锁的状态
     static final class Node {
         static final Node SHARED = new Node();
         static final Node EXCLUSIVE = null;
@@ -747,7 +787,7 @@ public abstract class AbstractQueuedSynchronizer
 - 学习 AQS 的目的主要是理解原理、提高技术。
 - 我们先从应用层理解为什么需要 AQS ，如何使用 AQS？什么场景需要 AQS。
 
-> 为什么需要 AQS
+> <b>为什么需要 AQS</b>
 
 技术的产生是为了解决某些问题，而 AQS 也是为了解决一些技术问题---并发控制。
 
@@ -755,7 +795,7 @@ ReentrantLock 和 Semaphore 都有一些类似的特点。他们都想一个闸�
 
 Semaphore 的内部类 Sync 继承了 AQS，CountDownLatch 也是这样，它的内部类 Sync 也继承了 AQS。虽然 Semaphore 和 CountDownLatch 的 Sync 逻辑不同，但是他们内部的很多操作都是一样的，而这些相同的操作就被封装到了 AQS 中，可以复用代码。
 
-> 如果没有 AQS？
+> <b>如果没有 AQS？</b>
 
 如果没有 AQS，那么每个协作工具类就需要自己实现：
 

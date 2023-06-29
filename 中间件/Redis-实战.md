@@ -92,6 +92,28 @@ docker run --name myredis -d -p6379:6379 redis
 docker exec -it myredis redis-cli
 ```
 
+docker 启动 redis 并配置 redis.conf，配置数据存储目录
+
+```shell
+sudo docker run -p 6379:6379 # 端口映射
+--name redis # 设置容器名
+-v /home/payphone/software/redis-6/redis.conf:/etc/redis/redis.conf # 配置文件路径映射
+-v /home/payphone/software/redis-6:/data # 数据存储路径映射
+-d redis 
+redis-server /etc/redis/redis.conf # 启动 redis-server 配置规则按 redis.conf 设置 
+--appendonly yes # 开启 appendonly
+
+# 无注释版本
+sudo docker run -p 6379:6379 --name redis -v /home/payphone/software/redis-6/redis.conf:/etc/redis/redis.conf  -v /home/payphone/software/redis-6:/data -d redis redis-server /etc/redis/redis.conf --appendonly yes
+```
+
+docker 启动的 redis 可能连接不上，需要把 redis.conf 中的 bind 127.0.0.1 注释掉，再把 87 行的 protected-mode yes 改成 no。
+
+```shell
+# bind 127.0.0.1
+protected-mode no
+```
+
 ### WSL
 
 也可以直接在 windows 的 wsl 子系统中安装 redis，也很方便。
@@ -101,6 +123,16 @@ apt-get install redis
 # 运行客户端
 redis-cli
 ```
+
+### 源码编译
+
+- 下载 redis 源码
+- 编译（记得安装 gcc 和 tcl）
+  - tar xzf redis-xx.tar.gz
+  - cd redis-xx
+  - sudo make
+  - sudo make test
+  - sudo make install
 
 ## 数据结构
 
