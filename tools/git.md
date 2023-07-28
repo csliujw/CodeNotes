@@ -653,8 +653,6 @@ git branch -D b1 不做任何检查，强制删除
 
 如果想修改先前 commit 的 msg，可以使用 [rebase](##变基（rebase）)
 
-
-
 #### 解决冲突
 
 当两个分支上对文件的修改可能会存在冲突，例如同时修改了同一个文件的同一行，这时就需要手动解决冲突，解决冲突步骤如下：
@@ -1316,6 +1314,12 @@ git branch -av
 
 注意：我们操作的其实都是本地分支，操作完毕后把内容 push 到远程分支上。如果本地分支和远程分支发生了冲突，可以将远程分支合并到本地分支，处理完冲突后再 push。
 
+```sh
+git checkout -b feature/datalist # 在本地创建一个 feature/datalist 分支
+git branch -u origin feature/datalist # 将本地的 feature/datalist 分支和远程的 feature/datalist 分支进行关联
+git push origin feature/datalist # 将本地分支（featute/datalist） 推送到远程的 feature/datalist 分支
+```
+
 #### 从远程仓库克隆
 
 如果已经有一个远端仓库，我们可以直接 clone 到本地。
@@ -1328,6 +1332,47 @@ git clone <仓库地址> [本地目录]
 
 #### 同步仓库内容
 
+<b>git 中是有三个分支的，本地分支，追踪分支，远程分支。</b>
+
+```mermaid
+graph TD
+ subgraph 本地分支
+ 	工作区1
+ 	暂存区1
+ 	对象区1
+ end
+ subgraph 追踪分支
+ 	工作区2
+ 	暂存区2
+ 	对象区2
+ end
+ subgraph 远程分支
+ 	工作区3
+ 	暂存区3
+ 	对象区3
+ end
+```
+
+追踪分支也叫本地的远程分支，是远程分支在本地的拷贝，作为本地与远程的媒介。
+
+<b>同步仓库内容用两种情况。</b>
+
+- 1️⃣本地→远程，本地有 dev 分支，远程没有。
+
+  - `git push -u origin dev`，关联本地分支和远程分支。
+
+    `git push --set-upstream origin dev`
+
+- 2️⃣远程→本地，远程有 dev 分支，本地没有。
+
+  - `git pull`，先拉取远程的分支到追踪分支（origin/xx origin 开头的是追踪分支哦）
+
+  - `git checkout -b dev origin/dev` 创建并切换到本地分支 dev，然后将本地分支和追踪分支关联。
+
+    `git checkout -b dev --track origin/dev` 和上面的命令一致。
+
+    也可以简写为 `git checkout --track origin/dev`，默认将 dev 分支的名字作为本地分支的名字。
+
 如果关联本地和远端仓库后，将本地的推送到远端发生了冲突，提示需要 pull xxx，可以用下面的方式解决。
 
 ```shell
@@ -1336,6 +1381,14 @@ git push 远端仓库名 分支名
 ```
 
 如果发现仓库的分支走向不是线性的，可以通过 merge 的手段合并分支，变成线性的（后面体会）。
+
+#### 删除远端分支
+
+删除本地分支：`git branch -d 分支名`
+
+本地分支推送远端：`git push origin local:remote_dest`
+
+删除远端分支：`git push origin _:test`，`_` 表示空格，或者 `git push origin --delete test`
 
 ### 文件冲突★
 

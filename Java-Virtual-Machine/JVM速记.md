@@ -1241,7 +1241,7 @@ goto 的本质就是改变的程序计数器的值（java 中没有 goto，goto 
 - 方法在执行的同时，会在虚拟机栈中创建一个栈帧
 - 栈帧中包含：方法的局部变量表，操作数据栈、动态链接、方法出口信息等
 
-当方法太多时，就可能发生 栈溢出异常 StackOverflowError，或者内存溢出异常 OutOfMemoryError
+当方法太多时，就可能发生栈溢出异常 StackOverflowError，或者内存溢出异常 OutOfMemoryError
 
 ```java
 public static void main(String[] args) {

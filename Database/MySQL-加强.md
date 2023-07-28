@@ -164,13 +164,13 @@ net stop mysql80
 
 <b>数据库操作</b>
 
-| 操作                     | 解释                        |
-| ------------------------ | --------------------------- |
-| show databases;          | 显示所有的数据库            |
-| create database 数据库名 | 创建数据库                  |
-| use 数据库名;            | 使用数据库/切换为 xx 数据库 |
-| select database();       | 查询当前数据库名称          |
-| drop databases 数据库名  | 删除数据库                  |
+| 操作                      | 解释                        |
+| ------------------------- | --------------------------- |
+| show databases;           | 显示所有的数据库            |
+| create database 数据库名; | 创建数据库                  |
+| use 数据库名;             | 使用数据库/切换为 xx 数据库 |
+| select database();        | 查询当前数据库名称          |
+| drop database 数据库名;   | 删除数据库                  |
 
 <b>表操作</b>
 
@@ -193,7 +193,7 @@ net stop mysql80
 
 <b>创建</b>
 
-```sql
+```mysql
 create database [IF NOT EXISTS] 数据库名 [DEFAULT CHARSET 字符集] [COLLATE 排序规则];
 # mysql数据库中 utf8 字符集存储的长度是三个字节，有些特殊字符占四个字节 
 # mb4则支持四个字节的 (语言表达有问题) ，默认好像就是utf8mb4
@@ -202,21 +202,21 @@ create database if not exists demo default charset utf8mb4;
 
 <b>删除</b>
 
-```sql
+```mysql
 drop database 数据库名;
 drop database demo;
 ```
 
 <b>使用</b>
 
-```sql
+```mysql
 use 数据库名;
 use demo;
 ```
 
 #### 表操作-创建
 
-```sql
+```mysql
 create table 表名(
     字段1 字段类型 [comment 字段1注释],
     字段2 字段类型 [comment 字段2注释],
@@ -236,7 +236,7 @@ create table `tb_user` (
     `gender` char(1) default null comment '性别 , 1: 男, 2: 女',
     `status` char(1) default null comment '状态',
     `createtime` datetime default null comment '创建时间',
-)
+)my
 ```
 
 #### 表操作-查询
@@ -724,9 +724,23 @@ end
 # 先找出符合条件的邮箱
 # select * from person as p1,person as p2 where p1.email = p2.email and p1.id>p2.id,p1 中的数据就是需要删除的。
 
+# 执行速度似乎较慢
 DELETE P1.* 
 FROM PERSON AS P1, PERSON AS P2
 WHERE P1.EMAIL=P2.EMAIL AND P1.ID>P2.ID
+
+# 不能同时对同一个表中的数据进行查询和删除。更多 SQL 查询细节请看 SQL 专项一章。
+DELETE from Person
+WHERE id NOT IN #不在满足条件内的肯定就是不满足的，直接删除
+(
+    SELECT ID #先把满足条件的找出来
+    From
+    (
+     SELECT  MIN(id) as ID
+     From Person
+     Group by Email
+    )t
+)
 ```
 
 [1667. 修复表中的名字 - 力扣 (LeetCode)  (leetcode-cn.com)](https://leetcode-cn.com/problems/fix-names-in-a-table/submissions/)
@@ -806,7 +820,7 @@ create user 'user2'@'%' identified by 'root';
 ```sql
 alter user '用户名'@'主机名' identified with mysql_native_password by '新密码';
 
- alter user 'user2'@'localhost' identified with mysql_native_password by '1234'
+alter user 'user2'@'localhost' identified with mysql_native_password by '1234'
 ```
 
 删除用户
@@ -883,7 +897,7 @@ mysql> select concat('s1','asf','demo');
 +---------------------------+
 | concat('s1','asf','demo') |
 +---------------------------+
-| s1asfdemo                 |
+| s1asfdemo								 |
 +---------------------------+
 1 row in set (0.00 sec)
 
@@ -891,7 +905,7 @@ mysql> select lower("BIG");
 +--------------+
 | lower("BIG") |
 +--------------+
-| big          |
+| big       |
 +--------------+
 1 row in set (0.01 sec)
 
@@ -899,13 +913,13 @@ mysql> select upper("small");
 +----------------+
 | upper("small") |
 +----------------+
-| SMALL          |
+| SMALL       |
 +----------------+
 1 row in set (0.00 sec)
 
 mysql> select LPAD('00101',32,'0');
 +----------------------------------+
-| LPAD('00101',32,'0')             |
+| LPAD('00101',32,'0')						 |
 +----------------------------------+
 | 00000000000000000000000000000101 |
 +----------------------------------+
@@ -915,15 +929,15 @@ mysql> select RPAD('320.0',6,'0');
 +---------------------+
 | RPAD('320.0',6,'0') |
 +---------------------+
-| 320.00              |
+| 320.00						|
 +---------------------+
 1 row in set (0.07 sec)
 
 mysql> select trim('   hello world  ');
 +--------------------------+
-| trim('   hello world  ') |
+| trim('   hello world  ')	|
 +--------------------------+
-| hello world              |
+| hello world							|
 +--------------------------+
 1 row in set (0.01 sec)
 
@@ -931,7 +945,7 @@ mysql> select substring('hello world java','2','3');
 +---------------------------------------+
 | substring('hello world java','2','3') |
 +---------------------------------------+
-| ell                                   |
+| ell																|
 +---------------------------------------+
 1 row in set (0.00 sec)
 
@@ -1911,6 +1925,40 @@ set session transaction isolation level read uncommitted ;
 
 set session transaction isolation level repeatable read ;
 ```
+
+# SQL专项
+
+## SQL查询错误
+
+> You can't specify target table 'Person' for update in FROM clause
+>
+> `delete from person where id not in ( select min(id) from person);`
+
+报错原因：在 MySQL 中不能在同一条 SQL 中查询出一张表的某些值，再直接用这些值更新这张表。
+
+解决方案：将查询出的结果用 SELECT 再查询一次，得到一张额外的临时表，再用临时表的值做更新。
+
+```mysql
+delete from person where id not in 
+	(select id from 
+     (select min(id) as id from person group by email)tmp
+  );
+  
+  
+# 窗口函数解法
+delete from person where id in(
+    select id from (
+        # 按 emial 进行分区，根据 id 进行排序
+        select id, dense_rank() over(partition by email order by id) as `rank` from person
+    ) as tmp
+    # 查询出同一分区 id 不是最大的数据（即需要被删除的记录）
+    where tmp.rank > 1
+)
+```
+
+## 窗口函数
+
+以记录 leetcode 和 nowcode 中的题目为主。
 
 # 进阶
 
@@ -4203,7 +4251,7 @@ update\delete 等操作先回到 buffer pool 里，然后把变化写入到 redo
 - 分库分表
 - 读写分离
 
-# 实现分布式锁
+# 分布式锁
 
 使用 MySQL 实现一个分布式锁。\=\=> Spring Session 实现分布式锁，Redis 实现分布式锁 (为用户创建一个 token，用户每次访问都携带这个 token，从 redis 中查询 token 对应的信息，以确认用户是否登录了) 
 
