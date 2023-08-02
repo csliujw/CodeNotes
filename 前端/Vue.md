@@ -1,15 +1,581 @@
-# 安装
+# 学习提要
+
+## 必备插件
 
 VSCode 开发安装插件
 
 - Vetur  -- Pine Wu
 - Vue 3 Snippets -- hollowtree
 
-#  基本用法
+## 学习内容
+
+后端开发人员学 Vue，因此重点在学会怎么用，学会常用的组件库。
+
+- Vue 的基本语法，生命周期，各种属性的含义
+- 为 DOM 绑定事件，给绑定的方法传递参数
+- 不同 vue 组件的参数传递 
+    - 父组件传递数据给子组件 -- props 属性
+    - 子组件传递数据给父组件 -- `this.$emit` 触发父组件的事件，通过触发事件，将参数传递给事件的函数，从而进行参数传递。
+    - 兄弟组件传递数据
+- 路由组件 --  vue-router
+- 全局状态管理组件 --  vue-router
+- 缓存（StoreSession）
+- 如何发起 ajax 请求
+
+## 版本选择
+
+- 开发版本，有完整的警告和调试模式
+- 生成版本，删除了警告
+- CDN，用于快速学习
+
+# vue2入门
+
+## 入门例子
+
+下面为 vue2 的一个基本示例，展示了如何创建 Vue 对象，将 Vue 绑定到 DOM 上，以及 if-else，for 的语法。
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="app">
+        <h4>{{message}}</h4>
+        <li>
+            <!-- 就是 if-else -->
+            <span v-if="!item.del">未删除 {{item.title}}</span>
+            <span v-else>删除了 {{item.title}}</span> <br />
+            <!-- 为 true 就显示 -->
+            <span v-show="item.show">显示！</span>
+        </li>
+        <h4>for 循环用法</h4>
+        <!-- 循环遍历 -->
+        <li v-for=" item in list">
+            <span>{{item.name}}</span><br>
+        </li>
+    </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script>
+    // 创建一个 vue 对象，这个对象绑定到 id 为 app 的 dom 上
+    // data 为在 dom 中需要使用的数据
+    const vm = new Vue({
+        el: '#app',
+        data: {
+            message: 'hello world',
+            item: {
+                title: 'some',
+                del: false,
+                show: true
+            },
+            list: [{
+                name: 'tom'
+            }, {
+                name: 'jetty'
+            }]
+        }
+    })
+</script>
+
+</html>
+```
+
+## 组件注册
+
+如果我们在 html 中需要多次用到同样的东西，我们可以把它抽取成一个『组件』，然后进行 html 块的复用。
+
+- 使用 Vue.component('组件名', {  }); 注册组件
+- 在 html 中直接通过 <组件名></组件名> 使用标签
+
+组件的定义及使用如下。
+
+```html
+<body>
+    <div id="app">
+        <h4>组件</h4>
+        <div v-for=" item in list">
+            <todo-item :title="item.name" :del="true" :show="true"></todo-item>
+        </div>
+    </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script>
+    Vue.component('todo-item', {
+        // 组件中的具体内容（即 html）
+        template: `<li><span v-if="!del">未删除 {{title}}</span><span v-else>删除了 {{title}}</span> <br /></li>`,
+        // 为组件定义一些属性（为类定义属性值），直接传递属性给组件
+        props: {
+            title: String,
+            del: {
+                type: Boolean,
+                default: false
+            },
+        },
+        // 组件内部的数据, 要返回（return），也可以 data(){ return{} } 这样写，一样的效果。
+        data: function() {
+            return {
+                name: '123'
+            };
+        },
+        // 组件内部用到的一些方法，如点击事件
+        methods: {},
+
+    })
+    const vm = new Vue({
+        el: '#app',
+        data: {
+            message: 'hello world',
+            list: [{
+                name: 'tom'
+            }, {
+                name: 'jetty'
+            }]
+        }
+    })
+</script>
+
+</html>
+```
+
+## 绑定事件
+
+- 给原生 DOM 绑定事件 -- @click=‘function'，很简单，就不写 Demo 了。
+- 给组件绑定事件并调用，调用涉及到父子通信，需要用到 `this.$emit` 方法。此处假定的逻辑是，子组件触发 click 方法后，调用父组件的 @delete 将两个参数传递给父组件。
+
+```html
+<body>
+    <div id="app">
+        <h4>组件</h4>
+        <todo-list></todo-list>
+    </div>
+</body>
+<script>
+    // 子组件
+    Vue.component('todo-item', {
+        // 组件中的具体内容（即 html）
+        template: `<li><span>{{title}}</span><button @click='delData'>删除</button></li>`,
+        props: { title: String },
+        // 组件内部用到的一些方法，如点击事件
+        methods: {
+            delData(args) {
+                console.log("删除数据", args);
+                // 假定处理逻辑是：子组件点击删除事件后，触发父组件的 delete 事件
+                this.$emit('delete', 1, 2);
+            }
+        },
+    });
+
+    // 父组件
+    Vue.component('todo-list', {
+        // 父组件通过 :title 把自己的数据传递给子组件
+        template: `<div><todo-item @delete='handleDel' v-for="item in list" :title="item.name"></todo-item></div>`,
+        data() {
+            return {
+                list: [{ name: 'tom' }, { name: 'jetty' }]
+            }
+        },
+        methods: {
+            handleDel(arg1, arg2) {
+                console.log("触发了父组件的 @delete 事件", arg1, arg2);
+            }
+        }
+    })
+
+    const vm = new Vue({
+        el: '#app',
+        data: {
+            message: 'hello world',
+        }
+    });
+</script>
+
+</html>
+```
+
+<b>事件修饰符</b>
+
+[事件处理 — Vue.js (vuejs.org)](https://v2.cn.vuejs.org/v2/guide/events.html)
+
+## 插槽
+
+在自定义的组件中，添加标签，例如我们用 todo-item 组件，我们希望可以在这个标签填充一些其他标签。
+
+```html
+<todo-item>
+    <!-- vue 2.6 的用法 -->
+    <template v-slot:pre-icon>前置</template>
+    <template v-slot:suf-icon>后置</template>
+</todo-item>
+
+<script>
+    Vue.component('todo-item', {
+        // 组件中的具体内容（即 html）
+        template: `<li> 
+                        <slot name='pre-icon'></slot>
+                        <span>{{title}}</span>
+                        <slot name='suf-icon'></slot>
+                        <button @click='delData'>删除</button>
+            		</li>`,
+        props: {
+            title: String,
+        },
+        methods: {
+            delData(args) {
+                console.log("删除数据", args);
+                // 子组件点击删除事件后，触发父组件的 delete 事件，删除 todo-item
+                this.$emit('delete', 1, 2);
+            }
+        },
+</script>
+```
+
+完整代码
+
+```html
+<body>
+    <div id="app">
+        <todo-list></todo-list>
+    </div>
+</body>
+<script>
+    // 子组件
+    Vue.component('todo-item', {
+        // 组件中的具体内容（即 html）
+        template: `<li> 
+                        <slot name='pre-icon'></slot>
+                        <span>{{title}}</span>
+                        <slot name='suf-icon'></slot>
+                        <button @click='delData'>删除</button>
+            		</li>`,
+        props: {
+            title: String,
+        },
+
+        methods: {
+            delData(args) {
+                console.log("删除数据", args);
+                // 子组件点击删除事件后，触发父组件的 delete 事件，删除 todo-item
+                this.$emit('delete', 1, 2);
+            }
+        },
+    });
+
+    // 父组件
+    Vue.component('todo-list', {
+        template: `<div>
+                        <todo-item @delete='handleDel' v-for="item in list" :title="item.name">
+                            <template v-slot:pre-icon>前置</template>
+                            <template v-slot:suf-icon>后置</template>
+                        </todo-item>
+                    </div>`,
+        data() {
+            return {
+                list: [{ name: 'tom' }, { name: 'jetty'}]
+            };
+        },
+        methods: {
+            handleDel(arg1, arg2) {
+                console.log("触发了父组件的 @delete 事件", arg1, arg2);
+            }
+        }
+    })
+
+    const vm = new Vue({
+        el: '#app',
+        data: {
+            message: 'hello world',
+        }
+    });
+</script>
+
+</html>
+```
+
+我们也可以向插槽传递属性（父组件向子组件的插槽传递属性）
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+</head>
+
+<body>
+    <div id="app">
+        <todo-list></todo-list>
+    </div>
+</body>
+<script>
+    // 子组件
+    Vue.component('todo-item', {
+        // 组件中的具体内容（即 html）
+        template: `<li> 
+                    <slot name='pre-icon' :value='123'></slot>
+                    <span>{{title}}</span>
+            	</li>`,
+
+        props: {
+            title: String,
+        }
+    });
+
+    // 父组件, 注意写法 v-slot:pre-icon='{value}' 这是为了后面 {{}} 取出 value 值用。
+    Vue.component('todo-list', {
+        template: `<div>
+                        <todo-item v-for="item in list" :title="item.name">
+                            <template v-slot:pre-icon='{value}'>前置{{value}}</template>
+                        </todo-item>
+                    </div>`,
+        data() {
+            return {
+                list: [{ name: 'tom'}, { name: 'jetty'}]
+            };
+        }
+    })
+
+    const vm = new Vue({
+        el: '#app',
+        data: {
+            message: 'hello world',
+        }
+    });
+</script>
+
+</html>
+```
+
+## 单文件组件
+
+<b>优点</b>
+
+- 有语法高亮
+- 便于管理（名字不容易冲突）
+- 支持 CSS
+- 有构建步骤，可以使用预处理器
+
+<b>单文件组件开发</b>
+
+- 安装 node，百度即可
+
+- 安装 vue cli
+
+    ```shell
+    npm install -g @vue/cli # -g 表示全局安装
+    # or
+    yarn global add @vue/cli
+    ```
+
+
+- 创建 vue 项目 -- 命令行创建
+
+    ```cmd
+    vue create vue-project
+    # 选择默认模式
+    #========================================
+    Vue CLI v5.0.8
+    ? Please pick a preset:
+      Default ([Vue 3] babel, eslint)
+    > Default ([Vue 2] babel, eslint)
+      Manually select features
+    #========================================
+    
+    ```
+
+- 创建 vue 项目 -- ui 创建
+
+    ```cmd
+    vue ui
+    🚀  Starting GUI...
+    🌠  Ready on http://localhost:8000
+    ```
+
+    然后按根据页面的提示创建项目就行
+
+<b>单文件组件的注册</b>
+
+- 全局注册，一般写在 main.js 里，导入组件后使用 Vue.component('todo-list',TodoList) 注册组件。
+- 局部注册，仅在当前组件内有效，直接在 components 里注册，注册组件 `TodoList.vue` 后，可以通过 `<todo-list></todo-list>` 标签使用。
 
 ## 双向数据绑定
 
-v-model 指令双向数据绑定，只要 vm 监听到 data 中任何一条数据的变化，都会重新执行 el 区域的所有指令
+v-model 指令双向数据绑定，只要 vm 监听到 data 中任何一条数据的变化，都会重新执行 el 区域的所有指令。
+
+```html
+<input v-mode="in_val">
+```
+
+[表单输入绑定 | Vue.js (vuejs.org)](https://cn.vuejs.org/guide/essentials/forms.html#text)
+
+## 虚拟DOM
+
+Vue 使用的虚拟 DOM，使用树形结构组织标签之前的曾经关系。在进行 for 遍历的时候，会要求绑定一个 key，如下
+
+```html
+<div>
+    <li v-for="item in list" :key='item.somekey'>
+        <span>{{item.name}}</span><br>
+    </li>
+</div>
+```
+
+有时会有人写成这种
+
+```html
+<div>
+    <li v-for="(item, index) in list" :key='index'>
+        <span>{{item.name}}</span><br>
+    </li>
+</div>
+```
+
+如果会对 list 中的数据进行添加删除，意味着每个 li 的 index 可能会发生变化，需要频繁修改 for 中的产生的 DOM，降低性能。建议在只需展示数据（数据不会变动）的场景下用 index 作为 key，其他情况下不要使用值会变动的 key。
+
+## 触发组件更新（原理）
+
+<b>Vue 是如何触发组件更新的？</b>
+
+Vue 是数据驱动的，数据改变的时候视图才会改变。
+
+<b>状态 data vs 属性 props</b>
+
+- 状态是组件自身的数据（即 data() { return {} }）
+- 属性是来自父组件的数据（子组件定义属性，然后父组件通过 `:属性名` 将父组件的值传递给子组件）
+- 状态的改变未必会触发更新（只有状态在 DOM 中才会触发更新）
+- 属性的改变未必会触发更新（只有属性在 DOM 中才会触发更新）
+
+<b>响应式更新</b>
+
+<div align="center"><img src="imgs/data.png"></div>
+
+vue 在实例化的时候，会对 data 下的数据做一个 getter/setter 的转换。即，在操作数据的时候，都会经过一个代理层，而代理层是通过 getter/setter 操作数据的。
+
+每个组件实例都对应一个 <b>watcher</b> 实例，它会在组件渲染的过程中（<b>虚拟 DOM 中用到的数据</b>）把“接触”过的数据 property 记录为依赖。之后当依赖项的 setter 触发时，会通知 watcher，从而使它关联的组件重新渲染。
+
+例如，下面的代码就会触发组件重新渲染。
+
+```html
+<template>
+  <div id="app">
+    <!-- DOM 里用到了 num，因此会触发 updated 方法 -->
+    <div :data="num"></div>
+    <button @click="cc">111</button>
+    <!-- DOM 没有用到 c，因此不会触发 updated 方法 -->  
+    <button @click="cc2">222</button>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'App',
+  components: { HelloWorld },
+  data() { return { num: 1 } },
+  updated() { console.log("触发了更新"); },
+  methods: {
+    cc(){
+      console.log("click");
+      this.num = 2;
+    },    
+    cc2() {
+      console.log("click");
+      this.c = 2;
+    }
+  }
+}
+</script>
+```
+
+## 计算属性和监听器
+
+### computed
+
+必须是响应式数据才行
+
+- 减少模板中计算逻辑
+- 数据缓存
+- 依赖固定的数据类型（应式数据）
+
+下面的例子展示了计算属性的优点
+
+```html
+<!-- 在模板中写逻辑 -->
+<div id="example">
+  {{ message.split('').reverse().join('') }}
+</div>
+
+<!-- 使用计算属性 -->
+<div id="example">
+  <p>Original message: "{{ message }}"</p>
+  <p>Computed reversed message: "{{ reversedMessage }}"</p>
+</div>
+<script>
+let vm = new Vue({
+  el: '#example',
+  data: { message: 'Hello' },
+  computed: {
+    // 计算属性的 getter
+    reversedMessage: function () {
+      // `this` 指向 vm 实例
+      return this.message.split('').reverse().join('')
+    }
+  }
+})
+</script>
+```
+
+使用方法也可以达成上述目的，但是计算属性会对结果进行缓存，<b>计算属性是基于它们的响应式依赖进行缓存的。</b>只在相关响应式依赖发生改变时它们才会重新求值。如果没有发生改变不会重新计算，而方法每次都要进行计算。
+
+[计算属性 getter 和 setter](https://v2.cn.vuejs.org/v2/guide/computed.html#计算属性的-setter)
+
+### watch
+
+监听数据是否发生变化（通过监听变化，来书写响应的逻辑）
+
+```html
+<div id="watch-example">
+	<input v-model="question">
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@0.12.0/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.13.1/lodash.min.js"></script>
+<script>
+var watchExampleVM = new Vue({
+  el: '#watch-example',
+  data: {
+    question: '',
+  },
+  watch: {
+    // 如果 `question` 发生改变，这个函数就会运行
+    question: function (newQuestion, oldQuestion) {
+       // question 发生变化的话，就执行下列代码
+       // some code
+    }
+  },
+})
+</script>
+```
+
+### computed vs watch
+
+- computed 能做的，watch 都能做，反之则不行（watch 更强大）
+- 能用 computed 的尽量用 computed，computed 更简洁，清爽
+
+## 生命周期
+
+### 函数式组件
+
+- functional: true
+- 无状态、无实例、没有 this 上下文、无生命周期
 
 ## 插值表达式
 
@@ -916,89 +1482,6 @@ Vue 不支持 animate4.0
 
 </html>
 ```
-
-# Webpack
-
-## 网页中常见静态资源
-
-- 样式表
-    - .css .less .scss
-- js文件
-    - .js	.ts	.coffee
-- 图片
-    - .jpg/.jpeg	.png	.gif	.bmp	.webp
-- 字体文件
-    - .ttf	.eot	.woff	.woff2	.svg
-- 模板文件
-    - .vue	.jsx
-
-> 引入静态资源多了？
-
-- 对网页性能不友好：要发起很多静态资源请求，降低页面的加载效率，用户体验差；
-- 对程序开发不友好：前端程序员要处理复杂的文件之间的依赖关系；
-
-> 如何解决上述问题？
-
-- 对于 JS 或 CSS，可以压缩和合并；小图片适合转 Base64 格式的编码。
-    - 合并：减少发送请求次数
-    - 压缩：减小文件的传输量
-    - Base：把图片转换成了字符串，无需为图片发起请求。
-- 通过一些工具，让工具自动维护文件之间的依赖关系。
-
-## Webpack
-
-**Webpack：**前端项目的构建工具；前端的项目都是基于 webpack 进行构建和运行的。
-
-**为什么用Webpack：**
-
-- 1、如果项目使用 webpack 进行构建，我们可以书写高级的 ES 代码，且不用考虑兼容性。
-- 2、webpack 能够优化项目的性能，比如合并、压缩文件等；
-- 3、基于webpack，程序员可以把自己的开发重心，放到功能上；
-
-**什么项目适合使用webpack：**
-
-- 单页面应用程序
-    - vue、react、angular 只要用前端三大框架开发项目，必然会使用 webpack 工具。
-- 不太适合与多页面的普通网站结合使用
-- <a href="http://webpack.github.io/">官网</a>
-
-## webpack 流程
-
-vscode快捷键==li{这是第$个li}*9==
-
-## 安装和配置webpack
-
-> 安装
-
-1、新建一个项目的空白目录，并在终端中，cd到项目根目录，指向==npm init -y==初始化项目
-
-2、装包：运行==npm i webpack webpack-cli -D== 安装项目构建所需要的webpack。
-
-- 由于存在版本问题，所以推荐使用指定版本的工具==npm i webpack@4.17.1 webpack-cli==
-
-3、打开 package.json 文件，在scripts节点中，==新增一个dev的节点==：
-
-```shell
-"scripts":{
-	"test" : "echo \"Error: no test specified\" && exit 1",
-	"dev" : "webpack"
-}
-```
-
-4、在项目根目录中，新建一个webpack.config.js 配置文件，内容如下：
-
-```js
-// 这里用的 Node 语法， 向外导出一个 配置对象
-module.exports = {
-	mode: 'production' // production development
-}
-```
-
-5、在项目根目录中，新增一个src目录，并且在src目录中，新建一个 index.js 文件，作为 webpack 构建的入口；会把打包好的文件输出到 dist->main.js
-
-6、在终端中，==直接运行 npm run dev==启动 webpack进行项目构建；
-
-webpack学习失败。我直接上极客时间的Vue了。
 
 # 组件化Vue
 
@@ -2617,23 +3100,22 @@ Vue.directive("focus", {
 
 ## 作用域插槽（五颗♥）
 
-- 1. 定义作用域插槽：在子组件中，使用 slot 定义插槽的时候，可以通过属性传值的心酸，为插槽传递数据；在element ui 这类三方 ui 库中用的很多。
+- 定义作用域插槽：在子组件中，使用 slot 定义插槽的时候，可以通过属性传值的心酸，为插槽传递数据；在element ui 这类三方 ui 库中用的很多。
+- 作用域插槽只能被使用一次，用多次，前面的会被覆盖掉，变得无效。如果过要接收作用域插槽中的数据，而且渲染为多个标签，则必须在多个标签之外，包裹一个父元素，接收插槽中的数据。
 
-- 2. 作用域插槽只能被使用一次，用多次，前面的会被覆盖掉，变得无效。如果过要接收作用域插槽中的数据，而且渲染为多个标签，则必须在多个标签之外，包裹一个父元素，接收插槽中的数据。
-
-        ```vue
-        <my-son>
-        	<h3 slot="s2" slot-scope="scope">{{scope.uinfo}}</h3> <!-- 这个不会显示 -->
-        	<h3 slot="s2" slot-scope="scope">{{scope.umsg}}</h3>  <!-- 这个才会显示 -->
-        </my-son>
-        <!-- 改造 -->
-        <my-son>
-            <template slot="s2" slot-scope="scope"> <!-- template 只起到包裹元素的作用，不会被渲染为任何标签 -->
-        		<h3>{{scope.uinfo}}</h3> <!-- 这个不会显示 -->
-        		<h3>{{scope.umsg}}</h3>  <!-- 这个才会显示 -->
-            </template>
-        </my-son>
-        ```
+```vue
+<my-son>
+	<h3 slot="s2" slot-scope="scope">{{scope.uinfo}}</h3> <!-- 这个不会显示 -->
+	<h3 slot="s2" slot-scope="scope">{{scope.umsg}}</h3>  <!-- 这个才会显示 -->
+</my-son>
+<!-- 改造 -->
+<my-son>
+    <template slot="s2" slot-scope="scope"> <!-- template 只起到包裹元素的作用，不会被渲染为任何标签 -->
+		<h3>{{scope.uinfo}}</h3> <!-- 这个不会显示 -->
+		<h3>{{scope.umsg}}</h3>  <!-- 这个才会显示 -->
+    </template>
+</my-son>
+```
 
 ----
 
@@ -2653,8 +3135,6 @@ Vue.directive("focus", {
 ```
 
 <img src="../pics/vue/heima/scope_slot.png">
-
-
 
 # element-ui
 

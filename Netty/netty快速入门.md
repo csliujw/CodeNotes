@@ -16,7 +16,7 @@ non-blocking io 非阻塞 IO
 
 - 使用 Netty 开发基本网络应用程序
 - 彻底理解阻塞、非阻塞的区别，并与 Netty、NIO 的编码联系起来。
-- 懂得多路复用在服务器开发时的优势。为什么在此基础上还要加多线程（为了重复利用 CPU？）
+- 懂得多路复用在服务器开发时的优势。为什么在此基础上还要加多线程（多路复用，一个线程处理多个连接，减少线程数，避免频繁切换线程；加入多线程是为了充分利用多核 CPU）
 - Netty 中是如何实现异步的，异步处理的优势是什么（用多线程实现的异步，不会阻塞当前线程，可以处理更多的内容）
 - Netty 中是如何管理线程的，EventLoop 如何运作（Netty4 用 EventLoop 管理线程组的，所有的出站入站处理器都是在线程内部完成的，可以避免加锁解锁）
 - Netty 中是如何管理内存的，ByteBuf 的特点和分配时机（申请直接内存的开销很大，采用的内存池避免这种开销）
@@ -157,17 +157,17 @@ channel 有一点类似于 stream，它就是读写数据的<b>双向通道</b>�
 
 ```mermaid
 flowchart LR
-channel <---> buffer
+channel <---> buffer,缓冲区
 ```
 
-常见的 Channel 有
+<b>常见的 Channel 有</b>
 
 * FileChannel：文件的数据传输通道，高版本 JDK 把 IO 流重写了，可以用 NIO 进行文件流的传输了
 * DatagramChannel：UDP 网络编程时的数据传输通道
 * SocketChannel：TCP 网络编程时的数据传输通道 (客户端/服务器端)  
 * ServerSocketChannel：TCP 网络编程时的数据传输通道 (服务器端)  
 
-buffer 则用来缓冲读写数据，常见的 buffer 有
+<b>buffer 则用来缓冲读写数据，常见的 buffer 有</b>
 
 * ByteBuffer：常用，以字节为单位进行读写，是个抽象类
     * MappedByteBuffer
@@ -186,6 +186,8 @@ selector 单从字面意思不好理解，需要结合服务器的设计演化�
 
 #### 多线程版设计
 
+一个线程对应一个 socket 连接。
+
 ```mermaid
 graph TD
 subgraph 多线程版
@@ -197,7 +199,7 @@ end
 
 连接数少时没什么问题，但是连接数一多的话缺点就体现出来了。
 
-#### ⚠️ 多线程版缺点
+<b>⚠️ 多线程版缺点</b>
 
 * 内存占用高：windows 下默认的线程会占用 1MB 内存。
 * 线程上下文切换成本高
@@ -215,7 +217,7 @@ t5(thread) -.-> s7(socket4)
 end
 ```
 
-#### ⚠️ 线程池版缺点
+<b>⚠️ 线程池版缺点</b>
 
 * 阻塞模式下，线程同一时间仅能处理一个 socket 连接
 * 仅适合短连接场景，短连接，连接断开了线程就可以腾出手出执行其他任务了。早期的 tomcat 就是用的线程池设计的，适用于 HTTP 这种短连接的请求。
@@ -234,7 +236,7 @@ selector --> c3(channel)
 end
 ```
 
-调用 selector 的 select() 会阻塞，直到 channel 发生了读写就绪事件，这些事件发生，select 方法就会返回这些事件交给 thread 来处理
+调用 selector 的 select() 会阻塞，直到 channel 发生了读写就绪事件，这些事件发生，select 方法就会返回这些事件交给 thread 来处理。从上图看，selector 类似于一个中介，让一个线程可以管理多个 channel。
 
 ## ByteBuffer
 
@@ -244,7 +246,7 @@ end
 1234567890abcd
 ```
 
-使用 FileChannel 来读取文件内容
+使用 FileChannel 来读取文件内容并打印
 
 ```java
 @Slf4j
@@ -254,7 +256,7 @@ public class ChannelDemo1 {
             FileChannel channel = file.getChannel();
             ByteBuffer buffer = ByteBuffer.allocate(10);
             do {
-                // 向 buffer 写入
+                // 从 channel 读取数据，向 buffer 写入
                 int len = channel.read(buffer);
                 log.debug("读到字节数：{}", len);
                 if (len == -1) {
@@ -264,7 +266,7 @@ public class ChannelDemo1 {
                 // buffer.flip();一定得有，如果没有，就是从文件最后开始读取的，
                 // 当然读出来的都是byte=0时候的字符。通过buffer.flip();这个语句，
                 // 就能把buffer的当前位置更改为buffer缓冲区的第一个位置。
-                buffer.flip();
+                buffer.flip(); // 切换至读模式，如果不切换，就是从文件最后开始读取的。
                 while(buffer.hasRemaining()) {
                     log.debug("{}", (char)buffer.get());
                 }
@@ -338,15 +340,21 @@ clear 动作发生后，状态
 
 <div align="center"><img src="img/0021.png"></div>
 
-compact 方法，是把未读完的部分向前压缩，然后切换至写模式。【数据没读完，就切换为写模式】
+compact 方法，是把未读完的部分向前压缩，然后切换至写模式。『数据没读完，就切换为写模式』
 
 <div align="center"><img src="img/0022.png"></div>
+
+<b>总结</b>
+
+- position 和 limit 控制了读写的范围
+- flip 切换为读模式，实际上就是给 position、limit 设置读取数据的起点和终点（读取范围）
+- clear 切换为写模式，实际上就是还原 position 和 limit
+- compact 把未读完的数据向前移动，然后设置 position limit 的值
 
 #### 💡 调试工具类
 
 ```java
 import io.netty.util.internal.StringUtil;
-
 import java.nio.ByteBuffer;
 
 import static io.netty.util.internal.MathUtil.isOutOfBounds;
@@ -531,7 +539,7 @@ ByteBuffer.allocate()：分配指定字节大小的空间
 - put：写入数据
 - flip：开启读模式 
 
-compact：且换写模式
+compact：切换写模式
 
 - 只是把未读取的数据移动到了前面而已，并不会清空数据
 - 例如 61 62 63，61 被读取了，然后 compact
@@ -540,7 +548,6 @@ compact：且换写模式
 ```java
 // 前面的那个工具类 ByteBufferUtil
 import com.netty.nio.utils.ByteBufferUtil; 
-
 import java.nio.ByteBuffer;
 
 public class TestByteBuffer {
@@ -752,7 +759,7 @@ public static void testByteBuffer2String() {
 
 #### ⚠️ Buffer 的线程安全
 
-> Buffer 是非线程安全的
+> <b style="color:red">Buffer 是非线程安全的</b>
 
 ### Scattering Reads
 
@@ -779,11 +786,13 @@ public void test() {
         debugAll(buf2);
         debugAll(buf3);
     } catch (Exception e) {
+        e.printStackTrace();
     }
 }
+// 结果：都读取到了数据
 ```
 
-结果：都读取到了数据
+意义：可以重复利用 ByteBuffer；例如，可以使用多个小的 ByteBuffer 来读取较大的数据，避免申请大内存。
 
 ### Gathering Writes
 
@@ -793,9 +802,7 @@ public void test() {
 // 聚集写
 public class TestGatheringWrites {
     public static void main(String[] args) {
-        try (
-                RandomAccessFile file = new RandomAccessFile("hello.txt", "rw")
-       )  {
+        try (RandomAccessFile file = new RandomAccessFile("hello.txt", "rw"))  {
             ByteBuffer hello = StandardCharsets.UTF_8.encode("hello");
             ByteBuffer world = StandardCharsets.UTF_8.encode("world");
             ByteBuffer java = StandardCharsets.UTF_8.encode("java");
@@ -809,7 +816,7 @@ public class TestGatheringWrites {
 
 ### 练习
 
-网络上有多条数据发送给服务端，数据之间使用 `\n` 进行分隔，但由于某种原因这些数据在接收时，被进行了重新组合，例如原始数据有3条为
+网络上有多条数据发送给服务端，数据之间使用 `\n` 进行分隔，但由于某种原因这些数据在接收时，被进行了重新组合，例如原始数据有 3 条为
 
 * Hello,world\n
 * I'm zhangsan\n
@@ -864,7 +871,7 @@ public class TestRecordContent {
 
 #### ⚠️ FileChannel 工作模式
 
-> <b style="color:purple">FileChannel 只能工作在阻塞模式下。而和网络相关的才能配合 selector 工作在非阻塞模式下。</b>
+> <b style="color:orange">FileChannel 只能工作在阻塞模式下，因此不能配合 Selector 使用，和网络相关的 Channel 才能配合 selector 工作在非阻塞模式下。</b>
 
 #### 获取
 
@@ -932,14 +939,13 @@ channel.position(newPos);
 
 ### 两个 Channel 传输数据
 
-只要是 JDK 中带了 transferTo 的底层都会用操作系统的<b>零拷贝</b>进行优化。`transferTo` 一次最多传 <b>2G</b>
+只要是 JDK 中带了 transferTo 的底层都会用操作系统的<b>零拷贝</b>进行优化。注意 `transferTo` 一次最多传 <b>2G</b>
 
 ```java
 public class TestFileChannelTransferTo {
     public static void main(String[] args) {
         try (FileChannel from = new FileInputStream("from.txt").getChannel();
-             FileChannel to = new FileOutputStream("to.txt").getChannel();
-       )  {
+             FileChannel to = new FileOutputStream("to.txt").getChannel();)  {
             // 起始位置，传多少字节，传到哪里去【效率高】
             from.transferTo(0, from.size(), to);
         } catch (IOException e) {
@@ -954,15 +960,10 @@ public class TestFileChannelTransferTo {
 ```java
 @Test
 public void bigFile() {
-    try (
-        FileChannel from = new FileInputStream("D:\\archive.zip").getChannel();
-        FileChannel to = new FileOutputStream("D:\\copy.zip").getChannel();
-   )  {
+    try (FileChannel from = new FileInputStream("D:\\archive.zip").getChannel();
+         FileChannel to = new FileOutputStream("D:\\copy.zip").getChannel();)  {
         // 效率高，底层会利用操作系统的零拷贝进行优化
         long size = from.size(); // 4845135158 ≈ 4.6G 就是文件的大小。
-        System.out.println("=============");
-        System.out.println(size);
-        System.out.println("=============");
 
         // left 变量代表还剩余多少字节
         for (long left = size; left > 0;)  {
@@ -1347,7 +1348,7 @@ public class Client {
 * 但非阻塞模式下，即使没有连接建立，和可读数据，线程仍然在不断运行，白白浪费了 `cpu`
 * 数据复制过程中，线程实际还是阻塞的 (`AIO` 改进的地方)  
 
-<b style="color:green">服务器端，客户端代码不变。这样写，虽然是非阻塞的，但是即便客户端没有发送数据过来，服务器的线程也要不断进行循环 (因为代码里是 while true)，很消耗 CPU。有读取事件时再进行处理比较好。</b>
+<b style="color:orange">服务器端，客户端代码不变。这样写，虽然是非阻塞的，但是即便客户端没有发送数据过来，服务器的线程也要不断进行循环 (因为代码里是 while true)，很消耗 CPU。有读取事件时再进行处理比较好。</b>
 
 ```java
 // 使用 nio 来理解非阻塞模式, 单线程
