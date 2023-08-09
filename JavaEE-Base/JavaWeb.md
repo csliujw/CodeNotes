@@ -2,11 +2,11 @@
 
 ## 基础知识
 
-> <b>传输协议</b>
+### 传输协议
 
-传输协议定义了，客户端和服务器端通信时，发送数据的格式；而 Hyper Text Transfer Protocol 超文本传输协议是一种请求/响应式的协议，定义了“发布和接收 HTML 页面的规则”。
+传输协议定义了客户端和服务器端通信的数据格式；而 Hyper Text Transfer Protocol 超文本传输协议是一种请求/响应式的协议，定义了“发布和接收 HTML 页面的规则”。
 
-客户端在与服务器端建立连接后，就可以向服务器端发送请求，这种请求被称作 HTTP 请求，服务器端接收到请求后会做出响应，称为 HTTP 响应
+客户端在与服务器端建立连接后，就可以向服务器端发送请求，称为 HTTP 请求，服务器端接收到请求后会做出响应，称为 HTTP 响应
 
 ```mermaid
 graph LR
@@ -14,18 +14,18 @@ graph LR
 服务器-->|HTTP相应|客户端
 ```
 
-> <b>HTTP 协议的特点</b>
+### HTTP 协议的特点
 
-- 支持客户端(浏览器就是一种 Web 客户端)/服务器模式。
-- 简单快速：客户端向服务器请求服务时，只需传送请求方式和路径。常用的请求方式有 GET、POST 等，每种方式规定了客户端与服务器联系的类型不同。由于 HTTP 简单，使得 HTTP 服务器的程序规模小，因而通信速度很快。
+- 支持客户端（浏览器就是一种 Web 客户端）/服务器模式。
+- 简单快速：客户端向服务器请求服务时，只需指定请求方式和路径。常用的请求方式有 GET、POST 等，每种方式规定了客户端与服务器联系的类型不同。由于 HTTP 简单，使得 HTTP 服务器的程序规模小，因而通信速度很快。
 - 灵活：HTTP 允许传输任意类型的数据，正在传输的数据类型由 Content-Type 加以标记。
 - 无状态：HTTP 是无状态协议。无状态是指协议对于事务处理没有记忆能力，每次请求之间相互独立，不能交互数据。如果后续处理需要前面的信息，则它必须重传，这样可能导致每次连接传送的数据量增大。
 
-> <b>HTTP 1.0 和 HTTP 1.1</b>
+### HTTP 1.0 VS HTTP 1.1
 
 <b style="color:purple">HTTP 1.0</b>
 
-- HTTP 协议是基于请求/响应模型的，一次请求对应一次响应，而较高版本的 tomcat 采用的 NIO（用 Netty 编写的），一次请求对应一个新的线程。
+- HTTP 协议是基于请求/响应模型的，一次请求对应一次响应。
 - 基于 HTTP 1.0 协议的客户端与服务器进行一次完整的通信需要经过建立连接、发送请求信息、回送响应信息、关闭连接 4 个步骤。<span style="color:purple">而客户端与服务器建立连接后，每次只能处理一个 HTTP 请求。后面出现新的请求-响应时会建立新的连接。</span>
 - HTTP 是基于 TCP/IP 的高级协议，默认端口号是 80。
 
@@ -35,11 +35,11 @@ graph LR
 
 可以思考下如何创建一个 HTTP 连接池复用 HTTP 连接。此处给一些思考：假定处理 A 信息的 HTTP 连接处理完后就存入一个集合中，如果下次还要向 A 发送数据那么就先看集合中是否存有连接到 A 的可用的 HTTP 连接，有的话就直接用集合中的而非重新建立连接。
 
-> <b>HTTPS 介绍</b>
+### HTTPS 介绍
 
 HTTP 协议是明文传输，不安全，不适合传输安全性要求高的文件，如密码。而 HTTPS 是对 HTTP 协议不安全的改进，HTTPS 全称叫安全套接字超文本传输协议，采用了基于 SSL(Secure Sockets Layer) 进行加密，安全性高！SSL 依靠证书来验证服务器的身份，并为浏览器和服务器之间的通信加密。
 
-> <b>SSL</b>
+### SSL介绍
 
 SSL 协议位于 [TCP/IP协议](https://baike.baidu.com/item/TCP%2FIP协议) 与各种[应用层](https://baike.baidu.com/item/应用层)协议之间，为[数据通讯](https://baike.baidu.com/item/数据通讯)提供安全支持。
 
@@ -48,12 +48,11 @@ SSL 协议可分为两层
 - SSL 记录协议（SSL Record Protocol）：它建立在可靠的[传输协议](https://baike.baidu.com/item/传输协议)（如 TCP）之上，为高层协议提供[数据封装](https://baike.baidu.com/item/数据封装)、压缩、加密等基本功能的支持。 
 - SSL [握手协议](https://baike.baidu.com/item/握手协议)（SSL Handshake Protocol）：它建立在 SSL 记录协议之上，用于在实际的数据传输开始前，通讯双方进行[身份认证](https://baike.baidu.com/item/身份认证)、协商[加密算法](https://baike.baidu.com/item/加密算法)、交换加密[密钥](https://baike.baidu.com/item/密钥)等。
 
-><b>HTTP 和 HTTPS 的对比</b>
+### HTTP VS HTTPS
 
-- https 相对于 http 加入了 ssl 层；
+- HTTPS 相对于 HTTP 加入了 SSL 层；
 - 需要到 ca 申请收费的证书，SSL 证书需要钱，功能越强大的证书费用越高，个人网站、小网站没有必要一般不会用；
 - 安全但是耗时多，缓存不是很好，HTTPS 协议握手阶段比较费时，会使页面的加载时间延长近 50%，增加 10% 到 20% 的耗电；
-- 注意兼容 http 和 https
 
 ## 请求消息数据格式
 
@@ -66,7 +65,7 @@ HTTP 协议请求消息的格式如下
 - 例如 GET /login.html	HTTP/1.1
 
 HTTP 协议有 8 种请求方式，GET、POST、HEAD、OPTIONS、DELETE、TRACE、PUT 和 CONNECT（保留到将来使用），而常用的有 2 种
-- GET：请求参数在请求行中，在 url 后；请求的 url 长度有限制的，这种限制是浏览器施加的限制而非协议的限制；不太安全。
+- GET：请求参数在请求行中（在 url 后），<span style="color:red">请求的 url 长度有限制的，这种限制是浏览器施加的限制而非协议的限制；</span>不太安全。
 - POST：请求参数在请求体中；请求的 url 长度没有限制的；相对安全。
 
 ### 请求消息头
@@ -145,15 +144,15 @@ HTTP 响应状态行位于响应消息的第 1 行，共包括 3 部分，协议
 
 响应状态码是服务器告诉客户端浏览器本次请求和响应的一个状态。状态代码由 3 位数字组成，表示请求是否被理解或被满足。 
 
-- 1xx：服务器就收客户端消息，但没有接受完成，等待一段时间后，发送 1xx 多状态码
-- 2xx：成功。代表：200（请求成功）
-- 3xx：重定向。代表：302 (重定向)，304 (访问缓存)
-- 4xx：客户端错误。代表：401（禁止访问），404（找不到请求资源）
+- 1xx：服务器就收客户端消息，但没有接受完成，等待一段时间后，发送 1xx 状态码
+- 2xx：成功。200（请求成功）
+- 3xx：重定向。302 (重定向)，304 (访问缓存)
+- 4xx：客户端错误。401（禁止访问），404（找不到请求资源）
 - 5xx：服务器端错误。
 
 <b>典型状态码代表</b>
 
-* 404：请求路径没有对应的资源）
+* 404：请求路径没有对应的资源
 * 405：请求方式没有对应的 doXxx 方法
 * 500：服务器内部出现异常
 * 302：重定向
@@ -168,13 +167,13 @@ HTTP 响应状态行位于响应消息的第 1 行，共包括 3 部分，协议
 | Accept-Range     | 用于说明服务器是否接收客户端使用 Range 请求头字段请求资源    |
 | Age              | 用于指出当前网页文档可以在客户端或代理服务器中缓存的有效时间，设置值为一一个<br/>以秒为单位的时间数 |
 | Location         | 用于通知客户端获取请求文档的新地址，其值为一一个使用绝对路径的 URL 地址 |
-| Retry-After      | 可以与 503 状态码配合使用，告诉客户端在什么时间可以重新发送请求。也可以与任<br/>何一个 3xx 状态码配合使用，告诉客户端处理重定向的最小延时时间。Retry- After<br/>头字段的值可以是 GMT 格式的时间，也可是一个以秒为单位的时间数 |
+| Retry-After      | 可以与 503 状态码配合使用，告诉客户端在什么时间可以重新发送请求。也可以与任何一个 3xx 状态码配合使用，告诉客户端处理重定向的最小延时时间。Retry- After 头字段的值可以是 GMT 格式的时间，也可是一个以秒为单位的时间数 |
 | Connection       | 当前的连接状态                                               |
 | Content-Encoding | 内容的编码格式                                               |
 | Content-Type     | 内容的类型和字符集                                           |
-| Date             | 一个通用首部，其中包含了报文创建的日期和时间。可用于判断请求到的数据是否是<br>之前的缓存 |
+| Date             | 一个通用首部，其中包含了报文创建的日期和时间。可用于判断请求到的数据是否是之前的缓存 |
 | Server           | 服务器软件的产品名                                           |
-| etag             | 用于向客户端传送代表实体内容特征的标记信息，这些标记信息称为实体标签，每个<br/>版本的资源的实体标签是不同的，通过实体标签可以判断在不同时间获得的同一资源<br/>路径下的实体内容是否相同 |
+| etag             | 用于向客户端传送代表实体内容特征的标记信息，这些标记信息称为实体标签，每个版本的资源的实体标签是不同的，通过实体标签可以判断在不同时间获得的同一资源路径下的实体内容是否相同 |
 
 
 ```http
@@ -227,7 +226,7 @@ x-cache-status: HIT
 
 - IP：电子设备（计算机）在网络中的唯一标识。
 - 端口：应用程序在计算机中的唯一标识，0~65536
-- 传输协议：规定了数据传输的规则；基础协议，TCP『可靠传输协议，三次握手，速度稍慢』UDP『不可靠传输协议。 速度快』
+- 传输协议：规定了数据传输的规则；基础协议，TCP『可靠传输协议，三次握手，速度稍慢』UDP『不可靠传输协议，速度快』
 
 ## Web服务器软件
 
@@ -254,14 +253,14 @@ x-cache-status: HIT
   - 访问：浏览器输入，http://localhost:8080 回车访问本地的服务器。
   - http://ip:8080 访问其他 IP 地址的服务器。
 
-> <b>启动可能遇到的问题</b>
+<b>启动可能遇到的问题</b>
 
 - 黑窗口一闪而过如何排除？
 
   - 在这种情况下，由于无法查看到错误信息，因此，无法对 Tomcat 进行诊断，分析其出错的原因。这时，可以先启动一个命令行窗口，在这个命令行窗口中进入 Tomcat 安装目录中的 bin 目录，然后在该窗口中执行 startup.bat 命令，就会看到错误信息显示在该窗口中。
   - 一般原因：没有正确配置 JAVA_HOME 环境变量，配置下 JAVA_HOME 即可。
 
-- 启动报错：
+- 启动报错？
 
   - 暴力：找到占用的端口号，并且找到对应的进程，杀死该进程『Windows 下用 netstat -ano 查找占用的网络端口』
 
@@ -299,6 +298,8 @@ x-cache-status: HIT
 ## IDEA搭建Tomcat
 
 [idea 创建 JavaWeb 项目（主要 idea2022） - 腾讯云开发者社区-腾讯云 (tencent.com)](https://cloud.tencent.com/developer/article/2152435#:~:text=配置 Tomcat idea2022（启动界面如下） 第一步 文件 – 新建 –,– New – Project） 第二步 新建项目 – 填入项目名称（自取且不为中文）)
+
+[IDEA+Maven+JavaWeb+tomcat项目搭建（图文并茂，详细）_花伦同学ko的博客-CSDN博客](https://blog.csdn.net/weixin_33446857/article/details/82143258)
 
 - 创建一个普通 Java 项目
 
@@ -357,7 +358,6 @@ Tomcat \conf 目录下的 web.xml 文件可以修改默认的主页面配置。
     - D:\hello 是项目的绝对路径。
     - 虚拟目录：xml 文件的名称。如 xml 名称为 demo，那么虚拟目录就是 `localhost:8080/demo`。
 
-
 <b>webapps 部署方式</b>
 
 - 直接将项目放到 webapps 目录下。
@@ -410,7 +410,7 @@ JavaEE 组织定制规范，提供接口，其他厂商根据规范和接口进�
 
 Servlet 是使用 Java 语言编写的运行在服务器端的程序。狭义的 Servlet 是指 Java 语言实现的一个接口，广义的 Servlet 是指任何实现了这个 Servlet 接口的类，一般情况下认为是后者。
 
-Servlet 由 Servlet 容器提供（如 Tomcat）。Servlet 容器将 Servlet 动态地加载到服务器上。与 HTTP 协议相关的 Servlet 使用 HTTP 请求和 HTTP 响应与客户端进行交互。因此，Servlet 容器支持所有 HTTP 协议的请求和响应。Servlet 应用程序的体系结构如图所示。
+Servlet 由 Servlet 容器提供（如 Tomcat）。Servlet 容器将 Servlet 动态地加载到服务器上。与 HTTP 协议相关的 Servlet 使用 HTTP 请求和 HTTP 响应与客户端进行交互。因此，Servlet 容器支持所有 HTTP 协议的请求和响应，Servlet 应用程序的体系结构如图所示。
 
 ```mermaid
 sequenceDiagram
@@ -418,12 +418,12 @@ participant client as 客户端
 participant httpServe as HTTP服务器
 participant ServletContainer as Servlet容器
 participant Servlet as Servlet
-client-->>httpServe:HTTP 请求
-httpServe-->>client:HTTP 响应
-httpServe-->>ServletContainer: 调用
-ServletContainer-->>httpServe: 返回结果
-ServletContainer-->>Servlet: 调用
-Servlet-->>ServletContainer: 返回结果
+client-->>httpServe:1.HTTP 请求
+httpServe-->>client:6.HTTP 响应
+httpServe-->>ServletContainer:2.调用
+ServletContainer-->>httpServe:5.返回结果
+ServletContainer-->>Servlet:3.调用
+Servlet-->>ServletContainer:4.返回结果
 ```
 
 Servlet 的请求首先会被 HTTP 服务器（如 Apache）接收，HTTP 服务器只负责静态 HTML 页面的解析，对于 Servlet 的请求转交给 Servlet 容器，Servlet 容器会根据 web.xml 文件中的映射关系或注解中的信息，调用相应的 Servlet，Servlet 将处理的结果返回给 Servlet 容器，并通过 HTTP 服务器将响应传输给客户端。
@@ -719,16 +719,16 @@ public class NotFound extends HttpServlet {
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface WebServlet {
-    //相当于<Servlet-name>
+		//相当于<Servlet-name>
     String name() default "";
     
-	//代表 urlPatterns() 属性配置
+		//代表 urlPatterns() 属性配置
     String[] value() default {};
     
-	//相当于<url-pattern>
+		//相当于<url-pattern>
     String[] urlPatterns() default {};
     
-	//相当于<load-on-startup>
+		//相当于<load-on-startup>
     int loadOnStartup() default -1;
 
     WebInitParam[] initParams() default {};
@@ -749,12 +749,12 @@ public @interface WebServlet {
 
 - IDEA 会为每一个 tomcat 部署的项目单独建立一份配置文件。
 - 工作空间项目和 tomcat 部署的 web 项目。
-  - tomcat 真正访问的是 “tomcat 部署的 web 项目”，"tomcat 部署的 web 项目"对应着"工作空间项目" 的 web 目录下的所有资源。
+  - tomcat 真正访问的是 “tomcat 部署的 web 项目”，tomcat 部署的 web 项目对应着工作空间项目的 web 目录下的所有资源。
 - WEB-INF 目录下的资源不能被浏览器直接访问。
 
-# 请求和响应
+# 请求/响应
 
-Tomcat 用 Request 对象和 Response 对象来处理请求和响应。
+Tomcat 用 Request 对象和 Response 对象来处理请求和响应，用于获取 HTTP 的请求消息，给浏览器发送响应。
 
 如果是 JDK11+，那么可以用 HttpClient 发起 Http 请求进行代码测试，不必用浏览器进行测试。具体用法 HttpClient 的注释里写的非常清楚。
 
@@ -763,14 +763,14 @@ Tomcat 用 Request 对象和 Response 对象来处理请求和响应。
 - request 和 response 对象是由服务器创建的。
 - request 对象是来获取请求消息，而 response 对象是来设置响应消息
 
-request 对象继承体系结构如下图所示，其中 org.apache.catalina.connector.RequestFacade 类是 tomcat 对 HttpServletRequest 的实现类。
+request 对象继承体系结构如下图所示，其中 org.apache.catalina.connector.RequestFacade 类是 tomcat 对 HttpServletRequest 的具体实现。
 
 ```mermaid
 graph
 ServletRequest接口---|继承|HttpServletRequest接口---|实现|org.apache.catalina.connector.RequestFacade
 ```
 
-response 对象继承体系结构，其中 org.apache.catalina.connector.ResponseFacade 类是 Tomcat 对 HttpServletResponse 的实现类。
+response 对象继承体系结构，其中 org.apache.catalina.connector.ResponseFacade 类是 Tomcat 对 HttpServletResponse 的具体实现。
 
 ```mermaid
 graph
@@ -959,9 +959,9 @@ public void setCharacterEncoding(String env) throws UnsupportedEncodingException
 
 ### 传递数据
 
-域对象：一个有作用范围的对象，在其作用范围内可以共享数据
+域对象：一个有作用范围的对象，在其作用范围内可以共享数据。
 
-request 域：代表一次请求的范围，一般用于请求转发的多个资源中共享数据
+request 域：代表一次请求的范围，一般用于请求转发的多个资源中共享数据。
 
 | 方法                                      | 说明             |
 | ----------------------------------------- | ---------------- |
@@ -2665,6 +2665,8 @@ MVC 是 Web 开发中的通用的设计模式，而三层架构是 JavaWeb/JavaE
 - `cn.demo.domain`：这个包中存放的是 JavaBean 类；
 - `cn.demo.service`：这个包中存放的是与业务相关的类，对应着 JavaWeb 三层架构中的业务层；
 - `cn.demo.web`：这个包中存放的是用来处理请求的 Servlet，对应着 JavaWeb 三层架构的 web 层。
+
+注意，MVC 是 MVC，三层架构是三层架构，不是同一个东西。
 
 # JDBC
 
