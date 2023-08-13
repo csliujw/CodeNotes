@@ -1,5 +1,7 @@
 # HTTP协议
 
+差一个 tomcat 各个组件生命周期的内容。
+
 ## 基础知识
 
 ### 传输协议
@@ -245,7 +247,7 @@ x-cache-status: HIT
 
 ### 安装
 
-- 下载：http://tomcat.apache.org/
+- 下载：http://tomcat.apache.org/，选择 core 列表下 64-bit Windows zip
 - 安装：解压压缩包即可
 - 卸载：删除目录就行了
 - 启动：
@@ -436,17 +438,17 @@ Servlet 的类关系图如下所示。
 
 下表为 Servlet 接口的抽象方法
 
-| 方法声明                                                | 功能描述                                                     |
-| ------------------------------------------------------- | ------------------------------------------------------------ |
-| void init(ServletConfig var1)                           | 容器在创建好 Servlet 对象后，就会调用此方法。该方法接收一个 ServletConfig 类型的参数，Servlet 容器通过这个参数向 Servlet 传递初始化配置信息。 |
-| ServletConfig getServletConfig()                        | 用于获取 Servlet 对象的配置信息，返回 Servlet 的 ServletConfig 对象。 |
-| void service(ServletRequest var1, ServletResponse var2) | 负责响应用户的请求，当容器接收到客户端访问 Servlet 对象的请求时，就会调用此方法。容器会构造一个表示客户端请求信息的 ServletRequest 对象和一个用于响应客户端的 ServletResponse 对象作为参数传递给 service() 方法。在 service() 方法中，可以通过 ServletRequest 对象得到客户端的相关信息和请求信息，在对请求进行处理后，调用 ServletResponse 对象的方法设置响应信息。 |
-| String getServletInfo()                                 | 返回一个字符串，其中包含关于 Servlet 的信息，例如，作者、版本和版权等信息。 |
-| void destroy();                                         | 负责释放 Servlet 对象占用的资源。当服务器关闭或者 Servlet 对象被移除时，Servlet 对象会被销毁，容器会调用此方法。 |
+| 方法声明                                              | 功能描述                                                     |
+| ----------------------------------------------------- | ------------------------------------------------------------ |
+| void init(ServletConfig config)                       | 容器在创建好 Servlet 对象后，就会调用此方法。该方法接收一个 ServletConfig 类型的参数，Servlet 容器通过这个参数向 Servlet 传递初始化配置信息。 |
+| ServletConfig getServletConfig()                      | 用于获取 Servlet 对象的配置信息，返回 Servlet 的 ServletConfig 对象。 |
+| void service(ServletRequest req, ServletResponse res) | 负责响应用户的请求，当容器接收到客户端访问 Servlet 对象的请求时，就会调用此方法。容器会构造一个表示客户端请求信息的 ServletRequest 对象和一个用于响应客户端的 ServletResponse 对象作为参数传递给 service() 方法。在 service() 方法中，可以通过 ServletRequest 对象得到客户端的相关信息和请求信息，在对请求进行处理后，调用 ServletResponse 对象的方法设置响应信息。 |
+| String getServletInfo()                               | 返回一个字符串，其中包含关于 Servlet 的信息，例如，作者、版本和版权等信息。 |
+| void destroy();                                       | 负责释放 Servlet 对象占用的资源。当服务器关闭或者 Servlet 对象被移除时，Servlet 对象会被销毁，容器会调用此方法。 |
 
 Servlet 有两个子类，GenericServlet 和 HttpServlet。
 
-- GenericServlet 为 Servlet 接口提供了部分实现，但是它并没有实现 HTTP 请求处理，包括 service 方法，也没有实现。
+- GenericServlet 为 Servlet 接口提供了部分实现，但是它并没有实现 HTTP 请求处理，也没有实现 service 方法。
 - HttpServlet 是 GenericServlet 的子类，它继承了 GenericServlet 的所有方法，并且为 HTTP 请求中的 POST、GET、PUT、DELETE 等类型提供了具体的操作方法。
 
 <div align="center"><img src="img/web/image-20230116224456836.png"></div>
@@ -514,8 +516,19 @@ public class FirstServlet extends HttpServlet {
 - 查找 web.xml 文件，是否有对应的 \<url-pattern\> 标签体内容
 - 如果有，则在找到对应的 \<servlet-class\> 全类名
 - tomcat 会将字节码文件加载进内存，并且创建其对象
-- 调用该对象的 service 方法
+- 调用该对象的 service 方法（service 会判断请求类型，然后调用对应的方法）
 - service 方法通过判断请求方法的类型（get、post）来调用对应的请求处理方法。
+
+```mermaid
+sequenceDiagram
+participant client as 客户端
+participant ServletContainer as Servlet容器
+participant Servlet
+client-->>ServletContainer:1.发送请求
+ServletContainer-->>ServletContainer:2.解析请求,分析请求的那个 Servlet
+ServletContainer-->>Servlet:3.创建对应的 Servlet 实例对象
+Servlet-->>Servlet:4.调用 service 方法处理请求
+```
 
 ## 生命周期
 
@@ -542,15 +555,15 @@ ServletContainer-->>Servlet:8.调用 destory 方法
 
 初始化阶段会执行 init 方法，且只执行一次，且 Servlet 在内存中只存在一个对象，是单实例的。
 
-当客户端向 Servlet 容器发出 HTTP 请求要求访问 Servlet 时，Servlet 容器首先会解析请求，检查内存中是否已经有了该 Servlet 对象，如果有直接使用该 Servlet 对象，如果没有就创建 Servlet 实例对象，然后通过调用 init() 方法实现 Servlet 的初始化工作。需要注意的是，在 Servlet 的整个生命周期内，它的 init() 方法只被调用一次。
+当客户端向 Servlet 容器发出 HTTP 请求要求访问 Servlet 时，Servlet 容器首先会解析请求，检查内存中是否已经有了该 Servlet 对象，如果有直接使用该 Servlet 对象，如果没有就创建，然后通过调用 init() 方法完成 Servlet 的初始化工作。需要注意的是，在 Servlet 的整个生命周期内，它的 init() 方法只被调用一次。
 
-通过上面的描述可以知道，Servlet 是单例的。多个用户同时访问时，可能存在线程安全问题。所以尽量不要在 Servlet 中定义成员变量。即使定义了成员变量，也不要对修改值。
+通过上面的描述可以知道，Servlet 是单实例的。多个用户同时访问时，可能存在线程安全问题。所以尽量不要在 Servlet 中定义成员变量。即使定义了成员变量，也不要对修改值。
 
 > <b>运行阶段</b>
 
 对外提供服务，每次访问 Servlet 时，service 方法都会被调用一次。
 
-Servlet 容器会为这个请求创建代表 HTTP 请求的 ServletRequest 对象和代表 HTTP 响应的 ServletResponse 对象，然后将它们作为参数传递给 Servlet 的 service() 方法。service() 方法从 ServletRequest 对象中获得客户请求信息并处理该请求，通过 ServletResponse 对象生成响应结果。在 Servlet 的整个生命周期内，对于 Servlet 的每一次访问请求，Servlet 容器都会调用一次 Servlet 的 service() 方法，并且创建新的 ServletRequest 和 ServletResponse 对象，也就是说，service() 方法在 Servlet 的整个生命周期中会被调用多次。
+Servlet 容器会为这个请求创建代表 HTTP 请求的 ServletRequest 对象和代表 HTTP 响应的 ServletResponse 对象，然后将它们作为参数传递给 Servlet 的 service() 方法。service() 方法从 ServletRequest 对象中获得客户请求信息并处理该请求，通过 ServletResponse 对象生成响应结果。在 Servlet 的整个生命周期内，对于 Servlet 的每一次访问请求，Servlet 容器都会调用一次 Servlet 的 service() 方法，并且创建新的 ServletRequest 和 ServletResponse 对象，也就是说，<b>service() 方法在 Servlet 的整个生命周期中会被调用多次。</b>
 
 > <b>销毁阶段</b>
 
@@ -563,40 +576,41 @@ Servlet 容器会为这个请求创建代表 HTTP 请求的 ServletRequest 对�
 > <b>测试生命周期</b>
 
 ```java
-package com.tomcat.controller;
+package com.example.demo;
 
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
 @WebServlet(urlPatterns = "/life")
 public class TestLifeCycle extends HttpServlet {
     @Override
-    public void init() {
-        System.out.println("executor init method");
+    public void init() throws ServletException {
+        System.out.println("execute init");
     }
 
     @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) {
-        System.out.println("executor service method");
+    public void service(ServletRequest req, ServletResponse res) throws Exception {
+        System.out.println("execute service");
     }
 
     @Override
     public void destroy() {
-        System.out.println("executor destroy method");
+        System.out.println("execute destroy");
     }
-
 }
 ```
 
 访问该 Servlet 两次，然后在 IDEA 控制台正常关闭 tomcat。
 
 ```cmd
-http://localhost:8080/tomcat
-executor init method
-executor service method
-executor service method
+http://localhost:8080/life
+execute init
+execute service
+execute service
 16-Jan-2023 23:17:46.035 信息 [Thread-3] org.apache.coyote.AbstractProtocol.pause 暂停ProtocolHandler["http-nio-8080"]
 16-Jan-2023 23:17:47.620 信息 [Thread-3] org.apache.catalina.core.StandardService.stopInternal 正在停止服务[Catalina]
 executor destroy method
@@ -609,19 +623,19 @@ executor destroy method
 有时候会希望某些 Servlet 程序可以在 Tomcat 启动时随即启动。例如，当启动一个 Web 项目时，首先需要对数据库信息进行初始化。这时，只需要使用 web.xml 文件中 \<load-on-startup\> 元素或者使用注解 @WebServlet，将初始化数据库的 Servlet 配置为随着 Web 应用启动而启动的 Servlet 即可。
 
 ```java
-@WebServlet(urlPatterns = "/one", loadOnStartup = 1)
-public class LoadOnStartupOne extends HttpServlet {
+@WebServlet(loadOnStartup = 1, urlPatterns = "/load1")
+public class LifeCycleAutoLoadServlet extends HttpServlet {
     @Override
-    public void init() throws ServletException {
-        System.out.println("one 1~");
+    public void init() {
+        System.err.println("1.auto load and execute init");
     }
 }
 
-@WebServlet(urlPatterns = "/two", loadOnStartup = 10)
-public class LoadOnStartupTwo extends HttpServlet {
+@WebServlet(loadOnStartup = 10, urlPatterns = "/load2")
+public class LifeCycleAutoLoadServletTwo extends HttpServlet {
     @Override
-    public void init() throws ServletException {
-        System.out.println("two 10~");
+    public void init() {
+        System.err.println("2.auto load and execute init");
     }
 }
 ```
@@ -630,12 +644,8 @@ public class LoadOnStartupTwo extends HttpServlet {
 - 值为正整数或 0，Servlet 容器将在 Web 应用启动时加载并初始化 Servlet，<b>并且 loadOnStartup 的值越小，它对应的 Servlet 就越先被加载。</b>
 
 ```cmd
-one 1~
-16-Jan-2023 23:28:17.915 信息 [main] org.apache.catalina.startup.HostConfig.deployDescriptor 部署描述符[C:\Users\69546\.SmartTomcat\tomcat\tomcat\conf\Catalina\localhost\tomcat.xml]的部署已在[1,955]ms内完成
-16-Jan-2023 23:28:17.919 信息 [main] org.apache.coyote.AbstractProtocol.start 开始协议处理句柄["http-nio-8080"]
-16-Jan-2023 23:28:17.926 信息 [main] org.apache.catalina.startup.Catalina.start [2039]毫秒后服务器启动
-http://localhost:8080/tomcat
-two 10~
+1.auto load and execute init
+2.auto load and execute init
 ```
 
 ## 路径映射
@@ -677,27 +687,29 @@ xml 的多重路径映射。
 
 ### 通配符映射
 
-有时候会希望某个目录下的所有路径都可以访问同一个 Servlet，这时，可以在 Servlet 映射的路径中使用通配符 “*”。通配符的格式有两种，如下所示。
+有时候会希望某个目录下的所有路径都可以访问同一个 Servlet，这时，可以在 Servlet 映射的路径中使用通配符 `*`。通配符的格式有两种，如下所示。
 
 - `*.扩展名` 例如 `*.do` 匹配以 `*.do` 结尾的所有 URL 地址。
-- 格式为 `/*`，例如 `/abc/*` 匹配以 `/abc` 开始的所有 URL 地址。
-- 需要注意，这两种通配符的格式不能混合使用。如 `/abc/*.do` 是不合法的映射路径。
+- 格式为 `/*`，例如 `/abc/*` 匹配 `/abc` 的地址和以 `/abc/` 开始的所有 URL 地址。
+- 需要注意，这两种通配符的格式不能混合使用。如 `/abc/*.do` 是不合法的映射路径，<span style="color:red">tomcat 会直接报错。</span>
 
 URL 的匹配也是优先进行精准匹配再进行通配符匹配。
 
-如果某个 Servlet 的映射路径仅仅是一个正斜线（/），那么这个 Servlet 就是当前 Web 应用的缺省 Servlet。Servlet 服务器在接收到访问请求时，如果找不到匹配的 URL，就会将访问请求交给缺省 Servlet 处理，可以用于设置 404 页面。
+### 缺省页面
+
+如果某个 Servlet 的映射路径仅仅是一个正斜线 `/`，那么这个 Servlet 就是当前 Web 应用的缺省 Servlet。Servlet 服务器在接收到访问请求时，如果找不到匹配的 URL，就会将访问请求交给缺省 Servlet 处理，可以用于设置 404 页面。
 
 ```java
 @WebServlet(urlPatterns = "/")
-public class NotFound extends HttpServlet {
+public class UrlPatternConfigNotFoundPage extends HttpServlet {
     @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.getWriter().write("404 not found~~");
+    public void service(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        res.getWriter().write("404 not found");
     }
 }
 ```
 
-访问应用中没有的路径时就会在页面输出 404 not found~~。
+访问应用中没有的路径时就会在页面输出 404 not found。
 
 ## Servlet3.0
 
@@ -711,7 +723,7 @@ public class NotFound extends HttpServlet {
 
 - 在类上使用 @WebServlet 注解，进行配置。
 
-* @WebServlet("资源路径") 注意，name 是指类的名称不是资源路径。
+* @WebServlet(urlPatterns = "资源路径") 注意，name 是指类的名称不是资源路径。
 
 
 ```java
@@ -732,15 +744,10 @@ public @interface WebServlet {
     int loadOnStartup() default -1;
 
     WebInitParam[] initParams() default {};
-
     boolean asyncSupported() default false;
-
     String smallIcon() default "";
-
     String largeIcon() default "";
-
     String description() default "";
-
     String displayName() default "";
 }
 ```
@@ -750,7 +757,7 @@ public @interface WebServlet {
 - IDEA 会为每一个 tomcat 部署的项目单独建立一份配置文件。
 - 工作空间项目和 tomcat 部署的 web 项目。
   - tomcat 真正访问的是 “tomcat 部署的 web 项目”，tomcat 部署的 web 项目对应着工作空间项目的 web 目录下的所有资源。
-- WEB-INF 目录下的资源不能被浏览器直接访问。
+- <span style="color:red">WEB-INF 目录下的资源不能被浏览器直接访问。</span>
 
 # 请求/响应
 
@@ -791,7 +798,7 @@ ServletResponse接口---|继承|HttpServletResponse接口---|实现|org.apache.c
 
 - 服务器接收到 HTTP 请求时创建 request 对象
 - 服务器发送 HTTP 响应结束后销毁 request 对象
-- request 对象仅存活于一次请求转发，请求转发结束后，对象也就销毁了
+- request 对象仅存活于一次请求转发，请求转发结束后，对象也就销毁了。
 
 ### HttpServletRequest对象
 
@@ -812,8 +819,8 @@ ServletResponse接口---|继承|HttpServletResponse接口---|实现|org.apache.c
 | String getProtocol()                                    | 获取协议及版本        | HTTP/1.1                                     |
 | String getRemoteAddr()                                  | 获取客户机的 IP 地址  |                                              |
 
-- URL：统一资源定位符 [ 不单单定义资源，还定义了如何找资源]：http://localhost/day14/demo1
-- URI：统一资源标识符 [ 定位资源  ]：/day14/demo1	
+- URL：统一资源定位符 [ 不单单定义资源，还定义了如何找资源 ]：http://localhost/day14/demo1
+- URI：统一资源标识符 [ 定位资源 ]：/day14/demo1	
 
 > <b>获取请求头数据</b>
 
@@ -873,6 +880,8 @@ public class RequestParam extends HttpServlet {
 ```
 
 用 HttpClient 发起请求。发起 Post 请求的时候需要设置 Content-Type 为表单类型，然后为 Post 设置表单参数。
+
+[Java 11 HTTP Client 的使用简介_墨城之左的博客-CSDN博客](https://blog.csdn.net/antony1776/article/details/89811751)
 
 ```java
 package com.tomcat.controller.request;
@@ -944,18 +953,25 @@ login.html 中 form 表单的 action 路径的写法
 
 虚拟目录+Servlet 的资源路径
 
-如：/blog/login.do===>项目名为 blog 的 login.do  Servlet
+如：/blog/login.do===>项目名为 blog，请求路径为 login.do 的 Servlet
 
 ### 解决请求乱码
 
-此处的中文乱码特指 request 请求乱码，不包括 response 响应乱码。
+> 为什么会出现请求中文乱码
+>
+> [HTTP 请求的乱码问题 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/488502005)
 
-- Get 方式：Tomcat 8 已经将 get 方式乱码问题解决了
-- Post 方式：在获取参数前，设置 request 的编码 request.setCharacterEncoding("utf-8");
+编码解码不一致就会出现乱码。请求乱码也是因为编码解码不一致导致的。
+
+- GET 请求乱码，客户端一般用 UTF-8 或 GBK 对请求数据进行编码，而服务器端用 ISO-8859-1 进行编码。Tomcat 8 已经改成用 UTF-8 进行编码，如果客户端编码也是 UTF-8 则 GET 请求不会出现乱码。
+- POST 请求乱码，Tomcat 10 及之后的版本，处理 POST 请求的编码默认为 UTF-8，如果浏览器的 POST 请求也为 UTF-8，那就无需再设置。
+- 如果上述请求出现了乱码问题，在获取参数前设置 request 获取参数的编码格式即可。如，客户端的编码方式为 utf-8，出现请求乱码，那么获取参数前设置 request.setCharacterEncoding("utf-8"); 即可。
 
 ```java
 public void setCharacterEncoding(String env) throws UnsupportedEncodingException;
 ```
+
+后面学习过滤器后，也可以通过统一的过滤器来解决请求乱码问题。
 
 ### 传递数据
 
@@ -1009,7 +1025,8 @@ public class RequestReferer extends HttpServlet {
 请求转发，一种在服务器内部的资源跳转方式，注意看示例代码中的注释。
 
 - 通过 request 对象获取请求转发器对象：RequestDispatcher#getRequestDispatcher(String path)
-- 使用 RequestDispatcher 对象来进行转发：forward(ServletRequest request, ServletResponse response)
+- 使用 RequestDispatcher 对象来进行转发：
+forward(ServletRequest request, ServletResponse response)
 
 <b>特点</b>
 
@@ -1089,8 +1106,7 @@ public class TestRequestParam {
             .newBuilder()
             .version(HttpClient.Version.HTTP_1_1)
             .connectTimeout(Duration.ofMillis(2000))
-        	// 允许重定向。
-            .followRedirects(HttpClient.Redirect.ALWAYS)
+            .followRedirects(HttpClient.Redirect.ALWAYS) // 允许重定向。
             .executor(threadPool)
             .build();
 }
@@ -1112,7 +1128,7 @@ ServletInputStream is = request.getInputStream();
 ServletContext context = request.getServletContext();
 ```
 
-ServletContext 官方叫 Servlet 上下文。服务器会为每一个工程创建一个对象，这个对象就是 ServletContext 对象。这个对象全局唯一，而且工程内部的所有 Servlet 都共享这个对象。所以叫全局应用程序共享对象。
+ServletContext 官方叫 Servlet 上下文。<b>服务器会为<u>每一个工程</u>创建一个对象</b>，这个对象就是 ServletContext 对象。这个对象全局唯一，而且工程内部的所有 Servlet 都共享这个对象。所以也叫全局应用程序共享对象。
 
 ## Response
 
@@ -1205,7 +1221,7 @@ public class TestResponseSend {
                 .GET()
                 .build();
         try {
-            HttpResponse<String> send = client.send(msg, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> send = client.send(msg,HttpResponse.BodyHandlers.ofString());
             showExecutorResult(send);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -1235,20 +1251,16 @@ public class TestResponseSend {
 }
 ```
 
-
-
 ### 响应乱码
 
-乱码问题
-
-response 流是我们获取出来的，不是 new 出来的。如果是 new 出来的，编码是和当前操作系统一致的。但是现在的流是 tomcat 提供的，和 tomcat 中配置的编码是一样的。tomcat 默认是 IOS-8859-1。
+response 流是我们获取出来的，不是 new 出来的。如果是 new 出来的，编码是和当前操作系统一致的。但是现在的流是 tomcat 提供的，和 Tomcat 中配置的编码是一样的。Tomcat 8 以下的版本（不包括 8）默认是 IOS-8859-1。
 
 ```java
 // 在获取流对象之前设置编码，让流以这个编码进行。即设置缓冲区编码为UTF-8编码形式
 response.setCharacterEncoding("utf-8");
 // 告诉浏览器，服务器发送的消息体数据的编码，建议浏览器使用该编码进行解码。『这个建议了，浏览器就会照做』
 response.setHeader("content-type","text/html;character=utf-8");
-// 其实写了上面那句，就不用写response.setCharacterEncoding("utf-8");了
+// 其实写了 setHeader，就不用写response.setCharacterEncoding("utf-8");了
 ```
 
 简单设置编码的写法，是在获取流之前设置
@@ -1321,13 +1333,13 @@ public class RequestFroward extends HttpServlet {
 }
 ```
 
-> <b>include 请求包含，简单说就是 Response 包含了当前 Servlet 的响应消息，也包含了 include 目标资源的响应消息</b>
+> <b>include 请求包含，可以理解为由两个Servlet共同完成响应体（都要留）。【复杂说就是 Response 包含了当前 Servlet 的响应消息，也包含了目标资源的响应消息( include )】</b>
 
 请求包含指的是使用 include() 方法将 Servlet 请求转发给其他 Web 资源进行处理，与请求转发不同的是，当我们访问 Servlet 时，在响应消息中，既包含了当前 Servlet 的响应消息，也包含了 include 目标 Web 资源所作出的响应消息。
 
 <div align="center"><img src="img/web/include.jpg"></div>
 
-编写两个 Servlet，IncludeOne 和 IncludeTwo，让 IncludeOne 调用 include，且目标路径是 IncludeTwo，然后访问 IncludeOne。
+编写两个 Servlet，IncludeOne 和 IncludeTwo，让 IncludeOne 调用 include，且目标路径是 IncludeTwo，然后访问 IncludeOne。<b>这样，虽然地址栏只是访问了 IncludeOne，但是整个请求是由 IncludeOne 和 IncludeTwo 共同完成的。</b>
 
 ```java
 @WebServlet(urlPatterns = "/include1")
@@ -1348,7 +1360,7 @@ public class IncludeTwo extends HttpServlet {
         resp.getWriter().println("<b>这是include2添加的内容</b>");
     }
 }
-// 这是include1添加的内容 这是include2添加的内容。
+// 浏览器输出：这是include1添加的内容 这是include2添加的内容。
 ```
 
 ### 请求重定向
@@ -1442,7 +1454,7 @@ public class Config extends HttpServlet {
 
 - 就是 URL 地址后面附加参数 
 - `<a href="xxx/xx/xxx?name=zs">`
-- 其缺点为：URL 地址过长，不同浏览器对 URL 传递参数的限制，安全性差『参数明码传输』，编程繁杂。
+- 其缺点为：URL 地址过长，不同浏览器对 URL 传递参数的限制，『参数明码传输』安全性差，编程繁杂。
 
 <b>隐藏表单字段</b>
 
@@ -1536,7 +1548,7 @@ public void setDomain(String domain) {
 
 ## Session
 
-Session是一种将会话数据保存到服务器端的技术。在一次会话的多次请求间共享数据，将数据保存在服务器端的对象中。
+Session 是一种将会话数据保存到服务器端的技术。在一次会话的多次请求间共享数据，将数据保存在服务器端的对象中。
 
 ### 基本使用
 
@@ -1680,8 +1692,7 @@ public class FilterDemo implements Filter {
 
     public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws ServletException, IOException {
         System.out.println("hello");
-        // 放行
-        chain.doFilter(req, resp);
+        chain.doFilter(req, resp); // 放行
     }
 
     public void init(FilterConfig config) throws ServletException {}
@@ -1728,8 +1739,6 @@ public class LoginFilter implements Filter {
 
     // 防止url非法访问 不能直接通过url访问
     public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws ServletException, IOException {
-        System.out.println("LLL");
-        String localName = req.getLocalName();
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) resp;
         StringBuffer requestURL = request.getRequestURL();
@@ -1740,7 +1749,6 @@ public class LoginFilter implements Filter {
             if (canPass(requestURI)) {
                 chain.doFilter(req, resp);
             } else {
-                System.out.println("*********************");
                 request.getRequestDispatcher("/index.html").forward(request, response);
             }
         } else {
@@ -1767,19 +1775,19 @@ public class LoginFilter implements Filter {
 
 ## 过滤器执行流程
 
-- 执行过滤器
+- 执行过滤器。
 
-- 执行放行后的资源
+- 执行放行后的资源。
 
-- 回来执行过滤器放行代码下边的代码
+- 回来执行过滤器放行代码下边的代码。
 
 - 执行的顺序可以理解为一个压栈的过程。
 
-  - 定义的顺序 F3，F2，F1
-  - 初始化的时候，F3，F2，F1 依次入栈
-  - 然后依次出栈执行初始化过程，所以 init 的输出顺序是 1 2 3。初始化好后的又入栈到 doFilter 这个栈中。 1 2 3『栈顶』
-  - 栈顶元素再一次执行 doFilter 方法。 顺序为  3  2  1.
-  - destroy 方法也是如此记忆。顺序为 1 2 3.
+  - 定义的顺序 F3，F2，F1。
+  - 初始化的时候，F3，F2，F1 依次入栈。
+  - 然后依次出栈执行初始化过程，所以 init 的输出顺序是 1 2 3。初始化好后的又入栈到 doFilter 这个栈中，1 2 3『栈顶』。
+  - 栈顶元素再一次执行 doFilter 方法，顺序为  3  2  1。
+  - destroy 方法也是如此记忆，顺序为 1 2 3。
 
   ```xml
   <filter>
@@ -1902,27 +1910,25 @@ public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain
     String uri = request.getRequestURI();
     //2.判断是否包含登录相关资源路径,
     //要注意排除掉 css/js/图片/验证码等资源
-    if(uri.contains("/login.jsp") ||
-       uri.contains("/loginServlet") ||
-       uri.contains("/css/") ||
-       uri.contains("/js/") ||
-       uri.contains("/fonts/") ||
-       uri.contains("/checkCodeServlet")  
-      ){
+    if (uri.contains("/login.jsp") || uri.contains("/loginServlet") ||
+            uri.contains("/css/") || uri.contains("/js/") ||
+            uri.contains("/fonts/") || uri.contains("/checkCodeServlet")) {
         //包含，用户就是想登录。放行
         chain.doFilter(req, resp);
-    }else{
+    } else {
         //不包含，需要验证用户是否登录
         //3.从获取session中获取user
         Object user = request.getSession().getAttribute("user");
-        if(user != null){
+        if (user != null) {
             //登录了。放行
             chain.doFilter(req, resp);
-        }else{
+        } else {
             //没有登录。跳转登录页面
-            request.setAttribute("login_msg","您尚未登录，请登录");      request.getRequestDispatcher("/login.jsp").forward(request,resp);
+            request.setAttribute("login_msg", "您尚未登录，请登录");
+            request.getRequestDispatcher("/login.jsp").forward(request, resp);
         }
     }
+}
 ```
 
 
@@ -1937,9 +1943,7 @@ public class SensitiveWordsFilter implements Filter {
 
     public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) {
         //1.创建代理对象，增强getParameter方法
-        ServletRequest proxy_req = (ServletRequest) Proxy.newProxyInstance(req.getClass().getClassLoader(), 
-                                                                           req.getClass().getInterfaces(), 
-                                                                           new InvocationHandler() {
+        ServletRequest proxy_req = (ServletRequest) Proxy.newProxyInstance(req.getClass().getClassLoader(), req.getClass().getInterfaces(), new InvocationHandler() {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 //增强getParameter方法
@@ -1962,7 +1966,6 @@ public class SensitiveWordsFilter implements Filter {
                 return method.invoke(req,args);
             }
         });
-
         //2.放行
         chain.doFilter(proxy_req, resp);
     }
@@ -1980,10 +1983,8 @@ public class SensitiveWordsFilter implements Filter {
             while((line = br.readLine())!=null){
                 list.add(line);
             }
-
             br.close();
             System.out.println(list);
-
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -2000,14 +2001,12 @@ public class SensitiveWordsFilter implements Filter {
 public class CharsetFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        request.setCharacterEncoding("UTF-8");
-        response.setContentType("text/html;charset=UTF-8");
+        request.setCharacterEncoding("UTF-8"); // 解决 request 乱码问题
+        response.setContentType("text/html;charset=UTF-8"); // 解决 response 乱码问题
         chain.doFilter(request, response);
     }
 }
 ```
-
-
 
 ## 增强对象的功能
 
@@ -2024,13 +2023,13 @@ pass
 - 代理对象
 - 代理模式：代理对象代理真实对象，达到增强真实对象功能的目的。
 
-> 实现方式
+> <b>实现方式</b>
 
 1.静态代理：有一个类文件描述代理模式
 
 2.动态代理：在内存中形成代理类
 
-> 动态代理实现步骤
+> <b>动态代理实现步骤</b>
 
 - 代理对象和真实对象实现相同的接口
 - 代理对象 = Proxy.netProxyInstance();
@@ -2231,6 +2230,10 @@ public class Listener implements ServletContextListener {
 
 ServletContext 是一个接口，官方叫 Servlet 上下文。当 Servlet 容器启动时，会为每个 Web 应用创建一个唯一的 ServletContext 对象代表当前 Web 应用，该对象不仅封装了当前 Web 应用的所有信息，而且实现了多个 Servlet 之间数据的共享。
 
+<b>创建：</b>该 web 应用被加载（服务器启动或发布 web 应用（前提，服务器启动状态））
+
+<b>销毁：</b>web 应用被卸载（服务器关闭，移除该 web 应用）
+
 ## 获取对象
 
 - 通过 request 对象获取  request.getServletContext();
@@ -2300,7 +2303,7 @@ public class GetServletContextAttribute extends HttpServlet {
 }
 ```
 
-<b>HttpClient 测试代码，先发起 set 请求在 get 属性</b>
+<b>HttpClient 测试代码，先发起 setContext 请求在 getContext 属性</b>
 
 ```java
 package com.tomcat.controller.context;
@@ -2334,7 +2337,6 @@ public class TestContext {
                 .timeout(Duration.ofMillis(2000))
                 .GET()
                 .build();
-
         try {
             client.send(setContext, HttpResponse.BodyHandlers.ofString());
             HttpResponse<String> send = client.send(getContext, HttpResponse.BodyHandlers.ofString());
@@ -2344,7 +2346,6 @@ public class TestContext {
         } finally {
             threadPool.shutdown();
         }
-
     }
 
 
@@ -2362,7 +2363,6 @@ public class TestContext {
             .followRedirects(HttpClient.Redirect.NEVER)
             .executor(threadPool)
             .build();
-
 }
 ```
 
@@ -2464,7 +2464,9 @@ resourceAsStream=====>这是一个测试 ServletContext 读取资源的文件。
 
 ## 添加组件
 
-ServletContext 类还提供了几个方法用于向容器中动态添加 Servlet、Filter、Listener 这三大组件。不过不能在上下文初始好后添加这些组件。因此，可以通过配置 loadOnStartup=正数，在容器启动，但是没有初始化好上下文（ServletContext）的时间将 Servlet 添加进去。
+ServletContext 类还提供了几个方法用于向容器中动态添加 Servlet、Filter、Listener 这三大组件。<b>但是，需要在上下文初始化前将这些组件添加进去。</b>
+
+从代码中看出，是执行 init 方法的时候添加的 Servlet 的。因此，可以通过配置 loadOnStartup=正数，在容器启动，但是没有初始化好上下文（ServletContext）时，将 Servlet 添加进去。
 
 ```java
 @WebServlet(urlPatterns = "/add", loadOnStartup = 0)
@@ -2593,11 +2595,7 @@ public class DownLoadUtils {
 
 令牌是一次性的，用过一次就废弃了，再用需要生成新的令牌。
 
-> 原理
-
-在页面加载时，一个 token 放在 session 中，另一个用 form 提交传递到后台。后台接收到两个 token 进行对比，相同则是第一次提交，token 在使用完毕后需要清除。
-
-> 使用方式
+<b>原理：</b>在页面加载时，一个 token 放在 session 中，另一个用 form 提交传递到后台。后台接收到两个 token 进行对比，相同则是第一次提交，token 在使用完毕后需要清除。
 
 使用方式有很多种。
 
@@ -2635,9 +2633,11 @@ session.setAttribute("token", token);
 
 # MVC&三层架构
 
+Web 开发中的设计模式。
+
 ## MVC
 
-1️⃣M：Model，模型，用来表示数据和处理业务，对应组件是 JavaBea（JavaBean 可重用组件）。如查询数据库，封装对象
+1️⃣M：Model，模型，用来表示数据和处理业务，对应组件是 JavaBean（可重用组件）。如查询数据库，封装对象
 
 2️⃣V：View，视图，用户看到并与之交互的界面。对应组件是 JSP 或 HTML 
 
@@ -2653,7 +2653,7 @@ MVC 是 Web 开发中的通用的设计模式，而三层架构是 JavaWeb/JavaE
 
 ## 三层架构
 
-- DAL 层（数据访问层）：该层所做事务直接操作数据库，针对数据的增添，删除，修改，更新，查找等，每层之间是一种垂直的关系。
+- DAL 层（数据访问层）：该层直接操作数据库，针对数据的增添，删除，修改，更新，查找等，每层之间是一种垂直的关系。
 - BLL 层（业务层）：针对具体问题的操作，也可以说是对数据层的操作，对数据业务逻辑的处理；
 - UI 层（表现层）：表现层就是展现给用户的界面，即用户在使用一个系统的时候的所见所得；
 
@@ -2721,7 +2721,7 @@ Statement 接口用于执行静态的 SQL 语句，并返回一个结果对象�
 
 > <b>PreparedStatement 接口</b>
 
-PreparedStatement是Statement的子接口，用于执行预编译的SQL语句。该接口扩展了带有参数SQL语句的执行操作，应用该接口中的SQL语句可以使用占位符“?”来代替其参数，然后通过setXxx()方法为SQL语句的参数赋值。在PreparedStatement接口中，提供了一些常用方法。
+PreparedStatement 是 Statement 的子接口，用于执行预编译的 SQL 语句。该接口扩展了带有参数 SQL 语句的执行操作，应用该接口中的 SQL 语句可以使用占位符“?”来代替其参数，然后通过 setXxx() 方法为 SQL 语句的参数赋值。在 PreparedStatement 接口中，提供了一些常用方法。
 
 | 方法                                                         | 功能描述                                                     |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -2739,7 +2739,7 @@ setDate() 方法可以设置日期内容，但参数 Date 的类型是 java.sql.
 
 > <b>ResultSet 接口</b>
 
-ResultSet 接口用于保存 JDBC 执行查询时返回的结果集，该结果集封装在一个逻辑表格中。在 ResultSet 接口内部有一个指向表格数据行的游标（或指针），ResultSet 对象初始化时，游标在表格的第 1 行之前，调用  next() 方法可将游标移动到下一行。如果下一行没有数据，则返回 false。在应用程序中经常使用 next() 方法作为 WHILE 循环的条件来迭代 ResultSet 结果集。
+ResultSet 接口用于保存 JDBC 执行查询时返回的结果集，该结果集封装在一个逻辑表格中。在 ResultSet 接口内部有一个指向表格数据行的游标（或指针），ResultSet 对象初始化时，游标在表格的第 1 行之前，调用 next() 方法可将游标移动到下一行。如果下一行没有数据，则返回 false。在应用程序中经常使用 next() 方法作为 while 循环的条件来迭代 ResultSet 结果集。
 
 | 方法                         | 功能描述                                                     |
 | ---------------------------- | ------------------------------------------------------------ |
@@ -2853,7 +2853,7 @@ public static void testPrepareStatement() {
 
 ## Ajax
 
-概念：Asynchronous JavaScript And XML 异步的 JavaScript 和 xml。『这里说的同步异步与线程关系不大』
+概念：Asynchronous JavaScript And XML 异步的 JavaScript 和 xml。『多线程只是异步的一种实现方式，而这里说的异步与线程关系不大』
 
 ### 原生JavaScript实现
 
@@ -2873,10 +2873,10 @@ public static void testPrepareStatement() {
         }
         // 2.发送请求
         /**
-		*  请求方式：GET POST
-		*  get：参数拼接在URL上
-		*  post：参数在send方法中定义
-		*/
+						*  请求方式：GET POST
+						*  get：参数拼接在URL上
+						*  post：参数在send方法中定义
+						*/
         xmlhttp.open("GET", "demo.json", true);
         xmlhttp.onreadystatechange = function() {
             if(xmlhttp.readyState==4 && xmlhttp.status==200){
@@ -3227,19 +3227,21 @@ public class JsonDemo {
 
 一款非常强大的 ajax 工具。写法总体来说我感觉比 jquery 舒服一点。
 
-## 安装
+<a href="https://www.kancloud.cn/yunye/axios/234845">中文文档</a>
+
+<b>安装</b>
 
 - 使用 npm 安装
 
-`npm install axios`
+  `npm install axios`
 
 - 使用 bower
 
-`bower install axios`
+  `bower install axios`
 
 - 使用 cdn
 
-`<script src="https://unpkg.com/axios/dist/axios.min.js"></script>`
+  `<script src="https://unpkg.com/axios/dist/axios.min.js"></script>`
 
 ## Get请求
 
@@ -3298,7 +3300,3 @@ axios.all([getUserAccount(), getUserPermissions()])
     // 两个请求现在都执行完成
   }));
 ```
-
-## 详细用法
-
-<a href="https://www.kancloud.cn/yunye/axios/234845">中文文档</a>

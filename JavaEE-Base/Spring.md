@@ -5421,7 +5421,7 @@ class DeferredResultQueue {
 }
 ```
 
-# Spring5新特性
+# Spring5特性
 
 ## 新功能
 
