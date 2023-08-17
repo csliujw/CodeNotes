@@ -4,7 +4,7 @@
 
 ## 学习内容
 
-> 容器
+> IoC & AOP
 
 - AnnotationConfigApplicationContext
 - 组件添加
@@ -15,7 +15,7 @@
 
 > 扩展原理
 
-- BeanFactoryPostProcessor
+- BeanFactoryPostProcessor（后置处理器）
 - BeanDefinitionRegistryPostProcessor
 - ApplicationListener
 - Spring 容器创建过程
@@ -33,15 +33,16 @@
 
 - 目录层级关系
 
-   src|
-
-  ​      |com 类所在的包名
-
+   ```shell
+  src |
+  ----| com 类所在的包名
+  ```
+  
   conf 配置文件所在的文件夹，与 src 目录同级别
 
 ## maven报错
 
-这个报错了，怎么办？
+maven 插件报错
 
 ```xml
 <plugin>
@@ -50,7 +51,7 @@
 </plugin>
 ```
 
-引入这个依赖就行！
+报错是因为缺少依赖，引入这个依赖就行！
 
 ```xml
 <dependency>
@@ -61,17 +62,19 @@
 </dependency>
 ```
 
+以后遇到 maven 插件报错可以看看是不是缺少了相关依赖。
+
 ## Spring的优点
 
 1️⃣非入侵式框架。可以使应用程序代码对框架的依赖最小化（其实也小不到哪里去）
 
-2️⃣方便解耦，简化开发。Spring就是一个大工厂，可以将所有对象的创建和依赖关系的维护工作都交给Spring容器管理，大大地降低了组件之间的耦合性。
+2️⃣方便解耦，简化开发。Spring 就是一个大工厂，可以将所有对象的创建和依赖关系的维护工作都交给 Spring 容器管理，大大地降低了组件之间的耦合性。
 
 3️⃣支持 AOP。Spring 提供了对 AOP 的支持，它允许将一些通用任务，如安全、事务、日志等进行集中式处理，从而提高了程序的复用性。
 
 4️⃣支持声明式事务处理。只需要通过配置就可以完成对事务的管理，而无须手动编程。
 
-5️⃣方便集成各种优秀框架。Spring 内部提供了对各种优秀框架（如Struts、Hibernate、MyBatis、Quartz 等）的直接支持。
+5️⃣方便集成各种优秀框架。Spring 内部提供了对各种优秀框架（如 Struts、Hibernate、MyBatis、Quartz 等）的直接支持。
 
 6️⃣降低 Java EE API 的使用难度。Spring 对 Java EE 开发中非常难用的一些 API（如 JDBC、JavaMail 等），都提供了封装，使这些 API 应用难度大大降低。
 
@@ -83,6 +86,8 @@
 
 Spring 框架的主要功能是通过其核心容器来实现的，而 Spring 框架提供了两种核心容器，分别为 BeanFactory 和 ApplicationContext。
 
+BeanFactory 是访问 Spring Bean 的一个根接口。ApplicationContext 是 BeanFactory 的一个子接口并拓展了一些其他功能。
+
 ### BeanFactory
 
 BeanFactory 是基础类型的 IoC 容器。简单说，BeanFactory 就是一个管理 Bean 的工厂，它主要负责初始化各种 Bean，并调用它们的生命周期方法。
@@ -93,15 +98,17 @@ ApplicationContext 是 BeanFactory 的子接口，也被称为应用上下文，
 
 ### 依赖注入示例
 
-依赖注入（Dependency Injection，简称 DI）与控制反转（IoC）的含义相同，只不过这两个称呼是从两个角度描述的同一个概念。
+依赖注入（Dependency Injection，简称 DI）与控制反转（IoC）的含义相同，只不过这两个称呼是从两个角度描述的同一个概念。【这边感觉并不准确】
 
 <b>控制反转：</b>不再是自己实例化对象，而是交给 Spring 容器来创建对象，控制权发生了反转。
 
 <b>依赖注入：</b>A 类和 B 类，如果 A 要用到 B，就是 A 依赖了 B。Spring 的 IOC 容器会为 A 初始化这个 B 对象，即注入这个依赖。
 
-> Spring 常用的依赖注入的方式有如下三种
+> <b>Spring doc：</b>Spring 有<b>两种主要的依赖注入方式</b>，一种是基于构造器的依赖注入，一种是基于 setter 方法的依赖注入。但是日常使用时，依赖注入的方式有如下三种（Spring 官方不推荐使用属性注入！）
 
-1️⃣setter 方法注入，需要在 setter 方法上加上 @Atuowired 注解。
+代码测试 SetterInjuect \ ConstructorInjuect
+
+1️⃣setter 方法注入，需要在 setter 方法上加上 @Autowired 注解，setter 注入需要配合 @Autowired 使用。
 
 2️⃣构造方法注入：<a href="https://blog.csdn.net/weixin_42128429/article/details/121395148">一篇优质博客</a>
 
@@ -110,7 +117,9 @@ ApplicationContext 是 BeanFactory 的子接口，也被称为应用上下文，
 - 如果有多个构造方法，但是没有无参数的，那么会报错。报错了，怎么办呢？为某个构造方法加上 @Autowired，就会使用那个构造方法进行初始化。
 - 如果需要根据不同的情况来实例化对象怎么办？请看下面的多构造实例化代码
 
-3️⃣属性注入，就是在属性上加上注解 @Autowired，大多数时候依赖注入都要结合注解注入来使用的。
+3️⃣属性注入，就是在属性上加上注解 @Autowired。
+
+大多数时候我们使用 Spring 的依赖注入都是使用注解
 
 > 依赖注入示例
 
@@ -293,7 +302,7 @@ public class Main {
 
 #### 实例化方式
 
-在 Spring 中，要想使用容器中的 Bean，需要实例化 Bean。实例化 Bean 有三种方式，分别为<span style="color:orange">构造器实例化、静态工厂方式实例化和实例工厂方式实例化</span>
+在 Spring 中，要想使用容器中的 Bean，需要实例化 Bean（创建对象）。实例化 Bean 有三种方式，分别为<span style="color:orange">构造器实例化、静态工厂方式实例化和实例工厂方式实例化</span>
 
 ##### 构造器实例化
 
@@ -383,13 +392,13 @@ public class Hello {
 }
 ```
 
-#### 作用域
+#### Bean 作用域
 
 通过 Spring 容器创建一个 Bean 的实例时，不仅可以完成 Bean 的实例化，还可以为 Bean 指定特定的作用域。Spring 中为 Bean 的实例定义了 7 种作用域。
 
 | 作用域名称          | 说明                                                         |
 | ------------------- | ------------------------------------------------------------ |
-| singleton（单实例） | 使用 singleton 定义的 Bean 在 Spring 容器中将只有一个实例，即单例模型。 |
+| singleton（单实例） | 使用 singleton 定义的 Bean 在 Spring 容器中将只有一个实例，但是不是单例设计模式！ |
 | prototype（多实例） | 每次通过 Spring 容器获取的 prototype 定义的 Bean 时，容器都将创建一个新的 Bean 实例。 |
 | request             | 在一次 HTTP 请求中，容器会返回一个 Bean 实例，不同的 HTTP 请求会产生不同的 Bean，且仅在当前 HTTP request 内有效。 |
 | session             | 在一次 HTTP Session 中，容器会返回同一个 Bean 实例，且仅在当前 HTTP Session 内有效。 |
@@ -407,7 +416,7 @@ public class Hello {
 </div>
 #### 装配方式
 
-Spring 提供了基于 XML 的配置、基于注解的配置和自动装配等。主要讲解基于注解的配置。
+Spring 提供了基于 XML 的配置、基于注解的配置和自动装配等。此处主要学习基于注解的配置。
 
 Spring 中定义了一系列的注解，常用的注解如下：
 
@@ -416,7 +425,7 @@ Spring 中定义了一系列的注解，常用的注解如下：
 - @Service：通常作用在业务层（Service 层），用于将业务层的类标识为 Spring 中的 Bean，其功能与 @Component 相同。
 - @Controller：通常作用在控制层（如 Spring MVC 的 Controller），用于将控制层的类标识为 Spring 中的 Bean，其功能与 @Component 相同。
 - @Autowired：用于对 Bean 的属性变量、属性的 setter 方法及构造方法进行标注，配合对应的注解处理器完成 Bean 的自动配置工作。<span style="color:orange">默认按照 Bean 的类型进行装配。如果按类型匹配发现有多个，就以字段名为 name 进行匹配，如果还没有匹配的 Bean，会报错。</span>
-- @Resource：其作用与 Autowired 一样。其区别在于 @Autowired 默认按照 Bean 类型装配，而 @Resource 默认按照 Bean 实例名称进行装配。@Resource 中有两个重要属性：name 和 type。
+- @Resource：其作用与 Autowired 一样。<span style="color:red">其区别在于 @Autowired 默认按照 Bean 类型装配，而 @Resource 默认按照 Bean 实例名称进行装配。</span>@Resource 中有两个重要属性：name 和 type。
     - Spring 将 name 属性解析为 Bean 实例名称，type 属性解析为 Bean 实例类型。
     - 如果指定 name 属性，则按实例名称进行装配；如果指定 type 属性，则按 Bean 类型进行装配；
     - 如果都不指定，则先按 Bean 实例名称装配，如果不能匹配，再按照 Bean 类型进行装配；如果都无法匹配，则抛出 NoSuchBeanDefinitionException 异常。
@@ -426,23 +435,18 @@ Spring 中定义了一系列的注解，常用的注解如下：
 
 ### 组件注入
 
-#### xml写法
+#### xml 方式
 
 POJO 对象
 
 ```java
 package org.example.pojo;
-
 public class Person {
     private String name;
     private Integer age;
-
     public Person() {}
-
-    public Person(String name) {
-        this.name = name;
-    }
-	// 省略 setter getter
+    public Person(String name) { this.name = name;}
+    // 省略 setter getter
 }
 ```
 
@@ -468,7 +472,7 @@ public class BeanXMLTest {
 - `xml` 配置文件。在 maven 的 `resrouce` 目录下。resource 目录下的资源最后会变成项目根目录下的文件。所以是直接 `Classxxx("bean.xml")`
 - `JavaSE` 的项目和 `JavaEE` 项目最后的输出路径好像都是 classes，但是 `JavaEE` 里写的路径是 `classpath`！
 
-#### 注解配置类写法
+#### 注解方式
 
 @Configuration 可以替代 XML，进行类的配置。典型的应用有三方 jar 包，我们需要把它交给 Spring 容器进行管理，于是用 @Configuration 的方式把这个类注入到 Spring 中。
 
@@ -485,12 +489,9 @@ import org.springframework.context.annotation.Configuration;
 public class MainConfiguration {
     // 给容器中注册一个Bean  默认是以方法名为 bean 的名称
     // 如果不想要方法名可以这样 @Bean("person") 或 @Bean({"person1","person2"})
-    // 具体看看源码注释 一目了然。
-    // value 与 name 之间 是别名关系
+    // 具体看看源码注释 一目了然。其中，value 与 name 之间 是别名关系
     @Bean("person3")
-    public Person person() {
-        return new Person();
-    }
+    public Person person() { return new Person(); }
 }
 ```
 
@@ -527,7 +528,7 @@ public class BeanXMLTest {
 
 用到的注解有 @Configuration、@ComponentScan，如果是 JDK8，它被设置成了重复注解，可以重复用。
 
-#### xml 的方式
+#### xml 方式
 
 ```xml
 <!-- 配置包扫描 , 只要标注了@Controller、@Service、@Repository、@Component的都会被自动的扫描加入容器中-->
@@ -568,28 +569,21 @@ public class MainConfiguration {
 // IncludeConfiguration的配置对象是也会包含的。
 @Configuration
 @ComponentScan(basePackages = "org.example", includeFilters = {
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, 
-                              classes = DemoService.class)
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = DemoService.class)
 }, useDefaultFilters = false)
 public class IncludeConfiguration {
     // 给容器中注册一个Bean
     @Bean(name = {"person1", "person2", "person3"})
-    public Person person() {
-        return new Person();
-    }
+    public Person person() { return new Person(); }
 
-    @Bean
-    public Person person007() {
-        return new Person();
-    }
+    @Bean public Person person007() { return new Person(); }
 }
 ```
 
 ```java
 public class ScanTest {
 
-    @Test
-    public void test1() {
+    @Test public void test1() {
         AnnotationConfigApplicationContext anno = new AnnotationConfigApplicationContext(MainConfiguration.class);
         String[] beanDefinitionNames = anno.getBeanDefinitionNames();
         for (int i = 0; i < beanDefinitionNames.length; i++) {
@@ -597,8 +591,7 @@ public class ScanTest {
         }
     }
 
-    @Test
-    public void test2() {
+    @Test public void test2() {
         AnnotationConfigApplicationContext anno = new AnnotationConfigApplicationContext(IncludeConfiguration.class);
         String[] beanDefinitionNames = anno.getBeanDefinitionNames();
         for (int i = 0; i < beanDefinitionNames.length; i++) {
@@ -645,9 +638,7 @@ class DefineFilter implements TypeFilter {
         // 类名
         String className = classMetadata.getClassName();
         System.out.println("---->" + className);
-        if (className.contains("Dao")) {
-            return true;
-        }
+        if (className.contains("Dao")) return true;
         return false;
     }
 }
@@ -666,8 +657,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 public class ScanTest {
 
-    @Test
-    public void test3() {
+    @Test public void test3() {
         AnnotationConfigApplicationContext anno = new AnnotationConfigApplicationContext(DefineFilterConfiguration.class);
         String[] beanDefinitionNames = anno.getBeanDefinitionNames();
         for (int i = 0; i < beanDefinitionNames.length; i++) {
@@ -709,62 +699,31 @@ public class ScanTest {
 @RunWith(SpringJUnit4ClassRunner.class)
 public class ScopeConfigurationTest {
 
-    @Autowired
-    Person person1;
+    @Autowired Person person1;
+    @Autowired Person person2;
+    @Autowired Person person3;
 
-    @Autowired
-    Person person2;
-
-    @Autowired
-    Person person3;
-
-    @Test
-    public void test1() {
+    @Test public void test1() {
         System.out.println(person1 == person2);
         System.out.println(person1 == person3);
     }
 }
 ```
 
-### Bean作用域范围
-
-通过 Spring 容器创建一个 Bean 的实例时，不仅可以完成 Bean 的实例化，还可以为 Bean 指定特定的作用域。而常见的作用域范围有下面五种。
-
-- singleton 单例
-- prototype 多例
-- request 
-- session
-- global-session
-
-完整的 Spring 中 Bean 的 7 种作用域。
-
-| 作用域名称          | 说明                                                         |
-| ------------------- | ------------------------------------------------------------ |
-| singleton（单实例） | 使用 singleton 定义的 Bean 在 Spring 容器中将只有一个实例，即单例模型。 |
-| prototype（多实例） | 每次通过 Spring 容器获取的 prototype 定义的 Bean 时，容器都将创建一个新的 Bean 实例。 |
-| request             | 在一次 HTTP 请求中，容器会返回一个 Bean 实例，不同的 HTTP 请求会产生不同的 Bean，且仅在当前 HTTP request 内有效。 |
-| session             | 在一次 HTTP Session 中，容器会返回同一个 Bean 实例，且仅在当前 HTTP Session 内有效。 |
-| globalSession       | 在一次 HTTP Session 中，容器会返回一个 Bean 实例，仅在使用 portlet 上下文时有效。<br>global session 类似于 HTTP Session 作用域，它只有对 portlet 才有意义。对于 Servlet 的 web 应用就相当于 session。 |
-| application         | 为每个 ServletContext 对象创建一个实例。仅在 Web 相关的 ApplicationContext 中生效。 |
-| websocket           | 为每个 websocket 对象创建一个实例。仅在 Web 相关的 ApplicationContext 中生效。 |
-
 ### 懒加载
 
-- @Lazy，针对单实例容器启动时不创建对象，第一次获取 bean 时再进行初始化。
+- @Lazy，针对单实例容器，容器启动时不创建对象，第一次获取 bean 时再进行初始化。
 - 验证代码如下
 
 ```java
 @Configuration
 public class LazyConfiguration {
-    @Scope("prototype")
-    @Bean
-    @Lazy public Person person() {
+    @Scope("prototype") @Bean @Lazy public Person person() {
         System.out.println("Create Person");
         return new Person();
     }
 
-    @Bean
-    public Person getP() {
+    @Bean public Person getP() {
         System.out.println("Create getP");
         return new Person();
     }
@@ -782,7 +741,6 @@ public class LazyConfiguration {
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Conditional {
-
 	/**
 	 * All {@link Condition} classes that must {@linkplain Condition#matches match}
 	 * in order for the component to be registered.
@@ -802,7 +760,6 @@ public interface Condition {
 	 * or {@code false} to veto the annotated component's registration
 	 */
 	boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata);
-
 }
 // 由此可看出，Conditional传入的是Condition数组
 ```
@@ -816,29 +773,22 @@ import cn.study.ioc.pojo.Person;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.*;
 import org.springframework.core.type.AnnotatedTypeMetadata;
-
 import java.util.Arrays;
 
 @Configuration
 public class BeanConditionInject {
     @Bean("linux")
     @Conditional(value = {LinuxCondition.class})
-    public Person getLinux() {
-        return new Person("linux");
-    }
+    public Person getLinux() { return new Person("linux"); }
 
     @Bean("windows")
     @Conditional(value = {WindowsCondition.class})
-    public Person getWindows() {
-        return new Person("windows");
-    }
+    public Person getWindows() { return new Person("windows"); }
 
     // 包含指定的Bean才注入此obj对象
     @Bean("obj")
     @Conditional(value = {OtherCondition.class})
-    public Object getObj() {
-        return new Object();
-    }
+    public Object getObj() { return new Object(); }
 
     public static void main(String[] args) {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanConditionInject.class);
@@ -858,8 +808,7 @@ class LinuxCondition implements Condition {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
         String property = context.getEnvironment().getProperty("os.name");
-        if (property != null && property.contains("linux"))
-            return true;
+        if (property != null && property.contains("linux")) return true;
         return false;
     }
 }
@@ -869,8 +818,7 @@ class WindowsCondition implements Condition {
     @Override
     public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
         String property = context.getEnvironment().getProperty("os.name");
-        if (property != null && property.contains("Window"))
-            return true;
+        if (property != null && property.contains("Window")) return true;
         return false;
     }
 }
@@ -934,10 +882,7 @@ public class BeanImport {
 }
 
 class Color {
-    @Bean
-    public Person getColor() {
-        return new Person("color");
-    }
+    @Bean public Person getColor() { return new Person("color"); }
 }
 /*
 ...
@@ -5476,7 +5421,7 @@ class DeferredResultQueue {
 }
 ```
 
-# Spring5新特性
+# Spring5特性
 
 ## 新功能
 

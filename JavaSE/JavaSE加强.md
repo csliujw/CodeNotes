@@ -203,7 +203,7 @@ public class JunitDemo {
 
 反射可以把类的各个组成部分封装为其他对象。流行的框架基本都是基于反射的思想写成的。
 
-Java 反射机制是在程序的运行过程中，对于任何一个类，都能够知道它的所有属性和方法；对于任意一个对象，都能够知道它的所有属性和方法，<b style="color:green">这种动态获取信息以及动态调用对象方法的功能称为Java语言的反射机制。</b>
+Java 反射机制是在程序的运行过程中，对于任何一个类，都能够知道它的所有属性和方法；对于任意一个对象，都能够知道它的所有属性和方法，<b style="color:green">这种动态获取信息以及动态调用对象方法的功能称为 Java 语言的反射机制。</b>
 
 Java 反射机制主要提供了以下这几个功能：
 
@@ -301,26 +301,16 @@ Object proxyObject = Proxy.newProxyInstance(ClassLoader classLoader, Class[] int
 ```java
 interface IBase {
     public void say();
-
     public void sleep();
-
     public String getName();
 }
 ```
 
 ```java
 public class Person implements IBase {
-    public void say() {
-        System.out.println("hello");
-    }
-
-    public void sleep() {
-        System.out.println("sleep");
-    }
-
-    public String getName() {
-        return "getName";
-    }
+    public void say() { System.out.println("hello"); }
+    public void sleep() { System.out.println("sleep"); }
+    public String getName() { return "getName"; }
 }
 ```
 
@@ -352,7 +342,7 @@ public class ProxyDemo1 {
 #### invoke解释
 
 ```java
-public Object invoke(Object proxy, Method method, Object[] args)
+public Object invoke(Object proxy, Method method, Object[] args);
 ```
 
 <b>这个 invoke 什么时候被调用？</b>
@@ -393,7 +383,7 @@ public class ProxyDemo2 {
 }
 ```
 
-### 模拟`AOP`
+### 模拟 `AOP`
 
 `Spring AOP`，感受一下什么叫增强内容可变
 
@@ -409,22 +399,19 @@ public class ProxyDemo2 {
 
 <b>作用分类：</b>
 
-1.代码分析，通过代码里标识的元数据对代码进行分析【结合反射技术】
-
-2.编译检查，通过代码里标识的元数据让编译器能够实现机泵的编译检查【Override】
-
-3.编写文档，通过代码里标识的元数据生成文档【生成文档 doc 文档】
+- 1.代码分析，通过代码里标识的元数据对代码进行分析【结合反射技术】
+- 2.编译检查，通过代码里标识的元数据让编译器能够实现机泵的编译检查【Override】
+- 3.编写文档，通过代码里标识的元数据生成文档【生成文档 doc 文档】
 
 ### 内置注解
 
 - `Override`：检测被标注的是否继承自父类
 - `Deprecated`：表示方法过时
-- `SuppressWarnings`：压制警告
-  - 一般传递参数 all
+- `SuppressWarnings`：压制警告，一般传递参数 all
 
 ### 自定义注解
 
-> <b>元注解`public @interface annotationName{}`</b>
+> <b>元注解 `public @interface annotationName{}`</b>
 
 反编译发现，本质就是一个接口。
 
@@ -444,13 +431,11 @@ public interface Annotation extends Annotation {}
 
 使用注解，数组类型的赋值 `str={xx,xx,xx}`，若数组中只有一个，大括号可省略。回忆 Spring 中的注解
 
-```
 * 基本数据类型
-		* String
-		* 枚举
-		* 注解
-		* 以上类型的数组
-```
+* String
+* 枚举
+* 注解
+* 以上类型的数组
 
 ### 元注解
 
@@ -483,10 +468,8 @@ public @interface Pro {
 
 @Pro(className = "com.bbxx.Demo1",methodName = "show1")
 public class RefelectDemo {
-    public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, InstantiationException {
-        /**
-         * 解析注解
-         */
+    public static void main(String[] args) throws Exception {
+        // 解析注解
         Class<RefelectDemo> refelectDemoClass = RefelectDemo.class;
         Pro annotation = refelectDemoClass.getAnnotation(Pro.class);
         String s = annotation.className();
@@ -542,7 +525,7 @@ class String{ // 引导加载， String类，类库中的
 
 继承 `ClassLoader` 类完成自定义类加载器。自定义类加载器一般是为了加载网络上的类，class 在网络中传输，为了安全，那么 class 需要加密，需要自定义类加载器来加载（对 class 做解密工作）
 
-`ClassLoader` 加载类都是通过 `loadClass()` 方法来完成的。`loadClass() `方法的工作流程如下：
+`ClassLoader` 加载类都是通过 `loadClass()` 方法来完成的。`loadClass()` 方法的工作流程如下：
 
 - 调用 `findLoadedClass()` 方法查看该类是否已经被加载过了，如果该类没有加载过，那么这个方法返回 null。
 - 判断 `findLoadedClass()` 返回的是否为 null,如果不是 null 那么直接返回，可避免同一个类被加载两次。
@@ -1267,7 +1250,7 @@ HotSpot 使用的是计数器的方式进行探测，为每个方法准备了两
 
 ### Java内存模型
 
-Java 内存模型希望屏蔽各种硬件和操作系统的访问差异，保证了 Java 程序在各种平台下对内存的访问都能得到一致的效果。目的是解决多线程存在的原子性、可见性（缓存一致性）以及有序性的问题。Java 内存模型时一种规范，JVM会实现这种规范。
+Java 内存模型希望屏蔽各种硬件和操作系统的访问差异，保证了 Java 程序在各种平台下对内存的访问都能得到一致的效果。目的是解决多线程存在的原子性、可见性（缓存一致性）以及有序性的问题。Java 内存模型时一种规范，JVM 会实现这种规范。
 
 > 主要内容概述
 
@@ -1277,7 +1260,7 @@ Java 内存模型希望屏蔽各种硬件和操作系统的访问差异，保证
 
 > Java 内存模型的抽象结构
 
-Java 内存模型定义了：Java 线程对内存数据进行交互的规范。
+Java 内存模型定义了 Java 线程对内存数据进行交互的规范。
 
 线程之间的共享变量存储在主内中，每个线程都有自己私有的本地内存，本地内存存储了该线程以读\写共享变量的副本。
 
@@ -1393,7 +1376,11 @@ Java 堆是被所有线程共享的一块内存区域，在虚拟机启动时创
 
 ### 小结
 
-JVM 内存结构组成：JVM 内存结构又称为「运行时数据区域」。主要有五部分组成：虚拟机栈、本地方法栈、程序计数器、方法区和堆。其中方法区和堆是线程共享的。虚拟机栈、本地方法栈以及程序计数器是线程隔离的。
+JVM 内存结构组成：JVM 内存结构又称为「运行时数据区域」。
+
+主要由五部分组成：虚拟机栈、本地方法栈、程序计数器、方法区和堆。
+
+其中方法区和堆是线程共享的。虚拟机栈、本地方法栈以及程序计数器是线程隔离的。
 
 
 

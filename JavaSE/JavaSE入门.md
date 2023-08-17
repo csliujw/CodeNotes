@@ -5,13 +5,13 @@
 ### Java虚拟机
 
 - JVM：Java 虚拟机。Java 代码是运行在虚拟机上的。
-- 跨平台：代码运行在虚拟机上，不同版的 OS（linux，windows，mac）对应不同的虚拟机。虚拟机本身不具备跨平台功能，每个 OS 下都有不同版本的虚拟机。【可理解为，各个 OS 下的虚拟机都是采用一套编码指令集，JVM 是面向操作系统的，它负责把 Class 字节码解释成系统所能识别的指令并执行，同时也负责程序运行时内存的管理】
+- 跨平台：代码运行在虚拟机上，不同版的 OS（linux，windows，mac）对应不同的虚拟机。虚拟机本身不具备跨平台功能，每个 OS 下都有不同版本的虚拟机。『可理解为，各个 OS 下的虚拟机都是采用一套编码指令集，JVM 是面向操作系统的，它负责把 Class 字节码解释成系统所能识别的指令并执行，同时也负责程序运行时内存的管理』
 
-### JRE和JDK
+### JRE&JDK
 
 - JRE (Java Runtime Environment):Java 程序的运行时环境，包含 JVM 和运行时所需要的核心类库
-- JDK(Java Development Kit):是 Java 程序开发的工具包，包含 JRE 和开发人员使用的工具。
-- 运行 Java 程序有 jre就行，开发 Java 程序需要 JDK。
+- JDK(Java Development Kit)：Java 程序开发的工具包，包含 JRE 和开发人员使用的工具。
+- 运行 Java 程序有 jre 就行，开发 Java 程序需要 JDK。
 - Windows 会把 %CC% CC 当作变量进行翻译
 
 ## 第三章 入门程序
@@ -41,20 +41,20 @@
 #### 基本数据类型
 
 - 整数
-  - byte  1 个字节
-  - short 2 个字节
-  - int   4 个字节
-  - long  8 个字节
+  - byte   1 个字节
+  - short  2 个字节
+  - int      4 个字节
+  - long   8 个字节
 - 浮点数
-  - float     4 个字节
-  - double    8 个字节
+  - float      4 个字节
+  - double   8 个字节
 - 字符型
-  - char      2 个字节
+  - char    2 个字节
 - 布尔型
   - boolean   1 个字节
 
 ><b>Java 中默认类型：整型是 int，浮点类型是 double</b>
->想要精确的数字不推荐用 double，用 BigDemical 吧。
+>想要精确的数字不推荐用 double，用 BigDemical。
 
 #### 引用数据类型
 
@@ -86,12 +86,12 @@ byte num2 = 50;
 int result = num1 + num2;
 //如果用 byte接收 需要强转
 byte result = (byte)(num1 + num2);
-short同理
+// short 同理
 ```
 
 ### ASCII码表
 
-```shell
+```
 0 -- 48
 A -- 65
 a -- 97
@@ -101,7 +101,7 @@ a -- 97
 
 ASCII 码表：American Standard Code for Information Interchange
 
-Unicode 码表：万国码。也是数字和符号对照关系，开头 0-127 部分和 ASCII 完全一样，但是从128 开始包含更多字符。
+Unicode 码表：万国码。也是数字和符号对照关系，开头 0-127 部分和 ASCII 完全一样，但是从 128 开始包含更多字符。
 
 ### 易错点
 
@@ -111,7 +111,8 @@ byte short char 这些在计算的时候，会有类型提升，提升为 int �
 public static void main(String[] args) {
     byte a = 8;
     byte b = 127;
-    b = a+b; // 会报错，提示你要进行强制类型转换。因为计算的时候，a和b会被提升为int类型，然后再进行计算，得到的结果也是int的，要把int类型的赋值给byte类型的变量需要进行强制类型转换。
+    b = a+b; 
+    // 会报错，提示你要进行强制类型转换。因为计算的时候，a和b会被提升为int类型，然后再进行计算，得到的结果也是int的，要把int类型的赋值给byte类型的变量需要进行强制类型转换。
 }
 ```
 
@@ -138,14 +139,13 @@ public class Demo {
     // VM参数 -XX:+TraceClassLoading
     public static void main(String[] args) {
         int a = 0x2f;
-        System.out.printf("", TestClassLoading.d); // 调用静态内部类，控制台输出，它被加载了。不用静态内部类，它就不加载。
+        // 调用静态内部类，控制台输出，它被加载了。不用静态内部类，它就不加载。
+        System.out.printf("", TestClassLoading.d); 
     }
 
     static class TestClassLoading {
-        static int d =10;
-        {
-            System.out.println("d");
-        }
+        static int d = 10;
+        { System.out.println("d"); }
     }
 }
 ```
@@ -277,14 +277,10 @@ public class TestSwitch {
         byte var3 = -1;
         switch(str.hashCode()) {
             case 3168:
-                if (str.equals("cc")) {
-                    var3 = 1;
-                }
+                if (str.equals("cc")) { var3 = 1; }
                 break;
             case 3200:
-                if (str.equals("dd")) {
-                    var3 = 0;
-                }
+                if (str.equals("dd")) { var3 = 0; }
         }
 
         switch(var3) {
@@ -368,13 +364,13 @@ break 跳出一层循环，continue 开启下一次循环。IDEA 点击关键字
 
 ### 方法重载与重写
 
-方法调用的三种格式
+<b>方法调用的三种格式</b>
 
 1.单独调用：方法名称(参数)
 2.打印调用：System.out.println(方法名称(参数))
 3.赋值调用：数据类型 变量名称 = 方法名称(参数)
 
-方法重载 Overload 
+<b>方法重载 Overload</b>
 
 - <b>方法重载：</b>指在同一个类中，允许存在一个以上的同名方法，只要它们的参数列表不同即可，与修饰符和返回值类型无关。
 - 参数列表：个数不同，数据类型不同，顺序不同。
@@ -390,8 +386,8 @@ public static void test(short b,int a){}
 
 - 方法重写 Overrider 
 
-  - 子类中出现和父类中一模一样的方法(包括返回值类型,方法名,参数列表）
-  - 1.重写的方法必须要和父类一模一样(包括返回值类型,方法名,参数列表)
+  - 子类中出现和父类中一模一样的方法（包括返回值类型,方法名,参数列表）
+  - 1.重写的方法必须要和父类一模一样（包括返回值类型,方法名,参数列表）
   - 2.重写的方法可以使用 @Override 注解来标识
 
 #### 重载的注意事项
@@ -463,9 +459,9 @@ public static int[] calculate(int a,int b){
     int [] array = {a,b};
     return array;
 }
+```
 
 数组作为参数，作为返回值其实都是数组的地址值
-```
 
 ### Java内存划分
 
@@ -482,7 +478,7 @@ Java 的垃圾回收，对于提高对象的创建速度，具有明显的效果
 
 Java 的 GC 工作的时候，一面回收内存空间，一面使堆中的对象紧凑排列。
 
-Java 的优化技术\=\=\=>JIT（Just-In-Time）：这种技术可以把程序的全部或部分代码翻译成本地机器码，提升程序速度。当要装载某个类时，编译器会先找到其 `.class` 文件，然后将该类的字节码转入内存。此时有两种方式可供选择：
+Java 的优化技术==>JIT（Just-In-Time）：这种技术可以把程序的全部或部分代码翻译成本地机器码，提升程序速度。当要装载某个类时，编译器会先找到其 `.class` 文件，然后将该类的字节码转入内存。此时有两种方式可供选择：
 
 - <span style="color:orange">一、让即时编译器编译所有代码，但是这种做法有两个缺陷：</span>
     - <span style="color:orange">①这种加载动作散落在整个程序的生命周期内，累加起来要花很多时间</span>
