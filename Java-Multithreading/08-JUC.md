@@ -35,6 +35,8 @@ subgraph waitting队列
 end
 ```
 
+JUC 中用 LockSupport 实现的类，争抢锁失败了，线程对应的状态都是 WAITING、TIME_WAITING 一类（Thread.State 源码注释中有说明），只有争强 sync 锁失败的线程对应 Java API 中的 BLOCKED 状态。
+
 ## ReentrantLock
 
 可重入锁，与 `synchroized` 类似，但是比 `synchronized` 多出了许多实用的功能。

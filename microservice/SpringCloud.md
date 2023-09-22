@@ -29,7 +29,7 @@
 
 ## 分布式架构
 
-<b>分布式架构</b>：根据业务功能对系统做拆分，每个业务功能模块作为独立项目开发，称为一个服务。
+<b>分布式架构：</b>根据业务功能对系统做拆分，每个业务功能模块作为独立项目开发，称为一个服务。
 
 <div align="center"><img src="assets/image-20210713203124797.png"></div>
 
@@ -327,6 +327,16 @@ public class OrderService {
 }
 ```
 
+### RestTemplate进阶用法
+
+参考博客 [Java RestTemplate post请求传递参数_postforentity和postforobject区别_chnjg的博客-CSDN博客](https://blog.csdn.net/qq_38422016/article/details/109530529)
+
+| 用法          | 说明                                                        |
+| ------------- | ----------------------------------------------------------- |
+| postForObject | 不可以设置 Header，返回值只包含 Body 信息。                 |
+| postForEntity | 可以设置 Header，不仅包含 Body 信息，包含了响应的所有信息。 |
+| exchange      | 与 postForEntity 类似，而且可以调用 get、put 等请求。       |
+
 ## 提供者与消费者
 
 在服务调用关系中，会有两个不同的角色
@@ -371,9 +381,9 @@ graph LR
 
 获取地址信息的流程如下：
 
-- `user-service` 服务实例启动后，将自己的信息注册到 `eureka-server`（`Eureka` 服务端）。这个叫服务注册
+- `user-service` 服务实例启动后，将自己的信息注册到 `eureka-server`（`Eureka` 服务端）。这个叫服务注册。
 - `eureka-server` 保存服务名称到服务实例地址列表的映射关系。<span style="color:red">（key-->服务名称；value-->服务地址）</span>
-- `order-service` 根据服务名称，拉取实例地址列表。这个叫服务发现或服务拉取
+- `order-service` 根据服务名称，拉取实例地址列表。这个叫服务发现或服务拉取。
 
 > <b style="color:orange">order-service 如何从多个 user-service 实例中选择具体的实例？</b>
 
@@ -616,7 +626,7 @@ public class OrderService {
 
 为什么我们只输入了 `service` 名称就可以访问了呢？之前还要获取 `IP` 和端口。显然有人帮我们根据 `service`  名称，获取到了服务实例的 `IP` 和端口。它就是 `LoadBalancerInterceptor`，这个类会在对 `RestTemplate` 的请求进行拦截，然后从 `Eureka` 根据服务 `id` 获取服务列表，随后利用负载均衡算法得到真实的服务地址信息，替换服务 `id`。
 
-> 想看处理流程的可以进行源码跟踪：
+想看处理流程的可以进行源码跟踪。
 
 ### LoadBalancerIntercepor
 
@@ -794,7 +804,7 @@ ribbon:
 </dependency>
 ```
 
-> <span style="color:red">注意：不要忘了注释掉 eureka 的依赖。</span>
+<span style="color:red">注意：不要忘了注释掉 eureka 的依赖。</span>
 
 ### 配置nacos地址
 
@@ -807,7 +817,7 @@ spring:
       server-addr: localhost:8848
 ```
 
-> <span style="color:red">注意：不要忘了注释掉 eureka 的地址</span>
+<span style="color:red">注意：不要忘了注释掉 eureka 的地址</span>
 
 ### 重启
 
@@ -884,7 +894,7 @@ spring:
 
 修改 `order-service` 的 `application.yml` 文件，添加集群配置：
 
-```sh
+```yml
 spring:
   cloud:
     nacos:
@@ -993,7 +1003,7 @@ Nacos 会把服务实例划分为两种类型
 
 - 另一种是非临时实例：如果实例宕机，不会从服务列表剔除，只是会将其标记为"不健康"，等待他恢复成健康状态。也可以叫永久实例。
 
-<span style="color:orange">Eureka 做服务拉取是 30 秒更新/拉取一次服务列表，更新的可能不够及时；而 nacos 中，如果采用的是非临时实例，会有有消息推送，假设 nacos 发现有服务挂了会把主动推送变更消息到消费者那边，让消费者及时更新。但是 nacos 非临时实例的主动检测模式对服务器的压力比较大，一般都是采用临时实例。</span>
+<span style="color:orange">Eureka 做服务拉取是 30 秒更新/拉取一次服务列表，更新的可能不够及时；而 nacos 中，如果采用的是非临时实例，会有消息推送，假设 nacos 发现有服务挂了会把主动推送变更消息到消费者那边，让消费者及时更新。但是 nacos 非临时实例的主动检测模式对服务器的压力比较大，一般都是采用临时实例。</span>
 
 配置一个服务实例为永久实例：
 
@@ -1007,11 +1017,13 @@ spring:
 
 Nacos 和 Eureka 整体结构类似，服务注册、服务拉取、心跳等待，但是也存在一些差异：
 
+> <b>nacos 注册中心细节分析</b>
+
 <div align="center"><img src="assets/image-20210714001728017.png"></div>
 
 - Nacos 与 eureka 的共同点
   - 都支持服务注册和服务拉取
-  - 都支持服务提供者心跳方式做健康检测
+  - 都支持服务提供者以心跳方式做健康检测（服务提供者告诉注册中心自己活着，注册中心长时间得不到服务者的心跳就默认服务者挂了）
 
 - Nacos 与 Eureka 的区别
   - Nacos 支持服务端主动检测提供者状态：临时实例采用心跳模式，非临时实例采用主动检测模式
@@ -1029,8 +1041,6 @@ Nacos 和 Eureka 整体结构类似，服务注册、服务拉取、心跳等待
 
 Nacos 除了可以做注册中心，同样可以做配置管理来使用。
 
-> 主要内容
-
 - 统一配置管理
 - 配置热更新
 - 配置共享
@@ -1043,8 +1053,6 @@ Nacos 除了可以做注册中心，同样可以做配置管理来使用。
 > 配置热更新
 
 <div align="center"><img src="assets/image-20210714164426792.png"></div>
-
-
 
 Nacos 一方面可以将配置集中管理，另一方可以在配置变更时，及时通知微服务，实现配置的热更新。
 
@@ -1101,9 +1109,9 @@ spring:
 
 这里会根据 spring.cloud.nacos.server-addr 获取 nacos 地址，再根据
 
-`${spring.application.name}-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension} `作为文件 id，来读取配置。
+`${spring.application.name}-${spring.profiles.active}.${spring.cloud.nacos.config.file-extension}` 作为文件 id，来读取配置。
 
-本例中，就是去读取`userservice-dev.yaml`：
+本例中，就是去读取 `userservice-dev.yaml`：
 
 <div align="center"><img src="assets/image-20210714170845901.png"></div>
 
@@ -1309,7 +1317,10 @@ Nacos 生产环境下一定要部署为集群状态，部署方式参考课前�
 
 先前我们利用 RestTemplate 发起远程调用的代码
 
+[url 中的服务名是如何转换为具体的 IP 地址的](##负载均衡原理)
+
 ```java
+// 注册中心会将服务名替换为 user-service 服务的具体 ip 地址。
 String url = "http://userservice/user/" + order.getUserId();
 User user = restTemplate.getForObject(url, User.class);
 ```
@@ -1380,7 +1391,7 @@ public interface UserClient {
 - 请求参数：Long id
 - 返回值类型：User
 
-这样，Feign 就可以帮助我们发送 http 请求（无需我们写具体的调用代码，会自动生成？），无需自己使用 RestTemplate 来发送了。
+这样，Feign 就可以帮助我们发送 http 请求（无需我们写具体的调用代码，会自动生成）无需自己使用 RestTemplate 来发送了。
 
 ### 测试
 
@@ -1413,7 +1424,7 @@ public class OrderService {
 
 ② 主程序启动类上添加 @EnableFeignClients 注解
 
-③ 编写 FeignClient 接口（只是告诉程序要去这个远程地址请求数据，数据的返回类型是什么，因此定义一个接口，接口中声明方法即可，后面应该会自动生成对象执行方法的调用）
+③ 编写 FeignClient 接口（只需要告诉程序要去这个远程地址请求数据，数据的返回类型是什么，因此定义一个接口，接口中声明方法即可，后面应该会自动生成对象执行方法的调用）
 
 ④ 使用 FeignClient 中定义的方法代替 RestTemplate
 
@@ -1560,9 +1571,9 @@ Debug 方式启动 order-service 服务，可以看到这里的 client，底层�
 
 ## 最佳实践
 
-所谓最佳实践，就是使用过程中总结的经验，最好的一种使用方式。观察可以发现，Feign 的客户端与服务提供者的 Controller 代码非常相似
+所谓最佳实践，就是使用过程中总结的经验，最好的一种使用方式。观察可以发现，Feign 的客户端与服务提供者的 Controller 代码非常相似。
 
-feign 客户端
+<b>feign 客户端</b>
 
 ```java
 @FeignClient("userservice")
@@ -1643,7 +1654,7 @@ public User queryById(@PathVariable("id") Long id) {
 
 #### 在order-service中使用feign-api
 
-首先，删除 order-service 中的 UserClient、User、DefaultFeignConfiguration 等类或接口。在 order-service 的 pom 文件中中引入 feign-api 的依赖
+首先，删除 order-service 中的 UserClient、User、DefaultFeignConfiguration 等类或接口。在 order-service 的 pom 文件中引入 feign-api 的依赖
 
 ```xml
 <dependency>
@@ -1910,13 +1921,13 @@ spring:
 
 ### 总结
 
-过滤器的作用是什么？
+<b>过滤器的作用是什么？</b>
 
 ①对路由的请求或响应做加工处理，比如添加请求头
 
 ②配置在路由下的过滤器只对当前路由的请求生效
 
-defaultFilters 的作用是什么？
+<b>defaultFilters 的作用是什么？</b>
 
 ①对所有路由都生效的过滤器
 
@@ -2079,9 +2090,9 @@ spring:
 
 - 微服务保护-Sentinel
     - 流量控制
-    - 系统保护
-    - 熔断降级
-    - 服务授权
+    - 隔离和降级
+    - 授权规则
+    - 规则持久化
 - 分布式事务
     - 分布式事务
     - TCC 模型
@@ -2105,13 +2116,14 @@ spring:
 
 # Sentinel限流
 
-- 初识 Sentinel，用来做什么的
+<b>Sentinel，用来做什么的？</b>
+
 - 流量控制，避免因为突发流量导致的宕机
 - 隔离和降级，避免微服务雪崩（雪崩，因为某个微服务失效导致与他相关的微服务也失效）
 - 授权规则，用 Sentinel 保护微服务，避免非法请求进入微服务中
 - 规则持久化，避免服务宕机/重启后规则丢失
 
-## 初始Sentinel
+## 初识Sentinel
 
 - 雪崩问题及解决方案
 - 服务保护技术对比
@@ -2122,13 +2134,13 @@ spring:
 
 ```mermaid
 graph LR
-请求-->|A 的 tomcat 资源耗尽|服务A
-服务A-->服务B
-服务A-->服务C
-服务A-->|D出现故障|服务D
+请求-->|A 的 tomcat 资源耗尽|A服务
+A服务-->B服务
+A服务-->C服务
+A服务-->|D出现故障|D服务
 ```
 
-服务 A 中依赖于服务 D 的请求就无法正常执行了，A 等待不到 D 的结果，会导致 A 的业务阻塞住，无法释放连接。如果多个依赖 D 的请求来了，会导致 A 中 tomcat 的资源耗尽，从而拖垮 A。
+A 服务的部分请求依赖于 D 服务，此时 D 服务出现故障无法正常执行。由于 A 中依赖于 D 的业务等不到 D 的结果，A 的业务被阻塞住，无法释放连接。如果多个同类型请求来了，会导致 A 中 tomcat 的资源耗尽（线程数），从而拖垮 A。
 
 <b>解决雪崩问题的常见方式有四种</b>
 

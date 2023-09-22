@@ -9,10 +9,10 @@
 
 ### JRE&JDK
 
-- JRE (Java Runtime Environment):Java 程序的运行时环境，包含 JVM 和运行时所需要的核心类库
-- JDK(Java Development Kit)：Java 程序开发的工具包，包含 JRE 和开发人员使用的工具。
+- JRE (Java Runtime Environment）Java 程序的运行时环境，包含 JVM 和运行时所需要的核心类库
+- JDK（Java Development Kit）Java 程序开发的工具包，包含 JRE 和开发人员使用的工具。
 - 运行 Java 程序有 jre 就行，开发 Java 程序需要 JDK。
-- Windows 会把 %CC% CC 当作变量进行翻译
+- Windows 会把 `%CC%` 中的 CC 当作变量进行翻译
 
 ## 第三章 入门程序
 
@@ -20,8 +20,8 @@
 
 - 编写、编译、运行
 - Java 源程序-->Java 字节码文件-->JVM 运行
-- Javac.exe 编译器 处理后 Java 文件变成字节码文件
-- Java.exe 解释器 解释字节码的内容
+- Javac.exe 编译器，将 Java 文件变成字节码文件
+- Java.exe 解释器，解释字节码的内容
 
 ## 第四章 常量
 
@@ -54,6 +54,7 @@
   - boolean   1 个字节
 
 ><b>Java 中默认类型：整型是 int，浮点类型是 double</b>
+>
 >想要精确的数字不推荐用 double，用 BigDemical。
 
 #### 引用数据类型
@@ -377,7 +378,7 @@ break 跳出一层循环，continue 开启下一次循环。IDEA 点击关键字
 - 重载方法调用：JVM 通过方法的参数列表，调用不同的方法。
 
 ```java
-以下参数顺序不一样也是重载！
+// 以下参数顺序不一样也是重载！
 public static void test(int a, short b){}
 public static void test(short b,int a){}
 ```
@@ -463,7 +464,7 @@ public static int[] calculate(int a,int b){
 
 数组作为参数，作为返回值其实都是数组的地址值
 
-### Java内存划分
+### Java 内存划分
 
 - 1.栈（stack）：存放的都是方法中的局部变量。方法的运行一定要在栈中运行
   - 局部变量：方法的参数，或者方法{}内部的变量
@@ -478,12 +479,12 @@ Java 的垃圾回收，对于提高对象的创建速度，具有明显的效果
 
 Java 的 GC 工作的时候，一面回收内存空间，一面使堆中的对象紧凑排列。
 
-Java 的优化技术==>JIT（Just-In-Time）：这种技术可以把程序的全部或部分代码翻译成本地机器码，提升程序速度。当要装载某个类时，编译器会先找到其 `.class` 文件，然后将该类的字节码转入内存。此时有两种方式可供选择：
+Java 的优化技术==>JIT（Just-In-Time）：这种技术可以把程序的全部或部分代码翻译成本地机器码，提升程序速度。当要装载某个类时，编译器会先找到其 `.class` 文件，然后将该类的字节码转入内存。此时有两种方式可供选择
 
-- <span style="color:orange">一、让即时编译器编译所有代码，但是这种做法有两个缺陷：</span>
-    - <span style="color:orange">①这种加载动作散落在整个程序的生命周期内，累加起来要花很多时间</span>
-    - <span style="color:orange">②会增加可执行代码的长度（字节码要比 JIT 展开后的本地机器码小很多），这将导致页面调度，从而降低程序速度。</span>
-- <span style="color:orange">二、惰性评估，只在必要的时候编译代码。</span>
+- 一、让即时编译器编译所有代码，但是这种做法有两个缺陷：
+    - ①这种加载动作散落在整个程序的生命周期内，累加起来要花很多时间
+    - ②会增加可执行代码的长度（字节码要比 JIT 展开后的本地机器码小很多），这将导致页面调度，从而降低程序速度。
+- 二、惰性评估，只在必要的时候编译代码。
 
 ### 常见异常
 

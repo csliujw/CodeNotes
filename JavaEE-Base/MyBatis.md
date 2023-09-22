@@ -504,8 +504,7 @@ public interface UserMapper {
     <!--
          让MyBatis自动地将自增id赋值给传入地 User 对象的id属性。
          useGeneratedKeys="true";原生jdbc获取自增主键的方法：
-         keyProperty="",将刚才自增的id封装给哪个属性。
- 	-->
+         keyProperty="",将刚才自增的id封装给哪个属性。-->
     <insert id="insert"  useGeneratedKeys="true" keyProperty="id">
         insert into users(name, sex) values (#{name}, #{sex} )
     </insert>

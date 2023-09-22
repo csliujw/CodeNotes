@@ -7,7 +7,7 @@
   --bg-color: white;
   --side-bar-bg-color: #f5f7f9;
   --control-text-color: #3b454e;
-  --primary-color: rgb(26, 168, 139);
+  --primary-color: hsl(217, 100%, 61%);
   --primary-btn-border-color: rgb(26, 168, 139);
   --active-file-bg-color: #e6ecf1;
   --active-file-text-color: inherit;
@@ -73,9 +73,9 @@ body {
 
 #write {
     font-size: 0.95rem;
-    max-width: 100%;
-    margin: 0px;
-    padding: 45px;
+    max-width: 95%;
+    margin: 0 auto;
+    padding: 30px;
     padding-bottom: 50px;
     width: 100%;
 }
@@ -376,7 +376,7 @@ table tr td {
   border: none;
   margin: 0;
   padding: 10px 16px;
-
+  border-bottom: solid 2px var(--borders);
   transition-property: background-color;
 }
 
@@ -685,7 +685,7 @@ code {
   margin-top: 0.5rem;
   padding-top: 8px;
   padding-bottom: 6px;
-  background-color: #151027;
+  background-color: #2B2B2B;
 }
 
 #typora-source {
