@@ -160,7 +160,7 @@ export LC_ALL="zh_CN.UTF-8"
 
 <img src="img/image-20220402210210816.png">
 
-测试连通性 ssh -T git@github.com[写死的]
+测试连通性 ssh -T git@github.com [写死的]
 
 本地和远程成功通信则可以在 .ssh 中发现 known_hosts 文件，出错就多试几次可能是网络问题。不行就检测建立 ssh 时输入的 pub key。
 
@@ -180,7 +180,7 @@ Initialized empty Git repository in D:/front/.git/
 
 ### 基础操作指令
 
-Git 工作目录下对于文件的<b>修改</b>(增加、删除、更新)会存在几个状态，这些<b>修改</b>的状态会随着我们执行 Git 的命令而发生变化。
+Git 工作目录下对于文件的<b>修改</b>（增加、删除、更新）会存在几个状态，这些<b>修改</b>的状态会随着我们执行 Git 的命令而发生变化。
 
 <img src="img/image-20220118144908667.png">
 
