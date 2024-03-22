@@ -1,0 +1,3421 @@
+[TOC]
+
+# MySQL基础
+
+<b>参考资料：《MySQL必知必会》、《SQL必知必会》</b>
+
+重点看看 case when 的用法。MySQL 8.0 支持的窗口函数也看看。用到的 sql 脚本位于 sql 文件夹下。
+
+<b>多表查询先考虑联成一个大表，再对大表做筛选（效率呢？）</b>
+
+<b>聚合函数会忽略 null 值</b>
+
+[MySql 中文文档 - 第十六章复制 | Docs4dev](https://www.docs4dev.com/docs/zh/mysql/5.7/reference/replication.html)
+
+> MySQL版本
+
+- 4---InnoDB 引擎，增加事务处理、改进全文本搜索。
+- 4.1---对函数库，子查询，集成帮助等的重要增加
+- 5----存储过程、触发器、游标、视图
+
+> 基本术语
+
+- 数据库：用于存储和管理数据的仓库。
+
+- 数据库的特点
+
+    - 持久化存储数据的。其实数据库就是一个文件系统
+    - 方便存储和管理数据
+    - 使用了统一的方式操作数据库 -- SQL
+
+- 数据库软件 (DBMS) ：数据库管理系统。
+
+- 表：某种特定类型数据的结构化清单。
+
+- 模式：关于数据库和表的布局及特性的信息。
+
+- 列 (column) ：表中的一个字段。
+
+- 数据类型 (datatype) ：所容许的数据的类型。
+
+- 行 (row) ：表中的一个记录。【行和记录可以互相替代，但从术语上来说，行才是正确的。】
+
+- 主键 (primary key) ：唯一区分表中的每行，
+
+    规则 (MySQL) 
+
+    - 任意两行都不具有相同的主键值。
+    - 每行都必须具有一个主键值。
+
+- SQL (Structured Query Language) ：结构化查询语言
+
+## 安装卸载
+
+### 安装
+
+参见《MySQL安装.md》
+
+### 卸载
+
+- 去 `mysql` 的安装目录找到 `my.ini` 文件
+  - 复制 `datadir="C:/ProgramData/MySQL/MySQL Server 5.5/Data/"`
+
+- 卸载 `MySQL`
+  - 删除 `C:/ProgramData` 目录下的 `MySQL` 文件夹。
+
+### 配置
+
+> <b>`MySQL` 服务启动</b>
+
+- cmd--> services.msc 打开服务的窗口`
+
+- 使用管理员打开 `cmd`
+  - `net start mysql : 启动 mysql 的服务`
+  - `net stop mysql:关闭 mysql 服务`
+
+> <b>`MySQL` 登录</b>
+
+- mysql -uroot -p 密码
+
+- mysql -hip -uroot -p 连接目标的密码
+
+- mysql --host=ip --user=root --password=连接目标的密码
+
+> <b>`MySQL` 退出</b>
+
+- exit 或 quit
+
+> <b>`MySQL` 目录结构</b>
+
+- MySQL `安装目录:` basedir="D:/develop/MySQL/"
+
+* 配置文件 `my.ini`
+
+- MySQL `数据目录:` datadir="C:/ProgramData/MySQL/MySQL Server 5.5/Data/"
+
+* 几个概念
+  * 数据库：文件夹  
+  * 表：文件
+  * 数据：数据
+
+## 使用MySQL
+
+### 连接
+
+> 开启 `MySQL` 服务
+
+`net start mysql` windows 下
+
+- net start 服务名称
+
+`service mysqld start` Linux 下
+
+- `service mysqld start` 5.0 版本是 `mysqld`
+- `service mysql start`  5.57 版本是 `mysql`
+
+> 关闭 `MySQL` 服务
+
+`net stop mysql` windows 下
+
+`service mysql stop` Linux 下，版本问题同开启一致
+
+> 连接本地数据库
+
+`mysql -uroot -proot`
+
+- -u用户名【用户名为 root】
+- -p密码【用户名为 root】
+
+> 连接服务器端的数据库
+
+`mysql -h 192.168.1.1 -P 3306 -uroot -proot`
+
+- -h 主机地址
+- -P 端口地址
+- -u 用户名
+- -p 密码
+
+### 选择数据库
+
+> 查看数据库：`show databases`
+>
+> 选择数据库：`use databaseName`
+>
+> 查看表：`show tables`
+>
+> 显示表的列：`show columns from tableName` 或 `desc tableName`
+
+> show 的作用
+
+查看表结构
+
+- `show columns from tableName`
+- `MySQL 5.0 提供了 desc tableName 作为快捷方式`
+- `show status`, 显示服务器状态信息
+- `show create database databaseName` 查看创建数据库的 `MySQL` 语句
+- `show create table tableName`, 查看数据库表的 `MySQL` 语句
+- `show grants for username` 显示授予用户的安全权限
+- `show errors / show warnings` 显示服务器错误或警告消息
+- 查看使用帮助：在 `mysql` 模式下输入 `help show`
+
+> `mysql` 清屏
+
+- Linux 系统下：`system clear`
+- windows 下 mysql8.0：`system cls` 
+
+### SQL介绍
+
+>  <b>Structured Query Language (SQL)：结构化查询语言。</b>
+>
+>  不同的数据库语法会存在一点差异，但是有些语法是通用的。
+>
+>  <b>SQL 通用语法</b>
+>
+>  - SQL 语句可以单行或多行书写，以分号结尾。
+>      - 可使用空格和缩进来增强语句的可读性。
+>
+>  - MySQL 数据库的 SQL 语句不区分大小写，关键字建议使用大写。
+>
+>  - 3 种注释
+>      - 单行注释: -- 注释内容或 # 注释内容 (mysql 特有) 
+>      - 多行注释: /* 注释 */
+
+> <b>SQL 可分为四种类别</b>
+>
+> - [x] DDL(Data Definition Language) 数据定义语言；用来定义数据库对象：数据库，表，列等。<span style="color:orange">关键字：create, drop, alter 等</span>
+> - [x] DML(Data Manipulation Language) 数据操作语言；用来对数据库中表的数据进行增删改。<span style="color:orange">关键字：insert, delete, update 等</span>
+> - [x] DQL(Data Query Language) 数据查询语言；用来查询数据库中表的记录(数据)。<span style="color:orange">关键字：select, where 等</span>
+> - [x] DCL(Data Control Language) 数据控制语言(了解)；用来定义数据库的访问权限和安全级别，及创建用户。<span style="color:orange">关键字：GRANT， REVOKE 等</span>
+
+## DDL  数据定义语言
+
+用来定义数据库对象：数据库，表，列等。关键字：create, drop, alter 等。
+
+### 操作数据库
+
+> <b>创建数据库</b>
+
+* 创建数据库 create database 数据库名称;
+* 创建数据库，判断不存在，再创建：create database if not exists 数据库名称;
+* 创建数据库，并指定字符集：create database 数据库名称 character set 字符集名;
+	
+* 练习：创建 db4 数据库，判断是否存在，并制定字符集为 gbk
+	* create database if not exists db4 character set gbk;
+
+> <b>查询/使用数据库</b>
+
+* 查询所有数据库的名称：show databases;
+* 查询某个数据库的字符集：查询某个数据库的创建语句：show create database 数据库名称;
+* 查询当前正在使用的数据库名称：select database();
+* 使用指定的数据库：use 数据库名称;
+
+> <b>修改/删除</b>
+
+- 修改数据库的字符集：alter database 数据库名称 character set 字符集名称;
+
+* 删除数据库：drop database 数据库名称;
+* 判断数据库存在，存在再删除：drop database if exists 数据库名称;
+
+### 操作表
+
+> <b>创建表</b>
+
+```mysql
+create table table_name(
+	列名1 数据类型1，
+	列名2 数据类型2，
+	...
+	列名n 数据类型n，
+);
+```
+
+| 类型      | 示例              | 说明                                                         |
+| --------- | ----------------- | ------------------------------------------------------------ |
+| int       | age int           | 整数类型                                                     |
+| double    | score double(5,2) | 小数类型，最多五位，小数点占 2 位                            |
+| date      |                   | 日期，只包含年月日，yyyy-MM-dd                               |
+| datetime  |                   | 日期，包含年月日时分秒，yyyy-MM-dd HH:mm:ss                  |
+| timestamp |                   | 时间戳类型，包含年月日时分秒，yyyy-MM-dd HH:mm:ss<br>如果将来不给这个字段赋值，或赋值为 null，则默认使用当前的系统时间，来自动赋值 |
+| varchar   | name varchar(20)  | 字符串，姓名最大 20 个字符，如 zhangsan 占 8 个字符。        |
+
+```mysql
+# 创建表
+create table student(
+	id int,
+    name varchar(32),
+    age int,
+    socre double(4,1),
+    birthday date,
+    insert_time timestamp
+);
+
+# 复制表 = create table 表名 like 被复制的表名
+create table stu like student;
+
+# 查看数据库中所有的表
+show tables;
+
+# 查询表结构
+desc table_name;
+
+# 修改表名 = alter table 表名 rename to 新的表名
+alter table student rename to copystu;
+
+# 修改表的字符集 = alter table 表名 character set 字符集名称;
+alter table student character set utf8;
+
+# 添加一列 = alter table 表明 add 列名 数据类型
+alter table student add gender varchar(4);
+
+# 修改列名称 类型 = alter table 表名 change 列名 新列名 新数据类型
+# 修改列类型 = alter table 表名 modify 列名 新数据类型
+alter table student change gender sex varchar(20); # 类型名称都改
+alter table student modify sex varchar(10) # modify只修改类型
+
+# 删除列 = alter table 表名 drop 要删除的列
+alter table student drop sex;
+```
+
+> <b>复制表</b>
+
+复制表结构+表数据
+
+```mysql
+create table new_table_name select * from 要复制的表
+
+mysql> create table user_copy select * from user;
+Query OK, 3 rows affected (0.04 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> select * from user_copy;
++----+------+
+| id | name |
++----+------+
+| 10 | kkx  |
+| 11 | kkx  |
+| 12 | kkx  |
++----+------+
+3 rows in set (0.00 sec)
+```
+
+仅复制表结构
+
+```mysql
+mysql> create table user_copy2 like user;
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> desc user_copy2;
++-------+--------------+------+-----+---------+-------+
+| Field | Type         | Null | Key | Default | Extra |
++-------+--------------+------+-----+---------+-------+
+| id    | int          | NO   | PRI | NULL    |       |
+| name  | varchar(255) | YES  |     | NULL    |       |
++-------+--------------+------+-----+---------+-------+
+2 rows in set (0.01 sec)
+```
+
+## DCL 数据控制语言
+
+用来定义数据库的访问权限和安全级别，及创建用户。<span style="color:orange">关键字：GRANT， REVOKE 等</span>
+
+### 常见操作
+
+<b>添加用户：不过有时候需要重启数据库新用户才可登录</b>
+
+* 语法：CREATE USER '用户名'@'主机名' IDENTIFIED BY '密码';
+
+<b>删除用户：</b>
+
+* 语法：DROP USER '用户名'@'主机名';
+
+<b>修改用户密码：</b>
+
+````mysql
+UPDATE USER SET PASSWORD = PASSWORD('新密码') WHERE USER = '用户名';
+UPDATE USER SET PASSWORD = PASSWORD('abc') WHERE USER = 'lisi';
+
+SET PASSWORD FOR '用户名'@'主机名' = PASSWORD('新密码');
+SET PASSWORD FOR 'root'@'localhost' = PASSWORD('123');
+````
+
+<b>查询用户</b>
+
+-  切换到 mysql 数据库 `USE myql;`
+-  查询 user 表 `SELECT * FROM USER;`
+-  通配符 % 表示可以在任意主机使用用户登录数据库
+
+<b>权限管理</b>
+
+* 查询权限
+    `SHOW GRANTS FOR '用户名'@'主机名';`
+    `SHOW GRANTS FOR 'lisi'@'%';`
+
+* 授予权限
+    grant 权限列表 on 数据库名.表名 to '用户名'@'主机名';
+    给张三用户授予所有权限，在任意数据库任意表上
+
+    `GRANT ALL ON *.* TO 'zhangsan'@'localhost';`
+
+- 撤销权限
+    revoke 权限列表 on 数据库名.表名 from '用户名'@'主机名';
+    `REVOKE UPDATE ON db3.account FROM 'lisi'@'%';`
+
+### 忘记密码
+
+<b>mysql 中忘记了 root 用户的密码如何找回密码？</b>
+
+1. cmd -- > net stop mysql 停止 mysql 服务【需要管理员运行该 cmd】
+
+2. 使用无验证方式启动 mysql 服务： mysqld --skip-grant-tables
+3. 打开新的 cmd 窗口,直接输入 mysql 命令，敲回车。就可以登录成功
+4. use mysql;
+5. update user set password = password('你的新密码') where user = 'root';
+6. 关闭两个窗口
+7. 打开任务管理器，手动结束 mysqld.exe 的进程
+8. 启动 mysql 服务
+9. 使用新密码登录。
+
+## DML 数据操作语言
+
+### 增删改表中数据
+
+> <b>添加数据</b>
+
+`insert into 表名(列名1,列名2,...列名n) values(值1,值2,...值n);`
+
+`insert into stu(name,age) values("kkx",18);` 一次插入一条数据
+
+`insert into stu(name,age) values("kkx",19),("kkx2",20);` 一次插入多条数据
+
+- 注意：列名和值要一一对应。
+
+
+- 如果表名后，不定义列名，则默认给所有列添加值 insert into 表名 values(值1, 值2, ...值n);
+
+- 除了数字类型，其他类型需要使用引号(单双都可以)引起来
+
+也可以将其他表的记录插入到当前表中，列名一致即可。
+
+`insert into user_copy2 select * from user;`
+
+`insert into user_copy2 select id, nickname as name from users;`
+
+> <b>删除数据</b>
+
+`delete from 表名 [ where 条件 ]`
+
+`delete from student where age = 18`
+
+- 注意：
+
+  1.如果不加条件，则删除表中所有记录
+
+  2.如果要删除所有记录
+
+  - `delete from 表名;` -- 不推荐使用。有多少条记录就会执行多少次删除操作
+  - <b>`TRUNCATE table 表名;` -- 先删除表，然后创建一张一样的表。【效率高一些，推荐】</b>
+
+> <b>修改数据</b>
+
+- 语法：`update 表名 set 列名1=值1, 列名2=值2,...[ where 条件 ]`，也可以配合 order by 这些语句做更新。
+
+- 注意：如果不加任何条件，则会将表中所有记录全部修改。为了避免这种意外，我们可以在启动 MySQL 监视器的时候加上 `--safe-updates` 选项，在此选项下，如果列上没有 where 条件就无法执行 update 或 delete。
+
+## DQL 数据查询语言
+
+需要用到的数据表文件
+
+```mysql
+mysql> create table tb(
+    -> empid varchar(20),
+    -> sales int,
+    -> month int
+    -> );
+
+mysql> insert into tb(empid,sales,month) values
+("A103",101,4),("A102",54,5),("A104",181,4),("A101",184,4),("A103",17,5),
+("A101",300,5),("A102",205,6),("A104",93,5),("A103",12,6),("A107",87,6);
+```
+
+### 基础知识
+
+> <b>去重</b>
+
+- `select distinct address from student;`
+- 关键字 <b>distinct</b>
+- 结果集完全一样才能去重
+
+> <b>计算</b>
+
+- `select name,math,english,math+english from student;`
+- 加减乘除都支持，`+ - * /`，但是不推荐在列上做运算，这样可能会让索引失效。
+- 如果 salary 字段是索引，`select * from user where salary-2>0` 可以被优化成 `select * from user where salary>2` 走索引，但有些情况下索引会失效。
+- 使用函数计算的话，也很大可能会导致索引失效。
+
+[(26条消息) MySQL高级之索引失效与优化详解_走慢一点点的博客-CSDN博客_mysql索引失效](https://blog.csdn.net/wuseyukui/article/details/72312574)
+
+> <b>NULL</b>
+
+- `select name, math, englis, math+IFNULL(english,0) from student`
+- <b>`IFNULL` 函数</b>  `IFNULL(xx,thisValue)` 如果为空，设置为 `thisValue`
+- `SELECT * FROM student WHERE math IS NOT NULL;`
+- `IS NOT NULL` 不为空则 xxx
+
+> <b>取别名</b>
+
+- `select name as 姓名 from student; `
+- `select name 姓名 from student; `
+- as 关键字，不过可以省略
+
+> <b>IN、OR</b>
+
+- `select * from student where age = 22 or age = 18;`
+- `select * from student where age in(18,22);`
+- `select * from student where english is null;`
+
+IN 和 OR 会走索引嘛？会走的。但是，如果发现走索引提高不了什么效率就不会走索引了。
+
+```mysql
++-------+-------+-------+
+| empid | sales | month |
++-------+-------+-------+
+| A103  |   101 |     4 |
+| A102  |    54 |     5 |
+| A104  |   181 |     4 |
+| A101  |   184 |     4 |
+| A103  |    17 |     5 |
+| A101  |   300 |     5 |
+| A102  |   205 |     6 |
+| A104  |    93 |     5 |
+| A103  |    12 |     6 |
+| A107  |    87 |     6 |
++-------+-------+-------+
+
+mysql> create index e_index on tb(empid);
+
+# in 走了索引
+mysql> explain select * from tb where empid in('A103','A101');
++----+-------------+-------+------------+-------+---------------+---------+---------+------+------+----------+-----------------------+
+| id | select_type | table | partitions | type  | possible_keys | key     | key_len | ref  | rows | filtered | Extra                 |
++----+-------------+-------+------------+-------+---------------+---------+---------+------+------+----------+-----------------------+
+|  1 | SIMPLE      | tb    | NULL       | range | e_index       | e_index | 83      | NULL |    5 |   100.00 | Using index condition |
++----+-------------+-------+------------+-------+---------------+---------+---------+------+------+----------+-----------------------+
+1 row in set, 1 warning (0.01 sec)
+
+# not in 也走了索引
+mysql> explain select * from tb where empid not in('A103','A101');
++----+-------------+-------+------------+-------+---------------+---------+---------+------+------+----------+-----------------------+
+| id | select_type | table | partitions | type  | possible_keys | key     | key_len | ref  | rows | filtered | Extra                 |
++----+-------------+-------+------------+-------+---------------+---------+---------+------+------+----------+-----------------------+
+|  1 | SIMPLE      | tb    | NULL       | range | e_index       | e_index | 83      | NULL |    6 |   100.00 | Using index condition |
++----+-------------+-------+------------+-------+---------------+---------+---------+------+------+----------+-----------------------+
+1 row in set, 1 warning (0.00 sec)
+
+# 不过，如果发现可以过滤掉的数据很少，就不会走索引了
+mysql> explain select * from tb where empid not in('A107');
++----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | filtered | Extra       |
++----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+|  1 | SIMPLE      | tb    | NULL       | ALL  | e_index       | NULL | NULL    | NULL |   10 |   100.00 | Using where |
++----+-------------+-------+------------+------+---------------+------+---------+------+------+----------+-------------+
+1 row in set, 1 warning (0.00 sec)
+```
+
+> <b>case when</b>
+
+根据条件改变并显示值。
+
+```mysql
+case
+	when 条件1 then 显示值
+	when 条件2 then 显示值
+	when 条件3 then 显示值
+...
+else 不满足所有条件时的值
+end
+```
+
+例如，使用 case when 实现下面的功能：当销售额（sales）大于 100 时为高，大于 50 时为中，否则为低。
+
+```mysql
+select
+ case
+  when sales>100 then '高'
+  when sales>50  then '低'
+  else '不及格'
+ end
+  '评价'  # 取别名为评价
+  ,empid # 然后继续查询其他值
+from tb;
+
+mysql> select
+    ->  case
+    ->   when sales>100 then '高'
+    ->   when sales>50  then '低'
+    ->   else '不及格'
+    ->  end
+    ->   '评价'
+    -> ,empid
+    -> from tb;
++--------+-------+
+| 评价   | empid |
++--------+-------+
+| 高     | A103  |
+| 低     | A102  |
+| 高     | A104  |
+| 高     | A101  |
+| 不及格 | A103  |
+| 高     | A101  |
+| 高     | A102  |
+| 低     | A104  |
+| 不及格 | A103  |
+| 低     | A107  |
++--------+-------+
+```
+
+> <b>模糊查询【Like】</b>
+
+- 占位符
+    - _：单个任意字符
+    - %：多个任意字符
+
+> <b>排序查询</b>
+
+- ASC：升序【默认的】ascend 升序
+- DESC：降序 descend
+
+```mysql
+SELECT * FROM student ORDER BY math DESC;
+# 只有第一条件一样时，才会使用第二条件。
+SELECT * FROM student ORDER BY math DESC,english ASC;
+```
+
+- 注意：如果有多个排序条件，则当前边的条件值一样时，才会判断第二条件。
+
+排序后删除
+
+```mysql
+mysql> select * from user_copy;
++----+------+
+| id | name |
++----+------+
+| 10 | kkx  |
+| 11 | kkx  |
+| 12 | kkx  |
++----+------+
+3 rows in set (0.01 sec)
+
+mysql> delete from user_copy order by id limit 2;
+Query OK, 2 rows affected (0.01 sec)
+
+mysql> select * from user_copy;
++----+------+
+| id | name |
++----+------+
+| 12 | kkx  |
++----+------+
+1 row in set (0.00 sec)
+```
+
+### 检索数据
+
+`sql` 不区分大小写。习惯上关键字大写，列名小写。以下为 sql 的基本用法。
+
+- 查询单列 `select prod_name from products`
+- 查询多列 `select prod_id, prod_name, prod_price from products;` 列与列用逗号分割。
+- 查询所有 `select * from products` 尽量别使用通配符查询所有字段，会拉低查询效率。
+- 查询不同的行 (去重) `select distinct vend_id from products` 使用关键字 distinct
+- 限制结果 【限制查询的结果数目】
+    - `select prod_name from products limit 5`  返回不多于 5 行
+    - `select prod_name from products limit 5,5`  从行 5 开始，查 5 条数据。 会查到 5 6 7 8 9。
+
+### 排序检索数据
+
+使用 order by 子句可以对数据进行排序。
+
+> 排序数据
+
+按照 prod_name 排序
+
+```sql
+select prod_name from products order by prod_name;
+```
+
+- 默认是升序
+- order by 也可以用不显示的那些列作为排序条件。如 `select prod_name from products order by prod_id`
+
+> 对多个字段进行排序
+
+按 prod_price 和 prod_name 排序。先按价格，价格一样再按 prod_name
+
+```sql
+select prod_id, prod_price, prod_name from products order by prod_price, prod_name
+```
+
+> 指定排序方向
+
+```sql
+select prod_id, prod_price, prod_name from products order by prod_price desc
+```
+
+- desc=descend 降序
+- asc=ascend 升序
+
+- desc 只作用于最前面那列
+
+
+```sql
+select prod_id,prod_price,prod_name 
+from products 
+order by prod_price desc, prod_name
+```
+
+- prod_price 是降序
+- prod_name 是升序
+
+> 查询价格最高的【order + limit】
+
+我们可以利用排序和分页来查询出价格最高的那一条数据的信息。
+
+```sql
+select * from products order by prod_price desc limit 1
+```
+
+### 数据过滤
+
+- 使用 where 子句，not 和 in 操作符进行数据过滤，较为简单。
+- 使用通配符来进行数据过滤
+- 使用正则表达式来进行数据过滤
+
+#### where字句
+
+使用 where 子句指定搜索条件，where 子句在 from 子句之后给出。
+
+在同时使用 order by 和 where 子句时，应该让 order by 位于 where 之后。
+
+> 基本用法
+
+```sql
+select prod_name,prod_price from products where prod_price=2.5
+```
+
+> `SQL` 过滤与客户端代码过滤
+
+`SQL` 过滤，数据库进行了一定的优化。要传给客户机应用 (或开发语言) 处理的数据更少。客户端代码过滤需要将所有的数据发送给客户机应用 (或开发语言) ，传递数据的开销大，且要处理的数据更多。
+
+> where 子句操作符
+
+| 操作符  | 说明               |
+| :------ | :----------------- |
+| =       | 等于               |
+| <>      | 不等于             |
+| !=      | 不等于             |
+| <       | 小于               |
+| <=      | 小于等于           |
+| >       | 大于               |
+| >=      | 大于等于           |
+| between | 在指定的两个值之间 |
+
+```sql
+# 范围值检查 [between 示例]
+select prod_name, prod_price from products where prod_price between 5 and 10;
+# 空值检查,查询价格为空的数据
+select prod_name from products where prod_price is null;
+```
+
+#### 通配符
+
+使用 Like 和通配符进行通配搜索。
+
+- 通配符：用来匹配值的一部分的特殊字符。
+- 搜索模式：由字面值、通配符或两者组合构成的搜索条件。
+
+> <b>百分号（%）通配符</b>
+
+% 可以匹配 0 个、1 个或多个字符。<span style="color:red">% 不可匹配 NULL！</span>
+
+```mysql
+# 匹配 jet 开头的
+select * from products where prod_name like 'jet%';
+
+# 匹配 s 开头，e 结尾的
+select * from products where prod_name like 's%e';
+```
+
+> <b>下划线（ _ ）通配符</b>
+
+```mysql
+# 只匹配单个字符
+select 
+	prod_id, 
+	prod_name 
+from 
+	products 
+where 
+	prod_name like '_ ton anvil';
+```
+
+> <b>通配符的使用技巧</b>
+
+通配符搜索处理一般比前面的其他搜索花的时间更长。
+
+- 不要过度使用通配符
+- 确实需要时才使用。除非必要，否在不要把它用在搜索模式的开始处，会导致索引失效。
+- 仔细注意通配符的位置。若放错地方，可能不会返回想要的数据。
+
+#### 正则表达式
+
+用来匹配文本的特殊的串（字符集合），如从文本中提取电话号码。`MySQL` 的 where 子句对正则表达式提供了初步的支持。
+
+> <b>匹配包含文本 1000 的所有行。</b>
+
+```sql
+select prod_name 
+from products 
+where prod_name 
+REGEXP '1000' 
+order by prod_name;
+```
+
+> <b>匹配一个任意字符</b>
+
+```sql
+select prod_name 
+from products 
+where prod_name 
+REGEXP '.000' 
+order by prod_name
+```
+
+得到结果
+
+- JetPack 1000
+- JetPack 2000
+
+匹配到任意一个字符开头且后缀为 000 的数据。
+
+> <b>Like 与 Regexp 的区别</b>
+
+- Like 匹配整列，如 like ‘1000’   得整列的值都是 1000 才行。
+
+- Regexp 在列值内进行匹配，如 Regexp '1000' 列值内含有 1000 就行。
+
+> <b>Regexp 匹配整列</b>
+
+使用 ^ 和 $（anchor）
+
+> <b>Regexp 中的 or 匹配</b>
+
+```sql
+select * from products where prod_name REGEXP '1000|2000' order by prod_name;
+```
+
+> <b>Regexp 中匹配几个字符之一</b>
+
+用了 | 试了下，发现没成功
+
+`select * from xx where prod_name REGEXP '1|2 Ton'` 不行，失败了
+
+这个 SQL 的意思是你要筛选 1 或 2 Ton 所以筛选结果不对。
+
+这个可以
+
+`select * from products where prod_name REGEXP [123] ton `  筛选出含有
+
+- 1 ton 或 2 ton 或 3 ton 的数据
+
+> <b>排除 xx 字符</b>
+
+排除了含有 1 ton  ，2 ton ，3 ton 的数据。
+
+```sql
+select * from products where prod_name REGEXP '[^123] ton';
+```
+
+> <b>范围匹配</b>
+
+匹配含有 1-5 的数据，也可 [a-z]
+
+```sql
+select * from products where prod_name REGEXP '[1-5]';
+```
+
+> <b>特殊字符的匹配</b>
+
+```sql
+# \\. 表示匹配 .
+select * from products where prod_name REGEXP '\\.';
+```
+
+> <b>匹配字符类</b>
+
+字符类列表
+
+| 类        | 说明                                   |
+| --------- | -------------------------------------- |
+| [:alnum:] | 任意字母和数字(同 [a-zA-Z0-9])         |
+| [:alpha:] | 任意字符 (同 [a-zA-Z])                 |
+| [:blank:] | 空格和制表符(`同 [\\t]` )              |
+| [:cntrl:] | ASCII 控制字符  (ASCII 0 到 31 和 127) |
+
+> <b>匹配多个实例</b>
+
+重复元字符表
+
+| 元字符    | 说明                         |
+| --------- | ---------------------------- |
+| *         | 0 或多个                     |
+| +         | 1 或多个                     |
+| ？        | 0 或 1 个                    |
+| {n}       | 指定数目的匹配               |
+| {n , }    | 不少于指定数目的匹配         |
+| { n , m } | 匹配数目的范围  m 不超过 255 |
+
+举例子
+
+```sql
+select 
+	prod_name 
+from 
+	products 
+where prod_name REGEXP \\([0-9] sticks?\\)
+```
+
+`\\( 匹配(`，sticks?  中的 s? 表示 s 可出现一次或 0 次
+
+```mysql
+# 匹配包含连续出现四次的数据
+select * from products where prod_name REGEXP '[0-9]{4}
+```
+
+> <b>定位符</b>
+
+| 元字符      | 说明       |
+| ----------- | ---------- |
+| ^           | 文本的开始 |
+| $           | 文本的结尾 |
+| [ [ :<: ] ] | 词的开始   |
+| [ [:>:] ]   | 词的结尾   |
+
+词的开始，词的结尾不会用。
+
+> <b>注意</b>
+
+高版本 `MySQL` 不区分大小写（3.23.4 以后的版本）。
+
+要区分大小写的话用 <span style="color:red">BINARY</span> 关键字
+
+### 计算字段
+
+SQL 中可以对字段进行操作，如拼接、大小写转换、格式化等等。
+
+> <b>拼接字段</b>
+
+```mysq
+select concat(vend_name, '(' , vend_contry , ')') from vendors;
+```
+
+其他 DBMS 用的可能是 + ||
+
+> <b>删除空格</b>
+
+- RTrim (字段)
+- LTrim (字段)
+- Trim (字段)
+
+> <b>算术运算</b>
+
+直接对字段【可计算的字段】 + - * /即可
+
+| 函数      | 操作                                      | 说明                                                         |
+| --------- | ----------------------------------------- | ------------------------------------------------------------ |
+| concat    | select concat(empid,sales,'str') from tb; | 拼接字符串                                                   |
+| right     | select right(empid,2)  from tb;           | 从右边取出指定个数的字符                                     |
+| left      | select left(empid,2)  from tb;            | 从左边取出指定个数的字符                                     |
+| substring | select substring(empid,1,1) from tb;      | 截取 empid 的第一个字符。是的从 1 开始，截取 1 个，这样就获得了第一个字符。 |
+| repeat    | select repeat(empid,2) from tb;           | 重复显示 empid 2 次                                          |
+| reverse   | select reverse(sales),sales from tb;      | 反转，可以是字符串也可以是数字                               |
+
+### 数据处理
+
+#### 文本处理
+
+长度、大小写转换、去空串、字符串截取，发音相近。
+
+> <b>发音相近</b>
+
+```sql
+select * from customers where soundex(cust_contact) = soundex('Y Lie');
+```
+
+#### 日期和时间处理
+
+这块的内容比较重要，要好好学学，用的挺频繁。
+
+| 函数          | 说明                                                         |
+| :------------ | :----------------------------------------------------------- |
+| AddDate()     | 增加一个日期（天 、周）AddDate (字段, INTERVAL 1 WEEK/YEAR/DAY) |
+| AddTime()     | 增加一个时间（时、分）类似上面                               |
+| CurDate()     | 返回当前日期【年月日】                                       |
+| CurTime()     | 返回当前时间【时分秒】select CurTime(); 查询当前时间         |
+| Date()        | 返回日期时间的日期部分 Date(xxx) xxx 字段的日期部分          |
+| DateDiff()    | 计算两个日期之差                                             |
+| Date_Add()    | 高度灵活的日期运算函数<a href="https://www.w3school.com.cn/sql/func_date_add.asp">具体用法</a> |
+| Date_Format() | 返回格式化的日期或串<a href="https://www.w3school.com.cn/sql/func_date_format.asp">具体用法</a> |
+| DayOfWeek()   | 返回日期对应的星期几 DayOfWeek (日期)                        |
+| Time()        | 返回时间部分。 时分秒。                                      |
+
+利用 MySQL 进行时间部分的匹配时，只匹配需要的那一部分字段。比如只要年月日就只比年月日。
+
+反例：`WHERE order_date = '2005-09-01’` 可能含有 `00：00：00`
+
+如果需要将提取时间的：年、月、日；可以采用函数 `year(time),month(time),day(time)` 进行处理。
+
+### 聚集函数
+
+<span style="color:orange">将一列数据作为一个整体，进行纵向的计算。聚合函数一般和分组一起使用，使用分组是无法使用 where 的，不过可以用 having 替代，一般是聚合函数中的字段才能使用 having。</span>
+
+> <b>典型场景</b>
+
+- 确定表中行数。【统计 null 吗？count 不统计 null】
+- 获得表中行组的和
+- 找出表列的 Max Min Avg
+
+> <b>常见聚集函数</b>
+
+| 函数  | 说明                                               |
+| :---- | :------------------------------------------------- |
+| avg   | 忽略为 null 的行                                   |
+| count | count(*) 空，非空都统计；count(column) 不统计 null |
+| max   | 忽略为 null 的行，可用于数值，非数值。如最大日期。 |
+| min   | 说明同 max                                         |
+| sum   | 忽略为 null 的行                                   |
+
+如果不允许计算重复的值，则可以指定 distinct 参数
+
+```sql
+# 17.多
+select avg(distinct prod_price) as avg_price from products;
+# 16.多
+select avg(prod_price) as avg_price from products;
+# 对于count 只能用于 count() 不能count(*)
+# 个人看法 count(distinct *)逻辑上也说不过去~~ 一般都有primary，不会同。
+select count(distinct  prod_price) from products;
+```
+
+同时使用多个聚集函数。
+
+```sql
+ select count(*) as num_items,
+    -> max(prod_price) as max_price,
+    -> min(prod_price) as min_price,
+    -> avg(prod_price) as avg_price
+    -> from products;
+```
+
+聚集函数主要是做列的纵向计算的。会排除 null 的。以下是聚集函数的一些简单示例
+
+```sql
+# count：计算个数【一般选非空的列，主键，因为聚合函数会排除空】
+select count(*) from student;
+select count(IFNULL(english,0)) from student;
+
+# max：计算最大值
+select max(math) from student;
+
+# min：计算最小值
+select min(math) from student;
+
+# sum：计算和
+select sum(math) from student;
+
+# avg：计算平均值，不会把 null 列入计算范围
+# 如，有 9 个非空一个空，则 avg = 总数/9
+select avg(math) from student;
+```
+
+<b>聚合函数的计算，排除 null 值</b>
+
+- 选择不包含空的列进行计算
+- IFNULL 函数
+
+### 分组查询
+
+让同属性的多条记录组成一个组合，这样就可以以组为单位计算该组记录的总和或平均值了。
+
+#### 典型场景
+
+需要把数据分为多个逻辑组，对每个逻辑组进行聚集计算。比如，我们查询 `pet_shop` 表中，按动物的品种作为分组，查询每个品种中最高的价格。
+
+```mysql
+SELECT species, MAX(price) AS price
+FROM pet_shop
+GROUP BY species;
+```
+
+```shell
++---------+-------+
+| species | price |
++---------+-------+
+| cat     |   200 |
+| dog     |   600 |
+| rabbit  |    50 |
++---------+-------+
+```
+
+#### 创建分组
+
+根据 vend_id 分组，统计每组的 `num_prods` 数目。group by 后面
+
+```mysql
+ select vend_id,count(*) as num_prods 
+ from products 
+ group by vend_id;
+ 
+ # 下面这条语句 没有显示 vend_id
+ select count(*) as num_prods 
+ from products 
+ group by vend_id;
+```
+
+#### group by
+
+对数据进行分组，然后将组作为操作的基本单位。如要查询每个班级中分数最高的人，按班级进行分组，然后查询每组中的 max。
+
+<b>group by 细节</b>
+
+- GROUP BY 子句可以包含任意数目的列。这使得能对分组进行嵌套，为数据分组提供更细致的控制。
+- 如果在 GROUP BY 子句中嵌套了分组，数据将在最后规定的分组上进行汇总。换句话说，在建立分组时，指定的所有列都一起计算 (所以不能从个别的列取回数据) 。
+- GROUP BY 子句中列出的每个列都必须是检索列或有效的表达式 (<span style="color:red">但不能是聚集函数</span>) 。如果在 SELECT 中使用表达式，则必须在 GROUP BY 子句中指定相同的表达式。不能使用别名。
+- 除聚集计算语句外，SELECT 语句中的每个列都必须在 GROUP BY 子句中给出？
+- 如果分组列中具有 NULL 值，则 NULL 将作为一个分组返回。如果列中有多行 NULL 值，它们将分为一组。
+- GROUP BY 子句必须出现在 WHERE 子句之后，ORDER BY 子句之前。
+
+<b style="color:red">分组查询的基本使用</b>
+
+group by + 聚合函数，进行分组统计
+
+- 语法：group by 分组字段
+
+  - `SELECT sex,AVG(math) FROM student GROUP BY sex;`
+  - `SELECT sex,AVG(math),COUNT(id) FROM student GROUP BY sex;`
+  - `SELECT sex,AVG(math),COUNT(id) FROM student WHERE math>70 GROUP BY sex HAVING COUNT(id)>=2;`
+
+如，以 empid 字段进行分组，统计每个 empid 出现的次数
+
+```mysql
+mysql> select empid, count(empid) as total from tb group by empid;
++-------+-------+
+| empid | total |
++-------+-------+
+| A101  |     2 |
+| A102  |     2 |
+| A103  |     3 |
+| A104  |     2 |
+| A107  |     1 |
++-------+-------+
+```
+
+以 empid 字段进行分组，统计每种 empid 的总销售额。<span style="color:orange">解释下，下面 SQL 的意思是：以 empid 进行分组，然后统计每个分组里的 sales 的总金额。</span>
+
+```mysql
+mysql> select empid,sum(sales) from tb group by empid;
++-------+------------+
+| empid | sum(sales) |
++-------+------------+
+| A101  |        484 |
+| A102  |        259 |
+| A103  |        130 |
+| A104  |        274 |
+| A107  |         87 |
++-------+------------+
+```
+
+以 empid 字段进行分组，统计每种 empid 的总数
+
+```mysql
+mysql> select empid,count(empid) as total from tb group by empid;
++-------+-------+
+| empid | total |
++-------+-------+
+| A101  |     2 |
+| A102  |     2 |
+| A103  |     3 |
+| A104  |     2 |
+| A107  |     1 |
++-------+-------+
+```
+
+#### 分组条件查询
+
+group by + having
+
+<span style="color:orange">分组条件查询是指，从分组查询的内容中根据条件再进行一次条件筛选。关键字 having 后的条件适用于分组结果的值。</span>
+
+注意：无法使用 where。where 过滤指定的行而非分组。where 没有分组的概念。我们需要使用 having！而 having 在分组中的用法与 where 类似。
+
+<b style="color:red">另一种解释</b>
+
+<span style="color:orange">WHERE 在数据分组前进行过滤，HAVING 在数据分组后进行过滤。</span>这是一个重要的区别，WHERE 排除的行不包括在分组中。这可能会改变计算值，从而影响 HAVING 子句中基于这些值过滤掉的分组。
+
+```mysql
+# 筛选出 数目大于2的
+select cust_id,count(*) as orders 
+from orders 
+group by cust_id 
+having count(*)>=2;
+```
+
+<b>基本用法</b>
+
+```mysql
+select 统计列 from 表名 group by 分组列 having 条件
+
+# 筛选出分组结果中 total_sales 大于 200 的数据
+mysql> select empid, sum(sales) as total_sales from tb 
+		group by empid having total_sales>=200;
++-------+-------------+
+| empid | total_sales |
++-------+-------------+
+| A101  |         484 |
+| A102  |         259 |
+| A104  |         274 |
++-------+-------------+
+```
+
+<b>having 也可以和 where 一起使用</b>
+
+先提取一部分数据，再对提取后的数据进行分组。
+
+```mysql
+select empid,sum(sales) as total_sales from tb where sales>90 group by empid having total_sales>=200;
+
+mysql> select empid,sum(sales) as total_sales from tb where sales>90 group by empid having total_sales>=200;
++-------+-------------+
+| empid | total_sales |
++-------+-------------+
+| A104  |         274 |
+| A101  |         484 |
+| A102  |         205 |
++-------+-------------+
+
+# where 条件所起到的作用
+mysql> select empid,sum(sales) as total_sales from tb where sales>90 group by empid;
++-------+-------------+
+| empid | total_sales |
++-------+-------------+
+| A104  |         274 |
+| A103  |         101 |
+| A101  |         484 |
+| A102  |         205 |
++-------+-------------+
+
+mysql> select empid,sum(sales) as total_sales from tb group by empid;
++-------+-------------+
+| empid | total_sales |
++-------+-------------+
+| A101  |         484 |
+| A102  |         259 |
+| A103  |         130 |
+| A104  |         274 |
+| A107  |          87 |
++-------+-------------+
+```
+
+<b style="color:red">注意</b>
+
+在 select 指定的字段要么就要包含在 group by 语句的后面，作为分组的依据；要么就要被包含在聚合函数中。
+
+1.分组之后查询的字段：分组字段，聚合函数。不能写其他字段了。
+
+2.where 和 having 的区别：
+
+- where 在分组之前进行限定，如果不满足条件，则不参与分组。having 在分组后进行限定，如果不满足结果，则不会被查询出来
+- where 后面不可以跟聚合函数，having 可以进行聚合函数的判断。
+- where 子句的作用是在对查询结果进行分组前，将不符合 where 条件的行去掉，即在分组之前过滤数据，where 条件中不能包含聚组函数，使用 where 条件过滤出特定的行。
+- having 子句的作用是筛选满足条件的组，即在分组之后过滤数据，条件中经常包含聚组函数，使用 having 条件过滤出特定的组，也可以使用多个分组标准进行分组。
+
+```mysql
+# 低于70分的不参与统计
+SELECT sex, AVG(math), COUNT(id) FROM student 
+WHERE math > 70 
+GROUP BY sex ;
+
+# 低于70分的不参与统计，且分组人数要大于等于2
+SELECT sex, AVG(math), COUNT(id) FROM student 
+WHERE math > 70 
+GROUP BY sex 
+HAVING COUNT(id) >= 2 ;
+
+# 示例9：Having和Where的联合使用方法  特别说明一下
+select 类别, SUM(数量)from A
+where 数量 gt;8
+group by 类别
+having SUM(数量) gt; 10
+```
+
+#### select子句顺序
+
+```mysql
+select
+from
+where   行级别过滤
+group by  分组说明
+having  组级别过滤
+order by  排序 【默认升序 asc[上升] desc[下降]】
+limit
+```
+
+### 用户变量
+
+为了便于使用，我们可以定义一个特定的变量来保存该值，这样的变量就是 MySQL 的用户变量了。在 `SELECT` 语句中设置临时变量，需要使用 `@` 开头，然后需要使用 `:=` 来进行赋值。
+
+比如，我们把在 `pet_shop` 表中的最大价格赋值给用户变量 `max_price`，把最低价格赋值给用户变量 `min_price`。
+
+```sql
+select @max_price := MAX(price), @min_price := MIN(price) 
+from pet_shop;
+```
+
+最高的价格和最低的价格都已经保存到用户变量中了，当我们需要时，直接查询这两个用户变量即可。例如，我们查询一下最高价格的动物和最低价格的动物信息。
+
+```mysql
+select @max_price; # 查询最高价格
+
+# 查询 pet_shop 中的最高价格和最低价格
+select * from pet_shop
+where price in(@max_price, @min_price);
+```
+
+### 分页查询
+
+`selct xx from student limit 当前条数，再选 x 条`
+
+- `SELECT * FROM student LIMIT 0,3;` 从 0 开始选 3 条
+- `SELECT * FROM student LIMIT 4,3;` 从 4 开始选 3 条
+
+- 不同数据库，分页的语法不一样
+
+指定记录的显示范围
+
+```mysql
+select colums from table_name limit show_count offset mov_times;
+
+# 将销售额按降序排序，查询聊天记录，从第0个index开始取数据
+select sales from tb order by sales desc limit 2 offset 0;
+
+# 将销售额按降序排序，查询聊天记录，从第1个index开始取数据
+select sales from tb order by sales desc limit 2 offset 1;
+
+mysql> select sales from tb order by sales desc limit 2;
++-------+
+| sales |
++-------+
+|   300 |
+|   205 |
++-------+
+
+mysql> select sales from tb order by sales desc limit 2 offset 0;
++-------+
+| sales |
++-------+
+|   300 |
+|   205 |
++-------+
+
+mysql> select sales from tb order by sales desc limit 2 offset 1;
++-------+
+| sales |
++-------+
+|   205 |
+|   184 |
++-------+
+```
+
+### 过滤重复数据
+
+过滤重复数据可以使用 distanct 也可以使用下面两个函数。
+
+- `BIT_OR` 是用来对两个二进制进行或运算。
+- `BIT_COUNT` 是用来计算二进制中包含 1 的个数。
+
+`BIT_OR` 是进行按位或运算，就是只有当两个数全为 0 时，结果才为 0，用它可以获得一个二进制的数值，但是返回给我们的结果会把该二进制转换成十进制。
+
+```mysql
+select bit_or(1<<4)
+select 1<<4 # 16
+
+select bit_count(3) # 2，3 的二进制是 11，1 的个数是 2
+```
+
+BIT_COUNT 和 BIT_OR 会自动把十进制转换为二进制。
+
+### 字段约束
+
+> <b>约束：</b>对表中的数据进行限定，保证数据的正确性、有效性和完整性。
+
+- 主键约束：primary key
+- 非空约束：not null
+- 唯一约束：unique
+- 外键约束：foreign key
+
+```mysql
+# 创建表时添加唯一约束
+CREATE TABLE stu(
+	id INT,
+	NAME VARCHAR(20) NOT NULL
+);
+# 删除非空约束
+ALTER TABLE stu MODIFY NAME VARCHAR(20);
+
+# 创建表后 添加非空约束
+ALTER TABLE stu MODIFY NAME VARCHAR(20) NOT NULL;
+
+# 创建表时添加唯一约束  UNIQUE mysql限定的唯一约束可以有多个null
+CREATE TABLE stu(
+	id INT,
+	phone_number VARCHAR(20) UNIQUE
+);
+
+# 删除唯一约束
+ALTER TABLE stu DROP INDEX phone_number;
+# 创建后添加唯一约束
+ALTER TABLE stu MODIFY phone_number VARCHAR(20) UNIQUE;
+
+# 创建表时创建主键约束
+CREATE TABLE stu1(
+	id INT PRIMARY KEY,
+	NAME VARCHAR(20)
+);
+# 删除主键
+ALTER TABLE stu1 DROP PRIMARY KEY;
+# 添加主键
+ALTER TABLE stu1 MODIFY id INT PRIMARY KEY;
+
+# 自动增长
+CREATE TABLE stu2(
+	id INT PRIMARY KEY AUTO_INCREMENT,
+	NAME VARCHAR(20)
+);
+# 删除自动增长
+ALTER TABLE stu MODIFY id INT;
+
+# 添加自动增长
+ALTER TABLE stu MODIFY id INT AUTO_INCREMENT;
+```
+
+外键约束：foreign key，让表于表产生关系，从而保证数据的正确性。
+
+```mysql
+# 在创建表时，可以添加外键
+create table 表名(
+    ....
+    外键列
+    constraint 外键名称 foreign key (外键列名称) references 主表名称(主表列名称)
+);
+
+# 删除外键
+ALTER TABLE 表名 DROP FOREIGN KEY 外键名称;
+
+# 创建表之后，添加外键
+ALTER TABLE 表名 ADD CONSTRAINT 外键名称 FOREIGN KEY (外键字段名称) REFERENCES 主表名称(主表列名称);
+```
+
+```mysql
+4. 级联操作
+# 添加级联操作
+语法：ALTER TABLE 表名 ADD CONSTRAINT 外键名称 
+FOREIGN KEY (外键字段名称) REFERENCES 主表名称(主表列名称) ON UPDATE CASCADE ON DELETE CASCADE  ;
+2. 分类：
+	级联更新：ON UPDATE CASCADE 
+	级联删除：ON DELETE CASCADE 
+```
+
+### 子查询
+
+子查询即嵌套在其他查询中的查询。
+
+#### 利用子查询进行过滤
+
+select 套 select
+
+我感觉没啥好记得，就是嵌套查询嘛。
+
+给一个例子即可。
+
+```mysql
+select cust_id 
+from orders 
+where order_num in (select order_num 
+                    from orderitems 
+                    where prod_id = 'TNT2');
+```
+
+嵌套子查询效率较低，不建议大量使用。
+
+#### 作为计算字段使用子查询
+
+经典案例，供参考。效率较差，不是很推荐。
+
+```mysql
+select cust_name,cust_state,
+	(select count(*) 
+     from orders 
+     where orders.cust_id = customers.cust_id) as orders from customers 
+order by cust_name;
+```
+
+### 多表之间的关系
+
+> <b>多表之间的关系</b>
+
+#### 多表间的关系
+
+- 一对一：一个人只有一个身份证，一个身份证只能对应一个人
+  
+- 一对多 (多对一)：一个部门有多个员工，一个员工只能对应一个部门
+  
+- 多对多：一个学生可以选择很多门课程，一个课程也可以被很多学生选择，需要使用中间表进行关联。
+
+#### 实现方式
+
+- 一对多 (多对一)：在多的一方建立外键，指向一的一方的主键。
+  
+- 多对多：多对多关系实现需要借助第三张中间表。中间表至少包含两个字段，这两个字段作为第三张表的外键，分别指向两张表的主键
+  
+- 一对一：一对一关系实现，可以在任意一方添加唯一外键（UNIQUE 约束）指向另一方的主键。一般是会合成一张表的。如果表字段多了，可能会拆分成两张表。
+
+### 联结表
+
+这块还是看王姗的数据库系统概论。
+
+#### 联结 (join) 
+
+超过三个表不推荐使用 join，不清晰。推荐用 where。【阿里巴巴开发手册】
+
+联结是一种机制，用来在一条 SELECT 语句中关联表。【用 where 不香吗，清晰，效率高】
+
+where 写法，不加条件的话会产生<span style="color:red">笛卡儿积，笛卡儿积是按 primary key 来组合的吗？</span>。
+
+- where 是等值联结
+
+```mysql
+select vend_name, prod_name, prod_price 
+from vendors, products 
+where vendors.vend_id = products.vend_id 
+order by vend_name, prod_name;
+```
+
+- 联结的表越多，越耗性能。
+
+### 高级联结
+
+表别名，解决二义性。
+
+#### 自联结
+
+查询需求忘了：发现 ID 为 DTNTR 的物品存在问题，希望查询出该物品供应商生产的其他物品（物品 id 和 物品名，供应商字段名为 `vend_id`）。
+
+先查找对于的厂商，然后再查找对应厂商的产品。
+
+```sql
+# 子查询的写法
+select prod_id, prod_name 
+	from products 
+	where products.vend_id = (select vend_id from products where prod_id = 'DTNTR');
+```
+
+自连接写法
+
+```mysql
+select p1.prod_id, p1.prod_name 
+from products as p1, products as p2 
+where p1.vend_id = p2.vend_id
+and p2.prod_id = 'DTNTR';
+```
+
+用自联结而不用子查询。自联结通常作为外部语句用来替代从相同表中检索数据时使用的子查询语句。虽然最终的结果是相同的，但有时候处理联结远比处理子查询快得多。
+
+- 为什么要自连接？
+- 有时候自联结比子查询快！
+
+#### 自然联结
+
+#### 外部联结
+
+两张表之间的关联。
+
+<b>内连接</b>
+
+```mysql
+# 可以不写inner关键字, inner join orders 将 orders 中的数据加入 customers 中，展示数据的筛选条件是 on 后面的条件。
+select customers.cust_id, orders.order_num 
+from customers 
+inner join orders on customers.cust_id = orders.cust_id;
+```
+
+<b>左外连接</b>
+
+```sql
+# LEFT JOIN 关键字会从左表 (table_name1) 那里返回所有的行，即使在右表 (table_name2) 中没有匹配的行
+# 可以不写outer关键字
+select customers.cust_id, orders.order_num 
+from customers 
+left outer join orders on customers.cust_id = orders.cust_id;
+```
+
+### 组合查询
+
+#### 推荐&效率
+
+使用 UNION，UNION ALL。看王姗的书。
+
+- 在单个查询中从不同的表返回<u>类似结构的数据</u>；
+- 对单个表执行多个查询，按单个查询返回数据；
+- 组合查询和 where 到达那个效率高未知，需要我们进行测试；
+
+#### 使用UNION
+
+<span style="color:blue">UNION 会取消重复行！！！UNION ALL，不取消重复行。取消重复行的代价较大，可以的话请使用 UNION ALL。</span>
+
+> <b>案例</b>
+
+把两个查询结果集并起来了
+
+```mysql
+select * from products 
+where prod_price<=5
+	union
+select * from products 
+where vend_id in(1001,1002)
+# 相当于
+select * from products 
+where prod_price<=5 or vend_id in(1001,1002)
+```
+
+> <b>使用规则</b>
+
+- UNION 必须由两条或两条以上的 SELECT 语句组成，语句之间用关键字 UNION 分隔 (因此，如果组合 4 条 SELECT 语句，将要使用 3 个 UNION 关键字) 。
+- UNION 中的每个查询必须包含相同的列、表达式或聚集函数 (不过各个列不需要以相同的次序列出) 。
+- 列数据类型必须兼容：类型不必完全相同，但必须是 DBMS 可以隐含地转换的类型 (例如，不同的数值类型或不同的日期类型) 。
+
+#### 对组合结果进行排序
+
+末尾加个 order by 即可
+
+```mysql
+select * from products 
+where prod_price<=5
+	union
+select * from products 
+where vend_id in(1001,1002)
+order by vend_id
+```
+
+### 全文本搜索
+
+并非所有的搜索引擎都支持全文本搜索。
+
+- `MyISAM` 支持全文本搜索。
+
+- `InnoDB` 不支持全文本搜索。
+
+### 范式的介绍
+
+设计数据库时，需要遵循的一些规范。要遵循后边的范式要求，必须先遵循前边的所有范式要求设计关系数据库时，遵从不同的规范要求。
+
+设计出合理的关系型数据库，这些不同的规范要求被称为不同的范式，各种范式呈递次规范，越高的范式数据库冗余越小。
+
+#### 范式的种类
+
+目前关系数据库有六种范式：第一范式（1NF）、第二范式（2NF）、第三范式（3NF）、巴斯-科德范式（BCNF）、第四范式（4NF）和第五范式（5NF，又称完美范式）。
+
+#### 范式的具体概念
+
+- <b>第一范式（1NF）</b>：每一列都是不可分割的原子数据项
+
+- <b>第二范式（2NF）</b>：在 1NF 的基础上，非码属性必须完全依赖于码（在 1NF 基础上消除非主属性对主码的部分函数依赖）
+
+* <b>几个概念：</b>
+	
+	- <b>函数依赖</b>：A-->B,如果通过A属性(属性组)的值，可以确定唯一B属性的值。则称B依赖于A
+	  例如：学号-->姓名。  （学号，课程名称） --> 分数
+	
+	- <b>完全函数依赖</b>：A-->B， 如果A是一个属性组，则B属性值得确定需要依赖于A属性组中所有的属性值。
+	  例如：（学号，课程名称） --> 分数
+	
+	- <b>部分函数依赖</b>：A-->B， 如果A是一个属性组，则B属性值得确定只需要依赖于A属性组中某一些值即可。
+	  例如：（学号，课程名称） -- > 姓名。【学号就可以确定姓名了，（学号，课程名称）就显得余了，只依赖了一部分所以称为部分函数依赖】
+	
+	- <b>传递函数依赖</b>：A-->B, B -- >C . 如果通过 A 属性(属性组)的值，可以确定唯一 B 属性的值，在通过 B 属性（属性组）的值可以确定唯一 C 属性的值，则称 C 传递函数依赖于A
+	  例如：学号-->系名，系名-->系主任
+	
+	- <b>码</b>：如果在一张表中，一个属性或属性组，被其他所有属性所完全依赖，则称这个属性(属性组)为该表的码。
+	  - 例如：该表中码为：（学号，课程名称）
+	
+	* <b>主属性</b>：码属性组中的所有属性
+	* <b>非主属性</b>：除过码属性组的属性
+
+- <b>第三范式（3NF）</b>：在 2NF 基础上，任何非主属性不依赖于其它非主属性（在 2NF 基础上消除传递依赖）
+
+### 数据库的还原
+
+> 数据库的备份和还原
+
+- 命令行：
+  - 备份：`mysqldump -u用户名 -p密码  数据库名称 > 保存路径`
+  - 还原：登录数据库；创建数据库；使用数据库；执行文件   【语法：source  文件路径】
+- 图形化界面
+
+## TCL 事务控制语言
+
+事务控制语言 set autocommit=0、start transaction、savepoint、commit、rollback
+
+# 语句执行顺序
+
+select 书写的顺序
+
+```mysql
+select
+from
+where   行级别过滤
+group by  分组说明
+having  组级别过滤
+order by  排序 【默认升序 asc[上升] desc[下降]】
+limit
+```
+
+<b style="color:blue">select 执行顺序 -- 由百川大模型生成</b>
+
+在 MySQL 8.0 中，一个典型的 SELECT 语句的逻辑执行顺序大致如下：
+
+1. FROM：从指定的表或多个表中组装数据。
+2. JOIN：如果有 JOIN 操作，则在这个阶段进行表的连接。
+3. WHERE：基于指定的条件对记录行进行筛选。
+4. GROUP BY：将数据划分为多个分组。
+5. HAVING：对分组后的结果进行筛选，只保留满足条件的分组。
+6. SELECT：选择要显示的列。
+7. DISTINCT：移除结果集中的重复记录（如果使用了 DISTINCT 关键字）。
+8. ORDER BY：对结果集进行排序。
+9. LIMIT：限制返回的结果数量。
+
+值得注意的是，这个执行顺序并不是绝对的，因为 MySQL 的查询优化器可能会根据表的统计信息、索引的使用情况等因素，对查询执行计划进行调整。这意味着在某些情况下，实际的执行顺序可能会有所不同。
+
+<b>问题</b>
+
+where 后面为什么不能用聚集函数，因为聚集函数是分组后才能执行，where 的优先级大于分组。
+
+```sql
+-- 优先级
+where > group by > 聚集函数
+```
+
+在 MySQL 中，当使用 `GROUP BY` 子句时，`SELECT` 列表可以包含以下几种元素：
+
+1. 聚合函数：比如 `COUNT()`, `SUM()`, `AVG()`, `MAX()`, `MIN()` 等。这些函数用来计算每个分组的数据总和、平均值、最大值、最小值等统计信息。
+2. 分组的列：也就是你在 `GROUP BY` 子句中明确指定的列。这些是用来进行分组的列，它们会将数据行划分为不同的组。
+3. 常量或者计算出来的常量表达式：例如, `SELECT 1 AS constant_value` 或 `SELECT column1 + 10 AS computed_value`。
+4. 与聚合函数一起使用的列：如果一个列在 `SELECT` 列表中同时也出现在某个聚合函数里面，那么这个列即使没有在 `GROUP BY` 子句中出现也是可以被选出来的。但是如果这个列既没有在任何聚合函数里出现，也没有在 `GROUP BY` 子句中出现，那么在 MySQL 中就会报错。
+
+# MySQL加强
+
+> 内容预览
+
+- 多表查询
+- 事务
+- DCL（数据控制语言）
+
+## 多表查询
+
+### 多表查询的分类
+
+<b>笛卡儿积</b>：集合的所有组合情况。要完成多表查询，需要避免笛卡儿积（消除无用的数据）
+
+-  内连接查询
+- 外连接查询
+- 子查询
+
+#### 内连接查询
+
+- <b>隐式内连接：使用 where 条件消除无用数据</b>
+
+  - 查询所有员工信息和对应的部门信息
+
+    `SELECT * FROM emp, dept WHERE emp.dept_id = dept.id;`
+
+  - 查询员工表的名称，性别，部门表的名称
+
+    `SELECT emp.name,emp.gender,dept.name FROM emp,dept WHERE emp.dept_id = dept.id;`
+
+- <b>显式内连接：</b>
+  
+  - 语法：select 字段列表 from 表名1 [inner] join 表名2 on 条件
+  - 例如：`SELECT * FROM emp [INNER] JOIN dept ON emp.dept_id= dept.id;`
+  - <span style="color:blue">join on 的写法在进行多表连接的时候，读起来可能更简单，但是更推荐的写法是用 where 而非 join on。</span>
+  
+- <b>内连接查询注意事项：</b>
+  
+  - 从哪些表中查询数据
+  - 条件是什么
+  - 查询哪些字段
+
+#### 外连接查询
+
+- <b>左外连接：</b>查询的是左表所有数据以及其交集部分
+  - 语法：select 字段列表 from 表1 left [outer] join 表2 on 条件；
+  - 例子：查询所有员工信息，如果员工有部门，则查询部门名称，没有部门，则不显示部门名称
+  - `SELECT  t1.*,t2.name FROM emp t1 LEFT JOIN dept t2 ON t1.dept_id = t2.id;`
+
+- <b>右外连接：</b>查询的是右表所有数据以及其交集部分。
+  - 语法：select 字段列表 from 表1 right [outer] join 表2 on 条件；
+  - 例子：`SELECT * FROM dept t2 RIGHT JOIN emp t1 ON t1.dept_id = t2.id`;
+
+#### 子查询
+
+<b>查询中套查询，称为子查询。</b>
+
+- 查询最高的工资是多少 9000
+  - `SELECT MAX(salary) FROM emp;`
+- 查询员工信息，并且工资等于 9000 的
+  - `SELECT * FROM emp WHERE emp.salary = 9000;`
+- 一条 sql 就完成这个操作。子查询
+  - `SELECT * FROM emp WHERE emp.salary = (SELECT MAX(salary) FROM emp);`
+
+<b>子查询中的不同情况</b>
+
+| 子程序的情况                           | 说明                                                        |
+| -------------------------------------- | ----------------------------------------------------------- |
+| 子查询的结果是单行单列的（一个数值）   | 子查询可以作为条件，使用运算符去判断。 运算符： > >= < <= = |
+| 子查询的结果是多行单列的（多条数据）   | 子查询可以作为条件，使用运算符 in 来判断                    |
+| 子查询的结果是多行多列的（一个数据表） | 子查询可以作为一张虚拟表参与查询                            |
+
+1️⃣子查询的结果是单行单列的
+
+- 子查询可以作为条件，使用运算符去判断。 运算符： > >= < <= =
+
+- eg：查询员工工资小于平均工资的人
+
+  `SELECT * FROM emp WHERE emp.salary < (SELECT AVG(salary) FROM emp);`
+
+2️⃣子查询的结果是单行多列的
+
+- 子查询可以作为条件，使用运算符去判断。
+
+- eg：查询员工性别和 tom 一样，工资和 tom 一样的人：
+
+  `select * from emp where (emp.salary, emp.sex) = (select salary, sex from emp where name='tom');`
+
+3️⃣子查询的结果是多行单列的
+
+* 子查询可以作为条件，使用运算符 in 来判断
+* 查询'财务部'和'市场部'所有的员工信息
+`SELECT id FROM dept WHERE NAME = '财务部' OR NAME = '市场部';`
+`SELECT * FROM emp WHERE dept_id = 3 OR dept_id = 2;`
+* 子查询
+`SELECT * FROM emp WHERE dept_id IN (SELECT id FROM dept WHERE NAME = '财务部' OR NAME = '市场部');`
+
+4️⃣子查询的结果是多行多列的：
+
+* 子查询可以作为一张虚拟表参与查询
+* 查询员工入职日期是 2011-11-11 日之后的员工信息和部门信息
+`SELECT * FROM dept t1 ,(SELECT * FROM emp WHERE emp.join_date> '2011-11-11') t2
+WHERE t1.id = t2.dept_id;`
+* 普通内连接
+`SELECT * FROM emp t1,dept t2 WHERE t1.dept_id = t2.id AND t1.join_date >  '2011-11-11'`
+
+### 多表查询
+
+准备表信息和表数据
+
+```mysql
+# 先前
+create table tb(
+ empid varchar(20),
+ sales int,
+ month int
+);
+insert into tb(empid,sales,month) 
+	   values("A103",101,4),("A102",54,5),("A104",181,4),("A101",184,4),("A103",17,5),
+			 ("A101",300,5),("A102",205,6),("A104",93,5),("A103",12,6),("A107",87,6);
+
+# 员工信息表
+create table tb1(
+	empid varchar(20),
+    name varchar(40),
+    age int
+);
+insert into tb1(empid,name,age)
+			values('A101','小红',40),('A102','小蓝',28),('A103','小绿',20),('A104','小白',423),('A101','小黄',35);
+
+# 员工信息表
+create table tb2(
+	empid varchar(20),
+    name varchar(40),
+    age int
+);
+insert into tb2(empid,name,age)
+			values('A106','小A',26),('A107','小B',24),('A108','小C',23),('A109','小D',25),('A110','小E',27);
+			
+# 员工出生地信息
+create table tb3(
+	empid varchar(20),
+    region varchar(40)
+);
+insert into tb3(empid,region)
+			values('A101','南昌'),('A102','成都'),('A103','武汉'),('A104','北京'),('A105','深圳');
+```
+
+#### 合并查询结果
+
+使用 UNION 从多个表中提取记录并将它们合并起来。`UNION` 合并的时候会去除重复的结果；`UNION ALL` 不会去除重复的结果。
+
+```mysql
+select * from tb1 
+	union 
+select * from tb2;
++-------+------+------+
+| empid | name | age  |
++-------+------+------+
+| A101  | 小红 |   40 |
+| A102  | 小蓝 |   28 |
+| A103  | 小绿 |   20 |
+| A104  | 小白 |  423 |
+| A101  | 小黄 |   35 |
+| A106  | 小A  |   26 |
+| A107  | 小B  |   24 |
+| A108  | 小C  |   23 |
+| A109  | 小D  |   25 |
+| A110  | 小E  |   27 |
++-------+------+------+
+
+mysql> select * from tb1;
++-------+------+------+
+| empid | name | age  |
++-------+------+------+
+| A101  | 小红 |   40 |
+| A102  | 小蓝 |   28 |
+| A103  | 小绿 |   20 |
+| A104  | 小白 |  423 |
+| A101  | 小黄 |   35 |
++-------+------+------+
+
+mysql> select * from tb2;
++-------+------+------+
+| empid | name | age  |
++-------+------+------+
+| A106  | 小A  |   26 |
+| A107  | 小B  |   24 |
+| A108  | 小C  |   23 |
+| A109  | 小D  |   25 |
+| A110  | 小E  |   27 |
++-------+------+------+
+```
+
+如果要进行条件筛选，可以在 UNION 联合的 SQL 语句中加入条件。如果不想在 UNION 的时候消除重复的字段可以用 UNION ALL
+
+```mysql
+select empid from tb where sales>50 
+	union 
+select empid from tb1; # 会进行去重
++-------+
+| empid |
++-------+
+| A102  |
+| A107  |
+| A104  |
+| A103  |
+| A101  |
++-------+
+
+
+select empid from tb where sales>50 
+	union all 
+select empid from tb1; # 使用 union all 不会去重。
++-------+
+| empid |
++-------+
+| A102  |
+| A107  |
+| A104  |
+| A103  |
+| A104  |
+| A101  |
+| A102  |
+| A101  |
+| A101  |
+| A102  |
+| A103  |
+| A104  |
+| A101  |
++-------+
+13 rows in set (0.00 sec)
+```
+
+#### 多表查询
+
+利用 join / where，查找多个表的数据信息。超过三个表不推荐使用 join，推荐用 where。
+
+```mysql
+select ~ from
+table1
+JOIN table2 condition
+JOIN table3 condition
+...
+;
+
+# 查询员工的 empid name 和 region
+select tb1.empid, tb1.name, tb3.region
+from tb1
+	join tb3
+  on tb1.empid = tb3.empid
+
+# 也可以使用 where 关键字
+select tb1.empid, tb1.name, tb3.region
+from tb1,
+     tb3
+where tb1.empid = tb3.empid
+
+# 查询结果
+A101,小黄,南昌
+A101,小红,南昌
+A102,小蓝,成都
+A103,小绿,武汉
+A104,小白,北京
+```
+
+join on 为内连接，只会显示符合要求的数据。
+
+### 连接
+
+#### 外连接
+
+<b>左外连接：显示左表所有的数据和右表符合条件的数据（left join 表 2 中符合条件的数据）</b>
+
+```mysql
+select tb.empid,tb1.name
+from tb
+left join tb1
+on tb1.empid=tb.empid
+order by empid; # 一共 12 条，将符合要求的 tb1 的 2 条数据也显示出来了
+
+select * from tb order by empid; # 只能查出 10 条。
+select * from tb1 order by empid; # 只能查出 5 条。
+# 因此是查询出 tb 中所有的数据和 left join 表2，表2中符合要求的数据
+```
+
+<b>右外连接：显示右表所有的数据和 right join 表 2 中符合条件的数据</b>
+
+```mysql
+# 查询右表 tb1 的所有数据和左表 tb 符合要求的数据
+select tb.empid,tb1.name
+from tb
+right join tb1
+on tb1.empid=tb.empid; # 查询出 11 条数据
+
+select * from tb order by empid; # 只能查出 10 条。
+
+select * from tb1 order by empid; # 只能查出 5 条。
+```
+
+#### 自连接
+
+表和自己进行联表查询。
+
+[196. 删除重复的电子邮箱 - 力扣（LeetCode）](https://leetcode.cn/problems/delete-duplicate-emails/description/) 自连接的经典题，删除所有重复的电子邮件
+
+```sql
+-- 表结构如下
++-------------+---------+
+| Column Name | Type    |
++-------------+---------+
+| id          | int     |
+| email       | varchar |
++-------------+---------+
+id 是该表的主键列(具有唯一值的列)。
+该表的每一行包含一封电子邮件。电子邮件将不包含大写字母。
+```
+
+```sql
+delete from Person p1, Person p2
+where p1.eamil = p2.email
+and p1.id > p2.id;
+```
+
+#### 子查询
+
+<b>子查询：执行查询，然后使用检索到的记录作为另一个查询的条件进行进一步的查询。</b>许多使用子查询的 SQL 可以用其他方法取代，但是子查询的处理方式更容易理解，SQL 优化器也会进行基础的子查询优化。
+
+查询 tb 表中最大 sales 的记录。
+
+```mysql
+select * from tb order by sales desc limit 1;
+
+# 回先执行子查询 select MAX(sales) from tb, 然后再执行 select * 这个查询
+select * from tb where sales>=(select MAX(sales) from tb);
+```
+
+<b>子查询和内连接的差异</b>
+
+```mysql
+# 假定我们要查询 tb1 和 tb2 中都存在的员工的 empid 和 name
+select tb.empid,tb1.name
+from tb,tb1
+where tb.empid = tb1.empid;
+/*
+由于 tb 中 empid 存在重复的，所有查出的数据是这样的。这是使用内连接
+A101,小红
+A101,小红
+A102,小蓝
+A102,小蓝
+A103,小绿
+A103,小绿
+A103,小绿
+A104,小白
+A104,小白
+A101,小黄
+A101,小黄
+*/
+
+select tb1.empid,tb1.name
+from tb1
+where tb1.empid in (select empid from tb);
+/*
+由于 tb1 中没有重复出现的 empid，因此采用子连接查询方式查出来的数据是这样的
+A101,小红
+A102,小蓝
+A103,小绿
+A104,小白
+A101,小黄
+*/
+```
+
+<b>使用 exists，仅以存在的记录为对象，not exists 同理，不再赘述。</b>
+
+```mysql
+# 这种 SQL 如何执行的不是很明白
+select * from tb1 where exists(select * from tb where tb.empid=tb1.empid)
+```
+
+- exists 只要存在则为真，因此，只要找到一条符合条件的，它就会停止检索，用 in 的话，它会遍历所有的数据；这种场景下 exists 的效率会高一些。
+
+### 组合查询
+
+使用 UNION，UNION ALL。看王姗的书。
+
+- 在单个查询中从不同的表返回类似结构的数据；
+- 对单个表执行多个查询，按单个查询返回数据；
+- 组合查询和 where 到底那个效率高未知，需要我们进行测试；
+
+#### 使用UNION
+
+<span style="color:orange">UNION 会取消重复行！！！UNION ALL，不取消重复行。</span>
+
+> <b>案例</b>
+
+把两个查询结果集并起来了
+
+```mysql
+select * from products 
+where prod_price<=5
+	union
+select * from products 
+where vend_id in(1001,1002)
+# 相当于
+select * from products 
+where prod_price<=5 or vend_id in(1001,1002)
+```
+
+> <b>使用规则</b>
+
+- UNION 必须由两条或两条以上的 SELECT 语句组成，语句之间用关键字 UNION 分隔（因此，如果组合 4 条 SELECT 语句，将要使用 3 个 UNION 关键字）。
+- UNION 中的每个查询必须包含相同的列、表达式或聚集函数（不过各个列不需要以相同的次序列出）。
+- 列数据类型必须兼容：类型不必完全相同，但必须是 DBMS 可以隐含地转换的类型（例如，不同的数值类型或不同的日期类型）。
+
+#### 对组合结果进行排序
+
+末尾加个 order by 即可
+
+```mysql
+select * 
+from products 
+where prod_price<=5
+	union
+select * 
+from products 
+where vend_id in(1001,1002)
+order by vend_id
+```
+
+## 用户变量
+
+为了便于使用，我们可以定义一个特定的变量来保存该值，这样的变量就是 MySQL 的用户变量了。在 `SELECT` 语句中设置临时变量，需要使用 `@` 开头，然后需要使用 `:=` 来进行赋值。
+
+比如，我们把在 `pet_shop` 表中的最大价格赋值给用户变量 `max_price`，把最低价格赋值给用户变量 `min_price`。
+
+```sql
+select 
+	@max_price := MAX(price), 
+	@min_price := MIN(price) 
+from pet_shop;
+```
+
+最高的价格和最低的价格都已经保存到用户变量中了，当我们需要时，直接查询这两个用户变量即可。例如，我们查询一下最高价格的动物和最低价格的动物信息。
+
+```mysql
+# 查询最高价格
+select @max_price;
+
+# 查询 pet_shop 中的最高价格和最低价格
+select * 
+from pet_shop
+where price in(@max_price, @min_price);
+```
+
+## 窗口函数
+
+<a href="https://dev.mysql.com/doc/refman/8.0/en/window-function-descriptions.html">MySQL 官方文档-窗口函数</a>
+
+[《MySQL 入门教程》第 22 篇 窗口函数 - 掘金 (juejin.cn)](https://juejin.cn/post/7031157682434211853)
+
+[MySQL8 窗口函数 →_→ 专治GROUP BY后组内元素 - 掘金 (juejin.cn)](https://juejin.cn/post/7329034058381131826)
+
+### 简介
+
+<b>窗口函数也就是在满足某种条件的记录集合上执行的特殊函数。</b>对于每条记录都要在此窗口内执行函数，有的函数随着记录不同，窗口大小都是固定的，这种属于静态窗口；有的函数则相反，不同的记录对应着不同的窗口，这种动态变化的窗口叫滑动窗口。
+
+作用：比如对某个单表查询，按指定的条件对 empid 进行分类，然后对每个类别中的 sales 进行排序。可以用自连接+排序但是比较复杂，窗口函数写起来则比较简单。
+
+> 聚合函数和窗口函数的区别
+
+- 聚合函数是将多条记录聚合为一条；而窗口函数是每条记录都会执行，有几条记录执行完还是几条，只是会给它们追加窗口；即窗口函数类似于 SUM()、COUNT() 那样的集合函数，但它并不会将多行查询结果合并为一行，而是将结果放回多行当中。
+- 聚合函数也可以用于窗口函数中。
+
+```sql
+-- 为每条记录追加了窗口函数的计算结果 total_sales
+mysql> select *, sum(order_price) over(partition by salesperson) as total_sales from sales;
++-------------+------------+-----------+----------+-------------+-------------+
+| salesperson | order_date | product   | quantity | order_price | total_sales |
++-------------+------------+-----------+----------+-------------+-------------+
+| Jane        | 2021-01-01 | Product A |       15 |      150.00 |      750.00 |
+| Jane        | 2021-01-02 | Product B |       25 |      250.00 |      750.00 |
+| Jane        | 2021-01-03 | Product C |       35 |      350.00 |      750.00 |
+| John        | 2021-01-01 | Product A |       10 |      100.00 |      600.00 |
+| John        | 2021-01-02 | Product B |       20 |      200.00 |      600.00 |
+| John        | 2021-01-03 | Product C |       30 |      300.00 |      600.00 |
+```
+
+### 语法&示例
+
+<b>常见的窗口函数</b>
+
+| 姓名                                                         | 描述                                               |
+| :----------------------------------------------------------- | :------------------------------------------------- |
+| [`CUME_DIST()`](https://mysql.net.cn/doc/refman/8.0/en/window-function-descriptions.html#function_cume-dist) | 累计分配值<br>分区值小于或等于当前行中的值的百分比 |
+| [`DENSE_RANK()`](https://mysql.net.cn/doc/refman/8.0/en/window-function-descriptions.html#function_dense-rank) | 当前行在其分区内的排名，没有间隙                   |
+| [`FIRST_VALUE()`](https://mysql.net.cn/doc/refman/8.0/en/window-function-descriptions.html#function_first-value) | 窗口框架第一行的参数值                             |
+| [`LAG()`](https://mysql.net.cn/doc/refman/8.0/en/window-function-descriptions.html#function_lag) | 分区内滞后当前行的行的参数值                       |
+| [`LAST_VALUE()`](https://mysql.net.cn/doc/refman/8.0/en/window-function-descriptions.html#function_last-value) | 窗口框架最后一行的参数值                           |
+| [`LEAD()`](https://mysql.net.cn/doc/refman/8.0/en/window-function-descriptions.html#function_lead) | 分区内当前行前导行的参数值                         |
+| [`NTH_VALUE()`](https://mysql.net.cn/doc/refman/8.0/en/window-function-descriptions.html#function_nth-value) | 来自窗口框架第 N 行的参数值                        |
+| [`NTILE()`](https://mysql.net.cn/doc/refman/8.0/en/window-function-descriptions.html#function_ntile) | 当前行在其分区内的桶号。                           |
+| [`PERCENT_RANK()`](https://mysql.net.cn/doc/refman/8.0/en/window-function-descriptions.html#function_percent-rank) | 百分比排名值                                       |
+| [`RANK()`](https://mysql.net.cn/doc/refman/8.0/en/window-function-descriptions.html#function_rank) | 当前行在其分区内的排名，有间隙                     |
+| [`ROW_NUMBER()`](https://mysql.net.cn/doc/refman/8.0/en/window-function-descriptions.html#function_row-number) | 其分区内的当前行数                                 |
+
+下面是一个简单的例子，我们创建一个名为 `employees` 的表，然后插入一些数据：
+
+```sql
+CREATE TABLE employees (
+    id INT PRIMARY KEY,
+    name VARCHAR(100),
+    salary DECIMAL(10, 2)
+);
+
+INSERT INTO employees (id, name, salary) VALUES
+(1, 'Alice', 5000.00),
+(2, 'Bob', 6000.00),
+(3, 'Charlie', 7000.00),
+(4, 'David', 5000.00),
+(5, 'Eve', 6000.00),
+(6, 'Frank', 7000.00);
+```
+
+---
+
+现在，我们可以使用 `ROW_NUMBER()` 函数来为每行数据分配一个唯一的序号：
+
+```sql
+-- 注意字段名和关键字名称不要重复。
+SELECT id, name, salary,
+       ROW_NUMBER() OVER (ORDER BY salary DESC) AS ranks
+FROM employees;
+```
+
+这将按薪水降序排列员工，并为每个人分配一个序号。
+
+---
+
+另一个例子，我们可以使用 `LEAD()` 函数来查看每个人的下一份薪水：
+
+```sql
+SELECT id, name, salary,
+       LEAD(salary) OVER (ORDER BY id) AS next_salary
+FROM employees;
+```
+
+这将显示每个人的薪水以及他们下一个人（按 id 对人员进行排序）的薪水。
+
+---
+
+最后，我们可以使用 `NTILE()` 函数将员工分成两组：
+
+```sql
+SELECT id, name, salary,
+       NTILE(2) OVER (ORDER BY salary) AS group_number
+FROM employees;
+```
+
+这将把员工按照薪水分成两组，第一组包括薪水最高的一半人，第二组包括薪水最低的一半人。
+
+---
+
+所用到的表数据
+
+```sql
+CREATE TABLE sales
+(
+    year    INT,
+    country VARCHAR(20),
+    product VARCHAR(32),
+    profit  INT
+);
+```
+
+```python
+# 随机生成一些数据
+import random
+
+# 设置国家列表
+countries = ['USA', 'China', 'India', 'Germany', 'France', 'UK', 'Italy', 'Brazil', 'Russia', 'Japan']
+
+# 设置产品列表
+products = ['Product A', 'Product B', 'Product C', 'Product D', 'Product E', 'Product F', 'Product G', 'Product H', 'Product I', 'Product J']
+
+# 生成200条记录的INSERT语句
+insert_statements = []
+for _ in range(200):
+    year = random.randint(2000, 2022)
+    country = random.choice(countries)
+    product = random.choice(products)
+    profit = random.randint(-10000, 10000)
+    insert_statement = f"INSERT INTO sales (year, country, product, profit) VALUES ({year}, '{country}', '{product}
+```
+
+- 窗口函数 over (窗口区域划分、排序)
+- 如：ROW_NUMBER() OVER (ORDER BY salary DESC) AS ranks
+- 如：RANK() OVER (PARTITION BY salesperson ORDER BY order_price DESC) AS rank
+
+<b>窗口函数的边界</b>
+
+- select sum(val) over() from employees，这表示窗口会包含表中的所有数据。
+- rows unbounded following 表示前后都无边界，即包含整个窗口的数据。
+
+```sql
+-- mysql 官方 demo
+mysql> SELECT
+         year, country, product, profit,
+         SUM(profit) OVER() AS total_profit,
+         SUM(profit) OVER(PARTITION BY country) AS country_profit
+       FROM sales
+       ORDER BY country, year, product, profit;
++------+---------+------------+--------+--------------+----------------+
+| year | country | product    | profit | total_profit | country_profit |
++------+---------+------------+--------+--------------+----------------+
+| 2000 | Finland | Computer   |   1500 |         7535 |           1610 |
+| 2000 | Finland | Phone      |    100 |         7535 |           1610 |
+| 2001 | Finland | Phone      |     10 |         7535 |           1610 |
+| 2000 | India   | Calculator |     75 |         7535 |           1350 |
+| 2000 | India   | Calculator |     75 |         7535 |           1350 |
+| 2000 | India   | Computer   |   1200 |         7535 |           1350 |
+| 2000 | USA     | Calculator |     75 |         7535 |           4575 |
+| 2000 | USA     | Computer   |   1500 |         7535 |           4575 |
+| 2001 | USA     | Calculator |     50 |         7535 |           4575 |
+| 2001 | USA     | Computer   |   1200 |         7535 |           4575 |
+| 2001 | USA     | Computer   |   1500 |         7535 |           4575 |
+| 2001 | USA     | TV         |    100 |         7535 |           4575 |
+| 2001 | USA     | TV         |    150 |         7535 |           4575 |
++------+---------+------------+--------+--------------+----------------+
+```
+
+- select sum(val) over( paratition by subject order by time rows unbounded preceding)，窗口显示的指定了 rows 的边界为 unbounded，rows unbounded preceding 表示计算窗口函数时从分区的第一行（即前面无边界，所以是第一行）开始考虑数据，直到达到窗口的当前行。
+- rows between 5 preceding and 5 following 表示窗口大小为当前行的前后五行，可以用来算滑动窗口的平均值。
+
+```mysql
+mysql> SELECT
+         time, subject, val,
+         SUM(val) OVER (PARTITION BY subject ORDER BY time
+                        ROWS UNBOUNDED PRECEDING)
+           AS running_total,
+         AVG(val) OVER (PARTITION BY subject ORDER BY time
+                        ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
+           AS running_average
+       FROM observations;
++----------+---------+------+---------------+-----------------+
+| time     | subject | val  | running_total | running_average |
++----------+---------+------+---------------+-----------------+
+| 07:00:00 | st113   |   10 |            10 |          9.5000 |
+| 07:15:00 | st113   |    9 |            19 |         14.6667 |
+| 07:30:00 | st113   |   25 |            44 |         18.0000 |
+| 07:45:00 | st113   |   20 |            64 |         22.5000 |
+| 07:00:00 | xh458   |    0 |             0 |          5.0000 |
+| 07:15:00 | xh458   |   10 |            10 |          5.0000 |
+| 07:30:00 | xh458   |    5 |            15 |         15.0000 |
+| 07:45:00 | xh458   |   30 |            45 |         20.0000 |
+| 08:00:00 | xh458   |   25 |            70 |         27.5000 |
++----------+---------+------+---------------+-----------------+
+```
+
+这条SQL语句使用了窗口函数来计算每个subject的累计总和（running_total）和移动平均值（running_average）。具体来说：
+
+- `SUM(val) OVER (PARTITION BY subject ORDER BY time ROW UNBOUNDED PRECEDING)`：这部分计算了每个subject的val的总和。`PARTITION BY subject`表示我们要按subject分组；`ORDER BY time`表示我们要按时间排序；`ROW UNBOUNDED PRECEDING`表示我们计算总和的范围是从当前行开始一直到第一行。
+- `AVG(val) OVER (PARTITION BY subject ORDER BY time ROW BETWEEN 1 PRECEDING AND 1 FOLLOWING)`：这部分计算了每个subject的val的移动平均值。`ROW BETWEEN 1 PRECEDING AND 1 FOLLOWING`表示我们计算平均值的范围是当前行的前一行和后一行。
+
+执行结果如下：
+
+- 对于st113，我们可以看到running_total从10逐渐增加到64，这是因为每次我们都在前一个总数的基础上加上当前的val。
+- 对于xh458，我们可以看到running_total从0逐渐增加到70，这也是因为每次我们都在前一个总数的基础上加上当前的val。
+- 对于running_average，我们可以看到它反映了每一行的val与其前后两行val的平均值。例如，对于st113，当time为07:15:00时，running_average为9.5，这是因为它是07:00:00的val（10）和07:30:00的val（25）的平均值。
+
+<b>命名窗口</b>
+
+如果 sql 语句中多次使用到了定义方式一样的窗口函数，可以使用命名窗口，避免重复定义。
+
+```sql
+SELECT
+  val,
+  ROW_NUMBER() OVER (ORDER BY val) AS 'row_number',
+  RANK()       OVER (ORDER BY val) AS 'rank',
+  DENSE_RANK() OVER (ORDER BY val) AS 'dense_rank'
+FROM numbers;
+```
+
+通过使用 一次定义窗口并在 子句 `WINDOW`中按名称引用窗口，可以更简单地编写查询：`OVER`
+
+```sql
+SELECT
+  val,
+  ROW_NUMBER() OVER w AS 'row_number',
+  RANK()       OVER w AS 'rank',
+  DENSE_RANK() OVER w AS 'dense_rank'
+FROM numbers
+WINDOW w AS (ORDER BY val);
+```
+
+<b>向命名窗口添加属性</b>
+
+```sql
+SELECT
+  DISTINCT year, country,
+  FIRST_VALUE(year) OVER (w ORDER BY year ASC) AS first,
+  FIRST_VALUE(year) OVER (w ORDER BY year DESC) AS last
+FROM sales
+WINDOW w AS (PARTITION BY country);
+```
+
+`OVER`子句只能向命名窗口添加属性，而不能修改它们 。如果命名窗口定义包含分区、排序或框架属性，则 `OVER`引用窗口名称的子句不能也包含相同类型的属性，否则会发生错误：
+
+- 这种构造是允许的，因为窗口定义和引用`OVER`子句不包含相同类型的属性：
+
+```sql
+OVER (w ORDER BY country)
+... WINDOW w AS (PARTITION BY country)
+```
+
+- 不允许使用此构造，因为该 `OVER`子句指定`PARTITION BY`了一个已具有的命名窗口 `PARTITION BY`：
+
+```sql
+OVER (w PARTITION BY year)
+... WINDOW w AS (PARTITION BY country)
+```
+
+命名窗口的定义本身可以以 *`window_name`*. 在这种情况下，允许向前和向后引用，但不允许循环：
+
+- 这是允许的；它包含向前和向后引用但没有循环：
+
+```sql
+WINDOW w1 AS (w2), w2 AS (), w3 AS (w1)
+```
+
+- 这是不允许的，因为它包含一个循环：
+
+```sql
+WINDOW w1 AS (w2), w2 AS (w3), w3 AS (w1)
+```
+
+### 示例
+
+<b>常见窗口函数及简单的示例</b>
+
+```sql
+CREATE TABLE sales (
+    salesperson VARCHAR(20),
+    order_date DATE,
+    product VARCHAR(50),
+    quantity INT,
+    order_price DECIMAL(10, 2)
+);
+
+INSERT INTO sales VALUES
+('John', '2021-01-01', 'Product A', 10, 100.00),
+('John', '2021-01-02', 'Product B', 20, 200.00),
+('John', '2021-01-03', 'Product C', 30, 300.00),
+('Jane', '2021-01-01', 'Product A', 15, 150.00),
+('Jane', '2021-01-02', 'Product B', 25, 250.00),
+('Jane', '2021-01-03', 'Product C', 35, 350.00);
+```
+
+使用窗口函数对 sales 进行从小到大的排序。
+
+```mysql
+-- rank() over 
+mysql> select empid, rank() over w as ranks from tb window w as(order by sales);
++-------+-------+
+| empid | ranks |
++-------+-------+
+| A103  |     1 |
+| A103  |     2 |
+| A102  |     2 |
+| A104  |     4 |
+| A107  |     4 |
+| A104  |     6 |
+| A101  |     7 |
+| A103  |     8 |
+| A101  |     9 |
+| A102  |    10 |
++-------+-------+
+10 rows in set (0.00 sec)
+```
+
+使用窗口函数统计每个当月的总 sales
+
+```mysql
+mysql> select empid,sales, sum(sales) over() as month_total_sales from tb;
++-------+-------+-------------------+
+| empid | sales | month_total_sales |
++-------+-------+-------------------+
+| A103  |    20 |               430 |
+| A102  |   123 |               430 |
+| A104  |    23 |               430 |
+| A101  |    44 |               430 |
+| A103  |    55 |               430 |
+| A101  |    67 |               430 |
+| A102  |    20 |               430 |
+| A104  |    43 |               430 |
+| A103  |    12 |               430 |
+| A107  |    23 |               430 |
++-------+-------+-------------------+
+10 rows in set (0.00 sec)
+```
+
+## 视图
+
+视图是一种非常方便的功能，该功能可以隐藏一些重要的数据，只将我们希望展示的数据显示出来。注意，视图不是表。视图是从一个或多个表中导出来的表，是一种<b>虚拟存在的表</b>。因此视图中并没有保存记录或列中的数据，视图只是一种信息，用于查询记录。它就像一个窗口，通过这个窗口可以看到系统专门提供的数据，这样，用户可以不用看到整个数据库中的数据，而只关心对自己有用的数据。
+
+从用户角度来看，视图和表没什么区别，也可以进行 select 和 update 操作，<span style="color:orange">在个别情况下也可以进行 insert 操作</span>，如果更新视图的记录那么对应的基本表中的数据也会更新。如果基础表的数据更新了，那么更新的数据也会同步到视图中。
+
+<b>注意理解视图是虚拟的表</b>
+
+- 数据库中只存放了视图的定义，而没有存放视图中的数据，这些数据存放在原来的表中；
+- 使用视图查询数据时，数据库系统会从原来的表中取出对应的数据；
+- 视图中的数据依赖于原来表中的数据，一旦表中数据发生改变，显示在视图中的数据也会发生改变；
+- 在使用视图的时候，可以把它当作一张表。
+
+### 创建视图
+
+```mysql
+CREATE VIEW 视图名(列a,列b,列c) AS SELECT 列1,列2,列3 FROM 表名字;
+```
+
+可见创建视图的语句，后半句是一个 SELECT 查询语句，所以<b>视图也可以建立在多张表上</b>，只需在 SELECT 语句中使用<b>子查询</b>或<b>连接查询</b>。
+
+创建一个简单的视图，名为 <b>v_emp</b>，包含 <b>v_name，v_age，v_phone</b> 三个列
+
+```sql
+CREATE VIEW v_emp (v_name,v_age,v_phone) AS SELECT name,age,phone FROM employee;
+```
+
+### 更新视图
+
+```mysql
+update v_emp set name=concat(name,'123') where name='小红'
+
+select * from v1;
+/*
+小红123,40
+小蓝,28
+小绿,20
+小白,423
+小黄,35
+*/
+```
+
+### 显示视图信息
+
+1️⃣desc 视图名 -- 查看视图的结构
+
+2️⃣show create view 视图名 -- 显示视图的详细信息
+
+### 插入数据
+
+对视图执行 insert 操作是有限制的，在使用了 UNION、JOIN、子查询的视图中，不能执行 insert 和 update。但是如果只是从一个表中提取了列，那么执行 insert 和 update 操作是没有问题的。
+
+```mysql
+insert into v1(name,age) values ('123',12);
+select * from tb1;
+/*
+<null>,123,12
+<null>,123,12
+*/
+```
+
+如果是通过设置了条件的基表创建的视图，如果插入和更新的数据不符合要求，会报错。
+
+```mysql
+# 创建一个显示 sales > 100 的带条件的视图 记得要加 with check option 不然会执行成功的。insert 也是一样的，不再赘述。
+drop view v2;
+create view v2 as select * from tb where tb.sales>20 with check option ;
+select * from v2;
+update v2 set sales=10 where sales>20;
+# [HY000][1369] CHECK OPTION failed 'miaosha.v2'
+```
+
+### 修改视图
+
+```sql
+alter view v1 as select xx from oo;
+```
+
+## 索引
+
+索引是一种与表有关的结构，它的作用相当于书的目录，可以根据目录中的页码快速找到所需的内容。在数据库中，我们可以使用索引快速找出在某个列中有一特定值的行。
+
+<b>使用索引的必要性</b>
+
+不使用索引，MySQL 必须从第 1 条记录开始读完整个表，直到找出相关的行。表越大，查询数据所花费的时间越多。如果表中查询的列有一个索引，MySQL 能快速到达某个位置去搜寻数据文件，而不必查看所有数据。
+
+### 索引简介
+
+> 索引的特点
+
+所有存储引擎支持每个表至少 16 个索引，总索引长度至少为 256 字节。大多数存储引擎有更高的限制。MySQL 中索引的存储类型有两种，即 BTREE 和 HASH，具体和表的存储引擎相关；MyISAM 和 InnoDB 存储引擎只支持 BTREE 索引；MEMORY/HEAP 存储引擎可以支持 HASH 和 BTREE 索引。
+
+<b>优点</b>
+
+- 通过创建唯一索引，可以保证数据库表中每一行数据的唯一性。
+- 可以大大加快数据的查询速度
+- 在实现数据的参考完整性方面，可以加速表和表之间的连接。
+- 在使用分组和排序子句进行数据查询时，也可以显著减少查询中分组和排序的时间（也是加快了数据的查询速度）
+
+<b>缺点</b>
+
+- 创建索引和维护索引要耗费时间，并且随着数据量的增加所耗费的时间也会增加。
+- 索引需要占磁盘空间，除了数据表占数据空间之外，每一个索引还要占一定的物理空间，如果有大量的索引，索引文件可能比数据文件更快达到最大文件尺寸。
+- 当对表中的数据进行增加、删除和修改的时候，索引也要动态地维护，这样就降低了数据的维护速度。
+
+> <b>分类</b>
+
+分为聚集索引（主键索引）和非聚集索引（普通索引、唯一索引、单列索引、组合索引、全文索引、空间索引）。
+
+<span style="color:orange">通过索引查找出自己想要的数据。聚集索引是索引字段和数据放在一起，一次查询就可以查询出数据；非聚集索引是索引字段和数据分开存放，可以通过非聚集索引查询到数据的主键（聚集索引的索引字段），如果非聚集索引上的数据不包含我们需要的所有数据，则会根据非聚集索引上查询到的主键在聚集索引上进行一次回表查询。</span>
+
+- 普通索引/唯一索引：普通索引字段的值可以重复且允许为 null，而唯一索引字段的值不能重复不能为 null。
+- 单列索引/组合索引：单列索引即一个索引只包含单个列，组合索引是指在表的多个字段组合上创建的索引。
+- 全文索引：全文索引类型为FULLTEXT，在定义索引的列上支持值的全文查找，允许在这些索引列中插入重复值和空值。全文索引可以在CHAR、VARCHAR或者TEXT类型的列上创建。MyISAM 支持全文索引，MySQL 8.0 Innodb 支持全文索引。
+
+> <b>索引设计</b>
+
+1️⃣索引并非越多越好，一个表中如有大量的索引，不仅占用磁盘空间，还会影响 INSERT、DELETE、UPDATE 等语句的性能，因为在表中的数据更改时，索引也会进行调整和更新。
+
+2️⃣避免对经常更新的表进行过多的索引，并且索引中的列要尽可能少。应该经常用于查询的字段创建索引，但要避免添加不必要的字段。
+
+3️⃣数据量小的表最好不要使用索引，由于数据较少，查询花费的时间可能比遍历索引的时间还要短，索引可能不会产生优化效果。
+
+4️⃣在条件表达式中经常用到的不同值较多的列上建立索引，在不同值很少的列上不要建立索引。比如在学生表的“性别”字段上只有“男”与“女”两个不同值，因此就无须建立索引，如果建立索引不但不会提高查询效率，反而会严重降低数据更新速度。
+
+5️⃣当唯一性是某种数据本身的特征时，指定唯一索引。使用唯一索引需能确保定义的列的数据完整性，以提高查询速度。
+
+6️⃣在频繁进行排序或分组（即进行group by或order by操作）的列上建立索引，如果待排序的列有多个，可以在这些列上建立组合索引。
+
+### 创建索引
+
+创建表时创建索引
+
+```mysql
+create table table_name(
+	id int primary key,
+    sex varchar(20),
+    phone cahr(11) not null,
+    index(phone) 
+    # UNIQUE index(phone) -- 唯一索引
+    # FULLTEXT index(phone) -- 全文索引
+    # spatial index(xx) -- 空间索引，在空间类型为GEOMETRY的字段上创建空间索引
+);
+```
+
+创建表后创建索引
+
+```mysql
+create [unique | fulltext | spatial] index index_name on table_name (clo_name[length],...) [asc | desc]
+
+# eg
+ALTER TABLE 表名字 ADD INDEX 索引名 (列名);
+CREATE INDEX 索引名 ON 表名字 (列名);
+
+# demo
+ALTER TABLE employee ADD INDEX idx_id (id); # 在employee表的id列上建立名为idx_id的索引
+CREATE INDEX idx_name ON employee (name);  # 在employee表的name列上建立名为idx_name的索引
+```
+
+索引的效果是加快查询速度，当表中数据不够多的时候是感受不出它的效果的。可以使用命令 <b>SHOW INDEX FROM 表名字;</b> 查看刚才新建的索引。
+
+```mysql
+show index from table_name;
+```
+
+在使用 SELECT 语句查询的时候，语句中 WHERE 里面的条件，会<b>自动判断有没有可用的索引</b>。
+
+比如有一个用户表，它拥有用户名(username)和个人签名(note)两个字段。其中用户名具有唯一性，并且格式具有较强的限制，我们给用户名加上一个唯一索引；个性签名格式多变，而且允许不同用户使用重复的签名，不加任何索引。
+
+这时候，如果你要查找某一用户，使用语句 `select * from user where username=?` 和 `select * from user where note=?` 性能是有很大差距的，对<b>建立了索引的用户名</b>进行条件查询会比<b>没有索引的个性签名</b>条件查询快几倍，在数据量大的时候，这个差距只会更大。
+
+一些字段不适合创建索引，比如性别，这个字段存在大量的重复记录无法享受索引带来的速度加成，甚至会拖累数据库，导致数据冗余和额外的 CPU 开销。
+
+### 删除索引
+
+```sql
+drop index index_name on table_name;
+```
+
+### 新特性
+
+在 MySQL 8.0 之前，MySQL 在语法上已经支持降序索引，但实际上创建的仍然是升序索引。MySQL 8.0 创建的索引就默认是减序索引了。
+
+## 事务介绍
+
+事务是一组不可再分割的原子性操作，要么全部成功，要么全部失败。
+
+### 事务的基本介绍
+
+<b>概念：</b>如果一个包含多个步骤的业务操作被事务管理，那么这些操作要么同时成功，要么同时失败。
+
+<b>操作：</b>
+
+1️⃣开启事务：start transaction;
+
+2️⃣回滚：rollback;
+
+3️⃣提交：commit;
+
+```mysql
+# 0. 开启事务
+START TRANSACTION;
+
+# 1.张三账户 -500
+UPDATE account SET balance = balance - 500 WHERE NAME = 'zhangsan';
+
+# 2.李四账户 +500
+# 出错了...
+UPDATE account SET balance = balance + 500 WHERE NAME = 'lisi';
+
+# 发现执行没有问题，提交事务
+COMMIT;
+
+# 发现出问题了，回滚事务
+ROLLBACK;
+```
+
+### MySQL中的事务
+
+<b>MySQL 数据库中事务默认是自动提交的，提交有两种方式，自动提交和手动提交。</b>
+
+1️⃣自动提交：MySQL 默认是自动提交的，一条 DML (增删改)语句会自动提交一次事务。
+
+2️⃣手动提交：
+
+-  Oracle 数据库默认是手动提交事务
+- 需要先开启事务，再提交
+-  修改事务的默认提交方式：
+  - 查看事务的默认提交方式：`SELECT @@autocommit;` 1 代表自动提交 0 代表手动提交
+  - 修改默认提交方式为手动提交：`set @@autocommit=0;`	
+
+### 事务的四大特征
+
+原子性（Atomicity）：事务是一个原子操作，是不可分割的最小操作单位，要么同时成功，要么同时失败。
+
+隔离性（Isolation）：多个事务之间。相互独立。
+
+持久性（Durability）：当事务提交或回滚后，数据库会持久化的保存数据。
+
+一致性（Consistency）：事务操作前后，数据总量不变。以转账为例，A 给 B 100, B 得到 100，最后的总量是不变的。一致性和原子性是紧密联系在一起的。前面所说的原子性、隔离性、持久性都是为数据一致性服务的。
+
+### 事务的隔离级别
+
+多个事务之间隔离的，相互独立的。但是如果多个事务操作同一批数据，则会引发一些问题，设置不同的隔离级别就可以解决这些问题。
+
+| 问题       | 解释                                                         | 说明                                                         |
+| ---------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 脏读       | 一个事务，读取到另一个事务中没有提交的数据                   |                                                              |
+| 不可重复读 | 在同一个事务中，两次读取到的数据不一样。【比如没有提交事务，导致不可重复读】 | 不可重复读，是指在数据库访问中，一个[事务](https://baike.baidu.com/item/事务)范围内两个相同的查询却返回了不同数据。<br>这是由于查询时系统中其他事务修改的提交而引起的。比如事务 T1 读取某一数据，事务 T2 读取并修改了该数据，T1 为了对读取值进行检验而再次读取该数据，便得到了不同的结果。 |
+| 幻读       | 一个事务操作 (DML) 数据表中<span style="color:red">所有记录</span>，另一个事务添加了一条数据，则第一个事务查询不到自己的修改。 |                                                              |
+
+在 MySQL 中，同一个事务中的数据查询使用的是快照技术。后面的查询都是在快照中进行，所以是可重复读的。而不可重复读是，同一个事务中，每次查询都查询最新的数据（可能被其他事务修改了一部分数据）因此造成了不可重复读。
+
+| 隔离级别         | 说明                                                      | 产生的问题             |
+| ---------------- | --------------------------------------------------------- | ---------------------- |
+| read uncommitted | 读未提交，事务 A 可以读取到事务 B 修改过但未提交的数据    | 脏读、不可重复读、幻读 |
+| read committed   | 读已提交 （Oracle），事务 A 可以读取到事务 B 已提交的数据 | 不可重复读、幻读       |
+| repeatable read  | 可重复读 （MySQL 默认的隔离级别）                         | 幻读                   |
+| serializable     | 串行化                                                    | 可以解决所有的问题     |
+
+注意：隔离级别从小到大安全性越来越高，但是效率越来越低
+
+数据库查询隔离级别：`select @@tx_isolation;`，MySQL 8.x 用 `select @@transaction_isolation;`，查询全局事务隔离级别或会话事务隔离级别用 @@global.xx 和 @@session.xx。
+
+数据库设置隔离级别：`set global transaction isolation level 级别字符串(如 repeatable read);`
+## MySQL8.0特性
+
+- 加入了窗口函数
+- group by 不再隐式排序
+- 通用表达式，效率比子查询要高
+- DDL 操作的原子化，MySQL 5.7 版本中，`drop table bk1,bk2`，如果只是 bk2 不存在，bk1 会被删除。MySQL 8.0 版本都不会被删除。
+
+MySQL 窗口函数的基本分类：
+
+```shell
+mysql> select * from tb order by empid;
++-------+-------+-------+
+| empid | sales | month |
++-------+-------+-------+
+| A101  |    44 |   4 |
+| A101  |    67 |   5 |
+| A102  |   123  |   5 |
+| A102  |    20 |   6 |
+| A103  |    20 |   4 |
+| A103  |    55 |   5 |
+| A103  |    12 |   6 |
+| A104  |    23 |   4 |
+| A104  |    43 |   5 |
+| A107  |    23 |   6 |
++-------+-------+-------+
+10 rows in set (0.02 sec)
+
+# 按 empid 进行分区，然后在分区内对 sales 进行排序。
+mysql> select row_number()over(partition by empid order by sales) as tmp,empid,sales,month from tb;
++-----+-------+-------+-------+
+| tmp | empid | sales | month |
++-----+-------+-------+-------+
+|   1 | A101  |    44 |     4 |
+|   2 | A101  |    67 |     5 |
+|   1 | A102  |    20 |     6 |
+|   2 | A102  |   123 |     5 |
+|   1 | A103  |    12 |     6 |
+|   2 | A103  |    20 |     4 |
+|   3 | A103  |    55 |     5 |
+|   1 | A104  |    23 |     4 |
+|   2 | A104  |    43 |     5 |
+|   1 | A107  |    23 |     6 |
++-----+-------+-------+-------+
+10 rows in set (0.01 sec)
+```
+
+# SQL优化
+
+- exists 一般比 in 快，用 exists 有索引优化
+
+# SQL刷题
+
+## leetcode
+
+[176. 第二高的薪水 - 力扣（LeetCode）](https://leetcode.cn/problems/second-highest-salary/description/)
+
+题目中，100，200，200，第二高的薪水是 100 哦
+
+```sql
+-- select 
+-- (select distinct salary 
+-- from employee 
+-- order by salary desc 
+-- limit 1 offset 1) as SecondHighestSalary
+# 分组后 order by 更快
+select 
+(select salary 
+ from employee 
+ group by salary 
+ order by salary desc 
+ limit 1 offset 1) as SecondHighestSalary;
+```
+
+
+
+## 牛客网
+
+### 非技术篇SQL
+
+[统计每个学校的答过题的用户的平均答题数_牛客题霸_牛客网 (nowcoder.com)](https://www.nowcoder.com/practice/88aa923a9a674253b861a8fa56bac8e5?tpId=199&tags=&title=&difficulty=0&judgeStatus=0&rp=0&sourceUrl=%2Fexam%2Foj%3Fpage%3D1%26tab%3DSQL%E7%AF%87%26topicId%3D199)
+
+```mysql
+select
+    university,
+    # 每个学校答过题的用户平均答题数量情况
+    # 用 distinct 去重，这样得到的 device_id(用户标识符) 就是唯一的了，就可以统计按照 university 分组的用户总数了。
+    count(question_id) / count(distinct q.device_id) as avg_answer_cnt
+from user_profile as u, question_practice_detail as q
+where u.device_id = q.device_id
+group by university;
+```
+
+[统计每个学校各难度的用户平均刷题数_牛客题霸_牛客网 (nowcoder.com)](https://www.nowcoder.com/practice/5400df085a034f88b2e17941ab338ee8?tpId=199&tqId=1975675&ru=%2Fpractice%2F53235096538a456b9220fce120c062b3&qru=%2Fta%2Fsql-quick-study%2Fquestion-ranking&sourceUrl=%2Fexam%2Foj%3Fpage%3D1%26tab%3DSQL%E7%AF%87%26topicId%3D199)
+
+```mysql
+# 分析题意，看需要对什么数据进行分组，还有平均数的计算。
+# 因为答题的人都存在了 qbd 中，up 中的有些人没有答题。
+select 
+    up.university,
+    qd.difficult_level,
+    count(qpd.id) / count(distinct qpd.device_id)
+from user_profile as up, 
+     question_practice_detail as qpd, 
+     question_detail as qd
+where 
+    up.device_id = qpd.device_id
+    and 
+    qpd.question_id = qd.question_id
+group by up.university, qd.difficult_level
+```
+
+[统计每个用户的平均刷题数_牛客题霸_牛客网 (nowcoder.com)](https://www.nowcoder.com/practice/f4714f7529404679b7f8909c96299ac4?tpId=199&tags=&title=&difficulty=0&judgeStatus=0&rp=0&sourceUrl=%2Fexam%2Foj%3Fpage%3D1%26tab%3DSQL%E7%AF%87%26topicId%3D199)
+
+```mysql
+# 只要山东大学的
+select 
+    up.university,
+    qd.difficult_level,
+    count(qpd.question_id) / count(distinct qpd.device_id) as avg_answer_cnt
+from 
+    user_profile as up, 
+    question_practice_detail as qpd,
+    question_detail as qd
+where 
+    up.device_id = qpd.device_id
+    and
+    qpd.question_id = qd.question_id
+    and
+    up.university = '山东大学'
+group by qd.difficult_level
+```
+
+[查找山东大学或者性别为男生的信息_牛客题霸_牛客网 (nowcoder.com)](https://www.nowcoder.com/practice/979b1a5a16d44afaba5191b22152f64a?tpId=199&tags=&title=&difficulty=0&judgeStatus=0&rp=0&sourceUrl=%2Fexam%2Foj%3Fpage%3D1%26tab%3DSQL%E7%AF%87%26topicId%3D199)
+
+```mysql
+# 结果不去重，因此用 or 不行，得用 union all
+select
+    device_id,
+    gender,
+    age,
+    gpa
+from 
+    user_profile
+where
+    university = '山东大学'
+union all
+select
+    device_id,
+    gender,
+    age,
+    gpa
+from 
+    user_profile
+where
+    gender = 'male';
+```
+
+[计算25岁以上和以下的用户数量_牛客题霸_牛客网 (nowcoder.com)](https://www.nowcoder.com/practice/30f9f470390a4a8a8dd3b8e1f8c7a9fa?tpId=199&tags=&title=&difficulty=0&judgeStatus=0&rp=0&sourceUrl=%2Fexam%2Foj%3Fpage%3D1%26tab%3DSQL%E7%AF%87%26topicId%3D199)
+
+```mysql
+# 这题乍一看，可以用 case when 来实现
+select
+    case 
+        when age < 25 or age is null then '25岁以下'
+        when age >= 25 then '25岁及以上'
+    end age_cut,
+    count(*) as number
+from user_profile
+group by age_cut;
+
+# 后面查阅资料也可以用 if
+select
+    if(age <25 or age is null,'25岁以下','25岁及以上') as age_cut,count(*)
+from user_profile
+group by age_cut;
+```
+
+[查看不同年龄段的用户明细_牛客题霸_牛客网 (nowcoder.com)](https://www.nowcoder.com/practice/ae44b2b78525417b8b2fc2075b557592?tpId=199&tqId=38696&sourceUrl=https%3A%2F%2Fwww.nowcoder.com%2Fexam%2Foj%3Fpage%3D1%26tab%3DSQL%E7%AF%87%26topicId%3D199)
+
+```mysql
+select
+    device_id,
+    gender,
+    case
+        when age is null then '其他'
+        when age<20 then '20岁以下'
+        when age <=24 then '20-24岁'
+        when age >=25 then '25岁及以上'
+    end age_cnt
+from user_profile
+```
+
+[计算用户8月每天的练题数量_牛客题霸_牛客网 (nowcoder.com)](https://www.nowcoder.com/practice/847373e2fe8d47b4a2c294bdb5bda8b6?tpId=199&tags=&title=&difficulty=0&judgeStatus=0&rp=0&sourceUrl=https%3A%2F%2Fwww.nowcoder.com%2Fexam%2Foj%3Fpage%3D1%26tab%3DSQL%E7%AF%87%26topicId%3D199)
+
+```mysql
+# day() 取出日期的天数 如 2021-08-09 取出 9
+# month() 取出日期的月份
+# year() 取出日期的年份
+select
+    day(qpd.date),
+    count(*) as question_cnt
+from question_practice_detail as qpd
+where month(qpd.date) = 8
+group by qpd.date
+```
+
+# JDBC
+
+定义了操纵所有关系型数据库的规则。
+
+JDBC 本质：其实是官方（sun 公司）定义的一套操作所有关系型数据库的规则，即接口。各个数据库厂商去实现这套接口，提供数据库驱动 jar 包。我们可以使用这套接口（JDBC）编程，真正执行的代码是驱动 jar 包中的实现类。
+
+## 操作流程
+
+- 导入驱动 jar 包 `mysql-connector-java-5.1.37-bin.jar`
+- 注册驱动 `Class.forName("com.mysql.jdbc.Driver")`
+- 获取数据库连接对象 Connection 
+  - `DriverManager.getConnection("jdbc:mysql://localhost:3306/jdbc_demo","root","root");`
+- 定义 sql
+- 获取执行 sql 语句的对象 Statement
+- 执行 sql，接受返回结果
+- 处理结果
+- 释放资源
+
+```java
+public static void main(String []agrs){
+    //1. 导入驱动jar包
+    //2.注册驱动
+    Class.forName("com.mysql.jdbc.Driver");
+    //3.获取数据库连接对象
+    Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/db3", "root", "root");
+    //4.定义sql语句
+    String sql = "update account set balance = 500 where id = 1";
+    //5.获取执行sql的对象 Statement
+    Statement stmt = conn.createStatement();
+    //6.执行sql
+    int count = stmt.executeUpdate(sql);
+    //7.处理结果
+    System.out.println(count);
+    //8.释放资源
+    stmt.close();
+    conn.close();
+}
+```
+
+## 重要API
+
+> <b>DriverManager 是驱动管理对象</b>
+
+- 注册驱动：告诉程序该使用哪一个数据库驱动 jar
+- static void registerDriver(Driver driver)：注册给定的驱动程序 DriverManager。
+- 写代码使用：Class.forName("com.mysql.jdbc.Driver");
+- 通过查看源码发现：在 com.mysql.jdbc.Driver 类中存在静态代码块，会自动注册 Driver。
+
+
+```java
+static {
+    try {
+        java.sql.DriverManager.registerDriver(new Driver());
+    } catch (SQLException E) {
+        throw new RuntimeException("Can't register driver!");
+    }
+}
+```
+
+<span style="color:blue">注意：MySQL5 之后的驱动 jar 包可以省略注册驱动的步骤，建立数据库连接时会判断是否加载了驱动，没加载则会进行加载。</span>
+
+> <b>获取数据库连接 Connection</b>
+
+- 方法 `static Connection getConnection(String url, String user, String password) `
+- 语法：jdbc:mysql://ip地址:端口号/数据库名称
+- 例子：<b>jdbc:mysql://localhost:3306/db3</b>
+- 细节：如果连接的是本机 mysql 服务器，并且 mysql 服务默认端口是 3306，则 url 可以简写为：jdbc:mysql:///数据库名称
+
+> <b>Connection 是数据库连接对象</b>
+
+- 获取执行 sql 的对象
+  - `Statement createStatement()`会有 SQL 注入
+  - `PreparedStatement prepareStatement(String sql)  ` 推荐这个，安全！
+- 管理事务
+  - 开启事务：`setAutoCommit(boolean autoCommit) `：调用该方法设置参数为 false，即开启事务
+  - 提交事务：`commit() `
+  - 回滚事务：`rollback() `
+
+> <b>Statement 是执行 sql 的对象</b>
+
+- boolean execute(String sql) ：可以执行任意的 sql 了解 
+- `int executeUpdate(String sql)：执行DML（insert、update、delete）语句、DDL(create，alter、drop)语句`
+- 返回值：影响的行数，可以通过这个影响的行数判断 DML 语句是否执行成功，`返回值 >0` 的则执行成功，反之，则失败。
+- ResultSet executeQuery(String sql)  ：执行 DQL(select) 语句
+
+> <b>ResultSet 是结果集对象，用于封装查询结果</b>
+
+```java
+public static void resuleDemo(){
+    while(rs.next()){
+        //获取数据
+        //6.2 获取数据
+        int id = rs.getInt(1);
+        String name = rs.getString("name");
+        double balance = rs.getDouble(3);
+
+        System.out.println(id + "---" + name + "---" + balance);
+    }
+}
+/**
+ 1. int：代表列的编号,从1开始   如： getXXX(1)
+ 2. String：代表列名称。 如： getXXX("balance")
+ 3. XXX表示数据类型
+*/
+```
+
+> <b>PreparedStatement 是执行 sql 的对象</b>
+
+- SQL 注入问题：在拼接 sql 时，有一些 sql 的特殊关键字参与字符串的拼接。会造成安全性问题。
+  - 输入用户随便，输入密码：a' or 'a' = 'a
+  - `select * from user where username = 'fhdsjkf' and password = 'a' or 'a' = 'a' `
+- 解决 sql 注入问题：使用 PreparedStatement 对象来解决
+
+## 控制事务
+
+操作：开启事务，提交事务，回滚事务。JDBC 中使用 Connection 对象来管理事务
+
+| 操作     | API                               | 说明                                                         |
+| -------- | --------------------------------- | ------------------------------------------------------------ |
+| 开启事务 | setAutoCommit(boolean autoCommit) | 调用该方法设置参数为 false，即开启事务<br>在执行 sql 之前开启事务 |
+| 提交事务 | commit()                          | 当所有 sql 都执行完提交事务                                  |
+| 回滚事务 | rollback()                        | 在 catch 中回滚事务                                          |
+
+```java
+public class JDBCDemo10 {
+    public static void main(String[] args) {
+        Connection conn = null;
+        PreparedStatement pstmt1 = null;
+        PreparedStatement pstmt2 = null;
+        try {
+            conn = JDBCUtils.getConnection();
+            conn.setAutoCommit(false);
+            //2.1 张三 - 500
+            String sql1 = "update account set balance = balance - ? where id = ?";
+            //2.2 李四 + 500
+            String sql2 = "update account set balance = balance + ? where id = ?";
+            //3.获取执行sql对象
+            pstmt1 = conn.prepareStatement(sql1);
+            pstmt2 = conn.prepareStatement(sql2);
+            //4. 设置参数
+            pstmt1.setDouble(1,500);
+            pstmt1.setInt(2,1);
+
+            pstmt2.setDouble(1,500);
+            pstmt2.setInt(2,2);
+            //5.执行sql
+            pstmt1.executeUpdate();
+            // 手动制造异常
+            int i = 3/0;
+            pstmt2.executeUpdate();
+            // 正常执行则提交事务
+            conn.commit();
+        } catch (Exception e) {
+            // 出现异常则事务回滚
+            try {
+                if(conn != null) {
+                    conn.rollback();
+                }
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+            e.printStackTrace();
+        }finally {
+            JDBCUtils.close(pstmt1,conn);
+            JDBCUtils.close(pstmt2,null);
+        }
+    }
+}
+```
+
+## Spring-JDBC
+
+> <b>Spring-JDBC 是 Spring 框架对 JDBC 的简单封装。提供了一个 JDBCTemplate 对象简化 JDBC 的开发</b>
+
+1️⃣导入 jar 包
+
+2️⃣创建 JdbcTemplate 对象。依赖于数据源 DataSource
+
+- `JdbcTemplate template = new JdbcTemplate(ds);`
+
+3️⃣调用 JdbcTemplate 的方法来完成 CRUD 的操作
+
+| JdbcTemplate API | 说明                                                         | 注意                                                         |
+| ---------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| update()         | 执行 DML 语句。增、删、改语句                                |                                                              |
+| queryForMap()    | 查询结果将结果集封装为 map 集合，将列名作为 key，<br>将值作为 value 将这条记录封装为一个 map 集合 | 这个方法查询的结果集长度只能是 1。                           |
+| queryForList()   | 查询结果将结果集封装为 list 集合                             | 将每一条记录封装为一个 Map 集合，再将 Map 集合装载到 List 集合中 |
+| query()          | 查询结果，将结果封装为 JavaBean 对象                         | query 的参数：RowMapper<br>一般我们使用 BeanPropertyRowMapper 实现类。可以完成数据到 JavaBean 的自动封装<br>new BeanPropertyRowMapper<类型>(类型.class) |
+| queryForObject   | 查询结果，将结果封装为对象                                   | 一般用于聚合函数的查询                                       |
+
+```java
+import com.alibaba.druid.pool.DruidDataSourceFactory;
+import com.bbxx.nature.Student;
+import org.junit.Assert;
+import org.junit.Test;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+
+import javax.sql.DataSource;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+/**
+ * Spring的jdbc模板操作
+ * 需要依赖一个数据源
+ */
+public class SprintJDBCTemplate {
+    public static JdbcTemplate jdbcTemplate = new JdbcTemplate(DataSourceUtils.getDataSource());
+
+    @Test
+    public void updateDemo() {
+        int update = jdbcTemplate.update("update student set name='xxx' where id=4");
+        Assert.assertEquals(1, update);
+    }
+
+    @Test
+    public void insertDemo() {
+        int update = jdbcTemplate.update("insert into student(name,phone,address) values(?,?,?)", "liuj", "11112312", "aor you kou");
+        Assert.assertEquals(1, update);
+    }
+
+    @Test
+    public void deleteDemo() {
+        int liuj = jdbcTemplate.update("delete from student where name=?", "liuj");
+        Assert.assertEquals(1, liuj);
+    }
+
+    @Test
+    /**
+     * 只能是单个数据。封装为map集合。key为字段名，value为字段值
+     */
+    public void querySingleForMap() {
+        Map<String, Object> map = jdbcTemplate.queryForMap("select * from student where id=?", 4);
+        System.out.println(map.keySet().size());
+    }
+
+    @Test
+    /**
+     * 多条结果集
+     * 每天结果都封装为map
+     */
+    public void queryListMap() {
+        List<Map<String, Object>> maps = jdbcTemplate.queryForList("select * from student");
+        maps.stream().forEach(System.out::println);
+    }
+
+
+    @Test
+    public void queryList() {
+        String sql = "select * from student";
+        List<Student> query = jdbcTemplate.query(sql, new RowMapper<Student>() {
+            @Override
+            public Student mapRow(ResultSet resultSet, int i) throws SQLException {
+                Student student = new Student();
+                student.setId(resultSet.getInt("id"));
+                student.setAddress(resultSet.getString("address"));
+                student.setPhone(resultSet.getString("phone"));
+                student.setName(resultSet.getString("name"));
+                return student;
+            }
+        });
+        
+         // 函数式编程
+        List<Student> query1 = jdbcTemplate.query(sql, (resultSet,i)->{
+            Student student = new Student();
+            student.setId(resultSet.getInt("id"));
+            student.setName(resultSet.getString("name"));
+            student.setPhone(resultSet.getString("phone"));
+            student.setAddress(resultSet.getString("address"));
+            return student;
+        });
+
+        query1.stream().forEach(s->{
+            System.out.println(s.getName()+s.getPhone());
+        });
+    }
+
+    @Test
+    /**
+     * String sql, RowMapper<T> rowMapper
+     * 也可以传这个BeanPropertyRowMapper 用反射进行映射。
+     */
+    public void queryList2(){
+        String sql = "select * from student";
+        List<Student> query = jdbcTemplate.query(sql, new BeanPropertyRowMapper<Student>(Student.class));;
+        query = 
+        query.stream().forEach(s->{System.out.println(s.getName());});
+    }
+    
+    @Test
+    // 聚合函数查询
+    public void queryForObject(){
+        String sql = "select count(1) from student";
+        Integer integer = jdbcTemplate.queryForObject(sql, int.class);
+        System.out.println(integer);
+    }
+}
+
+class DataSourceUtils {
+    private static DataSource dataSource = null;
+    private static Properties properties = null;
+
+    static {
+        properties = new Properties();
+        InputStream is = DataSourceUtils.class.getClassLoader().getResourceAsStream("druid.properties");
+        try {
+            properties.load(is);
+            dataSource = DruidDataSourceFactory.createDataSource(properties);
+            if (is != null) is.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static DataSource getDataSource() {
+        if (dataSource == null) {
+            DataSource dataSource = null;
+            try {
+                dataSource = DruidDataSourceFactory.createDataSource(properties);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return dataSource;
+        }
+        return dataSource;
+    }
+}
+```
+
+## 数据库连接池
+
+其实就是一个容器(集合)，存放数据库连接的容器。当系统初始化好后，容器被创建，容器中会申请一些连接对象，当用户来访问数据库时，从容器中获取连接对象，用户访问完之后，会将连接对象归还给容器。
+
+### 优点
+
+- 节约资源
+- 用户访问高效
+
+### 实现
+
+> <b>一般我们不去实现它，由数据库厂商来实现</b>
+
+标准接口：DataSource   javax.sql 包下的
+
+- 方法：
+  - 获取连接：getConnection()
+  - 归还连接：Connection.close()。如果连接对象 Connection 是从连接池中获取的，那么调用 Connection.close() 方法，则不会再关闭连接了。而是归还连接
+- 常用数据库连接池
+  - C3P0：数据库连接池技术
+  - Druid：数据库连接池实现技术，由阿里巴巴提供的
+
+#### C3P0
+
+- 导入 jar 包 `c3p0-0.9.5.2.jar` 与 `mchange-commons-java-0.2.12.jar`
+- 定义配置文件：
+  - c3p0.properties 或者 c3p0-config.xml
+  - 路径：直接将文件放在 src 目录下即可。
+- 创建核心对象，数据库连接池对象 ComboPooledDataSource
+- 获取连接：getConnection
+
+```xml
+<c3p0-config>
+    <default-config>
+        <property name="driverClass">com.mysql.jdbc.Driver</property>
+        <property name="jdbcUrl">jdbc:mysql://localhost:3306/jdbc_demo</property>
+        <property name="user">root</property>
+        <property name="password">root</property>
+
+        <property name="initialPoolSize"></property>
+        <property name="maxPoolSize">10</property>
+        <property name="maxStatements">0</property>
+    </default-config>
+</c3p0-config>
+```
+
+```java
+public class C3P0Demo {
+    private static ComboPooledDataSource dataSource = new ComboPooledDataSource();
+
+    public static void main(String[] args) throws SQLException {
+        Connection connection = dataSource.getConnection();
+        String sql = "select * from student";
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()){
+            System.err.println(resultSet.getString(1));
+        }
+    }
+}
+```
+
+#### Druid
+
+- 导入 jar 包 druid-1.0.9.jar
+- 定义配置文件：
+  - 是 properties 形式的
+  - 可以叫任意名称，可以放在任意目录下
+- 加载配置文件 Properties
+- 获取数据库连接池对象：通过工厂来来获取  DruidDataSourceFactory
+- 获取连接：getConnection
+
+```properties
+driverClassName=com.mysql.jdbc.Driver
+url=jdbc:mysql:///jdbc_demo
+username=root
+password=root
+initialSize=5
+maxActive=10
+maxWait=3000
+```
+
+```java
+public static void fn1(){
+    //3.加载配置文件
+    Properties pro = new Properties();
+    InputStream is = null;
+    // 这里是放在了src目录下
+    is = DruidDemo.class.getClassLoader().getResourceAsStream("druid.properties");
+    pro.load(is);
+    //4.获取连接池对象
+    DataSource ds = DruidDataSourceFactory.createDataSource(pro);
+    //5.获取连接
+    Connection conn = ds.getConnection();
+}
+```
