@@ -18,7 +18,7 @@ PyCharm 的所有操作与 IDEA 相同
 
 <div align="center"><img src="img/image-20220715231448887.png"></div>
 
-参考上图，method1 ⽅法调⽤ method2，当前断点的位置 j=100，点击上图红⾊箭头位置的 Drop Frame 图标后，时间穿越了回到了 method1 刚开始调用的时候，变量 i 变成了 99
+参考上图，method1 ⽅法调⽤ method2，当前断点的位置 j=100，点击上图红色箭头位置的 Drop Frame 图标后，时间穿越了回到了 method1 刚开始调用的时候，变量 i 变成了 99
 
 <div align="center"><img src="img/image-20220715231521196.png"></div>
 
@@ -149,7 +149,7 @@ A()
 
 如果这部分的操作比较复杂，我们可以设置条件断点查看这个 item 的具体操作细节，一步一步调试，看到底那个步骤出错的。
 
-![image-20220719192227725](C:\development\note\CodeNotes\Debug\img\image-20220719192227725.png)
+<div align="center"><img src="img/image-20220719192227725.png"></div>
 
 然后我们可以发现，是 kkx 这个字符串无法通过 split('.') 进行分割，所以报错。
 

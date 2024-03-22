@@ -7,7 +7,7 @@
 - unet 系列
 - mask r-cnn（实例分割）
 - yolo 系列
-- 基础模型：swin transformer、convnext、ViT
+- 基础模型：Swin Transformer、ConvNeXt、ViT
 
 # 单机分布式并行
 
@@ -19,7 +19,7 @@
 
 # PyTorch基本操作
 
-快速过一遍，有个大致的印象就行。
+快速过一遍，有个大致的印象就行。强烈推荐沐神的《动手学深度学习》！！！
 
 ## 矩阵操作
 
@@ -45,8 +45,6 @@ api 的基本使用方式为：
 | rand/randn(*sizes)                | 均匀/标准分布             |
 | normal(mean,std)/uniform(from,to) | 正态分布/均匀分布         |
 | randperm(m)                       | 随机排列列                |
-
-----
 
 ### 算术&矩阵运算
 

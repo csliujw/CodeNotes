@@ -96,8 +96,8 @@ Git Bash：Git 提供的命令行工具，提供了一些常见的 Linux 命令�
 - git config --global user.name "username" 如：`git config --global user.name "csxx"`
 - git config --global user.email "邮箱" 如：`git config --global user.email "12312331@qq.com"`
 - 查看配置信息
-    - git config --global user.name
-    - git config --global user.email
+    - `git config --global user.name`
+    - `git config --global user.email`
 
 除了 git config --global 外，还有其他的命令
 

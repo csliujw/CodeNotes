@@ -1879,7 +1879,7 @@ df['bin_label'] = pd.cut(df.Python, bins=[0,60,85,100], labels=list('中良优')
 
 ## 绘图
 
-Pandas 内部集成了 matplotlib 可以绘图，但是复杂的图还是用 matpotlib。以上面的代码为例，绘制成绩的柱状图
+Pandas 内部集成了 matplotlib 可以绘图，但是复杂的图还是用 matpotlib，简单了解下此处的绘图功能即可。以上面的代码为例，绘制成绩的柱状图。
 
 ```python
 df['bin_label'] = pd.cut(df.Python, bins=[0,60,85,100], labels=list('中良优'))

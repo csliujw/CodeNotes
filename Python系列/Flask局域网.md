@@ -7,7 +7,7 @@ flask 想要在局域网内可以访问需要：
   - `host=0.0.0.0` 表示局域网内都可以访问
   - `port=80` 是指定连接的端口
 
-- flask main 函数的代码请抱持一致
+- flask main 函数的代码请保持一致
 
   ```python
   if __name__ == '__main__':
