@@ -886,7 +886,7 @@ plt.show()
 
 ## 数据结构
 
-是基于 Numpy 的，用于数据分析，可用类似于 SQL 的方式对 csv tsv xlsx 等格式的数据进行处理和分析。Pandas 主要使用的数据结构为：Series 和 DataFrame 类
+Pandas 是基于 Numpy 的，用于数据分析，可对 csv tsv xlsx 等格式的数据进行处理和分析。Pandas 主要使用的数据结构为：Series 和 DataFrame 类
 
 Pandas 中常见的知识点如下
 
@@ -978,13 +978,13 @@ Series 可以通过<b>自定义的 index 获取数据</b>，也可以使用<b>�
 
 #### <b>索引</b>
 
-可以使用中括号取单个索引（此时返回的是元素类型），或者中括号里一个列表取多个索引（此时返回的仍然是一个Series类型）。分为显示索引和隐式索引
+可以使用中括号取单个索引（此时返回的是元素类型），或者中括号里一个列表取多个索引（此时返回的仍然是一个Series类型）。分为显示索引 [我们自定义的索引] 和隐式索引
 
 <b>(1) 显式索引</b>
 
 - 使用 index 中的元素作为索引值
 - 使用.loc[]（推荐，可以避免 pd 的 index（自定义的索引）和数组的索引冲突）
-- 如果企图使用数组默认索引访问数据请使用 `.iloc`
+- 如果企图使用数组默认索引访问数据请使用隐式索引 `.iloc`
 
 ```python
 s = pd.Series(np.arange(10,15),index=list('ABCDE'))
@@ -1091,12 +1091,12 @@ dtype: float64
 
 ## DataFrame⭐
 
-DataFrame 是一个【表格型】的数据结构，可以看做是【由 Series 组成的字典】（共用同一个索引）。DataFrame 由按一定顺序排列的多列数据组成。设计初衷是将 Series  的使用场景从一维拓展到多维。DataFrame 既有行索引，也有列索引。
+DataFrame 是一个【表格型】的数据结构，可以看做是【由 Series 组成的字典】（共用同一个索引）。DataFrame 由按一定顺序排列的多列数据组成。设计初衷是将 Series 的使用场景从一维拓展到多维。DataFrame 既有行索引，也有列索引。
 - 行索引：index
 - 列索引：columns
 - 值：values（NumPy 的二维数组）
 
-<b>注意：</b>DataFrame 是优先列的，更关心的是一列一列的数据，因此直接对 DataFrame 进行切片是默认是先对列做切片，再对行做切片；若希望像 numpy 一样操作需要使用 DataFrame 的 `iloc/loc` 方法。
+<b>注意：</b>DataFrame 是优先列的，更关心的是一列一列的数据，因此直接对 DataFrame 进行切片是<span style="color:blue">默认是先对列做切片</span>，再对行做切片；若希望像 numpy 一样操作需要使用 DataFrame 的 `iloc/loc` 方法。
 
 ### 创建
 
@@ -1117,7 +1117,10 @@ df = pd.DataFrame(my_dict)
 
 ```python
 # 3 行 5 列
-df2 = pd.DataFrame([[1,1,1,1,1],[2,2,2,2,2],[3,3,3,3,3]])
+df2 = pd.DataFrame(
+    [[1,1,1,1,1], # 行
+     [2,2,2,2,2], # 行
+     [3,3,3,3,3]])# 行
 df2.index=['A','B','C']
 df2.columns = ['Java','Python','C Plus Plus','C#','js']
 ```
@@ -1127,13 +1130,300 @@ df2.columns = ['Java','Python','C Plus Plus','C#','js']
 Pandas 列的新增和修改方式和字典新增/修改元素的方式一样
 
 ```python
-df2 = pd.DataFrame([[1,1,1,1,1],[2,2,2,2,2],[3,3,3,3,3]])
-df2.index=['A','B','C']
-df2.columns = ['Java','Python','C Plus Plus','C#','js']
+df2 = pd.DataFrame(
+    [[1,1,1,1,1], # 行
+     [2,2,2,2,2], # 行
+     [3,3,3,3,3]])# 行
+
+df2.index=['A', 'B', 'C']
+df2.columns = ['Java', 'Python', 'C Plus Plus', 'C#', 'js']
 
 # 有 Kotlin 这列则为修改，没有则为删除
 df2['Kotlin'] = [4,4,4]
+# OK
+df2['js'][df2['js']>2]=100
+# 但是不推荐，3.0 默认用 Copy-On-Write A typical example is when you are setting values in a column of a DataFrame, like:
+# df["col"][row_indexer] = value
 ```
+
+### Series中的_mgr
+
+DataFrame 是由 Series 组成的，Series 中的数据存储在哪里呢？存储在 `_mgr` 中，我们修改 Series 时，其实修改的是 `_mgr`。知道了这个，我们再来看 CoW 技术。
+
+### Copy-On-Write
+
+关于直接使用 DataFrame 切片修改元素的问题
+
+- 官方文档：在 Copy-On-Write 模式下，这种是无法修改原视图的
+
+Copy-On-Write：在我尝试修改数组的时候，我会先复制一份副本，然后修改副本，并不会修改原视图。
+
+#### Java中的CoW
+
+Java 中 Copy-On-Write 的典型实现
+
+```java
+public boolean add(E e) {
+    synchronized (lock) {
+        Object[] es = getArray();
+        int len = es.length;
+        es = Arrays.copyOf(es, len + 1); // 复制一份数据
+        es[len] = e;	// 在副本上做修改
+        setArray(es);	// 让数组的指针指向新的副本
+        return true;
+    }
+}
+```
+
+#### 体验Pandas中的CoW
+
+Pandas 中的 copy_on_write 也是类似的，在副本上做修改，不会改变原视图，我们可以写代码验证下这点。
+
+1️⃣给定一个 list，我们向里面插入元素，然后比较插入元素前后 list 的地址，地址都是一样的
+
+```python
+l = [1,2,3]
+print(id(l))    # 0528
+l.insert(0,100)
+# l.append(22)
+print(id(l))    # 0528
+```
+
+2️⃣给定一个 Pandas#DataFrame，不开启 CoW，我们修改里面的元素，然后比较被修改的列的地址.
+
+- 测试直接切片赋值（使用 pandas 3.0 以下的版本，还支持切片修改原数据）
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({'js': [50, 80, 90], 'python': [90, 80, 99]})
+
+print(id(df['js']))  # 7584
+df['js'][df['js'] < 60] = 60
+print(id(df['js']))  # 7584
+```
+
+- 我们开启 `mode.copy_on_write` 再次进行测试发现无法更改
+
+```python
+import pandas as pd
+
+df = pd.DataFrame({'js': [50, 80, 90], 'python': [90, 80, 99]})
+
+df['js'][df['js'] < 60] = 60
+```
+
+#### 理解CoW（1）
+
+我们先了解下 CoW 模式和非 CoW 模式下访问 DataFrame 中的列是什么样的调用情况
+
+1️⃣我们先看一个未开启 CoW 的代码 `df['js'] is df['js']` 每次都是返回 True，我们 debug 看看为什么每次都是 True
+
+```python
+import pandas as pd
+
+# 开启 Copy-On-Write 技术
+# pd.options.mode.copy_on_write = True
+
+df = pd.DataFrame({'js': [50, 80, 90], 'python': [90, 80, 99]})
+# print(df['js'] is df['js'])  # True 每次返回的都是相同的对象
+
+data = df['js']
+data = df['js']
+```
+
+调用流程如下
+
+```python
+"""
+data = df['js']  
+    ==> 调用 __getitem__ 方法
+        ==> _get_item_cache(key)，如果没有使用 CoW，就走 _ixs + cache[item] = res
+            ==> _ixs 走 _mgr.iget(i) 用于获取一个新的 mgr
+                ==> _mgr.iget()
+                    ==> block = self.blocks[self.blknos[1]] 用于获取原始数据的
+                    ==> 然后将数据包装成一个新的 mgr
+                ==> _box_col_values(col_mgr, i)，将 mgr 包装成一个 Series
+                    ==> _box_col_values 走 _constructor_sliced_from_mgr
+                    ==> _constructor_sliced_from_mgr 走 _sliced_from_mgr 生成一个新的 Series
+            ==> cache[item] = res 缓存这个新的 Series
+            
+    ==> 再次调用 __getitem__ 方法
+        ==> res = cache.get(item) 中能查到，返回的都是相同的 Series 了
+        
+总结：
+    第一次获取 Series 时，会根据原始数据生成 mgr ==> Series, 然后缓存这个 Series
+    后面获取时都是从缓存中获取了，mgr 中的 self.blocks 中保存了最原始的 NumpyBlock
+"""
+```
+
+从上面的调用流程可以看出来，如果未开启 CoW 则第一次访问时会缓存，后面访问会直接读取缓存中的 Series，因此每次返回的都是一个同一个 Series 对象。
+
+2️⃣开启 CoW 的代码 `df['js'] is df['js']` 每次都是返回 False，我们 debug 看看为什么每次都是 False
+
+```python
+import pandas as pd
+
+# 开启 Copy-On-Write 技术
+pd.options.mode.copy_on_write = True
+
+df = pd.DataFrame({'js': [50, 80, 90], 'python': [90, 80, 99]})
+# print(df['js'] is df['js'])  # False, 每次返回的都是不同的对象
+data1 = df['js']
+data2 = df['js']
+print(id(data1) == id(data2))  # False
+print(id(data1._mgr) == id(data2._mgr))  # False
+print(id(df['js']) == id(df['js']))  # False
+
+# debug 走是 False, 正常运行 True
+print(id(df['js']._mgr) == id(df['js']._mgr))
+
+
+for item in range(5):
+    # 用变量接收每次的地址都是不一样的
+    # 直接输出，地址有时候可能一样
+    d = df['js']
+    print(id(d))
+```
+
+调用流程
+
+```python
+"""
+data = df['js']  
+    ==> 调用 __getitem__ 方法
+        ==> _get_item_cache(key)，如果使用了 CoW，就不走 cache 了
+            ==> 走 _ixs 方法
+                ==> 走 _mgr.iget(i) 获取一个新的 mgr
+                    ==> iget 从 block 中拿数据，然后返回一个 BlockPlacement 对象
+                    ==> BlockPlacement 对象被包装成 SingleBlockManager
+                    ==> 返回一个新的 mgr（每次都是返回新的 mgr）
+                ==> 走 _box_col_values(col_mgr, i) 将 mgr 包装成一个新的 Series
+                    ==> _box_col_values 走 _constructor_sliced_from_mgr
+                        ==> _constructor_sliced_from_mgr 走 _sliced_from_mgr 生成一个新的 Series
+        ==> 每次都是返回新的 Series
+"""
+```
+
+从上面的调用流程可以看出来，如果开启 CoW 则每次访问都会创建一个新的 Series
+
+#### 理解CoW（2）
+
+我们再了解下 CoW 模式和非 CoW 模式下修改 DataFrame 中的列数据是什么样的情况
+
+1️⃣非 CoW 模式修改数据，修改的是 `_mgr`，series 共享 `_mgr` 因此能被感知到
+
+```python
+import pandas as pd
+
+# 开启 Copy-On-Write 技术
+# pd.options.mode.copy_on_write = True
+
+df = pd.DataFrame({'js': [50, 80, 90], 'python': [90, 80, 99]})
+data = df['js']
+data[0] = 500
+# print(id(data._mgr))  # 一样的地址
+print(df['js'][0])
+# print(id(df['js']._mgr))  # 一样的地址
+```
+
+调用流程
+
+```python
+"""
+data[0] = 500  
+    ==> 调用 __setitem__ 方法
+        ==> 没有使用 CoW， 所以走 sys.getrefcount(self) 这块不用管做什么的，和主线任务无关
+        ==> 走 _set_with_engine(key, value, warn=warn)
+            ==> 走 _mgr.setitem_inplace(loc, value, warn=warn)
+                ==> 走 setitem_inplace 直接修改的 ndarray 中对应 index 中的值
+                ==> _mgr 修改成功
+        ==> _maybe_update_cacher(inplace=True) 更新 cache
+            ==> _maybe_cache_changed(cacher[0], self, inplace=inplace) 需要修改 js 的 cache
+                ==> × _ixs(loc, axis=1) ==> 这部分的代码未使用到，只是执行了
+                    ==> _box_col_values(col_mgr, i) 创建一个新的 Series，但是是共享的 _mgr
+                    ==> result._set_as_cached(label, self) 这是一个缓存的值，将其标记为已缓存
+                ==> _mgr.iset(loc, arraylike, inplace=inplace)
+        
+    ==> df['js'][0]
+        ==> 调用 __getitem__ 方法
+            ==> 从 cache 中获取的数据，cache 中的 Series 是共享的 _mgr
+            ==> 由于 data[0] = 500 的过程中修改了 _mgr 所以 cache 中可以感知到值修改了
+"""
+```
+
+2️⃣CoW 模式修改数据
+
+```python
+import pandas as pd
+
+# 开启 Copy-On-Write 技术
+pd.options.mode.copy_on_write = True
+
+df = pd.DataFrame({'js': [50, 80, 90], 'python': [90, 80, 99]})
+data = df['js']
+data[0] = 500
+print(df['js'][0])
+```
+
+调用流程
+
+```python
+"""
+data[0] = 500  
+    ==> 调用 __setitem__ 方法
+        ==> 使用 CoW， 所以走一下 warnings
+        ==> 走 _set_with_engine(key, value, warn=warn)
+            ==> 走 _mgr.setitem_inplace(loc, value, warn=warn)
+                ==> 走 setitem_inplace，由于启用了 CoW，因此走了一个复制的代码
+                    ==> self.blocks = self._block.copy(), 确保 self.blocks 中的是旧数据
+                    ==> 清除了 _cache.clear()
+                    ==> 修改原始的 _mgr,修改成功
+        
+    ==> df['js'][0]
+        ==> 调用 __getitem__ 方法
+            ==> 尝试从 _get_item_cache 获取，发现使用了 CoW，没从缓存中拿
+            ==> _ixs(loc, axis=1)
+                ==> _mgr.iget(i) 从 blocks 中拿数据，blocks 中存储的旧数据
+                ==> _box_col_values 得到一个新的 Series
+        ==> 所以拿到的是旧数据
+    
+    ==> 在更改过程中确保了 self.blocks 中的是旧数据
+"""
+```
+
+#### 理解CoW（3）
+
+- 为了深入理解 Pandas 中的 CoW 机制，我们调试下列代码进行观察
+
+```python
+import pandas as pd
+
+# 开启 Copy-On-Write 技术
+pd.options.mode.copy_on_write = True
+
+df = pd.DataFrame({'js': [50, 80, 90], 'python': [90, 80, 99]})
+# print(df['js'] is df['js'])  # False, 每次返回的都是不同的对象
+data = df['js']  # 每次返回的都是一个全新的对象
+bool_slice = [True,True,False]
+
+data[bool_slice] = 60   # generic.py 10747 行 if inplace: 原地更新的，实际上是更换了 series 的 _mgr，series 对象没有改变，只是存储值的 _mgr 变了
+
+"""
+generic.py 10747 行
+        if inplace:
+            # we may have different type blocks come out of putmask, so
+            # reconstruct the block manager
+            # 尝试将新值复制过去
+            new_data = self._mgr.putmask(mask=cond, new=other, align=align, warn=warn)
+            result = self._constructor_from_mgr(new_data, axes=new_data.axes)
+            return self._update_inplace(result) # 更新的数据
+            
+            _update_inplace() 中的 self._mgr = result._mgr 更改的数据
+"""
+```
+
+Pandas 官方推荐：Try using `.loc[row_indexer, col_indexer] = value` instead, to perform the assignment in a single step.
 
 ### 属性&方法
 
@@ -1165,8 +1455,6 @@ df.语言.map(lambda x: x.strip()+'_1')
 """
 ```
 
-
-
 ### 索引&切片
 
 DataFrame 取数据的方式与 numpy 略有不同，直接利用 DataFrame 取元素时，<b style="color:red">DataFrame 优先取列索引</b>
@@ -1174,10 +1462,10 @@ DataFrame 取数据的方式与 numpy 略有不同，直接利用 DataFrame 取�
 数据准备
 
 ```python
-data = np.random.randint(low=60,high=90,size=(5,5))
+data = np.random.randint(low=60, high=90, size=(5,5))
 df = pd.DataFrame(data)
-df.index=['A','B','C','D','E']
-df.columns = ['Java','Python','C Plus Plus','C#','js']
+df.index=['A', 'B', 'C', 'D', 'E']
+df.columns = ['Java', 'Python', 'C Plus Plus', 'C#', 'js']
 ```
 
 #### 索引
@@ -1537,7 +1825,7 @@ pd.merge(df1, df2,on='id',how='outer')
    - 如果多个列相同，合并之后可以通过 suffixes 来区分.
    - 还可以通过 how 来控制合并的结果，默认是内合并，还有外合并 outer，左合并 left，右合并 right.
 
-## 缺失值处理-
+## 缺失值处理
 
 一般有两种空值：None 和 np.nan
 
