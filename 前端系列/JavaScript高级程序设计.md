@@ -10,16 +10,21 @@
 
 <b>JS 发展历史</b>
 
-- 1994 年，网景公司（Netscape）发布了 Navigator 浏览器 0.9 版，这是世界上第一款比较成熟的网络浏览器，轰动一时。但是这是一款名副其实的浏览器只能浏览页面，浏览器无法与用户互动，当时解决这个问题有两个办法，一个是采用现有的语言，允许它们直接嵌入网页。另一个是发明一种全新的语言。
-  liveScript ==> JavaScript ==> ECMAscript
-- 1995 年 Sun 公司将  Oak语言改名为 Java，正式向市场推出。Sun 公司大肆宣传，许诺这种语言可以"一次编写，到处运行"（Write Once, Run Anywhere），它看上去很可能成为未来的主宰。
-- 网景公司动了心，决定与 Sun 公司结成联盟
-- 34 岁的系统程序员 Brendan Eich 登场了。1995 年 4 月，网景公司录用了他，他只用 10 天时间就把 JavaScript 设计出来了。（多态语言）
-- JS 的设计理念
-  - 借鉴 C 语言的基本语法; 
-  - 借鉴 Java 语言的数据类型和内存管理; 
-  - 借鉴 Scheme 语言，将函数提升到"第一等公民"（first class）的地位;
-  - 借鉴 Self 语言，使用基于原型（prototype）的继承机制。
+1994 年，网景公司（Netscape）发布了 Navigator 浏览器 0.9 版，这是世界上第一款比较成熟的网络浏览器，轰动一时。但是这是一款名副其实的浏览器只能浏览页面，浏览器无法与用户互动，当时解决这个问题有两个办法，一个是采用现有的语言，允许它们直接嵌入网页。另一个是发明一种全新的语言。
+liveScript ==> JavaScript ==> ECMAscript
+
+1995 年 Sun 公司将  Oak语言改名为 Java，正式向市场推出。Sun 公司大肆宣传，许诺这种语言可以"一次编写，到处运行"（Write Once, Run Anywhere），它看上去很可能成为未来的主宰。
+
+网景公司动了心，决定与 Sun 公司结成联盟
+
+34 岁的系统程序员 Brendan Eich 登场了。1995 年 4 月，网景公司录用了他，他只用 10 天时间就把 JavaScript 设计出来了（多态语言）
+
+<b>JS 的设计理念</b>
+
+- 借鉴 C 语言的基本语法; 
+- 借鉴 Java 语言的数据类型和内存管理; 
+- 借鉴 Scheme 语言，将函数提升到"第一等公民"（first class）的地位;
+- 借鉴 Self 语言，使用基于原型（prototype）的继承机制。
 
 <b>JS 的作用</b>
 
@@ -66,10 +71,10 @@
 ```html
 <!-- 在 html 页面书写一个 script 标签，标签内部书写 js 代码 -->
 <script type="text/JavaScript">
-	alert('我是一个弹出层')
+    alert('我是一个弹出层')
 </script>
 <!-- 
-	注：script 标签可以放在 head 里面也可以放在 body 里面
+注：script 标签可以放在 head 里面也可以放在 body 里面
 -->
 ```
 
@@ -1781,8 +1786,6 @@ let myString = JSON.stringify(myObj);
 let obb = JSON.parse(myString)
 ```
 
-
-
 ## 数组
 
 JS 中的数组可以存储不同类型的数据。
@@ -2265,7 +2268,11 @@ BOM（Browser Object Model）浏览器对象模型，其实就是操作浏览器
 - BOM 的核心就是 window 对象
 - window 是浏览器内置的一个对象，里面包含着操作浏览器的方法
 
-BOM 常用的对象有 navigator、location、history、screen
+BOM 常用的对象有 navigator、location、history、screen。
+
+<b>如何学习和使用 BOM？</b>
+
+先过一遍 BOM 相关的内容，有个印象；后面如果想实现某些功能可以问 GPT，问他用那些 API，然后自己编码写主要的逻辑。
 
 ### 获取浏览器窗口的尺寸
 
@@ -2321,7 +2328,7 @@ window.location.href = 'https://www.naidu.com';
 window.location.reload()
 ```
 
-注意：不要写在全局，不然浏览器就会一直处在刷新状态
+注意：不要写在全局，不然浏览器就会一直处在刷新状态。
 
 ### 浏览器的历史记录-history
 
@@ -2347,7 +2354,7 @@ window 中有一个对象叫做 `navigator`，是专门用来获取浏览器信�
 
 ### 浏览器的 onload 事件
 
-这个不在是对象了，而是一个事件，是在页面所有资源加载完毕后执行的
+onload 事件是在页面所有资源加载完毕后执行的。
 
 ```js
 window.onload = function () {
@@ -2400,6 +2407,10 @@ window.onload = function () {
 </html>
 ```
 
+window.load 可以用于加载一些需要页面所有资源加载完毕后再进行操作的场景；例如，一些图表库或 UI 组件库需要在 DOM 结构完全就绪后才能绑定并正常工作。
+
+不过，更推荐使用 `document.addEventListener('DOMContentLoaded', callback)`来替代 `window.onload`，因为前者在 DOM 结构加载完成后就会触发，而不必等待所有资源加载完成，更能提高用户体验。
+
 ### 浏览器的 onscroll 事件
 
 这个 onscroll 事件是当浏览器的滚动条滚动的时候触发，或者鼠标滚轮滚动的时候出发
@@ -2425,160 +2436,107 @@ window.onscroll = function () {
 
 #### scrollTop
 
-- 获取的是页面向上滚动的距离
+scrollTop 用于获取的是页面向上滚动的距离，一共有两个获取方式
 
-- 一共有两个获取方式
+| 方法                               | IE                          | Chrome & Firefox    |
+| ---------------------------------- | --------------------------- | ------------------- |
+| document.body.scrollTop            | 没有 `DOCTYPE` 声明用谁都行 | 没有 `DOCTYPE` 声明 |
+| document.documentElement.scrollTop | 有 `DOCTYPE` 声明用它       | 有 `DOCTYPE` 声明   |
 
-  - `document.body.scrollTop`
-  - `document.documentElement.scrollTop`
+Safari 一枝独秀，用 `window.pageYOffset`
 
-  ```javascript
-  window.onscroll = function () {
+```javascript
+window.onscroll = function () {
     console.log(document.body.scrollTop)
     console.log(document.documentElement.scrollTop)
-  }
-  ```
-
-  - 两个都是获取页面向上滚动的距离
-  - 区别：
-    - IE 浏览器
-      - 没有 `DOCTYPE` 声明的时候，用这两个都行
-      - 有 `DOCTYPE` 声明的时候，只能用 `document.documentElement.scrollTop`
-    - Chrome 和 FireFox
-      - 没有 `DOCTYPE` 声明的时候，用 `document.body.scrollTop`
-      - 有 `DOCTYPE` 声明的时候，用 `document.documentElement.scrollTop`
-    - Safari
-      - 两个都不用，使用一个单独的方法 `window.pageYOffset `
+}
+```
 
 #### scrollLeft
 
-- 获取页面向左滚动的距离
+获取页面向左滚动的距离，也是两个方法
 
-- 也是两个方法
+| 方法                         | 说明              |
+| ---------------------------- | ----------------- |
+| document.body.scrollLeft     | 和 scrollTop 一致 |
+| document.documentElementLeft | 和 scrollTop 一致 |
 
-  - `document.body.scrollLeft`
-
-  - `document.documentElementLeft`
-
-    ```javascript
-    window.onscroll = function () {
-      console.log(document.body.scrollLeft)
-      console.log(document.documentElement.scrollLeft)
-    }
-    ```
-
-  - 两个之间的区别和之前的 `scrollTop` 一样
+```javascript
+window.onscroll = function () {
+    console.log(document.body.scrollLeft)
+    console.log(document.documentElement.scrollLeft)
+}
+```
 
 ### 定时器
 
+#### 使用定时器
+
 在 js 里面，有两种定时器，倒计时定时器和间隔定时器
 
-#### 倒计时定时器
+| 定时器                 | 说明                                   |
+| ---------------------- | -------------------------------------- |
+| setTimeout(fun, time)  | 倒计时多少时间以后执行函数，只执行一次 |
+| setInterval(fun, time) | 每间隔多少时间就执行一次函数           |
 
-- 倒计时多少时间以后执行函数
+<b>倒计时定时器</b>
 
-- 语法：`setTimeout(要执行的函数，多长时间以后执行)`
+倒计时多少时间以后执行函数，会在你设定的时间以后，执行函数
 
-- 会在你设定的时间以后，执行函数
+```javascript
+let timerId = setTimeout(()=>{ console.log("executor") }, 3000);
+```
 
-  ```javascript
-  var timerId = setTimeout(function () {
-    console.log('我执行了')
-  }, 1000)
-  console.log(timerId) // 1
-  ```
+- 时间是按照毫秒进行计算的，1000 毫秒就是 1秒钟
+- 所以会在页面打开 1 秒钟以后执行函数
+- 只执行一次，就不在执行了
+- 返回值是，当前这个定时器是页面中的第几个定时器
 
-  - 时间是按照毫秒进行计算的，1000 毫秒就是 1秒钟
-  - 所以会在页面打开 1 秒钟以后执行函数
-  - 只执行一次，就不在执行了
-  - 返回值是，当前这个定时器是页面中的第几个定时器
+<b>间隔定时器</b>
 
-#### 间隔定时器
+每间隔多少时间就执行一次函数
 
-- 每间隔多少时间就执行一次函数
+```javascript
+let timerId = setInterval(()=>{ console.log('我饿了！') }, 1000);
+```
 
-- 语法：`setInterval(要执行的函数，间隔多少时间)`
+- 时间和刚才一样，是按照毫秒进行计算的
+- 每间隔 1 秒钟执行一次函数
+- 只要不关闭，会一直执行
+- 返回值是，当前这个定时器是页面中的第几个定时器
 
-  ```javascript
-  var timerId = setInterval(function () {
-    console.log('我执行了')
-  }, 1000)
-  ```
+<b>定时器的返回值</b>
 
-  - 时间和刚才一样，是按照毫秒进行计算的
-  - 每间隔 1 秒钟执行一次函数
-  - 只要不关闭，会一直执行
-  - 返回值是，当前这个定时器是页面中的第几个定时器
-
-#### 定时器的返回值
-
-- 设置定时器的时候，他的返回值是部分 `setTimeout` 和 `setInterval` 的
-
-- 只要有一个定时器，那么就是一个数字
-
-  ```javascript
-  var timerId = setTimeout(function () {
-    console.log('倒计时定时器')
-  }, 1000)
-  
-  var timerId2 = setInterval(function () {
-    console.log('间隔定时器')
-  }, 1000)
-  
-  console.log(timerId) // 1
-  console.log(timerId2) // 2
-  ```
+设置定时器的时候，他们的返回值是一个数字。
 
 #### 关闭定时器
 
-- 我们刚才提到过一个 timerId，是表示这个定时器是页面上的第几个定时器
+定时器的返回值 timerId 是表示这个定时器是页面上的第几个定时器，这个 timerId 就是用来关闭定时器的数字
 
-- 这个 timerId 就是用来关闭定时器的数字
+我们有两个方法来关闭定时器 `clearTimeout` 和 `clearInterval`
 
-- 我们有两个方法来关闭定时器 `clearTimeout` 和 `clearInterval`
+```javascript
+let timerId = setTimeout(()=>{ console.log("executor") }, 3000);
+clearTimeout(timerId)
+```
 
-  ```javascript
-  var timerId = setTimeout(function () {
-    console.log('倒计时定时器')
-  }, 1000)
-  clearTimeout(timerId)
-  ```
+关闭以后，定时器就不会在执行了
 
-  - 关闭以后，定时器就不会在执行了
+```javascript
+let timerId = setInterval(()=>{ console.log('我饿了！') }, 1000);
+clearInterval(timerId2)
+```
 
-  ```javascript
-  var timerId2 = setInterval(function () {
-    console.log('间隔定时器')
-  }, 1000)
-  coearInterval(timerId2)
-  ```
+<b>原则上</b> 
 
-  - 关闭以后定时器就不会在执行了
+- `clearTimeout` 关闭 `setTimeout`
+- `clearInterval` 关闭 `setInterval`
 
-- 原则上是 
-
-  - `clearTimeout` 关闭 `setTimeout`
-  - `clearInterval` 关闭 `setInterval`
-
-- 但是其实是可以通用的，他们可以混着使用
-
-  ```javascript
-  var timerId = setTimeout(function () {
-    console.log('倒计时定时器')
-  }, 1000)
-  // 关闭倒计时定时器
-  clearInterval(timerId)
-  
-  var timerId2 = setInterval(function () {
-    console.log('间隔定时器')
-  }, 1000)
-  // 关闭间隔定时器
-  clearTimeout(timerId2)
-  ```
+但是其实是可以通用的，他们可以混着使用
 
 ### 浏览器页面自动滚动
 
-点击页面，单击时页面开始滚动，再次单击时停止滚动。
+需求：实现类似于微信读书中自动阅读的功能，点击页面时，页面开始滚动，再次单击时停止滚动。
 
 ```js
 let scrollAmount = 1; // 每次滚动的像素数
@@ -2615,11 +2573,10 @@ DOM（Document Object Model）文档对象模型，其实就是操作 html 中�
 - 给元素添加一些 css 样式
 - ...
 
-- DOM 的核心对象就是 docuemnt 对象
-- document 对象是浏览器内置的一个对象，里面存储着专门用来操作元素的各种方法
-- DOM：页面中的标签，我们通过 js 获取到以后，就把这个对象叫做 DOM 对象
 
-### 获取一个元素
+DOM 的核心对象就是 docuemnt 对象，而 document 对象是浏览器内置的一个对象，里面存储着专门用来操作元素的各种方法；我们通过 js 获取到的页面标签对象就叫做 DOM 对象
+
+### 获取元素
 
 - 通过 js 代码来获取页面中的标签
 - 获取到以后我们就可以操作这些标签了
@@ -2666,8 +2623,7 @@ DOM（Document Object Model）文档对象模型，其实就是操作 html 中�
 </body>
 ```
 
-- 获取到的是一组元素，是一个长得和数组一样的数据结构，但是不是数组，是伪数组
-- 这个一组数据也是按照索引排列的，所以我们想要准确的拿到这个 div，需要用索引来获取
+获取到的是一组元素，是一个长得和数组一样的数据结构，但是不是数组，是伪数组，这个一组数据也是按照索引排列的，所以我们想要准确的拿到这个 div，需要用索引来获取。
 
 #### getElementsByTagName
 
@@ -2686,8 +2642,7 @@ DOM（Document Object Model）文档对象模型，其实就是操作 html 中�
 </body>
 ```
 
-- 和 `getElementsByClassName` 一样，获取到的是一个长得很像数组的元素
-- 必须要用索引才能得到准确的 DOM 元素
+和 `getElementsByClassName` 一样，获取到的是一个长得很像数组的元素，必须要用索引才能得到准确的 DOM 元素
 
 #### querySelector
 
@@ -2710,202 +2665,173 @@ console.log(document.querySelectorAll('div')) // 获取页面中的所有的 div
 console.log(docuemnt.querySelectorAll('.box')) // 获取页面中所有有 box 类名的元素
 ```
 
-- 获取到的是一组数据，也是需要用索引来获取到准确的每一个 DOM 元素
+获取到的是一组数据，也是需要用索引来获取到准确的每一个 DOM 元素
+
+#### 练习
+
+获取 `https://www.baichuan-ai.com/chat` 反馈两个字。
+
+分析 html 结构，发现可以先获取 id 为 `__next` 的 DOM，然后再逐步获取它下面的子 DOM。
+
+```js
+let main = document.getElementById('__next');
+let feedbackEle = main.getElementsByClassName('feedback')[2];
+console.log(feedbackEle.textContent);
+```
 
 ### 操作属性
 
-- 通过我们各种获取元素的方式获取到页面中的标签以后
-- 我们可以直接操作 DOM 元素的属性，就能直接把效果展示在页面上
+通过我们各种获取元素的方式获取到页面中的标签以后，可以操作 DOM 元素的属性，来修改页面效果 / 更新页面属性（color，文本内容等）。
 
 #### innerHTML 
 
-- 获取元素内部的 HTML 结构
+获取元素内部的 HTML 结构
 
-  ```html
-  <body>
+```html
+<body>
     <div>
-      <p>
         <span>hello</span>
-      </p>
     </div>
-  
+
     <script>
-      var div = document.querySelector('div')
-      console.log(div.innerHTML)
-  		/*
-  			
-        <p>
-          <span>hello</span>
-        </p>
-  		
-  		*/
+        let div = document.querySelector('div');
+        console.log(div.innerHTML)
+        /* <span>hello</span> */
     </script>
-  </body>
-  ```
+</body>
+```
 
-- 设置元素的内容
+设置元素的内容
 
-  ```html
-  <body>
-    <div></div>
-  
-    <script>
-      var div = document.querySelector('div')
-     	div.innerHTML = '<p>hello</p>'
-    </script>
-  </body>
-  ```
+```html
+<body>
+  <div></div>
+  <script>
+    var div = document.querySelector('div')
+   	div.innerHTML = '<p>hello</p>'
+  </script>
+</body>
+```
 
-  - 设置完以后，页面中的 div 元素里面就会嵌套一个 p 元素
-
-
+设置完以后，页面中的 div 元素里面就会嵌套一个 p 元素
 
 #### innerText
 
-- 获取元素内部的文本（只能获取到文本内容，获取不到 html 标签）
+获取元素内部的文本，并修改文本内容（只能获取到文本内容，获取不到 html 标签）
 
-  ```html
-  <body>
-    <div>
-      <p>
-        <span>hello</span>
-      </p>
-    </div>
-  
-    <script>
-      var div = document.querySelector('div')
-      console.log(div.innerText) // hello
-    </script>
-  </body>
-  ```
+```html
+<body>
+  <div></div>
 
-- 可以设置元素内部的文本
+  <script>
+    let div = document.querySelector('div')
+   	div.innerText = '<p>hello</p>'
+  </script>
+</body>
+```
 
-  ```html
-  <body>
-    <div></div>
-  
-    <script>
-      var div = document.querySelector('div')
-     	div.innerText = '<p>hello</p>'
-    </script>
-  </body>
-  ```
-
-  - 设置完毕以后，会把 `<p>hello</p>` 当作一个文本出现在 div 元素里面，而不会把 p 解析成标签
-
-
+设置完毕以后，会把 `<p>hello</p>` 当作一个文本出现在 div 元素里面，而不会把 p 解析成标签
 
 #### getAttribute
 
-- 获取元素的某个属性（包括自定义属性）
+获取元素的某个属性（包括自定义属性）
 
-  ```html
-  <body>
+```html
+<body>
     <div a="100" class="box"></div>
-  
+
     <script>
-      var div = document.querySelector('div')
-     	console.log(div.getAttribute('a')) // 100
-      console.log(div.getAttribute('class')) // box
+        let div = document.querySelector('div')
+        console.log(div.getAttribute('a')) // 100
+        console.log(div.getAttribute('class')) // box
     </script>
-  </body>
-  ```
-
-
+</body>
+```
 
 #### setAttribute
 
-- 给元素设置一个属性（包括自定义属性）
+给元素设置一个属性（包括自定义属性）
 
-  ```html
-  <body>
+```html
+<body>
     <div></div>
-  
-    <script>
-      var div = document.querySelector('div')
-     	div.setAttribute('a', 100)
-      div.setAttribute('class', 'box')
-      console.log(div) // <div a="100" class="box"></div>
-    </script>
-  </body>
-  ```
 
-  
+    <script>
+        var div = document.querySelector('div')
+        div.setAttribute('a', 100)
+        div.setAttribute('class', 'box')
+        console.log(div) // <div a="100" class="box"></div>
+    </script>
+</body>
+```
 
 #### removeAttribute
 
-- 直接移除元素的某个属性
+直接移除元素的某个属性
 
-  ```html
-  <body>
+```html
+<body>
     <div a="100" class="box"></div>
-  
-    <script>
-      var div = document.querySelector('div')
-     	div.removeAttribute('class')
-      console.log(div) // <div a="100"></div>
-    </script>
-  </body>
-  ```
 
-  
+    <script>
+        let div = document.querySelector('div')
+        div.removeAttribute('class')
+        console.log(div) // <div a="100"></div>
+    </script>
+</body>
+```
 
 #### style
 
-- 专门用来给元素添加 css 样式的
+专门用来给元素添加 css 样式的，添加的都是行内样式
 
-- 添加的都是行内样式
+```js
+<body>
+  <div></div>
 
-  ```html
-  <body>
-    <div></div>
-  
-    <script>
-      var div = document.querySelector('div')
-     	div.style.width = "100px"
-      div.style.height = "100px"
-      div.style.backgroundColor = "pink"
-      console.log(div) 
-      // <div style="width: 100px; height: 100px; background-color: pink;"></div>
-    </script>
-  </body>
-  ```
+  <script>
+    var div = document.querySelector('div')
+   	div.style.width = "100px"
+    div.style.height = "100px"
+    div.style.backgroundColor = "pink"
+    console.log(div) 
+    // <div style="width: 100px; height: 100px; background-color: pink;"></div>
+  </script>
+</body>
+```
 
-  - 页面中的 div 就会变成一个宽高都是100，背景颜色是粉色
-
-
+页面中的 div 就会变成一个宽高都是100，背景颜色是粉色
 
 #### className
 
-- 专门用来操作元素的 类名的
+专门用来操作元素的类名的
 
-  ```html
-  <body>
+```html
+<body>
     <div class="box"></div>
-  
+
     <script>
-      var div = document.querySelector('div')
-     	console.log(div.className) // box
+        var div = document.querySelector('div')
+        console.log(div.className) // box
     </script>
-  </body>
-  ```
+</body>
+```
 
-- 也可以设置元素的类名，不过是全覆盖式的操作
+也可以设置元素的类名，不过是全覆盖式的操作
 
-  ```html
-  <body>
+```html
+<body>
     <div class="box"></div>
-  
-    <script>
-      var div = document.querySelector('div')
-     	div.className = 'test'
-      console.log(div) // <div class="test"></div>
-    </script>
-  </body>
-  ```
 
-  - 在设置的时候，不管之前有没有类名，都会全部被设置的值覆盖
+    <script>
+        var div = document.querySelector('div')
+        div.className = 'test'
+        console.log(div) // <div class="test"></div>
+    </script>
+</body>
+```
+
+在设置的时候，不管之前有没有类名，都会全部被设置的值覆盖
 
 ### DOM节点
 
@@ -2919,311 +2845,30 @@ DOM 的节点我们一般分为常用的三大类元素节点 / 文本节点 / �
 
 ### 获取节点
 
-| 方法       | 说明                             |
-| ---------- | -------------------------------- |
-| childNodes | 获取某一个节点下所有的子一级节点 |
-| children   |                                  |
-|            |                                  |
-|            |                                  |
-|            |                                  |
+节点按父子关系区分可分为，父节点和子节点（子一级），孙子节点（子二级），下表的子节点均指子一级节点
 
-- `childNodes`：获取某一个节点下 **所有的子一级节点**
+| 方法                   | 说明                       |
+| ---------------------- | -------------------------- |
+| childNodes             | 获取所有的子节点           |
+| children               | 获取所有的子元素节点       |
+| firstChild             | 获取第一个子节点           |
+| lastChild              | 获取最后一个子节点         |
+| firstElementChild      | 获取子一级第一个元素节点   |
+| nextSibling            | 获取下一个兄弟节点         |
+| previousSibling        | 获取上一个兄弟节点         |
+| nextElementSibling     | 获取下一个元素节点         |
+| previousElementSibling | 获取上一个元素节点         |
+| parentNode             | 获取父节点                 |
+| attributes             | 获取元素节点的所有属性节点 |
 
-  ```html
-  <body>
-    <div>
-      <p>hello</p>
-    </div>
-    
-    <script>
-      // 这个 oDiv 获取的是页面中的 div 元素，就是一个元素节点
-    	var oDiv = document.querySelector('div')
-      
-      console.log(oDiv.childNodes) 
-      /*
-      	NodeList(3) [text, p, text]
-        0: text
-        1: p
-        2: text
-        length: 3
-        __proto__: NodeList
-      */
-    </script>
-  </body>
-  ```
+这部分的内容主要是考察逻辑的，而非 API 的使用，多写点代码就可以了。（JS Dom 编程的艺术中的 DOM 操作写的比较细致）
 
-  - 我们会发现，拿到以后是一个伪数组，里面有三个节点
-  - 一个 text：从 <div> 一直到 <p> 中间有一个换行和一堆空格，这个是第一个节点，是一个文本节点
-  - 一个 p：这个 p 标签就是第二个节点，这个是一个元素节点
-  - 一个 text：从 </p> 一直到 </div> 中间有一个换行和一堆空格，这个是第三个节点，是一个文本节点
-  - 这个时候就能看到我们有不同的节点类型了
+<b>几个易错点</b>
 
-- `children` ：获取某一节点下所有的子一级 **元素节点**
+- firstChild，在 HTML 中，元素之间的空白字符（包括空格、制表符和换行符）会被解析为一个文本节点
+- firstElementChild 只会返回元素节点，忽略所有的文本节点和注释节点。
 
-  ```html
-  <body>
-    <div>
-      <p>hello</p>
-    </div>
-    
-    <script>
-      // 这个 oDiv 获取的是页面中的 div 元素，就是一个元素节点
-    	var oDiv = document.querySelector('div')
-      
-      console.log(oDiv.children) 
-      /*
-      	HTMLCollection [p]
-        0: p
-        length: 1
-        __proto__: HTMLCollection
-      */
-    </script>
-  </body>
-  ```
-
-  - 我们发现只有一个节点了，因为 `children` 只要元素节点
-  - div 下面又只有一个元素节点，就是 p
-  - 所以就只有一个，虽然只有一个，但是也是一个 **伪数组**
-
-- `firstChild`：获取某一节点下子一级的 **第一个节点**
-
-  ```html
-  <body>
-    <div>
-      <p>hello</p>
-    </div>
-    
-    <script>
-      // 这个 oDiv 获取的是页面中的 div 元素，就是一个元素节点
-    	var oDiv = document.querySelector('div')
-      
-      console.log(oDiv.firstChild) // #text 
-    </script>
-  </body>
-  ```
-
-  - 这个是只获取一个节点，不再是伪数组了
-  - 获取的是第一个
-  - 第一个就是 <div> 一直到 <p> 的那个换行和空格，是个文本节点
-
-- `lastChild`：获取某一节点下子一级的 **最后一个节点**
-
-  ```html
-  <body>
-    <div>
-      <p>hello</p>
-    </div>
-    
-    <script>
-      // 这个 oDiv 获取的是页面中的 div 元素，就是一个元素节点
-    	var oDiv = document.querySelector('div')
-      
-      console.log(oDiv.lastChild) // #text 
-    </script>
-  </body>
-  ```
-
-  - 只获取一个节点，不再是伪数组
-  - 获取的是最后一个
-  - 最后一个就是 </p> 一直到 </div> 之间的换行和空格，是个文本节点
-
-- `firstElementChild`：获取某一节点下子一级 **第一个元素节点**
-
-  ```html
-  <body>
-    <div>
-      <p>hello</p>
-    </div>
-    
-    <script>
-      // 这个 oDiv 获取的是页面中的 div 元素，就是一个元素节点
-    	var oDiv = document.querySelector('div')
-      
-      console.log(oDiv.firstElementChild) // <p>hello</p>
-    </script>
-  </body>
-  ```
-
-  - 只获取一个节点，不在是伪数组
-  - 获取的是第一个 **元素节点**
-  - 第一个元素节点就是 p 标签，是一个元素节点
-
-- `lastElementChild`：获取某一节点下子一级 **最后一个元素节点**
-
-  ```html
-  <body>
-    <div>
-      <p>hello</p>
-      <p>world</p>
-    </div>
-    
-    <script>
-      // 这个 oDiv 获取的是页面中的 div 元素，就是一个元素节点
-    	var oDiv = document.querySelector('div')
-      
-      console.log(oDiv.lastElementChild) // <p>world</p>
-    </script>
-  </body>
-  ```
-
-  - 只获取一个节点，不在是伪数组
-  - 获取的是最后一个 **元素节点**
-  - 最后一个元素节点是 `<p>world</p>`，是一个元素节点
-
-- `nextSibling`：获取某一个节点的 **下一个兄弟节点**
-
-  ```html
-  <body>
-    <ul>
-      <li id="a">hello</li>
-      <li id="b">world</li>
-      <li id="c">!!!</li>
-    </ul>
-    
-    <script>
-      // 这个 oLi 获取的是页面中的 li 元素，就是一个元素节点
-    	var oLi = document.querySelector('#b')
-      
-      console.log(oLi.nextSibling) // #text
-    </script>
-  </body>
-  ```
-
-  - 只获取一个节点，不在是伪数组
-  - 获取的是 `id="b"` 这个 li 的下一个兄弟节点
-  - 因为 `id="b"` 的下一个节点，是两个 li 标签之间的换行和空格，所以是一个文本节点
-
-- `previousSibling`：获取某一个节点的 **上一个兄弟节点**
-
-  ```html
-  <body>
-    <ul>
-      <li id="a">hello</li>
-      <li id="b">world</li>
-      <li id="c">!!!</li>
-    </ul>
-    
-    <script>
-      // 这个 oLi 获取的是页面中的 li 元素，就是一个元素节点
-    	var oLi = document.querySelector('#b')
-      
-      console.log(oLi.previousSibling) // #text
-    </script>
-  </body>
-  ```
-
-  - 只获取一个节点，不在是伪数组
-  - 获取的是 `id="b"` 这个 li 的上一个兄弟节点
-  - 因为 `id="b"` 的上一个节点，是两个 li 标签之间的换行和空格，所以是一个文本节点
-
-- `nextElementSibling`：获取某一个节点的 **下一个元素节点**
-
-  ```html
-  <body>
-    <ul>
-      <li id="a">hello</li>
-      <li id="b">world</li>
-      <li id="c">!!!</li>
-    </ul>
-    
-    <script>
-      // 这个 oLi 获取的是页面中的 li 元素，就是一个元素节点
-    	var oLi = document.querySelector('#b')
-      
-      console.log(oLi.nextElementSibling) // <li id="c">!!!</li>
-    </script>
-  </body>
-  ```
-
-  - 只获取一个节点，不在是伪数组
-  - 获取的是 `id="b"` 这个 li 的下一个兄弟元素节点
-  - 因为 `id="b"` 的下一个兄弟元素节点就是 `id="c"` 的 li，是一个元素节点
-
-- `previousElementSibling`：获取某一个节点的 **上一个元素节点**
-
-  ```html
-  <body>
-    <ul>
-      <li id="a">hello</li>
-      <li id="b">world</li>
-      <li id="c">!!!</li>
-    </ul>
-    
-    <script>
-      // 这个 oLi 获取的是页面中的 li 元素，就是一个元素节点
-    	var oLi = document.querySelector('#b')
-      
-      console.log(oLi.previousElementSibling) // <li id="a">hello</li>
-    </script>
-  </body>
-  ```
-
-  - 只获取一个节点，不在是伪数组
-  - 获取的是 `id="b"` 这个 li 的上一个兄弟元素节点
-  - 因为 `id="b"` 的上一个兄弟元素节点就是 `id="a"` 的 li，是一个元素节点
-
-- `parentNode`：获取某一个节点的 **父节点**
-
-  ```html
-  <body>
-    <ul>
-      <li id="a">hello</li>
-      <li id="b">world</li>
-      <li id="c">!!!</li>
-    </ul>
-    
-    <script>
-      // 这个 oLi 获取的是页面中的 li 元素，就是一个元素节点
-    	var oLi = document.querySelector('#b')
-      
-      console.log(oLi.parentNode) // <ul>...</ul>
-    </script>
-  </body>
-  ```
-
-  - 只获取一个节点，不在是伪数组
-  - 获取的是当前这个 li 的父元素节点
-  - 因为这个 li 的父亲就是 ul，所以获取到的就是 ul，是一个元素节点
-
-- `attributes`：获取某一个 **元素节点** 的所有 **属性节点**
-
-  ```html
-  <body>
-    <ul>
-      <li id="a" a="100" test="test">hello</li>
-    </ul>
-    
-    <script>
-      // 这个 oLi 获取的是页面中的 li 元素，就是一个元素节点
-    	var oLi = document.querySelector('#a')
-      
-      console.log(oLi.attributes) 
-      /*
-      	NamedNodeMap {0: id, 1: a, 2: test, id: id, a: a, test: test, length: 3}
-        0: id
-        1: a
-        2: test
-        length: 3
-        a: a
-        id: id
-        test: test
-        __proto__: NamedNodeMap
-      
-      */
-    </script>
-  </body>
-  ```
-
-  - 获取的是一组数据，是该元素的所有属性，也是一个伪数组
-  - 这个 li 有三个属性，id / a / test 三个，所以就获取到了这三个
-
-
-
-### 节点属性
-
-我们已经知道节点会分成很多种，而且我们也能获取到各种不同的节点；接下来我们就来聊一些各种节点之间属性的区别
-
-准备的代码
+<span style="color:blue">不带 Element 的，会将文本和注释作为一个节点。请看下面的代码。</span>
 
 ```html
 <body>
@@ -3233,16 +2878,53 @@ DOM 的节点我们一般分为常用的三大类元素节点 / 文本节点 / �
 
     <script>
         // 先获取 ul
-        var oUl = document.querySelector('ul')
+        let ul = document.querySelector('ul');
 
         // 获取到 ul 下的第一个子元素节点，是一个元素节点
-        var eleNode = oUl.firstElementChild
+        /* <li>hello</li> */
 
-        // 获取到 ul 的属性节点组合，因为是个组合，我们要拿到节点的话要用索引
-        var attrNode = oUl.attributes[0]
+        let eleNode = ul.firstElementChild;
 
         // 获取到 ul 下的第一个子节点，是一个文本节点
-        var textNode = oUl.firstChild
+        // #text，里面的内容是 '\n'
+        let textNode = ul.firstChild;
+        console.log(textNode)
+    </script>
+</body>
+```
+
+### 节点属性
+
+节点会分成很多种，我们也能获取到各种不同的节点；哪各种节点之间属性有什么区别？
+
+```html
+<body>
+    <ul test="我是 ul 的一个属性">
+        <li>hello</li>
+        <li>hello</li>
+    </ul>
+    <div></div>
+
+    <script>
+        // 先获取 ul
+        let ul = document.querySelector('ul');
+        /**
+        <ul test="我是 ul 的一个属性">
+            <li>hello</li>
+        </ul>
+        */
+
+        // 获取到 ul 下的第一个子元素节点，是一个元素节点
+        let eleNode = ul.firstElementChild;
+        /* <li>hello</li> */
+
+        // 获取到 ul 的属性节点组合，因为是个组合，我们要拿到节点的话要用索引
+        let attrNode = ul.attributes[0];
+        // test="我是 ul 的一个属性"
+
+        // 获取到 ul 下的第一个子节点，是一个文本节点 '\n'
+        let textNode = ul.firstChild;
+        console.log(textNode)
     </script>
 </body>
 ```
@@ -3275,8 +2957,6 @@ DOM 的节点我们一般分为常用的三大类元素节点 / 文本节点 / �
   - 属性节点的 `nodeName` 就是 **属性名**
   - 文本节点的 `nodeName` 都是 **#text**
 
-
-
 #### nodeValue
 
 - `nodeValue`： 获取节点的值
@@ -3291,8 +2971,6 @@ DOM 的节点我们一般分为常用的三大类元素节点 / 文本节点 / �
   - 属性节点的 `nodeValue` 就是 **属性值**
   - 文本节点的 `nodeValue` 就是 **文本内容**
 
-
-
 #### 汇总
 
 | -        | nodeType | nodeName   | nodeValue |
@@ -3300,8 +2978,6 @@ DOM 的节点我们一般分为常用的三大类元素节点 / 文本节点 / �
 | 元素节点 | 1        | 大写标签名 | null      |
 | 属性节点 | 2        | 属性名     | 属性值    |
 | 文本节点 | 3        | \#text     | 文本内容  |
-
-
 
 ## 操作 DOM 
 
@@ -3312,141 +2988,133 @@ DOM 的节点我们一般分为常用的三大类元素节点 / 文本节点 / �
 - 修改页面中的某一个节点
 - 获取页面中的某一个节点
 
-
-
 ### 创建一个节点
 
-- `createElement`：用于创建一个元素节点
+`createElement`：用于创建一个元素节点
 
-  ```javascript
-  // 创建一个 div 元素节点
-  var oDiv = document.createElement('div')
-  
-  console.log(oDiv) // <div></div>
-  ```
+```javascript
+// 创建一个 div 元素节点
+var oDiv = document.createElement('div')
 
-  - 创建出来的就是一个可以使用的 div 元素
+console.log(oDiv) // <div></div>
+```
 
-- `createTextNode`：用于创建一个文本节点
+创建出来的就是一个可以使用的 div 元素
 
-  ```javascript
-  // 创建一个文本节点
-  var oText = document.createTextNode('我是一个文本')
-  
-  console.log(oText) // "我是一个文本"
-  ```
+`createTextNode`：用于创建一个文本节点
 
+```javascript
+// 创建一个文本节点
+var oText = document.createTextNode('我是一个文本')
 
+console.log(oText) // "我是一个文本"
+```
 
 ### 向页面中加入一个节点
 
-- `appendChild`：是向一个元素节点的末尾追加一个节点
+`appendChild`：是向一个元素节点的末尾追加一个节点
 
-- 语法： `父节点.appendChild(要插入的子节点)`
+语法： `父节点.appendChild(要插入的子节点)`
 
-  ```javascript
-  // 创建一个 div 元素节点
-  var oDiv = document.createElement('div')
-  var oText = document.createTextNode('我是一个文本')
-  
-  // 向 div 中追加一个文本节点
-  oDiv.appendChild(oText)
-  
-  console.log(oDiv) // <div>我是一个文本</div>
-  ```
+```javascript
+// 创建一个 div 元素节点
+var oDiv = document.createElement('div')
+var oText = document.createTextNode('我是一个文本')
 
-- `insertBefore`：向某一个节点前插入一个节点
+// 向 div 中追加一个文本节点
+oDiv.appendChild(oText)
 
-- 语法： `父节点.insertBefore(要插入的节点，插入在哪一个节点的前面)`
+console.log(oDiv) // <div>我是一个文本</div>
+```
 
-  ```html
-  <body>
+`insertBefore`：向某一个节点前插入一个节点
+
+语法： `父节点.insertBefore(要插入的节点，插入在哪一个节点的前面)`
+
+```html
+<body>
     <div>
-      <p>我是一个 p 标签</p>
+        <p>我是一个 p 标签</p>
     </div>
-    
+
     <script>
-    	var oDiv = document.querySelector('div')
-      var oP = oDiv.querySelector('p')
-      
-      // 创建一个元素节点
-      var oSpan = document.createElement('span')
-      
-      // 将这个元素节点添加到 div 下的 p 的前面
-      oDiv.insertBefore(oSpan, oP)
-      
-      console.log(oDiv)
-      /*
-      	<div>
-      		<span></span>
-      		<p>我是一个 p 标签</p>
-      	</div>
-      */
+        var oDiv = document.querySelector('div')
+        var oP = oDiv.querySelector('p')
+
+        // 创建一个元素节点
+        var oSpan = document.createElement('span')
+
+        // 将这个元素节点添加到 div 下的 p 的前面
+        oDiv.insertBefore(oSpan, oP)
+
+        console.log(oDiv)
+        /*
+    	<div>
+    		<span></span>
+    		<p>我是一个 p 标签</p>
+        </div>
+    */
     </script>
-  </body>
-  ```
-
-
+</body>
+```
 
 ### 删除页面中的某一个节点
 
-- `removeChild`：移除某一节点下的某一个节点
+`removeChild`：移除某一节点下的某一个节点
 
-- 语法：`父节点.removeChild(要移除的字节点)`
+语法：`父节点.removeChild(要移除的字节点)`
 
-  ```html
-  <body>
+```html
+<body>
     <div>
-      <p>我是一个 p 标签</p>
+        <p>我是一个 p 标签</p>
     </div>
-    
+
     <script>
-    	var oDiv = document.querySelector('div')
-      var oP = oDiv.querySelector('p')
-      
-      // 移除 div 下面的 p 标签
-      oDiv.removeChild(oP)
-      
-      console.log(oDiv) // <div></div>
+        var oDiv = document.querySelector('div')
+        var oP = oDiv.querySelector('p')
+
+        // 移除 div 下面的 p 标签
+        oDiv.removeChild(oP)
+
+        console.log(oDiv) // <div></div>
     </script>
-  </body>
-  ```
-
-
+</body>
+```
 
 ### 修改页面中的某一个节点
 
-- `replaceChild`：将页面中的某一个节点替换掉
+`replaceChild`：将页面中的某一个节点替换掉
 
-- 语法： `父节点.replace(新节点，旧节点)`
+语法： `父节点.replace(新节点，旧节点)`
 
-  ```html
-  <body>
+```html
+<body>
     <div>
-      <p>我是一个 p 标签</p>
+        <p>我是一个 p 标签</p>
     </div>
-    
+
     <script>
-    	var oDiv = document.querySelector('div')
-      var oP = oDiv.querySelector('p')
-      
-      // 创建一个 span 节点
-      var oSpan = document.createElement('span')
-      // 向 span 元素中加点文字
-      oSpan.innerHTML = '我是新创建的 span 标签'
-      
-     	// 用创建的 span 标签替换原先 div 下的 p 标签
-      oDiv.replaceChild(oSpan, oP)
-      
-      console.log(oDiv)
-      /*
-      	<div>
-      		<span>我是新创建的 span 标签</span>
-      	</div>
-      */
+        var oDiv = document.querySelector('div')
+        var oP = oDiv.querySelector('p')
+
+        // 创建一个 span 节点
+        var oSpan = document.createElement('span')
+        // 向 span 元素中加点文字
+        oSpan.innerHTML = '我是新创建的 span 标签'
+
+        // 用创建的 span 标签替换原先 div 下的 p 标签
+        oDiv.replaceChild(oSpan, oP)
+
+        console.log(oDiv)
+        /*
+    	<div>
+    		<span>我是新创建的 span 标签</span>
+        </div>
+    */
     </script>
-  </body>
-  ```
+</body>
+```
 
 ### 获取元素的非行间样式
 
@@ -4050,6 +3718,33 @@ sessionStorage.removeItem('key');
 ```
 
 Web Storage 存储数据的适合，会为每个域名分开存储，即每个域都有一个单独的数据存储区，互不干扰，也无法互相访问。
+
+## 代理-Proxy
+
+Proxy 是 ES6 中新增的一个特性，它是一种用于定义对象访问行为的对象。简单来说，Proxy 可以拦截并定义对目标对象的属性访问、函数调用等操作的行为。
+
+<b>Proxy 的这种能力使得我们可以对对象实施各种检测和方法增强。</b>
+
+- 实现数据绑定，自动更新 UI；如果对象的值发生了 setter 事件并修改了值，那么级联更新对应的 DOM。
+- 对数据进行过滤或转换
+- 监控对象状态的变化，以便执行额外的逻辑
+- 提供默认值，防止读取不存在的属性时出错
+
+```js
+const target = {
+    foo: 'bar'
+};
+
+const handler  = {
+    get(trapTarget, property, receiver){
+        return 'handler override';
+    }
+}
+
+const proxy = new Proxy(target, handler);
+console.log(target.foo);
+console.log(proxy.foo);
+```
 
 ## this 的问题
 
@@ -4867,28 +4562,6 @@ console.log(book.other1);
 ```
 
 ## 可计算属性
-
-
-
-# 代理
-
-## 捕获器
-
-```js
-const target = {
-    foo: 'bar'
-};
-
-const handler  = {
-    get(trapTarget, property, receiver){
-        return 'handler override';
-    }
-}
-
-const proxy = new Proxy(target, handler);
-console.log(target.foo);
-console.log(proxy.foo);
-```
 
 
 

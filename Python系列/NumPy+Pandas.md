@@ -1142,9 +1142,11 @@ df2.columns = ['Java', 'Python', 'C Plus Plus', 'C#', 'js']
 df2['Kotlin'] = [4,4,4]
 # OK
 df2['js'][df2['js']>2]=100
-# 但是不推荐，3.0 默认用 Copy-On-Write A typical example is when you are setting values in a column of a DataFrame, like:
-# df["col"][row_indexer] = value
+# 但是不推荐，3.0 默认用 Copy-On-Write A typical example is when you are setting values in a column of a DataFrame, like:  df["col"][row_indexer] = value
+# 官方推荐 loc 的方式修改
 ```
+
+loc 保证操作的是原始的 DataFrame，实际上是修改 DataFrame 的 Series，会创建一个新的 Series。
 
 ### Series中的_mgr
 
