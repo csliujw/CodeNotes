@@ -1944,42 +1944,42 @@ console.log(num)
 
 列出的 API 都会创建新数组对象
 
-- concat，默认会展平 concat 的数组，
+concat，默认会展平 concat 的数组，
 
-  - 展平：将数组的元素一个一个添加进去，如果是数组套数组，内部的数组不会继续展平。
-  - 取消展平行为：将数组对象的 Symbol.isConcatSpreadable 设置为 false
+- 展平：将数组的元素一个一个添加进去，如果是数组套数组，内部的数组不会继续展平。
+- 取消展平行为：将数组对象的 Symbol.isConcatSpreadable 设置为 false
 
-  ```js
-  let n1 = [1,2,3]
-  let n2 = [4,5,[6]]
-  
-  n1.concat(n2) // [1, 2, 3, 4, 5, Array(1)]
-  n2[Symbol.isConcatSpreadable]=false
-  n1.concat(n2)// [1, 2, 3, Array(3)]
-  ```
+```js
+let n1 = [1,2,3]
+let n2 = [4,5,[6]]
 
-- slice，切片，从数组中切片出部分元素创建一个新数组
+n1.concat(n2) // [1, 2, 3, 4, 5, Array(1)]
+n2[Symbol.isConcatSpreadable]=false
+n1.concat(n2)// [1, 2, 3, Array(3)]
+```
 
-  ```js
-  let n = [0,1,2,3,4,5]
-  n.slice(2) // [2, 3, 4, 5]
-  n.slice(2,5)// [2, 3, 4]
-  ```
+slice，切片，从数组中切片出部分元素创建一个新数组
 
-- splice，在数组中插入 / 删除 / 替换 元素，用的非常多~
+```js
+let n = [0,1,2,3,4,5]
+n.slice(2) // [2, 3, 4, 5]
+n.slice(2,5)// [2, 3, 4]
+```
 
-  - start -- 起始索引
-  - deleteCount -- 删除多少元素
-  - items -- 将 item 插入到删除元素的位置
+splice，在数组中插入 / 删除 / 替换 元素，用的非常多~
 
-  ```js
-  let num = [0,1,2,3,4,5]
-  // 在索引0处删除0个元素，并在删除元素的索引插入元素 100 和 200
-  // 最后 num 为 [100, 200, 0, 1, 2, 3, 4, 5]
-  num.splice(0,0,100,200)
-  ```
+- start -- 起始索引
+- deleteCount -- 删除多少元素
+- items -- 将 item 插入到删除元素的位置
 
-### <b>搜索</b>
+```js
+let num = [0,1,2,3,4,5]
+// 在索引0处删除0个元素，并在删除元素的索引插入元素 100 和 200
+// 最后 num 为 [100, 200, 0, 1, 2, 3, 4, 5]
+num.splice(0,0,100,200)
+```
+
+### 搜索
 
 搜索有三个 function，分别是 indexOf / lastIndexOf / includes 都是采用的严格相等。
 
