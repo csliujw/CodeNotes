@@ -1,4 +1,4 @@
-# 前言
+# Python语言基础
 
 > Python 进阶书，有利于理解 Python 语言，介绍的基本都是高级的 Python 用法. 全面了解这个语言的能力边界。
 
@@ -6,7 +6,7 @@
 
 Linux 环境下：Python 交互式终端清屏（Ctrl + Alt + L）
 
-## 语言基础
+## 基础语法
 
 介绍 Python 语言的基础语法，和其他语言类似，不过没有自增和自减。
 
@@ -2236,7 +2236,127 @@ from . import module2
 
 ## 网络通信
 
+网络通信和其他语言类似，这里只简单记一下 TCP / UDP 的通信流程。
 
+### TCP 通信流程
+
+TCP 通信需要三次握手建立连接。
+
+<b>服务器端通信代码</b>
+
+```python
+import socket
+
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind(('localhost', 8888))
+server.listen(10)
+print("waiting for connection...")
+cur, addr = server.accept()
+
+while True:
+    data = cur.recv(1024).decode()
+    print(f"from {addr}, msg {data} \n")
+    if data == 'quit':
+        cur.send('bye bye'.encode('utf-8'))
+        break
+    cur.send('ack'.encode('utf-8'))
+
+cur.close()
+```
+
+<b>客户端通信代码</b>
+
+```python
+import socket
+
+client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client.connect(('localhost', 8888))
+while True:
+    msg = input('请输入要发送的消息：')
+    client.send(msg.encode('utf-8'))
+    server_info = client.recv(1024).decode('utf-8')
+    print(f'from server msg {server_info}')
+    if msg == 'quit':
+        break
+client.close()
+```
+
+### UDP 通信流程
+
+UDP 通信是不会建立连接的，是直接发送数据，所以发送的时候要指定 IP 地址和端口。
+
+<b>服务器端代码</b>
+
+- 绑定地址
+- UDP 没有 TCP 那种建立连接的握手过程，所以服务器端不用 accept，直接就是等待客户端的消息
+- 服务器端给客户端消息回执也是直接用 server.sendTo
+
+```python
+import socket
+
+server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# ADDR = ('172.26.0.1', 8888)
+ADDR = ('10.36.102.44', 8888)
+
+server.bind(ADDR)
+
+"""
+UDP 直接接收，来自其他客户端的数据
+"""
+while True:
+    data, addr = server.recvfrom(1024)
+    print(f"from {addr} get msg: {data.decode('utf-8')}")
+    """
+    回执的话直接通过 server 发送
+    """
+    server.sendto('get data'.encode('utf-8'), addr)
+```
+
+<b>客户端代码</b>
+
+```python
+import socket
+
+client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# ADDR = ('172.26.0.1', 8888)
+ADDR = ('10.36.102.50', 5462)
+
+while True:
+    msg = input('请输入消息: ')
+    client.sendto(msg.encode('utf-8'), ADDR)
+    data, addr = client.recvfrom(1024)
+    print(f"recv data from server {addr[0]}, msg: {data.decode('utf-8')}")
+```
+
+## 发送邮件
+
+- 开启发送方邮件的 SMTP 服务
+- 使用 smtplib 包发送邮件
+
+```python
+import smtplib
+from email.mime.text import MIMEText
+
+AUTHOR = 'NNEM123123fasXHXO32IIA'
+from_email = 'xxxx@163.com'
+smtp = smtplib.SMTP('smtp.163.com', 25)
+smtp.login(from_email, AUTHOR)
+email = MIMEText('hello this is first email')
+email['Subject'] = 'Notice!'
+
+email['From'] = from_email
+email['To'] = 'author'
+
+"""
+email 中存储的是邮件相关的消息，
+subject 是主题
+From 发件人 
+To 收件人
+"""
+
+smtp.sendmail(from_addr=from_email, to_addrs=[from_email], msg=email.as_string())
+print("send successfully")
+```
 
 # 第一章Python数据模型
 

@@ -157,7 +157,7 @@ channel 有一点类似于 stream，它就是读写数据的<b>双向通道</b>�
 
 ```mermaid
 flowchart LR
-channel <---> buffer,缓冲区
+channel <---> buffer-缓冲区
 ```
 
 <b>常见的 Channel 有</b>
