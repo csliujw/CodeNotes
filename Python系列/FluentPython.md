@@ -52,8 +52,8 @@ for item in range(0,100):
 
 - for
 - while
-- for-esle：仅当 for 循环运行完毕时（即 for 循环没有被 break 语句中止）才运行 else 块
-- while-else：仅当 while 循环因为条件为假值而退出时（即 while 循环没有被 break 语句中止）才运行 else 块。
+- for-esle：仅当 for 循环运行完毕时（即 for 循环没有被 break 语句中止）才运行 else 块，应当避免使用它。
+- while-else：仅当 while 循环因为条件为假值而退出时（即 while 循环没有被 break 语句中止）才运行 else 块，应当避免使用它。
 
 - else 还可以和 try 一起使用：仅当 try 块中没有异常抛出时才运行 else 块。[官方文档](https://docs.python.org/3/reference/compound_stmts.html)还指出，else 子句抛出的异常不会由前面的 except 子句处理。
 
@@ -309,7 +309,7 @@ l2 = [3] # l2 是 3，l1 依旧是 1，2，3
 
 <b>浅拷贝</b>
 
-浅拷贝即拷贝的是对象的引用
+浅拷贝即拷贝的是对象的地址
 
 ```python
 import copy
@@ -349,6 +349,14 @@ print(l[0],l2[0]) # 地址值不一样！！
 - `'' / [] / {} / () / 0 / 0.0 / None` 转为布尔类型时为 False
 - 布尔类型参与运算时，True 转为 1，False 转为 0
 - 空值：None，一种特殊的数据类型
+
+<b>易错题</b>
+
+```python
+x = True and "Hello "
+y = "Jerry" or "Tom"
+z = x + y # Hello Jerry
+```
 
 ### 可变与不可变⭐
 
@@ -408,23 +416,66 @@ def say():
     print(1)
 ```
 
-#### 参数
+#### 参数⭐
 
-Python 的函数参数有必需参数、默认参数、不定长参数
+Python 的函数参数除了形参和实参外，还有：默认参数、位置参数、关键字参数和不定长参数
 
-<b>必需参数</b>
-
-```python
-def say(n1, n2):
-    return n1+n2
-```
+| 参数类型   | 示例                                 | 说明                                                         |
+| ---------- | ------------------------------------ | ------------------------------------------------------------ |
+| 默认参数   | def func(name=None)                  | 定义函数时，为形参提供了默认值<br>默认参数必须在最右边       |
+| 位置参数   | 运行时的概念                         | 调用函数时传入实际参数的数量和位置<br>都必须和定义函数时保持一致 |
+| 关键字参数 | 运行时的概念                         | 调用函数时使用的时键值对的方式<br>key=values，混合传参时关键字参数必须在位置参数之后 |
+| 不定长参数 | def fn(\*args)<br>def fn(\*\*kwargs) | 可变长参数，带 \* 号的参数会以元组的形式导入<br>可变长参数，带 \*\* 号的参数以字典的形式传入 |
 
 <b>默认参数</b>
+
+调用函数的时候如果没有传入实参，则取默认参数，传入了实参，则取实参。
 
 ```python
 def say(name, age=18):
     return name + str(age)
+
+say('jerry')
 ```
+
+<b>位置参数</b>
+
+位置参数是一个运行时概念，出现在函数调用的时候。
+
+```python
+def say(n1, n2, nn=None):
+    print(n1, n2, nn)
+
+say(1, 2, 3)		# 按位置参数分配 n1=1,n2=2,nn=3
+say(1, nn=3, n2=2)	# 先按位置参数分配 n1=1, 在按关键字参数分配 nn=3, n2=2
+say(1, nn=3, n1=2)	# 错误，先按位置参数分配应该是 n1=1, 再按关键字参数分配 nn=3, n1=2, n1 重复赋值，n2 未赋值，因此报错
+```
+
+位置参数的位置，在函数调用时要和最初的位置保持一致，如果不一致，会抛出 TypeError 异常。
+
+<b>关键字参数</b>
+
+关键字参数就是指在函数调用时指定参数的名称的参数，我们实现一个装饰器，用来获取那些参数是函数运行时的关键字参数。
+
+```python
+def capture_kwargs(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        print(f"captured keyword arguments:{kwargs}")
+        return func(*args, **kwargs)
+    return wrapper
+
+@capture_kwargs
+def say(n1, n2, nn=None):
+    pass
+
+say(1, 2, 3)		# captured keyword arguments:{}, 都是按位置参数进行分配的
+say(1, nn=3, n2=2)	# captured keyword arguments:{'nn': 3, 'n2': 2}, nn 和 n2 是按关键字参数进行分配的
+```
+
+从上面的代码可以看出来，只要调用函数的时候是：形参名称=数据，那么这个参数就是关键字参数。
+
+需要注意的是，关键字参数必须跟在位置参数后面，而且不能有重复的关键字。
 
 <b>不定长参数</b>
 
@@ -456,64 +507,80 @@ get_dict(a=1, b=2, c=3) # {'a': 1, 'b': 2, 'c': 3}
 
 注意，可变长参数要放在最后面！`*args / **kwargs` 都有的话 `*args` 在前。
 
-#### 位置参数和关键字参数⭐
+#### 位置参数和关键字参数
 
-位置参数是指在函数定义和调用时，参数的顺序是固定的。例如，如果我们有一个函数 `def add(a, b)`，那么在调用这个函数时，我们必须按照定义时的顺序提供参数，如 `add(1, 2)`。
-
-关键字参数则允许我们在调用函数时，通过参数名来指定参数值，而不需要关心参数的位置。例如，我们可以这样调用 `add` 函数：`add(b=2, a=1)`。这种方式使得函数调用更加灵活，特别是在有很多参数或者某些参数的顺序容易混淆的情况下。
-
-需要注意的是，关键字参数必须跟在位置参数后面，而且不能有重复的关键字。此外，如果一个参数在函数定义时设置了默认值，那么这个参数就可以被省略，或者在调用时重新赋值。
-
-举个例子：
+如果位置参数和关键字参数混用，那么关键字参数必须要在位置参数的后面，且位置参数的顺序要和函数定义时形参的顺序一致。
 
 ```python
-def example_func(param1, param2='default'):
-    print(f"param1: {param1}, param2: {param2}")
+def say(n1, n2, nn=None):
+    pass
 
-example_func('value1')  # param1: value1, param2: default
-example_func('value1', 'value2')  # param1: value1, param2: value2
-example_func(param2='value2', param1='value1')  # param1: value1, param2: value2
+say(1, nn=3, n2=2)
 ```
 
-在上述例子中，`param1` 是一个位置参数，而 `param2` 是一个带有默认值的关键字参数。在函数调用时，我们可以通过不同的方式来传递这些参数。
+混用时，但是关键字参数必须在位置参数后面，且位置参数的顺序要和函数定义时形参的顺序一样，即 say 的第一个位置参数是赋值给 n1 的，其他参数的赋值是按关键字参数赋值的。
+
+如果这样调用
+
+```python
+say(1, nn=3, n1=2)
+```
+
+会抛出 TypeError 异常，say() got multiple values for arguments 'n1'，因为位置参数是按顺序进行赋值的，1 是赋值给 n1 的，后面的位置参数 n1=2 又给 n1 赋值了，n1 就得到了多个值。
 
 #### * 的作用⭐
 
-`*` 可以用来解包，也可以用来限定函数传参是必须指定形参名称
+`*` 可以用来解包，也可以用来限定参数只能为关键字参数。
+
+若函数形参中使用 `*`，则 `*` 后面的参数会作为且只能作为关键字参数，必须通过：形参名=值的形式赋值。
 
 ```python
 def needs(name, *, age):
     print(name, age)
 # 不指定 age 会报错 TypeError: needs() takes 1 positional argument but 2 were given
 
-needs('hello',18) # 错误 age 不能作为位置参数
-
-needs("hello", age=18)
+needs('hello',18) # 错误 age 不能作为位置参数，只能作为关键字参数
+needs("hello", age=18)	# 正确
 ```
 
-#### / 的作用
+#### / 的作用⭐
 
-在 Python 3.8 及以后的版本中，引入了一种新的语法，即在函数定义中使用斜杠（/）来指示哪些参数只能通过位置传递，而不能作为关键字参数。这被称为“仅限位置参数”
+在 Python 3.8 及以后的版本中，引入了一种新的语法，即在函数定义中使用斜杠（/）来指示， / 前面的参数只能通过位置传递，而不能作为关键字参数。这被称为“仅限位置参数”
 
 ```python
+
 def func(a, b, /, c, d):
     print(a, b, c, d)
-    
->>> func(1,2,c=3,d=4)
-1 2 3 4
->>> func(1,2,3,d=4)
-1 2 3 4
->>> func(1,2,d=3,c=4)
-1 2 4 3
+
+# 错误，a b 只能作为位置参数，不能作为关键字参数
+func(a=1, b=1, c=1, d=1)
+
+# 都是正确的， / 后面的即可作为位置参数，又可作为关键字参数
+func(1, 2, c=3, d=4)
+func(1, 2, 3, d=4)
+func(1, 2, d=3, c=4)
 ```
 
 在这个例子中，a 和 b 是仅限位置参数，而 c 和 d 既可以通过位置也可以通过关键字传递。
 
+#### keyword Arguments⭐
+
+官方文档中对 keyword arguments 的总结
+
+```python
+def f(pos1, pos2, /, pos_or_kwd, *, kwd1, kwd2):
+      -----------    ----------     ----------
+        |             |                  |
+        |        Positional or keyword   |
+        |                                - Keyword only
+         -- Positional only
+```
+
 #### 嵌套
 
-函数套函数。什么时候使用嵌套函数呢？
+嵌套即函数套函数。什么时候使用嵌套函数呢？
 
-- 闭包，定义装饰器的时候
+- 闭包 / 定义装饰器的时候
 - 函数很长，并且包含多个相关的子任务，并且不希望这些代码向外暴露 / 污染全局命名空间，那么可以将这些子任务定义为嵌套函数，以提高代码的可读性和可维护性
 
 ```python
@@ -2006,17 +2073,7 @@ except MyException as e:
     print(e)
 ```
 
-## 函数参数 & 拷贝⭐
-
-### 函数参数
-
-| 参数类型                  | 说明                                           |
-| ------------------------- | ---------------------------------------------- |
-| def func( arg1, *arg2 )   | 可变长参数，带 * 号的参数会以元组的形式导入    |
-| def func( arg1, **arg2 )  | 可变长参数，带 ** 号的参数以字典的形式传入     |
-| def func( a , b , * , c ) | 单独出现 * 后的参数必须使用关键字传入，看 code |
-
-### 拷贝
+## 拷贝⭐
 
 <b>不可变</b>
 
