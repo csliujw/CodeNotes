@@ -4709,17 +4709,16 @@ public void fn4(){
 
 ## 第十二章-集合
 
-java.util 库提供了一套相当完整的集合类（collection classes）来解决非固定长度数据的问题，其中基本的类型有 List 、Set 、Queue 和 Map。
+java.util 库提供了一套相当完整的集合类（collection classes），解决了非固定长度数据的问题，包括 List 、Set 、Queue 和 Map。
 
 ### 泛型和类型安全的集合
 
-使用 Java5 之前（Java5 才出现的泛型）的集合类，编译器允许向集合中插入不正确的类型。以 ArrayList 为例（先把它当作一个可变长的数组）
+使用 Java 5 之前（Java 5 才出现的泛型）的集合类，无法优雅的限定集合中的类型。假设我们希望创建一个只能容纳 Apple 类型对象的集合，但是编译器会允许向集合中插入不正确的类型（如 Orange），在取出数据时我们需要对数据进行强制，此时将 Orange 强转成 Apple 会抛出异常。
 
 ```java
 import java.util.ArrayList;
 
 class Apple {}
-
 class Orange {}
 
 public class AppleAndOrangeWithoutGenerics {
@@ -4736,7 +4735,7 @@ public class AppleAndOrangeWithoutGenerics {
 }
 ```
 
-Java5 提出的泛型可以解决上述问题，在编译时防止将错误类型的对象加入某个集合中，取出数据时也不必进行强制类型转化。
+Java 5 提出的泛型可以解决上述问题，在编译时防止将错误类型的对象加入某个集合中，取出数据时也不必进行强制类型转化。
 
 ```java
 public class AppleAndOrangeWithoutGenerics {
@@ -4750,7 +4749,7 @@ public class AppleAndOrangeWithoutGenerics {
 }
 ```
 
-Java7 简化了泛型的书写，所有有关泛型的信息都可以在左侧得到，也就没有理由让编译器强迫我们在右侧再写一遍了。
+Java 7 简化了泛型的书写，所有有关泛型的信息都可以在左侧得到，也就没有理由让编译器强迫我们在右侧再写一遍了。
 
 ```java
 ArrayList<Apple> saveApple = new ArrayList<>();
@@ -4766,20 +4765,24 @@ var com = new ArrayList<Apple>();
 
 ### 基本概念
 
-Java 集合类库采用“持有对象”（holding objects）的思想，从设计上来说，它可以分为两个不同的概念，表示为类库的两个基本接口。
+Java 集合类库采用“持有对象”（holding objects）的思想，从设计上来说，它分为两类，一类是集合（Collection），一类是映射（Map），在 Java 类库中表示为两个基本的接口。
 
 <b>集合（Collection）：</b>一个由单独元素组成的序列，这些元素要符合一条或多条规则。List 必须以插入的顺序保存元素，Set 不能包含重复元素，Queue 按照排队规则来输出元素。
 
-- HashSet、TreeSet、LinkedHashSet，仅保存每个相同项中的一个
-- `HashSet` 存储元素的方法复杂，检索元素快
-- `TreeSet` 按比较结果升序保存对象
-- `LinkedHashSet` 按照被添加的先后顺序保存对象
+| 集合                            | 说明                           |
+| ------------------------------- | ------------------------------ |
+| HashSet、TreeSet、LinkedHashSet | 仅保存重复项中的一个           |
+| HashSet                         | 存储元素的方法复杂，检索元素快 |
+| TreeSet                         | 按比较结果升序保存对象         |
+| LinkedHashSet                   | 按照被添加的先后顺序保存对象   |
 
 <b>映射（Map）：</b>一组成对的 “键值对” 对象，允许使用键来查找值。
 
-- `HashMap` 不按插入顺序存储元素。
-- `TreeMap` 按照键的升序来排序。低-->高
-- `LinkedHashMap` 在保持 HashMap 查找速度的同时按键的插入顺序保存键
+| 集合          | 说明                                              |
+| ------------- | ------------------------------------------------- |
+| HashMap       | 不按插入顺序存储元素                              |
+| TreeMap       | 按照键的升序来排序。低-->高                       |
+| LinkedHashMap | 在保持 HashMap 查找速度的同时按键的插入顺序保存键 |
 
 > 代码示例
 
@@ -4855,10 +4858,16 @@ public class PrintCollection {
 
 ### 列表 List
 
-- ArrayList：随机访问快，在中间插入、删除元素较慢。动态数组实现的。
-- LinkedList：随机访问慢，在 List 中间进行的插入和删除操作代价低一些，比 ArrayList 功能更多，链表实现。
+<b>ArrayList 和 LinkedList 的比较</b>
 
-> List 常用 API
+| 集合       | 说明                                                         |
+| ---------- | ------------------------------------------------------------ |
+| ArrayList  | 随机访问快，在中间插入、删除元素较慢。动态数组实现的。       |
+| LinkedList | 随机访问慢，在 List 中间进行的插入和删除操作代价低一些，比 ArrayList 功能更多，链表实现。 |
+
+头尾插入元素是 LinkedList 更快，但是中间位置或者说非头尾插入元素谁快需要测试一下才知道，毕竟 ArrayList 可以利用程序的局部性原理。
+
+<b>List 常用 API</b>
 
 | 方法                       | 说明                                                         |
 | -------------------------- | ------------------------------------------------------------ |
@@ -6935,7 +6944,7 @@ public class InterDemo {
 - 程序短小，容易理解。
 - <span style="color:orange">流是懒加载的。它只在绝对必要时才计算。可以将流看作 “延迟列表”。由于计算延迟，流使我们能够表示非常大（甚至无限）的序列，而不需要考虑内存问题。</span>
 
-代码举例：随机展示 5 至 20 之间不重复的整数并进行排序
+<b>代码举例：随机展示 5 至 20 之间不重复的整数并进行排序</b>
 
 ```java
 public class Randoms {
@@ -6943,7 +6952,7 @@ public class Randoms {
         new Random(47)
                 .ints(5, 20)
                 .distinct()
-                .limit(7)
+                .limit(3)
                 .sorted()
                 .forEach(System.out::println);
     }
@@ -6952,15 +6961,11 @@ public class Randoms {
 6
 10
 13
-16
-17
-18
-19
 ```
 
 - ints() 方法产生一个流
 - distinct() 使流中的整数不重复
-- limit() 方法获取前 7 个元素
+- limit() 方法获取前 n 个元素
 - sorted() 排序
 - forEach() 遍历输出
 
@@ -6986,9 +6991,9 @@ Randoms 是声明式编程，ImperativeRandoms 是命令式编程。必须研究
 
 ### 流支持
 
-要扩展流的话，有个非常大的问题：我们需要扩充现有接口，但是扩充现有接口又会破坏每一个实现了该接口，但是没有实现新加入方法的类。
+要扩展流的话，有个非常大的问题：我们需要扩充现有接口，但是扩充现有接口又会破坏每一个实现了该接口，需要确保每个实现了该接口的类实现被扩充的方法。
 
-最终的处理方式：Java8 在接口中添加被 default（默认）修饰的方法。通过这种方案，设计者们可以将流式（stream）方法平滑地嵌入到现有类中。
+最终的处理方式：Java 8 在接口中添加被 default（默认）修饰的方法。通过这种方案，设计者们可以将流式（stream）方法平滑地嵌入到现有类中。
 
 #### 流操作类型
 
