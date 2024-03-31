@@ -1,6 +1,6 @@
 # Python语言基础
 
-> Python 进阶书，有利于理解 Python 语言，介绍的基本都是高级的 Python 用法. 全面了解这个语言的能力边界。
+> Python 进阶书，有利于理解 Python 语言，全面了解这个语言的能力边界。该书介绍的基本都是 Python 的高级用法。
 
 在阅读该书前先温习下 Python 的 OOP。
 
@@ -38,7 +38,7 @@ if num > 50:
     pass
 ```
 
-- break，和其他语言一样，是退出最内层的整个循环
+- break，和其他语言一样，退出最内层的整个循环
 
 ```python
 for item in range(0,100):
@@ -79,13 +79,13 @@ else:
     print(f"计数完毕 total {total}")
 ```
 
-<b>Effective Python：避免使用 for-else，while-else 这种写法让代码难以阅读</b>
+<b>Effective Python：避免使用 for-else，while-else，这种写法会让代码难以阅读</b>
 
 ### 数据结构
 
 #### 列表
 
-可以保存不同的数据，会自动扩容
+Python 中的列表可以保存不同类型的数据，并且会自动扩容
 
 ```python
 empty_data = []
@@ -94,6 +94,8 @@ data.append('world')
 ```
 
 <b>列表的访问和遍历</b>，重点记忆下 `enumerate` 的用法
+
+<b>Effective Python：使用 enumerate 而非 range</b>
 
 ```python
 data = [1,2,3,True,'hello']
@@ -110,7 +112,7 @@ for index, ele in enumerate(data):
     print(index, ele)
 ```
 
-<b>列表的 + 运算</b>
+<b>使用列表的 + 运算，合并多个列表</b>
 
 ```python
 # 合并列表: 通过 + 实现
@@ -121,17 +123,17 @@ print(list1,list2)
 list3 = list1 + list2
 ```
 
-<b>列表元素重复</b>，是复制地址，让重复的元素指向同一个对象
+<b>重复列表中的元素</b>，注意，这种复制是潜复制，复制的是地址值，这意味着，重复的元素会指向同一个对象
 
 ```python
 # 重复输出列表中的元素: 通过 * 实现
 l = [1,2,3]
 ll = l * 4
 print(list1)
-print(id(ll[0]), id(ll[3])) # 同样的地址
+print(id(ll[0]), id(ll[3])) # 同样的地址 3728，3728
 ```
 
-<b>元素判断</b>，判断元素是否在列表中 `in`
+<b>使用 in 判断列表中是否存在某个元素</b>
 
 ```python
 #判断指定元素是否在列表中,使用成员运算符检查 in 和 not in 返回值是一个布尔类型 True 和 False
@@ -144,7 +146,7 @@ print(12 in list1)   # True
 ```python
 list2 = [13,45,2,35,7,9]
 # 语法: 列表名[开始下标:结束下标]   特点: 前闭后开  包含开始下标的元素不包含结束下标的元素
-print(list2[2:4]) # 2 35，不会切到 index 4 的位置
+print(list2[2:4]) # 2 35，不会切到 index 4 的位置，Python 中基本都是左闭，右开
 print(list2[2:-1]) # index2 到 index末尾，结果为 2 35 7
 ```
 
@@ -174,7 +176,7 @@ list2.append(1) # 一次只能追加一个对象
 list2.expand([1,2,3,]) # 会依次把 1 2 3追加进去，而非追加一整个列表
 ```
 
-<b>作为 stack</b>
+<b>列表也可以作为 stack 使用</b>
 
 ```python
 data = [1,2]
@@ -184,7 +186,7 @@ data.pop() # 3
 
 #### 元组
 
-与列表基本一样，但是元组不可变；元组不可变指的是元组中对象（元素）的地址不可以被修改（变量存储的都是地址值）。
+元组的用法与列表基本一样，但是元组不可变（列表用 `[]`，元组用 `()`）；元组的不可变指的是元组中存储的对象（元素）地址不可以被修改（变量存储的都是地址值）
 
 ```python
 data = (1,2,3)
@@ -212,7 +214,7 @@ tup4 = tup3 * 3
 
 #### 字典
 
-其他语言中的 `哈希表 / map`，key-value 形式，同样的 key 最好是不可变的！
+其他语言中的 `哈希表 / map`，key-value 形式，字典中的 key 最好是不可变的！
 
 <b>创建字典</b>
 
@@ -226,7 +228,9 @@ dict3 = dict( zip(['k1','k2'], ['v1','v2']) )
 dict4 = dict( [('k1','v1')] )
 ```
 
-dict 是内置类型的字典，非 python 实现的
+dict 是内置类型的字典，非 python 实现的，如果想实现一个自己的字典，不要试图继承 dict 类，应该继承由 Python 语言实现的类，如：UserDict.
+
+[为什么应该继承自 Python 语言实现的类](##不要试图子类化内置类型)
 
 <b>访问元素</b>
 
@@ -278,18 +282,22 @@ s = set()
 s = {1,4,4} # 只有 1,4 两个元素
 ```
 
-- add 添加元素
-- update 一次追加多个，以列表的形式追加
-- pop 删除元素，set 是无序的
-- remove('指定元素')，不存在会报错
-- discard('指定元素')，不存在不会报错！
+| 方法                | 说明                           |
+| ------------------- | ------------------------------ |
+| add                 | 添加元素                       |
+| update              | 一次追加多个，以列表的形式追加 |
+| pop                 | 删除元素，set 是无序的         |
+| remove('指定元素')  | 元素不存在会报错               |
+| discard('指定元素') | 不存在不会报错！               |
 
 <b>集合关系的运算</b>
 
-- 差集合，`-`
-- 并集合，`|`
-- 交集合，`&`
-- 包含判断，`set1 > se2`，判断 set1 是否包含 set2 中的所有元素
+| 运算         | 说明                                           |
+| ------------ | ---------------------------------------------- |
+| `-`          | 差集合                                         |
+| `|`          | 并集合                                         |
+| `&`          | 交集合                                         |
+| `set1 > se2` | 包含判断，判断 set1 是否包含 set2 中的所有元素 |
 
 #### stack & queue
 
@@ -407,7 +415,7 @@ print("n=%d, m=%d" % (n,m)) # n=1, m=2
 
 ### 函数
 
-先定义在调用，不能在定义前使用，<span style="color:blue">没有自动提升函数定义位置的功能（C / C++ 现在有这功能吗？）</span>
+Python 的函数需要先定义在调用，不能在定义前使用，<span style="color:blue">没有自动提升函数定义位置的功能（C / C++ 现在有这功能吗？）</span>
 
 调用符号 `()`，Python 中的函数可以被赋值给其他变量，然后通过 `()` 进行调用。
 
@@ -1080,7 +1088,52 @@ data = "你好"
 print(hashlib.md5(data.encode(encoding="UTF-8")).hexdigest())
 ```
 
+### json
 
+在 Python 中，可以使用 json 库实现字典和 JSON 格式字符串之间的互相转换。json 模块中的四个方法。
+
+| 方法  | 说明                                       |
+| ----- | ------------------------------------------ |
+| dump  | 将 Python 对象按照 JSON 格式序列化到文件中 |
+| dumps | 将 Python 对象处理成 JSON 格式的字符串     |
+| load  | 将文件中的 JSON 数据反序列化成对象         |
+| loads | 将字符串的内容反序列化成 Python 对象       |
+
+带 s 的表示是对字符串进行操作或操作结果是字符串。
+
+```python
+import json
+
+my_dict = {
+    'name': '骆昊',
+    'age': 40,
+    'friends': ['王大锤', '白元芳'],
+    'cars': [
+        {'brand': 'BMW', 'max_speed': 240},
+        {'brand': 'Audi', 'max_speed': 280},
+    ]
+}
+# 将字典转为 json 字符串
+str = json.dumps(my_dict)
+#将 json 字符串转为字典 
+obj = json.loads(str)
+```
+
+### request
+
+获取网络上的数据（HTTP 协议）
+
+```python
+import requests
+
+resp = requests.get('http://api.tianapi.com/guonei/?key=APIKey&num=10')
+if resp.status_code == 200:
+    data_model = resp.json()
+    for news in data_model['newslist']:
+        print(news['title'])
+        print(news['url'])
+        print('-' * 60)
+```
 
 ## 包 & 模块⭐s
 
@@ -1575,7 +1628,7 @@ Python 的模块就是天然的单例设计模式
 
 import xxx 模块被第一次导入的时候，会生成一个 `.pyc` 文件，当第二次导入的时候，会直接加载 `.pyc` 文件，将不会再去执行模块源代码。
 
-<b>使用模块的特点实现单例模式</b>
+<b>使用模块的特点实现单例模式，不推荐，只是演示下模块只会被执行一次</b>
 
 ```python
 # singleton.py
@@ -1589,20 +1642,20 @@ class Singleton:
     def get_value(self):
         return self.value
 
-# 注意：这里我们不直接实例化Singleton类
+# 这里我们直接实例化Singleton类
+singletion = Singletion();
 ```
 
-<span style="color:blue">在其他地方导入这个模块，第一次导入模块时，会执行模块中的代码，但是也就只执行一次！而这一次恰好创建了实例对象！</span>
+<span style="color:blue">在其他地方导入这个模块，第一次导入模块时，会执行模块中的代码，但是也就只执行一次！而这一次恰好创建了实例对象！我们使用的时候就不再手动 new 对象，而是直接导入现成的 singletion 对象</span>
 
 ```python
-from singleton import Singleton
+from singleton import singletion
 
-s1 = Singleton()
+s1 = singletion
 s1.set_value('Hello, World!')
 
-s2 = Singleton()
+s2 = singletion
 print(s2.get_value())  # 输出：Hello, World!
-
 print(s1 is s2)  # 输出：True
 ```
 
@@ -1634,6 +1687,8 @@ print(p == p1) # True
 # __new__():在创建对象的时候自动触发
 # __init__():在给创建的对象赋值属性的时候触发.dd
 ```
+
+视频中提了一句单例模式在数据库中的应用：数据库连接池操作`==>`应用程序中多处需要连接到数据库`==>`只需要创建一个连接池即可，避免资源的浪费
 
 ## 面向对象提高
 
@@ -1958,7 +2013,7 @@ for i in bj:
 
 ### 异常
 
-当程序在执行的过程中遇到异常，程序将会终止在出现异常的代码处，代码不会继续向下执行
+当程序在执行的过程中遇到异常，程序会终止在出现异常的代码处，代码不会继续向下执行
 
 | 异常              | 说明                             |
 | ----------------- | -------------------------------- |
@@ -1978,6 +2033,8 @@ for i in bj:
 - try-exception-else
 - try-except-finally
 
+<b>try-exception</b>
+
 ```python
 # 第二种方式:(常用)
 try:
@@ -1988,7 +2045,7 @@ except Exception as e:
 print("haha")
 ```
 
-
+<b>try-exception-else，没报错就走 else</b>
 
 ```python
 try:
@@ -2002,7 +2059,7 @@ else:
 print("lele")
 ```
 
-
+<b>try-except-finally，最后执行 finallu</b>
 
 ```python
 try:
@@ -2012,7 +2069,6 @@ except Exception as e:
     print("报错了,走这里")
 finally:
     print("不管你上面对与错,都要来我这报道!")
-print("嘿嘿!")
 ```
 
 ### 抛出异常
@@ -2055,7 +2111,7 @@ print("success")
 
 ### 自定义异常
 
-自定义异常最重要的是打印的内容（`__str__` 函数），让别人知道出现了什么异常。
+自定义异常最重要的是类命名和重写打印的内容（`__str__` 函数），让别人知道这是什么异常，异常信息是什么。
 
 ```python
 class MyException(Exception):
@@ -4901,7 +4957,7 @@ def __eq__(self, other):
     return (len(self) == len(other)) and all(a == b for a, b in zip(self, other))
 ```
 
-# 第十一章-接口：从协议到抽象基类
+# 第十一章-接口 从协议到抽象基类
 
 协议是接口, 但不是正式的，这些规定并不是强制性的, 一个类可能只实现部分接口, 其他语言如 Java 使用继承、重写和向上转型这三个必要条件来实现多态，而 Python 使用协议来实现类似与多态的功能。
 
