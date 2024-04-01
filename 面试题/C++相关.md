@@ -678,6 +678,8 @@ Linux 每个文件对应有两个计数器，在 inode 结构体中分别是 i_n
 
 # CPP
 
+[图说C++对象模型：对象内存布局详解 - melonstreet - 博客园 (cnblogs.com)](https://www.cnblogs.com/QG-whz/p/4909359.html)
+
 ## CPP基础语法
 
 ### static关键字

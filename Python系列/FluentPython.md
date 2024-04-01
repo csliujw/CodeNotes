@@ -1,4 +1,8 @@
-# Python语言基础
+# Python-语言参考手册
+
+[Python 语言参考手册 — Python 3.12.2 文档](https://docs.python.org/zh-cn/3/reference/index.html)
+
+# Python-语言基础
 
 > Python 进阶书，有利于理解 Python 语言，全面了解这个语言的能力边界。该书介绍的基本都是 Python 的高级用法。
 
@@ -1135,7 +1139,7 @@ if resp.status_code == 200:
         print('-' * 60)
 ```
 
-## 包 & 模块⭐s
+## 包 & 模块⭐
 
 ### 包
 
@@ -1152,7 +1156,7 @@ Python 的包中有一个特殊的文件 `__init__.py` 文件，里面可以不�
 
 ### 模块
 
-每个`.py`文件就被称为一个模块，通过结合包的使用来组织文件。
+每个 `.py` 文件就被称为一个模块，通过结合包的使用来组织文件。
 
 封装思路:  函数 => 类 => 模块 => 包 => 项目
 
@@ -1180,15 +1184,13 @@ import random as r
 
 <b>模块的搜索顺序</b>
 
-如果在当前目录则直接导入，没有则再搜索系统目录。
+如果在当前目录则直接导入，没有则搜索系统目录。
 
 python 中的每个模块都有一个内置属性 `__file__` 可以查看模块的完整路径
 
-这点上，没有 Java 的安全。Java 的类加载机制保证了类加载和类库调用的安全.
-
 <b>`__init__.py` 的作用</b>
 
-当我们导入一个包时，Python 会自动执行该包中的`__init__.py`文件，这意味着，如果我们需要校验当前包的运行环境是否符合要求，可以在 `__init__.py` 里写代码校验环境是否符合要求。
+当我们导入一个包时，Python 会自动执行该包中的 `__init__.py` 文件，这意味着，如果我们需要校验当前包的运行环境是否符合要求，可以在 `__init__.py` 里写代码校验环境是否符合要求。
 
 ```python
 例如，假设有以下的包结构：
@@ -1196,7 +1198,9 @@ python 中的每个模块都有一个内置属性 `__file__` 可以查看模块�
 mypackage/
     __init__.py
     one.py
+```
 
+```python
 # 在__init__.py文件中可以书写校验环境的代码，不符合要求就抛出异常
 # 终于理解一些github开源算法的 init 文件了...
 
@@ -1220,16 +1224,22 @@ mypackage/
     module1.py
     module2.py
 在__init__.py文件中，你有这样的导入语句：
+```
 
+```python
 from .module1 import func1
 from .module2 import func2
+```
 
-然后，在你的主程序中，你可以这样做：
+在其他 package 中导入 mypackage
+
+```python
+# 然后，在你的主程序中，你可以这样做：
 
 import mypackage
 
-mypackage.func1()  # 可以直接访问func1
-mypackage.func2()  # 可以直接访问func2
+mypackage.func1()  # 可以直接访问 func1
+mypackage.func2()  # 可以直接访问 func2
 ```
 
 ### 安装模块
@@ -1247,7 +1257,9 @@ mypackage.func2()  # 可以直接访问func2
 - 函数式：将某功能代码封装到函数中，日后便无需重复编写，仅调用函数即可
 - 面向对象：对函数进行分类和封装，让开发“更快更好更…”
 
-### 面向对象概念
+### 面向对象
+
+#### 面向对象概念
 
 - 类就是一个模板，模板里可以包含多个函数，函数里实现一些功能
 - 对象则是根据模板创建的实例，通过实例对象可以执行类中的函数
@@ -1271,10 +1283,17 @@ class Test(object):
     def __new__(cls, *args, **kwargs):
         print("new 对象啦！")
         return super().__new__(cls)
-    
-# 根据类Test创建对象obj
+    	# Python2 需要手动传入两个参数，Python3 会自动捕获这些参数
+        # 不用显示传参
+        # return super(Test, cls).__new__(cls)
+
+# 获取 obj 的所有属性
+print(dir(obj))
+# 查看 Test 类的所有超类
+print(Test.__bases__)
+# 根据类 Test 创建对象 obj
 obj = Test('jerry', 10)  # 类名加括号
-obj.demo()  # 执行demo方法
+obj.demo()  # 执行 demo 方法
 # 获取一个实例的类名
 print(obj.__class__.__name__)
 
@@ -1284,8 +1303,8 @@ if hasattr(obj, 'demo'):
 else:
     print("have no method")
 """
-new 对象啦！
-初始化变量啦！
+new 对象啦！	===> 先执行 new 方法
+初始化变量啦！	  ===> 再执行 init 方法
 self= <__main__.Test object at 0x00000283D943F910>
 Method= ['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', ...,]
 Hello
@@ -1298,7 +1317,7 @@ it has demo method
 - self 相当于其他语言的 this
 - 和其他语言一样，对象在 heap，方法调用和局部变量在 stack 里，每个对象的成员变量会在堆空间中开辟一份自己的空间，相互之间互不影响
 
-### 封装、继承、多态
+#### 封装、继承、多态
 
 - 封装，只暴露出我希望你看到的，不希望你看到的不暴露，封装的本质就是属性私有化的过程
 - 继承，子类可以继承父类的内容；Python 支持多继承
@@ -1308,7 +1327,7 @@ it has demo method
 
 #### 私有化属性
 
-<span style="color:blue">封装的本质就是属性私有化的过程，Python 的私有化可以使用 `__` 来实现，但是不推荐，Python 社区推荐的做法是使用 `_` 告诉程序员我希望它是私有的，你别用。</span>
+<span style="color:blue">封装的本质就是属性私有化的过程，Python 的私有化可以使用 `__` 来实现，但是不推荐，Python 社区推荐的做法是使用 `_` 告诉程序员我希望它是私有的，请不要使用。</span>
 
 <b>`__` 实现私有化</b>
 
@@ -1326,7 +1345,7 @@ print(Test._Test__name) # 可以获取到
 print(t._Test__age)
 ```
 
-`__` 防君子不防小人
+由于 `__` 防君子不防小人，因此 Python 更推荐使用 `_` 来表明字段是私有的，请你不要访问。
 
 #### set or get
 
@@ -1362,18 +1381,18 @@ print(jerry.name)
 
 <b>静态方法：</b>使用 @staticmethod 装饰器修饰的方法，被称为静态方法，可以通过类名调用，也可以通过对象调用，但是一般情况下使用类名调用。
 
-<b>静态方法其实和类没有任何关系，只是恰巧定义在了类中</b>
+<b style="color:red">静态方法其实和类没有任何关系，只是恰巧定义在了类中</b>
 
 ```python
 class Animal():
- # 类属性
- name = "牧羊犬"
- # 对象属性
- def __init__(self,name,sex):
-     self.name = name
-     self.sex = sex
+    # 类属性
+    name = "牧羊犬"
+    # 对象属性
+    def __init__(self,name,sex):
+        self.name = name
+        self.sex = sex
 
- ''' 
+''' 
      类方法:
          1.通过@classmethod装饰器修饰的方法就是类方法
          2.类方法可以使用类名或者对象调用. 但是一般情况下使用类名调用类方法(节省内存)
@@ -1382,13 +1401,13 @@ class Animal():
          5.形参的名字cls是class的简写,可以更换,只不过是约定俗成的写法而已
          6.cls表示的是当前类
  '''
- @classmethod
- def run(cls):
-     print("我是类方法")
-     print(cls.name)
-     print(cls == Animal) # cls表示的是当前类
+        @classmethod
+        def run(cls):
+            print("我是类方法")
+            print(cls.name)
+            print(cls == Animal) # cls表示的是当前类
 
- '''
+            '''
      静态方法:
          1.通过@staticmethod装饰器修饰的方法就是静态方法
          2.通过类名或者对象名都可以调用静态方法  (推荐使用类名调用)
@@ -1396,33 +1415,27 @@ class Animal():
          4.静态方法一般是一个单独的方法,只是写在类中
 
  '''
- # 静态方法
- @staticmethod
- def eat():
-     print("我是静态方法")
+            # 静态方法, 与类没有任何关系
+            @staticmethod
+            def eat():
+                print("我是静态方法")
 
-Animal.run()  # 类名调用类方法
-Animal.eat()  # 类调用静态方法
-# 创建对象
-dog = Animal('中华土狗','公')
-# dog.run()  # 对象调用类方法
+                Animal.run()  # 类名调用类方法
+                Animal.eat()  # 类调用静态方法
+                # 创建对象
+                dog = Animal('中华土狗','公')
+                # dog.run()  # 对象调用类方法
 ```
 
 ### 类中的常用属性
 
-<b>`__name__`</b>
+| 属性               | 说明                                                         |
+| ------------------ | ------------------------------------------------------------ |
+| <b>`__name__`</b>  | 通过类名访问，获取类名字符串；不能通过对象访问，否则报错     |
+| <b>`__dict__`</b>  | 通过类名访问，获取指定类的信息【类方法，静态方法，成员方法】，返回的是一个字典；<br>通过对象访问，获取的该对象的信息【所有的属性和值】，返回的是一个字典 |
+| <b>`__bases__`</b> | 通过类名访问，查看指定类的所有的父类【基类】                 |
 
-通过类名访问，获取类名字符串；不能通过对象访问，否则报错
-
-<b>`__dict__`</b>
-
-通过类名访问，获取指定类的信息【类方法，静态方法，成员方法】，返回的是一个字典；
-
-通过对象访问，获取的该对象的信息【所有的属性和值】，返回的是一个字典
-
-<b>`__bases__`</b>
-
-通过类名访问，查看指定类的所有的父类【基类】
+测试代码
 
 ```python
 class Animal(object):
@@ -1442,7 +1455,6 @@ print(animal.__dict__)  # 以字典的形式显示对象的属性
 
 # __bases__ 获取指定类的父类  返回的是一个元组
 print(Animal.__bases__)  # (<class 'object'>,)
-
 ```
 
 <b>魔法方法 `__str__ / __repr__`</b>
@@ -1475,11 +1487,9 @@ xiaohong = Person("小红",18)
 print(xiaohong)
 ```
 
-### 单根继承和多继承
+### 单根继承
 
-#### 单根继承
-
-只继承一个类
+单根继承即只继承一个类
 
 ```python
 class Animal(object):
@@ -1495,9 +1505,9 @@ class Cat(Animal):
 c = Cat('cat')
 ```
 
-#### 多继承
+### 多继承
 
-Python 的多继承分新式类与经典类，Python3 默认都是新式多继承
+多继承是指可以继承多个类，Python 的多继承分新式类与经典类，Python3 默认都是新式多继承。
 
 ```python
 class Father(object):
@@ -1514,8 +1524,8 @@ class Mother(object):
     def eat(self):
         print("干饭!")
 
-# 子类
-class Son(Father, Mother):  # 子类继承多个父类时,在括号内写多个父类名称即可
+# 子类继承多个父类时,在括号内写多个父类名称即可
+class Son(Father, Mother):  
     def __init__(self, surname, height, weight):
         # 继承父类的构造函数
         Father.__init__(self, surname)
@@ -1525,8 +1535,10 @@ class Son(Father, Mother):  # 子类继承多个父类时,在括号内写多个�
     def play(self):
         print("play!")
 
+        
 son = Son("jerry", "178", 140)
 print(son.surname, son.height, son.weight)
+
 son.make_money()
 son.eat()
 son.play()
@@ -1536,19 +1548,31 @@ son.play()
 
 <b>此处解释下 Python 方法的解析顺序</b>
 
-A 继承了 B 和 C，B 和 C 都继承了 D
+以下图 A、B、C、D 的继承关系为例进行说明：A 继承了 B 和 C，B 和 C 都继承了 D。
 
 ```mermaid
-graph TB
-	A-->|继承|B
-	A-->|继承|C
-	B-->|继承|D
-	C-->|继承|D
+graph BT
+	A-->|继承自|B
+	A-->|继承自|C
+	B-->|继承自|D
+	C-->|继承自|D
 ```
 
 按照 Python 方法的解析顺序（C3 线性化算法规则），解析顺序是 A B C D, B C 的共同子类会放到 A 继承的最后一个类（C）的后面
 
-Z 继承了 A B C，A 继承了 AF，解析顺序是 A AF B C；因为只有 A 继承了 AF，所以 AF 放到 A 的后面
+再看一个例子，Z 继承 A B C，A 继承 AF
+
+```mermaid
+graph BT
+Z-->|继承自|A
+Z-->|继承自|B
+Z-->|继承自|C
+A-->|继承自|AF
+```
+
+
+
+解析顺序是 A、AF、B、C；因为只有 A 继承了 AF，所以 AF 放到 A 的后面
 
 经典类，按 Python 方法的解析顺序查找，输出 'AF'
 
@@ -1592,37 +1616,41 @@ print(A.__mro__)  # A B C D
 
 ### 鸭子型
 
-鸭子型实现了和其他 OOP 语言的多态；阅读下面的代码。
-
-尽管 People 不是 Animal 类型的，但是他和 Animal 方法都有 run 方法，可以正常运行，这就是鸭子型。
+Python 是通过使用鸭子型来实现其他 OOP 语言的多态；下面的代码展示了 Python 的鸭子型
 
 ```python
 class Animal(object):
     def run(self):
         print('Animal is running...')
 
+
 class Dog(Animal):
     def run(self):
         print('Dog is running...')
 
-def run_twice(animal):
-    animal.run()
 
 class People(object):
     def run(self):
         print("People is run...")
 
+
+def run_twice(animal):
+    animal.run()
+
+
 run_twice(Dog())  # Dog is running...
-# people这个类却和animal没有任何关系，但是其中却有run这个方法
+# people 这个类却和 animal 没有任何关系，但是其中却有 run 这个方法
 run_twice(People())  # People is run...
 
 print(isinstance(Dog(), Animal))  # True
 print(isinstance(Animal(), Dog))  # False
 ```
 
+尽管 People 不是 Animal 类型的，但是他和 Animal 方法都有 run 方法，可以正常运行，这就是鸭子型，你的行为看起来像鸭子就行。
+
 ### 单例模式
 
-Python 的模块就是天然的单例设计模式
+单例模式是指，确保某个类的对象始终只有一个，Python 的模块就是天然的单例设计模式。
 
 <b>模块的工作原理</b>
 
@@ -1649,6 +1677,7 @@ singletion = Singletion();
 <span style="color:blue">在其他地方导入这个模块，第一次导入模块时，会执行模块中的代码，但是也就只执行一次！而这一次恰好创建了实例对象！我们使用的时候就不再手动 new 对象，而是直接导入现成的 singletion 对象</span>
 
 ```python
+# 从 singleton.py 中导入 singletion 变量
 from singleton import singletion
 
 s1 = singletion
@@ -1819,20 +1848,20 @@ property 的构造方法中有个四个参数，要用的时候点击源码看�
 
 ```python
 class A(object):
-    x = 7	# 定义了一个类属性
+    x = 7 # 定义了一个类属性
 
 f1 = A()
 f2 = A()
 
-f1.x += 7 # 这里是给实例 f1 绑定了一个实例属性，不是更改类属性哦
+# 这里是给实例 f1 绑定了一个实例属性，属性的值是 A.x + 7
+f1.x += 7 
 
 print(A.x)  # 7
-print(f1.x)  # 14
-print(getattr(f1, 'x'))  # 14
+print(f1.x)  # 14  getattr(f1, 'x') 和 f1.x 效果一样
 print(f2.x)  # 7
 ```
 
-如果类属性和实例属性重名了，可以使用 getattr 访问指定对象的类属性。
+如果类属性和实例属性重名了，可以使用<b>类名</b>访问指定对象的类属性。
 
 <b>特殊的类属性</b>
 
@@ -1848,10 +1877,9 @@ print(f2.x)  # 7
 
 ### 公有与私有
 
-自定义的私有成员命名时，前两个字符是下划线（Python 语言内部规定的魔法方法除外）
+自定义的私有成员命名时，前两个字符是下划线（Python 语言内部规定的魔法方法除外，魔法方法是方法前后都是 `__`）
 
 - 如果想一个字段，方法变成私有，`__name` 在前面加两个下划线即可
-- 方法也是一样
 
 但是这种方式防君子不防小人，可以强制访问私有字段的，如访问私有字段 `__name`，`obj._className__name`
 
@@ -1866,10 +1894,17 @@ print(f2.x)  # 7
 - `__module__` 表示当前操作的对象在那个模块
 - `__class__` 表示当前操作的对象的类是什么
 
+<b>Python 对象的实例化</b>
+
+Python 对象的创建和变量的初始化是分开的，创建对象是调用的 `__new__` 方法，初始化变量调用的是 `__init__` 方法。
+
+`__new__`
+
+创建对象，dog = Dog() 的返回值实际上是接收的 `__new__` 的返回值
+
 `__init__`
 
-- 构造方法，类创建完对象后，初始化对象的状态，执行 `__new__` 后自动触发执行，Python 的解释器会在创建类的实例后自动调用 `__init__` 方法
-- dog = Dog() 的返回值实际上是接收的 `__new__` 的返回值
+init 是构造方法，当类创建完对象后，用于初始化对象的状态，执行 `__new__` 后自动触发执行，Python 的解释器会在创建类的实例后自动调用 `__init__` 方法
 
 ```python
 class MyClass:
@@ -1890,13 +1925,17 @@ obj = MyClass(1, 2)
 print(obj)
 ```
 
+<b>Python 中的析构函数</b>
+
 `__del__`
 
 - 析构方法，当对象在内存中被释放时，自动触发执行
 
+<b>让实例对象可以像方法一样调用</b>
+
 <b style="color:blue">`__call__`</b>
 
-- callable，让实例对象可以像方法一样调用
+- callable，让实例对象可以像方法一样调用。可以看成 `__call__` 是重写了调用符 `()`，当我们使用 `实例对象()` 的时候，实际上是调用的 `__call__` 方法。
 
 ```python
 class MyClass:
@@ -1941,11 +1980,45 @@ print(obj2.__dict__)
 # 输出：{'count': 3888, 'name': 'HeNan'}
 ```
 
+<b>迭代器魔法方法，实现迭代器协议</b>
+
+`__iter__` 魔法方法，从字面上看，这是一个迭代器，实现了迭代器魔法方法（迭代协议）那么这个对象就可以被迭代
+
+列表、字典、元组可以使用诸如 for 循环之类的操作进行迭代，是因为类型内部实现了 ` __iter__`（可以去 list 源码里看看定义了那些方法）
+
+```python
+class FooY(object):
+    def __init__(self, sq):
+        self.sq = sq
+
+    def __iter__(self):
+        return iter(self.sq)
+
+
+objy = FooY([11, 22, 33, 44])
+
+for i in objy:
+    print(i)
+
+# 11
+# 22
+# 33
+# 44
+
+# 也可也写成
+bj = iter([11, 22, 33, 44])
+
+for i in bj:
+    print(i)
+```
+
+<b>让类可以迭代 / 支持切片、索引等的魔法方法</b>
+
 ` __getitem__ / __setitem__ / __delitem__`
 
-- 用于索引操作，如字典。以上分别表示获取、设置、删除数据
-- 实现了 getitem 相当于实现了序列的一部分协议，可以被迭代，为什么呢？
-  - 如果被迭代的对象没有实现 `__iter__` 方法，但是实现了 `__getitem__` 方法，Python 会创建一个迭代器（iter 包装一下那个对象），尝试按顺序（从索引 0 开始）获取元素。
+- 上面的三个魔法方法分别表示获取、设置、删除数据
+- 如果一个类实现了 getitem 相当于实现了序列的一部分协议，这个类就可以被迭代，不必非得实现 `__iter__` 方法，为什么呢？
+- 如果被迭代的对象没有实现 `__iter__` 方法，但是实现了 `__getitem__` 方法，Python 会创建一个迭代器（iter 包装一下那个对象），尝试按顺序（从索引 0 开始）获取元素。
 
 
 ```python
@@ -1967,49 +2040,51 @@ obj['k1'] = 'tony'  # 自动触发执行 __setitem__
 del obj['k1']  # 自动触发执行 __delitem__
 
 print(obj['k1'])  # 自动触发执行 __getitem__
-```
 
-`__iter__`
-
-- 用于迭代器，之所以列表、字典、元组可以进行 for 循环，是因为类型内部定义了` __iter__`
-
-```python
-class Foo(object):
-    pass
-
-class FooX(object):
-    def __iter__(self):
-        pass
-
-objx = FooX()
-
-class FooY(object):
-    def __init__(self, sq):
-        self.sq = sq
-
-    def __iter__(self):
-        return iter(self.sq)
-
-objy = FooY([11, 22, 33, 44])
-
-for i in objy:
-    print(i)
-
-# 11
-# 22
-# 33
-# 44
-
-# 也可也写成
-bj = iter([11, 22, 33, 44])
-
-for i in bj:
-    print(i)
+# 同样可以使用循环进行迭代
+for item in obj:
+    print(item)
 ```
 
 [流畅的python学习笔记-第7章扩展内容 - python深度学习 - SegmentFault 思否](https://segmentfault.com/a/1190000021528367)
 
-## 异常处理
+## 一切皆对象
+
+<b>Python 中的所有内容都是对象，除了 array.array 中存储的数据。</b>
+
+验证 array.array 中的数据不是对象。
+
+```python
+import array
+import sys
+
+t = array.array('i', [1, 2, 3, 4, 5]).tobytes()
+print(sys.getsizeof(t))     # 53
+print(sys.getsizeof(1))     # 28
+```
+
+对于小整数，Python 解释器会使用一个整数池来缓存这些值，以便重复使用，这种机制被称为“小整数优化”（用的享元模式吗？）
+
+具体来说，当整数值位于 [-x, y] 的范围内时，Python 解释器会将这些值对应的整数对象缓存起来，直接使用缓存的对象。这样做可以减少创建对象的开销和内存分配的次数，提高程序的运行效率。
+
+具体的范围是多少呢？在 Python Shell 中测试了下，[-5, +∞] 似乎都会被缓存。
+
+```shell
+id(-6)	# 4608
+id(-6)	# 4864
+```
+
+使用 PyCharm 的话，会缓存很小的负数。
+
+```python
+c = -2000000
+d = -2000000
+print("=" * 20)
+print(id(c))	# 1024
+print(id(d))	# 1024
+```
+
+## 异常处理⭐
 
 ### 异常
 
@@ -2020,8 +2095,8 @@ for i in bj:
 | NameError         | 变量未被定义                     |
 | TypeError         | 类型错误                         |
 | IndexError        | 索引异常                         |
-| KeyError          |                                  |
-| ValueError        |                                  |
+| KeyError          | 试图访问不存在的 key             |
+| ValueError        | 试图访问不存在的 value           |
 | AttributeError    | 属性异常                         |
 | ImportError       | 导入模块的时候路径异常           |
 | SyntaxError       | 代码不能编译                     |
@@ -2056,10 +2131,10 @@ except Exception as e:
 else:
     print("不报错,走这里")
 
-print("lele")
+print("lalalala")
 ```
 
-<b>try-except-finally，最后执行 finallu</b>
+<b>try-except-finally，最后执行 finally</b>
 
 ```python
 try:
@@ -2073,7 +2148,7 @@ finally:
 
 ### 抛出异常
 
-如果满足特定业务需求时，希望抛出异常，推荐使用 raise 主动抛出一个指定的异常对象、
+有时候我们希望主动抛出异常，这时候可以使用 raise 主动抛出一个指定的异常对象
 
 ```python
 try:
@@ -2085,7 +2160,7 @@ except Exception as e:
     print("引发异常", repr(e))
 ```
 
-密码长度不符合要求则抛出异常
+eg：密码长度不符合要求则抛出异常
 
 ```python
 def throw_exception():
@@ -2099,7 +2174,7 @@ if __name__ == '__main__':
     throw_exception()
 ```
 
-### assert
+### assert⭐⭐
 
 assert 断言，断言正确继续运行，错误则终止运行
 
@@ -2115,32 +2190,33 @@ print("success")
 
 ```python
 class MyException(Exception):
-    def __init__(self, name, code):
-        self.name = name
+    def __init__(self, code):
         self.code = code
 
     def __str__(self):
-        return f'This is {self.name} Exception, error code is {self.code}'
+        return f'This is {MyException.__name__}, error code is {self.code}'
 
 
 try:
-    raise MyException("自定义异常", 1001)
+    raise MyException(1001)
 except MyException as e:
     print(e)
 ```
 
 ## 拷贝⭐
 
-<b>不可变</b>
+### 不可变
 
-了解拷贝细节前需要先了解下可变对象与不可变对象。
+了解拷贝细节前需要先了解可变对象与不可变对象。
 
 - 不可变数据类型：数据的值发生改变，是开辟了一个新的地址空间，存储改变后的值，原有值还在老空间中呆着（如果没被 `gc` 的话）~
 - 可变数据类型：数据的值发生改变，是在原有地址空间中的改变~
 
 区别赋值运算与深浅拷贝
 
-<b style="color:green">赋值运算与深浅拷贝无关</b>【l1 和 l2 是同一个指向】
+<b style="color:green">赋值运算与深浅拷贝无关，深浅拷贝，拷贝会创建新的对象</b>【l1 和 l2 是同一个指向】
+
+赋值操作仅仅是复制了对象的引用，而浅拷贝则创建了一个新的对象，但是这个新对象中的容器元素仍然是原始对象的引用。因此赋值操作不会创建数据的副本，而浅拷贝则创建了一个不完全独立的数据副本。
 
 ```python
 l1 = [1,2,3,[22,33]]
@@ -2150,9 +2226,9 @@ print(l1) # output [1,2,3,[22,33],666]
 print(l2) # output [1,2,3,[22,33],666]
 ```
 
-<b>深拷贝与浅拷贝</b>
+### 深拷贝与浅拷贝
 
-<span style="color:green">浅拷贝</span>
+<b >浅拷贝</b>
 
 列表是一个个槽位，每个槽位存储的是该对象的内存地址。
 
@@ -2160,25 +2236,22 @@ print(l2) # output [1,2,3,[22,33],666]
 l1 = [1,2,[22,33]]
 l2 = l1.copy()
 
-l1[2].append(44) 
+print(l1) # [1,2,[22,33]]
+print(l2) # [1,2,[22,33]]
+
+print(id(l1), id(l2)) # 4608， 5440
+
+# index=2 的位置是一个列表，我们向列表中追加元素会影响到 copy 的列表
+l1[2].append(44)
 print(l1) # [1,2,[22,33,44]]
 print(l2) # [1,2,[22,33,44]]
-
-# python存在不可变数据类型，当不可变数据类型对应变量的值发送了改变，那么内存地址值就改变了,指向的就不是同一块内存地址空间了~。
-
-l1 = [1,2,[22,33]]
-l2 = l1.copy()
-l1[0] = 6
-# int类型是不可变的，它l1中的0位置指向的内存空间以及变了。l2还是指向原来的数据
-print(l1) # [6,2,[22,33]]
-print(l2) # [1,2,[22,33]]
 ```
 
 <span style="color:green">浅拷贝小结</span>
 
 浅拷贝会在内存中新开辟一个空间，存放这个 copy 的列表，但是列表里面的内容还是沿用之前对象的内存地址。
 
-<span style="color:green">深拷贝</span>
+<b >深拷贝</b>
 
 全新的副本，互不影响~（可变数据类型在内存中重新创建一份，而不可变沿用之前的，为什么不可变可以沿用之前的？看 Java 不可变类的源码就知道了~）
 
@@ -2250,7 +2323,7 @@ from module_name import function_name, variable_name
 import module_name as alias
 ```
 
-**高级语法**：
+### 高级语法
 
 <b>星号(*)用法</b>
 
@@ -2477,12 +2550,59 @@ print("send successfully")
 
 # 第一章Python数据模型
 
+## 什么是数据模型？
 
-这部分主要介绍了 Python 的魔术方法, 它们经常是两个下划线包围来命名的(比如 `__init__` , `__lt__`, `__len__` ). 这些特殊方法是为了被 Python 解释器调用的, 这些方法会注册到他们的类型中方法集合中, 相当于为 cPython 提供抄近路. 这些方法的速度也比普通方法要快, 当然在自己不清楚这些魔术方法的用途时, 不要随意添加.
+Python 数据模型，社区中也称之为对象模型。我们借助《深度探索 C++ 对象模型》一书的话来理解 Python 的对象模型。
 
-关于字符串的表现形式是两种, `__str__` 与 `__repr__` . Python的内置函数 `repr` 就是通过 `__repr__` 这个特殊方法来得到一个对象的字符串表示形式. 这个在交互模式下比较常用, 如果没有实现 `__repr__` , 当控制台打印一个对象时往往是 `<A object at 0x000>` . 而 `__str__` 则是 `str()` 函数时使用的, 或是在 `print` 函数打印一个对象的时候才被调用, 终端用户友好.
+>有两个概念可以解释 C++ 对象模型
+>
+>- 语言中直接支持面向对象程序设计的部分
+>- 对于各种支持的底层实现机制
 
-两者还有一个区别, 在字符串格式化时, `"%s"` 对应了 `__str__` . 而 `"%r"` 对应了 `__repr__`. `__str__` 和 `__repr__` 在使用上比较推荐的是，前者是给终端用户看，而后者则更方便我们调试和记录日志.
+在 Python 中，数据模型 / 对象模型也是类似的概念，那些用以支持 / 实现 Python 面向对象和各种功能的底层实现机制。<b>Python 数据模型定义了对象的行为和属性。</b>
+
+- Python 是怎么支持对象可迭代的？
+- len、str、repr 方法是如何获取对象长度，将对象转为字符串的？
+
+这些功能的底层实现机制就是 Python 数据模型的一部分。这部分介绍的内容主要是 Python 中的魔法方法，如何定义对象的行为和属性（如何在 Python 层面定义对象的属性和行为，内部是如何调用这些方法的）
+
+## 特殊方法
+
+<b>这部分主要介绍 Python 的特殊方法（magic method，魔术/法方法）</b>
+
+魔法方法是两个下划线包围来命名的（如 `__init__` , `__lt__`, `__len__`）这些特殊方法是为了被 Python 解释器调用的（不要自己调用魔法方法），会被注册到它们所属类型的方法集中。Python 解释器直接调用 magic method 速度更快哦。
+
+因为，在 Python 的解释器中，这些方法相当于提供了一些快捷方式，让解释器能够更高效地处理某些常见的操作。由于这些方法是由解释器直接调用的，它们通常会比普通的用户定义方法运行得更快，因为它们避免了常规的函数调用开销。（相当于为 cPython 提供抄近路。这些方法的速度比普通方法要快）
+
+<b>不过，在不清楚这些魔术方法的用途时，不要随意添加。</b>
+
+Python 是如何实现对象的字符串表示的？
+
+Python 中关于字符串的表现形式有两种： `__str__` 与 `__repr__` 。
+
+- Python 的内置函数 `repr` 就是通过 `__repr__` 这个特殊方法来得到一个对象的字符串表示形式。这个在交互模式和调试器（pydev debugger）上比较常用，如果没有实现 `__repr__` ，当控制台（交互模式的控制台）打印一个对象时往往是 `<A object at 0x000>` 。
+- `__str__` 则是使用 `str()` 函数时使用的，或是在 `print` 函数打印一个对象的时候才被调用，终端用户友好。
+
+PyCharm debugger 实测：Python debugger 对象时，会以 `__repr__` 的返回值来显示对象，其次才是根据  `__str__` 的返回值来显示对象。
+
+```python
+class D:
+    def __str__(self):
+        return "hello"
+
+    def __repr__(self):
+        return "hello repr"
+
+
+d = D()
+print(d)
+```
+
+注意，PyCharm 的 Evaluate 是通过调用对象的 `__repr__` 或 `__str__` 方法来实现的，会优先执行 `__repr__` 方法。
+
+<b>优先选择实现 `__repr__` 而非 `__str__`</b>
+
+在字符串格式化时，`"%s"` 对应了 `__str__`，而 `"%r"` 对应了 `__repr__`。`__str__` 和 `__repr__` 在使用上比较推荐的是，前者是给终端用户看，而后者则更方便我们调试和记录日志，如果要二选一实现一个魔法方法，优先实现 `__repr__`，因为它对开发和调试工作非常重要。
 
 此处给出 `__str__` 与 `__repr__` 的示例代码
 
@@ -2510,7 +2630,7 @@ print(demo1)  # str My name is 'tony1
 print(repr(demo1))  # repr My name is "'tony1"
 ```
 
-值得注意的是，特殊方法的调用大多是隐式的，如 `for i in x` 这个语句，背后其实用的式 iter(x), 而这个函数的背后则是 `x.__iter__()` 方法。当然前提是这个方法在 x 中被实现了。
+值得注意的是，特殊方法的调用大多是隐式的，如 `for i in x` 这个语句，背后其实用的是 iter(x)，而这个函数的背后则是 `x.__iter__()` 方法。当然前提是这个方法在 x 中被实现了。
 
 <b>这里着重介绍下 `__getitem__` 方法和 `__len__` 方法</b>
 
@@ -2568,23 +2688,31 @@ print(repr(demo1))  # repr My name is "'tony1"
 
 # 第二章序列构成的数组
 
-这部分主要是介绍序列, 着重介绍数组和元组的一些高级用法.
+这部分主要是介绍序列，着重介绍数组和元组的一些高级用法，以深入理解 Python 中不同的序列类型。
 
-序列按照容纳数据的类型可以分为:
+Python 使用 C 语言实现了丰富的序列类型，由于是使用 C 来实现的，因此，尝试继承这些序列，重写它们的方法时，会有意想不到的结果。[不要试图子类化内置类型](##不要试图子类化内置类型)
 
-- `容器序列`: list、tuple 和 collections.deque 这些序列能存放不同类型的数据
-- `扁平序列`: str、bytes、bytearray、memoryview 和 array.array，这类序列只能容纳一种类型.
+<b>序列按照容纳数据的类型可以分为</b>
 
-如果按照是否能被修改可以分为:
+- `容器序列`：list、tuple 和 collections.deque 这些序列存放的是所包含对象的引用，对象可以是任何类型
+- `扁平序列`：str、bytes、bytearray、memoryview 和 array.array，这类序列在自己的内存空间中存储所含内容的值，而不是各自不同的 Python 对象。<span style="color:blue">因此，扁平序列更加紧凑，但是只能存放原始机器值，例如字节、整数和浮点数。</span>
 
-- `可变序列`: list、bytearray、array.array、collections.deque 和 memoryview
-- `不可变序列`: tuple、str 和 bytes
+<div align="center"><img src="FluentPython/sequence.jpeg"></div>
+
+图中展示的是一个元组和一个数组的内存简图，它们各有 3 项。灰色方块（未按比例绘制）表示各个 Python 对象的内存标头。元组中的每一项都是引用，引用的是不同的 Python 对象，对象中还可以存放其他 Python 对象的引用，例如那个包含两个项的列表。相比之下，Python 中的数组整体是一个对象，存放一个 C 语言数组，包含 3 个双精度数
+
+<b>如果按照是否能被修改可以分为</b>
+
+- `可变序列`：list、bytearray、array.array、collections.deque 和 memoryview
+- `不可变序列`：tuple、str 和 bytes
+
+可变序列继承不可变序列的所有方法，另外还多实现了几个方法。内置的具体序列类型其实不是 Sequence 和 MutableSequence 抽象基类的子类，而是一种虚拟子类（virtual subclass），使用这两个抽象基类注册（Python 3.10 测试，MutableSequence 是 False）
 
 ## 列表推导
 
-列表推导是构建列表的快捷方式, 可读性更好且效率更高.
+列表推导是构建列表的快捷方式，可读性更好且效率更高。
 
-例如, 把一个字符串变成 unicode 的码位列表的例子, 一般:
+例如，我们需要把一个字符串变成 unicode 的码位列表。我们可以直接使用 for 循环迭代，将每个字符存入列表。
 
 ```python
 symbols = '$¢£¥€¤'
@@ -2593,7 +2721,7 @@ for symbol in symbols:
     codes.append(ord(symbol))
 ```
 
-使用列表推导:
+也可以使用列表推导完成上述功能
 
 ```python
 symbols = '$¢£¥€¤'
@@ -2603,11 +2731,21 @@ codes = [ord(symbol) for symbol in symbols]
 str2unicode_ = [ord(item) for item in "hello" if ord(item) >=104]
 ```
 
-能用列表推导来创建一个列表, 尽量使用推导, 并且保持它简短.
+能用列表推导来创建一个列表，就尽量使用推导，因为列表推导式的性能远高于 for 循环。在书写的时候保持列表推导式的简短，如果超过两行，那么最好把语句拆开，或者使用传统的 for 循环重写。
+
+如果希望列表推导式中的变量可以在列表推导式外依旧可以访问，可以使用海象运算符 `:=`
+
+```python
+# last 在列表推导式结束后依旧可以使用
+codes = [last := ord(c) for c in t]
+print(codes, last)
+```
+
+<b>map 和 filter 不一定比列表推导式快，Python 中推荐使用列表推导式而非 map 和 filter</b>
 
 ## 生成器表达式
 
-生成器表达式是能逐个产出元素, 节省内存. 例如:
+生成器表达式是使用迭代器协议逐个产出元素，而非构建整个列表；因此，生成器表达式占用的内存更少。
 
 ```Python
 color = ['black', 'red']
@@ -2616,7 +2754,7 @@ dcr = [(c, s) for c in color for s in size if len(c) >= len(s)]
 print(dcr)
 ```
 
-实例中列表元素比较少, 如果是生成 100w 元素的列表, 内存将会占用很大, 而是用生成器表达式就可以帮忙省掉这种内存占用开销.
+实例中列表元素比较少，如果是生成 100w 元素的列表，内存将会占用很大；使用生成器表达式的话可以节省这种内存占用开销。
 
 ```python
 import sys
@@ -2635,7 +2773,7 @@ for item in iter_10b:
         break
 ```
 
-从上面的代码可以看出来迭代器占用的内存要小非常多，而且占用的内存一直都是 104.
+从上面的代码可以看出来迭代器占用的内存要小非常多，而且占用的内存一直都是 104
 
 <b>内存监控工具</b>
 
@@ -2653,9 +2791,20 @@ def fun_try():
 fun_try()
 ```
 
-## 元组拆包
+## 元组
 
-元组赋值拆包和函数参数传递拆包
+元组的作用一般有两种
+
+- 作为不可变的列表
+- 作为没有字段名称的记录，如  `(’jerry‘, '18')` 作为一条记录
+
+元素的用法与列表类似，但是元组是使用 `()`。<b style="color:red">切记，使用元组时不要企图在里面存放可变的项，这会产生一些奇怪的行为。</b>
+
+## 元组、序列、可迭代对象拆包
+
+<b>以元组为例演示拆包，序列、可迭代的拆包方式也是一样的</b>
+
+元组拆包，多个变量接收元组内的数据
 
 ```python
 #元组拆包
@@ -2665,6 +2814,8 @@ a, b = t
 # 如果有不想接收的参数，用占位符即可
 a, _ = t
 ```
+
+函数传参中的拆包
 
 ```python
 # 函数赋值时的拆包
@@ -2721,11 +2872,129 @@ china = country('China', 960, 14, (20, 80))
 print(china._asdict())  # 转为字典
 ```
 
+### 序列模式匹配
+
+3.10 新增的语法，序列模式匹配与其他语言的 switch 有些类似，但是功能更为强大。序列模式匹配是用在序列上的，语法为 match-case-卫语句
+
+<b>序列匹配的基础用法</b>
+
+假设现在有个序列有三个值，我们希望通过序列中的第一个值判断执行何种方法，其他两个值作为 function 的参数。
+
+```python
+def f1(n1, n2):
+    print("f1(n1, n2)=", (n1, n2))
+
+
+def f2(n1, n2):
+    print("f2(n1, n2)=", (n1, n2))
+
+
+def f3(n1, n2):
+    print("f3(n1, n2)=", (n1, n2))
+
+
+def handle_command(message):
+    match message:
+        # 使用 *n1 接收多个变量
+        case ['f1', *n1]:
+            f1(*n1)
+        case ['f2', n1, n2]:
+            f2(n1, n2)
+        case _: # 默认的 case 子句，前面所有模式都不匹配时执行
+            raise ValueError("无匹配值")
+
+
+handle_command(['f1', 1, 1])
+# 无匹配值
+# handle_command(['f3', 1, 1])
+```
+
+在 match/case 上下文中，str、bytes 和 bytearray 实例不作为序列处理，如果我们像根据电话的字符串来匹配对于的地区呢？
+
+```python
+def matchs(phone: str):
+    match tuple(phone):
+        case ['1', *rest]:
+            print("A 地区")
+		# 这里使用了 | 表示 2 3 有一个匹配即可
+        case ['2' | '3', *rest]:
+            print("B 地区")
+
+
+matchs("10086")
+matchs("20086")
+```
+
+如果像忽略某些项，使用 `_` 即可，匹配相应位置上的任何一项，但不绑定匹配项的值
+
+```python
+def get_addr(addr: str):
+    match tuple(addr):
+        case ['北', '京', _, *rest]:
+            print(*rest)
+        case _:
+            print("not exist")
+
+
+get_addr("北京-五环")
+```
+
+<b>高级用法</b>
+
+匹配任何以字符串开头、以嵌套两个浮点数的序列结尾的序列，则可以使用如下模式
+
+```python
+case [str(name), *_, (float(lat), float(lon))]:
+```
+
+使用卫语句筛选，满足 lon > 1 的才是符合条件的匹配项
+
+```python
+def get_seq(seq: list):
+    match seq:
+        case [str(name), *_, float(lat), float(lon)] if lon > 1:
+            print(f"{name}-{lat}-{lon} is ok")
+        case _:
+            print("not found")
+
+get_seq(["jerry", "223", "ssf", 12.5, 11.])
+```
+
+如果最后的两个数据不是 float 类型而是 int 类型，匹配不到第一个 case。
+
+<b>高端操作</b>
+
+使用 Python 的模式匹配序列可以简便的实现一个解释器，判断变量的定义是否合法。
+
+```python
+"""
+利用模式匹配序列校验数据类型定义的语法，规定
+int a;
+float a;
+double a;
+String a;
+char a;
+这种语法才是正确的，以变量类型开头，中间一个空格 后面是任意的以字母开头的变量，最后是分号
+"""
+
+def test(judge: list):
+    match judge:
+        case ['int' | 'float' | 'char' | 'String' | 'double', ' ', name, ';'] if name[0].isalpha():
+            print(f"{judge} 合法")
+        case _:
+            print(f"{judge} 非法")
+
+
+test(['int', ' ', 'a', ';'])
+test(['float', ' ', 'a', ';'])
+test(['int', ' ', 'a', ','])
+```
+
 ## 切片
 
-列表中是以 0 作为第一个元素的下标, 切片可以根据下标提取某一个片段.
+列表中是以 0 作为第一个元素的下标，切片则可以根据下标提取某一个片段。在 Python 中，列表、元组、字符串等所有序列类型都支持切片操作。
 
-用 `s[a:b:c]` 的形式对 `s` 在 `a` 和 `b` 之间以 `c` 为间隔取值。`c` 的值还可以为负, 负值意味着反向取值.
+切片的典型语法：用 `s[a:b:c]` 的形式对 `s` 在 `a` 和 `b` 之间以 `c` 为间隔取值。`c` 的值还可以为负, 负值意味着反向取值.
 
 ```python
 # 给切片赋值
@@ -2734,6 +3003,28 @@ print(l[2:6])			 # 切片
 l[2:6] = [10, 20]  # 切片赋值 [start:end) 2 3 4 5 的元素被替换为了 10, 20
 print(l)
 ```
+
+### 切片区间排除最后一项的原因
+
+切片和区间排除最后一项是一种 Python 风格约定，理由如下
+
+- 在仅指定停止位置时，容易判断切片或区间的长度；
+  - range(3) 和 my_list[:3] 我们很容易就看出它是取了三个元素
+  - 同时指定起始和停止位置时，容易计算切片或区间的长度，做个减法即可：stop - start。
+- 方便在索引 x 处把一个序列拆分成两部分而不产生重叠，直接使用 my_list[:x]  和 my_list[x:] 即可
+
+### 为切片赋值
+
+在赋值语句的左侧使用切片表示法，或者作为 del 语句的目标，可以就地移植、切除或以其他方式修改可变序列
+
+```python
+l = list(range(6))
+# l[2:5] = 10 # TypeError: can only assign an iterable
+# l[2:5] = [10] # [0, 1, 10, 5]
+# del l[2:5] # [0, 1, 5]
+```
+
+如果赋值目标是一个切片，则右边必须是一个可迭代对象。
 
 ## 序列的操作
 
@@ -2765,9 +3056,44 @@ print(f" one addr = {id(one)}, two addr = {id(two)}")
 
 array 没有提供排序的功能，要先转为 list，排序，然后转回 array。
 
-## 令人迷惑的序列复制
+<b>令人迷惑的元组</b>
 
-先给出结论：在 Python 中，当使用星号 (*) 操作符复制可变对象时，实际上复制的是对象的引用，而不是对象的值。
+我们在控制台执行下面的代码，会报错，提示元组不可变，不可以给它修改值；但是最后元组中列表又被成功修改了。
+
+```python
+>>> t = (1,2, [30,40])
+>>> t[2]+=[50,60]
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: 'tuple' object does not support item assignment
+>>> t
+(1, 2, [30, 40, 50, 60])
+>>>
+```
+
+我们看下 `t[2]+=[50,60]` 的字节码
+
+```shell
+>>> dis.dis('t[2]+=[50,60]')
+  1           0 LOAD_NAME                0 (t)
+              2 LOAD_CONST               0 (2)
+              4 DUP_TOP_TWO
+              6 BINARY_SUBSCR
+              8 LOAD_CONST               1 (50)
+             10 LOAD_CONST               2 (60)
+             12 BUILD_LIST               2
+             14 INPLACE_ADD
+             16 ROT_THREE
+             18 STORE_SUBSCR # 将栈顶的元素存储到第二个栈顶元素指定的位置这个操作尝试给元组赋值，报错了
+             20 LOAD_CONST               3 (None)
+             22 RETURN_VALUE
+```
+
+再次强调，<b>不要在元组中存放可变的项。</b>
+
+## 迷惑的序列复制
+
+先给出结论：在 Python 中，当使用星号 `*` 操作符复制可变对象时，实际上复制的是对象的引用，而不是对象的值。
 
 请看下面这个例子
 
@@ -2799,9 +3125,11 @@ print(board) # [['-', 'x'], ['-', 'x']]
 | queue （（Queue，LifoQueue & PriorityQueue））   | 同步类，用于不同线程利用这些数据类型交换信息                 |
 | multiprocessing （Queue）                        | 进程间通信                                                   |
 | asyncio （（Queue，LifoQueue & PriorityQueue）） | 异步编程里的任务管理                                         |
-| heapq                                            | 没有队列类，只是提供了heappush和heappop，让用户可以把可变序列当作堆队列或者优先队列使用 |
+| heapq                                            | 没有队列类，只是提供了 heappush 和heappop，让用户可以把可变序列当作堆队列或者优先队列使用 |
 
 ## 数组
+
+### 节省内存的数组
 
 Python 中任何东西都是对象，包括定义的 int 变量。虽然传入的是一个 int 数据 1，但是它仍然占据了 28  bytes 的内存空间。
 
@@ -2819,7 +3147,7 @@ print(sys.getsizeof(array.array('i', [1])))  # size = 84
 print(sys.getsizeof(array.array('i', [1, 2])))  # size = 88, 增加了一个元素只增加了 4 byte
 ```
 
-## 数组于列表的效率对比
+### 数组与列表的效率对比
 
 分别用数组和列表生成数据写入 txt 文档。
 
@@ -2866,7 +3194,7 @@ txt2array(file="list.bin") # 0.03528928756713867
 
 ## memoryview
 
-memoryview 提供了一个高级接口来访问和处理内存中的数据，它允许在不进行数据拷贝的情况直接访问和处理字节数据，可以减少内存的使用和提高效率。
+内置的 memoryview 类是一种共享内存的序列类型，可在不复制字节的情况下处理数组的切片，可以减少内存的使用和提高效率。
 
 memoryview 对象可以与其他 Python 对象一起使用，例如字节数组、字节对象、数组等。它通过提供一个统一的接口来访问这些对象的底层内存，从而使得对这些数据进行低级别的操作变得可能。
 
@@ -2919,7 +3247,7 @@ print(data_from_string)
 
 ## deque
 
-<b>deque 是双向队列，如果你的业务逻辑里面需要大量的从队列的头或者尾部删除，添加，用 deque 的性能会大幅提高！</b>
+<b>deque 是双向队列，如果业务逻辑中需要大量的从队头或尾部删除、添加元素，用 deque 的性能会大幅提高！</b>
 
 如果只是小队列，并且对元素需要随机访问操作，那么 list 会快一些。
 
@@ -2941,8 +3269,8 @@ dq.clear()
 <b>总结</b>
 
 1. 列表表达式 和 生成器表达式(元组省内存)很好用
-2. 元祖的拆包十分神奇,尤其是*号的存在
-3. 具名元组的实例也很节省空间,有点像模拟字典使用,._asdict() 方法来把记录变成 OrderedDict 类型
+2. 元组的拆包十分神奇，尤其是 * 号的存在
+3. 具名元组的实例也很节省空间，有点像模拟字典使用 ._asdict() 方法来把记录变成 OrderedDict 类型
 4. 切片是基本用法,给切片赋值是个好的修改方式
 5. +=
    - 增量赋值 += 和 *= 会区别对待可变和不可变序列
@@ -2963,7 +3291,7 @@ dq.clear()
 > - 可散列对象还要有`__qe__()` 方法，这样才能跟其他键做比较。
 > - 如果两个可散列对象是相等的，那么它们的散列值一定是一样的……
 
-`str`, `bytes`, `frozenset` 和 `数值` 都是可散列类型.
+`str`, `bytes`, `frozenset` 和 数值 都是可散列类型.
 
 ## 字典推导式
 

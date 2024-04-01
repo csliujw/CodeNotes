@@ -5,6 +5,7 @@
 - [CPP 视频](https://www.bilibili.com/video/BV1N24y1B7nQ/?spm_id_from=333.999.0.0&vd_source=cb8bc4312b30b416beadaad7244940ac)
 - [编译原理](https://www.bilibili.com/video/BV1m7411d7iS/?spm_id_from=333.337.search-card.all.click)
 - [计算机网络](https://www.bilibili.com/video/BV1JV411t7ow/?spm_id_from=333.337.search-card.all.click)
+- [《深度探索C++对象模型》全文笔记 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/599506395)
 
 ## 📝期刊论文
 
