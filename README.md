@@ -101,6 +101,11 @@ sci-hub 下载收费论文
 - [C++Primer读书笔记](C++系列/C++Primer.md)
 - [后台开发-核心技术与应用实践-面试](C++系列/后台开发-核心技术与应用实践.md)
 
+## 🏄Python
+
+- [Python基础](Python系列/Python基础.md)
+- [FluentPython](Python系列/FluentPython.md)
+
 ## 🎨设计模式
 
 - [GoF设计模式](Design-Pattern/设计模式.md)
