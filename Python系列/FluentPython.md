@@ -3282,13 +3282,13 @@ dq.clear()
 
 # 第三章字典和集合
 
-`dict` 类型不但在各种程序里广泛使用, 它也是 `Python` 语言的基石. 正是因为 `dict` 类型的重要, `Python` 对其的实现做了高度的优化, 其中最重要的原因就是背后的「散列表」 set（集合）和 dict 一样, 其实现基础也是依赖于散列表.
+`dict` 类型不但在各种程序里广泛使用，它也是 `Python` 语言的基石。正是因为 `dict` 类型的重要，`Python` 对其的实现做了高度的优化。Python 3.6 起，dict 的代码有两项重要的优化，节省了内存，还能保留键的插入顺序。其中最重要的原因就是背后的「散列表」 set（集合）和 dict 一样, 其实现基础也是依赖于散列表.
 
-散列表也叫哈希表, 对于 dict 类型, 它的 key 必须是可哈希的数据类型. 什么是可哈希的数据类型呢, 官方解释是:
+散列表也叫哈希表，对于 dict 类型，它的 key 必须是可哈希的数据类型。官方对可哈希的解释是
 
 > - 如果一个对象是可散列的，那么在这个对象的生命周期中，它的散列值是不变的
 > - 这个对象需要实现 `__hash__()` 方法。
-> - 可散列对象还要有`__qe__()` 方法，这样才能跟其他键做比较。
+> - 可散列对象还要有 `__qe__()` 方法，这样才能跟其他键做比较。
 > - 如果两个可散列对象是相等的，那么它们的散列值一定是一样的……
 
 `str`, `bytes`, `frozenset` 和 数值 都是可散列类型.
@@ -3306,6 +3306,73 @@ DIAL_CODE = [
 ## 利用字典推导快速生成字典
 country_code = {country: code for code, country in DIAL_CODE}
 print(country_code) # {'China': 86, 'India': 91, 'Russia': 7, 'Japan': 81}
+```
+
+## 映射拆包
+
+Python 3.5 增强了映射拆包功能
+
+- 1️⃣调用函数时，不止一个参数可以使用 **。但是，所有键都要是字符串，而且在所有参数中是唯一的（因为关键字参数不可重复）
+- 2️⃣** 可在 dict 字面量中使用，同样可以多次使用。这种情况下允许键重复，后面的键覆盖前面的键
+
+1️⃣调用函数时
+
+```python
+def test(**kwargs):
+    return kwargs
+
+test(**{'x': 1}, y=50, **{'z': 10})
+```
+
+2️⃣在 dict 字面量中使用
+
+```python
+t = {**{'x': 1}, 'y': 50, **{'z': 10}}
+```
+
+## 合并 dict |
+
+Python 3.9 支持使用 | 和 |= 合并映射
+
+```python
+t1 = {'x': 1}
+t2 = {'z': 10}
+print(t1 | t2)
+
+t1 |= t2
+```
+
+## 使用模式匹配处理映射
+
+模式匹配也同样支持 dict，且模式中键的顺序无关紧要。
+
+```python
+def get_creators(record: dict) -> list:
+    match record:
+        case {'type': 'book', 'api': 2, 'authors': [*names]}:
+            print("one")
+            return names
+        case {'type': 'book', 'api': 1, 'author': name}:
+            print("two")
+            return [name]
+        case {'type': 'book'}:
+            raise ValueError(f"Invalid 'book' record: {record!r}")
+        case {'type': 'movie', 'director': name}:
+            return [name]
+        case _:
+            raise ValueError(f'Invalid record: {record!r}')
+
+
+record = {'type': 'book', 'api': 2, 'authors': [1, 2, 3], 'title': 'hello'}
+get_creators(record) # one
+```
+
+与序列模式不同，就算只有部分匹配，映射模式也算成功匹配。所有的 case 中都没有 title，但是依旧成功匹配了。
+
+如果我们想把多出的键值对捕获到一个 dict 中，可以在一个变量前面加上 ，不过必须放在模式最后，`**_ ` 是无效的。
+
+```python
+case {'type': 'book', 'api': 2, 'authors': [*names], **extra}
 ```
 
 ## setdafault
@@ -3431,6 +3498,32 @@ print(d_proxy) # mappingproxy({1: 'A', 2: 'B'})
 
 `d_proxy` 是动态的, 也就是说对 `d` 所做的任何改动都会反馈到它上面.
 
+## 字典视图
+
+dict 的实例方法 .keys()、.values() 和 .items() 分别返回 dict_keys、dict_values 和 dict_items 类的实例。这些字典视图是 dict 内部实现使用的数据结构的只读投影。我们不能使用 [] 获取视图中的项。
+
+```python
+item = {'name': 'John', 'age': 22}
+val = item.values()
+# print(val[0]) # TypeError: 'dict_values' object is not subscriptable
+for it in val:
+    print(it)
+```
+
+通过 debugger 我们可以看到 val 视图有个 mapping 属性，他是 mappingproxy 类型的。因为视图对象是动态代理的，这也意味着更新原 dict 对象后，现有视图立即就能看到变化。
+
+如果我们在迭代视图的时候，修改原字典，可能会出现运行时异常`RuntimeError: dictionary changed size during iteration`，可以自己写代码 debugger 测试下。
+
+## 字典的缺点
+
+Python 的字典和其他语言类似，也是使用哈希表来实现的，查找效率很高，但是这意味着 key 必须是可哈希的，字典的内存开销也会比较大；
+
+不过在 CPython 3.6 中，dict 的内存布局更为紧凑，顺带的一个副作用是键的顺序得以保留。即便 CPython 3.6+ dict 的内存布局更加紧凑，但是至少需要把哈希表中三分之一的行留空。
+
+我们知道，Python 会在 `__dict__` 属性中存储实例属性，正是以字典形式存储实例属性的。Python 3.3 为了节省内存，实现了 `PEP 412- Key-Sharing Dictionary`，如果类实例的属性一样就共用一个哈希表，随类一起存储。如果新实例在 `__init__` 方法执行后又添加了新的实例属性，Python 就得为这个实例的 `__dict__` 属性创建一个新哈希表。
+
+因此，尽量避免在 `__init__` 后创建新的实例属性。
+
 ## 集合论
 
 集合的本质是许多唯一对象的聚集. 因此, 集合可以用于去重. 集合中的元素必须是可散列的, 但是 `set` 本身是不可散列的, 而 `frozenset` 本身可以散列.
@@ -3474,7 +3567,7 @@ s = {chr(i) for i in range(23, 45)}
 
 # 第四章文本和字节序列
 
-本章讨论了文本字符串和字节序列, 以及一些编码上的转换. 本章讨论的 `str` 指的是Python3下的.
+本章讨论了文本字符串和字节序列, 以及一些编码上的转换. 本章讨论的 `str` 指的是 Python3 下的
 
 ## 字符问题
 
