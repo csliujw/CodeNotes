@@ -1,13 +1,20 @@
 # 内容速查
 
-## 📚学习计划（暂停）
+## 📚学习计划
 
 - [CPP 视频](https://www.bilibili.com/video/BV1N24y1B7nQ/?spm_id_from=333.999.0.0&vd_source=cb8bc4312b30b416beadaad7244940ac)
 - [编译原理](https://www.bilibili.com/video/BV1m7411d7iS/?spm_id_from=333.337.search-card.all.click)
 - [计算机网络](https://www.bilibili.com/video/BV1JV411t7ow/?spm_id_from=333.337.search-card.all.click)
 - [《深度探索C++对象模型》全文笔记 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/599506395)
+- [Python 语言参考手册 — Python 3.12.2 文档](https://docs.python.org/zh-cn/3/reference/index.html) ing
 
 ## 📝期刊论文
+
+高质量期刊会议：CVPR、ECCV、ICVV、AAAI、WACV（也还行）
+
+推荐网站：[paperwithcode](https://paperswithcode.com)；[arXiv.org e-Print archive](https://arxiv.org/)
+
+百度搜 sci-hub 下载收费论文
 
 [从顶会层面看科研！计算机顶级会议大盘点（下） - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/397937922)
 
@@ -16,12 +23,6 @@
 [分布式系统领域有哪些经典论文？ - 知乎 (zhihu.com)](https://www.zhihu.com/question/30026369)
 
 [Distributed Systems Reading List (dancres.github.io)](https://dancres.github.io/Pages/)
-
-高质量期刊会议：CVPR、ECCV、ICVV、AAAI、WACV（也还行）
-
-推荐网站：[paperwithcode](https://paperswithcode.com)；[arXiv.org e-Print archive](https://arxiv.org/)
-
-sci-hub 下载收费论文
 
 ## 📒技术博客
 
