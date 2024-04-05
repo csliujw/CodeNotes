@@ -23,6 +23,10 @@ Linux 环境下：Python 交互式终端清屏（Ctrl + Alt + L）
 <class 'str'>
 ```
 
+### 变量
+
+Python 中的变量是定义的时候就要赋值，不能只定义不赋值~
+
 ### 分支结构
 
 - if
@@ -1443,6 +1447,20 @@ class Animal():
                 dog = Animal('中华土狗','公')
                 # dog.run()  # 对象调用类方法
 ```
+
+### 类的属性
+
+我们可以在类中定义属性，这类似于 Java 中的静态变量。
+
+```python
+class T:
+    a = 10
+    b = 20
+    def __init__(self):
+        print("create class T")
+```
+
+<b style="color:red">注意：Python 的变量一定是要定义的时候赋值！！不能只定义，不赋值！！</b>
 
 ### 类中的常用属性
 

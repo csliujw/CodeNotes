@@ -48,7 +48,7 @@
 
 <b>这部分的重点是：类装饰器和元类（metaclass），纯高级内容，如果涉及不到类库开发可以不看</b>
 
-# 第一部分-数据结构
+# ➡️第一部分-数据结构
 
 # 数据模型
 
@@ -80,9 +80,9 @@ Python 数据模型，社区中也称之为对象模型。我们借助《深度�
 
 Python 是如何实现对象的字符串表示的？
 
-Python 中关于字符串的表现形式有两种： `__str__` 与 `__repr__` 。
+Python 中关于字符串的表现形式有两种：`__str__` 与 `__repr__` 。
 
-- Python 的内置函数 `repr` 就是通过 `__repr__` 这个特殊方法来得到一个对象的字符串表示形式。这个在交互模式和调试器（pydev debugger）上比较常用，如果没有实现 `__repr__` ，当控制台（交互模式的控制台）打印一个对象时往往是 `<A object at 0x000>` 。
+- Python 的内置函数 `repr` 就是通过 `__repr__` 这个特殊方法来得到一个对象的字符串表示形式。这个在交互模式和调试器（pydev debugger）上比较常用，如果没有实现 `__repr__` ，当控制台（交互模式的控制台）打印一个对象时往往是 `<A object at 0x000>`。
 - `__str__` 则是使用 `str()` 函数时使用的，或是在 `print` 函数打印一个对象的时候才被调用，终端用户友好。
 
 PyCharm debugger 实测：Python debugger 对象时，会以 `__repr__` 的返回值来显示对象，其次才是根据  `__str__` 的返回值来显示对象。
@@ -1073,7 +1073,13 @@ s = {chr(i) for i in range(23, 45)}
 
 # 文本和字节序列
 
-本章讨论了文本字符串和字节序列, 以及一些编码上的转换. 本章讨论的 `str` 指的是 Python3 下的
+本章讨论了文本字符串和字节序列，以及一些编码上的转换。本章讨论的 `str` 指的是 Python3 下的
+
+<b>编码和解码</b>
+
+编码，将信息（如文本、声音、图像等）从一种格式或表示方式转换为另一种格式或表示方式的过程。
+
+解码，将经过编码的信息还原为原来的格式或表示方式（一般是转成我们可读的内容）
 
 ## 字符问题
 
@@ -1251,13 +1257,15 @@ print(io.getvalue())  # ["streaming API"]
 
 
 
-# 数据类构建器⚠️
+# 数据类构建器⚠️⚠️
 
 ## 数据类构建器介绍
 
-数据类构建器：构建一个只是字段集合的简单类，除此之外，这个类几乎没有其他额外的功能。
+数据类构建器：构建一个只是字段集合（存储数据）的简单类，除此之外，这个类几乎没有其他额外的功能。
 
-<b>我们来构建一个简单的代表经纬度坐标的类来理解为什么要提出数据类构建器</b>
+为什么需要数据类构建器呢？当我们希望使用一个类来存储数据时，我们往往是只希望它存储数据（如将数据库中查询出的数据存储到类中），使用普通的类存在严重的重复复编码的问题。
+
+<b>我们来构建一个简单的代表经纬度坐标的类来理解为什么要提出数据类构建器，它是怎么解决重复编码问题的</b>
 
 这是一个代表经纬度坐标的类
 
@@ -1268,7 +1276,7 @@ class Coordinate:
         self.lon = lon
 ```
 
-这种写法，每个属性我们都要写三次，而且它也没有给我们提供人性化的打印方式和比较数据的方式。
+这种写法，每个属性我们都要写三次，存在严重的重复编码，而且它也没有给我们提供人性化的打印方式和比较数据的方式，都需要我们自行实现。
 
 直接打印经纬度对象是这样的
 
@@ -1287,7 +1295,7 @@ location == moscow # False 无意义的==操作，继承自object的__eq__方法
 (location.lat, location.lon) == (moscow.lat, moscow.lon) # 需要显示比较每个属性
 ```
 
-而数据类构建器可以很好的解决上述问题，下面是通过 namedtuple 构建的 Coordinate 类例子
+<span style="color:blue">而数据类构建器可以很好的解决上述问题，不希望需要我们手动编写这么多代码。下面是通过 namedtuple 构建的 Coordinate 类例子</span>
 
 ```python
 from collections import namedtuple
@@ -1301,7 +1309,9 @@ moscow # 有意义的__repr__
 moscow == Coordinate(lat=55.756, lon=37.617) # True 支持根据属性比较
 ```
 
-而新的 type.NamedTuple 提供了一些功能，为每个字段添加类型注解
+<b>除了 namedtuple 外，Python 还提供了 typing.NamedTuple 和 dataclass 作为数据构建器</b>
+
+typing.NamedTuple 提供了一些功能，可以为每个字段添加类型注解
 
 ```python
 import typing
@@ -1313,7 +1323,7 @@ issubclass(Coordinate, tuple) # True
 typing.get_type_hints(Coordinate) # {'lat': float, 'lon': float}
 ```
 
-自 Python3.6 之后，typing.NamedTuple 也能用于类声明中。这样可读性更好，而且很容易重写或增加方法。
+自 Python3.6 之后，typing.NamedTuple 也能用于类声明中。这种方式可读性更好，而且很容易重写或增加方法。
 
 ```python
 class Coordinate(NamedTuple):
@@ -1324,11 +1334,21 @@ class Coordinate(NamedTuple):
 Coordinate(1, 2) # Coordinate(lat=1, lon=2)
 ```
 
-虽然 NamedTuple 这样看起来像是父类，但是实际并不是。它使用元类高级特性来自定义用户类的创建
+虽然 NamedTuple 看起来是父类，但其实不是，NamedTuple 是一个 function，是使用元类这一高级功能来创建用户类的。
 
-在通过 typing.NamedTuple 生成的 `__init__` 方法中，字段作为参数出现的顺序与它们在类语句中出现的顺序相同。
+```python
+from typing import NamedTuple
 
-像 typing.NamedTuple 一样，dataclass 装饰器支持 PEP 526 语法来定义实例属性。装饰器读取变量注释，并为你的类自动生成方法。
+class D(NamedTuple):
+    lat: float
+
+# print(issubclass(D, typing.NamedTuple)) # 抛出异常
+print(type(NamedTuple)) # <class 'function'>
+```
+
+在 typing.NamedTuple 生成的 `__init__` 方法中，字段作为参数出现的顺序与它们在 class 语句中出现的顺序相同。
+
+与 typing.NamedTuple 一样，dataclass 装饰器支持 PEP 526 语法来定义实例属性。装饰器读取变量注释，自动为构建类生成方法。
 
 ```python
 from dataclasses import dataclass
@@ -1339,15 +1359,15 @@ class Coordinate:
     lon: float
 ```
 
-<b>主要特性</b>
-
-不同的数据类构建器有很多共同点，如下表所示。
-
-||||
-
-
+<b>类装饰器和元类提供了超越继承的功能，方便我们定制类的行为。</b>
 
 ## 使用数据类构建器的理由
+
+<b>Python 数据类构建器的方式有三种</b>
+
+- 具名元组 collections.namedtuple，构建的是内容不可变的数据类
+- typing.NamedTuple，[collections.namedtuple()](https://docs.python.org/zh-cn/3/library/collections.html#collections.namedtuple) 的类型版本，需要为字段添加类型提示，构建的是内容不可变的数据类
+- @dataclasses.dataclass [官方介绍](https://peps.python.org/pep-0557/)，相比于前两种方式，可以实现更为复杂的功能；可以构建内容可变的数据类
 
 <b>Python 为什么要提出数据类构建器呢？</b>
 
@@ -1359,44 +1379,209 @@ class Coordinate:
 
 数据类可用于构建将要导出为 JSON 或其他交换格式的记录，也可用于存储刚刚从其他系统导入的数据。Python 中的数据类构建器都提供了把实例转换为普通字典的方法或函数，而且构造函数全部支持通过关键字参数提供一个字典（非常接近 JSON 记录），再使用 ** 展开。
 
-我们在使用数据类时，应该将其实例当作不可变对象处理，即使字段是可变的，也不应该修改。倘若更改，把数据和行为结合在一起的巨大优势就没有了。假如导入或导出时需要更改值，应该自己实现构建器方法，而不是使用数据类构建器提供的“用作字典”方法或常规的构造函数。
+<span style="color:blue">我们在使用数据类时，应该将其实例当作不可变对象处理，即使字段是可变的，也不应该修改。</span>倘若更改，把数据和行为结合在一起的巨大优势就没有了。假如导入或导出时需要更改值，应该自己实现构建器方法，而不是使用数据类构建器提供的“用作字典”方法或常规的构造函数。
 
-<b>x._asdict() 将数据类构造器转为 dict，便于转 JSON 格式的数据</b>
+<b>x._asdict() 将数据类构造器转为 dict，转 JSON 格式的数据</b>
 
-<b>Python 数据类构建器的方式有三种</b>
+## 主要功能
 
-- 具名元组 collections.namedtuple，构建的是内容不可变的数据类
-- typing.NamedTuple，[collections.namedtuple()](https://docs.python.org/zh-cn/3/library/collections.html#collections.namedtuple) 的类型版本，需要为字段添加类型提示，构建的是内容不可变的数据类
-- @dataclasses.dataclass [官方介绍](https://peps.python.org/pep-0557/)，相比于前两种方式，可以实现更为复杂的功能；可以构建内容可变的数据类
+| -                | namedtuple        | NamedTuple          | dataclass                                        |
+| ---------------- | ----------------- | ------------------- | ------------------------------------------------ |
+| 可变实例         | 否                | 否                  | 是                                               |
+| class 语句语法   | 是                | 是                  | 是                                               |
+| 构造字典         | x._asdict()       | x._asdict()         | dataclasses.asdict(x)                            |
+| 获取默认值       | x._field_defaults | x._field_defaults   | [ f.default for f in <br>dataclasses.fields(x) ] |
+| 获取字段类型     | 不支持字段类型    | `x.__annotations__` | `x.__annotations__`                              |
+| 更改后创建新实例 | x._replace(...)   | x._replace(...)     | x._replace(...)                                  |
+| 运行时定义新类   | namedtuple(...)   | NamedTuple(...)     | dataclasses.make_dataclass(...)                  |
 
-## 什么是类型提示⚠️
+下面分别讨论这些主要功能
 
-Python 类型提示可以看作“供 IDE 和类型检查工具验证类型的文档”。类型提示对 Python 程序的运行时行为没有任何影响。
+<b>可变实例</b>
+
+3 个数据类构建器之间主要的区别在于，collections.namedtuple 和 typing.NamedTuple 构建的类是 tuple 的子类（<span style="color:blue">NamedTuple 类型的写法并非继承自 NamedTuple，而是使用元类这一高级功能创建用户类的。PS：NamedTuple 是一个 function。</span>），因此实例是不可变的。@dataclass 默认构建可变的类。不过，@dataclass 装饰器接受一个关键字参数frozen，指定 frozen=True，初始化实例之后，如果为字段赋值，则抛出异常。
+
+<b>class 语句语法</b>
+
+只有 typing.NamedTuple 和 dataclass 支持常规的 class 语句句法，方便为构建的类添加方法和文档字符串。
+
+<b>构造字典</b>
+
+两种具名元组都提供了构造 dict 对象的实例方法（._asdict），可根据数据类实例的字段构造字典。dataclasses 模块也提供了构造字典的函数，即 dataclasses.asdict。
+
+<b>获取字段名称和默认值</b>
+
+3 个类构建器都支持获取字段名称和可能配置的默认值。对于具名元组类，这些元数据在类属性 .\_fields 和 .\_fields_defaults 中。对于使用 dataclass 装饰器构建的类，这些元数据使用 dataclasses 模块中的 fields 函数获取。fields 函数返回一个由 Field 对象构成的元组，Field 对象有几个属性，包括 name 和 default。
+
+<b>获取字段类型</b>
+
+typing.NamedTuple 和 @dataclass 定义的类有一个 `__annotations__` 类属性，值为字段名称到类型的映射。前面说过，不要直接读取 `__annotations__` 属性，而要使用 typing.get_type_hints 函数。
+
+<b>更改后创建新实例</b>
+
+对于具名元组实例 x，x._replace(\*\*kwargs) 根据指定的关键字参数替换某些属性的值，返回一个新实例。模块级函数 dataclasses.replace(x, \*\*kwargs) 与 dataclass 装饰的类具有相同的作用
+
+<b>运行时定义新类</b>
+
+class 句法虽然可读性更高，但毕竟还是硬编码的。框架可能需要在运行时动态构建数据类，<span style="color:blue">如根据程序运行产生的一些条件动态修改类</span>。为此，可以使用默认的函数调用句法，collections.namedtuple 和 typing.NamedTuple 都支持。dataclasses 模块提供的make_dataclass 函数也是出于这个目的。
+
+## 类型提示⚠️
+
+类型提示（也叫类型注解）声明函数参数、返回值、变量和属性的预期类型。Python 的类型提示可以看作“供 IDE 和类型检查工具验证类型的文档”。因为类型提示对 Python 程序的运行时行为没有任何影响。
+
+#### 变量注解句法
+
+变量注解的基本语法 var_name: some_type
+
+定义数据类时，最常使用以下类型
+
+- 一个具体类，如 str 或 FrenchDeck
+- 一个参数化容器类型，如 list[int]、tuple[str, float] 等
+- typing.Optional，如 Optional[str]，声明一个字段的类型可以是 str 或 None
+
+另外，还可以为变量指定初始值。在 typing.NamedTuple 和 @dataclass 声明中，指定的初始值作为属性的默认值，防止调用构造函数时没有提供对应的参数。
+
+`var_name: some_type = a_value`
+
+#### 变量注解的意义
+
+类型提示在运行时没有作用。但是，Python 在导入时（加载模块时）会读取类型提示，构建 `__annotations__` 字典，供 typing.NamedTuple 和 @dataclass 使用，增强类的功能。
+
+<b>在普通类上使用类型提示</b>
 
 ```python
-# 大模型不了解 Python 3.7+ 以后的语法
 class D:
-    a: int  # 仅作为一个类型注解存在，并未绑定到类属性上, 这种语法有什么意义？
-    b: float = 10  # 是类型注解，且被绑定在了类属性上
+    a: int  		#1️⃣
+    b: float = 10  	#2️⃣
+    c = 'cc'		#3️⃣
+dir(D) #[..., '__weakref__', 'b', 'c']
+
+❶ a 出现在 __annotations__ 中，但被抛弃了，因为该类没有名为
+a 的属性
 ```
+
+1️⃣a 出现在了 `__annotations__` 中，但是这个类型注解并未实际创建一个名为 a 的属性，这种行为被称为 ”被抛弃了“。尽管类型注解存在，但它并没有导致创建相应的属性或字段。
+
+2️⃣b 作为注解记录在案，并且是一个类属性，值为 1.1
+
+3️⃣c 是普通的类属性，没有注解
+
+为什么 a 不是类属性，b、c 是类属性？因为它们在类中，且绑定了值。
+
+<span style="color:blue">我们尝试访问 D 中的 a 会抛出异常 AttributeError: type object 'D' has no attribute 'a'</span>
+
+```python
+class D:
+    a: int  # 1️⃣
+    b: float = 10  # 2️⃣
+    c = 'cc'  # 3️⃣
+
+print(D.__annotations__)
+# print(D.a)  # error
+print(D.b, D.c)
+```
+
+<b>在 typing.NamedTuple 上类型注解的表现和普通类有所不同</b>
+
+```python
+import typing
+class DemoTNClass(typing.NamedTuple):
+    a: int			#1️⃣
+    b: float = 1.1	#2️⃣
+    c = 'span'		#3️⃣
+
+print(DemoTNClass.__annotations__)
+print(dir(DemoTNClass))
+print(DemoTNClass.a)
+```
+
+1️⃣2️⃣3️⃣都是注解，也都是实例属性 (使用 dir 查看)。
+
+a 和 b 还是实例属性，创建 DemoTNClass 实例对象的时候，实例对象会有 a b 两个实例属性~
+
+```python
+d = DemoTNClass(a=1, b=1.)
+```
+
+<span style="color:red">具体的细节涉及到元编程，目前可以把描述符理解为特性（property）读值（getter）方法</span>
+
+<b> dataclass 装饰的类，类型注解的表现</b>
+
+```python
+from dataclasses import dataclass
+@dataclass(frozen=False)
+class DemoDataClass:
+    a: int			#1️⃣
+    b: float = 1.1	#2️⃣
+    c = 'span'		#3️⃣
+
+print(DemoDataClass.__annotations__) # {'a': <class 'int'>, 'b': <class 'float'>}
+# print(DemoDataClass.a) # error
+d = DemoDataClass(a=1, b=1.)
+print(d.a)
+```
+
+1️⃣是注解和实例属性，不是类属性！！！
+
+2️⃣是注解，类属性和实例属性
+
+3️⃣是类属性
+
+#### dataclass 中的细节
+
+dataclass 中有两个参数，forzen 和 order。frozen=True 可以防止意外更改类的实例。order=True 允许排序数据类的实例。
+
+Python 中规定，带默认值的参数一定要在无默认值参数的后面。但是当我们在 @dataclass 装饰的类中给属性可变默认值时会抛出异常。
+
+```python
+from dataclasses import dataclass, field
+@dataclass
+class ClubMember:
+    name: str
+    guests: list = [] 1️⃣
+```
+
+1️⃣这种行为是不允许的 `ValueError: mutable default <class 'list'> for field guests is not allowed: use default_factory`
+
+应该修改为使用 default_factory 赋予默认值
+
+```python
+from dataclasses import dataclass, field
+@dataclass
+class ClubMember:
+    name: str
+    guests: list = field(default_factory=list)
+```
+
+共用往往导致 bug。这样，我们可以确保每个 ClubMember 实例都有自己的一个 list，而不是所有实例共用同一个 list。
+
+<b>@dataclass 提供了一个 `__post_init__` 方法，该方法会在执行 `__init__` 后自动调用，可用于校验数据，或根据已有字段计算其他字段</b>
+
+如果想定义一个非实例的字段，可以使用 InitVar，它会阻止 @dataclass 把 database 视为床柜字段，不会被设为实例属性。
+
+```python
+from dataclasses import dataclass, InitVar
+
+@dataclass
+class C:
+    i: int  # 实例属性，而非类属性
+    has_database: bool = None
+    database: InitVar[list] = None
+
+    def __post_init__(self, database):
+        if database is not None:
+            self.has_database = True
+        else:
+            self.has_database = False
+
+print('i' in dir(C))
+c = C(i=10, database=[1, 2, 3])
+print(c.has_database)
+```
+
+
 
 <b style="color:red">再看一遍书里的 5.5 节</b>
-
-## 使用普通类存储数据
-
-我们来看一个使用普通类存储数据的代码。
-
-```python
-class Save:
-    def __init__(self, name, age):
-        self.name = name
-        self.age = age
-
-    def __repr__(self):
-        return f'name={self.name}, age={self.age}'
-```
-
-我们需要书写 `__init__ / __repr__` 等方法，略显累赘（每一个 name、age 都需要写四次）。而且，当我们希望使用一个类来存储数据时，我们往往是只希望它存储数据。不希望需要我们手动编写这么多代码。
 
 ## 具名元组-nametuple
 
@@ -1454,20 +1639,6 @@ print(T("jerry", 120))
 ```
 
 <b>collections.namedtuple 和 typing.NamedTuple 构建的类是 tuple 的子类，因此实例是不可变的</b>
-
-## @dataclasses.dataclass
-
-使用 @dataclass 时不能省略类型提示
-
-@dataclass 在顶层声明的带有类型提示的属性是实例属性，在顶层声明的不带类型提示的属性是类属性。
-
-```python
-@dataclass
-class Spam:
-    repeat: int = 99  # 实例属性
-    num = 10 # 类属性
-    ber: ClassVar[int] = 99 # 使用 ClassVar 为类属性声明注解类型，不优雅。
-```
 
 # 对象引用/可变性/GC
 
@@ -1812,7 +1983,7 @@ True
 
 第一部分最后一章书的总结。
 
-# 第二部分-函数即对象
+# ➡️第二部分-函数即对象
 
 # 函数是一等对象
 
@@ -1857,7 +2028,6 @@ print(fab(5))
 
 - 如 `map`, `filter` , `reduce`, `sorted` 等
 - map、filter 返回的是生成器，可以被生成器表达式替代，reduce 大多数场景没有 sum 好用，效率也没 sum 高
-- 这三个高阶函数的返回值都是迭代器
 
 sorted 也是一个高阶函数，调用 sorted 时，我们可以将 len 函数作为参数传递
 
@@ -1870,10 +2040,11 @@ print(new_fruits)
 - map 接受一个函数和一个可迭代的对象 (实现了 getitem 的就是可迭代的)
 
 ```python
-numbers = range(1, 5)
+from collections.abc import Iterator
+
 # map 接受一个函数和一个可迭代对象
-data = map(lambda x: x * 2, numbers)
-print(list(data))
+data = map(lambda x: x * 2, range(1, 5))
+print(isinstance(data, Iterator)) # True 返回的是迭代器
 ```
 
 可能会用到的内置归约函数（reduce，归约）
@@ -1988,9 +2159,9 @@ for name, param in sig.parameters.items():
 
 [流畅的python读书笔记-第五章 一等函数 - 个人文章 - SegmentFault 思否](https://segmentfault.com/a/1190000014676694)
 
-## 从位参数到仅限关键字参数
+## 从位置参数到仅限关键字参数
 
-[Python的参数类型](Python基础.md###函数)
+[请看这个文档：Python的参数类型，写的非常详细~](Python基础.md###函数)
 
 ```kotlin
 def fun(name, age, *args, **kwargs):
@@ -1999,20 +2170,20 @@ def fun(name, age, *args, **kwargs):
 
 fun 中的 `*args` 和 `**kwargs` 都是可迭代对象，展开后映射到单个参数。args 是个元组，kwargs 是字典。
 
+ <b>*args 不定长的可变长位置参数</b>
+
 ```python
-# 仅限关键字参数，用 * 限制 other 的传参只能通过 other= 的形式传递参数
-def my_func(min, max=10, *, other):
-    print(other)
-
-my_func(100, 500, other=700)
-
 # *data 表示 data 会接受多个数据，数据以元组的形式包装起来
 # 由于 data 可以接受不定数量的参数，因此 other 需要指定参数
 def my_func2(min, *data, other):
     print(f"min:{min}, data:{data}, other:{other}")
 
 my_func2(10, 11, 12, other=13)
+```
 
+<b>**kwargs 不定长仅限关键字参数</b>
+
+```python
 # ** 映射到单个参数，参数的名称就是 key，值为 value
 def my_func3(min, **kdict):
     print(f"min:{min}, kdict:{kdict}")
@@ -2023,9 +2194,94 @@ my_func3(10, key='value', key2='value2')
 my_func3(10, **my_dict)
 ```
 
-## 冻结部分参数-partial
+<b>仅限关键字参数</b>
 
-有时候我们调用其他类库中的方法时，希望某些参数是固定的（因为我们不会直接修改他人类库中的方法，没法给参数默认值）这时候就可以使用 partial，将原函数改造成需要更少参数的回调的 API。
+Python 可以用 * 限制，* 后面参数的传参只能使用关键字参数。
+
+```python
+# 用 * 限制 other 的传参只能通过 other= 的形式传递参数
+def my_func(min, max=10, *, other):
+    print(other)
+
+my_func(100, 500, other=700)
+```
+
+<b>仅限位置参数</b>
+
+从 Python 3.8 开始，用户定义的函数签名可以使用 `/` 指定仅限位置参数，`/` 前面的都只能通过位置参数的方式进行传递。
+
+```python
+def only_position(a, b, /, c, d):
+    print(a + b + c + d)
+
+# error a,b 只能通过位置参数的方式进行传递，不能使用关键字参数
+only_position(a=1, b=2, c=3, d=4)
+# error a,b 是第一个和第二个
+only_position(c=3, d=4, 1, 2)
+# 正确
+only_position(1, 2, c=3, d=4)
+```
+
+<b>官方文档对 keyword arguments 的总结</b>
+
+```python
+def f(pos1, pos2, /, pos_or_kwd, *, kwd1, kwd2):
+      -----------    ----------     ----------
+        |             |                  |
+        |        Positional or keyword   |
+        |                                - Keyword only
+         -- Positional only
+```
+
+## operator & functools
+
+### functools
+
+<b>functools 中比较有用的方法有 reduce、map、filter 和 partial。</b>
+
+- partial 一般用于冻结函数的参数，将原函数改造成需要更少参数的回调的 API。
+- map 和 filter 大多数情况可以被生成器表达式替代，生成器表达式的性能更高，代码也更简洁。
+- reduce 在用于求和时可以被 sum 替代，sum 的性能高于 reduce。
+
+<b>reduce 代码示例，求乘积</b>
+
+```python
+t = reduce(lambda x, y: x * y, range(1, 5)) # 24
+```
+
+<b>map 代码示例，data 转换</b>
+
+```python
+from collections.abc import Iterator
+
+m = map(lambda x: str(x ** 2), range(1, 5))
+print(isinstance(m, Iterator)) # True 返回的是迭代器
+```
+
+<b>filter 代码示例，数据过滤</b>
+
+```python
+from collections.abc import Iterator
+
+f = filter(lambda x: x ** 2 > 5, range(1, 5))
+print(isinstance(f, Iterator)) # True 返回的是迭代器
+```
+
+### operator
+
+operator 中提供了很多操作供函数式编程使用，如利用 map 求数据的绝对值序列。
+
+```python
+import operator
+
+map(operator.abs, range(-10, -2)) # 返回的是一个生成器
+```
+
+其他方法要用到时再查。
+
+### 冻结部分参数-functools#partial
+
+有时候我们调用其他类库中的方法时，希望某些固定某些参数的值（我们不会直接修改他人类库中的方法，没法给参数默认值）这时候就可以使用 partial，将原函数改造成需要更少参数的回调的 API。
 
 从 functools 模块中导入 partial 函数，使用该函数固定 mul 函数的部分参数，返回一个新的函数。
 
@@ -2074,7 +2330,331 @@ print(test.__annotations__)
 
 # 函数中的类型提示
 
-https://blog.51cto.com/u_15127617/3264887
+<b>为什么要引入类型提示？</b>
+
+Python 3.5 引入了类型提示，它允许开发人员在代码中显示地声明类型信息。但是这种提示不是前置的，也不会影响 Python 解释器的运行，它的作用是为类型检测工具（如 Mypy）IDE（如 PyCharm）等分析代码。
+
+这里我们使用 mypy 分析代码中的类型提示 `pip install mypy`，`mypy source.py --check-untyped-defs` 可以检测代码的类型是否正确
+
+<b>个人认为，类型提示不是必须的，而是可选的。</b>
+
+2020 年看过一个 swin-deeplabv3 模型的代码，作者在类，函数等地方都用了类型提示，可读性确实强了很多，代码也臃肿了很多。
+
+如果确实需要使用类型提示再考虑使用。就像我们在复用类的功能是，到底是使用继承还是组合呢？只有当继承是必须的，且带来的收益高于付出时才考虑使用它。
+
+如果你确实需要类型提示，可以看这部分的内容。
+
+[Python类型提示_mob604756f99da6的技术博客_51CTO博客](https://blog.51cto.com/u_15127617/3264887)
+
+[《流畅的Python第二版》读书笔记——函数中的类型注解_12570095的技术博客_51CTO博客](https://blog.51cto.com/greyfoss/5825587)
+
+
+
+## 类型提示的基本语法
+
+<b>类型提示的语法格式</b>
+
+1️⃣对于变量：`var_name: type =`
+
+2️⃣对于函数形参：`var_name: type = `
+
+3️⃣对于函数返回值：`-> type`
+
+<b>我们来看下如何对变量、函数参数、函数返回值中使用类型提示</b>
+
+定义变量时使用类型提示。注意 Python 的变量不能只定义不赋值~
+
+```python
+# check_type.py
+a: int	# 定义 int 类型的变量 a
+a = 10	# 为其赋值
+
+b: float = 20	# 定义 float 类型的变量 b，赋值为 20
+
+"""
+检查代码的类型是否正确
+mypy check_type.py --check-untyped-defs
+
+Success: no issues found in 1 source file
+"""
+```
+
+我们再给出一个错误的类型操作，使用 mypy 进行类型检测
+
+```python
+a: int = 10
+b: str = "hello"
+c: str = a + b
+"""
+mypy check_type.py --check-untyped-defs
+check_type.py:3: error: Incompatible types in assignment (expression has type "int", variable has type "str")  [assignment]
+check_type.py:3: error: Unsupported operand types for + ("int" and "str")  [operator]
+Found 2 errors in 1 file (checked 1 source file)
+"""
+```
+
+从上面的代码可以看出，类型检查确实可以为我们发现一些潜在的错误。
+
+在函数的形参和返回值上使用类型提示
+
+```python
+def test_function(a: str, b: float = 10.)->float:
+    return a+str(b)
+"""
+mypy check_type.py --check-untyped-defs
+Success: no issues found in 1 source file
+"""
+```
+
+如果接受任意类型的参数或返回值可以使用 Any
+
+```python
+from typing import Any
+
+def test_any(a: Any) -> Any:
+    return a
+
+
+test_any(1)
+test_any("1")
+"""
+mypy check_type.py --check-untyped-defs
+Success: no issues found in 1 source file
+"""
+```
+
+## 类型声明
+
+类型声明包含这几种：基本类型、嵌套类型、自定义类型、复合类型、Any、别名。
+
+### <b>基本类型</b>
+
+对于 Python 的内置基本类型 int、float、str 和 byte 等，可以直接使用类型本身进行类型提示。
+
+```python
+# 直接定义
+age: int = 1
+
+# 声明后定义
+name: str
+naem = "jerry"
+
+def greet(name: str) -> str:
+    return f"Hello, my name is {name}!"
+
+def even_number(x: int) -> bool:
+    return x % 2 == 0
+
+def encode_data(data: str) -> bytes:
+    return data.encode('utf-8')
+```
+
+### <b>容器类型</b>
+
+我们可以指定变量的容器类型
+
+```python
+names: tuple
+names = (1,2,3,'jerry')
+# 或
+names: tuple = (1,2,3,'jerry')
+"""
+mypy check_type.py --check-untyped-defs
+Success: no issues found in 1 source file
+"""
+```
+
+也可以限定容器中的元素类型，可以使用 `list[str]` 表明 list 中只接收 str 类型的数据，3.6 以下的 Python 可以使用 typing 标准库来声明类型及元素类型。
+
+```python
+from typing import Tuple, List, Dict
+
+person: Tuple[str, int] = ('kkx', 18)	#1️⃣
+ages: List[int] = [1, 2, 3, 4, 5]		#2️⃣
+k_v: Dict[str, int] = {'age': 12, 'sex': 1}	#3️⃣
+"""
+mypy check_type.py --check-untyped-defs
+Success: no issues found in 1 source file
+"""
+```
+
+1️⃣限定了元组的第一个元素为 str 类型，第二个为 int 类型。<span style="color:blue">注意，元组中的所有元素都要指定类型。</span>
+
+2️⃣限定了列表中的元素都要为 int 类型
+
+3️⃣限定了字典的 key 要为 str 类型，value 要为 int 类型
+
+<b>元组指定类型元素的简写方式</b>
+
+如果元组中存储了很多元素，我们可以使用 `tuple[x,...]` 的方式表明所有的元素都是 x 类型的。
+
+```python
+ages: tuple[int, ...] = (1, 2, 3)
+```
+
+
+
+<b>list[str]</b>
+
+ Python 3.7 和 Python 3.8，需要从 `__future__` 中导入相关内容，才能在内置容器（例如 list）后面使用 [] 表示法。
+
+```python
+from __future__ import annotations
+
+names: list[str] = ['11']
+```
+
+3.9 及其以后的版本可以直接使用。
+
+### <b>自定义类型</b>
+
+Python 也支持对自定义类进行类型提示，用法和上面两种方式一样。
+
+```python
+from dataclasses import dataclass
+from typing import List
+
+@dataclass
+class Person:
+    name: str
+    age: int
+
+customer: List[Person] = [Person('jerry', 10), Person('john', 20)]
+
+print(customer[0])
+"""
+mypy check_type.py --check-untyped-defs
+Success: no issues found in 1 source file
+"""
+```
+
+### 复合类型-Union/Optional
+
+<b>Union：</b>如果类型是可变的，即可能是多种类型中的一种，可以使用 Union。
+
+```python
+def four_type_sum(value: Union[int, float, List[int | float], Tuple[int, int]]) -> int | float:
+    if isinstance(value, int | float):
+        return value * 2
+    if isinstance(value, List | Tuple):
+        return sum(value) * 2
+    return -1
+
+
+four_type_sum(1)
+four_type_sum(2)
+four_type_sum([1, 2, 3, 4.5])
+four_type_sum((1, 2))
+```
+
+我们在 Union 中使用了 `|` 这是 Python 3.10 支持的语法，`Union[float | int] 等价于 Union[float, int]`，`|` 语法的语义更加清晰。
+
+<b>Optional 表示类型可以是 Optional 中的任何一个或 None。</b>
+
+```python
+Python 文档中的注释
+Optional[X] is equivalent to Union[X, None]
+```
+
+```python
+from typing import Optional
+
+def test_option(name: Optional[str]) -> Optional[str]:
+    return name
+
+test_option(None)
+```
+
+Union 和 Optional 也可以一起使用，诸如 `Optional[Union[int,float]]`
+
+### Callable
+
+Callable 类型提示用于表示一个可调用对象，例如函数、类或对象等。Callable 类型提示接受两个类型提示参数：第一个参数表示函数的参数类型，第二个参数表示函数的返回类型。
+
+```python
+import math
+from typing import Callable
+
+
+def test_callable(func: Callable[[float, float], float], x: float, y: float) -> float:
+    return func(x, y)
+
+
+test_callable(math.pow, 1, 2)
+```
+
+### Any/NoReturn
+
+Any 类型表示一个任意类型，它可以用于函数参数、函数返回值和变量等。使用 Any 类型时，我们可以省略类型注释，使变量类型更加灵活。
+
+```python
+def test_return(value: Union[int | float]) -> Any:
+    if isinstance(value, int):
+        return str(value)
+    elif isinstance(value, float):
+        return value
+    else:
+        return type(value)
+"""
+mypy test_check.py 
+Success: no issues found in 1 source file
+"""
+```
+
+NoReturn 类型表示函数不会返回任何值。这个类型通常用于标识那些没有返回值的函数。但是，Python 的函数默认会返回 None。mypy 在检测 NoReturn 时会提示错误。
+
+```python
+from typing import NoReturn
+
+def test_return() -> NoReturn:
+    print("hello")
+"""
+mypy test_check.py 
+test_check.py:7: error: Implicit return in function which does not return  [misc]
+"""
+```
+
+### 仅限位置参数和关键字参数
+
+对于仅限位置参数和关键字参数，类型的指定方式和普通变量一致。
+
+```python
+def t(a: int, b: int, /, *content: str, **key: str) -> Any:
+    print(a, b, content, key)
+
+
+t(1, 2, "3", "4", name="jerry")
+```
+
+这里我们指定了可变长参数的类型都要是 str，关键字参数类型都要是 str。
+
+## 鸭子型与名义类型
+
+<b>鸭子型</b>
+
+鸭子类型（Duck typing）这种观点被 Smalltalk — 首创的面向对象语言 — 以及Pyhton、JS、Ruby 采纳。
+
+在鸭子类型中，对象本身需要明确其类型，但变量（包括函数参数）却是无类型的。实际上，对象声明的类型并不重要，关键在于它实际支持的操作。例如，如果我们能够调用 birdie.quack() 方法，那么在当前上下文中，birdie 就是一个“鸭子”。
+
+根据定义，只有在运行时尝试对对象进行操作时才强制鸭子类型。这比名义类型更灵活，但代价是在运行时允许更多的错误。
+
+<b>名义类型</b>
+
+名义类型（Nominal typing）被 C++、Java 和 C# 等语言采纳，也被注解的 Python 支持。在名义类型系统中，对象和变量都具有明确的类型。
+
+名义类型描述了一种类型系统，其中每个值都有一个唯一的类型标识符，而这种类型标识符与值的内部结构无关。名义类型系统的核心特征在于其类型安全性完全依赖于类型的命名，而非值的内部结构。这意味着即使两个值的内部结构完全相同，只要它们的类型标识符不同，它们就被视为不同的类型。
+
+<b>鸭子型的优缺点</b>
+
+鸭子型最大的优点就是灵活，我们不必过分关注对象的类型，只要它们实现了相同的协议就可以互换（里氏替换原则）；和名义类型牵制要求类型相比，代码更加简洁、灵活。
+
+鸭子型的缺点也很明显。由于类型检查在运行时进行，这可能导致运行时错误，而这些错误往往难以预测和调试。
+
+<b>名义类型的优缺点</b>
+
+名义类型的优点是，它提供了编译时的类型安全保证，可以帮助编译器在编译时捕获许多潜在的错误，提高代码的可靠性。
+
+其缺点在于它的类型固化性。一旦定义了一个类型，就很难改变其行为。名义类型难以支持鸭子类型那样的动态行为，在需要高度灵活性的场景中可能是个劣势。
 
 # 函数装饰器和闭包
 
@@ -2089,27 +2669,31 @@ https://blog.51cto.com/u_15127617/3264887
 ```python
 # 一个典型的闭包
 def outer():
-    content = []1️⃣
-    def inner(value):2️⃣
+    content = [] #1️⃣
+    # print(id(content)) 2112
+    def inner(value):#2️⃣
         content.append(value)
+        # print(id(content)) 2112，可以看出，是同一个变量
         return content
     return inner
 
 t = outer()
-t(1)3️⃣
-t(2)3️⃣
-print(t(3))3️⃣ # [1,2,3]
+t(1)
+t(2)
+print(t(3))#3️⃣ [1,2,3]
 ```
 
-闭包可以访问定义体（自己）之外定义的非全局变量1️⃣。为了确保外部函数调用结束后，内部函数仍能访问外部函数的非全局变量，闭包2️⃣会保留自己用到的非全局变量，将其作为自由变量绑定在自己身上。这样，调用函数时，虽然外函数的作用域不可用了，但是仍能使用那些自由变量3️⃣。
+闭包可以访问定义体（自己）之外定义的非全局变量1️⃣。为了确保外部函数调用结束后，内部函数仍能访问外部函数的非全局变量，2️⃣会保留自己用到的非全局变量，将其作为自由变量绑定在自己身上。这样，调用函数时，虽然外函数的作用域不可用了，但是仍能使用那些自由变量3️⃣。
 
 <b>注意：只有涉及嵌套函数时才有闭包问题，它能访问定义体之外定义的非全局变量，理解了自由变量，就理解了闭包。</b>
 
-我们使用高阶函数来实现一个求均值的 avg 函数
+### 自由变量
+
+我们使用高阶函数来实现一个求均值的 avg 函数，通过它来探索自由变量的存储位置。
 
 ```python
 def make_avg():
-    data = []1️⃣
+    data = []#1️⃣
 
     def avg(new_value):
         series.append(new_value)
@@ -2140,7 +2724,7 @@ Python 在 `__code__` 属性（表示编译后的函数定义体）中保存了�
 
 从自由变量于函数的绑定我们可以看出来，其实闭包就是<b>名字空间与函数捆绑后的结果，被称为一个闭包 (closure).</b>
 
-### 闭包中的不可变-使用nonlocal
+### 闭包中的不可变-nonlocal
 
 为提高 avg 函数的效率，我们修改它的代码。
 
@@ -2249,14 +2833,19 @@ print(out) # 9
 
 ## 装饰器基础知识
 
-装饰器是可调用的对象，可以为已经存在的对象添加额外的功能，可以用在 function 上（function 也是对象），也可以用在 class 上。
+装饰器是一种可调用的对象，其参数是另一个函数（被装饰的函数）。
+
+装饰器可能会对被装饰的函数做些处理，然后返回函数，或者把函数替换成另一个函数或可调用对象。
+
+装饰器可以用在 function 上（function 也是对象），也可以用在 class 上。
 
 ### function 上的装饰器
 
 function 上的装饰器可用于增强 function。如，使用装饰器增强 add 方法，在计算结果前打印文字。
 
 ```python
-def deco_add(func):
+def deco(func):
+    print("execute deco ~ ")
     def inner(a, b):
         print("计算结果是: ", end='')
         func(a, b)
@@ -2272,20 +2861,27 @@ cal_add(10, 20)
 装饰器也可以简写成
 
 ```python
-def deco_add(func):
+def deco(func):
+    print("execute deco ~ ")
     def inner(a, b):
         print("计算结果是: ", end='')
         func(a, b)
-    return inner
+    return inner # 将 func 替换为 inner
 
-@deco_add
+@deco
 def add(one, two):
     print(one + two)
 
 add(1, 2)
 ```
 
-一般情况下装饰函数都会将某个函数作为返回值。
+一般情况下，装饰器会把一个函数替换成另一个函数。
+
+<b>从上面的例子可以看出，装饰器有以下三个基本性质</b>
+
+- 装饰器是一个函数或其他可调用对象。
+- 装饰器可以把被装饰的函数替换成别的函数。
+- 装饰器在加载模块时立即执行。
 
 ### 装饰器分类
 
@@ -2445,7 +3041,7 @@ subs(2, 3) # -1
 
 ## 何时执行装饰器
 
-- 被装饰的函数定义之后立即执行装饰器
+装饰器在被装饰的函数定义之后立即运行
 
 ```python
 # 运行下面的代码，即使没有运行 function, 但是由于 f1 f2 已经定义好了，这两个函数依旧是会被装饰器注册到 registry 中
@@ -2476,6 +3072,11 @@ import test_time
 # 运行下面的代码，test_time 中的装饰器会将 f1 f2 注册到 registry 中
 ```
 
+## 装饰器的实际用法
+
+- 装饰器通常在一个模块中定义，然后再应用到其他模块中的函数上。
+- register 装饰器返回的函数与通过参数传入的函数相同。实际上，大多数装饰器会在内部定义一个函数，然后将其返回。
+
 ## 标准库中的装饰器
 
 Python 内置了三个用于装饰方法的函数：`property` 、 `classmethod` 和 `staticmethod` 这些是用来丰富类的。
@@ -2485,9 +3086,10 @@ Python 内置了三个用于装饰方法的函数：`property` 、 `classmethod`
 - staticmethod：标记为普通函数，与类无关的函数
 - abstractmethod：标记为抽象方法，需要类继承 abc.ABC
 
-标准库 `functools.lru_cache` 还有两个非常实用的装饰器
+标准库 `functools` 有三个非常实用的装饰器
 
 - lru_cache 实现了备忘功能，缓存结果，利用缓存减少计算次数，可以用于优化递归计算
+- cache，对 lru_cache 的简单包装，功能和 lru_cache 一样
 - singledispatch 让 Python实现函数分发（类似于其他语言的重载）
 
 ### property
@@ -2529,6 +3131,8 @@ class D(abc.ABC):
 ```
 
 ### lru_cache
+
+lru_cache 比 cache 更为灵活，这里只介绍 lru_cache，cache 的用法可以自己去看文档注释。
 
 <b>lru_cache 提升 fib 的计算速度</b>
 
@@ -2617,6 +3221,43 @@ def f():
 f = d1(d2(f))
 ```
 
+## functools#wraps
+
+`functools.wraps` 是一个装饰器，它的主要作用是在使用装饰器时保留原始函数的元信息，如函数名、文档字符串、注释等。
+
+当我们在一个函数上使用装饰器时，装饰器通常会创建一个新的函数来包装原始函数。这个新的函数会覆盖原始函数的元信息，导致一些问题，比如函数的名称会变成内部函数名，文档字符串也会丢失。
+
+使用 `functools.wraps` 可以避免这些问题。它会将原始函数的元信息复制到新的函数上，使得新的函数看起来就像是原始函数一样。
+
+以下是一个使用`functools.wraps`的例子：
+
+```python
+from functools import wraps
+
+
+def decorator(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        print("Before function call")
+        result = func(*args, **kwargs)
+        print("After function call")
+        return result
+
+    return wrapper
+
+
+@decorator
+def say_hello(name):
+    """Say hello to the person with the given name."""
+    print(f"Hello, {name}!")
+
+
+print(say_hello.__name__)  # 输出: say_hello
+print(say_hello.__doc__)  # 输出: Say hello to the person with the given name.
+```
+
+我们使用 `@wraps(func)` 来装饰内部的 `wrapper` 函数，这使得 `say_hello` 函数的名称和文档字符串都被正确地保留了下来（将原函数的一些信息赋值给了新函数？）
+
 ## 总结
 
 <b>装饰器</b>
@@ -2667,252 +3308,250 @@ f = d1(d2(f))
       return inner_func
   ```
 
-# 一等函数与设计模式
+# 使用一等函数实现设计模式
 
-虽然设计模式与语言无关，但这并不意味着每一个模式都能在每一个语言中使用。Gamma 等人合著的《设计模式：可复用面向对象软件的基础》一书中有 `23` 个模式，其中有 `16` 个在动态语言中"不见了，或者简化了"。<span style="color:blue">Python 由于一等函数的存在可以简化某些设计模式。</span>
+在软件工程中，设计模式指解决常见设计问题的一般性方案。
+
+符合模式并不表示做得对 --- Ralph Johnson 经典著作《设计模式》的作者之一
+
+## 一等函数与设计模式
+
+虽然设计模式与语言无关，但这并不意味着每一个模式都能在每一门语言中使用。Gamma 等人合著的《设计模式：可复用面向对象软件的基础》一书中有 `23` 个模式，其中有 `16` 个在动态语言中"不见了，或者简化了"。<span style="color:blue">迭代器模式深植于 Python 语言中，在 Python 中模仿迭代器模式毫无意义；同时，由于一等函数的存在，Python 可以简化某些设计模式；</span>
 
 <b>为什么说一等函数可以简化设计模式呢？</b>
 
-以策略模式为例。经典的 OOP 语言，诸如 C++ / Java 等是不能让其他变量指向函数的。而 python function 实际上就是一个类，可以用其他变量指向函数。
+以策略模式为例。经典的 OOP 语言，诸如 C++ / Java 等是不能让其他变量指向函数的。而 Python 的函数实际上就是 function 类的实例对象，可以让其他变量指向函数。
 
-为了确保可以多态调用方法，C++ / Java 等语言只能通过设计基类、子类的形式来实现多态；而 Python 不必在设计一个基类，派生多个子类，只需要确保 function 一致即可。正是借助于这种特性，简化了设计模式的写法。
+设计模式的基石是多态。C++ / Java 等语言只能通过设计基类、子类的形式来实现多态；而 Python 不必设计一个基类，派生多个子类，只需要确保函数的行为一致即可。正是借助于这种特性，简化了设计模式的写法。
 
-<b>这里以订单业务举例，分别使用纯 OOP 和一等函数实现策略模式。</b>
+<b>所用的语言决定了哪些模式可用</b>
 
-假如一个网店制定了下述折扣规则。
+GoF 一书中有 `23` 个模式，其中有 `16` 个在动态语言中"不见了，或者简化了。这表明，语言的特性可以简化设计模式的写法，甚至是有些设计模式直接变成了语言的特点。
+
+这告诫我们，在学习设计模式的时候，应该关注它们解决了说明问题，不应该过于注重模式的形式（写法）。模式，本质上还是对多态的合理运用。
+
+<b>重新审视设计模式</b>
+
+在有一等函数的语言中，我们应该重新审视『策略/命令/模板方法/访问者』等经典模式。
+
+## 策略模式
+
+<b>这里以订单业务举例，分别使用纯 OOP 和一等函数实现策略模式。模式的 UML 图如下：</b>
+
+<div align="center"><img src="FluentPython/strategy.jpeg"></div>
+
+<span style="color:blue">假如一个网店制定了下述折扣规则。</span>
 
 - 有 1000 或以上积分的顾客，每个订单享 5% 折扣。
 - 同一订单中，单个商品的数量达到 20 个或以上，享 10% 折扣。
 - 订单中的不同商品达到 10 个或以上，享 7% 折扣。
 
-简单起见，我们假定一个订单一次只能享用一个折扣。
+<span style="color:blue">简单起见，我们假定一个订单一次只能享用一个折扣。</span>
 
-- 具体策略由上下文类的客户选择。
-- 实例化订单之前，系统会以某种方式选择一种促销折扣策略，
-- 然后把它传给 Order 构造方法。
+- 具体策略由上下文类的客户选择（一个基类，多个派生类）。
+- 实例化订单之前，系统会以某种方式选择一种促销折扣策略，然后把它传给 Order 构造方法。
 - 具体怎么选择策略，不在这个模式的职责范围内。
 
-纯 OOP 需要借助多态才可以实现策略模式
+<b>纯 OOP 需要借助多态才可以实现策略模式</b>
+
+用数据类构建器实现数据类 Customer / Item / Order
+
+- Customer 包含客户的信息，name 和 fidelity（积分）
+- Item 包含商品的信息，name / price / quantity 和一个计算总价的方法
+- Order 包含 customer（客户） / cart（购物车） / promotion（折扣策略）和计算订单原价的方法，计算订单折后价格的方法
 
 ```python
+import collections
+from typing import NamedTuple, Tuple, Optional
 from abc import ABC, abstractmethod
-from collections import namedtuple
-customer = namedtuple('Customer', 'name fidelity')
-
-"""产品类"""
 
 
-class Item:
-    def __init__(self, product, quantity, price) -> None:
-        self.product = product
-        self.quantity = quantity
-        self.price = price
+class Customer(NamedTuple):
+    """客户信息"""
+    name: str
+    fidelity: int
 
-    def total(self):
+    
+class Item(NamedTuple):
+    """商品信息"""
+    name: str
+    price: float
+    quantity: int  # 数量
+
+    def total(self) -> float:
         return self.price * self.quantity
 
 
-"""
-折扣策略类, 传入订单参数返回折扣金额
-"""
+class Order(NamedTuple):
+    """
+    统计原价和折扣价
+    """
+    customer: Customer
+    cart: Tuple[Item, ...]
+    promotion: Optional['Promotion'] = None
 
+    def __post_init__(self):
+        print(len(self.cart))
 
+    def total(self) -> float:
+        totals = (item.total() for item in self.cart)
+        return sum(totals)
+
+    def due(self) -> float:
+        if self.promotion is None:
+            discount = 0.
+        else:
+            discount = self.promotion.discount(self)
+        return self.total() - discount
+
+    def __repr__(self):
+        return f'Order( total: {self.total():.2f}, due: {self.due():.2f})'
+```
+
+定义一个父类 Promotion，并继承父类实现三种折扣策略
+
+```python
 class Promotion(ABC):
+
     @abstractmethod
-    def discount(self, order):
-        pass
+    def discount(self, order: Order) -> float:
+        """返回折扣金额"""
 
 
 class FidelityPromo(Promotion):
-    def __init__(self) -> None:
-        super().__init__()
+    def discount(self, order: Order) -> float:
+        if order.customer.fidelity >= 1000:
+            return order.total() * 0.05
+        return 0.0
 
-    def discount(self, order):
-        return order.total() * 0.05 if order.customer.fidelity > 1000 else 0
 
-
-class BulkItemPromo(Promotion):
-    def discount(self, order):
-        discount = 0
+class BulkPromo(Promotion):
+    def discount(self, order: Order) -> float:
+        discount = 0.0
         for item in order.cart:
             if item.quantity >= 20:
                 discount += item.total() * 0.1
         return discount
 
 
-"""
-订单类，可用于统计订单总价, 
-折扣价和非折扣价是区分开来的,
-total 表示非折扣价, due 表示折扣价
-"""
-
-
-class Order:
-    """
-    客户、购物车、销售策略
-    """
-
-    def __init__(self, customer, cart, promotion=None) -> None:
-        self.customer = customer
-        self.cart = list(cart)
-        self.promotion = promotion
-
-    def total(self):
-        """hasattr 判断是否有该变量,有则赋值,懒赋值吧"""
-        if not hasattr(self, '__total'):
-            self.__total = sum([item.total() for item in self.cart])
-        return self.__total
-
-    def due(self):
-        if self.promotion is None:
-            discount = 0
-        else:
-            discount = self.promotion.discount(self)
-        return self.total() - discount
-
-    """重写 toString 方法"""
-
-    def __repr__(self) -> str:
-        return f"total price {self.total()}, after due price {self.due()}"
-
-
-if __name__ == "__main__":
-    """第一个参数指定这个元组模板的名称, 后面的name fidelity 是客户名和积分"""
-    tom = customer('tom',1200)
-    tom_cart = [Item("牛奶", 2, 21.2), Item("鸡蛋", 20, 1), Item("巧克力", 5, 2)]
-    tom_order = Order(tom, tom_cart, FidelityPromo())
-    print(tom_order)
-
-
-    jerry = customer('jerry', 900)
-    jerry_cart = [Item("牛奶", 2, 21.2), Item("鸡蛋", 20, 1), Item("巧克力", 5, 2)]
-    jerry_order = Order(jerry, jerry_cart, BulkItemPromo())
-    print(jerry_order)
-    """
-    上述代码并未使用一等函数
-    """
+class LargeOrderPromo(Promotion):
+    def discount(self, order: Order) -> float:
+        distinct_item = {item.name for item in order.cart}
+        if len(distinct_item) >= 10:
+            return order.total() * 0.07
+        return 0.0
 ```
 
-一等函数无需借助多态实现策略模式，使用鸭子型即可，看起来像就行。
+测试代码
 
 ```python
-from abc import ABC, abstractmethod
-from collections import namedtuple
-customer = namedtuple('Customer', 'name fidelity')
+jerry = Customer('jerry', 0)
+tom = Customer('tom', 1000)
+cart = (Item('apple', 10, 20), Item('banana', 2, 4), Item('orange', 4, 20))
 
-"""产品类"""
+print(Order(jerry, cart, FidelityPromo()))
+print(Order(tom, cart, FidelityPromo()))
+```
+
+## 重构策略模式
+
+我们可以把具体策略换成简单的函数，只要这些策略的行为一样，都像折扣策略即可（三个策略的形参和返回值一样），这样可以去掉了抽象类 Promotion。Order 类需要修改，但改动不大。
+
+```python
+from typing import NamedTuple, Tuple, Optional, Callable
+
+class Customer(NamedTuple):
+    """客户信息"""
+
+class Item(NamedTuple):
+    """商品信息"""
+
+class Order(NamedTuple):
+    """
+    统计原价和折扣价
+    """
+    customer: Customer
+    cart: Tuple[Item, ...]
+    promotion: Optional[Callable[['Order'], float]] = None
+
+    def __post_init__(self):
+        print(len(self.cart))
+
+    def total(self) -> float:
+        totals = (item.total() for item in self.cart)
+        return sum(totals)
+
+    def due(self) -> float:
+        if self.promotion is None:
+            discount = 0.
+        else:
+            discount = self.promotion(self)
+        return self.total() - discount
+
+    def __repr__(self):
+        return f'Order( total: {self.total():.2f}, due: {self.due():.2f})'
 
 
-class Item:
-    def __init__(self, product, quantity, price) -> None:
-        self.product = product
-        self.quantity = quantity
-        self.price = price
-
-    def total(self):
-        return self.price * self.quantity
+def fidelity_promo_discount(order: Order) -> float:
+    if order.customer.fidelity >= 1000:
+        return order.total() * 0.05
+    return 0.0
 
 
-"""
-折扣策略类, 传入订单参数返回折扣金额, 由于 Python 中函数的引用可以被指向其他变量, 因此策略这块并不需要使用 class
-"""
-
-
-def fidelityPromo(order):
-    return order.total() * 0.05 if order.customer.fidelity > 1000 else 0
-
-
-def bulkItemPromo(order):
-    discount = 0
+def bulk_promo_discount(order: Order) -> float:
+    discount = 0.0
     for item in order.cart:
         if item.quantity >= 20:
             discount += item.total() * 0.1
     return discount
 
 
-"""
-订单类，可用于统计订单总价, 
-折扣价和非折扣价是区分开来的,
-total 表示非折扣价, due 表示折扣价
-"""
+def large_order_promo_discount(order: Order) -> float:
+    distinct_item = {item.name for item in order.cart}
+    if len(distinct_item) >= 10:
+        return order.total() * 0.07
+    return 0.0
 
 
-class Order:
-    """
-    客户、购物车、销售策略
-    """
+jerry = Customer('jerry', 0)
+tom = Customer('tom', 1000)
+cart = (Item('apple', 10, 20), Item('banana', 2, 4), Item('orange', 4, 20))
 
-    def __init__(self, customer, cart, promotion=None) -> None:
-        self.customer = customer
-        self.cart = list(cart)
-        self.promotion = promotion
-
-    def total(self):
-        """hasattr 判断是否有该变量,有则赋值,懒赋值吧"""
-        if not hasattr(self, '__total'):
-            self.__total = sum([item.total() for item in self.cart])
-        return self.__total
-
-    def due(self):
-        if self.promotion is None:
-            discount = 0
-        else:
-            discount = self.promotion(self)
-        return self.total() - discount
-
-    """重写 toString 方法"""
-
-    def __repr__(self) -> str:
-        return f"total price {self.total()}, after due price {self.due()}"
-
-
-if __name__ == "__main__":
-    """第一个参数指定这个元组模板的名称, 后面的name fidelity 是客户名和积分"""
-    tom = customer('tom', 1200)
-    tom_cart = [Item("牛奶", 2, 21.2), Item("鸡蛋", 20, 1), Item("巧克力", 5, 2)]
-    tom_order = Order(tom, tom_cart, fidelityPromo)
-    print(tom_order)
-
-    jerry = customer('jerry', 900)
-    jerry_cart = [Item("牛奶", 2, 21.2), Item("鸡蛋", 20, 1), Item("巧克力", 5, 2)]
-    jerry_order = Order(jerry, jerry_cart, bulkItemPromo)
-    print(jerry_order)
-    """
-    上述代码使用了一等函数, 策略的写法变得更为简洁
-    """
+print(Order(jerry, cart, fidelity_promo_discount))
+print(Order(tom, cart, fidelity_promo_discount))
 ```
 
 这块，书里的内容太少了，关于设计模式更详细的内容可参考：<a href="https://segmentfault.com/a/1190000021528338">思否</a>
 
-# 第三部分-类和协议
+# ➡️第三部分-类和协议
 
-# 符合Python风格的对象
+# 符合 Python 风格的对象
 
 <b style="color:red">绝对不要使用两个前导下划线，这是很烦人的自私行为 -- Ian Bicking</b>
 
 > 得益于 Python 数据模型，自定义类型的行为可以像内置类型那样自然。实现如此自然的行为，靠的不是继承，而是鸭子类型（duck typing）
 
-<b>鸭子型（duck typing）：</b>我们只需按照预定行为实现对象所需的方法即可。
+> <b>鸭子型（duck typing）：</b>我们只需按照预定行为实现对象所需的方法即可。
 
-这块的内容比较陌生，列一个提纲
+<b>这块的内容比较陌生，列一个提纲</b>
 
-- 支持用于生成对象其他表示形式的内置函数（如 repr()、bytes()，等等）
+- 让对象支持内置函数的行为，如使用 repr() / bytes() / complex() 将对象转为字符串、字节、complex 等
 - 使用一个类方法实现备选构造方法★★★
 - 扩展内置的 format() 函数和 str.format() 方法使用的格式微语言
 - 实现只读属性（property）
 - 把对象变为可散列的，以便在集合中及作为 dict 的键使用
-- 利用 `__slots__` 节省内存 => Python 默认用 dict 存储属性，dict 用哈希表实现的，费内存。
+- 利用 `__slots__` 节省内存 => 『Python 默认用 dict 存储属性，dict 用哈希表实现的，费内存』
 
 ## 对象表示形式
 
-每门面向对象的语言至少都有一种获取对象的字符串表示形式的标准方式。Python 提供了两种方式。
+每门面向对象的语言至少都有一种获取对象的字符串表示形式的标准方式。而 Python 提供了两种方式。
 
-- `repr()`，以便于开发者理解的方式返回对象的字符串表示形式。
-- `str()`，以便于用户理解的方式返回对象的字符串表示形式。
+| 方式     | 说明                                                         |
+| -------- | ------------------------------------------------------------ |
+| `repr()` | 以便于开发者理解的方式返回对象的字符串表示形式。<br>Python 控制台或调试器在显示对象时采用这种方式。 |
+| `str()`  | 以便于用户理解的方式返回对象的字符串表示形式。<br>使用print() 打印对象时采用这种方式。 |
 
 在 Python 3 中，`__repr__`、`__str__` 和 `__format__` 都必须返回 Unicode 字符串（str 类型）。只有 `__bytes__` 方法应该返回字节序列（bytes 类型）
-
-推荐优先实现 `__repr__`
 
 ## 实现 Vector
 
@@ -2928,8 +3567,11 @@ if __name__ == "__main__":
 - bool 函数会调用 `__bool__` 方法，如果 Vector2d 实例的模为零，返回 False，否则返回 True。
 
 ```python
+import math
+from array import array
+
 class Vector2d:
-    typecode = 'd'
+    typecode = 'd' # 1️⃣
 
     def __init__(self, x, y) -> None:
         self.x = float(x)
@@ -2938,14 +3580,14 @@ class Vector2d:
     def __iter__(self):
         return (i for i in (self.x, self.y))
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str: # 2️⃣
         class_name = type(self).__name__
         return "{}({!r},{!r})".format(class_name, *self)
 
     def __str__(self) -> str:
         return str(tuple(self))
 
-    def __bytes__(self):
+    def __bytes__(self): # 3️⃣
         return (bytes([ord(self.typecode)]) +
                 bytes(array(self.typecode, self)))
 
@@ -2958,10 +3600,17 @@ class Vector2d:
 
     def __bool__(self):
         return bool(abs(self))
-    
+
+
 vec = eval(repr(Vector2d(1.0, 2.0)))
 print(vec)  # (1.0, 2.0)
 ```
+
+1️⃣typecode 是类属性，在 Vector2d 实例和字节序列之间转换时使用。
+
+2️⃣`__repr__`使用 `{!r}` 获取各个分量的表示形式，然后插值，构成一个字符串。
+
+3️⃣迭代 Vector2d 实例，得到一个数组，再把数组转换成字节序列
 
 <b>实现一个方法将实例转换成字节序列，需求如下</b>
 
@@ -2979,7 +3628,7 @@ def from_bytes(cls, octets):
     return cls(*memv) # * 表示可以传入任意多的非 key-value 的参数
 ```
 
-此处解释下 cls，`cls` 通常用作类方法的参数，代表当前类的类型。它可以帮助我们在类方法内部创建新的实例，或者在需要的情况下获取类的相关信息。
+此处解释下 cls，cls 通常用作类方法的参数，代表当前类的类型。可以用于在类方法内部创建新的实例，获取类的相关信息。
 
 ```python
 class MyClass:
@@ -2993,10 +3642,10 @@ print(obj.x, obj.y)  # 输出：1 2
 
 ## classmethod 与 staticmethod
 
-这两个都是 Python 内置提供了装饰器. 这两个都是在类 `class` 定义中使用的, 一般情况下, class 里面定义的函数是与其类的实例进行绑定的. 而这两个装饰器则可以改变这种调用方式.
+这两个都是 Python 内置的装饰器，都是在类 `class` 定义中使用的。一般情况下，class 里面定义的函数是与其类的实例进行绑定的，而这两个装饰器则可以改变这种调用方式。
 
-- `classmethod` 这个装饰器表示方法属于类，非实例的方法, 并且将类本身作为第一个参数.
-- `staticmethod` 装饰器也会改变方法的调用方式, 它就是一个普通的函数, 只是恰巧定义在类里面。
+- `classmethod` 这个装饰器表示方法属于类，非实例的方法，classmethod 修饰的函数会将类本身（cls）作为第一个参数.
+- `staticmethod` 装饰器也会改变方法的调用方式，staticmethod 修饰的函数就是一个普通的函数，只是恰巧定义在类里面。
 
 ```python
 class Demo:
@@ -3020,18 +3669,40 @@ print(Demo.statmeth(5, 5, )) # (5,5)
 
 ## 格式化显示
 
-内置的 `format()` 函数和 `str.format()` 方法把各个类型的格式化方式委托给相应的 `.__format__(format_spec)` 方法. `format_spec` 是格式说明符，它是：
+f 字符串、内置函数 format() 和 str.format() 方法会把各种类型的格式化方式委托给相应的 `.__format__(format_spec)` 方法。format_spec 是格式说明符，它是：`format(my_obj, format_spec)` 的第二个参数
 
-- `format(my_obj, format_spec)` 的第二个参数
-- `str.format()` 方法的格式字符串，{} 里代换字段中冒号后面的部分
+我们来看下 Python 中的几种格式化字符串方式
 
-语法部分见第四章#format
+- 内置函数 format 格式化
+- str.format 格式化
+- f 字符串
+
+```python
+num = 1 / 3
+format(num, '.2f')
+"{rate:.2f}".format(rate=num)	# 1️⃣ .2f 是格式说明符, rate 作为 format 中的关键字参数
+f"{num:.2f}"								 # 2️⃣	.2f 是格式说明符
+```
+
+注意下怎么使用 str.format 和 f 字符串保留指定的小数位。
+
+1️⃣2️⃣格式化字符串使用到了 `:`，`:` 左边的是字段名，右边的是格式说明符，Python 中常用的格式说明符说明：b 和 x 分别表示二进制和十六进制的 int 类型，f 表示小数形式的 float 类型，而 % 表示百分数形式。
+
+格式说明符使用的表示法叫格式规范微语言，我们可以自行扩展。datatime 就扩展了自己的格式规范（重写 `__format__`）。
+
+```python
+>>> from datetime import datetime
+>>> now = datetime.now()
+>>> format(now, '%H:%M')
+'13:47'
+>>> format(now, '%H:%M:%S')
+'13:47:28'
+```
 
 ## 属性--@property装饰器
 
 - 将一个方法转为属性，下面的类将 value 方法视为一个属性使用 obj.value
-- 为了创建一个可写的属性，我们需要定义一个额外的装饰器@value.setter。
-  这个装饰器告诉 Python 如何设置属性的值
+- 为了创建一个可写的属性，我们需要定义一个额外的装饰器 @value.setter。这个装饰器告诉 Python 如何设置属性的值
 
 ```python
 class TestProperty:
@@ -3053,35 +3724,78 @@ tp.value = 200
 print(tp.value)
 ```
 
-## 私有属性和"受保护的"属性
+## 可哈希
 
-Python 实例变量没有像 `private` 这样的修饰符来创建私有属性, 在 Python 中, 有一个简单的机制来处理私有属性.
+如果我们希望一个对象可哈希，不一定要实现特性，也不一定要保护实例属性，正确实现 `__hash__` 方法和 `__eq__` 方法即可。但是，可哈希对象的值绝不应该变化。
+
+特殊方法 `__hash__` 的文档建议根据元组的分量计算哈希值。
 
 ```python
-class Dog:
-    def __init__(self, name) -> None:
-        self.__name = name
+# 在Vector2d类中定义
 
-dog = Dog('tom')
-print(dog.__name) # AttributeError: 'Dog' object has no attribute '__name'
-print(dog._Dog__name)# tom
+def __hash__(self):
+    return hash((self.x, self.y))
 ```
 
-如果属性以 `__name` 的 `两个下划线为前缀, 尾部最多一个下划线` 命名的实例属性, Python会把它名称前面加一个下划线加类名, 再放入 `__dict__` 中, 以 `__name` 为例, 就会变成 `_A__name` .
+## 私有属性和"受保护的"属性
 
-名称改写算是一种安全措施, 但是不能保证万无一失, 它能避免意外访问, 但不能阻止故意做坏事.
+Python 不能像 Java 那样使用 private 修饰符创建私有属性，但是它有一个简单的机制（`__`），能避免子类意外覆盖“私有”属性。
 
-只要知道私有属性的机制, 任何人都能直接读取和改写私有属性. 因此很多 Python 程序员严格规定：`遵守使用一个下划线标记对象的私有属性` . 
+我们使用 `__` 来创建类私有属性和实例私有属性。
 
-Python 解释器不会对使用单个下划线的属性名做特殊处理, 由程序员自行控制, 不在类外部访问这些属性. 这种方法也是所推荐的, 两个下划线的那种方式就不要再用了.
+```python
+class TP:
+    __name = 'jerry'
+
+    def __init__(self, age):
+        self.__age = age
+
+
+tp = TP(18)
+print(tp.__age)			# AttributeError
+print(tp.__name)		# AttributeError
+```
+
+现在，我们似乎无法在类外面访问私有属性了。但是，只要知道私有属性的机制，任何人都能直接读取和改写私有属性。
+
+以两个下划线为前缀（尾部最多一个下划线）命名的属性，Python 会在它们的名称前面加上 `_类名`，再放入 `__dict__` 中，以 `__name` 为例, 就会变成 `_TP__name`
+
+```python
+print(tp._TP__age)	# 可以访问了
+print(tp._TP__name)# 可以访问了
+```
+
+因此，名称改写算是一种安全措施，但是不能保证万无一失，它能避免意外访问，防君子不防小人。只要知道私有属性的机制，任何人都能直接读取和改写私有属性。因此 Python 社区规定：使用一个下划线标记对象的私有属性。
+
+Python 解释器不会对使用单个下划线的属性名做特殊处理，由程序员自行克制，不在类外部访问这些属性。使用两个下划线命名属性/方法是非常自私的行为。
 
 <b>Python 社区规定：使用一个下划线前缀标记的属性称为"受保护的"属性</b>
 
 ## 使用 slots 类属性节省空间
 
-Python 在各个实例中名为 `__dict__` 的字典里存储实例属性，字典虽然访问速度快但是会消耗大量内存。
+默认情况下 Python 将实例属性存储在名为 `__dict__` 的字典中，可以快速访问里面的属性。字典虽然访问速度快但是会消耗大量内存。
 
-如果要处理数百万个<b>属性不多的实例</b>，通过 `__slots__` 类属性，能节省大量内存，`__slots__` 是让解释器在元组中存储实例属性，而不用字典。
+如果定义一个名为 `__slots__` 的类属性，Python 会以序列的形式存储属性名称，不再使用字典存储属性，可以减小内存开销。
+
+```python
+class Pixel:
+    # 限定了 Pixel 只有三个属性
+    # __slots__ = ["x", "y", "value"]
+    __slots__ = ("x", "y", "value")
+
+p = Pixel() 
+
+p.x = 10
+p.y = 20 # 1️⃣
+p.color = 'red' # 2️⃣AttributeError: 'Pixel' object has no attribute 'color'
+# print(p.__dict__)  # 3️⃣AttributeError: 'Pixel' object has no attribute '__dict__'.
+```
+
+- 1️⃣我们只能给他绑定 `__slots__` 中出现的属性
+- 2️⃣无法绑定 `__slots__` 中未现的属性
+- 3️⃣不会创建 `__dict__` 了
+
+如果要处理数百万个<b>属性不多的实例</b>，通过 `__slots__` 类属性，能节省大量内存，`__slots__` 是让解释器在元组/列表中存储实例属性，而非字典。
 
 ```python
 class Vector2d:
@@ -3090,13 +3804,61 @@ class Vector2d:
     # 下面是各个方法（因排版需要而省略了）
 ```
 
+<b>父类声明了 `__slots__`，子类也建议声明一个 `__slots__`</b>
+
+我们来看下这份代码
+
+```python
+class Pixel:
+    __slots__ = ('__x', '__y', 'value')
+
+class MyPixel(Pixel):
+    pass
+
+mp = MyPixel()
+mp.name = 'jerry'
+print(mp.__dict__) # {'name': 'jerry'}
+```
+
+子类只继承 `__slots__` 的部分效果。为了确保子类的实例也没有 `__dict__` 属性，必须在子类中再次声明 `__slots__` 属性。
+
+```python
+class Pixel:
+    __slots__ = ('__x', '__y', 'value')
+
+class MyPixel(Pixel):
+    __slots__ = ()
+
+mp = MyPixel()
+mp.x = 100
+mp.name = 'jerry'  # AttributeError: 'MyPixel' object has no attribute 'name'
+```
+
+如果在子类中声明 `__slots__ = ()`（一个空元组），则子类的实例将没有`__dict__` 属性，而且只接受基类的 `__slots__` 属性列出的属性名称。
+
+如果子类需要额外属性，则在子类的 `__slots__` 属性中列出来
+
+```python
+class Pixel:
+    __slots__ = ('__x', '__y', 'value')
+
+class MyPixel(Pixel):
+    __slots__ = ('name',)
+
+mp = MyPixel()
+mp.x = 100
+mp.name = 'jerry'  # AttributeError: 'MyPixel' object has no attribute 'name'
+```
+
 <b>slots 的副作用</b>
 
 类实例没有办法再自由添加属性，这是副作用，而非目的。
 
+每个子类都要重新声明 `__slots__` 属性，如果父类定义了 `__slots__` 但是子类没定义，那么子类依旧是使用 `__dict__`，可以自由添加属性。
+
 如果不把 `'__weakref__'` 加入 `__slots__`，实例就不能作为弱引用的目标。
 
-每个子类要单独定义 slot 属性，因为解释器不会继承 slot，如果父类定义了 slots 但是子类没定义，那么子类依旧是使用 `__dict__`，可以自由添加属性。
+有 `__slots__` 的类不能使用 @cached_property 装饰器，除非把 `__dict__` 加入 `__slots__` 中
 
 ## 覆盖类属性
 
@@ -3114,28 +3876,28 @@ d2.type = 'dog2'
 print(d2.type)
 ```
 
-如果还想访问类属性，可以使用 `getattr` 方法，使用 type 获得实例对象属于那个类，然后用 getattr 获取类对应的属性。
+## 对私有的思考
 
-```python
-print(getattr( type(d2), 'type') ) # dog2
-```
+Java 的 private 修饰符和 protected 修饰符往往只是为了防止意外发生（一种安全措施）。只有使用 SecurityManager 部署 Java 应用程序时才能保障绝对安全，防止恶意访问。
 
-# 序列的修改/散列/切片
+Java 中的访问控制修饰符基本上也是安全措施，不能保证万无一失，至少在实践中是这样。因此，安心享受 Python 提供的强大功能，放心去用吧。
+
+# 序列的特殊方法
 
 ## 协议和鸭子类型
 
-在 Python 中, 序列类型不需要使用继承, 只需要符合序列协议的方法即可. 这里的协议就是实现 `__len__` 和 `__getitem__` 两个方法. 任何类, 只要实现了这两个方法, 它就满足了序列操作, 因为它的行为像序列.
+在 Python 中，自定义序列无需使用继承，符合序列协议即可。这里的协议就是实现 `__len__` 和 `__getitem__` 两个方法。任何类，只要实现了这两个方法，它就满足了序列操作，因为它的行为像序列。
 
 <b>把协议当作正式接口，理解协议和鸭子类型的关系，对自定义类型的影响</b>
 
-- Python 的序列协议只需要 __len__ 和 __getitem__ 两个方法。只要实现了这两个方法，就可以作为序列使用。如 PyTorch 的 DataLoader；这就是鸭子类型。像即可。
-- 协议是非正式的, 没有强制力, 因此你知道类的具体使用场景, 通常只要实现一个协议的部分. 例如, 为了支持迭代, 只需实现 `__getitem__` 方法, 没必要提供 `__len__` 方法, 这也就解释了 `鸭子类型`.( 实现 `__getitem__` 或 `__iter__` 对象就具备迭代的功能了)
+- 实现了 `__len__` 和 `__getitem__` 方法，就可以作为序列使用。如 PyTorch 的 DataLoader；这就是鸭子类型，像即可。
+- 协议是非正式的，没有强制力。因此，如果我们可以根据具体的需求来决定，是实现完整的协议还是实现部分协议。例如，为了支持迭代，实现 `__getitem__` 方法即可，无需提供 `__len__` 方法。( 实现 `__getitem__` 或 `__iter__` 对象就具备迭代的功能了)
 
-> <b>鸭子型：</b>当看到一只鸟走起来像鸭子、游泳起来像鸭子、叫起来也像鸭子，那么这只鸟就可以被称为鸭子
+<b>鸭子型：</b>当看到一只鸟走起来像鸭子、游泳起来像鸭子、叫起来也像鸭子，那么这只鸟就可以被称为鸭子。
 
 ## 可切片的序列
 
-切片 (Slice) 是用来获取序列某一段范围的元素. 切片操作也是通过 `__getitem__` 来完成的.
+切片 (Slice) 是用来获取序列某一段范围的元素。切片操作也是通过 `__getitem__` 来完成的。
 
 ```python
 from array import array
@@ -3247,14 +4009,26 @@ def __getitem__(self, index):
 
 ## 动态存取属性
 
-如果我们希望动态的为 Vector 设置一些属性（xyzt），让 xyzt 分别对应0~3 index 的值，这时候可以实现 `__getattr__` 方法。
+如果我们希望动态的为 Vector 设置一些属性（xyzt），让 xyzt 分别对应 0~3 index 的值，我们可以利用 @property 设置只读属性，但是过于麻烦。另一种策略是，实现 `__getattr__` 方法。
 
-- 查找属性时，先从实例里找，在找类，再沿着继承树找，还没有就调用类中定义的 `__getattr__` 方法，传入 self 和属性名称的字符串形式（openmmlab 好像用了挺多, convnext 里也用了很多）
+查找属性时，先从实例里找，在找类，再沿着继承树找，还没有就调用类中定义的 `__getattr__` 方法（openmmlab 好像用了挺多，convnext 里也用了很多）
+
+```mermaid
+graph LR
+查找属性-->实例对象-->|找到了|over
+实例对象-->|未找到|类
+类-->|找到了|over
+类-->|未找到|继承树
+继承树-->|找到了|over
+继承树-->|未到|getattr
+getattr-->|找到了|over
+```
 
 通过访问分量名来获取属性
 
 ```Python
 shortcut_names = 'xyzt'
+# 传入 self 和属性名称的字符串形式
 def __getattr__(self, name):
     cls = type(self)
     if len(name) == 1:
@@ -3294,9 +4068,9 @@ print(getattr(obj, 'attr')) # value
 
 ## 散列和快速等值测试
 
-实现 `__hash__` 方法。加上现有的 `__eq__` 方法，这会把实例变成可散列的对象.
+实现 `__hash__` 方法。加上现有的 `__eq__` 方法，这会把实例变成可散列的对象。
 
-当序列是多维是时候, 我们有一个效率更高的方法:
+当序列是多维是时候，我们有一个效率更高的方法
 
 ```Python
 def __eq__(self, other):
@@ -3317,11 +4091,11 @@ def __eq__(self, other):
 
 # 从协议到抽象基类
 
-协议是接口, 但不是正式的，这些规定并不是强制性的, 一个类可能只实现部分接口, 其他语言如 Java 使用继承、重写和向上转型这三个必要条件来实现多态，而 Python 使用协议来实现类似与多态的功能。
+协议是非正式的接口，非正式意味着这些规定并不是强制性的，我们可以只实现协议的部分要求。Java / C# 等语言使用继承、重写和向上转型这三个必要条件来实现多态，而 Python 则是使用协议来实现类似与多态的功能。
 
 ## 序列协议
 
-序列协议是 Python 最基础的协议之一。即便对象只实现了那个协议最基本的一部分，解释器也会负责任地处理.
+序列协议是 Python 最基础的协议之一。即便对象只实现了那个协议最基本的一部分，解释器也会负责任地处理。
 
 ```python
 class Foo:
@@ -3337,7 +4111,7 @@ for i in f:
 
 ## 猴子补丁
 
-猴子补丁，在运行时实现协议，即在运行的时候给对象添加方法让其支持某种协议。
+猴子补丁可以在运行时修改类或模块，而不改动源码。例如，在运行的时候给对象添加方法让其支持某种协议。
 
 random 的 shuffle 函数需要序列实现 `__setitem__` 才能进行打乱，这时我们可以使用猴子补丁。
 
@@ -3367,7 +4141,7 @@ shuffle(deck)
 print(deck) # 正常运行了
 ```
 
-猴子补丁的名声不太好。如果滥用，会导致系统难以理解和维护。补丁通常与目标紧密耦合，因此很脆弱。另一个问题是，打了猴子补丁的两个库可能相互牵绊，因为第二个库可能撤销了第一个库的补丁。
+虽然猴子补丁很强大，但是打补丁的代码与被打补丁的程序耦合十分紧密，非必要情况，不要使用。
 
 ## isinstance 和 issubclass
 
@@ -3392,9 +4166,9 @@ print(isinstance(Dog(), abc.Sized)) # True
 
 ## abc.ABC类
 
-除了非正式的协议, 还有有正式的协议（抽象基类）, 抽象基类就是一种强制性的协议.
+除了非正式的协议，还有有正式的协议（抽象基类），抽象基类就是一种强制性的协议。
 
-抽象基类要求其子类需要实现定义的某个接口, 且抽象基类不能实例化.
+抽象基类要求其子类需要实现定义的某个接口，且抽象基类不能实例化。
 
 <b>自定义抽象基类</b>
 
@@ -3432,11 +4206,11 @@ ta.load([1, 2, 3, 4, 5, 6])
 print(ta.strs()) # Tombola
 ```
 
-- 不要随意定义 python 的抽象类（抽象基类）
+不要随意定义 python 的抽象类（抽象基类）
 
 ## 虚拟子类
 
-我们保证注册的类忠实地实现了抽象基类定义的接口，而 Python 会相信我们，从而不做检查。如果我们说谎了，那么常规的运行时异常会把我们捕获。
+即便不继承，也有办法把一个类注册为抽象基类的虚拟子类。只要我们承诺注册的类实现了抽象基类定义的接口即可，而 Python 会相信我们，不再检查。如果我们说谎了，那么常规的运行时异常会把我们捕获。
 
 注册虚拟子类的方式是在抽象基类上调用 register 方法。这么做之后，注册的类会变成抽象基类的虚拟子类，而且 issubclass 和 isinstance 等函数都能识别，但是注册的类不会从抽象基类中继承任何方法或属性。
 
@@ -3586,7 +4360,7 @@ Python 会按照特定的顺序遍历继承图。这个顺序叫方法解析顺�
 
 Python 3.10 的 zip：可以通过设置 strict 的值，若可迭代对象长度不同，直接抛出 ValueError，默认为 False。
 
-# 第四部分-控制流
+# ➡️第四部分-控制流
 
 # 可迭代的对象、迭代器和生成器
 
@@ -4458,7 +5232,7 @@ if __name__ == '__main__':
     return Result(status, cc)
 ```
 
-# 第五部分-元编程
+# ➡️第五部分-元编程
 
 # 动态属性和特性
 
