@@ -17,6 +17,8 @@
 
 [PyTorch Parallel Training（单机多卡并行、混合精度、同步BN训练指南文档） - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/145427849)
 
+有些算法代码采用的分布式训练，parse 里设置了 local_rank，要我们传入 local_rank 的值；按照 PyTorch 官方的说法，我们可以不传这个值，直接用 `--use-env` 给系统添加环境变量，然后使用 `os.enviro['LOCAL_RANK']` 获取当前的 LOCAL_RANK 的值。[关于Pytorch 分布式训练local_rank的坑-CSDN博客](https://blog.csdn.net/qq_40837764/article/details/128141119)
+
 # PyTorch基本操作
 
 快速过一遍，有个大致的印象就行。强烈推荐沐神的《动手学深度学习》！！！

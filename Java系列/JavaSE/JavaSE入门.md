@@ -54,7 +54,6 @@
   - boolean   1 个字节
 
 ><b>Java 中默认类型：整型是 int，浮点类型是 double</b>
->
 >想要精确的数字不推荐用 double，用 BigDemical。
 
 #### 引用数据类型

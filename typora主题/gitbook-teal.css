@@ -51,9 +51,9 @@
   --note-border: #aaaa33;
 
   /*****************************/
-  --font-family: "Open Sans", "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --code-font-family: 'Source Code Pro';
-  --monospace: 'Source Code Pro';
+  --font-family: Consolas, KaiTi, "Clear Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --code-font-family: Monaco, KaiTi, "Andale Mono", "DejaVu Sans Mono", monospace;
+  --monospace:  Monaco, Consolas, "Andale Mono", "DejaVu Sans Mono", monospace;
 }
 
 html,
@@ -72,7 +72,7 @@ body {
 }
 
 #write {
-    font-size: 0.95rem;
+    font-size: 1rem;
     max-width: 95%;
     margin: 0 auto;
     padding: 30px;
@@ -614,6 +614,7 @@ table tr td:last-child {
   font-weight: 400;
 }
 
+
 .md-fences .code-tooltip {
   box-shadow: rgba(116, 129, 141, 0.08) 0px 2px 6px 0px;
   border: solid 1px var(--borders);
@@ -634,7 +635,7 @@ table tr td:last-child {
   padding-left: 0.5rem !important;
   text-align: left;
   display: block;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: 600;
   font-family: var(--font-family);
 
@@ -662,7 +663,7 @@ tt {
   border-radius: 0.3rem;
   color: #ffffff;
   padding: 0.5rem;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
 }
 	
 code {

@@ -883,10 +883,10 @@ case {'type': 'book', 'api': 2, 'authors': [*names], **extra}
 
 ## setdafault
 
-找不到元素时给默认值
+非常好用的一个方法，它用于在字典中查找指定键。如果 key 存在，则返回对应的值；如果不存在添加该 key 设置默认值并返回。
 
 - get 方法
-- setdefault 方法 -- 没有则插入
+- setdefault 方法 -- 没有则插入，始终返回 value
 
 ```python
 """get 方法，没有就给默认值 [], 但是并不会改变原 dict 的值"""
@@ -905,9 +905,9 @@ print(val) # value4
 
 ## defaultdict
 
-当有 key 不在映射里, 我们希望能得到一个默认值. 可以使用 `defaultdict` , 为所有不存在的 key 设置一个统一的默认值。
+当有 key 不在映射里，我们希望能得到一个默认值。可以使用 `defaultdict`，为所有不存在的 key 设置一个统一的默认值。
 
-`defaultdict` 是属于collections 模块下的一个工厂函数, 也是 `dict` 的子类, 并实现了 `__missing__` 方法. 
+`defaultdict` 是属于collections 模块下的一个工厂函数，也是 `dict` 的子类，并实现了 `__missing__` 方法。
 
 - <span style="color:blue">接收一个函数（可调用）对象为作为参数。</span>
 - 参数返回的类型是什么，key 对应 value 就是什么类型
@@ -921,7 +921,7 @@ for item in range(10):
 print(index[10])  # [] 参数返回的类型是什么，key 对应 value 就是什么类型
 ```
 
-值得注意的是，只有在调用 `__getitem__` 方法的时候找不到 key, Python 才会自动调用 `__missing__` 方法。阅读下面的代码，说结果。
+值得注意的是，只有在调用 `__getitem__` 方法的时候找不到 key，Python 才会自动调用 `__missing__` 方法。阅读下面的代码，说结果。
 
 ```python
 import collections

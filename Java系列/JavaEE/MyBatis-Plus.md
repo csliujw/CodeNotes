@@ -2,9 +2,11 @@
 
 ## 简介
 
-MyBatis-Plus（简称 MP）是一个 MyBatis 的增强工具，在 MyBatis 的基础上只做增强不做改变，为简化开发、提高效率而生（向 JPA 看起？）
+MyBatis-Plus（简称 MP）是一个 MyBatis 的增强工具，在 MyBatis 的基础上只做增强不做改变，为简化开发、提高效率而生。
 
 官网：https://mp.baomidou.com/
+
+注意：MyBatis-Plus 是简化单表操作的。如果想做多表的操作，需要使用 MyBatis 或利用 MP 提供的 SqlRunner 执行原生 SQL 语句。
 
 > MyBatis-Plus 架构图
 
@@ -30,7 +32,7 @@ JPA 的优势
 
 MyBatis 的劣势
 
-- 简单 CRUD 还得些 SQL 语句
+- 简单 CRUD 还得写 SQL 语句
 - XML 中有大量的 SQL 要维护
 - MyBatis 自身功能很有限，但支持 Plugin
 
@@ -52,72 +54,127 @@ MyBatis 的劣势
 
 ## 快速开始
 
+假设有如下四张表
+
+- 用户表：记录用户的信息
+- 商品表：记录商品的信息
+- 类别表：记录商品的类别
+- 订单表：记录订单的信息
+
+四张表的关系如下
+
+- 商品表和类别表是一对一的关系
+- 用户表和订单表是一对多的关系
+- 订单表中包含用户 id，商品 id
+
 ### 创建表
 
+常见数据库 mp，在 mp 下创建四张表 `tb_user\tb_produce\tb_type\tb_orders`。
+
 ```mysql
-create database mybatis_plus;
-use mybatis_plus;
-
-CREATE TABLE `tb_user` (
-    `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `user_name` varchar(20) NOT NULL COMMENT '用户名',
+drop database if exists mp;
+create database mp;
+use mp;
+drop TABLE if exists `tb_user`;
+drop TABLE if exists `tb_produce`;
+drop TABLE if exists `tb_type`;
+drop TABLE if exists `tb_orders`;
+-- 用户表
+create table `tb_user`
+(
+    `id`       int         NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `nickname` varchar(20) NOT NULL COMMENT '用昵称',
     `password` varchar(20) NOT NULL COMMENT '密码',
-    `name` varchar(30) DEFAULT NULL COMMENT '姓名',
-    `age` int(11) DEFAULT NULL COMMENT '年龄',
-    `email` varchar(50) DEFAULT NULL COMMENT '邮箱',
-     PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+    `name`     varchar(30) DEFAULT NULL COMMENT '姓名',
+    `age`      int(11)     DEFAULT NULL COMMENT '年龄',
+    `email`    varchar(50) DEFAULT NULL COMMENT '邮箱',
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 1
+  DEFAULT CHARSET = utf8;
 
--- 插入测试数据
-INSERT INTO `tb_user` (`id`, `user_name`, `password`, `name`, `age`, `email`) VALUES
-('1', 'zhangsan', '123456', '张三', '18', 'test1@itcast.cn');
-INSERT INTO `tb_user` (`id`, `user_name`, `password`, `name`, `age`, `email`) VALUES
-('2', 'lisi', '123456', '李四', '20', 'test2@itcast.cn');
-INSERT INTO `tb_user` (`id`, `user_name`, `password`, `name`, `age`, `email`) VALUES
-('3', 'wangwu', '123456', '王五', '28', 'test3@itcast.cn');
-INSERT INTO `tb_user` (`id`, `user_name`, `password`, `name`, `age`, `email`) VALUES
-('4', 'zhaoliu', '123456', '赵六', '21', 'test4@itcast.cn');
-INSERT INTO `tb_user` (`id`, `user_name`, `password`, `name`, `age`, `email`) VALUES
-('5', 'sunqi', '123456', '孙七', '24', 'test5@itcast.cn');
+-- 商品表
+create table `tb_produce`
+(
+    `id`           int         NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `t_id`         int(3)      NOT NULL COMMENT '类别id',
+    `produce_name` varchar(20) NOT NULL COMMENT '商品名',
+    `price`        double      NOT NULL COMMENT '价格',
+    `total`        int(6)       DEFAULT NULL COMMENT '库存',
+    `introduce`    varchar(300) DEFAULT NULL COMMENT '简介',
+    `date`         date         DEFAULT NULL COMMENT '入库日期',
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 1
+  DEFAULT CHARSET = utf8;
+
+
+-- 商品类别表
+create table `tb_type`
+(
+    `id`        int         NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `type_name` varchar(60) NOT NULL COMMENT '类别id',
+    `date`      date DEFAULT NULL COMMENT '创建日期',
+    PRIMARY KEY (`id`)
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 1
+  DEFAULT CHARSET = utf8;
+
+
+-- 订单表
+create table `tb_orders`
+(
+    `id`       int  NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `u_id`     int  NOT NULL COMMENT '用户 id',
+    `p_id`     int  NOT NULL COMMENT '商品 id',
+    `date`     date NOT NULL COMMENT '创建订单日期',
+    `quantity` int  NOT NULL COMMENT '商品数量',
+    PRIMARY KEY (`id`)
+
+) ENGINE = InnoDB
+  AUTO_INCREMENT = 1
+  DEFAULT CHARSET = utf8;
 ```
 
 ### 导入依赖
+
+用到了 SpringBoot（2.6.13）框架和 MyBatis-Plus（3.5.6）框架。
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.4.2</version>
-        <relativePath/> <!-- lookup parent from repository -->
-    </parent>
-    <groupId>com.example</groupId>
-    <artifactId>demo</artifactId>
+    <groupId>com.study</groupId>
+    <artifactId>mp</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>springboot</name>
-    <description>Demo project for Spring Boot</description>
+    <name>mybatis_plus</name>
+    <description>mybatis_plus</description>
     <properties>
-        <java.version>8</java.version>
+        <java.version>11</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <spring-boot.version>2.6.13</spring-boot.version>
     </properties>
     <dependencies>
-        <!-- MyBatis-Plus -->
+        <!--mp 依赖-->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
-            <version>3.4.3</version>
+            <version>3.5.6</version>
         </dependency>
+        <!--mysql 依赖-->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.30</version>
         </dependency>
+
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
@@ -130,31 +187,66 @@ INSERT INTO `tb_user` (`id`, `user_name`, `password`, `name`, `age`, `email`) VA
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-        </dependency>
     </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>11</source>
+                    <target>11</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
+                <configuration>
+                    <mainClass>com.study.mp.MybatisPlusApplication</mainClass>
+                    <skip>true</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>repackage</id>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
+
 </project>
 ```
 
-### 创建 Boot + 整合
+### 配置文件
+
+JDBC 的配置文件和 MP 的配置文件。
 
 ```yml
 spring:
@@ -164,48 +256,89 @@ spring:
     username: root
     password: root
 
+server:
+  port: 80
+
 mybatis-plus:
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl 
-    # 打印SQL语句到控制台
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印SQL语句到控制台
 ```
 
 其他整合方式查阅官网。
 
 ### 测试代码
 
-```java
-@Mapper
-public interface UserMapper extends BaseMapper<User> {}
+我们利用 MP + SB 实现一个简单的 User 表查询功能。
 
-@Data
+POJO 代码
+
+```java
+package com.study.mp.pojo;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
+@ToString
 @TableName("tb_user")
 public class User {
     private Integer id;
-    private String userName;
+    private String nickname;
     private String password;
     private String name;
     private Integer age;
     private String email;
 }
+```
+
+Mapper 代码
+
+```java
+package com.study.mp.mapper;
+
+import com.study.mp.pojo.User;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+public interface UserMapper extends BaseMapper<User> {}
+```
+
+测试代码
+
+```java
+package com.study.mp;
+
+import com.study.mp.mapper.UserMapper;
+import com.study.mp.pojo.User;
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
+import java.util.List;
 
 @SpringBootApplication
+@MapperScan(basePackages = {"com.study.mp.mapper"})
 @RestController
-public class MPApplication {
-
-    public static void main(String[] args) {
-        SpringApplication.run(MPApplication.class, args);
-    }
-
-    @Autowired
+public class MybatisPlusApplication {
+    @Resource
     UserMapper userMapper;
 
-    @GetMapping("/all")
-    public List<User> queryAll() {
+    @GetMapping("/index")
+    public List<User> getAllUser() {
         return userMapper.selectList(null);
     }
+
+    public static void main(String[] args) {
+        SpringApplication.run(MybatisPlusApplication.class, args);
+    }
+
 }
 ```
 
@@ -213,7 +346,7 @@ public class MPApplication {
 
 ```java
 @SpringBootTest
-public class ApplicationTest {
+public class MybatisPlusApplicationTests {
     @Autowired
     UserMapper mapper;
 
@@ -224,13 +357,25 @@ public class ApplicationTest {
 }
 ```
 
-注意：MyBatis-Plus 中，如果数据库表中有下划线字段会默认采用驼峰转换。如数据中的字段为 `user_name`，Java 代码中为 `userName` 是可以自动对应上的。
+<b style="color:red">注意：MyBatis-Plus 中，如果数据库表中有下划线字段会默认采用驼峰转换。如数据中的字段为 `user_name`，Java 代码中为 `userName` 是可以自动对应上的。</b>
 
 ### 常用注解
 
-- @TableName -- 做类名和表名的映射，如果表名和类名不一致可以使用该注解。
-- @TableId -- 表示这是主键，MP 默认是找名字为 id 的作为数据库主键，如果没有名为 id 的字段就会找不到主键，此时可以用 @TableId 标识某个字段为主键。
+- @TableName -- 用来指定表名：如果表名和类名不一致可以使用该注解。
+- @TableId -- 用来指定表中的主键字段信息
+  - MP 默认是找名字为 id 的作为数据库主键，如果没有名为 id 的字段就会找不到主键，此时可以用 @TableId 标识某个字段为主键。
+  - IdType 的常见类型
+    - AUTO：数据库自增长
+    - ASSIGN_ID：分配 ID，使用接口 IdentifierGenerator 的方法 nextId 来生成 id；默认实现类为 DefaultIdentifierGenerator 雪花算法
+    - INPUT：通过 set 方法自行输入
+
 - @TableField -- 普通列，数据库中和类中的名字不一样，此时可以用 @TableField 进行映射，但是只有普通列才有效果！TableField 还可以用于排除某些字段 `@TableField(select=false)` 表示查询时不查询该注解修饰的字段。
+- @TableField 的常见使用场景
+  - 成员变量名与数据库字段名不一致
+  - 成员变量名以 is 开头，且是布尔值
+  - 成员变量名与数据库关键字冲突
+  - 成员变量不是数据库字段
+
 
 > 修改数据库字段 age 为 ages，id 为 user_id
 
@@ -248,58 +393,63 @@ public class User {
     @TableField("ages")
     private Integer age;
     private String email;
-    // @TableField(exist = false)
-    // private String remark;
 }
 ```
 
-```java
-import com.mp.mapper.UserMapper;
-import com.mp.pojo.User;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+省略测试代码
 
-import java.util.List;
+### 常见配置
 
-@SpringBootTest
-public class MPApplicationTest {
-    @Autowired
-    UserMapper userMapper;
-
-    @Test
-    void testSelect() {
-        List<User> users = userMapper.selectList(null);
-        users.stream().forEach(System.out::println);
-    }
-
-    @Test
-    void testInsert() {
-        // id 为空的话，mp 会用雪花算法生成 id 进行填充。
-        User user = new User(null, "Jack", "123", "Jack", 12, "hello@qq");
-        userMapper.insert(user);
-        System.out.println(user);
-    }
-}
+```yaml
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/mp?serverTimezone=UTC
+    username: root
+    password: root
+    
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 打印SQL语句到控制台
+mybatis-plus:
+	type-aliases-package: com.study.mp.pojo
+	mapper-localtions: classpath*:mapper/**/*.xml # 默认值就是这个
 ```
 
-### 排除非表字段
+mp 可以结合 xml 自定义 SQL 语句，xml 要放在 resource 目录下，这样 maven 打包的时候才会把 xml 和 Java 代码整合到一起。
 
-一共有三种方式
+如果想 xml 和 Java 代码放在一起，需要告诉 idea，在编译的时候将 src/main/java 下的 xml 一起打包进 class 文件夹。
+
+```xml
+<build>
+	<resources>
+    	<resource>
+        	<directory>src/main/java</directory>
+            <includes>
+            	<include>**/*.xml</include>
+            </includes>
+        </resource>
+    </resources>
+</build>
+```
+
+### 排除字段
+
+MP 排除字段一共有三种方式
 
 - 为字段加上 `transient` 关键字
 - 用 `static` 修饰字段
 - 为字段加上注解 `@TableField(exist=false)`，表示它不是数据库中的字段
 
-在 User 中添加一个数据库中不存在的字段，不加任何处理进行数据库查询时报错，用上述方案解决时就不再报错了。
+我们可以使用这种方式排除不想查询出的字段值。同时，当 POJO 中存在非数据库表的字段时，直接查询数据会抛出异常。
+
+我们向 User 中添加一个数据库中不存在的字段（address）。当我们操作数据库时会报错（BadSqlGrammarException）。这时，可以用上述方案解决该错误。
 
 ## 查询方法
 
 通过继承 BaseMapper 就可以获取到各种各样的单表操作，接下来详细讲解这些操作。
 
 <div align="center"><img src="img/ibatis/plus/image-20211105220903263.png"></div>
-
-
 
 没啥好记的，现查现用。只记录一个分页查询
 
@@ -760,6 +910,70 @@ void testXML2() {
     userMapper.selectByDefaultCondition(query).forEach(System.out::println);
 }
 ```
+
+### 多表联查
+
+如果想使用多表联查呢？多表联查的结果如何映射到嵌套的 POJO 对象里？使用 @Results+@Result 注解即可。
+
+- 对于嵌套 pojo 对象，可以使用 @Result 注解进行结果映射。（原理：OGNL 表达式）
+
+```java
+@Select("select * from orders as o,book as b where o.book_id = b.id and ${ew.sqlSegment}")
+@Results(value = {
+    @Result(property = "typeId", column = "type_id"),
+    @Result(property = "book.type", column = "type"),
+})
+OrdersQuery test(@Param(Constants.WRAPPER) Wrapper<OrdersQuery> queryWrapper);
+```
+
+### @One和@Many
+
+@One 注解和 @Many 注解是做一对一查询和一对多查询的。
+
+- @One 是只能处理简单的查询？？？
+- @Many 可以处理复杂的查询
+
+```java
+@Select("SELECT * FROM users")
+@Results({
+    @Result(property = "id", column = "id"),
+    @Result(property = "username", column = "username"),
+    @Result(property = "orders", javaType = List.class, many = @Many(select = "getOrders"))
+})
+List<User> getAllUserse(@Param("startDate") String startDate, @Param("endDate") String endDate);
+
+@Select("SELECT * FROM orders WHERE user_id = #{userId} AND order_date BETWEEN #{startDate} AND #{endDate}")
+List<Order> getOrders(@Param("userId") Integer userId, @Param("startDate") String startDate, @Param("endDate") String endDate);
+```
+
+GPT 给的解释
+
+```
+对不起，我理解错了你的问题。你是对的，我们需要确保userId参数能够在调用selectOrdersByUserIdAndStatus方法时被正确传递。在MyBatis中，当使用@Many注解指定一个映射器方法时，MyBatis会自动将主实体的相应属性值作为参数传递给该方法。在我们的例子中，主实体是User，所以userId会自动传递给selectOrdersByUserIdAndStatus方法。
+
+以下是修正后的代码示例：
+
+java
+1@Select("SELECT * FROM orders WHERE user_id = #{userId} AND status = #{status}")
+2List<Order> selectOrdersByUserIdAndStatus(@Param("userId") Integer userId, @Param("status") String status);
+3
+4@Select("SELECT * FROM users")
+5@Results({
+6    @Result(property = "id", column = "id"),
+7    @Result(property = "username", column = "username"),
+8    @Result(property = "orders", javaType = List.class, many = @Many(select = "selectOrdersByUserIdAndStatus"))
+9})
+10List<User> selectUsersWithOrdersByStatus(String status);
+在这个例子中，selectOrdersByUserIdAndStatus方法接受两个参数：userId和status。userId参数将由MyBatis自动填充，因为它对应于主实体User的id属性。status参数则需要在调用selectUsersWithOrdersByStatus方法时手动传递。
+
+当你调用selectUsersWithOrdersByStatus方法时，你需要传递订单状态作为参数，例如：
+
+java
+1List<User> users = userMapper.selectUsersWithOrdersByStatus("COMPLETED");
+这样，MyBatis将为每个用户加载其状态为"COMPLETED"的订单列表。userId参数会自动从对应的User实例中获取，而status参数则是通过方法调用传递的。
+```
+
+
 
 ### SqlRunner
 
@@ -1306,6 +1520,7 @@ mybatis-plus.configuration.cache-enabled=false
 
 主要学习以下内容
 
+- SqlRunner
 - 逻辑删除、自动填充、乐观锁插件
 - 性能分析插件、多租户 SQL 解析器
 - 动态表名 SQL 解析器、SQL 注入器
@@ -1330,6 +1545,31 @@ mybatis-plus:
 ```
 
 低版本的 MyBatis-Plus（3.1.1 以下版本）需要通过注入 Bean 的方式进行配置，注入 LogicSqlInjector() 对象。
+
+## SqlRunner
+
+SqlRunner 执行原始的 SQL 语句。可以通过 SqlRunner 执行多表查询的语句。
+
+```java
+public void test(){
+    Page<Map<String, Object>> ordersPage = new Page<>(1, 2);
+    Map<String, Object> stringObjectMap = SqlRunner.db().selectOne("select * from book limit 1,10");
+    
+    Page<Map<String, Object>> mapPage = SqlRunner.db().selectPage(ordersPage, "select * from book");
+    List<Map<String, Object>> records = mapPage.getRecords();
+    records.stream().forEach(e -> e.keySet().forEach(System.out::println));    
+}
+```
+
+## 多表/多表分页查询
+
+- 用 @Select，直接写 SQL 进行多表查询。
+- 如果想多表分页查询，那就给方法加参数 `IPage<Book> page`
+
+```java
+@Select(" select b.id as id,b.name as name,b.description as description,b.price as price,c.name as cname from book b left join catalog c on b.cid = c.id")
+List<BookAndCatalog> queryBookAndCatalog(IPage<Book> page);
+```
 
 ## 逻辑删除
 

@@ -4,7 +4,7 @@
 
 - 此处的设定
 
-  - 内网服务器 close：安装了 openssh-server，开放了 22 端口，用户名为 user
+  - 内网服务器 inner：安装了 openssh-server，开放了 22 端口，用户名为 user
   - 公网服务器 open：
     - 安装了 openssh-server，开放了 22、8022、8023 端口，用户名为 root；
     - /etc/ssh/sshd_config 中配置 `GatewayPorts yes`

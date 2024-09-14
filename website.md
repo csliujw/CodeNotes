@@ -54,3 +54,24 @@
 <a href="https://blog.csdn.net/zhning12L/article/details/78664495">numpy库矩阵信息的获取（最大值最小值、平均值、中值、方差标准差、求和）</a>
 
 <a href="https://blog.csdn.net/lanchunhui/article/details/51737428">numpy.ndarray 交换多维数组（矩阵）的行/列</a>
+
+
+
+```mermaid
+sequenceDiagram
+participant file as 文件
+participant part as 模式
+participant cout as 输出
+file->>part:1.1 输送内容 cout<<a<<endl;
+part->>part:1.2 包含 cout,是范围查找的起始位置
+part->>cout:1.3 输出 count<<a<<endl;
+
+file->>part:2.1 输送内容 cout<<b<<endl;
+part->>part:2.2 包含 endl;
+part->>cout:2.3 输出 count<<b<<endl;
+
+file->>part:3.1 输送内容 ans
+part->>part:3.2 不包含 cout,不是范围内
+part->>part:3.3 不输出ans
+```
+
