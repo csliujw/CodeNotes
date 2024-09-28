@@ -1,5 +1,7 @@
 # 快速入门
 
+SpringBoot 3.x 版本的 bean 处理方式改了。
+
 ## 注解补充
 
 > @Inherited 元注解的作用
