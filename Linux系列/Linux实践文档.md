@@ -2148,17 +2148,17 @@ curl 还支持很多高级特性，有兴趣的同学可以自己去查资料。
 wget [option] [URL]
 ```
 
-- option 用于改变 wget 的行为
+- option 用于改变 `wget` 的行为
 - URL 是下载的地址
 
 <b>常用选项</b>
 
 | 选项       | 说明                       |
 | ---------- | -------------------------- |
-| `-O`       | 指定下载文件的保存名称     |
-| `-P`       | 指定下载文件的保存路径     |
 | `-c`:star: | 断点续传                   |
 | `-b`:star: | 后台下载                   |
+| `-O`       | 指定下载文件的保存名称     |
+| `-P`       | 指定下载文件的保存路径     |
 | `-r`       | 递归下载，用于下载整个网站 |
 
 - 下载单个文件
@@ -2263,6 +2263,51 @@ watch -n 0.1 command：每 0.1 秒执行一次 command 命令
 | -d      | 高亮显示命令结果的变动之处             |
 | -t      | 关闭顶部显示的时间间隔、命令、当前时间 |
 
+### gzip
+
+`gzip` 是 Linux 下常见的一个压缩工具，用于压缩单个文件，无法将多个文件压缩到一起。
+
+<b>基本语法</b>
+
+```shell
+gzip	[选项] file.zip  要压缩的内容	 # 压缩
+gunzip  [选项] file.zip 				 # 解压
+```
+
+每个压缩命令都可以使用一个 0～9 的数字作为选项，用来指定压缩率指标，数字越大，压缩率越高，同时意味着算法耗时也更多。
+
+| 选项 | 说明                                           |
+| ---- | ---------------------------------------------- |
+| -r   | 递归压缩单个文件                               |
+| 1~9  | 制定压缩率指标，数字越大压缩率越高             |
+| -t   | 测试压缩文件的完整性，若文件正常，控制台无输出 |
+| -d   | 解压缩文件（`gzip -c xxx.gz = gunzip xxx.gz`） |
+
+- 使用 gzip 单独压缩多个文件
+
+```shell
+touch a b c
+gzip a b c # ==> a.gz b.gz c.gz
+```
+
+- 逐个压缩目录中的文件
+
+```shell
+mkdir test
+touch test/{a..c}
+gzip -r test # ==> test/a.gz test/b.gz test/c.gz
+```
+
+- 合并多个文件然后压缩在一起（-c）
+
+```shell
+echo "aaa">>a
+echo "bbb">>b
+gzip -c a b >> concat.gz
+gzip -d concat.gz
+cat concat # aaa \n bbb
+```
+
 ### tar
 
 在 Linux 系统中，我们可以使用 tar 命令把多个文件打包在一起，也可以解压打包文件（打包!=压缩）。
@@ -2275,33 +2320,66 @@ tar	[option] XXX.tar.gz  将要打包进去的内容
 
 | 选项 | 功能               |
 | ---- | ------------------ |
-| -z   | 打包同时压缩       |
-| -c   | 产生.tar打包文件   |
+| -z   | 压缩/解压          |
+| -c   | 打包文件           |
 | -v   | 显示详细信息       |
 | -f   | 指定压缩后的文件名 |
-| -x   | 解包.tar文件       |
+| -x   | 解包文件           |
+
+使用 tar 归档文件，然后使用 file 命令查看归档后文件的类型
 
 ```shell
-tar -zcvf xxx.tar.gz /path/to/file/*	# 归档
+mkdir test; touch test/{a..f}
+tar -cvf test.gz test
+file test.gz # ==> test.gz: POSIX tar archive (GNU)
+```
+
+使用 tar 归档文件并压缩，然后使用 file 命令查看归档并压缩文件的类型
+
+```shell
+mkdir test; touch test/{a..f}
+tar -cvf test.gz test
+file test.gz # ==> test.gz: gzip compressed data, from Unix, original size modulo 2^32 10240
+```
+
+使用 tar 解档并解压文件
+
+```shell
 tar -zxvf xxx.tar.gz					# 解档
 ```
 
+PS：其实不管是归档+压缩还是解档+解压，都有 -zvf，唯一的区别就是用 -c 还是 -x。cz 就表示归档+压缩，xz 就表示解档+解压。 
+
 ### zip
 
-zip 也是压缩和解压的工具，用起来更简单。
+zip 也是压缩和解压的工具，相比与 gzip，zip 可以将多个文件打包压缩在一起，相比与 tar，zip 用起来更简单。
 
 <b>基本语法</b>
 
 ```shell
-zip	[选项] XXX.zip  将要压缩的内容		# 压缩
-unzip [选项] XXX.zip					 # 解压
+zip		[选项] file.zip  要压缩的内容	# 压缩
+unzip	[选项] file.zip				# 解压
 ```
 
-压缩多个文件，压缩目录，解压文件到指定目录
+| 选项 | 说明     |
+| ---- | -------- |
+| -r   | 递归压缩 |
+
+- 压缩多个文件
 
 ```shell
 zip bak.zip data.log dd.sh d.sh	# 压缩多个文件
+```
+
+- 压缩目录
+
+```shell
 zip -r git_demo.zip git_demo	# 压缩目录
+```
+
+- 解压文件到指定目录
+
+```shell
 unzip bak.zip -d ./new_dir		# 解压文件到指定目录
 ```
 
@@ -4359,12 +4437,70 @@ mount [-t vfstype] [-o options] device dir	# 挂载设备
 umount 设备文件名或挂载点					  # 卸载设备
 ```
 
+-t 和 -o 会自动被内核识别，是可以省略的
+
+```shell
+mount device dir			# 挂载设备
+umount 设备文件名或挂载点	  # 卸载设备
+```
+
 | 参数       | 功能                                                         |
 | ---------- | ------------------------------------------------------------ |
 | -t vfstype | 指定文件系统的类型，通常不必指定。mount 会自动选择正确的类型。常用类型有：光盘或光盘镜像：iso9660DOS fat16文件系统：msdos[Windows](http://blog.csdn.net/hancunai0017/article/details/6995284) 9x fat32文件系统：vfatWindows NT ntfs文件系统：ntfsMount Windows文件[网络](http://blog.csdn.net/hancunai0017/article/details/6995284)共享：smbfs[UNIX](http://blog.csdn.net/hancunai0017/article/details/6995284)(LINUX) 文件网络共享：nfs |
 | -o options | 主要用来描述设备或档案的挂接方式。常用的参数有：loop：用来把一个文件当成硬盘分区挂接上系统ro：采用只读方式挂接设备rw：采用读写方式挂接设备　  iocharset：指定访问文件系统所用字符集 |
 | device     | 要挂接(mount)的设备                                          |
 | dir        | 设备在系统上的挂接点(mount point)                            |
+
+<b>最常见的用法，将硬盘挂载到指定位置 /mnt/data</b>
+
+将设备 /dev/nvme1n1p3 挂载到 /mnt/data
+
+```shell
+mkdir /mnt/data
+sudo mount /dev/nvme1n1p3 /mnt/data
+```
+
+设置开机自动挂载 `/dev/nvme1n1p3`
+
+```shell
+vim /etc/fstab 
+# 加入配置
+UUDI=磁盘UUID	挂载的路径	磁盘系统类型	default	0	0
+```
+
+我们如何得知磁盘的 UUID 和磁盘类型呢？
+
+```shell
+# 可以用 blkid 查看磁盘的详细信息
+sudo blkid /dev/nvme1n1p3
+
+/dev/nvme1n1p3: BLOCK_SIZE="512" UUID="12F44ECBF44EB0B1" TYPE="ntfs" PARTLABEL="Basic data partition" PARTUUID="27b007ba-09f3-423b-bb82-973042a27922"
+
+# 也可以用下面的命令
+# 获取磁盘的 UUID
+cd /dev/disk/by-uuid
+ls -alh
+# 我们挂载的是 nvme1n1p3 它的 UUID 是 12F44ECBF44EB0B1
+lrwxrwxrwx 1 root root  15 10月  4 22:58 12F44ECBF44EB0B1 -> ../../nvme1n1p3
+lrwxrwxrwx 1 root root  15 10月  4 22:06 2C88AA4C88AA13FC -> ../../nvme1n1p4
+lrwxrwxrwx 1 root root  15 10月  4 22:06 41dcc69f-ae10-4d21-9753-d47952735219 -> ../../nvme0n1p2
+lrwxrwxrwx 1 root root  15 10月  4 22:06 8C8E-2573 -> ../../nvme1n1p1
+lrwxrwxrwx 1 root root  15 10月  4 22:06 D171-36AD -> ../../nvme0n1p1
+
+
+# 查看磁盘的类型
+df -TH
+```
+
+因此，配置文件应该是
+
+```shell
+vim /etc/fstab
+# 加入配置
+UUDI=12F44ECBF44EB0B1	/mnt/data	fuseblk	default	0	0
+```
+
+<b>other</b>
 
 将设备 /dev/cdrom 挂载到挂载点
 
