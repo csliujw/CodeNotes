@@ -1468,12 +1468,12 @@ grep 是一个非常重要的命令，它和 sed、awk 一般被称为 Linux 三
 
 ```mermaid
 graph LR
-Linux三剑客-->grep数据的查找与定位
-Linux三剑客-->awk数据切片
-Linux三剑客-->sed数据修改
-grep数据的查找与定位-->根据正则表达式查找内容,并打印对应的数据
-awk数据切片-->根据定位到的数据行处理其中的分段
-sed数据修改-->定位到数据行并对数据进行增删改查操作
+Linux三剑客-->grep&nbsp数据的查找与定位
+Linux三剑客-->sed&nbsp数据修改
+Linux三剑客-->awk&nbsp数据切片
+grep&nbsp数据的查找与定位-->根据指定的规则查找内容
+sed&nbsp数据修改-->定位到数据行并对数据进行增删改查操作
+awk&nbsp数据切片-->根据定位到的数据行处理其中的分段
 ```
 
 这里我们先简单学习下 grep。
@@ -1482,30 +1482,55 @@ sed数据修改-->定位到数据行并对数据进行增删改查操作
 
 ```shell
 grep [option] [pattern] file
-	 参数    过滤条件  文件
+	   选项	  过滤条件	文件
 # grep 命令默认使用的是基本的正则表达式
 ```
 
-| 参数       | 说明                                         |
-| ---------- | -------------------------------------------- |
-| `-n`:star: | `--line-number` 显示行号                     |
-| `-i`:star: | `ignorecase` 忽略字符的大小写                |
-| `-o`:star: | 只显示匹配到的字符串                         |
-| `-E`       | 支持使用扩展的正则表达                       |
-| `-v`       | `--inver-match` 显示不能被匹配到的行         |
-| `-q`       | `--quiet, --silent` 精默模式，不输出任何信息 |
-
-使用 grep 过滤出 data.log 中包含 hello 的内容（输出信息要包括行号）
+使用 grep 过滤出 data.log 中包含 hello 的内容
 
 ```shell
-echo -e 'hello world \n test \test2 \nhello' >> data.log
-
-grep -n 'hello' data.log
-1:hello world
-3:hello
+grep 'hello' data.log
 ```
 
-查找当前目录中以 `.log` 结尾的文件
+使用 grep 过滤出 data.log 中的错误日志
+
+```shell
+grep 'Exception' data.log
+```
+
+| 选项       | 说明                                                         |
+| ---------- | ------------------------------------------------------------ |
+| `-n`:star: | `--line-number` 显示行号                                     |
+| `-i`:star: | `ignorecase` 忽略字符的大小写                                |
+| `-o`:star: | 只显示匹配到的字符串                                         |
+| `-c`:star: | 统计匹配的行数<br>统计当前有多少个 Java 服务 `jps | grep -c '**'`<br>统计当前有多少个 sshd 服务 `ps -ef |grep -c sshd` |
+| `-v`       | `--inver-match` 显示不能被匹配到的行                         |
+| `-E`       | 支持使用扩展的正则表达                                       |
+| `-q`       | `--quiet, --silent` 精默模式，不输出任何信息                 |
+
+有时候，我们希望知道是第几行的日志出错了（查看错误行的前后发生了什么操作，可以做错误排查），可以使用 -n 来定位行号。
+
+```shell
+grep -n 'Exception' data.log
+7645:2024-10-09 23:45:00 - 赵六 - throws Operation Exception
+15002:2024-10-09 23:45:00 - Super Admin - throws Operation Exception
+17003:2024-10-09 23:45:00 - 李四 - throws Operation Exception
+18526:2024-10-09 23:45:00 - 田七 - throws Operation Exception
+```
+
+定位到错误的行号后，我们可以用 sed 来筛选出指定范围的日志，用于做错误排查。
+
+```shell
+sed -n '7600,7700p' data.log
+```
+
+大多数时候，我们并不清楚日志中的异常是 Exception 还是 exception，这时候，我们可以使用 `-i` 忽略大小写来进行匹配。
+
+```shell
+grep -ni 'exception' data.log
+```
+
+grep 也可以结合其他命令一起使用，例如，我们可以使用 grep 查找当前目录中以 `.log` 结尾的文件
 
 ```shell
 touch a.log aa.log aaa.log alog
@@ -1549,7 +1574,7 @@ sshd    14111 root    4u  IPv6  64500      0t0  TCP *:ssh (LISTEN)
 
 ```shell
 top | grep 'java'
- 117982 root      20   0 2510452 129696  28132 S   0.3   7.1   0:06.17 java
+117982 root      20   0 2510452 129696  28132 S   0.3   7.1   0:06.17 java
  
 ps -aux | grep 'java'
 root      117982  9.4  7.1 2510452 129696 pts/0  Sl+  17:19   0:06 java -jar demo.jar
@@ -3030,10 +3055,10 @@ She sells sea shells by the sea shore.
 
 | 功能  | 说明                                                         |
 | ----- | ------------------------------------------------------------ |
-| `s`   | 替换 substitute<br>`sed '/s/int/long/g' file` 将所有的 int 换成 long（会自动打印） |
+| `s`   | 替换 substitute<br>`sed 's/int/long/g' file` 将所有的 int 换成 long（会自动打印） |
 | `p`   | 显示 print<br>`sed -n '2p' file` 打印第 2 行的内容           |
 | `d`   | 删除 delete<br>`sed '1d' file` 删除第 1 行                   |
-| `cai` | 增加 /c/a/i<br>`sed '2c\new' file` 将第 2 行的内容换成 new <br>`sed '1a aaa' file` 在第 1 行后面插入 `aaa`<br>`sed '1i before' file` 在第 1 行前面插入 `before` |
+| `cai` | 增加 c, a, i<br>`sed '2c new' file` 将第 2 行的内容换成 new <br>`sed '1a aaa' file` 在第 1 行后面插入 `aaa`<br>`sed '1i before' file` 在第 1 行前面插入 `before` |
 
 ### sed-执行过程
 
@@ -3071,7 +3096,7 @@ sed 有一些内置的命令字符，使用这些命令字符可以对文件完�
 | `/pattern/`        | 查找符合 pattern 的内容                                      |
 |                    | `sed -n '/pattern/p' file` 查找符合 pattern 的内容并打印     |
 | `s/pattern/内容/g` | 使用正则表达式进行文本替换，`s/lod/new/g`，g 表示全局匹配 s=substitute |
-|                    | `sed '/s/int/long/g' file` 将所有的 int 换成 long（会自动打印） |
+|                    | `sed 's/int/long/g' file` 将所有的 int 换成 long（会自动打印） |
 | `a`                | 在当前行的下一行添加指定的文本字符串                         |
 |                    | `sed '1a insert!!' file` 在第 1 行后面插入 `insert!!!`       |
 | `i`                | 在当前行的上一行添加指定的文本字符串；                       |
@@ -3079,7 +3104,7 @@ sed 有一些内置的命令字符，使用这些命令字符可以对文件完�
 | `d`                | 删除指定行                                                   |
 |                    | `sed '1d' file` 删除第 1 行                                  |
 | `c`                | 用指定的文本字符串替换指定范围内的行                         |
-|                    | `sed 'c\new' file` 将 file 中所有的内容替换成 new<br>`sed '2c\new' file` 将第 2 行的内容换成 new<br>其他的不常用 |
+|                    | `sed 'c new' file` 将 file 中所有的内容替换成 new<br>`sed '2c two' file` 将第 2 行的内容换成 two<br>其他的不常用 |
 
 <b>sed 匹配范围的写法</b>
 
@@ -3111,7 +3136,7 @@ sed 的查找类似于 grep 命令的过滤，但是比 grep 强，sed 可以查
 
 准备数据 test.cpp
 
-```c++
+```cpp
 #include <iostream>
 
 int main(){
@@ -4428,6 +4453,23 @@ fdisk -l	# 查看磁盘分区详情 -l 显示所有硬盘的分区列表
 | Id     | 分区类型 ID   |
 | System | 分区类型      |
 
+可以用 fdisk 查看所有的磁盘，然后找到那些磁盘未挂载。
+
+```shell
+fdusk -l # 2 的
+Disk /dev/sdb	1.76TiB
+Disk /dev/sdc	1.76TiB
+Disk /dev/sdd	1.76TiB
+```
+
+## mkfs
+
+mkfs 是用来格式化磁盘的。
+
+```shell
+sudo mkfs.ext4 /dev/sdb	# 将 /dev/sdb 格式化成 ext4 格式
+```
+
 ## mount
 
 <b>基本语法</b>
@@ -4797,7 +4839,7 @@ apt [options] command
 
 #### 更新本地数据库
 
-更新本地数据库。在安装、查找软件时需要先更新本地数据库。
+更新本地数据库。在首次使用 apt 安装、查找软件时需要先更新本地数据库。
 
 ```shell
 apt update
@@ -4821,6 +4863,18 @@ apt --installed list
 
 ```shell
 apt show package-name
+```
+
+有时候我们只记得某个关键包的关键字，不记得全名，这时候可以用 search 来进行查找。如，我们想查找 jdk 的安装包。
+
+```shell
+apt search openjdk-21
+
+openjdk-21-jdk/jammy-security 21.0.4+7-1ubuntu2~22.04 amd64
+  OpenJDK Development Kit (JDK)
+
+openjdk-21-jdk-headless/jammy-security,now 21.0.4+7-1ubuntu2~22.04 amd64
+  OpenJDK Development Kit (JDK) (headless)
 ```
 
 如果我们想找到某个软件包安装的所有文件，需要使用 dpkg 命令。
@@ -4905,41 +4959,18 @@ apt 的 remove 命令可以删除软件包，同时保留数据和配置文件�
 
 #### 汇总
 
-apt 安装/卸载包
-
-```shell
-apt install xxx # 安装软件 xxx
-apt remove xxx # 卸载软件包 xxx
-apt purge xxx # 清除指定软件包 xxx，并删除用户配置文件
-apt update # 更新本地数据库。在安装、查找软件时需要先更新本地数据库
-apt upgrade # 升级所有可升级的软件包
-```
-
-自动删除不再需要的软件包(因依赖关系而被自动安装，后因上层软件被删除或者在升级过程中依赖关系发生变化，不再需要这些软件包)
-
-```shell
-apt autoremove
-```
-
-删除指定的软件包，但保留用户配置文件
-
-```shell
-apt remove package-name
-```
-
-清除指定软件包，包括删除用户配置文件
-
-```shell
-apt urge package-name
-```
-
-下载源代码压缩包
-
-```shell
-apt source xxx
-```
-
-
+| 命令                   | 说明                                                         |
+| ---------------------- | ------------------------------------------------------------ |
+| apt search jdk:star:   | 查找关键字中包含 jdk 的软件                                  |
+| apt install wget:star: | 安装软件 wget                                                |
+| apt remove wget:star:  | 卸载软件包 wget，但是保留数据和配置文件                      |
+| apt purge wget:star:   | 清除指定软件包 wget，并删除用户配置文件                      |
+| apt auto remove:star:  | 自动删除不再需要的软件包<br>因依赖关系而被自动安装，后因上层软件被删除或者在升级过程中依赖关系发生变化，不再需要这些软件包 |
+| apt update:star:       | 更新本地数据库。在安装、查找软件时需要先更新本地数据库       |
+| apt upgrade            | 升级所有可升级的软件包                                       |
+| apt source wget        | 下载 wget 的源代码压缩包                                     |
+| apt list               | 列出当前源中的所有可安装的软件                               |
+| apt list --install     | 列出当前已经安装的软件                                       |
 
 ## 网络工具
 
@@ -5011,7 +5042,7 @@ tcpdump tcp port 80
 
 防火墙（Firewall）是指位于内部网和外部网之间的屏障，它由硬件和软件两部分组成。软件部分按照预设规则，控制网络数据包的进出。这里我们主要学习如何查看 Ubuntu 的防火墙状态，和如何放行端口。
 
-在 Ubuntu 系统进行安装的时候默认安装了 ufw 防火墙。我们开启/关闭防火墙、开发端口都是用 `ufw`。ufw 常用的命令如下：
+在 Ubuntu 系统进行安装的时候默认安装了 ufw 防火墙。我们开启/关闭防火墙、开放端口都是用 `ufw`。ufw 常用的命令如下：
 
 | 命令                              | 说明                              |
 | --------------------------------- | --------------------------------- |
@@ -6522,7 +6553,7 @@ sudo systemctl start xx.service
 
 ```shell
 scp [option] location_file server_user@server_ip:server_dir
-# 将本地文件 file1 file2 上传到服务器 110.25.36.3
+# 将本地文件 file1 file2 上传到服务器 110.25.36.3 /home/pc 目录
 scp file1 file2 root@110.25.36.3:/home/pc/
 ```
 
@@ -6999,7 +7030,7 @@ ssh -fCNL *:8023:localhost:8022 -o ServerAliveInterval=60 root@localhost -p 22
 
 [Git学习笔记 | Kisugi Takumi](https://kisugitakumi.com/2022/01/18/Git学习笔记/#Git学习笔记)
 
-<img src="常用工具/img/011500266295799.png">
+<img src="../常用工具/img/011500266295799.png">
 
 Git 是一个开源的分布式版本控制系统，在软件开发领域，大多使用 Git 作为项目的版本控制工具。Git 使得团队成员能够有效地管理和跟踪代码的历史变更，有效、高速地处理从很小到非常大的项目版本管理。
 
@@ -7243,7 +7274,7 @@ export LC_ALL="zh_CN.UTF-8"
 
 打开 github 网站 ==> 找到 setting ==> new ssh key，title 任意，key 输入本地生成的 pubkey (公钥) , pubkey 的存放地址请仔细看 Git 控制台的输出。
 
-<img src="常用工具/img/image-20220402210210816.png">
+<img src="../常用工具/img/image-20220402210210816.png">
 
 测试连通性 `ssh -T git@github.com` [写死的]
 
@@ -7690,7 +7721,7 @@ git push origin _:远程分支	# _表示空格,用_只是方便告诉你这是�
 
 ### 重命名(mv):star:
 
-`git mv` 是 git 自带的对文件进行重命名的命令。
+`git mv` 是 git 自带的对文件进行重命名的命令。git 并不显式跟踪文件移动操作。如果在 git 中重命名了某个文件，仓库中存储的元数据并不会体现出这是一次更名操作。
 
 #### git-mv的优点
 
