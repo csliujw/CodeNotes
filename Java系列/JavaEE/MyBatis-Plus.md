@@ -1573,7 +1573,25 @@ List<BookAndCatalog> queryBookAndCatalog(IPage<Book> page);
 
 ## 逻辑删除
 
-通过一个字段标识数据是否被删除。本例中添加的逻辑删除标识字段为 delete，0 表示未删除，1 表示已删除。
+逻辑删除就是通过一个字段标识数据是否被删除。本例中添加的逻辑删除标识字段为 delete，0 表示未删除，1 表示已删除。
+
+MP 配置逻辑删除有两种方式
+
+- 在 yml 文件中配置（全局配置）推荐😀
+
+  ```yml
+  mybatis-plus:
+    global-config:
+      db-config:
+        logic-delete-field: deleted #默认deleted
+        logic-delete-value: 1 # 1 表示删除
+        logic-not-delete-value: 0 # 0 表示未删除
+        id-type: auto
+  ```
+
+- 直接在逻辑删除的字段上加 @TableLogic 注解 `@TableLogic(value="1", delval="0")`
+
+下面时测试逻辑删除的代码。
 
 ```java
 @SpringBootTest

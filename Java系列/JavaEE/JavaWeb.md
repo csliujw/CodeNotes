@@ -237,11 +237,16 @@ x-cache-status: HIT
 - 服务器软件：接收用户的请求，处理请求，做出响应。
 - web 服务器软件：接收用户的请求，处理请求，做出响应。
   - 在 web 服务器软件中，可以部署 web 项目，让用户通过浏览器来访问这些项目。
-- 常见的 Java 相关的 web 服务器软件
-  - webLogic：oracle 公司，大型的 JavaEE 服务器，支持所有的 JavaEE 规范，收费的。
-  - webSphere：IBM 公司，大型的 JavaEE 服务器，支持所有的 JavaEE 规范，收费的。
-  - JBOSS：JBOSS 公司的，大型的 JavaEE 服务器，支持所有的 JavaEE 规范，收费的。
-  - Tomcat：Apache 基金组织，中小型的 JavaEE 服务器，仅仅支持少量的 JavaEE 规范 servlet/jsp。开源的，免费。
+
+常见的 Java 相关的 web 服务器软件
+
+| 服务器名称 | 公司            | 说明                                                         |
+| ---------- | --------------- | ------------------------------------------------------------ |
+| webLogic   | Oracle          | 大型的 JavaEE 服务器，支持所有的 JavaEE 规范，收费           |
+| webSphere  | IBM             | 大型的 JavaEE 服务器，支持所有的 JavaEE 规范，收费           |
+| JBOSS      | JBOSS           | 大型的 JavaEE 服务器，支持所有的 JavaEE 规范，收费           |
+| Tomcat     | Apache 基金组织 | 中小型的 JavaEE 服务器，仅仅支持少量的 JavaEE 规范 servlet/jsp，开源免费 |
+
 - JavaEE：Java 语言在企业级开发中使用的技术规范的总和，一共规定了 13 项大的规范。
 
 ## Tomcat
@@ -284,7 +289,7 @@ x-cache-status: HIT
 - 正常关闭：bin/shutdown.bat 或 ctrl+c
 - 强制关闭：点击启动窗口的❌
 
-### 目录结构
+### 结构
 
 <div align="center"><img src="img/web/image-20230116205057238.png"></div>
 
@@ -297,6 +302,12 @@ x-cache-status: HIT
 - temp，用于存放 Tomcat 运行时产生的临时文件。
 - webapps，Web 应用程序的主要发布目录，通常将要发布的应用程序放到这个目录下。
 - work，Tomcat 的工作目录，JSP 编译生成的 Servlet 源文件和字节码文件放到这个目录下。
+
+## 版本
+
+2017 年 0racle 宣布将 JavaEE 规范移交 Eclipse基金会，但不允许 Eclipse 基金会继续使用 JavaEE 的名字。Eclipse 基金会将 JavaEE 规范更名为 JakartaEE 规范。自此，J2EENavaEE 成为了历史，而新的 JakartaEE 规范将完全由 Java 社区主导。
+
+Tomcat 10 开始，用的 servlet 就是 jakarta.servlet 了，不再是 javax.servlet 了。有时候出现说，找不到 javax.servlet 的错误，可能是 tomcat 版本太高了，降到 10 以下即可。
 
 ## IDEA搭建Tomcat
 
@@ -564,11 +575,19 @@ ServletContainer-->>Servlet:8.调用 destory 方法
 
 对外提供服务，每次访问 Servlet 时，service 方法都会被调用一次。
 
-Servlet 容器会为这个请求创建代表 HTTP 请求的 ServletRequest 对象和代表 HTTP 响应的 ServletResponse 对象，然后将它们作为参数传递给 Servlet 的 service() 方法。service() 方法从 ServletRequest 对象中获得客户请求信息并处理该请求，通过 ServletResponse 对象生成响应结果。在 Servlet 的整个生命周期内，对于 Servlet 的每一次访问请求，Servlet 容器都会调用一次 Servlet 的 service() 方法，并且创建新的 ServletRequest 和 ServletResponse 对象，也就是说，<b>service() 方法在 Servlet 的整个生命周期中会被调用多次。</b>
+Servlet 容器会为这个请求创建代表 HTTP 请求的 ServletRequest 对象和代表 HTTP 响应的 ServletResponse 对象，然后将它们作为参数传递给 Servlet 的 service() 方法。
+
+service() 方法从 ServletRequest 对象中获得客户请求信息并处理该请求，通过 ServletResponse 对象生成响应结果。
+
+在 Servlet 的整个生命周期内，对于 Servlet 的每一次访问请求，Servlet 容器都会调用一次 Servlet 的 service() 方法，并且创建新的 ServletRequest 和 ServletResponse 对象，也就是说，<b>service() 方法在 Servlet 的整个生命周期中会被调用多次。</b>
 
 > <b>销毁阶段</b>
 
-当服务器关闭或 Web 应用被移除出容器时，Servlet 随着 Web 应用的销毁而销毁。在销毁 Servlet 之前，Servlet 容器会调用 Servlet 的 destroy() 方法，以便让 Servlet 对象释放它所占用的资源。在 Servlet 的整个生命周期中，destroy() 方法也只被调用一次。需要注意的是，Servlet 对象一旦创建就会驻留在内存中等待客户端的访问，直到服务器关闭，或 Web 应用被移除出容器时，Servlet 对象才会销毁。
+当服务器关闭或 Web 应用被移除出容器时，Servlet 随着 Web 应用的销毁而销毁。
+
+在销毁 Servlet 之前，Servlet 容器会调用 Servlet 的 destroy() 方法，以便让 Servlet 对象释放它所占用的资源。
+
+在 Servlet 的整个生命周期中，destroy() 方法也只被调用一次。需要注意的是，Servlet 对象一旦创建就会驻留在内存中等待客户端的访问，直到服务器关闭，或 Web 应用被移除出容器时，Servlet 对象才会销毁。
 
 - Servlet 被销毁时执行。服务器关闭时，Servlet 被销毁。
 - 只有服务器正常关闭时，才会执行 destroy 方法。
@@ -2655,12 +2674,15 @@ MVC 是 Web 开发中的通用的设计模式，而三层架构是 JavaWeb/JavaE
 ## 三层架构
 
 - DAL 层（数据访问层）：该层直接操作数据库，针对数据的增添，删除，修改，更新，查找等，每层之间是一种垂直的关系。
+
 - BLL 层（业务层）：针对具体问题的操作，也可以说是对数据层的操作，对数据业务逻辑的处理；
 - UI 层（表现层）：表现层就是展现给用户的界面，即用户在使用一个系统的时候的所见所得；
 
-1. 界面层(表示层)：用户看的得界面。用户可以通过界面上的组件和服务器进行交互
-2. 业务逻辑层：处理业务逻辑的。
-3. 数据访问层：操作数据存储文件。
+界面层(表示层)：用户看的得界面。用户可以通过界面上的组件和服务器进行交互
+
+业务逻辑层：处理业务逻辑的。
+
+数据访问层：操作数据存储文件。
 
 - `cn.demo.dao`：这个包中存放的是数据层的相关类，对应着 JavaWeb 三层架构中的数据层；
 - `cn.demo.domain`：这个包中存放的是 JavaBean 类；
