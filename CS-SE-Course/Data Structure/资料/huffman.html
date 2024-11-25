@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 74%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Huffman</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#00FF99; margin: 2px 2px 0 0; padding: 4px 6px;'>已访问</div>
+    <div style='background-color:#ccc; margin: 2px 2px 0 0; padding: 4px 6px;'>未访问</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>原始串&nbsp;</span><input type="text" id='str' class="saveable" value="abbccccccc">
+    <span>n&nbsp;</span><input type="text" id='n' class="saveable" value="4">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>直径</span><input type="number" step="1" value="30" id="DIAMETER" class="saveable int" style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="180" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('huffman')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const preDiv = document.getElementById("preDiv")
+    const inDiv = document.getElementById("inDiv")
+    const postDiv = document.getElementById("postDiv")
+    const resultSpans = document.querySelectorAll(".result")
+    const result = []
+    const options = loadOptionsFromStorage('huffman')
+    let str = options.str
+    let map = new Map()
+    for (let i = 0; i < str.length; i++) {
+      const ch = str.charAt(i)
+      if (!map.has(ch)) {
+        map.set(ch, 0)
+      }
+      const count = map.get(ch)
+      map.set(ch, count + 1)
+    }
+    let data = []
+    map.forEach((v, k) => {
+      data.push({ ch: k, freq: v })
+    })
+    let heap;
+    const DIAMETER = options.DIAMETER
+    const WIDTH = options.RECT_WIDTH
+    const TOP = DIAMETER
+    const n = options.n
+    const d = new Draw(options.animate_speed)
+    let root
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 13
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      noStroke()
+      heap = new Heap(data)
+      huffman()
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#ddd'))
+    }
+    function frame({ cloned }) {
+      drawArray(cloned.array, cloned.a, cloned.b)
+    }
+
+    function drawArray(array, a, b) {
+      // console.log(node)
+      if (array) {
+        const LEFT = (width - array.length * WIDTH) / 2
+        for (let i = 0; i < array.length; i++) {
+          fill('#ccc')
+          let x = LEFT + i * WIDTH
+          let y = TOP
+          stroke('black')
+          rect(x, y, WIDTH, DIAMETER)
+          drawTree(array[i], x + WIDTH / 2, y + DIAMETER / 2, n - 1, 0, 0)
+        }
+      }
+      const LEFT = (width - 2 * WIDTH) / 2
+      if (a) {
+        drawTree(a, LEFT, 100, n - 1, 0, 0)
+      }
+      if (b) {
+        drawTree(b, LEFT + WIDTH, 100, n - 1, 0, 0)
+      }
+    }
+
+    function drawTree(node, x, y, deep, px, py) {
+      if (node) {
+        if (px && py) {
+          stroke('black')
+          line(x, y, px, py)
+        }
+        drawTree(node.left, x - Math.pow(2, deep) * DIAMETER / 5, y + Math.pow(2, n - deep) * DIAMETER / 2, deep - 1, x, y)
+        drawTree(node.right, x + Math.pow(2, deep) * DIAMETER / 5, y + Math.pow(2, n - deep) * DIAMETER / 2, deep - 1, x, y)
+        fill('#00FF99')
+        stroke('black')
+        circle(x, y, DIAMETER)
+        fill('black')
+        noStroke()
+        const txt = node.left ? node.freq : node.ch + '_' + node.freq
+        text(txt, x, y + 4)
+      }
+    }
+
+    class Heap {
+      constructor(data) {
+        this.data = data
+        this.heapify(data)
+      }
+      heapify(data) {
+        for (let i = (data.length >>> 1) - 1; i >= 0; i--) {
+          this.down(i)
+        }
+      }
+      size() {
+        return this.data.length
+      }
+      down(parent) {
+        const size = this.data.length
+        const left = 2 * parent + 1
+        const right = left + 1
+        let min = parent
+        if (left < size && this.data[left].freq < this.data[min].freq) {
+          min = left
+        }
+        if (right < size && this.data[right].freq < this.data[min].freq) {
+          min = right
+        }
+        if (min != parent) {
+          swap(this.data, min, parent)
+          this.down(min)
+        }
+      }
+      poll() {
+        swap(this.data, 0, this.data.length - 1)
+        const pop = this.data.pop()
+        this.down(0)
+        return pop
+      }
+      offer(offered) {
+        let child = this.data.length
+        while (child > 0) {
+          let parent = (child - 1) >> 1
+          if (offered.freq < this.data[parent].freq) {
+            this.data[child] = this.data[parent]
+          } else {
+            break
+          }
+          child = parent
+        }
+        this.data[child] = offered
+      }
+    }
+    function swap(a, i, j) {
+      let k = a[i]
+      a[i] = a[j]
+      a[j] = k
+    }
+    function huffman() {
+      d.add({ cloned: clone({ array: heap.data }) }, frame)
+      while (heap.size() >= 2) {
+        const a = heap.poll()
+        const b = heap.poll()
+        d.add({ cloned: clone({ array: heap.data, a, b }) }, frame)
+        const parent = { freq: a.freq + b.freq, left: a, right: b, ch: a.ch + '_' + b.ch }
+        d.add({ cloned: clone({ array: heap.data, a: parent }) }, frame)
+        heap.offer(parent)
+        d.add({ cloned: clone({ array: heap.data }) }, frame)
+      }
+      d.add({ cloned: clone({ array: heap.data }) }, frame)
+      const root = heap.poll()
+      // console.log(traversal(root, []))
+      // console.log(root)
+    }
+
+    function traversal(node, code) {
+      let sum = 0
+      if (node.left) {
+        code.push('0')
+        sum += traversal(node.left, code)
+        code.push('1')
+        sum += traversal(node.right, code)
+      } else {
+        node.code = code.join('')
+        sum = node.freq * code.length
+      }
+      code.pop()
+      return sum
+    }
+
+  </script>
+</body>
+
+</html>

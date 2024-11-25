@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>二进制运算</title>
+  <style>
+    .result {
+      display: inline-block;
+      margin-left: 10px;
+      /* font-weight: bold;       */
+      width: 320px;
+    }
+
+    html,
+    body {
+      background-color: #eee;
+      color: black;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+  <input type="radio" name="bits" value="8" checked> 8 bits
+  <input type="radio" name="bits" value="16"> 16 bits
+  <input type="radio" name="bits" value="32"> 32 bits
+  <hr>
+  <div>
+    <span class="result"></span><input type="text" id="a"></span><select id="oper">
+      <option>^</option>
+    </select>
+  </div>
+  <div>
+    <span class="result"></span><input type="text" id="b"></span><input type="button" value="=" id="eq">
+  </div>
+  <hr>
+  <div>
+    <span class="result"></span><span id="c"></span>
+    <span class="result"></span><span id="d"></span>
+  </div>
+
+  <script>
+    const aElement = document.querySelector('#a')
+    const bElement = document.querySelector('#b')
+    const cElement = document.querySelector('#c')
+    const dElement = document.querySelector('#d')
+
+    document.querySelectorAll('input[name=bits]').forEach(e => {
+      e.onclick = function () {
+        aElement.onkeyup()
+        bElement.onkeyup()
+      }
+    })
+
+    aElement.onkeyup = function () {
+      showAt(this.value, this.previousElementSibling)
+      clearResult([cElement, cElement.previousElementSibling, dElement, dElement.previousElementSibling])
+    }
+
+    bElement.onkeyup = function () {
+      showAt(this.value, this.previousElementSibling)
+      clearResult([cElement, cElement.previousElementSibling, dElement, dElement.previousElementSibling])
+    }
+
+    function clearResult(elements) {
+      if (elements) {
+        for (const e of elements) {
+          e.innerHTML = ''
+        }
+      }
+    }
+
+    document.querySelector("#eq").onclick = function () {
+      const a = Number(aElement.value)
+      const b = Number(bElement.value)
+      if (oper.value === '^') {
+        cElement.innerHTML = a ^ b
+        showAt(a ^ b, cElement.previousElementSibling)
+      }
+    }
+
+    function showAt(str, element) {
+      if (str === '' || !Number.isInteger(Number(str))) {
+        return
+      }
+      const bits = document.querySelector('input[name=bits]:checked').value
+      let num = BigInt(str)
+      const result = []
+      if (num < 0n) {
+        num = 2n ** BigInt(bits) + num
+      }
+
+      for (let i = 0; i < Number(bits); i++) {
+        result[i] = num % 2n
+        num /= 2n
+      }
+
+      // show result 
+      const html = []
+      for (let i = result.length - 1; i >= 0; i--) {
+        html.push(result[i])
+        if (i % 4 == 0 && i > 0) {
+          html.push('_')
+        }
+      }
+      element.innerHTML = html.join('')
+    }
+
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 1008 - 根据前序遍历构造二叉搜索树</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#00FF99; margin: 2px 2px 0 0; padding: 4px 6px;'>进行中</div>
+    <div style='background-color:#7df4f2; margin: 2px 2px 0 0; padding: 4px 6px;'>已结束</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>数组表示的二叉树&nbsp;</span><input type="text" id='data' class="saveable array" value="8, 5, 1, 7, 10, 12">
+    <span>n&nbsp;</span><input type="text" id='n' class="saveable" value="6">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="40" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="30" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_1008')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('leetcode_1008')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const n = options.n
+    let data = options.data
+    let root;
+    const MAX = Number.MAX_VALUE
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 10
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      root = insert(data, MAX)
+      d.add({ cloned: clone(root) }, frame)
+      d.updateFrameButtons()
+      noStroke()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    function frame({ cloned }) {
+      for (let i = 0; i < cloned.length; i++) {
+        const node = cloned[i]
+        drawTree(node, width / 2, RECT_HEIGHT + i * 120, n - 1, 0, 0)
+      }
+    }
+
+    let i = 0
+    const all = []
+    function insert(data, max) {
+      if (i == data.length) {
+        return null
+      }
+      const val = data[i]
+      if (val > max) {
+        return null
+      }
+      let display = ` 左限 ${val} 右限 ${max === MAX ? 'MAX' : max}`
+      const node = { txt: val, display }
+      all.push(node)
+      i++
+      d.add({ cloned: clone(all) }, frame)
+      const left = insert(data, node.txt);
+      node.left = left
+      node.display += ' 左完'
+      d.add({ cloned: clone(all) }, frame)
+      const right = insert(data, max)
+      node.right = right
+      node.display += ' 右完'
+      d.add({ cloned: clone(all) }, frame)
+      all.pop()
+      return node
+    }
+
+    function drawTree(node, x, y, deep, px, py) {
+      if (node) {
+        if (node.txt) {
+          if (px && py) {
+            stroke('black')
+            line(x, y, px, py)
+            noStroke()
+          }
+        }
+        drawTree(node.left, x - Math.pow(2, deep) * RECT_WIDTH / 4, y + Math.pow(2, n - deep) * RECT_WIDTH / 2, deep - 1, x, y)
+        drawTree(node.right, x + Math.pow(2, deep) * RECT_WIDTH / 4, y + Math.pow(2, n - deep) * RECT_WIDTH / 2, deep - 1, x, y)
+        if (node.txt) {
+          fill('#00FF99')
+          const w = (node.txt + ' ' + node.display).length * 8 + 12
+          rect(x - w / 2, y - RECT_HEIGHT / 2, w, RECT_HEIGHT)
+          fill('black')
+          text((node.txt + ' ' + node.display), x, y + 3)
+        }
+      }
+    }
+
+  </script>
+</body>
+
+</html>

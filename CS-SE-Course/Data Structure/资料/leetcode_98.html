@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 98 - 判断是否合法二叉搜索树</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#00FF99; margin: 2px 2px 0 0; padding: 4px 6px;'>进行中</div>
+    <div style='background-color:#7df4f2; margin: 2px 2px 0 0; padding: 4px 6px;'>已结束</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>数组表示的二叉树&nbsp;</span><input type="text" id='data' class="saveable narray" value="4,2,6,n,n,3,7">
+    <span>n&nbsp;</span><input type="text" id='n' class="saveable int" value="6">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="25" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_98')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('leetcode_98')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const n = options.n
+    const data = options.data
+    let root;
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 10
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      root = binary_tree(data, n)
+      const r = isValid(root)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    function frame({ cloned }) {
+      drawTree(cloned, width / 2, RECT_HEIGHT, n - 1, 0, 0)
+    }
+
+    function drawTree(node, x, y, deep, px, py) {
+      if (node) {
+        if (node.txt) {
+          if (px && py) {
+            stroke('black')
+            line(x, y, px, py)
+            noStroke()
+          }
+        }
+        drawTree(node.left, x - Math.pow(2, deep) * RECT_WIDTH / 4, y + Math.pow(2, n - deep) * RECT_WIDTH / 2, deep - 1, x, y)
+        drawTree(node.right, x + Math.pow(2, deep) * RECT_WIDTH / 4, y + Math.pow(2, n - deep) * RECT_WIDTH / 2, deep - 1, x, y)
+        if (node.txt) {
+          fill('#00FF99')
+          stroke('black')
+          const w = (node.txt + ' ' + node.display).length * 6 + 12
+          rect(x - w / 2, y - RECT_HEIGHT / 2, w, RECT_HEIGHT)
+          fill('black')
+          noStroke()
+          text((node.txt + ' ' + node.display), x, y + 3)
+        }
+      }
+    }
+
+    const MIN = -1 * Number.MAX_VALUE
+    let prev = MIN
+    function isValid(node) {
+      if (node === null || node === undefined) {
+        return true
+      }
+      const a = isValid(node.left)
+      if (!a) {
+        return;
+      }
+      const self = `${prev === MIN ? 'MIN' : prev} < ${node.txt} ${prev >= node.txt ? '失败' : '通过'}`
+      if (a) {
+        node.display = `(左通过, ${self})`
+      } else {
+        node.display = `(左失败, ${self})`
+      }
+      d.add({ cloned: clone(root) }, frame)
+      if (prev >= node.txt) {
+        return false
+      }
+      prev = node.txt
+      const b = isValid(node.right)
+      if (a && b) {
+        node.display = `(左通过, ${self}, 右通过)`
+      } else if (a && !b) {
+        node.display = `(左通过, ${self}, 右失败)`
+      } else if (!a && b) {
+        node.display = `(左失败, ${self}, 右通过)`
+      } else {
+        node.display = `(右失败, ${self}, 右失败)`
+      }
+      d.add({ cloned: clone(root) }, frame)
+      return a && b
+    }
+
+    function binary_tree(array, n) {
+      const newArray = array.map(e => e ? ({ txt: Number(e), status: 0, display: '' }) : null)
+      const size = array.length
+      for (let i = size - 1; i > 0; i--) {
+        const pi = (i - 1) >> 1
+        const parent = newArray[pi]
+        if (parent != null) {
+          const left = 2 * pi + 1
+          const right = left + 1
+          if (left === i) {
+            parent.left = newArray[i]
+          }
+          if (right === i) {
+            parent.right = newArray[i]
+          }
+        }
+      }
+      const root = newArray[0]
+      d.add({ cloned: clone(root) }, frame)
+      return root
+    }
+
+  </script>
+</body>
+
+</html>

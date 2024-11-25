@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 80%;
+      min-height: 170px;
+    }
+  </style>
+  <title>动态数组</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <div class="code" style="display: none;">
+    <pre><code class="language-java">public void add(int index, int element) {
+    if (this.size == this.capacity) grow();
+    if (index < size) System.arraycopy(this.array, index, this.array, index + 1, this.size - index);
+    this.array[index] = element; this.size++;
+}
+private void grow() {
+    this.capacity += this.capacity >> 1;
+    int[] newArray = new int[this.capacity];
+    System.arraycopy(this.array, 0, newArray, 0, this.size);
+    this.array = newArray;
+}
+public int remove(int index) {
+    int removed = this.array[index];
+    System.arraycopy(this.array, index + 1, this.array, index, this.size - index - 1);
+    this.size--;
+    return removed;
+}</code></pre>
+  </div>
+  <main></main>
+  <section>
+    <div style='background-color:#cc99cd; margin: 2px 2px 0 0; padding: 4px 6px;'>索引</div>
+    <div style='background-color:#ccc; margin: 2px 2px 0 0; padding: 4px 6px;'>空闲</div>
+    <div style='background-color:#67cdcc; margin: 2px 2px 0 0; padding: 4px 6px;'>占用</div>
+    <div style='background-color:#f08d49; margin: 2px 2px 0 0; padding: 4px 6px;'>拷贝</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>待添加值&nbsp;</span><input type="text" id='values' class="saveable">
+    <input style='font-size:12px;' type="button" value="addLast()" onclick="onAddLast()">
+    <span>待插入索引&nbsp;</span><input type="text" id='insertIndex' style="width:20px;" value="2" class="saveable">
+    <span>待插入值&nbsp;</span><input type="text" id='insertValue' style="width:20px;" value="6" class="saveable">
+    <input style='font-size:12px;' type="button" value="add()" onclick="onAdd()">
+    <span>待删除索引&nbsp;</span><input type="text" id='removeIndex' style="width:20px;" value="2" class="saveable">
+    <input style='font-size:12px;' type="button" value="remove()" onclick="onRemove()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('ds_dynamic_array')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    class DynamicArray {
+      constructor() {
+        this.size = 0
+        this.capacity = 8
+        this.array = new Int32Array(this.capacity)
+      }
+      init() {
+        d.add({ data: this, pointers: [{ text: 'size', index: this.size }] }, frame)
+      }
+      _grow() {
+        console.log(this.capacity, this.capacity + (this.capacity >> 1))
+        const newArray = new Int32Array(this.capacity + (this.capacity >> 1))
+        d.add({ data: this, array: newArray, pointers: [{ text: 'size', index: this.size }], keyframe: true, lineNumber: 9 }, frame)
+        const highlights = []
+        for (let i = 0; i < this.size; i++) {
+          newArray[i] = this.array[i]
+          highlights.push(i)
+        }
+        d.add({ data: this, array: newArray, pointers: [{ text: 'size', index: this.size }], highlights, lineNumber: 10 }, frame)
+        this.array = newArray
+        this.capacity += this.capacity >> 1
+        d.add({ data: this, pointers: [{ text: 'size', index: this.size }], lineNumber: 11 }, frame)
+      }
+      addLast(e) {
+        this.add(this.size, e)
+      }
+      add(i, e) {
+        if (this.size === this.capacity) {
+          this._grow()
+        }
+        if (i < this.size) {
+          let highlights = []
+          for (let j = i; j < this.size; j++) {
+            highlights.push(j)
+          }
+          d.add({ data: this, pointers: [{ text: 'size', index: this.size }], highlights, lineNumber: 4 }, frame)
+          highlights = []
+          for (let j = this.size; j > i; j--) {
+            highlights.push(j)
+            this.array[j] = this.array[j - 1]
+          }
+          d.add({ data: this, pointers: [{ text: 'size', index: this.size }], highlights, lineNumber: 4 }, frame)
+        }
+        this.array[i] = e
+        this.size++
+        d.add({ data: this, pointers: [{ text: 'size', index: this.size }], lineNumber: 5 }, frame)
+      }
+      remove(i) {
+        let removed = this.array[i]
+        let highlights = []
+        for (let j = i + 1; j < this.size; j++) {
+          highlights.push(j)
+        }
+        d.add({ data: this, pointers: [{ text: 'size', index: this.size }], highlights, lineNumber: 14 }, frame)
+        highlights = []
+        for (let j = i; j < this.size - 1; j++) {
+          this.array[j] = this.array[j + 1]
+          highlights.push(j)
+        }
+        d.add({ data: this, pointers: [{ text: 'size', index: this.size }], highlights, lineNumber: 15 }, frame)
+        this.size--
+        d.add({ data: this, pointers: [{ text: 'size', index: this.size }], lineNumber: 16 }, frame)
+        return removed
+      }
+      get(i) {
+        return this.array[i]
+      }
+      clone() {
+        const c = new DynamicArray()
+        c.size = this.size
+        c.capacity = this.capacity
+        c.array = this.array ? this.array.map(i => i) : null
+        return c
+      }
+    }
+
+    function onAddLast() {
+      for (const n of document.querySelector('#values').value.split(',')) {
+        dynamicArray.addLast(Number(n))
+      }
+      d.updateFrameButtons()
+    }
+    function onAdd() {
+      const idx = Number(document.querySelector('#insertIndex').value)
+      const val = Number(document.querySelector('#insertValue').value)
+      dynamicArray.add(idx, val)
+      d.updateFrameButtons()
+    }
+    function onRemove() {
+      const idx = Number(document.querySelector('#removeIndex').value)
+      dynamicArray.remove(idx)
+      d.updateFrameButtons()
+    }
+
+    const options = loadOptionsFromStorage('ds_dynamic_array')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+
+    const dynamicArray = new DynamicArray()
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 10
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      dynamicArray.init()
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    function frame({ data, array: newArray, pointers, highlights, lineNumber }) {
+      const pre = document.querySelector('pre')
+      if (lineNumber > 0) {
+        pre.setAttribute('data-line', lineNumber)
+        Prism.highlightAllUnder(pre)
+      }
+      const LEFT = RECT_WIDTH / 2
+
+      for (let i = 0; i < data.capacity + 1; i++) {
+        // 注：矩形以左下角 x, y 作为起点坐标
+        let x = LEFT + i * RECT_WIDTH
+        let y = height - RECT_HEIGHT
+
+        stroke(0)
+        pointers.draw(i, x, RECT_HEIGHT)
+        noStroke()
+
+        if (i < data.capacity) {
+          fill('#ccc')
+          if (i < data.size) {
+            fill('#67cdcc')
+          }
+          if (highlights.includes(i)) {
+            fill('#f08d49')
+          }
+          rect(x, y, RECT_WIDTH, -RECT_HEIGHT)
+          fill('#ffffff')
+          text(data.array[i], x + RECT_WIDTH / 2, y - 6)
+          fill('#cc99cd')
+          rect(x, height, RECT_WIDTH, -RECT_HEIGHT)
+          fill('#ffffff')
+          text(i, x + RECT_WIDTH / 2, height - 6)
+        }
+      }
+
+      if (newArray) {
+        for (let i = 0; i < newArray.length; i++) {
+          let x = LEFT + i * RECT_WIDTH
+          let y = height - RECT_HEIGHT * 4
+          fill('#ccc')
+          if (highlights.includes(i)) {
+            fill('#f08d49')
+          }
+          rect(x, y, RECT_WIDTH, -RECT_HEIGHT)
+          fill('#ffffff')
+          text(newArray[i], x + RECT_WIDTH / 2, y - 6)
+          fill('#cc99cd')
+          rect(x, height - RECT_HEIGHT * 3, RECT_WIDTH, -RECT_HEIGHT)
+          fill('#ffffff')
+          text(i, x + RECT_WIDTH / 2, height - RECT_HEIGHT * 3 - 6)
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>

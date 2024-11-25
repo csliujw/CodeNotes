@@ -29,17 +29,17 @@ python -m torch.distributed.launch --nproc_per_node=2 tools/train.py --model bis
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            // 分布式启动代码的路径
+            // 分布式启动代码的路径，当前conda环境 pytorch 包 launch.py 文件的路径
             "program": "/home/xxx/torch/distributed/launch.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             // 分布式训练参数设置
             "args":[
                 "--nproc_per_node=1",
-                "tools/train.py",
+                "tools/train.py", // 分布式训练，训练脚本是 tools/train,py
                 "--model", // 控制台参数模型参数
             ],
-    					"env": { "CUDA_VISIBLE_DEVICES" : "0" }
+			"env": { "CUDA_VISIBLE_DEVICES" : "0" }
         }
     ]
 }
@@ -66,16 +66,16 @@ args
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            // 分布式启动代码的路径
+            // 分布式启动代码的路径.
             "program": "/home/xxx/torch/distributed/launch.py",
             "console": "integratedTerminal",
             "justMyCode": true,
             // 分布式训练参数设置
             "args":[
-                "--nproc_per_node=1", // 可以用等号
+                "--nproc_per_node=1", // 可以用等号，每个节点的 GPU 数量
                 "--model", "resnet101"// 控制台参数模型参数
             ],
-    					"env": { "CUDA_VISIBLE_DEVICES" : "0" }
+			"env": { "CUDA_VISIBLE_DEVICES" : "0" }
         }
     ]
 }

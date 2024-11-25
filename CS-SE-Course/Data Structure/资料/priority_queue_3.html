@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 66%;
+      min-height: 400px;
+    }
+  </style>
+  <title>优先级队列(二叉大顶堆)</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <div class="code" style="display: none;">
+    <pre><code class="language-java">public static int binarySearch(int[] a, int target) {
+    int i = 0, j = a.length - 1;
+    int candidate = -1;
+    while (i <= j) {
+        int m = (i + j) >>> 1;
+        if (target < a[m]) {          // 在左边
+            j = m - 1;
+        } else if (a[m] < target) {   // 在右边
+            i = m + 1;
+        } else {
+            candidate = m;
+            j = m - 1;
+        }
+    }
+    return candidate;
+}</code></pre>
+  </div>
+  <main></main>
+  <section>
+    <div style='background-color:#cc99cd; margin: 2px 2px 0 0; padding: 4px 6px;'>索引</div>
+    <div style='background-color:#67cdcc; margin: 2px 2px 0 0; padding: 4px 6px;'>数据</div>
+    <div style='background-color:#f08d49; margin: 2px 2px 0 0; padding: 4px 6px;'>比较或交换</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <div style="margin-bottom: 2px;">
+      <span>初始队列&nbsp;</span><input type="text" id='initQueue' class="saveable array" value="100,19,36,17,3,25,1,2,7">
+    </div>
+    <div style="margin-bottom: 2px;">
+      <span>入队&nbsp;</span><input type="text" id='offered' class="saveable" value="4">
+      <input style='font-size:12px;' type="button" value="offer()" onclick="offer()">
+    </div>
+    <div style="margin-bottom: 2px;">
+      <span>出队&nbsp;</span><input style='font-size:12px;' type="button" value="poll()" onclick="poll()">
+    </div>
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>直径</span><input type="number" step="1" value="30" id="DIAMETER" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('priority_queue_3')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    function poll() {
+      d.add({ array: dataArray, highlights: [0, dataArray.length - 1] }, frame)
+      swap(dataArray, 0, dataArray.length - 1)
+      d.add({ array: dataArray, highlights: [0, dataArray.length - 1] }, frame)
+      dataArray.pop()
+      d.add({ array: dataArray }, frame)
+      sink(0)
+      d.add({ array: dataArray }, frame)
+      d.updateFrameButtons()
+    }
+
+    function sink(parent) {
+      const left = 2 * parent + 1
+      const right = left + 1
+      let max = parent
+      d.add({ array: dataArray, highlights: [parent], pointers: [{ index: left, text: 'L' }, { index: right, text: 'R' }, { index: parent, text: 'P' }] }, frame)
+      if (left < dataArray.length && dataArray[left] > dataArray[max]) {
+        max = left
+      }
+      if (right < dataArray.length && dataArray[right] > dataArray[max]) {
+        max = right
+      }
+      if (max != parent) {
+        d.add({ array: dataArray, highlights: [parent, max], pointers: [{ index: left, text: 'L' }, { index: right, text: 'R' }, { index: parent, text: 'P' }] }, frame)
+        swap(dataArray, max, parent)
+        d.add({ array: dataArray, highlights: [parent, max], pointers: [{ index: left, text: 'L' }, { index: right, text: 'R' }, { index: parent, text: 'P' }] }, frame)
+        sink(max)
+      }
+    }
+
+    function swap(a, i, j) {
+      let k = a[i]
+      a[i] = a[j]
+      a[j] = k
+    }
+
+    function offer() {
+      const offered = Number(document.querySelector('#offered').value)
+
+      let child = dataArray.length
+      let parent = (child - 1) >> 1
+      while (child > 0 && offered > dataArray[parent]) {
+        d.add({ array: child == dataArray.length ? [...dataArray, ''] : dataArray, highlights: [parent], pointers: [{ index: child, text: 'C' }, { index: parent, text: 'P' }] }, frame)
+        dataArray[child] = dataArray[parent]
+        d.add({ array: dataArray, highlights: [parent, child], pointers: [{ index: child, text: 'C' }, { index: parent, text: 'P' }] }, frame)
+        child = parent
+        parent = (child - 1) >> 1
+      }
+      if (parent >= 0) {
+        d.add({ array: dataArray, highlights: [parent], pointers: [{ index: child, text: 'C' }, { index: parent, text: 'P' }] }, frame)
+      }
+      dataArray[child] = offered
+      d.add({ array: dataArray, highlights: [child], pointers: [{ index: child, text: 'C' }] }, frame)
+
+      d.add({ array: dataArray }, frame)
+      d.updateFrameButtons()
+    }
+    const options = loadOptionsFromStorage('priority_queue_3')
+    const DIAMETER = options.DIAMETER
+    const d = new Draw(options.animate_speed)
+    const NODE_LEFT_PAD = 250
+    const LEFT_PAD = 20
+    const TOP_PAD = 40
+
+    let dataArray = options.initQueue
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 10
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      d.add({ array: dataArray }, frame)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+
+    class Node {
+      constructor(data, parent) {
+        this.data = data
+        this.parent = parent
+        this.left = null
+        this.right = null
+      }
+    }
+
+    function createNodes(array, highlights) {
+      const maxLevel = Math.floor(Math.log2(array.length)) // 层数，即高度-1
+      let nodes = array.map(x => new Node(x, null))
+      let root = nodes[0]
+      for (let i = 0, lvl = 0; i < array.length; i++) {
+        let n = nodes[i]
+        n.level = i
+        if (2 * i + 1 < array.length) {
+          n.left = nodes[2 * i + 1]
+        }
+        if (2 * i + 2 < array.length) {
+          n.right = nodes[2 * i + 2]
+        }
+        n.color = highlights.includes(i) ? '#f08d49' : '#67cdcc'
+        if (i > 0) {
+          n.parent = nodes[Math.floor((i - 1) / 2)]
+        }
+        lvl = Math.floor(Math.log2(i + 1))
+        if (i == 0) {
+          n.position = lvl
+        } else {
+          if (i & 1 == 1) { //left
+            n.position = n.parent.position - Math.pow(2, maxLevel - lvl)
+          } else { // right
+            n.position = n.parent.position + Math.pow(2, maxLevel - lvl)
+          }
+        }
+      }
+      return nodes;
+    }
+
+    function drawNodes(nodes) {
+      for (let i = 0; i < nodes.length; i++) {
+        let node = nodes[i]
+        fill(node.color)
+        let x = NODE_LEFT_PAD + DIAMETER / 2 * node.position
+        let y = i * DIAMETER + TOP_PAD
+        noStroke()
+        circle(x, y, DIAMETER)
+
+        fill(255)
+        text(node.data, x, y + 4)
+
+        stroke(node.color)
+        if (node.parent != null) {
+          line(
+            (NODE_LEFT_PAD + DIAMETER / 2 * node.parent.position),
+            (node.parent.level * DIAMETER + TOP_PAD) + DIAMETER / 2,
+            x,
+            y - DIAMETER / 2
+          )
+        }
+      }
+    }
+    /*
+      array: 数组
+      pointers: 指针
+      highlights: 高亮位置
+      lineNumber: 高亮行号
+    */
+    function frame({ array, pointers, highlights, lineNumber }) {
+      const pre = document.querySelector('pre')
+      if (lineNumber > 0) {
+        pre.setAttribute('data-line', lineNumber)
+        Prism.highlightAllUnder(pre)
+      }
+
+      let x = LEFT_PAD, y = TOP_PAD - DIAMETER / 2
+      for (let i = 0; i < array.length; i++) {
+        stroke(0)
+        pointers.draw2(i, y, x + 400 - DIAMETER)        
+        highlights.includes(i) ? fill('#f08d49') : fill('#67cdcc')
+        rect(x + DIAMETER, y, DIAMETER, DIAMETER)
+        fill('#ffffff')
+        noStroke()
+        text(array[i], x + DIAMETER + DIAMETER / 2, y + DIAMETER / 2 + 4)
+
+        stroke(0)
+        fill('#cc99cd')
+        rect(x, y, DIAMETER, DIAMETER)
+        fill('#ffffff')
+        noStroke()
+        text(i, x + DIAMETER / 2, y + DIAMETER / 2 + 4)
+
+        stroke(0)
+        line(x, y, x + 400, y)
+        y += DIAMETER
+      }
+      line(x, y, x + 400, y)
+      const nodes = createNodes(array, highlights)
+      drawNodes(nodes)
+    }
+  </script>
+</body>
+
+</html>

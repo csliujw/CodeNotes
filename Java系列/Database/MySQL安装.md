@@ -153,3 +153,25 @@ mysql> show variables like 'default_password_lifetime';
 alter user user() identified by "123456";
 ```
 
+# WSL 安装 MySQL
+
+```shell
+apt install mysql-server-8.0
+```
+
+登录，提示密码错误。我们可以重置密码。
+
+```shell
+sudo mysqld_safe --skip-grant-tables &	# 安全模式启动 mysql
+
+# 连接到 mysql
+mysql -u root
+
+# 修改密码
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '新密码';
+
+# 重启 mysql 服务
+sudo service mysql stop
+sudo service mysql start
+```
+

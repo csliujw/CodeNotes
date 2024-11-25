@@ -15,4 +15,4 @@ Django 都是在 settings.py 里进行配置的
 - 注释掉 MIDDLEWARE 中的 `django.middleware.csrf.CsrfViewMiddleware`，不安全
 
 - 使用 `from django.views.decorators.csrf import csrf_exempt` 装饰器
-
+123

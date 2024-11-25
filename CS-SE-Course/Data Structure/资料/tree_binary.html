@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 74%;
+      min-height: 200px;
+    }
+  </style>
+  <title>二叉树遍历</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#00FF99; margin: 2px 2px 0 0; padding: 4px 6px;'>已访问</div>
+    <div style='background-color:#ccc; margin: 2px 2px 0 0; padding: 4px 6px;'>未访问</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>数组表示的二叉树&nbsp;</span><input type="text" id='data' class="saveable narray" value="1,2,3,4,n,5,6">
+    <span>n&nbsp;</span><input type="text" id='n' class="saveable" value="5">
+    <input style='font-size:12px;' type="button" value="前序" onclick="p1()">
+    <input style='font-size:12px;' type="button" value="中序" onclick="p2()">
+    <input style='font-size:12px;' type="button" value="后序" onclick="p3()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>直径</span><input type="number" step="1" value="50" id="DIAMETER" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('tree_binary')">
+  </div>
+  <div id="preDiv"
+    style="display: none; padding: 10px 30px 10px 10px; background-color: bisque; position: absolute; top: 100px; right: 0;">
+    <span>前序遍历规则</span>
+    <ul>
+      <li>先访问该节点</li>
+      <li>然后是左子树</li>
+      <li>最后是右子树</li>
+    </ul>
+    <span>结果：</span><span class="result"></span>
+  </div>
+  <div id="inDiv"
+    style="display: none; padding: 10px 30px 10px 10px; background-color: bisque; position: absolute; top: 100px; right: 0;">
+    <span>中序遍历规则</span>
+    <ul>
+      <li>先访问左子树</li>
+      <li>然后是该节点</li>
+      <li>最后是右子树</li>
+    </ul>
+    <span>结果：</span><span class="result"></span>
+  </div>
+  <div id="postDiv"
+    style="display: none; padding: 10px 30px 10px 10px; background-color: bisque; position: absolute; top: 100px; right: 0;">
+    <span>后序遍历规则</span>
+    <ul>
+      <li>先访问左子树</li>
+      <li>然后是右子树</li>
+      <li>最后是该节点</li>
+    </ul>
+    <span>结果：</span><span class="result"></span>
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const preDiv = document.getElementById("preDiv")
+    const inDiv = document.getElementById("inDiv")
+    const postDiv = document.getElementById("postDiv")
+    const resultSpans = document.querySelectorAll(".result")
+    const result = []
+    function p1() {
+      clearStatus(root)
+      result.splice(0)
+      preOrder(root)
+      d.updateFrameButtons()
+      resultSpans[0].innerHTML = result
+      preDiv.style.display = "block"
+      inDiv.style.display = "none"
+      postDiv.style.display = "none"
+    }
+    function p2() {
+      clearStatus(root)
+      result.splice(0)
+      inOrder(root)
+      d.updateFrameButtons()
+      resultSpans[1].innerHTML = result
+      preDiv.style.display = "none"
+      inDiv.style.display = "block"
+      postDiv.style.display = "none"
+    }
+    function p3() {
+      clearStatus(root)
+      result.splice(0)
+      postOrder(root)
+      d.updateFrameButtons()
+      resultSpans[2].innerHTML = result
+      preDiv.style.display = "none"
+      inDiv.style.display = "none"
+      postDiv.style.display = "block"
+    }
+    const options = loadOptionsFromStorage('tree_binary')
+    let data = options.data
+    const DIAMETER = options.DIAMETER
+    const n = options.n
+    const d = new Draw(options.animate_speed)
+    let root
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 14
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      root = binary_tree(data, n)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    function frame({ cloned }) {
+      drawTree(cloned, width / 2, DIAMETER, n - 1, 0, 0)
+    }
+
+    function drawTree(node, x, y, deep, px, py) {
+      // console.log(node)
+      if (node) {
+        if (node.txt) {
+          if (px && py) {
+            stroke('black')
+            line(x, y, px, py)
+          }
+        }
+        drawTree(node.left, x - Math.pow(2, deep) * DIAMETER / 4, y + Math.pow(2, n - deep) * DIAMETER / 2, deep - 1, x, y)
+        drawTree(node.right, x + Math.pow(2, deep) * DIAMETER / 4, y + Math.pow(2, n - deep) * DIAMETER / 2, deep - 1, x, y)
+        if (node.txt) {
+          stroke(0)
+          // console.log(node.status, (node.status & 1) === 1, (node.status & 2) === 2, (node.status & 4) === 4)
+          if ((node.status & 1) === 1) { fill('#00FF99') } else { fill('#ccc') }
+          arc(x, y, DIAMETER, DIAMETER, PI, TWO_PI)
+          if ((node.status & 2) === 2) { fill('#00FF99') } else { fill('#ccc') }
+          arc(x, y, DIAMETER, DIAMETER, HALF_PI, PI)
+          if ((node.status & 4) === 4) { fill('#00FF99') } else { fill('#ccc') }
+          arc(x, y, DIAMETER, DIAMETER, 0, HALF_PI)
+          fill('black')
+          text(node.txt, x, y - 6)
+        }
+      }
+    }
+
+    function preOrder(node) {
+      if (!node) {
+        return
+      }
+      node.status |= 1
+      result.push(node.txt)
+      d.add({ cloned: clone(root) }, frame)
+      preOrder(node.left)
+      node.status |= 2
+      d.add({ cloned: clone(root) }, frame)
+      preOrder(node.right)
+      node.status |= 4
+      d.add({ cloned: clone(root) }, frame)
+    }
+
+    function inOrder(node) {
+      if (!node) {
+        return
+      }
+      inOrder(node.left)
+      node.status |= 2
+      d.add({ cloned: clone(root) }, frame)
+      node.status |= 1
+      result.push(node.txt)
+      d.add({ cloned: clone(root) }, frame)
+      inOrder(node.right)
+      node.status |= 4
+      d.add({ cloned: clone(root) }, frame)
+    }
+
+    function postOrder(node) {
+      if (!node) {
+        return
+      }
+      postOrder(node.left)
+      node.status |= 2
+      d.add({ cloned: clone(root) }, frame)
+      postOrder(node.right)
+      node.status |= 4
+      d.add({ cloned: clone(root) }, frame)
+      node.status |= 1
+      result.push(node.txt)
+      d.add({ cloned: clone(root) }, frame)
+    }
+
+    function clearStatus(node) {
+      if (!node) {
+        return
+      }
+      node.status = 0
+      clearStatus(node.left)
+      clearStatus(node.right)
+    }
+
+
+    /*
+      status
+        0-都未处理
+        1-节点自身处理完
+        2-左孩子处理完
+        4-右孩子处理完
+    */
+    // 根据 array 构造二叉树
+    function binary_tree(array, n) {
+      const newArray = array.map(e => e ? ({ txt: e, status: 0 }) : null)
+      const size = array.length
+      for (let i = size - 1; i > 0; i--) {
+        const pi = (i - 1) >> 1
+        const parent = newArray[pi]
+        if (parent != null) {
+          const left = 2 * pi + 1
+          const right = left + 1
+          if (left === i) {
+            parent.left = newArray[i]
+          }
+          if (right === i) {
+            parent.right = newArray[i]
+          }
+        }
+      }
+      const root = newArray[0]
+      d.add({ cloned: clone(root) }, frame)
+      return root
+    }
+
+  </script>
+</body>
+
+</html>

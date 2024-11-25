@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <script src="js/p5.js"></script>
+  <script>
+    let startX = 500;
+    let startY = 300;
+    let targetX = 50;
+    let targetY = 50;
+    let curveX = 200;
+    let curveY = 100;
+    let reachedTarget = false;
+
+    function setup() {
+      createCanvas(600, 400);
+    }
+
+    function draw() {
+      background(220);
+
+      // 计算当前位置
+      if (!reachedTarget) {
+        let percent = map(frameCount, 0, 120, 0, 1);
+        let currentX = bezierPoint(startX, curveX, curveX, targetX, percent);
+        let currentY = bezierPoint(startY, curveY, curveY, targetY, percent);
+
+        // 检查是否到达目标位置
+        if (dist(currentX, currentY, targetX, targetY) <= 1) {
+          reachedTarget = true;  // 停止更新位置
+        }
+
+        // 绘制矩形
+        rect(currentX, currentY, 50, 50);
+      } else {
+        // 如果已到达目标位置，则绘制矩形在目标位置上
+        rect(targetX, targetY, 50, 50);
+      }
+
+      // 绘制曲线
+      noFill();
+      stroke(0);
+      bezier(startX, startY, curveX, curveY, curveX, curveY, targetX, targetY);
+    }
+
+
+
+  </script>
+</body>
+
+</html>

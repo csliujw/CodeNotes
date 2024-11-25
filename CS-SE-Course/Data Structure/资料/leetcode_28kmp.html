@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 28 - 匹配字符串</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#00FF99; margin: 2px 2px 0 0; padding: 4px 6px;'>正在对比</div>
+    <div style='background-color:rgba(143, 143, 193, 0.5); margin: 2px 2px 0 0; padding: 4px 6px;'>无需对比</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    原始串 <input type="text" id="str1" value="ababababcabacacababaca" class="saveable" />
+    匹配串 <input type="text" id="str2" value="ababaca" class="saveable" />
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_28kmp')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('leetcode_28kmp')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const str1 = options.str1
+    const str2 = options.str2
+    // const str1 = 'aaacaaab'
+    // const str2 = 'aaab'
+    // const str1 = 'abababacbababaca'
+    // const str2 = 'ababaca'
+    // const str1 = 'aaaaaaaaaaab'
+    // const str2 = 'aaaab'
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 14
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      strMatch()
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'), () => true)
+    }
+    function frame({ cloned: node }) {
+      if (node) {
+        const startX = width / 2 - str1.length / 2 * RECT_WIDTH
+        const startY = height - 100
+        let x = startX + node.startj * RECT_WIDTH
+        let y = startY - 200
+
+        noStroke()
+        fill('black')
+        text('longest prefix suffix', x + RECT_WIDTH * 2.2, y - RECT_HEIGHT)
+        for (let i = 0; i < next.length; i++) {
+          if (node.nv != -1 && i == node.j - 1) {
+            fill('rgba(143, 143, 193, 0.5)')
+          } else {
+            fill('white')
+          }
+          stroke('black')
+          rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+          noStroke()
+          fill('black')
+          text(next[i], x + RECT_WIDTH / 2, y + RECT_HEIGHT / 2 + 4)
+          x += RECT_WIDTH
+        }
+
+        x = startX
+        y = startY
+        for (let i = 0; i < str1.length; i++) {
+          if (i < node.i && i > node.i - node.nv - 1) {
+            fill('rgba(143, 143, 193, 0.5)')
+          } else if (node.i == i) {
+            fill('rgba(0,255,0,.5)')
+          } else {
+            fill('white')
+          }
+          stroke('black')
+          rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+          noStroke()
+          fill('black')
+          text(str1[i], x + RECT_WIDTH / 2, y + RECT_HEIGHT / 2 + 4)
+          if (node.i == i) {
+            text("i", x + RECT_WIDTH / 2, y + RECT_HEIGHT * 1.5 + 6)
+          }
+          x += RECT_WIDTH
+        }
+        x = startX + node.startj * RECT_WIDTH
+        y = startY - RECT_HEIGHT
+        for (let i = 0; i < str2.length; i++) {
+          if (i < node.nv) {
+            fill('rgba(143, 143, 193, 0.5)')
+          } else if (node.j == i) {
+            fill('rgba(0,255,0,.5)')
+          } else {
+            fill('white')
+          }
+          stroke('black')
+          rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+          noStroke()
+          fill('black')
+          text(str2[i], x + RECT_WIDTH / 2, y + RECT_HEIGHT / 2 + 4)
+          if (node.j == i) {
+            text("j", x + RECT_WIDTH / 2, y - RECT_HEIGHT / 2)
+          }
+          x += RECT_WIDTH
+        }
+      }
+    }
+
+    function prefix() {
+      const next = []
+      for (let k = 0; k < str2.length; k++) {
+        next[k] = 0
+      }
+      let j = 0
+      let i = 1
+      while (i < str2.length) {
+        if (str2[i] == str2[j]) {
+          j++
+          next[i] = j
+          i++
+        }
+        else if (j != 0) {
+          j = next[j - 1]
+        } else {
+          i++
+        }
+      }
+      return next
+    }
+    const next = prefix()
+    function strMatch() {
+      const n = str1.length
+      const m = str2.length
+      let i = 0
+      let j = 0
+      let startj = 0
+      d.add({ cloned: clone({ i, j, startj, nv: -1 }) }, frame)
+      while (i < n) {
+        if (str1[i] == str2[j]) {
+          j++
+          i++
+          if (i < n)
+            d.add({ cloned: clone({ i, j, startj, nv: -1 }) }, frame)
+        } else if (j != 0) {
+          if (i < n)
+            d.add({ cloned: clone({ i, j, startj, nv: next[j - 1] }) }, frame)
+          j = next[j - 1]
+          startj = (i - j)
+          if (i < n)
+            d.add({ cloned: clone({ i, j, startj, nv: -1 }) }, frame)
+        } else {
+          i++
+          startj = (i - j)
+          d.add({ cloned: clone({ i, j, startj, nv: -1 }) }, frame)
+        }
+        if (j == m) {
+          break;
+        }
+      }
+    }
+
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,77 @@
+html,body {
+  margin: 0;
+  padding: 0;
+}
+.-ht--content {
+  display: grid;
+  justify-items: center;
+  align-items: center;
+  grid-template-columns: auto minmax(auto, 300px) minmax(auto, 300px) auto;
+  grid-template-areas:
+    ". size cycle . "
+    ". canvas canvas . "
+    ". next reset ."
+    ". status status .";
+  gap: 1rem;
+  width: 100%;
+}
+
+.-ht--ll-size-container {
+  margin-top: 1rem;
+  grid-area: size;
+}
+
+.-ht--cycle-size-container {
+  margin-top: 1rem;
+  grid-area: cycle;
+}
+
+.-ht--canvas-container {
+  position: relative;
+  grid-area: canvas;
+  border: solid black 1px;
+  height: 400px;
+}
+
+.-ht--canvas-legend {
+  position: absolute;
+  bottom: 0;
+  /* border: solid black 1px; */
+  padding-left: 0.5rem;
+  padding-right: 1rem;
+}
+.-ht--canvas-legend h3 {
+  text-decoration: underline;
+}
+
+.-ht--canvas-legend ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.-ht--box {
+  box-sizing: border-box;
+  display: inline-block;
+  height: 10px;
+  width: 10px;
+  border-radius: 5px;
+}
+
+#-ht--next-button {
+  grid-area: next;
+}
+
+#-ht--reset-button {
+  grid-area: reset;
+}
+
+#-ht--status {
+  grid-area: status;
+  justify-self: start;
+  font-style: italic;
+}
+
+.-ht--status-title {
+  font-weight: bold;
+  font-style: normal;
+}

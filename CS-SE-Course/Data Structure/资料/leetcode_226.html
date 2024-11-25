@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 74%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 226 - 翻转二叉树</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#00FF99; margin: 2px 2px 0 0; padding: 4px 6px;'>已访问</div>
+    <div style='background-color:#ccc; margin: 2px 2px 0 0; padding: 4px 6px;'>未访问</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>数组表示的二叉树&nbsp;</span><input type="text" id='data' class="saveable narray" value="1,2,3,4,5,n,n,n,n,7,8">
+    <span>n&nbsp;</span><input type="text" id='n' class="saveable" value="5">
+    <input style='font-size:12px;' type="button" value="翻转" onclick="invertTree()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>直径</span><input type="number" step="1" value="30" id="DIAMETER" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_226')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const result = []
+    function invertTree() {
+      rec(root, root)
+      d.updateFrameButtons()
+    }
+    function rec(root, node) {
+      if (!node) {
+        return
+      }            
+      const highlights = []
+      if(node.left) {
+        highlights.push(node.left.id)
+      }
+      if(node.right) {
+        highlights.push(node.right.id)
+      }
+      if (node.left || node.right) {
+        d.add({ cloned: clone(root), highlights }, frame)
+      }
+      let t = node.left
+      node.left = node.right
+      node.right = t
+      if (node.left || node.right) {
+        d.add({ cloned: clone(root), highlights }, frame)
+      }
+      rec(root, node.left)
+      rec(root, node.right)
+    }
+
+    const options = loadOptionsFromStorage('leetcode_226')
+    const data = options.data
+    const DIAMETER = options.DIAMETER
+    const n = options.n
+    const d = new Draw(options.animate_speed)
+    let root
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 12
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      root = binary_tree(data, n)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    function frame({ cloned, highlights }) {
+      drawTree(cloned, width / 2, DIAMETER, n - 1, 0, 0, highlights)
+    }
+
+    function drawTree(node, x, y, deep, px, py, highlights) {
+      if (node) {
+        if (node.txt) {
+          if (px && py) {
+            stroke('black')
+            line(x, y, px, py)
+            noStroke()
+          }
+        }
+        drawTree(node.left, x - Math.pow(2, deep) * DIAMETER / 4, y + Math.pow(2, n - deep) * DIAMETER / 2, deep - 1, x, y, highlights)
+        drawTree(node.right, x + Math.pow(2, deep) * DIAMETER / 4, y + Math.pow(2, n - deep) * DIAMETER / 2, deep - 1, x, y, highlights)
+        if (node.txt) {
+          if (highlights && highlights.includes(node.id)) {
+            fill('#00FF99')
+          } else {
+            fill('#ccc')
+          }
+          // console.log(node.status, (node.status & 1) === 1, (node.status & 2) === 2, (node.status & 4) === 4)
+          circle(x, y, DIAMETER)
+          fill('black')
+          text(node.txt, x, y + 3)
+        }
+      }
+    }
+
+    /*
+      status
+        0-都未处理
+        1-节点自身处理完
+        2-左孩子处理完
+        4-右孩子处理完
+    */
+    // 根据 array 构造二叉树
+    function binary_tree(array, n) {
+      const newArray = array.map((e, i) => e ? ({ txt: e, status: 0, id: i }) : null)
+      const size = array.length
+      for (let i = size - 1; i > 0; i--) {
+        const pi = (i - 1) >> 1
+        const parent = newArray[pi]
+        if (parent != null) {
+          const left = 2 * pi + 1
+          const right = left + 1
+          if (left === i) {
+            parent.left = newArray[i]
+          }
+          if (right === i) {
+            parent.right = newArray[i]
+          }
+        }
+      }
+      const root = newArray[0]
+      d.add({ cloned: clone(root) }, frame)
+      return root
+    }
+
+  </script>
+</body>
+
+</html>

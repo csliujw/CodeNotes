@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 1206 - 跳表</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#00FF99; margin: 2px 2px 0 0; padding: 4px 6px;'>路径</div>
+  </section>
+  <div style="margin-bottom: 2px;">
+    <span>添加key&nbsp;</span><input type="text" id='addKey' style="width:20px;" class="saveable" value="1">
+    <span>添加key&nbsp;</span><input type="number" id='addLevel' style="width:20px;" class="saveable" value="0">
+    <input style='font-size:12px;' type="button" value="put()" onclick="onPut()">
+  </div>
+  <div style="margin-bottom: 2px;">
+    <span>获取key&nbsp;</span><input type="text" id='getKey' style="width:20px;" value="1" class="saveable">
+    <input style='font-size:12px;' type="button" value="get()" onclick="onGet()">
+  </div>
+  <div style="margin-bottom: 2px;">
+    <span>删除key&nbsp;</span><input type="text" id='eraseKey' style="width:20px;" value="1" class="saveable">
+    <input style='font-size:12px;' type="button" value="erase()" onclick="onErase()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>最大高度&nbsp;</span><input type="number" id="maxLevel" class="saveable int" value="10">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_1206')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const addKey = document.getElementById('addKey')
+    const addLevel = document.getElementById('addLevel')
+    const getKey = document.getElementById('getKey')
+    const eraseKey = document.getElementById('eraseKey')
+    function onPut() {
+      myList.add(addKey.value, addLevel.value - 0)
+      d.updateFrameButtons()
+    }
+    function onGet() {
+      myList.search(getKey.value)
+      d.updateFrameButtons()
+    }
+    function onErase() {
+      myList.erase(eraseKey.value)
+      d.updateFrameButtons()
+    }
+    class SkipList {
+      constructor(max) {
+        this.max = max
+        this.head = { val: " ", forward: new Array(max) }
+      }
+      find(key) {
+        const path = new Array(this.max)
+        let curr = this.head
+        for (let i = this.max - 1; i >= 0; i--) {
+          while (curr.forward[i] && curr.forward[i].val < key) {
+            curr = curr.forward[i]
+          }
+          path[i] = curr
+        }
+        d.add({ cloned: { list: this.clone(), path: this.clonePath(path) } }, frame)
+        return path
+      }
+      clone() {
+        const list = new SkipList(this.max)
+        let od = this.head.forward[0]
+        let nw = list.head
+        while (od) {
+          nw.forward[0] = { val: od.val, forward: new Array(od.forward.length) }
+          nw = nw.forward[0]
+          od = od.forward[0]
+        }
+        for (let i = 1; i < this.max; i++) {
+          let bottom = list.head.forward[0]
+          let od = this.head.forward[i]
+          let nw = list.head
+          while (od) {
+            while (bottom && bottom.val != od.val) {
+              bottom = bottom.forward[0]
+            }
+            nw.forward[i] = bottom
+            nw = nw.forward[i]
+            od = od.forward[i]
+          }
+        }
+        return list
+      }
+      search(key) {
+        const node = this.find(key)[0].forward[0]
+        return node && node.val == key
+      }
+      clonePath(path) {
+        const result = []
+        for (let i = 0; i < path.length; i++) {
+          result[i] = { val: path[i].val }
+        }
+        return result
+      }
+      add(key, level) {
+        const path = this.find(key)
+        const lv = level > 0 ? level : this.random()
+        const node = { val: key, forward: new Array(lv) }
+        // console.log(key, lv)
+        for (let i = 0; i < lv; i++) {
+          node.forward[i] = path[i].forward[i]
+          path[i].forward[i] = node
+        }
+        d.add({ cloned: { list: this.clone(), path: this.clonePath(path) } }, frame)
+      }
+      erase(key) {
+        const path = this.find(key)
+        const node = path[0].forward[0]
+        if (!node || node.val != key) {
+          return false
+        }
+        for (let i = 0; i < this.max; i++) {
+          if (path[i].forward[i] != node) {
+            break;
+          }
+          path[i].forward[i] = node.forward[i]
+        }
+        d.add({ cloned: { list: this.clone(), path: this.clonePath(path) } }, frame)
+        return true
+      }
+      random() {
+        let level = 1
+        while (Math.random() < 0.5 && level < this.max) {
+          level++
+        }
+        return level
+      }
+    }
+    const options = loadOptionsFromStorage('leetcode_1206')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const myList = new SkipList(options.maxLevel)
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 16
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      // myList.add(3)
+      // myList.add(7)
+      // myList.add(22)
+      // myList.add(11)
+      // myList.add(19)
+      // myList.add(23)
+      // myList.add(26)
+      // myList.add(37)
+      // myList.add(16)
+      // myList.add(12)
+      // myList.add(30)
+
+      const head = myList.head
+      const v3 = { val: 3, forward: new Array(3) }
+      const v7 = { val: 7, forward: new Array(3) }
+      const v11 = { val: 11, forward: new Array(1) }
+      const v12 = { val: 12, forward: new Array(2) }
+      const v16 = { val: 16, forward: new Array(3) }
+      const v19 = { val: 19, forward: new Array(8) }
+      const v22 = { val: 22, forward: new Array(3) }
+      const v23 = { val: 23, forward: new Array(1) }
+      const v26 = { val: 26, forward: new Array(4) }
+      const v30 = { val: 30, forward: new Array(1) }
+      const v37 = { val: 37, forward: new Array(2) }
+      head.forward[0] = head.forward[1] = head.forward[2] = v3
+      head.forward[3] = head.forward[4] = head.forward[5] = head.forward[6] = head.forward[7] = v19
+      v3.forward[0] = v3.forward[1] = v3.forward[2] = v7
+      v7.forward[0] = v11
+      v7.forward[1] = v12
+      v7.forward[2] = v16
+      v11.forward[0] = v12
+      v12.forward[0] = v12.forward[1] = v16
+      v16.forward[0] = v16.forward[1] = v16.forward[2] = v19
+      v19.forward[0] = v19.forward[1] = v19.forward[2] = v22
+      v19.forward[3] = v26
+      v22.forward[0] = v23
+      v22.forward[1] = v22.forward[2] = v26
+      v23.forward[0] = v26
+      v26.forward[0] = v30
+      v26.forward[1] = v37
+      v30.forward[0] = v37
+      d.add({ cloned: { list: myList.clone() } }, frame)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'), () => false)
+    }
+    function frame({ cloned }) {
+      drawTree({ head: cloned.list.head, max: cloned.list.max, path: cloned.path })
+    }
+
+    function drawTree({ head, max, path }) {
+      const startX = 100
+      const startY = height - 100
+      let x = startX
+      let y = startY
+      let curr = head
+
+      let length = -1
+      while (curr) {
+        length++
+        curr = curr.forward[0]
+      }
+      x += RECT_WIDTH / 2
+      y -= RECT_HEIGHT / 2
+      fill('black')
+      stroke('black')
+      for (let i = 0; i < max; i++) {
+        line(x, y, x + RECT_WIDTH * length * 3 + RECT_WIDTH, y)
+        y -= RECT_HEIGHT
+      }
+      x = startX
+      y = startY
+      curr = head
+      while (curr) {
+        for (let i = 0; i < curr.forward.length; i++) {
+          const node = curr.forward[i]
+          if (path && path[i].val == curr.val) {
+            fill('#00FF99')
+          } else {
+            fill('white')
+          }
+          stroke('black')
+          y -= RECT_HEIGHT
+          rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+          fill('black')
+          noStroke()
+          text(curr.val, x + RECT_WIDTH / 2, y + RECT_HEIGHT / 2 + 5)
+        }
+        curr = curr.forward[0]
+        y = startY
+        x += RECT_WIDTH * 3
+      }
+    }
+  </script>
+</body>
+
+</html>

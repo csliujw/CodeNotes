@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>目录</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background-image: url(img/10.png);
+      background-size: 800px 800px;
+      background-repeat: no-repeat;
+    }
+
+    #dad {
+      display: flex;
+      justify-content: center;
+      flex-flow: row wrap;
+    }
+
+    #dad div {
+      border: 1px solid #444;
+      border-radius: 3px;
+      padding: 10px 25px 10px 10px;
+      font-size: 14px;
+      background-color: rgba(255,228,196, 0.9);
+      margin: 10px;
+    }
+
+    #dad div ol {
+      font-size: 12px;
+      padding-left: 30px;
+    }
+
+    #dad div ol li {
+      margin-bottom: 6px;
+    }
+
+    #dad a {
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body id="dad">
+  <div>
+    <span>二进制</span>
+    <ol>
+      <li><a href="binary_operation.html">+-%&移位</a></li>
+      <li><a href="binary_operation_float.html">浮点数</a></li>
+      <li><a href="binary_operation_xor.html">异或</a></li>
+    </ol>
+  </div>
+
+  <div>
+    <span>缓存行与局部性原理</span>
+    <ol>
+      <li><a href="cache_line1.html">遍历二维数组（外j内i）</a></li>
+      <li><a href="cache_line2.html">遍历二维数组（外i内j）</a></li>
+    </ol>
+  </div>
+
+  <div>
+    <span>数据结构</span>
+    <ol>
+      <li><a href="ds_dynamic_array.html">动态数组</a></li>
+      <li><a href="ds_singly_linked_list.html">单向链表</a></li>
+      <li><a href="ds_singly_linked_list(sentinal).html">单向链表（带哨兵）</a></li>
+      <li><a href="ds_doubly_linked_list(sentinal).html">双向链表（带哨兵）</a></li>
+      <li><a href="priority_queue_1.html">优先级队列（无序数组）</a></li>
+      <li><a href="priority_queue_2.html">优先级队列（有序数组）</a></li>
+      <li><a href="priority_queue_3.html">优先级队列（堆）</a></li>
+      <li><a href="heap_max.html">大顶堆</a></li>
+      <li><a href="heap_min.html">小顶堆</a></li>
+      <li><a href="leetcode_295.html">leetcode 295-求数据流中位数</a></li>
+      <li><a href="hashtable.html">哈希表</a></li>
+    </ol>
+  </div>
+
+  <div>
+    <span>递归</span>
+    <ol>
+      <li><a href="recursion_fibonacci.html">斐波那契数列</a></li>
+      <li><a href="recursion_merge.html">合并k个有序链表</a></li>
+    </ol>
+  </div>
+
+  <div>
+    <span>双指针</span>
+    <ol>     
+      <li><a href="floyd-s-hare-and-tortoise/dist/index.html">龟兔赛跑算法</a></li>
+      <li><a href="leetcode_11.html">leetcode 11-盛水最多容器</a></li>      
+      <li><a href="leetcode_167.html">leetcode 167-两数之和</a></li>
+      <li><a href="leetcode_15.html">leetcode 15-三数之和</a></li>
+      <li><a href="leetcode_18.html">leetcode 18-四数之和</a></li>      
+      <li><a href="leetcode_283.html">leetcode 283-移动零</a></li>      
+    </ol>
+  </div>
+
+  <div>
+    <span>二分查找</span>
+    <ol>
+      <li><a href="search_binary1.html">二分查找-基础版</a></li>
+      <li><a href="search_binary1_error.html">二分查找-基础版（有问题）</a></li>
+      <li><a href="search_binary2.html">二分查找-改动版</a></li>
+      <li><a href="search_binary2_error.html">二分查找-改动版（有问题）</a></li>
+      <li><a href="search_binary3.html">二分查找-平衡版</a></li>
+      <li><a href="search_binary_left1.html">二分查找-Leftmost 返回 -1</a></li>
+      <li><a href="search_binary_right1.html">二分查找-Rightmost 返回 -1</a></li>
+      <li><a href="search_binary_left2.html">二分查找-Leftmost 返回 i</a></li>
+      <li><a href="search_binary_right2.html">二分查找-Rightmost 返回 i-1</a></li>
+    </ol>
+  </div>
+
+  <div>
+    <span>二叉树</span>
+    <ol>
+      <li><a href="tree_binary.html">二叉树遍历</a></li>
+      <li><a href="tree_binary2.html">二叉树遍历（非递归）</a></li>
+      <li><a href="tree_binary_search.html">二叉树搜索树</a></li>
+      <li><a href="tree_avl.html">AVL树</a></li>
+      <li><a href="tree_redblack.html">红黑树</a></li>
+      <li><a href="tree_2_3.html">B-树(t=2)</a></li>
+      <li><a href="tree_n.html">B-树(t=3)</a></li>
+      <li><a href="leetcode_101.html">leetcode 101-对称二叉树</a></li>
+      <li><a href="leetcode_226.html">leetcode 226-翻转二叉树</a></li>
+      <li><a href="leetcode_98.html">leetcode 98-判断合法二叉搜索树</a></li>
+      <li><a href="leetcode_1008.html">leetcode 1008-前序遍历构造二叉搜索树</a></li>
+    </ol>
+  </div>
+
+  <div>
+    <span>排序</span>
+    <ol>
+      <li><a href="sort_bubble1.html">冒泡</a></li>
+      <li><a href="sort_bubble2.html">冒泡（改进1）</a></li>
+      <li><a href="sort_bubble3.html">冒泡（改进2）</a></li>
+      <li><a href="sort_selection.html">选择</a></li>
+      <li><a href="sort_heap.html">堆</a></li>
+      <li><a href="sort_insertion1.html">插入</a></li>
+      <li><a href="sort_insertion2.html">插入（交换法）</a></li>
+      <li><a href="sort_shell.html">希尔</a></li>
+      <li><a href="sort_merge.html">归并</a></li>
+      <li><a href="sort_quick.html">快速(单边)</a></li>
+      <li><a href="sort_quick_hoare.html">快速(双边)</a></li>
+      <li><a href="sort_quick_duplicate.html">快速(处理重复)</a></li>
+    </ol>
+  </div>
+
+  <div>
+    <span>图</span>
+    <ol>
+      <li><a href="graph_dijkstra.html">dijkstra</a></li>
+      <li><a href="graph_dijkstra_negative_edge.html">dijkstra 负边</a></li>
+      <li><a href="graph_floyd.html">floyd</a></li>
+      <li><a href="graph_floyd_negative_cycle.html">floyd 负环</a></li>
+      <li><a href="graph_prim.html">prim</a></li>
+    </ol>
+  </div>
+
+  <div>
+    <span>贪心</span>
+    <ol>
+      <li><a href="huffman.html">huffman 树</a></li>
+    </ol>
+  </div>
+
+  <div>
+    <span>回溯</span>
+    <ol>
+      <li><a href="leetcode_46.html">leetcode 46-全排列</a></li>
+      <li><a href="leetcode_47.html">leetcode 47-全排列II</a></li>
+      <li><a href="leetcode_77.html">leetcode 77-组合</a></li>
+      <li><a href="leetcode_39.html">leetcode 39-组合总和</a></li>
+      <li><a href="leetcode_51.html">leetcode 51-N皇后</a></li>
+      <li><a href="leetcode_37.html">leetcode 37-数独</a></li>
+    </ol>
+  </div>
+
+  <div>
+    <span>单调队列与单调栈</span>
+    <ol>
+      <li><a href="leetcode_239.html">leetcode 239-最大滑动窗口</a></li>
+      <li><a href="leetcode_42.html">leetcode 42-接雨水</a></li>
+    </ol>
+  </div>
+
+  <div>
+    <span>字符串</span>
+    <ol>
+      <li><a href="leetcode_28.html">leetcode 28-字符串匹配（暴力）</a></li>
+      <li><a href="leetcode_28kmp.html">leetcode 28-字符串匹配（KMP）</a></li>
+      <li><a href="leetcode_28kmpnext.html">leetcode 28-字符串匹配（KMP 生成最长前后缀数组）</a></li>
+      <li><a href="leetcode_14.html">leetcode 14-最长公共前缀</a></li>
+      <li><a href="leetcode_5.html">leetcode 5-最长回文子串</a></li>
+      <li><a href="leetcode_76.html">leetcode 76-最小覆盖子串</a></li>
+    </ol>
+  </div>
+
+  <div>
+    <span>设计</span>
+    <ol>
+      <li><a href="leetcode_146.html">leetcode 146-LRU缓存</a></li>
+      <li><a href="leetcode_460.html">leetcode 460-LFU缓存</a></li>
+      <li><a href="leetcode_1206.html">leetcode 1206-跳表</a></li>
+      <li><a href="leetcode_155.html">leetcode 155-最小栈</a></li>
+      <li><a href="leetcode_155_2.html">leetcode 155-最小栈(解法2)</a></li>
+      <li><a href="leetcode_355.html">leetcode 355-设计推特</a></li>
+    </ol>
+  </div>
+
+  <div>
+    <span>股票问题</span>
+    <ol>
+      <li><a href="leetcode_121.html">leetcode 121-买卖股票最佳方案 I</a></li>
+      <li><a href="leetcode_122.html">leetcode 122-买卖股票最佳方案 II</a></li>
+      <li><a href="leetcode_123.html">leetcode 123-买卖股票最佳方案 III</a></li>
+      <li><a href="leetcode_188.html">leetcode 188-买卖股票最佳方案 IV</a></li>
+      <li><a href="leetcode_714.html">leetcode 714-买卖股票最佳方案-带手续费</a></li>
+      <li><a href="leetcode_309.html">leetcode 309-买卖股票最佳方案-带冷冻期</a></li>
+    </ol>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 75%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 309-股票问题</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#f7e4ff; margin: 2px 2px 0 0; padding: 4px 6px;'>若等</div>
+    <div style='background-color:#d4ecfc; margin: 2px 2px 0 0; padding: 4px 6px;'>若买</div>
+    <div style='background-color:#c0fcf0; margin: 2px 2px 0 0; padding: 4px 6px;'>若等</div>
+    <div style='background-color:#fce3cd; margin: 2px 2px 0 0; padding: 4px 6px;'>若卖</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    原始数组 <input type="text" id="myArray" value="1, 2, 3, 0, 2" class="saveable array" />
+    手续费 <input type="text" id="fee" value="0" class="saveable int" />
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="100" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_309')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('leetcode_309')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const myProblem = { array: options.myArray, fee: options.fee }
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 16
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      maxProfit()
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'), () => false)
+    }
+    function frame({ cloned: { i, buy, sell } }) {
+      const myArray = myProblem.array
+      const startX = width / 2 - myArray.length / 2 * RECT_WIDTH
+      const startY = height - 150
+      let x = startX
+      let y = startY
+      for (let k = 0; k < myArray.length; k++) {
+        stroke('black')
+        strokeWeight(10)
+        y = startY - myArray[k] * RECT_HEIGHT
+        point(x, y)
+        noStroke()
+        text(`${myArray[k]}`, x, y - 7)
+        stroke('black')
+        if (k + 1 < myArray.length) {
+          strokeWeight(1)
+          line(x, y, x + RECT_WIDTH, startY - myArray[k + 1] * RECT_HEIGHT)
+        }
+        x += RECT_WIDTH
+      }
+      strokeWeight(1)
+      stroke('black')
+      text("i", startX + RECT_WIDTH * i, startY + 20)
+      const m = Math.max(...myArray)
+      arrow2(startX - 20, startY, RECT_WIDTH * myArray.length, 0, 'black')
+      arrow2(startX - 20, startY, RECT_HEIGHT * (m + 1), -PI / 2, 'black')
+
+      x = startX
+      y = startY + 40
+      for (let k = 0; k < buy.length; k++) {
+        if (k == 0 || k < i) {
+          stroke('black')
+          fill('white')
+          rect(x, y, RECT_WIDTH / 2, RECT_HEIGHT * 2)
+          noStroke()
+          fill('black')
+          text(`${buy[k].max} ${buy[k].action}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT + 5)
+        } else {
+          stroke('black')
+          fill('#f7e4ff')
+          rect(x, y, RECT_WIDTH / 2, RECT_HEIGHT)
+          fill('#d4ecfc')
+          rect(x, y + RECT_HEIGHT, RECT_WIDTH / 2, RECT_HEIGHT)
+          noStroke()
+          fill('black')
+          text(`${buy[k].wait}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT * 0.5 + 5)
+          text(`${buy[k].buy}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT * 1.5 + 5)
+        }
+        x += RECT_WIDTH
+      }
+
+      x = startX
+      y = startY + 100
+      for (let k = 0; k < sell.length; k++) {
+        if (k == 0 || k < i) {
+          stroke('black')
+          fill('white')
+          rect(x, y, RECT_WIDTH / 2, RECT_HEIGHT * 2)
+          noStroke()
+          fill('black')
+          text(`${sell[k].max} ${sell[k].action}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT + 5)
+        } else {
+          stroke('black')
+          fill('#c0fcf0')
+          rect(x, y, RECT_WIDTH / 2, RECT_HEIGHT)
+          fill('#fce3cd')
+          rect(x, y + RECT_HEIGHT, RECT_WIDTH / 2, RECT_HEIGHT)
+          noStroke()
+          fill('black')
+          text(`${sell[k].wait}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT * 0.5 + 5)
+          text(`${sell[k].sell}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT * 1.5 + 5)
+        }
+        x += RECT_WIDTH
+      }
+    }
+
+    function maxProfit() {
+      if (myProblem.array.length == 1) {
+        return 0
+      }
+      const buy = [
+        { max: -myProblem.array[0], wait: -myProblem.array[0], buy: -myProblem.array[0], action: '买' }
+      ]
+      const sell = [
+        { max: 0, wait: 0, sell: 0, action: '卖' }
+      ]
+      d.add({ cloned: { i: 0, buy: clone(buy), sell: clone(sell) } }, frame)
+      buy[1] = { max: Math.max(-myProblem.array[0], -myProblem.array[1]), wait: -myProblem.array[0], buy: -myProblem.array[1], action: '买' }
+      sell[1] = { max: Math.max(0, buy[0].max + myProblem.array[1]), wait: 0, sell: buy[0].max + myProblem.array[1], action: '卖' }
+      d.add({ cloned: { i: 0, buy: clone(buy), sell: clone(sell) } }, frame)
+      for (let i = 2; i < myProblem.array.length; i++) {
+        const obj1 = { wait: buy[i - 1].max, buy: sell[i - 2].max - myProblem.array[i] }
+        obj1.max = Math.max(obj1.wait, obj1.buy)
+        obj1.action = obj1.wait > obj1.buy ? '等' : '买'
+        buy[i] = obj1
+        d.add({ cloned: { i, buy: clone(buy), sell: clone(sell) } }, frame)
+        const obj2 = { wait: sell[i - 1].max, sell: buy[i - 1].max + myProblem.array[i] - myProblem.fee }
+        obj2.max = Math.max(obj2.wait, obj2.sell)
+        obj2.action = obj2.wait > obj2.sell ? '等' : '卖'
+        sell[i] = obj2
+        d.add({ cloned: { i, buy: clone(buy), sell: clone(sell) } }, frame)
+      }
+      d.add({ cloned: { i: myProblem.array.length, buy: clone(buy), sell: clone(sell) } }, frame)
+    }
+
+  </script>
+</body>
+
+</html>

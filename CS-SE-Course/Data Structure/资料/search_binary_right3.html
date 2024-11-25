@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 40%;
+      min-height: 200px;
+    }
+  </style>
+  <title>二分查找(Rightmost 返回i-1)</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <div class="code">
+    <pre><code class="language-java">public static int binarySearchRightmost(int[] a, int target) {
+    int i = 0, j = a.length;
+    while (i < j) {
+        int m = (i + j) >>> 1;
+        if (target < a[m]) {            
+            j = m;
+        } else {                        
+            i = m + 1;                  
+        }
+    }
+    return i - 1;
+}</code></pre>
+  </div>
+  <main></main>
+  <section>
+    <div style='background-color:#cc99cd; margin: 2px 2px 0 0; padding: 4px 6px;'>索引</div>
+    <div style='background-color:#f08d49; margin: 2px 2px 0 0; padding: 4px 6px;'>找到</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>元素个数&nbsp;</span><input type="text" id='count' class="saveable">
+    <span>待查找值&nbsp;</span><input type="text" id='key' class="saveable">
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('search_binary_right3')">
+    <input style='font-size:12px;' type="button" value="查找" onclick="onSearch()">
+    <span id="searchCount">所用次数:?</span>
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    function onSearch() {
+      binarySearch(dataArray, document.querySelector('#key').value)
+      d.updateFrameButtons()
+    }
+    const options = loadOptionsFromStorage('search_binary_right3')
+    const RECT_WIDTH = 30                 // 矩形宽度、圆直径
+    const RECT_HEIGHT = 20                // 值矩形高度
+    const SPACING = 1                     // 间隙
+    const INDEX_RECT_HEIGHT = 20          // 索引矩形高度
+    const POINTER_HEIGHT = 150            // 指针高度, 从底部算
+    const d = new Draw(options.animate_speed)
+    let dataArray = [1, 2, 3, 4, 4, 4, 6,6, 7]
+    function preload() {
+      // const font = loadFont('JetBrainsMono-Regular.ttf')
+    }
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 10
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      d.add({ array: dataArray }, frame)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#2d2d2d'))
+    }
+    /*
+      array: 数组
+      pointers: 指针
+      highlights: 高亮位置
+      lineNumber: 高亮行号
+    */
+    function frame({ array, pointers, highlights, lineNumber }) {
+      const pre = document.querySelector('pre')
+      if (lineNumber > 0) {
+        pre.setAttribute('data-line', lineNumber)
+        Prism.highlightAllUnder(pre)
+      }
+      const LEFT = (width - array.length * (RECT_WIDTH + SPACING)) / 2
+      for (let i = -1; i <= array.length; i++) {
+        stroke(255)
+        let x = LEFT + i * (RECT_WIDTH + SPACING)
+        let y = height - (SPACING + INDEX_RECT_HEIGHT)
+        pointers.draw(i, x + RECT_WIDTH / 2, INDEX_RECT_HEIGHT + SPACING * 2)
+        if (i >= 0 && i < array.length) {
+          highlights.includes(i) ? fill('#f08d49') : fill('#67cdcc')
+          noStroke()
+          rect(x, y, RECT_WIDTH, -RECT_HEIGHT)
+          fill('#ffffff')
+          text(array[i], x + RECT_WIDTH / 2, y - 6)
+          fill('#cc99cd')
+          rect(x, height, RECT_WIDTH, -INDEX_RECT_HEIGHT)
+          fill('#ffffff')
+          text(i, x + RECT_WIDTH / 2, height - 6)
+        }
+      }
+    }
+
+    function binarySearch(a, target) {
+      let i = 0, j = a.length
+      while (i < j) {
+        d.add({ array: dataArray, pointers: [{ text: 'i', index: i }, { text: 'j', index: j }], lineNumber: 3 }, frame)
+        const m = (i + j) >>> 1
+        d.add({ array: dataArray, pointers: [{ text: 'i', index: i }, { text: 'j', index: j }, { text: 'm', index: m }], lineNumber: 5 }, frame)
+        if (target < a[m]) {
+          d.add({ array: dataArray, pointers: [{ text: 'i', index: i }, { text: 'j', index: j }, { text: 'm', index: m }], lineNumber: 6 }, frame)
+          j = m
+        } else {
+          d.add({ array: dataArray, pointers: [{ text: 'i', index: i }, { text: 'j', index: j }, { text: 'm', index: m }], lineNumber: 8 }, frame)
+          i = m + 1
+        }
+      }
+      d.add({ array: dataArray, pointers: [{ text: 'i', index: i }, { text: 'j', index: j }], highlights: [i - 1], lineNumber: 11 }, frame)
+      return i - 1;
+    }
+  </script>
+</body>
+
+</html>

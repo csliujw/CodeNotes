@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <input type="range" min="40" max="100" value="40" step="20" onchange="doOnchange(this)">
+  线程1<button id="t1" onclick="doLock(this, t1)">lock</button>
+  线程2<button id="t2" onclick="doLock(this, t2)">lock</button>
+  <script src="js/p5.js"></script>
+  <script>
+    function doOnchange(range) {
+      t1.height = Number(range.value)
+    }
+    let markcopy
+    function doLock(btn, t) {
+      if (btn.innerText == 'lock') {
+        if (t === t2 && t2.y < t1.y + t1.height) {
+          // alert('fail')
+          monitor = new MyObj(objx, my, 40, false, 'Monitor')
+          r3 = new MyRect({ sx: mx, sy: my, content: 'm pointer[02]', bc: 'purple', fc: 'white' });
+          r3.status = 0
+          r3.setStartXY(monitor.x, monitor.y)
+          r3.setTargetXY(obj.x, obj.y)
+          r3.status = 1
+          r3.callback = (x, y) => {
+            markcopy = new MyRect({ sx: mx, sy: my, content: 'markword[01]', bc: 'black', fc: 'white' });
+            markcopy.setStartXY(monitor.x, monitor.y)
+            if (r1) r1.status = 2
+            if (r2) r2.status = 2
+            arrow(x, y, monitor.x + 50, monitor.y + monitor.height, 'black')
+            arrow(monitor.x + 60, monitor.y + monitor.height, t2.x, t2.y, 'black')
+            arrow(monitor.x + 40, monitor.y + monitor.height, t1.x + 100, t1.y, 'black')
+            fill('black')
+            noStroke()
+            text('owner', monitor.x - 50, monitor.y + monitor.height + 12)
+            text('cxq', monitor.x + 140, monitor.y + monitor.height + 30)
+          }
+        } else {
+          // success
+          let r
+          if (t === t1) {
+            if (!r1) {
+              r1 = new MyRect({ sx: t1x, sy: t1y, content: 't1 pointer[00]', bc: 'yellow' });
+            }
+            r = r1
+          } else {
+            if (!r2) {
+              r2 = new MyRect({ sx: t2x, sy: t2y, content: 't2 pointer[00]', bc: 'lightgreen' });
+            }
+            r = r2
+          }
+          mark.callback = (x, y) => {
+          }
+          r.status = 0
+          r.setStartXY(t.x, t.y)
+          btn.innerText = 'unlock'
+          r.setTargetXY(obj.x, obj.y)
+          r.status = 1 // 动画
+          r.callback = (x, y) => {
+            mark.setStartXY(t.x, t.y)
+            if (x > t.x) {
+              arrow(x, y, t.x + 100, t.y, 'black')
+            } else {
+              arrow(x + 100, y, t.x, t.y, 'black')
+            }
+          }
+        }
+
+      } else {
+        // success
+        if (t === t1) {
+          r = r1
+        } else {
+          r = r2
+        }
+        btn.innerText = 'lock'
+        r.callback = (x, y) => {
+        }
+        mark.setTargetXY(obj.x, obj.y)
+        mark.status = 1
+        mark.callback = (x, y) => {
+          r.status = 2
+        }
+      }
+    }
+
+    class MyRect {
+      constructor(ops) {
+        this.sx = ops.sx - 50;
+        this.sy = ops.sy - 10;
+        this.status = 0;
+        this.content = ops.content;
+        this.bc = ops.bc;
+        this.fc = ops.fc;
+        this.count = 0;
+        this.callback = ops.callback
+      }
+      setStartXY(x, y) {
+        this.sx = x;
+        this.sy = y;
+      }
+      setTargetXY(x, y) {
+        this.tx = x;
+        this.ty = y;
+        this.cx = (x > this.sx) ? (x - this.sx / 2) : (this.sx - x / 2);
+        this.cy = (y - this.sy);
+      }
+      draw() {
+        let percent = map(this.count, 0, 60, 0, 1);
+        let currentX
+        let currentY
+        switch (this.status) {
+          case 0:
+            fill(this.bc ?? 'white')
+            rect(this.sx, this.sy, 100, 20);
+            fill(this.fc ?? 'black')
+            noStroke()
+            text(this.content, this.sx + 50, this.sy + 10 + 4)
+            stroke('black')
+            if (this.callback) {
+              this.callback(this.sx, this.sy)
+            }
+            break;
+          case 1:
+            currentX = bezierPoint(this.sx, this.cx, this.cx, this.tx, percent);
+            currentY = bezierPoint(this.sy, this.cy, this.cy, this.ty, percent);
+            // console.log(this.sy, this.cy, this.cy, this.ty)
+            // console.log(this.tx, this.cx, this.cx, this.sx)
+            // noFill();
+            // stroke(0);
+            // bezier(this.sx, this.sy, this.cx, this.cy, this.cx, this.cy, this.tx, this.ty);
+            if (dist(currentX, currentY, this.tx, this.ty) <= 1) {
+              this.status = 0;
+              this.count = 0;
+              this.sx = this.tx
+              this.sy = this.ty
+            }
+            fill(this.bc ?? 'white')
+            rect(currentX, currentY, 100, 20);
+            fill(this.fc ?? 'black')
+            noStroke()
+            text(this.content, currentX + 50, currentY + 10 + 4)
+            stroke('black')
+            this.count++;
+            break;
+          case 2:
+            break;
+        }
+      }
+    }
+    class MyObj {
+      constructor(x, y, height, showLine, content) {
+        this.x = x - 50;
+        this.y = y - 10;
+        this.height = height ?? 20
+        this.showLine = showLine
+        this.content = content
+      }
+      draw() {
+        stroke('black')
+        fill('white')
+        rect(this.x, this.y, 100, this.height)
+        if (this.showLine) {
+          stroke('red')
+          line(0, this.y + this.height + 1, width, this.y + this.height + 1)
+          stroke('black')
+        }
+        if (this.content) {
+          fill('black')
+          noStroke()
+          text(this.content, this.x + 50, this.y - 5)
+        }
+      }
+    }
+
+    let r1
+    let r2
+    let r3
+    let obj
+    let t1
+    let t2
+    let mark
+    let monitor
+    let t1x, t1y, t2x, t2y, mx, my
+    function setup() {
+      createCanvas(600, 400);
+      textAlign(CENTER)
+      objx = width / 2
+      objy = height / 2
+      obj = new MyObj(objx, objy, height, false, '锁对象');
+      t1x = 50
+      t1y = 100
+      t2x = width - 50
+      t2y = 150
+      t1 = new MyObj(t1x, t1y, 40, true, '线程1')
+      t2 = new MyObj(t2x, t2y, 40, false, '线程2')
+      mark = new MyRect({ sx: objx, sy: objy, content: 'markword[01]', bc: 'black', fc: 'white' })
+      mx = objx
+      my = 25
+    }
+
+    function draw() {
+      background(220);
+      obj.draw()
+      t1.draw()
+      t2.draw()
+      mark.draw()
+      if (r1) {
+        r1.draw()
+      }
+      if (r2) {
+        r2.draw()
+      }
+      if (monitor) {
+        monitor.draw()
+        r3.draw()
+      }
+      if (markcopy) {
+        markcopy.draw()
+      }
+    }
+
+
+    // 按起点与终点画箭头
+    function arrow(x1, y1, x2, y2, color) {
+      push()
+      stroke(color)
+      line(x1, y1, x2, y2)
+      const offset = 5
+      const th = 0.5
+      const angle = atan2(y1 - y2, x1 - x2)
+      translate(x2, y2)
+      rotate(angle - HALF_PI)
+      fill(color)
+      triangle(-2, 5, 0, 0, 2, 5)
+      pop()
+    }
+
+  </script>
+</body>
+
+</html>

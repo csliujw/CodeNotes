@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 5 - 最长回文子串</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:red; margin: 2px 2px 0 0; padding: 4px 6px; color:white;'>最长回文</div>
+    <div style='background-color:blue; margin: 2px 2px 0 0; padding: 4px 6px; color:white;'>目前回文</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>原始字符串&nbsp;</span><input type="text" value="bccbcbabcbafa" id='myString' class="saveable">    
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int" style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_5')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('leetcode_5')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const myString = options.myString
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 16
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      longestPalindrome(myString)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'), () => true)
+    }
+    function frame({ cloned: obj }) {
+      if (obj) {
+        const startX = width / 2 - myString.length / 2 * RECT_WIDTH
+        const startY = height - 100
+        let x = startX
+        let y = startY
+        for (let i = 0; i < myString.length; i++) {
+          if (obj.maxSub.i == i) {
+            stroke('red')
+            strokeWeight(5)
+            line(x, y - 12, x + RECT_WIDTH * obj.maxSub.length, y - 12)
+          }
+          stroke('black')
+          strokeWeight(1)
+          fill('white')
+          rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+          noStroke()
+          fill("black")
+          text(myString[i], x + RECT_WIDTH / 2, y + RECT_HEIGHT / 2 + 5)
+          x += RECT_WIDTH
+        }
+        x = startX
+        y = startY
+        fill('blue')
+        stroke('blue')
+        strokeWeight(5)
+        line(x + obj.i * RECT_WIDTH, y - 5, x + obj.j * RECT_WIDTH + RECT_WIDTH, y - 5)
+        noStroke()
+        text("i", x + obj.i * RECT_WIDTH + RECT_WIDTH / 2, y + RECT_HEIGHT + 16)
+        text("j", x + obj.j * RECT_WIDTH + RECT_WIDTH / 2, y + RECT_HEIGHT + 32)
+      }
+    }
+
+    let maxSub = { i: 0, length: 1 }
+    function longestPalindrome(str) {
+      for (let i = 0; i < str.length - 1; i++) {
+        d.add({ cloned: clone({ maxSub, i, j: i + 1 }) }, frame)
+        extend(str, i, i + 1)
+      }
+      for (let i = 0; i < str.length - 1; i++) {
+        d.add({ cloned: clone({ maxSub, i, j: i }) }, frame)
+        extend(str, i, i)
+      }
+      return str.substr(maxSub.i, maxSub.length)
+    }
+
+    function extend(str, i, j) {
+      while (i >= 0 && j < str.length && str[i] == str[j]) {
+        i--
+        j++
+        if (i >= 0 && j < str.length && str[i] == str[j]) {
+          d.add({ cloned: clone({ maxSub, i, j }) }, frame)
+        }
+      }
+      i++
+      if (j - i > maxSub.length) {
+        maxSub = { i: i, length: j - i }
+      }
+    }
+
+  </script>
+</body>
+
+</html>

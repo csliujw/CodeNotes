@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leetcode 295 - 数据流的中位数</title>
+</head>
+
+<body>
+  <div style="float: left; width: 400; margin-right: 20px;">    
+    <div style="text-align: right;height:20px;">
+      <div style="display: inline-block;">大顶堆</div>
+      <div style="transform:rotate(90deg);display: inline-block">🔺</div>
+    </div>
+    <div style="text-align: right;"><span id="left"></span></div>
+    <input id="offer1"><input type="button" value="offer" onclick="offer1()"><input type="button" value="poll" onclick="poll1()">
+  </div>
+
+  <div style="float: left; width: 400;">
+    <div style="height:20px;">
+      <div style="transform:rotate(-90deg);display: inline-block">🔺</div>
+      <div style="display: inline-block;">小顶堆</div>
+    </div>
+    <div><span id="right"></span></div>
+    <input id="offer2"><input type="button" value="offer" onclick="offer2()"><input type="button" value="poll" onclick="poll2()">
+  </div>
+  <script>
+    function offer1(){
+      left.offer(Number(document.querySelector("#offer1").value))
+      updateLeft()
+    }
+
+    function offer2(){
+      right.offer(Number(document.querySelector("#offer2").value))
+      updateRight()
+    }
+
+    function poll1(){
+      const v = left.poll()
+      updateLeft()
+      alert(v)
+    }
+
+    function poll2(){
+      const v = right.poll()
+      updateRight()
+      alert(v)
+    }
+
+    class Heap {
+      constructor(max, array) {
+        this.max = max;
+        this.array = array ? array : [];
+        this._heapify()
+      }
+
+      peek() {
+        return array[0]
+      }
+
+      offer(offered) {
+        this._up(offered)
+      }
+
+      poll() {
+        this._swap(0, this.array.length - 1)
+        const polled = this.array.pop()
+        this._down(0)
+        return polled
+      }
+
+      _heapify() {
+        for (let i = (this.array.length >> 1) - 1; i >= 0; i--) {
+          this._down(i)
+        }
+      }
+
+      _up(offered) {
+        let child = this.array.length
+        while (child > 0) {
+          let parent = (child - 1) >> 1
+          if (this.max ? offered > this.array[parent] : offered < this.array[parent]) {
+            this.array[child] = this.array[parent]
+          } else {
+            break
+          }
+          child = parent
+        }
+        this.array[child] = offered
+      }
+
+      _down(parent) {
+        const left = parent * 2 + 1
+        const right = left + 1
+        let minOrMax = parent;
+        if (left < this.array.length &&
+          this.max ? this.array[left] > this.array[minOrMax] : this.array[left] < this.array[minOrMax]) {
+          minOrMax = left
+        }
+        if (right < this.array.length &&
+          this.max ? this.array[right] > this.array[minOrMax] : this.array[right] < this.array[minOrMax]) {
+          minOrMax = right
+        }
+        if (minOrMax != parent) {
+          this._swap(minOrMax, parent)
+          this._down(minOrMax)
+        }
+      }
+
+      _swap(i, j) {
+        const t = this.array[i]
+        this.array[i] = this.array[j]
+        this.array[j] = t
+      }
+    }
+
+    function print(left, right) {
+      const l = [...left.array]
+      l.reverse()
+      console.log(l + " <-> " + right.array)
+    }
+
+    const left = new Heap(true, [2,1,3])
+    const right = new Heap(false, [8,7,9])
+
+    const leftSpan = document.querySelector("#left")
+    const rightSpan = document.querySelector("#right")
+    function updateLeft(){
+      const l = [...left.array]
+      l.reverse()
+      leftSpan.textContent = l
+    }
+
+    function updateRight(){
+      rightSpan.textContent = right.array
+    }
+
+    updateLeft()
+    updateRight()
+  </script>
+</body>
+
+</html>

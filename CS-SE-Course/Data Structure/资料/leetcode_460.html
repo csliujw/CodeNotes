@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 460 - LFU缓存</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#FFCF00; margin: 2px 2px 0 0; padding: 4px 6px;'>节点</div>
+    <div style='background-color:#F2798F; margin: 2px 2px 0 0; padding: 4px 6px;'>节点</div>
+    <div style='background-color:#AED4D4; margin: 2px 2px 0 0; padding: 4px 6px;'>节点</div>
+    <div style='background-color:#A2D5F2; margin: 2px 2px 0 0; padding: 4px 6px;'>节点</div>
+    <div style='background-color:#a7a7f2; margin: 2px 2px 0 0; padding: 4px 6px;'>节点</div>
+    <div style='background-color:#a7f2a7; margin: 2px 2px 0 0; padding: 4px 6px;'>节点</div>
+    <div style='background-color:#F2F2F2; margin: 2px 2px 0 0; padding: 4px 6px;'>节点</div>
+  </section>
+  <div style="margin-bottom: 2px;">
+    <span>添加key&nbsp;</span><input type="text" id='addKey' style="width:20px;" class="saveable" value="1">
+    <span>添加value&nbsp;</span><input type="text" id='addValue' class="saveable" value="1">
+    <input style='font-size:12px;' type="button" value="put()" onclick="onPut()">
+  </div>
+  <div style="margin-bottom: 2px;">
+    <span>获取key&nbsp;</span><input type="text" id='getKey' style="width:20px;" value="1" class="saveable">
+    <input style='font-size:12px;' type="button" value="get()" onclick="onGet()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>容量&nbsp;</span><input type="number" id="capacity" class="saveable int" value="2">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="80" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_460')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const colors = ['#FFCF00', '#F2798F', '#AED4D4', '#A2D5F2', '#a7a7f2', '#a7f2a7', '#F2F2F2']
+    const addKey = document.getElementById('addKey')
+    const addValue = document.getElementById('addValue')
+    const getKey = document.getElementById('getKey')
+    function onPut() {
+      myCache.put(addKey.value, addValue.value)
+    }
+    function onGet() {
+      myCache.get(getKey.value)
+    }
+    let color = 0
+    class LFUCache {
+      constructor(capacity) {
+        this.capacity = capacity
+        this.kvmap = {}
+        this.freqmap = {}
+        this.minFreq = 1
+        this.size = 0
+      }
+      get(key) {
+        const node = this.kvmap[key]
+        if (node === undefined) {
+          return -1
+        }
+        const list = this.freqmap[node.freq]
+        const idx = list.findIndex(node => node.key == key)
+        list.splice(idx, 1)
+
+        if (node.freq == this.minFreq && list.length == 0) {
+          this.minFreq++
+        }
+        node.freq++
+        if (this.freqmap[node.freq] === undefined) {
+          this.freqmap[node.freq] = []
+        }
+        this.freqmap[node.freq].unshift(node)
+        return node.value
+      }
+      put(key, value) {
+        let node = this.kvmap[key]
+        if (node !== undefined) {
+          const list = this.freqmap[node.freq]
+          const idx = list.findIndex(node => node.key == key)
+          list.splice(idx, 1)
+          if (node.freq == this.minFreq && list.length == 0) {
+            this.minFreq++
+          }
+          node.freq++
+          node.value = value
+          if (this.freqmap[node.freq] === undefined) {
+            this.freqmap[node.freq] = []
+          }
+          this.freqmap[node.freq].unshift(node)
+        } else {
+          if (this.size == this.capacity) {
+            const last = this.freqmap[this.minFreq].pop()
+            delete this.kvmap[last.key]
+            this.size--
+          }
+          node = { key, value, freq: 1, color: color++ }
+          this.kvmap[key] = node
+          if (this.freqmap[1] === undefined) {
+            this.freqmap[1] = []
+          }
+          this.freqmap[1].unshift(node)
+          this.minFreq = 1
+          this.size++
+        }
+      }
+    }
+    const options = loadOptionsFromStorage('leetcode_460')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const myCache = new LFUCache(options.capacity)
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 16
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      d.add({ cloned: myCache }, frame)
+      d.updateFrameButtons()
+      noStroke()
+    }
+    function draw() {
+      d.draw(() => background('#eee'), () => true)
+    }
+    function frame({ cloned }) {
+      drawTree({ kvmap: cloned.kvmap, freqmap: cloned.freqmap, capacity: cloned.capacity, minFreq: cloned.minFreq })
+    }
+
+    function drawTree({ kvmap, freqmap, capacity, minFreq }) {
+      const startX = width / 2 - capacity / 2 * RECT_WIDTH
+      const startY = height - 100
+      let x = startX
+      let y = startY
+      for (let key in kvmap) {
+        stroke('black')
+        fill('white')
+        rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+        fill(colors[kvmap[key].color % colors.length])
+        rect(x, y + RECT_HEIGHT, RECT_WIDTH, RECT_HEIGHT)
+        noStroke()
+        fill('black')
+        text(key, x + RECT_WIDTH / 2, y + RECT_HEIGHT * 0.5 + 5)
+        text(`{${kvmap[key].key},${kvmap[key].value},${kvmap[key].freq}}`, x + RECT_WIDTH / 2, y + RECT_HEIGHT * 1.5 + 5)
+        x += RECT_WIDTH
+      }
+
+      x = startX
+      y = startY - 100
+      for (let key in freqmap) {
+        const list = freqmap[key]
+        stroke('black')
+        fill('white')
+        rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+        noStroke()
+        fill('black')
+        text(key, x + RECT_WIDTH / 2, y + RECT_HEIGHT * 0.5 + 5)
+        for (let i = 0; i < list.length; i++) {
+          y += RECT_HEIGHT
+          stroke('black')
+          fill(colors[list[i].color % colors.length])
+          rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+          noStroke()
+          fill('black')
+          text(`{${list[i].key},${list[i].value},${list[i].freq}}`, x + RECT_WIDTH / 2, y + RECT_HEIGHT / 2 + 5)
+        }
+        y = startY - 100
+        x += RECT_WIDTH
+      }
+
+      x = startX
+      y = startY - 200
+      noStroke()
+      fill('red')
+      text(`minFreq = ${minFreq}`, x + RECT_WIDTH / 2, y + RECT_HEIGHT / 2 + 5)
+    }
+
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>二进制运算</title>
+  <style>
+    .result {
+      display: inline-block;
+      margin-left: 10px;
+      /* font-weight: bold;       */
+      width: 320px;
+    }
+
+    html,
+    body {
+      background-color: #eee;
+      color: black;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+  <input type="radio" name="bits" value="8" checked> 8 bits
+  <input type="radio" name="bits" value="16"> 16 bits
+  <input type="radio" name="bits" value="32"> 32 bits
+  <hr>
+  <div>
+    <span class="result"></span><input type="text" id="a"></span><select id="oper">
+      <option>+</option>
+      <option>-</option>
+      <option>%</option>
+      <option>&</option>
+    </select>
+  </div>
+  <div>
+    <span class="result"></span><input type="text" id="b"></span><input type="button" value="=" id="eq">
+  </div>
+  <hr>
+  <div>
+    <span class="result"></span><span id="c"></span>
+    <span class="result"></span><span id="d"></span>
+  </div>
+
+
+  <div style="margin-top: 200px;">
+    <span class="result"></span><input type="text" id="x"><input type="button" value=">>>" id="shift"><input type="text"
+      id="y" value="1" style="width: 10px;">
+    <input type="button" value="unsigned" id="unsigned">
+  </div>
+  <hr>
+  <div>
+    <span class="result"></span><span id="z"></span>
+  </div>
+  <script>
+    const aElement = document.querySelector('#a')
+    const bElement = document.querySelector('#b')
+    const cElement = document.querySelector('#c')
+    const dElement = document.querySelector('#d')
+    const xElement = document.querySelector('#x')
+    const yElement = document.querySelector('#y')
+    const zElement = document.querySelector('#z')
+
+    document.querySelector('#unsigned').onclick = function () {
+      const x = BigInt(xElement.value)
+
+      const bits = BigInt(document.querySelector('input[name=bits]:checked').value)
+      if (x < 0n) {
+        const r = 1n * (2n ** BigInt(bits) + x)
+        zElement.innerHTML = r
+        showAt(r, zElement.previousElementSibling)
+      }      
+    }
+
+    document.querySelectorAll('input[name=bits]').forEach(e => {
+      e.onclick = function () {
+        aElement.onkeyup()
+        bElement.onkeyup()
+        xElement.onkeyup()
+      }
+    })
+
+    aElement.onkeyup = function () {
+      showAt(this.value, this.previousElementSibling)
+      clearResult([cElement, cElement.previousElementSibling, dElement, dElement.previousElementSibling])
+    }
+
+    bElement.onkeyup = function () {
+      showAt(this.value, this.previousElementSibling)
+      clearResult([cElement, cElement.previousElementSibling, dElement, dElement.previousElementSibling])
+    }
+
+    function clearResult(elements) {
+      if (elements) {
+        for (const e of elements) {
+          e.innerHTML = ''
+        }
+      }
+    }
+
+    document.querySelector("#eq").onclick = function () {
+      const a = Number(aElement.value)
+      const b = Number(bElement.value)
+      if (oper.value === '+') {
+        cElement.innerHTML = a + b
+        showAt(a + b, cElement.previousElementSibling)
+      } else if (oper.value === '-') {
+        cElement.innerHTML = a - b
+        showAt(a - b, cElement.previousElementSibling)
+      } else if (oper.value === '%') {
+        const r = a % b
+        const q = (a - r) / b
+        cElement.innerHTML = r + '&nbsp(余数)'
+        dElement.innerHTML = q + '&nbsp(商)'
+        showAt(r, cElement.previousElementSibling)
+        showAt(q, dElement.previousElementSibling)
+      } else if (oper.value === '&') {
+        const r = a & b
+        cElement.innerHTML = r
+        showAt(r, cElement.previousElementSibling)
+      }
+    }
+
+    xElement.onkeyup = function () {
+      showAt(this.value, this.previousElementSibling)
+      clearResult([zElement, zElement.previousElementSibling])
+    }
+
+    document.querySelector("#shift").onclick = function () {
+      const oper = document.querySelector("#oper")
+      const x = BigInt(xElement.value)
+      const y = BigInt(yElement.value)
+      const bits = BigInt(document.querySelector('input[name=bits]:checked').value)
+      const r = (((1n << bits) - 1n) & x) >> y
+      zElement.innerHTML = r
+      showAt(r, zElement.previousElementSibling)
+    }
+
+    function showAt(str, element) {
+      if (str === '' || !Number.isInteger(Number(str))) {
+        return
+      }
+      const bits = document.querySelector('input[name=bits]:checked').value
+      let num = BigInt(str)
+      const result = []
+      if (num < 0n) {
+        num = 2n ** BigInt(bits) + num
+      }
+
+      for (let i = 0; i < Number(bits); i++) {
+        result[i] = num % 2n
+        num /= 2n
+      }
+
+      // show result 
+      const html = []
+      for (let i = result.length - 1; i >= 0; i--) {
+        html.push(result[i])
+        if (i % 4 == 0 && i > 0) {
+          html.push('_')
+        }
+      }
+      element.innerHTML = html.join('')
+    }
+
+  </script>
+  <!--
+    关于负数的表示, 例如以 byte 为例
+    -2 表示为 1111_1110
+    -1 表示为 1111_1111
+    如何理解呢？
+    ---------------- 从溢出的角度理解
+    -1 的 1111_1111 如果看作正数，应该是 255
+    现在执行 -1 + 2 = 1  ==>  255 + 2 = 257 ==> 1_0000_0001
+    但由于 byte 只能表示 8 bit, 因此高位溢出的 1 被截掉了, 剩下的 0000_0001 就是 1
+
+    结论: 有符号的数字 -1 与无符号的数字 255 它们都能够在接下来的有限位运算中得到相同的结果, 因此可以用 255 代表 -1
+
+    ---------------- 从借位的角度理解
+    可以把 -1 看作最高位 1 + 111_1111 的组合，把最高位 1 看成向更高位借的 -128, 那么 -128 + 111_1111 ==> -128 + 127 = -1
+    现在执行 -1 + 2 = 1 ==> (-128 + 127) + 2 ==> -128 + (127 + 2) ==> 进位上去的 128 与 -128 抵消, 剩下的是 1
+  -->
+</body>
+
+</html>

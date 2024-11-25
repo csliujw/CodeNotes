@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 155 - 最小栈</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#00FF99; margin: 2px 2px 0 0; padding: 4px 6px;'>进行中</div>
+    <div style='background-color:#7df4f2; margin: 2px 2px 0 0; padding: 4px 6px;'>已结束</div>
+  </section>
+  <div style="margin-bottom: 2px;">
+    <span>value&nbsp;</span><input type="text" id='pushVal' style="width:20px;" class="saveable" value="2">
+    <input style='font-size:12px;' type="button" value="push()" onclick="onPush()">
+    <input style='font-size:12px;' type="button" value="pop()" onclick="onPop()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="100" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_155_2')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    function onPush() {
+      const val = document.getElementById('pushVal').value - 0
+      if (stack.length == 0) {
+        stack.push({ val, min: val })
+        return
+      }
+      stack.push({ val, min: Math.min(stack[stack.length - 1].min, val) })
+    }
+    function onPop() {
+      if (stack.length == 0) {
+        return
+      }
+      stack.pop()
+    }
+    const options = loadOptionsFromStorage('leetcode_155_2')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 16
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+
+      d.add({ cloned: { stack } }, frame)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'), () => true)
+    }
+    function frame({ cloned: { stack } }) {
+      if (stack) {
+        const startX = width / 2 - 0.5 * RECT_WIDTH
+        const startY = height - 100
+        let x = startX
+        let y = startY
+        for (let i = 0; i < stack.length; i++) {
+          fill('white')
+          stroke('black')
+          rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+
+          fill('black')
+          noStroke()
+          const e = stack[i]
+          text(`${e.val}, min:${e.min}`, x + RECT_WIDTH / 2, y + RECT_HEIGHT / 2 + 5)
+          y -= RECT_HEIGHT
+        }
+      }
+    }
+
+    const stack = []
+
+  </script>
+</body>
+
+</html>

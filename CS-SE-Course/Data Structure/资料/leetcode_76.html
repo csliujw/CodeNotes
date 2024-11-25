@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 76 - 最小覆盖子串</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#00FF99; margin: 2px 2px 0 0; padding: 4px 6px;'>满足条件</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    原始串 <input type="text" id="mySource" value="ADOBECODEBANC" class="saveable" />
+    目标串 <input type="text" id="myTarget" value="ABC" class="saveable" />
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_76')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('leetcode_76')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const mySource = options.mySource.toLowerCase()
+    const myTarget = options.myTarget.toLowerCase()
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 16
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+
+      minWindow()
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'), () => true)
+    }
+    function frame({ cloned: node }) {
+      if (node) {
+        const startX = width / 2 - mySource.length / 2 * RECT_WIDTH
+        const startY = height - 100
+        let x = startX
+        let y = startY - 200
+
+        for (let key in targetMap) {
+          stroke('black')
+          strokeWeight(1)
+          fill('white')
+          rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+          rect(x, y + RECT_HEIGHT, RECT_WIDTH, RECT_HEIGHT)
+
+          noStroke()
+          fill('black')
+          text(key, x + RECT_WIDTH / 2, y + RECT_HEIGHT / 2 + 5)
+          text(targetMap[key], x + RECT_WIDTH / 2, y + RECT_HEIGHT + RECT_HEIGHT / 2 + 5)
+          x += RECT_WIDTH
+        }
+
+        x = startX
+        y = startY - 100
+        for (let key in node.windowMap) {
+          stroke('black')
+          strokeWeight(1)
+          fill('white')
+          rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+          if (targetMap[key] != undefined && node.windowMap[key] >= targetMap[key]) {
+            fill('rgba(0,255,0,.5)')
+          } else {
+            fill('white')
+          }
+          rect(x, y + RECT_HEIGHT, RECT_WIDTH, RECT_HEIGHT)
+
+          noStroke()
+          fill('black')
+          text(key, x + RECT_WIDTH / 2, y + RECT_HEIGHT / 2 + 5)
+          text(node.windowMap[key], x + RECT_WIDTH / 2, y + RECT_HEIGHT + RECT_HEIGHT / 2 + 5)
+          x += RECT_WIDTH
+        }
+
+
+        x = startX
+        y = startY
+        for (let i = 0; i < mySource.length; i++) {
+          stroke('black')
+          strokeWeight(1)
+          fill('white')
+          rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+
+          noStroke()
+          fill('black')
+          text(mySource[i], x + RECT_WIDTH / 2, y + RECT_HEIGHT / 2 + 5)
+
+          x += RECT_WIDTH
+        }
+
+        x = startX
+        y = startY
+        noStroke()
+        fill('red')
+        text("i", x + node.i * RECT_WIDTH + RECT_WIDTH / 2, y + RECT_HEIGHT + 16)
+        text("j", x + node.j * RECT_WIDTH + RECT_WIDTH / 2, y + RECT_HEIGHT + 32)
+      }
+    }
+
+    const targetMap = {}
+    const windowMap = {}
+    function minWindow() {
+      for (let i = 0; i < myTarget.length; i++) {
+        const ch = myTarget[i]
+        if (targetMap[ch] === undefined) {
+          targetMap[ch] = 0
+        }
+        targetMap[ch]++
+      }
+      let pass = 0
+      let passCount = 0
+      for (let k in targetMap) {
+        passCount++
+      }
+      let i = 0
+      let j = 0
+      while (j < mySource.length) {
+        const right = mySource[j]
+        if (windowMap[right] === undefined) {
+          windowMap[right] = 0
+        }
+        windowMap[right]++
+        d.add({ cloned: clone({ windowMap, i, j }) }, frame)
+        if (windowMap[right] === targetMap[right]) {
+          pass++
+        }
+        while (i <= j && pass == passCount) {
+          const left = mySource[i]
+          windowMap[left]--
+          i++
+          d.add({ cloned: clone({ windowMap, i, j }) }, frame)
+          const x = targetMap[left]
+          if (x !== undefined && windowMap[left] < x) {
+            pass--
+          }
+        }
+        j++
+      }
+      d.add({ cloned: clone({ windowMap, i, j }) }, frame)
+    }
+
+  </script>
+</body>
+
+</html>

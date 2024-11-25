@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+      margin-right: 1px;
+      flex: 1;
+      height: 100%;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    main {
+      margin-top: 4px;
+      width: 100%;
+      height: 60%;
+      min-height: 170px;
+    }
+  </style>
+  <title>单向链表(带哨兵)</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="height: 273px; display: none;">
+    <div class="code">
+      <pre class="a"><code class="language-java">public void addLast(int value) {
+  Node last = findLast();
+  last.next = new Node(value, null);
+}
+public void addFirst(int value) {
+  Node newNode = new Node(value);
+  newNode.next = this.head.next;
+  this.head.next = newNode;
+}</code></pre>
+    </div>
+    <div class="code">
+      <pre class="b"><code class="language-java">public void insert(int index, int value) {
+  Node prev = findNode(index - 1);  
+  if (prev != null) {
+    Node newNode = new Node(value);
+    newNode.next = prev.next;
+    prev.next = newNode;
+  }
+}
+public void remove(int index) {
+  Node prev = findNode(index - 1); Node curr;
+  if (prev != null && (curr = prev.next) != null) {
+      prev.next = curr.next;
+  }
+}</code></pre>
+    </div>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#67cdcc; margin: 2px 2px 0 0; padding: 4px 6px;'>value值</div>
+    <div style='background-color:#cc99cd; margin: 2px 2px 0 0; padding: 4px 6px;'>next指针</div>
+    <div style='background-color:#dd7777; margin: 2px 2px 0 0; padding: 4px 6px;'>head指针</div>
+    <div style='background-color:#f08d49; margin: 2px 2px 0 0; padding: 4px 6px;'>找到</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <div style="margin-bottom: 2px;">
+      <span>待添加值&nbsp;</span><input type="text" id='values' class="saveable" value="1,2,3">
+      <input style='font-size:12px;' type="button" value="addLast()" onclick="onAddLast()">
+    </div>
+    <div style="margin-bottom: 2px;">
+      <span>待添加值&nbsp;</span><input type="text" id='firstValue' style="width:20px;" class="saveable" value="6">
+      <input style='font-size:12px;' type="button" value="addFirst()" onclick="onAddFirst()">
+    </div>
+    <div style="margin-bottom: 2px;">
+      <span>待插入索引&nbsp;</span><input type="text" id='insertIndex' style="width:20px;" class="saveable" value="2">
+      <span>待插入值&nbsp;</span><input type="text" id='insertValue' style="width:20px;" class="saveable" value="7">
+      <input style='font-size:12px;' type="button" value="insert()" onclick="onInsert()">
+    </div>
+    <div style="margin-bottom: 2px;">
+      <span>待删除索引&nbsp;</span><input type="text" id='removeIndex' style="width:20px;" class="saveable" value="2">
+      <input style='font-size:12px;' type="button" value="remove()" onclick="onRemove()">
+    </div>
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <span>next宽</span><input type="number" step="1" value="10" id="NEXT_WIDTH" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('ds_singly_linked_list(sentinal)')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    class LinkedNode {
+      constructor() {
+        this.head = { value: '哨兵', next: null }
+      }
+      init() {
+        d.add({ data: this }, frame)
+      }
+      addFirst(value) {
+        this.insert(0, value)
+      }
+      _addLast(value) {
+        const [last, idx] = this.findLastNode()
+        last.next = { value, next: null }
+      }
+      addLast(value) {
+        const [last, idx] = this.findLastNode()
+        d.add({ data: this, highlights: [idx], lineNumber: 3, code: 'pre.a' }, frame) // 找到帧
+        last.next = { value, next: null }
+        d.add({ data: this, lineNumber: 1000, code: 'pre.a' }, frame)
+      }
+      get(index) {
+        const node = findNode(index)
+        return node !== null ? node.value : null
+      }
+      findLastNode() {
+        let curr
+        let idx = -1
+        for (curr = this.head; curr.next != null; curr = curr.next, idx++) {
+
+        }
+        return [curr, idx]
+      }
+      findNode(index) {
+        let i = -1
+        for (let curr = this.head; curr != null; curr = curr.next, i++) {
+          if (i === index) {
+            return curr
+          }
+        }
+        return null
+      }
+      insert(index, value) {
+        const prev = this.findNode(index - 1)
+        if (prev != null) {
+          d.add({ data: this, highlights: [index - 1, index], lineNumber: 3, code: 'pre.b' }, frame) // 找到帧
+          // 插入节点帧(3帧)
+          if (index > 0)
+            d.add({ data: this, highlights: [index - 1, index], node: [value, null, null, index], lineNumber: 5, code: 'pre.b' }, frame)
+          d.add({ data: this, highlights: [index - 1, index], node: [value, null, prev.next ? index : null, index], lineNumber: 6, code: 'pre.b' }, frame)
+          d.add({ data: this, highlights: [index - 1, index], node: [value, index - 1, prev.next ? index : null, index], lineNumber: 7, code: 'pre.b' }, frame)
+          prev.next = { value, next: prev.next }
+          d.add({ data: this, lineNumber: 1000, code: 'pre.b' }, frame)
+        }
+      }
+      remove(index) {
+        const prev = this.findNode(index - 1)
+        if (prev != null) {
+          const curr = prev.next
+          d.add({ data: this, highlights: [index - 1, index], lineNumber: 11, code: 'pre.b' }, frame) // 找到帧
+          if (curr != null) {
+            prev.next = curr.next
+            // 删除节点帧(3帧)
+            d.add({ data: this, highlights: [index - 1, index], node: [curr.value, index - 1, prev.next ? index : null, index], lineNumber: 12, code: 'pre.b' }, frame)
+            d.add({ data: this, highlights: [index - 1, index], node: [curr.value, null, prev.next ? index : null, index], lineNumber: 13, code: 'pre.b' }, frame)
+          }
+          d.add({ data: this, lineNumber: 1000, code: 'pre.b' }, frame)
+        }
+      }
+      clone() {
+        const list2 = new LinkedNode()
+        for (let curr1 = this.head; curr1 != null; curr1 = curr1.next) {
+          if (curr1 === this.head) {
+            continue
+          }
+          list2._addLast(curr1.value)
+        }
+        return list2
+      }
+    }
+
+    function onAddLast() {
+      for (const n of document.querySelector('#values').value.split(',')) {
+        list.addLast(Number(n))
+      }
+      d.updateFrameButtons()
+    }
+    function onAddFirst() {
+      const val = Number(document.querySelector('#firstValue').value)
+      list.addFirst(val)
+      d.updateFrameButtons()
+    }
+    function onInsert() {
+      const idx = Number(document.querySelector('#insertIndex').value)
+      const val = Number(document.querySelector('#insertValue').value)
+      list.insert(idx, val)
+      d.updateFrameButtons()
+    }
+    function onRemove() {
+      const idx = Number(document.querySelector('#removeIndex').value)
+      list.remove(idx)
+      d.updateFrameButtons()
+    }
+    const options = loadOptionsFromStorage('ds_singly_linked_list(sentinal)')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const NEXT_WIDTH = options.NEXT_WIDTH
+    const list = new LinkedNode()
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 10
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      list.init()
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    /*
+      node: 新增节点
+    */
+    function frame({ data, lineNumber, highlights, node, code }) {
+      const pre = code ? document.querySelector(code) : document.querySelector('pre')
+      if (lineNumber > 0) {
+        pre.setAttribute('data-line', lineNumber)
+        Prism.highlightAllUnder(pre)
+      }
+      const UNIT = RECT_WIDTH + NEXT_WIDTH + RECT_WIDTH
+      const BASE = UNIT + UNIT / 2
+      const LEFT = UNIT / 2
+
+      const [nValue, nPrev, nNext, nIndex] = [...node]
+      const N_HEIGHT = height - 80
+
+      // head
+      noStroke()
+      fill('#dd7777')
+      rect(0, height, NEXT_WIDTH, -RECT_HEIGHT)
+      arrow2(NEXT_WIDTH, height - RECT_HEIGHT / 2, RECT_WIDTH, 0, 'black')
+
+      let i = 0
+      let idx = -1
+      if (nIndex >= 0) { // 画上方新增或删除的节点
+        drawRect(BASE + nIndex * UNIT - RECT_WIDTH, N_HEIGHT, nValue, true)
+      }
+
+      for (let curr = data.head; curr != null; curr = curr.next, i++, idx++) {
+        let x = LEFT + i * UNIT
+        let y = height
+
+        if (nNext === idx) {
+          arrow1(BASE + nIndex * UNIT + NEXT_WIDTH / 2, N_HEIGHT, x + RECT_WIDTH / 2, y - RECT_HEIGHT, 'black') // next 右下
+        } else if (nIndex >= 0 && nNext == null) {
+          arrow2(BASE + nIndex * UNIT + NEXT_WIDTH, N_HEIGHT - RECT_HEIGHT / 2, RECT_WIDTH, 0, 'black') // next 右
+        }
+        if (nPrev === idx) {
+          arrow1(x + RECT_WIDTH + NEXT_WIDTH / 2, y - RECT_HEIGHT, BASE + nIndex * UNIT - RECT_WIDTH / 2, N_HEIGHT, 'black') // next 右上
+        } else {
+          arrow2(x + RECT_WIDTH + NEXT_WIDTH, y - RECT_HEIGHT / 2, RECT_WIDTH, 0, 'black') // next 右
+        }
+
+        drawRect(x, y, curr.value, highlights.includes(idx))
+      }
+    }
+    function drawRect(x, y, txt, highlight) {
+      if (highlight) {
+        fill('#f08d49')
+      } else {
+        fill('#67cdcc')
+      }
+      rect(x, y, RECT_WIDTH, -RECT_HEIGHT)
+      fill('#ffffff')
+      text(txt, x + RECT_WIDTH / 2, y - 6)
+
+      fill('#cc99cd')
+      rect(x + RECT_WIDTH, y, NEXT_WIDTH, -RECT_HEIGHT)
+    }
+  </script>
+</body>
+
+</html>

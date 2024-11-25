@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 70%;
+      min-height: 200px;
+    }
+
+    input[type=text],
+    input[type=number] {
+      width: 100px;
+    }
+  </style>
+  <title>B-树(t=2)</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>要插入的数据&nbsp;</span><input type="text" id='data' class="saveable array" value="1,2,3,4">
+    <input style='font-size:12px;' type="button" value="put" onclick="doPut2()">
+    <span>n&nbsp;</span><input type="text" id='n' class="saveable" value="6">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>待插入 key</span><input type="text" id='inserted' class="saveable" value="11">
+    <input style='font-size:12px;' type="button" value="put" onclick="doPut()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>待删除 key</span><input type="text" id='deleted' class="saveable" value="4">
+    <input style='font-size:12px;' type="button" value="delete" onclick="doDelete()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>宽度</span><input type="number" step="1" value="40" id="WIDTH" class="saveable int" style="width: 40px;">
+    <span>高度</span><input type="number" step="1" value="25" id="HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('tree_23')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('tree_23')
+    let data = options.data
+    const WIDTH = options.WIDTH
+    const HEIGHT = options.HEIGHT
+    const n = options.n
+    const d = new Draw(options.animate_speed)
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 12
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      for (let i = 0; i < 0; i++) {
+        tree.insert(i + 1)
+      }
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    function frame({ cloned }) {
+      for (let i = 0; i < cloned.length; i++) {
+        const node = cloned[i]
+        drawTree(node, width / 2, WIDTH / 2 + 10 + i * 180, n - 1 - i, 0, 0, '')
+      }
+    }
+
+    const subs = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉']
+    function drawTree(node, x, y, deep, px, py, index) {
+      if (node) {
+        // console.log(node)
+        if (px && py) {
+          stroke(0)
+          line(x, y, px, py)
+        }
+        const half = Math.floor(node.children.length / 2)
+        const step = Math.pow(2, deep) * WIDTH / 8 - 47
+        const nth = node.children.length
+        switch (nth) {
+          case 1:
+            drawTree(node.children[0], x, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 0)
+            break;
+          case 2:
+            drawTree(node.children[0], x - step, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 0)
+            drawTree(node.children[1], x + step, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 1)
+            break;
+          case 3:
+            drawTree(node.children[0], x - step, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 0)
+            drawTree(node.children[1], x, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 1)
+            drawTree(node.children[2], x + step, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 2)
+            break;
+          case 4:
+            drawTree(node.children[0], x - step, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 0)
+            drawTree(node.children[1], x - step / 2.5, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 1)
+            drawTree(node.children[2], x + step / 2.5, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 2)
+            drawTree(node.children[3], x + step, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 3)
+            break;
+          case 5:
+            drawTree(node.children[0], x - step, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 0)
+            drawTree(node.children[1], x - step / 2.5, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 1)
+            drawTree(node.children[2], x, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 2)
+            drawTree(node.children[3], x + step / 2.5, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 3)
+            drawTree(node.children[4], x + step, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 4)
+            break;
+          case 6:
+            drawTree(node.children[0], x - step, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 0)
+            drawTree(node.children[1], x - step / 1.5, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 1)
+            drawTree(node.children[2], x - step / 3.5, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 2)
+            drawTree(node.children[3], x + step / 3.5, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 3)
+            drawTree(node.children[4], x + step / 1.5, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 4)
+            drawTree(node.children[5], x + step, y + Math.pow(2, n - deep) * WIDTH / 2, deep - 1, x, y, 5)
+            break;
+          default:
+          // console.log('default')
+        }
+
+        stroke(0)
+        const keys = node.keys.map((e, i) => { return e + '' + subs[i] }).join(' ')
+        let color = "black"
+        fill(color)
+        const wi = WIDTH + keys.length * 2
+        rect(x - wi / 2, y - HEIGHT / 2, wi, HEIGHT)
+        fill('red')
+        rect(x - wi / 2, y + HEIGHT / 2, wi, HEIGHT / 2)
+        noStroke()
+        fill('white')
+        text(keys, x, y + 4)
+        fill('white')
+        text(index, x, y + HEIGHT / 2 + 11)
+      }
+    }
+
+    function doPut() {
+      const key = Number(document.getElementById("inserted").value)
+      tree.insert(key)
+      d.updateFrameButtons()
+    }
+
+    function doPut2() {
+      document.getElementById('data').value.split(',').forEach(e => {
+        tree.insert(Number(e))
+      })
+      d.updateFrameButtons()
+    }
+
+    function doDelete() {
+      const key = Number(document.getElementById("deleted").value)
+      tree.remove(key)
+      d.updateFrameButtons()
+    }
+
+    function clearStatus(node) {
+      if (!node) {
+        return
+      }
+      node.status = 0
+      clearStatus(node.left)
+      clearStatus(node.right)
+    }
+
+    class Node {
+      constructor() {
+        this.keys = []
+        this.children = []
+        this.leaf = true
+      }
+      get(key) {
+        let i = 0
+        while (i < this.keys.length && keys[i] < key) {
+          i++
+        }
+        if (i < this.this.keys.length && keys[i] === key) {
+          return this
+        }
+        if (this.leaf) {
+          return null
+        }
+        return this.children[i].get(key)
+      }
+      insertKey(key, index) {
+        this.keys.splice(index, 0, key)
+      }
+      insertChild(child, index) {
+        this.children.splice(index, 0, child)
+      }
+    }
+
+    class Tree {
+      constructor(t) {
+        this.root = new Node()
+        this.t = t ?? 2
+      }
+      insert(key) {
+        this.doInsert(null, this.root, key, 0)
+      }
+      doInsert(parent, node, key, index) {
+        let i = node.keys.length - 1
+        while (i >= 0 && key < node.keys[i]) {
+          i--
+        }
+        i++
+        if (node.keys[i] == key) {
+          return
+        }
+        if (node.leaf) {
+          node.insertKey(key, i)
+          d.add({ cloned: clone(all) }, frame)
+        } else {
+          this.doInsert(node, node.children[i], key, i)
+        }
+        this.checkAndSplit(parent, node, index)
+      }
+      checkAndSplit(parent, left, index) {
+        if (left.keys.length == 2 * this.t - 1) {
+          if (parent == null) {
+            const newRoot = new Node(this.t)
+            newRoot.leaf = false
+            newRoot.insertChild(this.root, 0)
+            this.root = newRoot
+            parent = newRoot
+            all.pop()
+            all.push(this.root)
+          }
+          const right = new Node(this.t)
+          right.leaf = left.leaf
+          all.push(right)
+          d.add({ cloned: clone(all) }, frame)
+          right.keys.push(...left.keys.splice(this.t))
+          d.add({ cloned: clone(all) }, frame)
+          if (!left.leaf) {
+            right.children.push(...left.children.splice(this.t))
+            d.add({ cloned: clone(all) }, frame)
+          }
+          const mid = left.keys.pop()
+          parent.insertKey(mid, index)
+          d.add({ cloned: clone(all) }, frame)
+          parent.insertChild(right, index + 1)
+          all.pop()
+          d.add({ cloned: clone(all) }, frame)
+        }
+      }
+    }
+    const tree = new Tree(2)
+    const all = []
+
+  </script>
+</body>
+
+</html>

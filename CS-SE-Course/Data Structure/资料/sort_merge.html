@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>归并排序</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <div class="code" style="display: none;">
+    <pre><code class="language-java">public static void insertion(int[] a) {
+  for(int j = 1; i < a.length; j++) {
+    int i = j - 1;
+    int t = a[j];
+    while(i >= 0 && t < a[i]) {
+      a[i+1] = a[i];
+      j--;
+    }
+    a[i+1] = t;
+  }
+}</code></pre>
+  </div>
+  <main></main>
+  <section>
+    <div style='background-color:#67cdcc; margin: 2px 2px 0 0; padding: 4px 6px;'>未排序区域</div>
+    <div style='background-color:#cc99cd; margin: 2px 2px 0 0; padding: 4px 6px;'>索引</div>
+    <div style='background-color:#f08d49; margin: 2px 2px 0 0; padding: 4px 6px;'>范围内</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>初始数组&nbsp;</span><input type="text" id='data' class="saveable array" value="9, 3, 7, 2, 8, 5, 1, 4">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('sort_merge')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('sort_merge')
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const VALUE_RECT_MIN_HEIGHT = 20      // 值矩形最小高度
+    const VALUE_RECT_MAX_HEIGHT = 100     // 值矩形最大高度
+    const d = new Draw(options.animate_speed)
+    let data = options.data
+    let heightMap = new Map()
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 10
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      heightMap = calculateRectHeight(data, VALUE_RECT_MIN_HEIGHT, VALUE_RECT_MAX_HEIGHT)
+      insertion(data)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    /*
+      array: 数组
+      highlights: 高亮位置
+      pointers: 指针
+      sorted: 未排序索引, < sorted 为已排序
+      lineNumber: 高亮行号
+    */
+    function frame({ array, pointers, highlights, lineNumber, sorted, gap }) {
+      const pre = document.querySelector('pre')
+      if (lineNumber > 0) {
+        pre.setAttribute('data-line', lineNumber)
+        Prism.highlightAllUnder(pre)
+      }
+      const LEFT = (width - array.length * RECT_WIDTH) / 2
+      for (let i = -1; i < array.length; i++) {
+        // 注：矩形以左下角 x, y 作为起点坐标
+        let x = LEFT + i * RECT_WIDTH
+        let y = height - RECT_HEIGHT
+        stroke(0)
+        pointers.draw(i, x + RECT_WIDTH / 2, RECT_HEIGHT)
+        fill(highlights.includes(i) ? '#f08d49' : '#67cdcc')
+        if (i >= 0) {
+          stroke(0)
+          rect(x, y, RECT_WIDTH, -heightMap.get(array[i]))
+          fill('#ffffff')
+          noStroke()
+          text(array[i], x + RECT_WIDTH / 2, y - 6)
+          fill('#cc99cd')
+          stroke(0)
+          rect(x, height, RECT_WIDTH, -RECT_HEIGHT)
+          fill('#ffffff')
+          noStroke()
+          text(i, x + RECT_WIDTH / 2, height - 6)
+        }
+      }
+    }
+    let rangeInclusive = (start, end) => new Array(end + 1 - start).fill(start).map((el, i) => start + i)
+    function insertion(a1) {
+      d.add({ array: a1 }, frame)
+      ssplit(a1, 0, a1.length - 1, [])
+    }
+    function ssplit(a1, i, j, a2) {
+      // d.add({ array: a1, highlights: Array.from({ length: j - i + 1 }, (v, idx) => idx + i) }, frame)
+      if (i == j) {
+        return
+      }
+      const m = (i + j) >>> 1
+      ssplit(a1, i, m, a2)
+      ssplit(a1, m + 1, j, a2)
+      merge(a1, i, m, m + 1, j, a2)
+      for (let k = i; k <= j; k++) {
+        a1[k] = a2[k]
+      }
+      d.add({ array: a1, highlights: Array.from({ length: j - i + 1 }, (v, idx) => idx + i) }, frame)
+    }
+    function merge(a1, i, iEnd, j, jEnd, a2) {
+      let k
+      for (k = i; i <= iEnd && j <= jEnd; k++) {
+        if (a1[i] < a1[j]) {
+          a2[k] = a1[i]
+          i++
+        } else {
+          a2[k] = a1[j]
+          j++
+        }
+      }
+      if (i > iEnd) {
+        for (let x = j; x <= jEnd; x++, k++) {
+          a2[k] = a1[x]
+        }
+      }
+      if (j > jEnd) {
+        for (let x = i; x <= iEnd; x++, k++) {
+          a2[k] = a1[x]
+        }
+      }
+    }
+    // let a1 = [1, 5, 6, 2, 4, 10, 11]
+    // let a2 = []
+    // merge(a1, 0, 2, 3, 6, a2)
+    // console.log(a2)
+  </script>
+</body>
+
+</html>

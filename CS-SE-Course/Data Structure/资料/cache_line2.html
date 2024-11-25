@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 40%;
+      min-height: 200px;
+    }
+  </style>
+  <title>缓存行_正例</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <div class="code" style="display: none;">
+    <pre><code class="language-java">int[][] a = new int[10][14];
+for (int i = 0; i < 10; i++) {
+  for (int j = 0; j < 14; j++) {
+      a[i][j];
+  }
+}</code></pre>
+  </div>
+  <main></main>
+  <section>
+    <div style='background-color:rgb(251, 255, 226); margin: 2px 2px 0 0; padding: 4px 6px;'>未填充</div>
+    <div style='background-color:#67cdcc; margin: 2px 2px 0 0; padding: 4px 6px;'>新加载</div>
+    <div style='background-color:#ccc; margin: 2px 2px 0 0; padding: 4px 6px;'>未命中</div>
+    <div style='background-color:#f08d49; margin: 2px 2px 0 0; padding: 4px 6px;'>命中</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>循环次数&nbsp;</span><input type="text" id='count' class="saveable int" value="10">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('cache_line2')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('cache_line2')
+    const count = options.count
+    const d = new Draw(options.animate_speed)
+    const cache = new Cache()
+    function preload() {
+      // const font = loadFont('JetBrainsMono-Regular.ttf')
+    }
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 10
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      d.add({}, frame)
+      for (let i = 0; i < count; i++) {
+        for (let j = 0; j < 14; j++) {
+          d.add({ cache: cache.add(i).array, lineNumber: 4, highlights: [i, j] }, frame)
+        }
+      }
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    function frame({ cache, lineNumber, highlights }) {
+      const pre = document.querySelector('pre')
+      if (lineNumber > 0) {
+        pre.setAttribute('data-line', lineNumber)
+        Prism.highlightAllUnder(pre)
+      }
+      const unitWidth = 36
+      const unitHeight = 20
+      const cacheWidth = 16 * unitWidth
+      const cacheHeight = unitHeight * 8
+      const LEFT = (width - cacheWidth) / 2
+      const TOP = (height - cacheHeight) / 2
+      stroke(0)
+      fill('rgb(251, 255, 226)')
+
+      for (let i = 0; i < 8; i++) {
+        rect(LEFT, TOP + 20 * i, cacheWidth, unitHeight)
+      }
+      [hi, hj] = Array.from(highlights)
+      for (let i = 0; i < cache.length; i++) {
+        const ts = cache[i].split('_')
+        for (let j = 0; j < 16; j++) {
+          stroke(0)
+          fill('#ccc')
+          if (hi % 8 === i) { // 当前行
+            if (j === hj + 2) { // 命中
+              fill('#f08d49')
+            } else if (ts[1] === 'false') {
+              fill('#67cdcc')
+            }
+          }
+          rect(LEFT + unitWidth * j, TOP + unitHeight * i, unitWidth, unitHeight)
+          noStroke()
+          fill(0)
+          text(ts[j], LEFT + unitWidth * j + unitWidth / 2, TOP + unitHeight * i + unitHeight / 2 + 3)
+        }
+      }
+    }
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 239 - 最大滑动窗口</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#ff0000; margin: 2px 2px 0 0; padding: 4px 6px;'>滑动窗口</div>
+    <div style='background-color:rgba(88,195,224,0.4); margin: 2px 2px 0 0; padding: 4px 6px;'>单调队列</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <input type="button" value="poll" onclick="onPoll()">
+    <input type="number" id="offered" value="6">
+    <input type="button" value="offer" onclick="onOffer()">
+    原始数组 <input type="text" id="myArray" value="1, 3, -1, -3, 1, 5, 3, 6, 7" class="saveable array" />
+    窗口大小 <input type="text" id="k" value="3" class="saveable int" />
+    显示数组 <input type="checkbox" name="showarray" checked>
+    显示单调栈 <input type="checkbox" name="showstack" checked>
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="40" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="30" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_239')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    function onPoll() {
+      queue.poll()
+    }
+    function onOffer() {
+      const v = document.getElementById('offered').value - 0
+      queue.offer({ v, i: 0 })
+    }
+    class MonoDeque {
+      constructor() {
+        this.deque = []
+      }
+      peek() {
+        return this.deque[0]
+      }
+      poll() {
+        this.deque.shift()
+      }
+      offer(t) {
+        while (true) {
+          let len = this.deque.length
+          if (len == 0 || this.deque[len - 1].v >= t.v) {
+            break
+          }
+          this.deque.pop()
+        }
+        this.deque.push(t)
+      }
+    }
+    const options = loadOptionsFromStorage('leetcode_239')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const myArray = options.myArray
+    const showmax = document.querySelector('[name=showmax]')
+
+    const queue = new MonoDeque()
+    const k = options.k
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 16
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      d.add({ cloned: { i: 0, q: queue.deque } }, frame)
+      maxSlidingWindow(k)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'), () => true)
+    }
+    function frame({ cloned: node }) {
+      if (node) {
+        const startX = width / 2 - myArray.length / 2 * RECT_WIDTH
+        const startY = height - 100
+        stroke('black')
+        let x = startX
+        let y = startY
+        if (document.querySelector('[name=showarray]').checked) {
+          for (let i = 0; i < myArray.length; i++) {
+            fill("white")
+            rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+            fill("black")
+            text(myArray[i], x + RECT_WIDTH / 2, y + RECT_HEIGHT / 2 + 6)
+            x += RECT_WIDTH
+          }
+          stroke('red')
+          strokeWeight(4)
+          fill('red')
+          y = startY + RECT_HEIGHT + 10
+          line(startX + (node.windowI + 1) * RECT_WIDTH, y, startX + (node.windowI - (k - 1)) * RECT_WIDTH, y) // 横线
+          line(startX + (node.windowI - (k - 1)) * RECT_WIDTH, y, startX + (node.windowI - (k - 1)) * RECT_WIDTH, y - 4) // 左竖
+          line(startX + (node.windowI + 1) * RECT_WIDTH, y, startX + (node.windowI + 1) * RECT_WIDTH, y - 4)  // 右竖
+        }
+
+        stroke('black')
+        strokeWeight(1)
+        if (document.querySelector('[name=showstack]').checked) {
+          x = startX + RECT_WIDTH * (node.q.length > 0 ? node.q[0].i : 0)
+          y = startY - RECT_HEIGHT
+          for (let i = 0; i < node.q.length; i++) {
+            fill("rgba(88,195,224,0.4)")
+            rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+            fill("black")
+            text(node.q[i].v, x + RECT_WIDTH / 2, y + RECT_HEIGHT / 2 + 6)
+            x += RECT_WIDTH
+          }
+        }
+      }
+    }
+
+    function maxSlidingWindow(k) {
+      const q = new MonoDeque()
+      for (let i = 0; i < myArray.length; i++) {
+        if (i >= k && myArray[i - k] == q.peek().v) {
+          q.poll()
+        }
+        q.offer({ v: myArray[i], i })
+        d.add({ cloned: clone({ q: q.deque, windowI: i }) }, frame)
+        if (i >= k - 1) {
+          q.peek()
+        }
+      }
+    }
+
+  </script>
+</body>
+
+</html>

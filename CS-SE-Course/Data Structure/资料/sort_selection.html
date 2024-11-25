@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 60%;
+      min-height: 200px;
+    }
+  </style>
+  <title>选择排序</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <div class="code" style="display: none;">
+    <pre><code class="language-java">public static void bubble(int[] a) {
+  final int n = a.length - 1;
+  for (int j = 0; j < n; j++) {
+    for (int i = 0; i < n - j; i++) {
+      if (a[i] > a[i + 1]) {
+        swap(a, i, i + 1);
+      }
+    }
+  }
+}</code></pre>
+  </div>
+  <main></main>
+  <section>
+    <div style='background-color:#67cdcc; margin: 2px 2px 0 0; padding: 4px 6px;'>未排序区域</div>
+    <div style='background-color:#ccc; margin: 2px 2px 0 0; padding: 4px 6px;'>已排序区域</div>
+    <div style='background-color:#cc99cd; margin: 2px 2px 0 0; padding: 4px 6px;'>索引</div>
+    <div style='background-color:#f08d49; margin: 2px 2px 0 0; padding: 4px 6px;'>要交换</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>初始数组&nbsp;</span><input type="text" id='data' class="saveable array" value="3,2,4,1,6,5,7">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('sort_selection')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('sort_selection')
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const VALUE_RECT_MIN_HEIGHT = 20      // 值矩形最小高度
+    const VALUE_RECT_MAX_HEIGHT = 100     // 值矩形最大高度
+    const d = new Draw(options.animate_speed)
+    let data = options.data
+    let heightMap = new Map()
+    function preload() {
+      // const font = loadFont('JetBrainsMono-Regular.ttf')
+    }
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 10
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      heightMap = calculateRectHeight(data, VALUE_RECT_MIN_HEIGHT, VALUE_RECT_MAX_HEIGHT)
+      bubble(data)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    /*
+      array: 数组
+      highlights: 高亮位置
+      pointers: 指针
+      unsorted: 未排序个数
+      lineNumber: 高亮行号
+    */
+    function frame({ array, pointers, highlights, lineNumber, unsorted }) {
+      const pre = document.querySelector('pre')
+      if (lineNumber > 0) {
+        pre.setAttribute('data-line', lineNumber)
+        Prism.highlightAllUnder(pre)
+      }
+      const LEFT = (width - array.length * RECT_WIDTH) / 2
+      for (let i = 0; i < array.length; i++) {
+        // 注：矩形以左下角 x, y 作为起点坐标
+        let x = LEFT + i * RECT_WIDTH
+        let y = height - RECT_HEIGHT
+        stroke('black')
+        pointers.draw(i, x + RECT_WIDTH / 2, RECT_HEIGHT)
+        if (i > unsorted) {
+          fill('#ccc')
+        } else {
+          highlights.includes(i) ? fill('#f08d49') : fill('#67cdcc')
+        }
+        stroke(0)
+        rect(x, y, RECT_WIDTH, -heightMap.get(array[i]))
+        fill('#ffffff')
+        noStroke()
+        text(array[i], x + RECT_WIDTH / 2, y - 6)
+        fill('#cc99cd')
+        stroke(0)
+        rect(x, height, RECT_WIDTH, -RECT_HEIGHT)
+        fill('#ffffff')
+        noStroke()
+        text(i, x + RECT_WIDTH / 2, height - 6)
+      }
+    }
+
+    function bubble(a) {
+      const n = a.length - 1
+      d.add({ array: a, unsorted: n }, frame)
+      for (let right = a.length - 1; right > 0; right--) {
+        let max = right
+        for (let i = 0; i < right; i++) {
+          // d.add({ array: a, unsorted: right, pointers: [{ index: max, text: 'max' }, { index: i, text: 'i' }]}, frame)
+          if (a[i] > a[max]) {
+            max = i
+            // d.add({ array: a, unsorted: right, pointers: [{ index: max, text: 'max' }, { index: i, text: 'i' }]}, frame)   
+          }
+        }
+        swap(a, max, right)
+        d.add({ array: a, unsorted: right - 1 }, frame)
+      }
+      d.add({ array: a, unsorted: -1 }, frame)
+    }
+    function swap(a, i, j) {
+      let k = a[i]
+      a[i] = a[j]
+      a[j] = k
+    }
+  </script>
+</body>
+
+</html>

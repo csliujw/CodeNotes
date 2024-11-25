@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>归并排序</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <div class="code" style="display: none;">
+    <pre><code class="language-java">public static void insertion(int[] a) {
+  for(int j = 1; i < a.length; j++) {
+    int i = j - 1;
+    int t = a[j];
+    while(i >= 0 && t < a[i]) {
+      a[i+1] = a[i];
+      j--;
+    }
+    a[i+1] = t;
+  }
+}</code></pre>
+  </div>
+  <main></main>
+  <section>
+    <div style='background-color:#67cdcc; margin: 2px 2px 0 0; padding: 4px 6px;'>未排序区域</div>
+    <div style='background-color:#cc99cd; margin: 2px 2px 0 0; padding: 4px 6px;'>索引</div>
+    <div style='background-color:#f08d49; margin: 2px 2px 0 0; padding: 4px 6px;'>范围内</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>初始数组&nbsp;</span><input type="text" id='data' class="saveable" value="9, 3, 7, 2, 8, 5, 1, 4">
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('sort_merge_list')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('sort_merge_list')
+    const RECT_WIDTH = 30                 // 矩形宽度、圆直径
+    const SPACING = 1                     // 间隙
+    const INDEX_RECT_HEIGHT = 20          // 索引矩形高度
+    const POINTER_HEIGHT = 150            // 指针高度, 从底部算
+    const VALUE_RECT_MIN_HEIGHT = 20      // 值矩形最小高度
+    const VALUE_RECT_MAX_HEIGHT = 100     // 值矩形最大高度
+    const d = new Draw(options.animate_speed)
+    let data = options.data.split(',').map(e => Number(e))
+    let heightMap = new Map()
+    function preload() {
+      // const font = loadFont('JetBrainsMono-Regular.ttf')
+    }
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 10
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      heightMap = calculateRectHeight(data, VALUE_RECT_MIN_HEIGHT, VALUE_RECT_MAX_HEIGHT)
+      const r = insertion(data)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    /*
+      array: 数组
+      highlights: 高亮位置
+      pointers: 指针
+      sorted: 未排序索引, < sorted 为已排序
+      lineNumber: 高亮行号
+    */
+    // let colors = ['#1E90FF', '#87CEFA', '#FF7F50', '#FFD700', '#FFA500'];
+    let colors = [
+      // '#FFF0F0',
+      // '#FFE0E0',
+      // '#FFC0C0',
+      '#FFA0A0',
+      '#FF8080',
+      '#FF6060',
+      '#FF4040',
+      '#FF2020',
+      '#FF0000',
+      '#E60000'];
+    function getColorArray(end, gap) {
+      const colorArray = [];
+      for (let i = 0; i < end; i++) {
+        colorArray[i] = colors[i % gap]
+      }
+      return colorArray;
+    }
+    function frame({ cloned }) {
+      console.log(JSON.stringify(cloned))
+    }
+    const all = []
+    let rangeInclusive = (start, end) => new Array(end + 1 - start).fill(start).map((el, i) => start + i)
+    function insertion(a1) {
+      d.add({ array: a1 }, frame)
+      return ssplit(a1)
+    }
+    function ssplit(a1) {
+      if (a1.length == 1) {
+        return a1
+      }
+      const m = (a1.length) >>> 1
+      const a2 = a1.splice(m)
+      
+      const b1 = ssplit(a1)
+      const b2 = ssplit(a2)
+      const r = merge(b1, b2)
+      
+      const obj = { array1: clone(b1), array2: clone(b2) }
+      all.push(obj)
+      d.add({ cloned: clone(all) }, frame)
+      all.pop()
+      return r
+    }
+    function merge(left, right) {
+      const res = []
+      const len = left.length + right.length
+      for (i = 0, li = 0, ri = 0; i < len; i++) {
+        if (li === left.length) {
+          res.push(right[ri])
+          ri++
+        } else if (ri === right.length) {
+          res.push(left[li])
+          li++
+        } else if (left[li] < right[ri]) {
+          res.push(left[li])
+          li++
+        } else {
+          res.push(right[ri])
+          ri++
+        }
+      }
+      return res
+    }
+
+    function clone(tree) {
+      return JSON.parse(JSON.stringify(tree))
+    }
+    // let a1 = [1, 5, 6]
+    // let a2 = [2, 4, 10, 11]
+
+    // console.log(merge(a1, a2))
+  </script>
+</body>
+
+</html>

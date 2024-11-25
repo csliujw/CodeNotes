@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+      margin-right: 1px;
+      flex: 1;
+      height: 100%;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    main {
+      margin-top: 4px;
+      width: 100%;
+      height: 60%;
+      min-height: 170px;
+    }
+  </style>
+  <title>双向链表(带哨兵)</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="height: 273px; display: none;">
+    <div class="code">
+      <pre class="a"><code class="language-java">public void addLast(int value) {
+  Node last = findLast();
+  last.next = new Node(value, null);
+}
+public void addFirst(int value) {
+  Node newNode = new Node(value);
+  newNode.next = this.head.next;
+  this.head.next = newNode;
+}</code></pre>
+    </div>
+    <div class="code">
+      <pre class="b"><code class="language-java">public void insert(int index, int value) {
+  Node prev = findNode(index - 1);  
+  if (prev != null) {
+    Node newNode = new Node(value);
+    newNode.next = prev.next;
+    prev.next = newNode;
+  }
+}
+public void remove(int index) {
+  Node prev = findNode(index - 1); Node curr;
+  if (prev != null && (curr = prev.next) != null) {
+      prev.next = curr.next;
+  }
+}</code></pre>
+    </div>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#1abc9c; margin: 2px 2px 0 0; padding: 4px 6px;'>prev指针</div>
+    <div style='background-color:#67cdcc; margin: 2px 2px 0 0; padding: 4px 6px;'>value值</div>
+    <div style='background-color:#cc99cd; margin: 2px 2px 0 0; padding: 4px 6px;'>next指针</div>
+    <div style='background-color:#f08d49; margin: 2px 2px 0 0; padding: 4px 6px;'>找到</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <div style="margin-bottom: 2px;">
+      <span>待添加值&nbsp;</span><input type="text" id='values' class="saveable" value="1,2,3">
+      <input style='font-size:12px;' type="button" value="addLast()" onclick="onAddLast()">
+    </div>
+    <div style="margin-bottom: 2px;">
+      <span>待添加值&nbsp;</span><input type="text" id='firstValue' style="width:20px;" value="6" class="saveable">
+      <input style='font-size:12px;' type="button" value="addFirst()" onclick="onAddFirst()">
+    </div>
+    <div style="margin-bottom: 2px;">
+      <span>待插入索引&nbsp;</span><input type="text" id='insertIndex' style="width:20px;" value="2" class="saveable">
+      <span>待插入值&nbsp;</span><input type="text" id='insertValue' style="width:20px;" value="7" class="saveable">
+      <input style='font-size:12px;' type="button" value="insert()" onclick="onInsert()">
+    </div>
+    <div style="margin-bottom: 2px;">
+      <span>待删除索引&nbsp;</span><input type="text" id='removeIndex' style="width:20px;" value="2" class="saveable">
+      <input style='font-size:12px;' type="button" value="remove()" onclick="onRemove()">
+    </div>
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <span>prev宽</span><input type="number" step="1" value="10" id="PREV_WIDTH" class="saveable int" style="width: 40px;">
+    <span>next宽</span><input type="number" step="1" value="10" id="NEXT_WIDTH" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('ds_doubly_linked_list(sentinal)')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    class LinkedNode {
+      constructor() {
+        this.head = { prev: null, value: '头', next: null }
+        this.tail = { prev: null, value: '尾', next: null }
+        this.head.next = this.tail
+        this.tail.prev = this.head
+      }
+      init() {
+        d.add({ data: this }, frame)
+      }
+      addFirst(value) {
+        this.insert(0, value)
+      }
+      _addLast(value) {
+        const [prev, idx] = this.findLastNode()
+        const added = { prev, value, next: this.tail }
+        prev.next = added
+        this.tail.prev = added
+      }
+      addLast(value) {
+        const [prev, idx] = this.findLastNode()
+        d.add({ data: this, highlights: [idx, idx + 1] }, frame)
+        const added = { prev, value, next: this.tail }
+        d.add({ data: this, highlights: [idx, idx + 1], node: [value, null, null, idx + 1] }, frame)
+        d.add({ data: this, highlights: [idx, idx + 1], node: [value, idx, null, idx + 1] }, frame)
+        d.add({ data: this, highlights: [idx, idx + 1], node: [value, idx, idx + 1, idx + 1] }, frame)
+        prev.next = added
+        this.tail.prev = added
+        d.add({ data: this, lineNumber: 1000, code: 'pre.a' }, frame)
+      }
+      get(index) {
+        const node = findNode(index)
+        return node !== null ? node.value : null
+      }
+      findLastNode() {
+        let curr
+        let idx = -1
+        for (curr = this.head; curr.next != this.tail; curr = curr.next, idx++) {
+
+        }
+        return [curr, idx]
+      }
+      findNode(index) {
+        let i = -1
+        for (let p = this.head; p != this.tail; p = p.next, i++) {
+          if (i === index) {
+            return p
+          }
+        }
+        return null
+      }
+      insert(index, value) {
+        const prev = this.findNode(index - 1)
+        if (prev != null) {
+          d.add({ data: this, highlights: [index - 1, index] }, frame) // 找到帧
+          d.add({ data: this, highlights: [index - 1, index], node: [value, null, null, index] }, frame)
+          d.add({ data: this, highlights: [index - 1, index], node: [value, index - 1, null, index] }, frame)
+          d.add({ data: this, highlights: [index - 1, index], node: [value, index - 1, index, index] }, frame)
+          const next = prev.next
+          const inserted = { prev, value, next }
+          prev.next = inserted
+          next.prev = inserted
+          d.add({ data: this }, frame)
+        }
+      }
+      remove(index) {
+        const prev = this.findNode(index - 1)
+        if (prev != null) {
+          const removed = prev.next
+          if (removed != this.tail) {
+            d.add({ data: this, highlights: [index - 1, index, index + 1] }, frame) // 找到帧
+            const next = removed.next
+            prev.next = next
+            next.prev = prev
+            d.add({ data: this, highlights: [index - 1, index], node: [removed.value, index - 1, index, index] }, frame)
+            d.add({ data: this, highlights: [index - 1, index], node: [removed.value, null, index, index] }, frame)
+            d.add({ data: this, highlights: [index - 1, index], node: [removed.value, null, null, index] }, frame)
+          }
+          d.add({ data: this, lineNumber: 1000, code: 'pre.b' }, frame)
+        }
+      }
+      clone() {
+        const list2 = new LinkedNode()
+        for (let curr1 = this.head; curr1 != this.tail; curr1 = curr1.next) {
+          if (curr1 === this.head) {
+            continue
+          }
+          list2._addLast(curr1.value)
+        }
+        return list2
+      }
+    }
+
+    function onAddLast() {
+      for (const n of document.querySelector('#values').value.split(',')) {
+        list.addLast(Number(n))
+      }
+      d.updateFrameButtons()
+    }
+    function onAddFirst() {
+      const val = Number(document.querySelector('#firstValue').value)
+      list.addFirst(val)
+      d.updateFrameButtons()
+    }
+    function onInsert() {
+      const idx = Number(document.querySelector('#insertIndex').value)
+      const val = Number(document.querySelector('#insertValue').value)
+      list.insert(idx, val)
+      d.updateFrameButtons()
+    }
+    function onRemove() {
+      const idx = Number(document.querySelector('#removeIndex').value)
+      list.remove(idx)
+      d.updateFrameButtons()
+    }
+    
+    const options = loadOptionsFromStorage('ds_doubly_linked_list(sentinal)')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const PREV_WIDTH = options.PREV_WIDTH
+    const NEXT_WIDTH = options.NEXT_WIDTH
+    const list = new LinkedNode()
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 10
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      list.init()
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    /*
+      node: 新增节点
+    */
+    function frame({ data, lineNumber, highlights, node, code }) {
+      const pre = code ? document.querySelector(code) : document.querySelector('pre')
+      if (lineNumber > 0) {
+        pre.setAttribute('data-line', lineNumber)
+        Prism.highlightAllUnder(pre)
+      }
+      const UNIT = PREV_WIDTH + RECT_WIDTH + NEXT_WIDTH + RECT_WIDTH
+      const BASE = UNIT + UNIT / 2
+      const LEFT = UNIT / 2
+
+      const [nValue, nPrev, nNext, nIndex] = [...node]
+      const N_HEIGHT = height - 80
+
+      noStroke()
+
+      let i = 0
+      let idx = -1
+      let nextArrowX = null, nextArrowY = null, prevArrowX = null, prevArrowY = null, newX = null, newY = null
+      if (nIndex >= 0) { // 画上方新增或删除的节点
+        drawRect(BASE + nIndex * UNIT - RECT_WIDTH - PREV_WIDTH, N_HEIGHT, nValue, true)
+        prevArrowX = BASE + nIndex * UNIT - RECT_WIDTH - PREV_WIDTH / 2
+        prevArrowY = N_HEIGHT - RECT_HEIGHT / 2
+        nextArrowX = BASE + nIndex * UNIT + NEXT_WIDTH / 2
+        nextArrowY = N_HEIGHT
+        newX = BASE + nIndex * UNIT - RECT_WIDTH / 2
+        newY = N_HEIGHT
+      }
+
+      for (let curr = data.head; curr != null; curr = curr.next, i++, idx++) {
+        let x = LEFT + i * UNIT
+        let y = height
+
+        if (nIndex >= 0 && nIndex == i) {
+          arrow1(prevArrowX, prevArrowY, x + PREV_WIDTH + RECT_WIDTH / 2, y - RECT_HEIGHT, 'black')
+          arrow1(nextArrowX, nextArrowY, x + UNIT + PREV_WIDTH + RECT_WIDTH / 2, y - RECT_HEIGHT, 'black')
+        }
+
+        if (nNext === idx) {
+          arrow1(x + PREV_WIDTH / 2, y - RECT_HEIGHT, newX + 1, newY, 'black') // prev 左上
+        } else {
+          arrow2(x, y - RECT_HEIGHT / 2 - RECT_HEIGHT / 4, PREV_WIDTH + RECT_WIDTH, PI, 'black')  // prev 左
+        }
+        if (nPrev === idx) {
+          arrow1(x + PREV_WIDTH + RECT_WIDTH + NEXT_WIDTH / 2, y - RECT_HEIGHT / 2, newX - 1, newY, 'black') // next 右上
+        } else {
+          arrow2(x + PREV_WIDTH + RECT_WIDTH + NEXT_WIDTH, y - RECT_HEIGHT / 2 + RECT_HEIGHT / 4, RECT_WIDTH + NEXT_WIDTH, 0, 'black') // next 右
+
+        }
+        drawRect(x, y, curr.value, highlights.includes(idx))
+      }
+    }
+    function drawRect(x, y, txt, highlight) {
+      fill('#1abc9c')
+      rect(x, y - RECT_HEIGHT / 2, PREV_WIDTH, -RECT_HEIGHT / 2)
+      if (highlight) {
+        fill('#f08d49')
+      } else {
+        fill('#67cdcc')
+      }
+      rect(x + PREV_WIDTH, y, RECT_WIDTH, -RECT_HEIGHT)
+      fill('#ffffff')
+      text(txt, x + PREV_WIDTH + RECT_WIDTH / 2, y - 6)
+
+      fill('#cc99cd')
+      rect(x + PREV_WIDTH + RECT_WIDTH, y, NEXT_WIDTH, -RECT_HEIGHT / 2)
+    }
+  </script>
+</body>
+
+</html>

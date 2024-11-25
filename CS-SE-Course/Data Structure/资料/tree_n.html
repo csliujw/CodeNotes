@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 70%;
+      min-height: 200px;
+    }
+
+    input[type=text],
+    input[type=number] {
+      width: 100px;
+    }
+  </style>
+  <title>B-树(t=3)</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>要插入的数据&nbsp;</span><input type="text" id='data' class="saveable array" value="1,2,3,4,5,6,7">
+    <input style='font-size:12px;' type="button" value="put" onclick="doPut2()">
+    <span>n&nbsp;</span><input type="text" id='n' class="saveable" value="5">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>待插入 key</span><input type="text" id='inserted' class="saveable" value="11">
+    <input style='font-size:12px;' type="button" value="put" onclick="doPut()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>待删除 key</span><input type="text" id='deleted' class="saveable" value="4">
+    <input style='font-size:12px;' type="button" value="delete" onclick="doDelete()">
+    <input style='font-size:12px;' type="button" value="case1&2" onclick="c3()">
+    <input style='font-size:12px;' type="button" value="case3&4" onclick="c4()">
+    <input style='font-size:12px;' type="button" value="case5 1" onclick="c52()">
+    <input style='font-size:12px;' type="button" value="case5 2" onclick="c51()">
+    <input style='font-size:12px;' type="button" value="case5 3" onclick="c53()">
+    <input style='font-size:12px;' type="button" value="case5 4" onclick="c54()">
+    <input style='font-size:12px;' type="button" value="case6" onclick="c6()">
+    <input style='font-size:12px;' type="button" value="case 综合1(t=2)" onclick="c61()">
+    <input style='font-size:12px;' type="button" value="case 综合2(t=2)" onclick="c62()">
+    <input style='font-size:12px;' type="button" value="case 综合3(t=2)" onclick="c63()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>宽度</span><input type="number" step="1" value="75" id="WIDTH" class="saveable int" style="width: 40px;">
+    <span>高度</span><input type="number" step="1" value="25" id="HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('tree_n')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    function c63() {
+      WIDTH = 40
+      n = 7
+      aj1 = 47
+      aj2 = 180
+      tree.t = 2
+      tree.root = new Node()
+      all.pop()
+      all.push(tree.root)
+      const str = '1,2,3,4,5,6,7,8,9,10,11'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.insert(n)
+      }
+      d.add({ cloned: clone(all), keyframe: true }, frame)
+      tree.remove(4)
+      tree.remove(8)
+      tree.remove(5)
+      tree.remove(6)
+      tree.remove(7)
+      tree.remove(2)
+      tree.remove(3)
+      tree.remove(10)
+      tree.remove(9)
+      d.updateFrameButtons()
+    }
+    function c62() {
+      WIDTH = 40
+      n = 7
+      aj1 = 47
+      aj2 = 180
+      tree.t = 2
+      tree.root = new Node()
+      all.pop()
+      all.push(tree.root)
+      const str = '1,2,3,4,5,6,7,8,9,10,11'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.insert(n)
+      }
+      d.add({ cloned: clone(all), keyframe: true }, frame)
+      while (data.length > 0) {
+        const n = data.shift()
+        tree.remove(n)
+      }
+      d.updateFrameButtons()
+    }
+    function c61() {
+      WIDTH = 40
+      n = 7
+      aj1 = 47
+      aj2 = 180
+      tree.t = 2
+      tree.root = new Node()
+      all.pop()
+      all.push(tree.root)
+      const str = '1,2,3,4,5,6,7,8,9,10,11'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.insert(n)
+      }
+      d.add({ cloned: clone(all), keyframe: true }, frame)
+      while (data.length > 0) {
+        const n = data.pop()
+        tree.remove(n)
+      }
+      d.updateFrameButtons()
+    }
+    function c6() {
+      tree.root = new Node()
+      all.pop()
+      all.push(tree.root)
+      const str = '1,2,4,5,7'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.insert(n)
+      }
+      document.getElementById("deleted").value = '2'
+      d.updateFrameButtons()
+    }
+    function c54() {
+      tree.root = new Node()
+      all.pop()
+      all.push(tree.root)
+      const str = '1,2,4,5,7,8,9,10'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.insert(n)
+      }
+      document.getElementById("deleted").value = '2'
+      d.updateFrameButtons()
+    }
+    function c53() {
+      tree.root = new Node()
+      all.pop()
+      all.push(tree.root)
+      const str = '1,2,4,5,7,8,9,10'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.insert(n)
+      }
+      document.getElementById("deleted").value = '5'
+      d.updateFrameButtons()
+    }
+    function c52() {
+      tree.root = new Node()
+      all.pop()
+      all.push(tree.root)
+      const str = '1,2,4,5,7,8,9,10,6,11,12,13'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.insert(n)
+      }
+      document.getElementById("deleted").value = '9'
+      d.updateFrameButtons()
+    }
+    function c51() {
+      tree.root = new Node()
+      all.pop()
+      all.push(tree.root)
+      const str = '1,2,4,5,7,6,9,11,12,13,10,8'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.insert(n)
+      }
+      document.getElementById("deleted").value = '5'
+      d.updateFrameButtons()
+    }
+
+    function c3() {
+      tree.root = new Node()
+      all.pop()
+      all.push(tree.root)
+      const str = '1,2,3,5'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.insert(n)
+      }
+      document.getElementById("deleted").value = '3'
+      d.updateFrameButtons()
+    }
+
+    function c4() {
+      tree.root = new Node()
+      all.pop()
+      all.push(tree.root)
+      const str = '1,2,3,4,5,6'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.insert(n)
+      }
+      document.getElementById("deleted").value = '3'
+      d.updateFrameButtons()
+    }
+
+
+    const options = loadOptionsFromStorage('tree_n')
+    let data = options.data
+    let WIDTH = options.WIDTH
+    const HEIGHT = options.HEIGHT
+    let n = options.n
+    let aj1 = 150
+    let aj2 = 120
+    const d = new Draw(options.animate_speed)
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 12
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      for (let i = 0; i < 0; i++) {
+        tree.insert(i + 1)
+      }
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    function frame({ cloned }) {
+      const totalHeight = cloned[0].height
+      let y = WIDTH / 2 + 10
+      drawTree(cloned[0], width / 2 - 150, y, 0, 0, '', totalHeight)
+      if (cloned.length > 1) {
+        for (let i = 0; i < totalHeight - cloned[1].height; i++) {
+          y += Math.pow(2, totalHeight - cloned[1].height - 1 - i) * WIDTH
+          // console.log('start', y)
+        }
+        drawTree(cloned[1], width - 150, y, 0, 0, '', totalHeight)
+      }
+    }
+
+    const subs = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉']
+    function drawTree(node, x, y, px, py, index, totalHeight) {
+      // const hightIncreament = Math.pow(2, n - deep) * WIDTH / 2
+      const hightIncreament = Math.pow(2, totalHeight - node.height) * WIDTH
+      // console.log(node.keys, y)
+      if (node) {
+        // console.log(node)
+        if (px && py) {
+          stroke(0)
+          line(x, y, px, py)
+        }
+        const half = Math.floor(node.children.length / 2)
+        // const step = Math.pow(2, deep) * WIDTH / 8 - aj1
+        const step = Math.pow(2, node.height) * WIDTH - aj1
+        const nth = node.children.length
+        switch (nth) {
+          case 1:
+            drawTree(node.children[0], x, y + hightIncreament, x, y, 0, totalHeight)
+            break;
+          case 2:
+            drawTree(node.children[0], x - step, y + hightIncreament, x, y, 0, totalHeight)
+            drawTree(node.children[1], x + step, y + hightIncreament, x, y, 1, totalHeight)
+            break;
+          case 3:
+            drawTree(node.children[0], x - step, y + hightIncreament, x, y, 0, totalHeight)
+            drawTree(node.children[1], x, y + hightIncreament, x, y, 1, totalHeight)
+            drawTree(node.children[2], x + step, y + hightIncreament, x, y, 2, totalHeight)
+            break;
+          case 4:
+            drawTree(node.children[0], x - step, y + hightIncreament, x, y, 0)
+            drawTree(node.children[1], x - step / 2.5, y + hightIncreament, x, y, 1, totalHeight)
+            drawTree(node.children[2], x + step / 2.5, y + hightIncreament, x, y, 2, totalHeight)
+            drawTree(node.children[3], x + step, y + hightIncreament, x, y, 3, totalHeight)
+            break;
+          case 5:
+            drawTree(node.children[0], x - step, y + hightIncreament, x, y, 0, totalHeight)
+            drawTree(node.children[1], x - step / 2.5, y + hightIncreament, x, y, 1, totalHeight)
+            drawTree(node.children[2], x, y + hightIncreament, x, y, 2, totalHeight)
+            drawTree(node.children[3], x + step / 2.5, y + hightIncreament, x, y, 3, totalHeight)
+            drawTree(node.children[4], x + step, y + hightIncreament, x, y, 4, totalHeight)
+            break;
+          case 6:
+            drawTree(node.children[0], x - step, y + hightIncreament, x, y, 0, totalHeight)
+            drawTree(node.children[1], x - step / 1.5, y + hightIncreament, x, y, 1, totalHeight)
+            drawTree(node.children[2], x - step / 3.5, y + hightIncreament, x, y, 2, totalHeight)
+            drawTree(node.children[3], x + step / 3.5, y + hightIncreament, x, y, 3, totalHeight)
+            drawTree(node.children[4], x + step / 1.5, y + hightIncreament, x, y, 4, totalHeight)
+            drawTree(node.children[5], x + step, y + hightIncreament, x, y, 5, totalHeight)
+            break;
+          default:
+          // console.log('default')
+        }
+
+        stroke(0)
+        const keys = node.keys.map((e, i) => { return e + '' + subs[i] }).join(' ')
+        let color = "black"
+        fill(color)
+        rect(x - WIDTH / 2, y - HEIGHT / 2, WIDTH, HEIGHT)
+        fill('red')
+        rect(x - WIDTH / 2, y + HEIGHT / 2, WIDTH, HEIGHT / 2)
+        noStroke()
+        fill('white')
+        // text(keys + `(${node.height})`, x, y + 4)
+        text(keys, x, y + 4)
+        fill('white')
+        text(index, x, y + HEIGHT / 2 + 11)
+      }
+    }
+
+    function doPut() {
+      const key = Number(document.getElementById("inserted").value)
+      tree.insert(key)
+      d.updateFrameButtons()
+    }
+
+    function doPut2() {
+      document.getElementById('data').value.split(',').forEach(e => {
+        tree.insert(Number(e))
+      })
+      d.updateFrameButtons()
+    }
+
+    function doDelete() {
+      const key = Number(document.getElementById("deleted").value)
+      tree.remove(key)
+      d.updateFrameButtons()
+    }
+
+    function clearStatus(node) {
+      if (!node) {
+        return
+      }
+      node.status = 0
+      clearStatus(node.left)
+      clearStatus(node.right)
+    }
+
+    class Node {
+      constructor() {
+        this.keys = []
+        this.children = []
+        this.leaf = true
+        this.height = 1
+      }
+      get(key) {
+        let i = 0
+        while (i < this.keys.length && keys[i] < key) {
+          i++
+        }
+        if (i < this.this.keys.length && keys[i] === key) {
+          return this
+        }
+        if (this.leaf) {
+          return null
+        }
+        return this.children[i].get(key)
+      }
+      insertKey(key, index) {
+        this.keys.splice(index, 0, key)
+      }
+      insertChild(child, index) {
+        this.children.splice(index, 0, child)
+      }
+      removeKey(index) {
+        return this.keys.splice(index, 1).pop()
+      }
+      removeLeftmostKey() {
+        return this.keys.shift()
+      }
+      removeRightmostKey() {
+        return this.keys.pop()
+      }
+      removeChild(index) {
+        return this.children.splice(index, 1).pop()
+      }
+      removeLeftmostChild() {
+        return this.children.shift()
+      }
+      removeRightmostChild() {
+        return this.children.pop()
+      }
+      moveToLeft(left) {
+        const start = left.keys.length
+        if (!this.leaf) {
+          left.children.push(...this.children)
+        }
+        left.keys.push(...this.keys)
+      }
+      leftSibling(index) {
+        return index > 0 ? this.children[index - 1] : null
+      }
+      rightSibling(index) {
+        return index == this.keys.length ? null : this.children[index + 1]
+      }
+    }
+
+    function notFound(node, key, i) {
+      return i >= node.keys.length || (i < node.keys.length && node.keys[i] !== key)
+    }
+
+    class Tree {
+      constructor(t) {
+        this.root = new Node()
+        this.t = t ?? 2
+      }
+      remove(key) {
+        this.doRemove(null, this.root, 0, key)
+      }
+      doRemove(parent, node, index, key) {
+        let i = 0
+        while (i < node.keys.length) {
+          if (node.keys[i] >= key) {
+            break
+          }
+          i++
+        }
+        if (node.leaf) {
+          if (notFound(node, key, i)) {
+            return
+          }
+          node.removeKey(i)
+          d.add({ cloned: clone(all) }, frame)
+        } else {
+          if (notFound(node, key, i)) {
+            this.doRemove(node, node.children[i], i, key)
+          } else {
+            let s = node.children[i + 1]
+            while (!s.leaf) {
+              s = s.children[0]
+            }
+            const k = s.keys[0]
+            node.keys[i] = k
+            d.add({ cloned: clone(all) }, frame)
+            this.doRemove(node, node.children[i + 1], i + 1, k)
+          }
+        }
+        if (node.keys.length < this.t - 1) {
+          this.fix(parent, node, index)
+        }
+      }
+      fix(parent, node, index) {
+        if (!parent) {
+          if (node.keys.length == 0) {
+            if (node.children.length > 0) {
+              this.root = node.children[0]
+              all.pop()
+              all.push(this.root)
+              d.add({ cloned: clone(all) }, frame)
+            }
+          }
+          return
+        }
+        let left = parent.leftSibling(index)
+        let right = parent.rightSibling(index)
+        if (left && left.keys.length > this.t - 1) {
+          node.insertKey(parent.keys[index - 1], 0)
+          d.add({ cloned: clone(all) }, frame)
+          if (!left.leaf) {
+            node.insertChild(left.removeRightmostChild(), 0)
+            d.add({ cloned: clone(all) }, frame)
+          }
+          parent.keys[index - 1] = left.removeRightmostKey()
+          d.add({ cloned: clone(all) }, frame)
+          return
+        }
+        if (right && right.keys.length > this.t - 1) {
+          node.insertKey(parent.keys[index], node.keys.length)
+          d.add({ cloned: clone(all) }, frame)
+          if (!right.leaf) {
+            node.insertChild(right.removeLeftmostChild(), node.keys.length + 1)
+            d.add({ cloned: clone(all) }, frame)
+          }
+          parent.keys[index] = right.removeLeftmostKey()
+          d.add({ cloned: clone(all) }, frame)
+          return
+        }
+        if (left) {
+          right = parent.removeChild(index)
+          all.push(right)
+          d.add({ cloned: clone(all) }, frame)
+          left.insertKey(parent.removeKey(index - 1), left.keys.length)
+          d.add({ cloned: clone(all) }, frame)
+          right.moveToLeft(left)
+        } else {
+          right = parent.removeChild(index + 1)
+          all.push(right)
+          d.add({ cloned: clone(all) }, frame)
+          node.insertKey(parent.removeKey(index), node.keys.length)
+          d.add({ cloned: clone(all) }, frame)
+          right.moveToLeft(node)
+        }
+        all.pop()
+        d.add({ cloned: clone(all) }, frame)
+      }
+      insert(key) {
+        this.doInsert(null, this.root, key, 0)
+      }
+      doInsert(parent, node, key, index) {
+        let i = node.keys.length - 1
+        while (i >= 0 && key < node.keys[i]) {
+          i--
+        }
+        i++
+        if (node.keys[i] == key) {
+          return
+        }
+        if (node.leaf) {
+          node.insertKey(key, i)
+          d.add({ cloned: clone(all) }, frame)
+        } else {
+          this.doInsert(node, node.children[i], key, i)
+        }
+        if (node.keys.length == 2 * this.t - 1) {
+          this.split(parent, node, index)
+        }
+      }
+      split(parent, node, index) {
+        if (parent == null) {
+          const newRoot = new Node(this.t)
+          newRoot.leaf = false
+          newRoot.height = this.root.height + 1
+          newRoot.insertChild(this.root, 0)
+          this.root = newRoot
+          parent = newRoot
+          all.pop()
+          all.push(this.root)
+        }
+        const right = new Node(this.t)
+        right.leaf = node.leaf
+        right.height = node.height
+        all.push(right)
+        d.add({ cloned: clone(all) }, frame)
+        right.keys.push(...node.keys.splice(this.t))
+        d.add({ cloned: clone(all) }, frame)
+        if (!node.leaf) {
+          right.children.push(...node.children.splice(this.t))
+          d.add({ cloned: clone(all) }, frame)
+        }
+        const mid = node.keys.pop()
+        parent.insertKey(mid, index)
+        d.add({ cloned: clone(all) }, frame)
+        parent.insertChild(right, index + 1)
+        all.pop()
+        d.add({ cloned: clone(all) }, frame)
+      }
+    }
+    const tree = new Tree(3)
+    const all = []
+
+  </script>
+</body>
+
+</html>

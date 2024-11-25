@@ -1,0 +1,42 @@
+ <div class="-ht--content">
+      <div class="-ht--ll-size-container">
+        <label for="-ht--ll-size">Total size</label>
+        <input type="range" id="-ht--ll-size" name="ll-size" min="1" max="25" />
+        <span id="-ht--ll-size-value">1</span>
+      </div>
+      <div class="-ht--cycle-size-container">
+        <label for="-ht--cycle-size">Cycle size</label>
+        <input
+          type="range"
+          id="-ht--cycle-size"
+          name="cycle-size"
+          min="0"
+          max="10"
+        />
+        <span id="-ht--cycle-size-value">0</span>
+      </div>
+      <div class="-ht--canvas-container">
+        <canvas id="-ht--canvas"></canvas>
+        <div class="-ht--canvas-legend">
+          <h3>Legend</h3>
+          <ul>
+            <li>
+              <span style="background: red" class="-ht--box"></span>
+              Hare
+            </li>
+            <li>
+              <span style="background: green" class="-ht--box"></span>
+              Tortoise
+            </li>
+          </ul>
+        </div>
+      </div>
+      <button class="wp-block-button__link" id="-ht--next-button">Next</button>
+      <button class="wp-block-button__link" id="-ht--reset-button">
+        Reset
+      </button>
+      <div id="-ht--status">
+        <span class="-ht--status-title">Status:</span>
+        <span id="-ht--status-content"></span>
+      </div>
+    </div>

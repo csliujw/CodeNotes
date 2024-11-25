@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 355 - 多路归并</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:rgba(0,255,0,0.2); margin: 2px 2px 0 0; padding: 4px 6px;'>从堆删除</div>
+    <div style='background-color:rgba(255,0,0,0.2); margin: 2px 2px 0 0; padding: 4px 6px;'>在堆中</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_355')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    class MaxHeap {
+      constructor(comparator) {
+        this.array = []
+        this.comparator = comparator
+      }
+      offer(offered) {
+        let child = this.array.length
+        while (child > 0) {
+          let parent = (child - 1) >> 1
+          if (this.comparator(offered) > this.comparator(this.array[parent])) {
+            this.array[child] = this.array[parent]
+          } else {
+            break
+          }
+          child = parent
+        }
+        this.array[child] = offered
+      }
+      down(parent, size) {
+        const left = 2 * parent + 1
+        const right = left + 1
+        let max = parent
+        if (left < size && this.comparator(this.array[left]) > this.comparator(this.array[max])) {
+          max = left
+        }
+        if (right < size && this.comparator(this.array[right]) > this.comparator(this.array[max])) {
+          max = right
+        }
+        if (max != parent) {
+          swap(this.array, max, parent)
+          this.down(max, size)
+        }
+      }
+      poll() {
+        swap(this.array, 0, this.array.length - 1)
+        const polled = this.array.pop()
+        this.down(0, this.array.length)
+        return polled
+      }
+      isEmpty() {
+        return this.array.length == 0
+      }
+    }
+
+    function swap(a, i, j) {
+      let k = a[i]
+      a[i] = a[j]
+      a[j] = k
+    }
+
+    const options = loadOptionsFromStorage('leetcode_355')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const myList = [
+      { id: -1, time: -1, next: { id: 1, time: 10, next: { id: 2, time: 6, next: { id: 3, time: 5, next: { id: 4, time: 4, next: null } } } } },
+      { id: -1, time: -1, next: { id: 5, time: 9, next: { id: 6, time: 8, next: { id: 7, time: 7, next: null } } } },
+      { id: -1, time: -1, next: { id: 8, time: 3, next: { id: 9, time: 2, next: { id: 10, time: 1, next: null } } } }
+    ]
+    const heap = new MaxHeap((obj) => obj.time)
+    function mergeK() {
+      const result = []
+      for (let i = 0; i < myList.length; i++) {
+        heap.offer(myList[i].next)
+      }
+      d.add({ cloned: { top: heap.array.map(e => e.id), result: [] } }, frame)
+      while (!heap.isEmpty()) {
+        const max = heap.poll()
+        result.push(max)
+        d.add({ cloned: { top: heap.array.map(e => e.id), polled: max.id, result: [...result] } }, frame)
+        if (max.next) {
+          heap.offer(max.next)
+          d.add({ cloned: { top: heap.array.map(e => e.id), result: [...result] } }, frame)
+        }
+      }
+      d.add({ cloned: { top: heap.array.map(e => e.id), result: [...result] } }, frame)
+      return result
+    }
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 16
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      // console.log(heap)
+      const result = mergeK()
+      // console.log(result)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'), () => false)
+    }
+    function frame({ cloned: { top, polled, result } }) {
+      if (top) {
+        const startX = width / 2 - myList.length / 2 * RECT_WIDTH
+        const startY = height / 2
+        let x = startX
+        let y = startY
+        for (let i = 0; i < myList.length; i++) {
+          let head = myList[i]
+          while (head) {
+            stroke('black')
+            strokeWeight(1)
+            if (top.includes(head.id)) {
+              fill('rgba(255,0,0,0.2)')
+            } else if (polled == head.id) {
+              fill('rgba(0,255,0,0.2)')
+            } else {
+              fill('white')
+            }
+            rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+            noStroke()
+            fill("black")
+            text(`${head.time}`, x + RECT_WIDTH / 2, y + RECT_HEIGHT / 2 + 5)
+            head = head.next
+            y += RECT_HEIGHT
+          }
+          x += RECT_WIDTH + 10
+          y = startY
+        }
+
+        x = startX
+        y = startY - 40
+        for (let i = 0; i < result.length; i++) {
+          stroke('black')
+          fill('white')
+          rect(x, y, RECT_WIDTH, RECT_HEIGHT)
+          noStroke()
+          fill("black")
+          text(`${result[i].time}`, x + RECT_WIDTH / 2, y + RECT_HEIGHT / 2 + 5)
+          x += RECT_WIDTH
+        }
+      }
+    }
+
+  </script>
+</body>
+
+</html>

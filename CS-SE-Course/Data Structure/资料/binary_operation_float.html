@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>二进制运算</title>
+  <style>
+    .result {
+      display: inline-block;
+      margin-left: 10px;
+      /* font-weight: bold;       */
+      width: 450px;
+    }
+
+    div {
+      margin-bottom: 5px;
+    }
+
+    html,
+    body {
+      /* background-color: #2d2d2d; */
+      background-color: #eee;
+      color: black;
+      font-size: 16px;
+    }
+
+    .sign {
+      color: aqua;
+    }
+
+    .mantissa {
+      color: azure;
+    }
+
+    .exponent {
+      color: fuchsia;
+    }
+  </style>
+</head>
+
+<body>
+  小数点后保留位数
+  <input type="radio" name="bits" value="24"> 24 bits
+  <input type="radio" name="bits" value="32" checked> 32 bits
+  <input type="radio" name="bits" value="64"> 64 bits
+  <hr>
+  <div>
+    <span class="result"></span><input type="text" id="a"></span>
+  </div>
+  <div>
+    <span class="result"></span><input type="button" value="分离" id="s1"></span>
+    <span class="exponent" id="e"></span>
+  </div>
+  <div>
+    <span class="result"></span><input type="button" value="存储" id="s2"></span>
+  </div>
+
+  <script>
+    const aElement = document.querySelector('#a')
+
+    function decimalToBinary(num) {
+      var integer = Math.abs(Math.floor(num)); // 取整数部分
+      var decimal = num - integer; // 取小数部分
+      var binary = ''; // 存储二进制形式的字符串
+
+      // 转换整数部分为二进制形式
+      while (integer > 0) {
+        binary = (integer % 2) + binary;
+        integer = Math.floor(integer / 2);
+      }
+
+      // 如果有小数部分，则转换小数部分为二进制形式
+      if (decimal > 0) {
+        binary += '.'; // 小数部分前加上小数点
+        var maxIterations = maxIter();
+        while (decimal > 0 && maxIterations > 0) {
+          decimal *= 2;
+          binary += Math.floor(decimal);
+          decimal -= Math.floor(decimal);
+          maxIterations--;
+        }
+      }
+
+      return binary;
+    }
+
+    function maxIter() {
+      return Number(document.querySelector('input[name=bits]:checked').value)
+    }
+
+    function decimalToScientific(num) {
+      var integer = Math.abs(Math.floor(num)); // 取整数部分
+      var decimal = num - integer; // 取小数部分
+      var binary = ''; // 存储二进制形式的字符串
+
+      // 转换整数部分为二进制形式
+      while (integer > 0) {
+        binary = (integer % 2) + binary;
+        integer = Math.floor(integer / 2);
+      }
+
+      // 如果有小数部分，则转换小数部分为二进制形式
+      if (decimal > 0) {
+        binary += '.'; // 小数部分前加上小数点
+        var maxIterations = maxIter();
+        while (decimal > 0 && maxIterations > 0) {
+          decimal *= 2;
+          binary += Math.floor(decimal);
+          decimal -= Math.floor(decimal);
+          maxIterations--;
+        }
+      }
+
+      // 将二进制形式的字符串转换为科学计数法形式
+      const pointIndex = binary.indexOf('.')
+      var exponent = pointIndex >= 0 ? pointIndex - 1 : binary.length - 1; // 计算指数部分
+      var mantissa = binary.replace('.', '').padEnd(33, '0'); // 去掉小数点
+      let leadZero = true
+      let result = ''
+      console.log(mantissa)
+      for (let i = 0; i < mantissa.length; i++) {
+        const c = mantissa.charAt(i)
+        if (c === '1') {
+          leadZero = false
+        }
+        if (leadZero) {
+          exponent -= 1
+        } else {
+          result += c
+        }
+      }
+      result = result.charAt(0) + '.' + result.substring(1)
+      var sign = num < 0 ? '-' : '+'; // 符号位
+
+      return [sign, result, exponent]
+    }
+
+    function intToBinary(str) {
+      var bits = 8; // Maximum number of bits to represent the number
+      let num = BigInt(str)
+      const result = []
+      if (num < 0n) {
+        num = 2n ** BigInt(bits) + num
+      }
+
+      for (let i = 0; i < Number(bits); i++) {
+        result[i] = num % 2n
+        num /= 2n
+      }
+      return result.reverse().join('')
+    }
+
+    // 示例：
+    // console.log(decimalToBinary(10)); // 输出："1010"
+    // console.log(decimalToBinary(10.5)); // 输出："1010.1"
+    // console.log(decimalToBinary(0.1)); // 输出："0.000110011001100110011"
+
+    // console.log(decimalToScientific(10)); 
+    // console.log(decimalToScientific(10.5)); 
+    // console.log(decimalToScientific(0.1));
+    // console.log(intToBinary(-1))
+    // console.log(intToBinary(-4))
+    // console.log(intToBinary(4))
+
+
+    document.querySelectorAll('input[name=bits]').forEach(e => {
+      e.onclick = function () {
+        aElement.onkeyup()
+      }
+    })
+
+    aElement.onkeyup = function () {
+      const str = this.value
+      if (str === '' || isNaN(Number(str))) {
+        return
+      }
+      const result = decimalToBinary(Number(str))
+      showAt(result, this.previousElementSibling)
+    }
+
+    function clearResult(elements) {
+      if (elements) {
+        for (const e of elements) {
+          e.innerHTML = ''
+        }
+      }
+    }
+
+    function showAt(str, element) {
+      element.innerHTML = `<span class='mantissa'>${str}</span>`
+    }
+
+    document.querySelector('#s1').onclick = function () {
+      const result = decimalToScientific(aElement.value)
+      const r = `<span class='sign'>${result[0]}</span><span class='mantissa'>${result[1]}</span> * <span class='mantissa'>2<sup class='exponent'>${result[2]}</sup></span>`
+      const x = result[2] + 127
+      document.getElementById("e").innerHTML = `${result[2]} + 127 = ${x} => ${x.toString(2).padStart(8, '0')}`
+      showAt(r, this.previousElementSibling)
+    }
+    document.querySelector('#s2').onclick = function () {
+      const buffer = new ArrayBuffer(4)
+      const view = new DataView(buffer)
+      view.setFloat32(0, Number(aElement.value))
+      const bits = view.getUint32(0).toString(2).padStart(32, '0')
+      const a = bits[0]
+      const b = bits.substring(1, 9)
+      const c = bits.substring(9)
+      const r = `<span class='sign'>${a}</span><span class='exponent'>${b}</span><span class='mantissa'>${c}</span>`
+      showAt(r, this.previousElementSibling)
+    }
+
+  </script>
+</body>
+
+</html>

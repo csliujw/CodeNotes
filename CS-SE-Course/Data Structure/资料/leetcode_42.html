@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 42 - 接雨水</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#888; margin: 2px 2px 0 0; padding: 4px 6px; color: white;'>柱子</div>
+    <div style='background-color:rgb(88,195,224); margin: 2px 2px 0 0; padding: 4px 6px; color: white;'>水</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    原始数组 <input type="text" id="myArray" value="0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1" class="saveable array" />
+    <input type="button" value="pop" onclick="onPop()">
+    <input type="number" id="pushed" value="6">
+    <input type="button" value="push" onclick="onPush()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_42')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    function onPop() {
+      monoStack.pop()
+    }
+    function onPush() {
+      const v = document.getElementById("pushed").value - 0
+      monoStack.push({ v, i: 0 })
+    }
+    class MonoStack {
+      constructor() {
+        this.stack = []
+      }
+      push({ v, i }) {
+        while (this.stack.length > 0 && this.stack[this.stack.length - 1].v < v) {
+          this.stack.pop()
+        }
+        this.stack.push({ v, i })
+      }
+      pop() {
+        this.stack.pop()
+      }
+    }
+    const monoStack = new MonoStack()
+    const options = loadOptionsFromStorage('leetcode_42')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const myArray = options.myArray
+    // const myArray = [4, 2, 0, 3, 2, 5]
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 16
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      d.add({ cloned: { stack: monoStack.stack, water: [] } }, frame)
+      trap()
+      d.updateFrameButtons()
+      noStroke()
+    }
+    function draw() {
+      d.draw(() => background('#eee'), () => true)
+    }
+    function frame({ cloned: { stack, water } }) {
+      const startX = width / 2 - myArray.length / 2 * RECT_WIDTH
+      const startY = height - 100
+      stroke('black')
+      fill('#888')
+      let x = startX
+      let y = startY
+      for (let i = 0; i < myArray.length; i++) {
+        rect(x, y - myArray[i] * RECT_HEIGHT, RECT_WIDTH, myArray[i] * RECT_HEIGHT)
+        x += RECT_WIDTH
+      }
+
+      noStroke()
+      fill('rgb(88,195,224)')
+      x = startX
+      y = startY
+      for (let i = 0; i < water.length; i++) {
+        rect(
+          x + water[i].left * RECT_WIDTH,
+          y - (water[i].bottom) * RECT_HEIGHT,
+          water[i].width * RECT_WIDTH,
+          water[i].height * RECT_HEIGHT
+        )
+      }
+
+      stroke('black')
+      fill('#888')
+      x = startX
+      y = 150
+      for (let i = 0; i < stack.length; i++) {
+        rect(x, y - stack[i].v * RECT_HEIGHT, RECT_WIDTH, stack[i].v * RECT_HEIGHT)
+        x += RECT_WIDTH
+      }
+    }
+
+    function trap() {
+      let stack = []
+      let water = []
+      for (let i = 0; i < myArray.length; i++) {
+        const right = { v: myArray[i], i }
+        while (stack.length > 0 && stack[stack.length - 1].v < right.v) {
+          const pop = stack.pop()
+          if (stack.length > 0) {
+            const left = stack[stack.length - 1]
+            water.push({ left: left.i + 1, bottom: Math.min(right.v, left.v), width: (i - left.i - 1), height: Math.min(right.v, left.v) - pop.v })
+            const node = { stack, water }
+            d.add({ cloned: clone(node) }, frame)
+          }
+        }
+        stack.push(right)
+        const node = { stack, water }
+        d.add({ cloned: clone(node) }, frame)
+      }
+    }
+
+  </script>
+</body>
+
+</html>

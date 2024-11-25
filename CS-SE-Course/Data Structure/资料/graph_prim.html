@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prim</title>
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    #cy {
+      width: 100%;
+      height: 60%;
+      display: block;
+      background-color: #eee;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="cy"></div>
+  <script src="js/cytoscape.min.js"></script>
+  <script>
+    var cy = cytoscape({
+      container: document.getElementById('cy'), // container to render in
+      elements: [ // list of graph elements to start with
+        {
+          data: { id: 'v1', name:"0"}
+        },
+        {
+          data: { id: 'v2', name:"1" }
+        },
+        {
+          data: { id: 'v3', name:"2" }
+        },
+        {
+          data: { id: 'v4', name:"3" }
+        },
+        {
+          data: { id: 'v5', name:"4" }
+        },
+        {
+          data: { id: 'v6', name:"5" }
+        },
+        {
+          data: { id: 'v7', name:"6" }
+        },
+        /* {
+          data: { id: 'e1', source: 'v1', target: 'v2', weight: "2" }
+        },
+        {
+          data: { id: 'e2', source: 'v1', target: 'v3', weight: "4" }
+        },
+        {
+          data: { id: 'e3', source: 'v1', target: 'v4', weight: "1" }
+        },
+        {
+          data: { id: 'e5', source: 'v2', target: 'v4', weight: "3" }
+        },
+        {
+          data: { id: 'e6', source: 'v2', target: 'v5', weight: "10" }
+        },
+        {
+          data: { id: 'e8', source: 'v3', target: 'v4', weight: "2" }
+        },
+        {
+          data: { id: 'e9', source: 'v3', target: 'v6', weight: "5" }
+        },
+        {
+          data: { id: 'e13', source: 'v4', target: 'v5', weight: "7" }
+        },
+        {
+          data: { id: 'e14', source: 'v4', target: 'v6', weight: "8" }
+        },
+        {
+          data: { id: 'e15', source: 'v4', target: 'v7', weight: "4" }
+        },
+        {
+          data: { id: 'e18', source: 'v5', target: 'v7', weight: "6" }
+        },
+        {
+          data: { id: 'e21', source: 'v6', target: 'v7', weight: "1" }
+        } */
+      ],
+
+      style: [ // the stylesheet for the graph
+        {
+          selector: 'node',
+          style: {
+            'background-color': '#666',
+            'label': 'data(name)'
+          }
+        },
+
+        /* {
+          selector: 'edge',
+          style: {
+            'content': 'data(weight)',
+            'width': 3
+          }
+        }, */
+
+        {
+          selector: ':selected',
+          style: {
+            'background-color': 'red',
+            'line-color': 'red',
+          }
+        }
+      ],
+
+      layout: {
+        name: 'grid'
+      }
+    });
+
+  </script>
+</body>
+
+</html>

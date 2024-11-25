@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 70%;
+      min-height: 150px;
+    }
+
+    input[type=text],
+    input[type=number] {
+      width: 100px;
+    }
+  </style>
+  <title>hashtable</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>要插入的数据&nbsp;</span><input type="text" id='data' class="saveable" value="2,3,4,5">
+    <input style='font-size:12px;' type="button" value="put" onclick="doPut2()">
+    <input type="text" id='begin' class="saveable" value="1">
+    <input type="button" class="saveable" value="conflict key" onclick="doConflict()">
+    resize <input type="checkbox" id="rehash" class="saveable bool" checked />
+    update <input type="checkbox" id="updated" class="saveable bool" checked />
+    load factor<input type="number" id='lf' class="saveable" value="0.25" step="0.25">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>待插入 key</span><input type="text" id='inserted' class="saveable" value="1">
+    <input style='font-size:12px;' type="button" value="put" onclick="doPut()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>待删除 key</span><input type="text" id='deleted' class="saveable" value="1">
+    <input style='font-size:12px;' type="button" value="delete" onclick="doDelete()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('hashtable')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    function doConflict() {
+      let begin = Number(document.getElementById('begin').value)
+      const result = []
+      for (let i = 0; i < 7; i++) {
+        result.push(begin)
+        begin += table.table.length
+      }
+      document.getElementById('data').value = result.join(',')
+    }
+    const options = loadOptionsFromStorage('hashtable')
+    let data = options.data.split(',').map(e => Number(e))
+    const WIDTH = 60
+    const HEIGHT = 25
+    const n = options.n
+    const d = new Draw(options.animate_speed)
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 12
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      // noStroke()
+      stroke('white')
+      all.push(table.table)
+      d.add({ cloned: clone(all) }, frame)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    function frame({ cloned }) {
+      for (let i = 0; i < cloned.length; i++) {
+        const table = cloned[i]
+        drawTree(table, 40, 30 + i * 200)
+      }
+    }
+
+    const subs = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉']
+    function drawTree(table, x, y) {
+      if (table) {
+        for (let i = 0; i < table.length; i++) {
+          let cx = x + i * WIDTH
+          let cy = y
+          fill('#aaa')
+          stroke('white')
+          rect(cx, cy - HEIGHT, WIDTH, HEIGHT)
+          fill('white')
+          noStroke()
+          text(`${i}`, cx + WIDTH / 2, cy - HEIGHT / 2 + 4)
+          let p = table[i]
+          while (p) {
+            if (p) {
+              fill('black')
+              stroke('white')
+              rect(cx, cy, WIDTH, HEIGHT)
+              fill('white')
+              noStroke()
+              text(`${p.key} ${p.value}`, cx + WIDTH / 2, cy + HEIGHT / 2 + 4)
+            }
+            p = p.next
+            cy += HEIGHT
+          }
+        }
+      }
+    }
+
+    function doPut() {
+      const key = Number(document.getElementById("inserted").value)
+      table.put(Number(key), getRandomElement(surnames))
+      d.updateFrameButtons()
+    }
+    const surnames = ["张", "王", "李", "赵", "陈", "刘", "周", "吴", "孙", "朱", "何", "罗", "高", "林", "郑", "谢", "郭", "梁", "宋", "唐", "许", "韩", "冯", "邓", "曹", "彭", "曾", "萧", "田", "董", "潘", "袁", "于", "余", "叶", "蒋", "杜", "苏", "魏", "程", "吕", "丁", "沈", "任", "姚", "卢", "傅", "钟", "姜", "崔", "谭", "廖", "范", "汪", "陆", "金", "石", "戴", "贾", "韦", "夏", "邱", "方", "侯", "邹", "熊", "孟", "秦", "白", "江", "阎", "薛", "尹", "段", "雷", "黎", "史", "龙", "陶", "贺", "顾", "毛", "郝", "龚", "邵", "万", "钱", "严", "赖", "覃", "洪", "武", "莫", "孔", "汤", "向", "常", "温", "康", "施", "文", "牛", "樊", "葛", "邢", "安", "齐", "易", "乔", "伍", "庞", "颜", "倪", "庄", "聂", "章", "鲁", "岳", "翟", "殷", "詹", "申", "欧阳", "耿", "关", "兰", "焦", "俞", "左", "柳", "甘", "祝", "包", "宁", "尚", "符", "舒", "阮", "柯", "纪", "梅", "童", "凌", "毕", "单", "季", "裴", "霍", "涂", "成", "苗", "谷", "盛", "曲", "翁", "冉", "骆", "蓝", "路", "游", "辛", "靳", "欧", "阳", "管", "柴", "蒙", "鲍", "华", "喻", "祁", "蒲", "房", "滕", "屈", "饶", "解", "牟", "艾", "尤", "阳", "时", "穆", "农", "司", "马", "卫", "侯", "仇", "桂", "全", "宫", "祖", "武", "符", "刁", "阎", "慕", "连", "茅", "习", "宣", "郁", "胡", "南", "班", "储", "荣", "荀", "羊", "於", "惠", "甄", "麻", "封", "花", "仲", "柳", "唐", "叶", "容", "慎", "戈", "廉", "岑", "薄", "卜", "屠", "甘", "景", "詹", "束", "龙", "蔡", "蒯", "相", "蓝", "溥", "井", "位", "邬", "安", "柏", "窦", "戚", "莱", "卓", "蔺", "居", "衡", "步", "都", "耿", "满", "弘", "匡", "文", "国", "寇", "广", "禄", "阙", "东", "欧", "殳", "沃", "利", "蔚", "越", "夔", "隆", "师", "巩", "厍", "聂", "晁", "勾", "敖", "融", "冷", "訾", "辛", "阚", "那", "简", "饶", "空", "曾", "毋", "沙", "乜", "养", "鞠", "须", "丰", "巢", "关", "蒯", "相", "查", "後", "荆", "红", "游", "竺", "权", "逯", "盖", "益", "桓", "公", "万", "俟", "司", "马", "上", "官", "欧", "阳", "夏", "侯", "诸", "葛", "闻", "人", "东", "方", "赫", "连", "皇", "甫", "尉", "迟", "公", "羊", "澹", "台", "公", "治", "宗", "政", "濮", "阳", "淳", "于", "单", "于", "太", "叔", "申", "屠", "公", "孙", "仲", "孙", "轩", "辕", "令", "狐", "钟", "离", "宇", "文", "长", "孙", "慕", "容", "鲜", "于", "闾", "丘", "司", "徒", "司", "空"]
+    function getRandomElement(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+    function doPut2() {
+      document.getElementById('data').value.split(',').forEach(e => {
+        table.put(Number(e), getRandomElement(surnames))
+      })
+      d.updateFrameButtons()
+    }
+
+    function doDelete() {
+      const key = Number(document.getElementById("deleted").value)
+      table.remove(key)
+      d.updateFrameButtons()
+    }
+
+    class Entry {
+      constructor(key, value) {
+        this.key = key
+        this.value = value
+        this.next = null
+      }
+    }
+
+    class Table {
+      constructor() {
+        this.size = 0
+        this.table = new Array(8)
+        this.table.fill(null)
+      }
+      threshold() {
+        const lf = Number(document.getElementById("lf").value)
+        return Number(lf * this.table.length).toFixed()
+      }
+      put(key, value) {
+        const i = key & (this.table.length - 1)
+        if (!this.table[i]) {
+          this.table[i] = new Entry(key, value)
+        } else {
+          let p = this.table[i]
+          while (true) {
+            if (p.key === key && document.getElementById('updated').checked) {
+              p.value = value
+              d.add({ cloned: clone(all) }, frame)
+              return
+            }
+            if (p.next == null) {
+              break
+            }
+            p = p.next
+          }
+          p.next = new Entry(key, value)
+        }
+        this.size++
+        d.add({ cloned: clone(all) }, frame)
+        console.log(this.threshold())
+        if (this.size > this.threshold() && document.getElementById('rehash').checked) {
+          this.resize()
+        }
+      }
+      resize() {
+        const newTable = new Array(this.table.length * 2)
+        all.push(newTable)
+        d.add({ cloned: clone(all) }, frame)
+        for (let i = 0; i < this.table.length; i++) {
+          const entry = this.table[i]
+          if (entry) {
+            let p = entry
+            let ha, ta, hb, tb
+            while (p) {
+              if ((p.key & this.table.length) == 0) {
+                if (ta) {
+                  ta.next = p
+                } else {
+                  ha = p
+                }
+                ta = p
+              } else {
+                if (tb) {
+                  tb.next = p
+                } else {
+                  hb = p
+                }
+                tb = p
+              }
+              p = p.next
+            }
+            if (ta) {
+              ta.next = null
+              newTable[i] = ha
+              d.add({ cloned: clone(all) }, frame)
+            }
+            if (tb) {
+              tb.next = null
+              newTable[i + this.table.length] = hb
+              d.add({ cloned: clone(all) }, frame)
+            }
+          }
+        }
+        this.table = newTable
+        all.shift()
+        d.add({ cloned: clone(all) }, frame)
+      }
+      remove(key) {
+        const i = key & (this.table.length - 1)
+        if (!this.table[i]) {
+          return null
+        }
+        let p = this.table[i]
+        let prev = null
+        while (p) {
+          if (p.key === key) {
+            if (prev) {
+              prev.next = p.next
+            } else {
+              this.table[i] = p.next
+            }
+            this.size--
+            d.add({ cloned: clone(all) }, frame)
+            return p.value
+          }
+          prev = p
+          p = p.next
+        }
+        return null
+      }
+    }
+    const table = new Table()
+    const all = []
+
+    function clone(tree) {
+      return JSON.parse(JSON.stringify(tree))
+    }
+
+    function decimalToBinary(num) {
+      var integer = Math.abs(Math.floor(num)); // 取整数部分
+      var decimal = num - integer; // 取小数部分
+      var binary = ''; // 存储二进制形式的字符串
+
+      // 转换整数部分为二进制形式
+      while (integer > 0) {
+        binary = (integer % 2) + binary;
+        integer = Math.floor(integer / 2);
+      }
+
+      // 如果有小数部分，则转换小数部分为二进制形式
+      if (decimal > 0) {
+        binary += '.'; // 小数部分前加上小数点
+        var maxIterations = maxIter();
+        while (decimal > 0 && maxIterations > 0) {
+          decimal *= 2;
+          binary += Math.floor(decimal);
+          decimal -= Math.floor(decimal);
+          maxIterations--;
+        }
+      }
+
+      return binary;
+    }
+
+    /* for (let i = 0; i <= 48; i += 8) {
+      const b = decimalToBinary(i).padStart(8, '0')
+      const r = i & 8
+      const n = String(i).padStart(2, ' ')
+      console.log(`%c${n} & 8 = %c${r} %c${b}`, 'color:black', 'color:red', 'color:white;background-color:black')
+    }
+    console.log('---------------------------')
+    for (let i = 1; i <= 49; i += 8) {
+      const b = decimalToBinary(i).padStart(8, '0')
+      const r = i & 8
+      const n = String(i).padStart(2, ' ')
+      console.log(`%c${n} & 8 = %c${r} %c${b}`, 'color:black', 'color:red', 'color:white;background-color:black')
+    } */
+
+    function printB(i, padding, last) {
+      const b = decimalToBinary(i).padStart(padding ?? 8, '0')
+      const n = String(i).padStart(2, ' ')
+      if (last) {
+        const x = b.substring(0, b.length - last)
+        const y = b.substring(b.length - last)
+        console.log(`%c${n} %c${x}%c${y}`, 'color:black', 'color:white;background-color:black', 'color:yellow;background-color:black')
+      } else {
+        console.log(`%c${n} %c${b}`, 'color:black', 'color:white;background-color:black')
+      }
+
+    }
+
+    function printMod(a, padding, start, end) {
+      for (let i = 2 ** (start ?? 1); i <= 2 ** (end ?? start ?? 1); i *= 2) {
+        const m = String(a % i).padStart(2, ' ')
+        const mod = decimalToBinary(m).padStart(padding ?? 8, '0')
+        const ao = String(a).padStart(2, ' ')
+        const ab = decimalToBinary(a).padStart(padding ?? 8, '0')
+        const io = String(i).padStart(2, ' ')
+        const ib = decimalToBinary(i).padStart(padding ?? 5, '0')
+        console.log(`${ao} % ${io} = ${m}, %c${ab}%c % %c${ib}%c = %c${mod}`,
+          'color:white;background-color:black', 'color:black', 'color:white;background-color:black', 'color:black', 'color:white;background-color:black')
+      }
+    }
+
+  </script>
+</body>
+
+</html>

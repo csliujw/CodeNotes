@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>解数独</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:rgb(243, 251, 195); margin: 2px 2px 0 0; padding: 4px 6px; border: 1px solid black;'>原始
+    </div>
+    <div style='background-color:#ffffff; margin: 2px 2px 0 0; padding: 4px 6px; border: 1px solid black;'>待解</div>
+    <div style='background-color:rgba(255,0,0,.2); margin: 2px 2px 0 0; padding: 4px 6px; border: 1px solid black;'>冲突</div>
+    <div style='background-color:rgba(0,255,0,.5); margin: 2px 2px 0 0; padding: 4px 6px; border: 1px solid black;'>当前</div>
+    <!-- <div style='background-color:#7df4f2; margin: 2px 2px 0 0; padding: 4px 6px;'>已结束</div> -->
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="40" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_37')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const table = Array.from({ length: 9 }, () => [])
+    const va = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => false))
+    const vb = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => false))
+    const vc = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => Array.from({ length: 9 }, () => false)))
+    function putQueen() {
+      let i = document.getElementById("i").value - 0
+      let j = document.getElementById("j").value - 0
+      va[j] = true
+      vb[i + j] = true
+      vc[table.length - 1 - (i - j)] = true
+      table[i][j] = 'Q'
+    }
+    function clearQueen() {
+      clearTable()
+    }
+    const options = loadOptionsFromStorage('leetcode_37')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 18
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      clearTable()
+      let aliveNode = { i: -1, j: -1, table, va, vb, vc, x: -1 }
+      d.add({ cloned: aliveNode }, frame)
+      clearTable()
+      sudoku(table, va, vb, vc, 0, 0)
+      d.updateFrameButtons()
+      stroke('black')
+    }
+    let tablecopy = []
+    function draw() {
+      d.draw(() => background('#ccc'), () => true)
+    }
+    function frame({ cloned }) {
+      drawTree(cloned)
+    }
+    function clearTable() {
+      for (let i = 0; i < 9; i++) {
+        va[i] = Array.from({ length: 9 }, () => false);
+      }
+      for (let i = 0; i < 9; i++) {
+        vb[i] = Array.from({ length: 9 }, () => false);
+      }
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          vc[i][j] = Array.from({ length: 9 }, () => false)
+        }
+      }
+      table.splice(0)
+      // table[0] = ['5', '3', '.', '.', '7', '.', '.', '.', '.']
+      // table[1] = ['6', '.', '.', '1', '9', '5', '.', '.', '.']
+      // table[2] = ['.', '9', '8', '.', '.', '.', '.', '6', '.']
+      // table[3] = ['8', '.', '.', '.', '6', '.', '.', '.', '3']
+      // table[4] = ['4', '.', '.', '8', '.', '3', '.', '.', '1']
+      // table[5] = ['7', '.', '.', '.', '2', '.', '.', '.', '6']
+      // table[6] = ['.', '6', '.', '.', '.', '.', '2', '8', '.']
+      // table[7] = ['.', '.', '.', '4', '1', '9', '.', '.', '5']
+      // table[8] = ['.', '.', '.', '.', '8', '.', '.', '7', '9']
+      table[0] = ['5', '3', '4', '6', '7', '8', '9', '.', '.']
+      table[1] = ['6', '7', '.', '1', '9', '5', '.', '.', '8']
+      table[2] = ['.', '9', '8', '.', '4', '.', '5', '6', '7']
+      table[3] = ['8', '5', '9', '7', '6', '1', '4', '2', '3']
+      table[4] = ['.', '2', '6', '8', '5', '3', '7', '.', '1']
+      table[5] = ['7', '.', '.', '9', '2', '4', '8', '5', '6']
+      table[6] = ['.', '6', '1', '5', '3', '.', '2', '8', '.']
+      table[7] = ['2', '8', '7', '4', '1', '9', '6', '3', '5']
+      table[8] = ['3', '4', '5', '.', '8', '6', '.', '7', '9']
+      tablecopy = clone(table)
+      for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+          let x = table[i][j] - 1
+          va[i][x] = true
+          vb[j][x] = true
+          vc[Math.floor(i / 3)][Math.floor(j / 3)][x] = true
+        }
+      }
+    }
+
+    function drawTree(node) {
+      if (node) {
+        const startX = width / 2 - 9 / 2 * RECT_WIDTH
+        const startY = height / 2 - 9 / 2 * RECT_WIDTH
+        let x = startX + RECT_WIDTH
+        let y = startY - RECT_WIDTH
+        x = startX
+        y = startY
+        for (let i = 0; i < 9; i++) {
+          for (let j = 0; j < 9; j++) {
+            const cond3 = Math.floor(i / 3) == Math.floor(node.i / 3) && Math.floor(j / 3) == Math.floor(node.j / 3)
+            if (tablecopy[i][j] != '.') {
+              fill('rgba(243,251,195,.5)')
+            } else {
+              fill('white')
+            }
+            if (i == node.i && j == node.j) {
+              fill('rgba(0,255,0,.5)')
+            }
+            rect(x, y, RECT_WIDTH, RECT_WIDTH)
+            if (cond3) {
+              noFill()
+              strokeWeight(4)
+              rect(startX + Math.floor(j / 3) * RECT_WIDTH * 3, startY + Math.floor(i / 3) * RECT_WIDTH * 3, RECT_WIDTH * 3, RECT_WIDTH * 3)
+              strokeWeight(1)
+            }
+            if (node.table[i][j] != '.') {
+              fill('black')
+              text(node.table[i][j], x + RECT_WIDTH / 2, y + RECT_WIDTH / 2 + 4)
+            }
+            x += RECT_WIDTH
+          }
+          y += RECT_WIDTH
+          x = startX
+        }
+        x = startX
+        y = startY
+        for (let i = 0; i < 9; i++) {
+          for (let j = 0; j < 9; j++) {
+            const cond1 = i == node.i
+            const cond2 = j == node.j
+            const cond3 = Math.floor(i / 3) == Math.floor(node.i / 3) && Math.floor(j / 3) == Math.floor(node.j / 3)
+            if (node.table[i][j] == node.x && (i != node.i || j != node.j)) {
+              if (cond1 || cond2 || cond3) {
+                fill('rgba(255,0,0,.2)')
+                rect(x, y, RECT_WIDTH, RECT_WIDTH)
+              }
+            }
+            x += RECT_WIDTH
+          }
+          y += RECT_WIDTH
+          x = startX
+        }
+      }
+    }
+
+    function sudoku(table, va, vb, vc, i, j) {
+      while (table[i][j] != '.') {
+        if (++j >= 9) {
+          j = 0
+          i++
+        }
+        if (i >= 9) {
+          clearTable()
+          return true
+        }
+      }
+      for (let x = 0; x < 9; x++) {
+        let node = { table, va, vb, vc, i, j, x: x + 1 }
+        table[i][j] = `${x + 1}`
+        d.add({ cloned: clone(node) }, frame)
+        if (va[i][x] || vb[j][x] || vc[Math.floor(i / 3)][Math.floor(j / 3)][x]) {
+          table[i][j] = '.'
+          continue
+        }
+        table[i][j] = `${x + 1}`
+        va[i][x] = vb[j][x] = vc[Math.floor(i / 3)][Math.floor(j / 3)][x] = true
+        if (sudoku(table, va, vb, vc, i, j)) {
+          return true
+        }
+        table[i][j] = '.'
+        va[i][x] = vb[j][x] = vc[Math.floor(i / 3)][Math.floor(j / 3)][x] = false
+      }
+      return false
+    }
+
+  </script>
+</body>
+
+</html>

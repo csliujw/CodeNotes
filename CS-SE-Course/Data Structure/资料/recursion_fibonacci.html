@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>斐波那契数列</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#00FF99; margin: 2px 2px 0 0; padding: 4px 6px;'>进行中</div>
+    <div style='background-color:#ccc; margin: 2px 2px 0 0; padding: 4px 6px;'>已结束</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>n&nbsp;</span><input type="text" id='n' class="saveable" value="5">
+    <input style='font-size:12px;' type="button" value="显示重复" onclick="showDuplicate()">
+    <input type="checkbox" id="enable_cache" class="saveable bool"> 记忆化
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>直径</span><input type="number" step="1" value="35" id="DIAMETER" class="saveable int" style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="35" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="25" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('fibonacci')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    /*
+      时间复杂度计算公式 ==> 2*f(n+1)-1
+      t(0) = 1
+      t(1) = 1
+      t(2) = t(0) + t(1) + 1 = 3       2*f(3)-1
+      t(3) = t(1) + t(2) + 1 = 5       2*f(4)-1
+      t(4) = t(2) + t(3) + 1 = 9       2*f(5)-1
+      t(5) = t(3) + t(4) + 1 = 15      2*f(6)-1
+      t(6) = t(4) + t(5) + 1 = 25      2*f(7)-1
+      ...
+
+      通项公式计算
+      f(0) = (1.618^0 - 0.618^0) / 2.236 = 0
+      f(1) = (1.618^1 + 0.618^1) / 2.236 = 1
+      f(2) = (1.618^2 - 0.618^2) / 2.236 = 1
+      f(3) = (1.618^3 + 0.618^3) / 2.236 = 2
+      f(4) = (1.618^2 - 0.618^4) / 2.236 = 3
+      ... 随着n增大, 后面0.618所在的项越来越不重要, 可以忽略
+      f(7) = (1.618^7 ...) / 2.236       = 13
+
+
+    */
+    const colorMap = new Map()
+    const colorArray = ['#1abc9c', '#e67e22', '#3498db', '#f1c40f', '#9b59b6', '#e74c3c']
+    let colorIndex = 0
+    function showDuplicate() {
+      d.add({ cloned: clone(tree) }, ({ cloned }) => {
+        recursion(cloned, width / 2, DIAMETER, n - 1, 0, 0)
+      })
+      d.updateFrameButtons()
+    }
+    function recursion(node, x, y, deep, px, py) {
+      if (node) {
+        if (node.txt) {
+          if (px && py) {
+            stroke(0)
+            line(x, y, px, py)
+            noStroke()
+          }
+        }
+        recursion(node.left, x - Math.pow(2, deep) * DIAMETER / 4, y + Math.pow(2, n - deep) * DIAMETER / 4, deep - 1, x, y)
+        recursion(node.right, x + Math.pow(2, deep) * DIAMETER / 4, y + Math.pow(2, n - deep) * DIAMETER / 4, deep - 1, x, y)
+        if (node.txt) {
+          let c = colorMap.get(node.txt)
+          if (!c) {
+            colorMap.set(node.txt, colorArray[colorIndex++])
+          }
+          fill(colorMap.get(node.txt))
+          stroke('black')
+          circle(x, y, DIAMETER)
+          fill('black')
+          text(node.txt, x, y + 5)
+        }
+      }
+    }
+    const options = loadOptionsFromStorage('fibonacci')
+    const d = new Draw(options.animate_speed)
+    const DIAMETER = options.DIAMETER
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const SPACING = 1                     // 间隙
+    const INDEX_RECT_HEIGHT = 20          // 索引矩形高度
+    const n = options.n
+    const enable_cache = options.enable_cache
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 16
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      d.add({}, frame)
+      fibonacci(n, tree)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    function frame({ cloned, array: cache }) {
+      drawTree(cloned, width / 2, DIAMETER, n - 1, 0, 0)
+      if (enable_cache) {
+        const LEFT = (width - cache.length * (RECT_WIDTH + SPACING)) / 2
+        for (let i = 0; i < cache.length; i++) {
+          // 注：矩形以左下角 x, y 作为起点坐标
+          let x = LEFT + i * (RECT_WIDTH + SPACING)
+          let y = height - (SPACING + INDEX_RECT_HEIGHT)
+          stroke(0)
+          noStroke()
+          fill('#67cdcc')
+          rect(x, y, RECT_WIDTH, -RECT_HEIGHT)
+          fill('#ffffff')
+          text(cache[i], x + RECT_WIDTH / 2, y - 6)
+          fill('#cc99cd')
+          rect(x, height, RECT_WIDTH, -INDEX_RECT_HEIGHT)
+          fill('#ffffff')
+          text(`f(${i})`, x + RECT_WIDTH / 2, height - 6)
+        }
+      }
+    }
+
+    function drawTree(node, x, y, deep, px, py) {
+      if (node) {
+        if (node.txt) {
+          if (px && py) {
+            stroke(0)
+            line(x, y, px, py)
+            noStroke()
+          }
+        }
+        drawTree(node.left, x - Math.pow(2, deep) * DIAMETER / 4, y + Math.pow(2, n - deep) * DIAMETER / 4, deep - 1, x, y)
+        drawTree(node.right, x + Math.pow(2, deep) * DIAMETER / 4, y + Math.pow(2, n - deep) * DIAMETER / 4, deep - 1, x, y)
+        if (node.txt) {
+          if (node.done) {
+            fill('#ccc')
+          } else {
+            fill('#00FF99')
+          }
+          stroke('black')
+          circle(x, y, DIAMETER)
+          noStroke()
+          fill('black')
+          text(node.txt, x, y + 5)
+        }
+      }
+    }
+
+
+    const tree = { done: false }
+    const cache = []
+    cache[0] = 0
+    cache[1] = 1
+    function fibonacci(n, t) {
+      t.txt = `f(${n})`
+      // console.log('去', clone(tree))
+      d.add({ cloned: clone(tree), array: cache }, frame)
+      if (enable_cache && cache[n] !== undefined) {
+        t.done = true
+        d.add({ cloned: clone(tree), array: cache }, frame)
+        return cache[n]
+      }
+
+      if (n == 0) {
+        t.done = true
+        // console.log('回', n, clone(tree))
+        d.add({ cloned: clone(tree), array: cache }, frame)
+        return 0
+      }
+      if (n == 1) {
+        t.done = true
+        // console.log('回', n, clone(tree))
+        d.add({ cloned: clone(tree), array: cache }, frame)
+        return 1
+      }
+      t.left = { done: false }
+      t.right = { done: false }
+      const l = fibonacci(n - 1, t.left)
+      const r = fibonacci(n - 2, t.right)
+      const m = l + r
+      t.done = true
+      // d.add({ cloned: clone(tree), array:cache }, frame)
+      if (enable_cache) {
+        cache[n] = m
+      }
+      d.add({ cloned: clone(tree), array: cache }, frame)
+      // console.log('回', n, clone(tree))
+      return m
+    }
+
+  </script>
+</body>
+
+</html>

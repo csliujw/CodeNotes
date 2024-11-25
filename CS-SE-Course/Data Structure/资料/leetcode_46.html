@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>全排列</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#fcedad; margin: 2px 2px 0 0; padding: 4px 6px;'>已访问</div>
+    <div style='background-color:#00FF99; margin: 2px 2px 0 0; padding: 4px 6px;'>当前</div>
+    <!-- <div style='background-color:#7df4f2; margin: 2px 2px 0 0; padding: 4px 6px;'>已结束</div> -->
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>原始数组&nbsp;</span><input type="text" id='myArray' class="saveable array" value="1,2,3">
+    <span>n&nbsp;</span><input type="text" id='n' class="saveable" value="5">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_46')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('leetcode_46')
+    const WIDTH_ARRAY = [15, 25, 40, 80, 120, 250, 250]
+    const HEIGHT_ARRAY = [80, 60, 40, 25, 25, 25, 25]
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const myArray = options.myArray
+    const n = options.n
+
+    const tree = { done: false, nodes: [], txt: ' ' }
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 12
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      const visited = [false, false, false]
+      const stack = []
+      const f = permute(myArray, visited, stack, tree)
+      d.updateFrameButtons()
+      stroke('black')
+    }
+    function draw() {
+      d.draw(() => background('#ccc'))
+    }
+    function frame({ cloned, array, curr }) {
+      drawTree(cloned, array, curr, width / 2, RECT_HEIGHT, n - 1, 0, 0)
+    }
+
+    function drawTree(node, visited, curr, x, y, deep, px, py) {
+      if (node) {
+        if (node.txt) {
+          if (px && py) {
+            line(x, y, px, py)
+          }
+        }
+        const mid = Math.floor(node.nodes.length / 2)
+        for (let i = 0; i < node.nodes.length; i++) {
+          const v = node.nodes[i]
+          if (i < mid) {
+            drawTree(v, visited, curr, x - WIDTH_ARRAY[deep], y + HEIGHT_ARRAY[deep], deep - 1, x, y)
+          } else if (i == mid) {
+            drawTree(v, visited, curr, x, y + HEIGHT_ARRAY[deep], deep - 1, x, y)
+          } else {
+            drawTree(v, visited, curr, x + WIDTH_ARRAY[deep], y + HEIGHT_ARRAY[deep], deep - 1, x, y)
+          }
+        }
+        if (node.txt) {
+          if (node.txt == curr) {
+            fill('#00FF99')
+          } else {
+            fill('#fcedad')
+          }
+          const w = node.txt.length * 4 + 16
+          rect(x - w / 2, y - RECT_HEIGHT / 2, w, RECT_HEIGHT)
+          fill('black')
+          text(node.txt, x, y + 3)
+        }
+
+        let start = width / 2
+        let m = start
+        for (let i = 0; i < myArray.length; i++) {
+          if (visited[i]) {
+            fill('#bbb')
+          } else {
+            fill('#00FF99')
+          }
+          rect(m, height - 100, RECT_WIDTH, RECT_HEIGHT)
+          fill('black')
+          text(myArray[i], m + RECT_WIDTH / 2, height - 100 + RECT_HEIGHT / 2 + 4)
+          m += RECT_WIDTH
+        }
+
+      }
+    }
+
+    function permute(lists, visited, stack, t) {
+      if (stack.length == lists.length) {
+        return;
+      }
+      for (let i = 0; i < lists.length; i++) {
+        if (visited[i]) {
+          continue
+        }
+        stack.push(lists[i])
+        visited[i] = true
+        // d.add({ cloned: clone(tree), array: visited, curr: stack.join(' ') }, frame)
+        const node = { txt: stack.join(' '), nodes: [] }
+        t.nodes.push(node)
+        d.add({ cloned: clone(tree), array: visited, curr: node.txt }, frame)
+        permute(lists, visited, stack, node)
+        stack.pop()
+        visited[i] = false
+        d.add({ cloned: clone(tree), array: visited, curr: stack.join(' ') }, frame)
+      }
+    }
+
+  </script>
+</body>
+
+</html>

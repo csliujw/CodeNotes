@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 75%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 123-股票问题</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#f7e4ff; margin: 2px 2px 0 0; padding: 4px 6px;'>若等</div>
+    <div style='background-color:#d4ecfc; margin: 2px 2px 0 0; padding: 4px 6px;'>若买</div>
+    <div style='background-color:#c0fcf0; margin: 2px 2px 0 0; padding: 4px 6px;'>若等</div>
+    <div style='background-color:#fce3cd; margin: 2px 2px 0 0; padding: 4px 6px;'>若卖</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    原始数组 <input type="text" id="myArray" value="3, 5, 0, 3, 1, 4" class="saveable array" />
+    手续费 <input type="text" id="fee" value="0" class="saveable int" />
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="100" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_123')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('leetcode_123')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const myProblem = { array: options.myArray, fee: options.fee }
+    // const myProblem = { array: [3, 3, 5, 0, 0, 3, 1, 4], fee: 0 }
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 16
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      maxProfit()
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'), () => false)
+    }
+    function frame({ cloned: { i, buy1, sell1, buy2, sell2 } }) {
+      const myArray = myProblem.array
+      const startX = width / 2 - myArray.length / 2 * RECT_WIDTH
+      const startY = height - 300
+      let x = startX
+      let y = startY
+      for (let k = 0; k < myArray.length; k++) {
+        stroke('black')
+        strokeWeight(10)
+        y = startY - myArray[k] * RECT_HEIGHT
+        point(x, y)
+        noStroke()
+        text(`${myArray[k]}`, x, y - 7)
+        stroke('black')
+        if (k + 1 < myArray.length) {
+          strokeWeight(1)
+          line(x, y, x + RECT_WIDTH, startY - myArray[k + 1] * RECT_HEIGHT)
+        }
+        x += RECT_WIDTH
+      }
+      strokeWeight(1)
+      stroke('black')
+      text("i", startX + RECT_WIDTH * i, startY + 20)
+      const m = Math.max(...myArray)
+      arrow2(startX - 20, startY, RECT_WIDTH * myArray.length, 0, 'black')
+      arrow2(startX - 20, startY, RECT_HEIGHT * (m + 1), -PI / 2, 'black')
+
+      x = startX
+      y = startY + 40
+      noStroke()
+      fill('red')
+      text('第一次买卖', x - 100, y + 50)
+      for (let k = 0; k < buy1.length; k++) {
+        if (k == 0 || k < i) {
+          stroke('black')
+          fill('white')
+          rect(x, y, RECT_WIDTH / 2, RECT_HEIGHT * 2)
+          noStroke()
+          fill('black')
+          text(`${buy1[k].max} ${buy1[k].action}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT + 5)
+        } else {
+          stroke('black')
+          fill('#f7e4ff')
+          rect(x, y, RECT_WIDTH / 2, RECT_HEIGHT)
+          fill('#d4ecfc')
+          rect(x, y + RECT_HEIGHT, RECT_WIDTH / 2, RECT_HEIGHT)
+          noStroke()
+          fill('black')
+          text(`${buy1[k].wait}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT * 0.5 + 5)
+          text(`${buy1[k].buy}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT * 1.5 + 5)
+        }
+        x += RECT_WIDTH
+      }
+
+      x = startX
+      y = startY + 100
+      for (let k = 0; k < sell1.length; k++) {
+        if (k == 0 || k < i) {
+          stroke('black')
+          fill('white')
+          rect(x, y, RECT_WIDTH / 2, RECT_HEIGHT * 2)
+          noStroke()
+          fill('black')
+          text(`${sell1[k].max} ${sell1[k].action}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT + 5)
+        } else {
+          stroke('black')
+          fill('#c0fcf0')
+          rect(x, y, RECT_WIDTH / 2, RECT_HEIGHT)
+          fill('#fce3cd')
+          rect(x, y + RECT_HEIGHT, RECT_WIDTH / 2, RECT_HEIGHT)
+          noStroke()
+          fill('black')
+          text(`${sell1[k].wait}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT * 0.5 + 5)
+          text(`${sell1[k].sell}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT * 1.5 + 5)
+        }
+        x += RECT_WIDTH
+      }
+
+      x = startX
+      y = startY + 160
+      fill('red')
+      text('第二次买卖', x - 100, y + 50)
+      for (let k = 0; k < buy2.length; k++) {
+        if (k == 0 || k < i) {
+          stroke('black')
+          fill('white')
+          rect(x, y, RECT_WIDTH / 2, RECT_HEIGHT * 2)
+          noStroke()
+          fill('black')
+          text(`${buy2[k].max} ${buy2[k].action}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT + 5)
+        } else {
+          stroke('black')
+          fill('#f7e4ff')
+          rect(x, y, RECT_WIDTH / 2, RECT_HEIGHT)
+          fill('#d4ecfc')
+          rect(x, y + RECT_HEIGHT, RECT_WIDTH / 2, RECT_HEIGHT)
+          noStroke()
+          fill('black')
+          text(`${buy2[k].wait}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT * 0.5 + 5)
+          text(`${buy2[k].buy}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT * 1.5 + 5)
+        }
+        x += RECT_WIDTH
+      }
+
+      x = startX
+      y = startY + 220
+      for (let k = 0; k < sell2.length; k++) {
+        if (k == 0 || k < i) {
+          stroke('black')
+          fill('white')
+          rect(x, y, RECT_WIDTH / 2, RECT_HEIGHT * 2)
+          noStroke()
+          fill('black')
+          text(`${sell2[k].max} ${sell2[k].action}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT + 5)
+        } else {
+          stroke('black')
+          fill('#c0fcf0')
+          rect(x, y, RECT_WIDTH / 2, RECT_HEIGHT)
+          fill('#fce3cd')
+          rect(x, y + RECT_HEIGHT, RECT_WIDTH / 2, RECT_HEIGHT)
+          noStroke()
+          fill('black')
+          text(`${sell2[k].wait}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT * 0.5 + 5)
+          text(`${sell2[k].sell}`, x + RECT_WIDTH / 4, y + RECT_HEIGHT * 1.5 + 5)
+        }
+        x += RECT_WIDTH
+      }
+    }
+
+    function maxProfit() {
+      if (myProblem.array.length == 1) {
+        return 0
+      }
+      const buy1 = [
+        { max: -myProblem.array[0], wait: -myProblem.array[0], buy: -myProblem.array[0], action: '买' }
+      ]
+      const sell1 = [
+        { max: 0, wait: 0, sell: 0, action: '卖' }
+      ]
+      const buy2 = [
+        { max: -myProblem.array[0], wait: -myProblem.array[0], buy: -myProblem.array[0], action: '买' }
+      ]
+      const sell2 = [
+        { max: 0, wait: 0, sell: 0, action: '卖' }
+      ]
+      d.add({ cloned: { i: 0, buy1: clone(buy1), sell1: clone(sell1), buy2: clone(buy2), sell2: clone(sell2) } }, frame)
+      for (let i = 1; i < myProblem.array.length; i++) {
+        const obj1 = { wait: buy1[i - 1].max, buy: -myProblem.array[i] }
+        obj1.max = Math.max(obj1.wait, obj1.buy)
+        obj1.action = obj1.wait > obj1.buy ? '等' : '买'
+        buy1[i] = obj1
+        // d.add({ cloned: { i, buy1: clone(buy1), sell1: clone(sell1), buy2: clone(buy2), sell2: clone(sell2) } }, frame)
+        const obj2 = { wait: sell1[i - 1].max, sell: buy1[i - 1].max + myProblem.array[i] - myProblem.fee }
+        obj2.max = Math.max(obj2.wait, obj2.sell)
+        obj2.action = obj2.wait > obj2.sell ? '等' : '卖'
+        sell1[i] = obj2
+        // d.add({ cloned: { i, buy1: clone(buy1), sell1: clone(sell1), buy2: clone(buy2), sell2: clone(sell2) } }, frame)
+        const obj3 = { wait: buy2[i - 1].max, buy: sell1[i - 1].max - myProblem.array[i] }
+        obj3.max = Math.max(obj3.wait, obj3.buy)
+        obj3.action = obj3.wait > obj3.buy ? '等' : '买'
+        buy2[i] = obj3
+        // d.add({ cloned: { i, buy1: clone(buy1), sell1: clone(sell1), buy2: clone(buy2), sell2: clone(sell2) } }, frame)
+        const obj4 = { wait: sell2[i - 1].max, sell: buy2[i - 1].max + myProblem.array[i] - myProblem.fee }
+        obj4.max = Math.max(obj4.wait, obj4.sell)
+        obj4.action = obj4.wait > obj4.sell ? '等' : '卖'
+        sell2[i] = obj4
+        d.add({ cloned: { i, buy1: clone(buy1), sell1: clone(sell1), buy2: clone(buy2), sell2: clone(sell2) } }, frame)
+      }
+      d.add({ cloned: { i: myProblem.array.length, buy1: clone(buy1), sell1: clone(sell1), buy2: clone(buy2), sell2: clone(sell2) } }, frame)
+    }
+
+  </script>
+</body>
+
+</html>

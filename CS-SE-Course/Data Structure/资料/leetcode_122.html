@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 122-股票问题</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:red; margin: 2px 2px 0 0; padding: 4px 6px;color:white'>逢涨</div>
+    <div style='background-color:green; margin: 2px 2px 0 0; padding: 4px 6px;color:white;'>遇跌</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    原始数组 <input type="text" id="myArray" value="9, 3, 12, 1, 2, 3" class="saveable array" />
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="100" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_122')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('leetcode_122')
+    const colorArray = ['#9b59b6', '#3498db', '#1abc9c', '#e67e22', '#f1c40f', '#e74c3c']
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const myArray = options.myArray
+    // const myArray = [7, 1, 5, 3, 6, 4]
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 16
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      maxProfit()
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'), () => false)
+    }
+    function frame({ cloned: { i, j, profit, profits } }) {
+      const startX = width / 2 - myArray.length / 2 * RECT_WIDTH
+      const startY = height - 100
+      let x = startX
+      let y = startY
+      for (let k = 0; k < myArray.length; k++) {
+        stroke('black')
+        strokeWeight(10)
+        y = startY - myArray[k] * RECT_HEIGHT
+        point(x, y)
+        if (k + 1 < myArray.length) {
+          strokeWeight(1)
+          line(x, y, x + RECT_WIDTH, startY - myArray[k + 1] * RECT_HEIGHT)
+        }
+        x += RECT_WIDTH
+      }
+      if (profit > 0) {
+        stroke('red')
+      } else {
+        stroke('green')
+      }
+      strokeWeight(2)
+      line(startX + RECT_WIDTH * i, startY - RECT_HEIGHT * myArray[i], startX + RECT_WIDTH * j, startY - RECT_HEIGHT * myArray[j])
+      strokeWeight(1)
+      noStroke()
+      stroke('black')
+      text("i", startX + RECT_WIDTH * i, startY + 20)
+      text("j", startX + RECT_WIDTH * j, startY + 20)
+      const m = Math.max(...myArray)
+      arrow2(startX - 20, startY, RECT_WIDTH * myArray.length, 0, 'black')
+      arrow2(startX - 20, startY, RECT_HEIGHT * (m + 1), -PI / 2, 'black')
+
+      strokeWeight(2)
+      for (let k = 0; k < profits.length; k++) {
+        stroke(colorArray[k])
+        x = startX + profits[k].j * RECT_WIDTH
+        line(x, startY - RECT_HEIGHT * profits[k].low, x, startY - RECT_HEIGHT * profits[k].high)
+      }
+    }
+
+    function maxProfit() {
+      const profits = []
+      let i = 0
+      let j = 1
+      let max = 0
+      while (j < myArray.length) {
+        d.add({ cloned: { i, j, profit: myArray[j] - myArray[i], profits: [...profits] } }, frame)
+        if (myArray[j] - myArray[i] > 0) {
+          profits.push({ low: myArray[i], high: myArray[j], j })
+          max = Math.max(max, myArray[j] - myArray[i])
+        }
+        i = j
+        j++
+      }
+      d.add({ cloned: { i, j, profit: myArray[j] - myArray[i], profits: [...profits] } }, frame)
+    }
+
+  </script>
+</body>
+
+</html>

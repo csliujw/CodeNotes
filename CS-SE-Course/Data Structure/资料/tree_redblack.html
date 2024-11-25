@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 50%;
+      min-height: 200px;
+    }
+
+    input[type=text],
+    input[type=number] {
+      width: 100px;
+    }
+  </style>
+  <title>平衡二叉搜索树-红黑树</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#f0ff1c; margin: 2px 2px 0 0; padding: 4px 6px;'>向上的</div>
+    <div style='background-color:pink; margin: 2px 2px 0 0; padding: 4px 6px;'>向下的</div>
+    <div style='background-color:#00FF99; margin: 2px 2px 0 0; padding: 4px 6px;'>换爹的</div>
+    <div style='background-color:#ccc; margin: 2px 2px 0 0; padding: 4px 6px;'>平衡</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>数组表示的二叉树&nbsp;</span><input type="text" id='data' class="saveable array" value="4,2,6,1,3,5,7">
+    <span>n&nbsp;</span><input type="text" id='n' class="saveable" value="5">
+    <input style='font-size:12px;' type="button" value="判断1" onclick="i4()">
+    <input style='font-size:12px;' type="button" value="判断2" onclick="i2()">
+    <input style='font-size:12px;' type="button" value="判断3" onclick="i1()">
+    <input style='font-size:12px;' type="button" value="判断4" onclick="i3()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>待删除 key</span><input type="text" id='deleted' class="saveable" value="4">
+    <input style='font-size:12px;' type="button" value="delete" onclick="doDelete()">
+    <input style='font-size:12px;' type="button" value="c1_1" onclick="d1_1()">
+    <input style='font-size:12px;' type="button" value="c1_2" onclick="d1_2()">
+    <input style='font-size:12px;' type="button" value="c2_1" onclick="d2_1()">
+    <input style='font-size:12px;' type="button" value="c2_2" onclick="d2_2()">
+    <input style='font-size:12px;' type="button" value="c3 & c4" onclick="d3()">
+    <input style='font-size:12px;' type="button" value="c4_1" onclick="d4_1()">
+    <input style='font-size:12px;' type="button" value="c4_2" onclick="d4_2()">
+    <input style='font-size:12px;' type="button" value="c4_3" onclick="d4_3()">
+    <input style='font-size:12px;' type="button" value="c5 RL 1" onclick="d5_1()">
+    <input style='font-size:12px;' type="button" value="c5 RL 2" onclick="d5_2()">
+    <input style='font-size:12px;' type="button" value="c5 RR 1" onclick="d5_3()">
+    <input style='font-size:12px;' type="button" value="c5 RR 2" onclick="d5_4()">
+    <input style='font-size:12px;' type="button" value="c5 LL 1" onclick="d5_5()">
+    <input style='font-size:12px;' type="button" value="c5 LL 2" onclick="d5_8()">
+    <input style='font-size:12px;' type="button" value="c5 LL 3" onclick="d5_7()">
+    <input style='font-size:12px;' type="button" value="c5 LR" onclick="d5_6()">
+    <input style='font-size:12px;' type="button" value="c0 & c4" onclick="d6_1()">
+    <input style='font-size:12px;' type="button" value="c0 & c4" onclick="d6_2()">
+    <input style='font-size:12px;' type="button" value="c0 & c4" onclick="d6_3()">
+    <input style='font-size:12px;' type="button" value="c4 & c5" onclick="d7()">
+    <input style='font-size:12px;' type="button" value="??" onclick="d8()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>待插入 key</span><input type="text" id='inserted' class="saveable" value="9">
+    <input style='font-size:12px;' type="button" value="put" onclick="doPut()">
+    <input style='font-size:12px;' type="button" value="c1" onclick="e1()">
+    <input style='font-size:12px;' type="button" value="c2" onclick="e2()">
+    <input style='font-size:12px;' type="button" value="c3_1" onclick="e3_1()">
+    <input style='font-size:12px;' type="button" value="c3_2" onclick="e3_2()">
+    <input style='font-size:12px;' type="button" value="c4 LL" onclick="e4()">
+    <input style='font-size:12px;' type="button" value="c4 LR" onclick="e5()">
+    <input style='font-size:12px;' type="button" value="c3 & c4 LL" onclick="e6()">
+    <input style='font-size:12px;' type="button" value="c4 RL" onclick="e7()">
+    <input style='font-size:12px;' type="button" value="c4 RR" onclick="e8()">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>直径</span><input type="number" step="1" value="25" id="DIAMETER" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('tree_redblack')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    function i4() {
+      tree.root = new Node(6, 'black',
+        new Node(2, 'red', new Node(1, 'red')),
+        new Node(8, 'red')
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '7'
+      d.updateFrameButtons()
+    }
+    function i3() {
+      tree.root = new Node(6, 'black',
+        new Node(2, 'red', new Node(1, 'black')),
+        new Node(8, 'black')
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '7'
+      d.updateFrameButtons()
+    }
+    function i2() {
+      tree.root = new Node(6, 'black',
+        new Node(2, 'black', new Node(1, 'red'), new Node(3, 'red')),
+        new Node(8, 'black', new Node(7, 'black'), new Node(9, 'black'))
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '7'
+      d.updateFrameButtons()
+    }
+    function i1() {
+      tree.root = new Node(6, 'black',
+        new Node(2, 'black', new Node(1, 'red')),
+        new Node(8, 'black')
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '7'
+      d.updateFrameButtons()
+    }
+    function d8() {
+      tree.root = new Node(8, 'black',
+        new Node(6, 'red', new Node(5, 'black'), new Node(7, 'black')),
+        new Node(9, 'black')
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '7'
+      d.updateFrameButtons()
+    }
+    function d7() {
+      tree.root = new Node(6, 'black',
+        new Node(2, 'black', new Node(1, 'black'), new Node(4, 'red', new Node(3, 'black'), new Node(5, 'black'))),
+        new Node(8, 'black', new Node(7, 'black'), new Node(9, 'black'))
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '7'
+      d.updateFrameButtons()
+    }
+    function d6_3() {
+      tree.root = new Node(6, 'black',
+        new Node(2, 'black', new Node(1, 'black'), new Node(4, 'red', new Node(3, 'black'), new Node(5, 'black'))),
+        new Node(8, 'black', new Node(7, 'black'), new Node(9, 'black'))
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '2'
+      d.updateFrameButtons()
+    }
+    function d6_2() {
+      tree.root = new Node(5, 'black',
+        new Node(3, 'black', new Node(1, 'black'), new Node(4, 'black')),
+        new Node(7, 'black', new Node(6, 'black'), new Node(8, 'black'))
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '7'
+      d.updateFrameButtons()
+    }
+    function d6_1() {
+      tree.root = new Node(5, 'black',
+        new Node(3, 'red', new Node(1, 'black'), new Node(4, 'black')),
+        new Node(7, 'red', new Node(6, 'black'), new Node(8, 'black'))
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '7'
+      d.updateFrameButtons()
+    }
+    function d5_6() {
+      tree.root = new Node(5, 'black',
+        new Node(3, 'red', new Node(1, 'black', null, new Node(2)), new Node(4, 'black')),
+        new Node(7, 'red', new Node(6, 'black'), new Node(8, 'black'))
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '4'
+      d.updateFrameButtons()
+    }
+    function d5_7() {
+      tree.root = new Node(6, 'black',
+        new Node(4, 'red', new Node(2, 'black', new Node(1), new Node(3)), new Node(5, 'black')),
+        new Node(8, 'red', new Node(7, 'black'), new Node(9, 'black'))
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '5'
+      d.updateFrameButtons()
+    }
+    function d5_8() {
+      tree.root = new Node(5, 'black',
+        new Node(3, 'black', new Node(2, 'black', new Node(1)), new Node(4, 'black')),
+        new Node(7, 'black', new Node(6, 'black'), new Node(8, 'black'))
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '4'
+      d.updateFrameButtons()
+    }
+    function d5_5() {
+      tree.root = new Node(5, 'black',
+        new Node(3, 'red', new Node(2, 'black', new Node(1)), new Node(4, 'black')),
+        new Node(7, 'red', new Node(6, 'black'), new Node(8, 'black'))
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '4'
+      d.updateFrameButtons()
+    }
+    function d5_4() {
+      tree.root = new Node(5, 'black',
+        new Node(3, 'black', new Node(2, 'black'), new Node(4, 'black')),
+        new Node(7, 'black', new Node(6, 'black'), new Node(8, 'black', null, new Node(9)))
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '6'
+      d.updateFrameButtons()
+    }
+    function d5_3() {
+      tree.root = new Node(5, 'black',
+        new Node(3, 'red', new Node(2, 'black'), new Node(4, 'black')),
+        new Node(7, 'red', new Node(6, 'black'), new Node(8, 'black', null, new Node(9)))
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '6'
+      d.updateFrameButtons()
+    }
+    function d5_2() {
+      tree.root = new Node(5, 'black',
+        new Node(3, 'black', new Node(2, 'black'), new Node(4, 'black')),
+        new Node(7, 'black', new Node(6, 'black'), new Node(9, 'black', new Node(8)))
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '6'
+      d.updateFrameButtons()
+    }
+    function d5_1() {
+      tree.root = new Node(5, 'black',
+        new Node(3, 'red', new Node(2, 'black'), new Node(4, 'black')),
+        new Node(7, 'red', new Node(6, 'black'), new Node(9, 'black', new Node(8)))
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '6'
+      d.updateFrameButtons()
+    }
+    function d4_3() {
+      tree.root = new Node(8, 'black', new Node(4, 'black',
+        new Node(2, 'red', new Node(1, 'black'), new Node(3, 'black')),
+        new Node(6, 'red', new Node(5, 'black'), new Node(7, 'black'))
+      ), new Node(12, 'black',
+        new Node(10, 'red', new Node(9, 'black'), new Node(11, 'black')),
+        new Node(14, 'red', new Node(13, 'black'), new Node(15, 'black'))
+      ))
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '1'
+      d.updateFrameButtons()
+    }
+    function d4_2() {
+      tree.root = new Node(8, 'black', new Node(4, 'black',
+        new Node(2, 'black', new Node(1, 'black'), new Node(3, 'black')),
+        new Node(6, 'black', new Node(5, 'black'), new Node(7, 'black'))
+      ), new Node(12, 'black',
+        new Node(10, 'black', new Node(9, 'black'), new Node(11, 'black')),
+        new Node(14, 'black', new Node(13, 'black'), new Node(15, 'black'))
+      ))
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '1'
+      d.updateFrameButtons()
+    }
+    function d4_1() {
+      tree.root = new Node(4, 'black',
+        new Node(3, 'black'),
+        new Node(7, 'black')
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '3'
+      d.updateFrameButtons()
+    }
+    function d3() {
+      tree.root = new Node(6, 'black',
+        new Node(4, 'black'),
+        new Node(8, 'red', new Node(7, 'black'), new Node(9, 'black'))
+      )
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '4'
+      d.updateFrameButtons()
+    }
+    function d2_2() {
+      tree.root = new Node(8, 'black', new Node(6, 'black', new Node(5)), new Node(9, 'black'))
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '6'
+      d.updateFrameButtons()
+    }
+    function d2_1() {
+      tree.root = new Node(8, 'black', new Node(6), null)
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '6'
+      d.updateFrameButtons()
+    }
+
+    function d1_2() {
+      tree.root = new Node(8, 'black', new Node(6), null)
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '8'
+      d.updateFrameButtons()
+    }
+    function d1_1() {
+      tree.root = new Node(8, 'black')
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("deleted").value = '8'
+      d.updateFrameButtons()
+    }
+    function e1() {
+      tree.root = null
+      all.pop()
+      document.getElementById("inserted").value = '9'
+      d.updateFrameButtons()
+    }
+    function e2() {
+      tree.root = null
+      all.pop()
+      const str = '8'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.put(n)
+      }
+      document.getElementById("inserted").value = '5'
+      d.updateFrameButtons()
+    }
+    function e3_2() {
+      tree.root = new Node(9, 'black',
+        new Node(5, 'red',
+          new Node(3, 'black', new Node(2, 'red'), new Node(4, 'red')),
+          new Node(7, 'black')
+        ), new Node(13, 'red',
+          new Node(11, 'black'),
+          new Node(15, 'black')
+        ))
+      all.pop()
+      all.push(tree.root)
+      d.add({ cloned: clone(all) }, frame)
+      document.getElementById("inserted").value = '1'
+      d.updateFrameButtons()
+    }
+    function e3_1() {
+      tree.root = null
+      all.pop()
+      const str = '8,5,10'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.put(n)
+      }
+      document.getElementById("inserted").value = '3'
+      d.updateFrameButtons()
+    }
+    function e4() {
+      tree.root = null
+      all.pop()
+      const str = '8,5,10,3'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.put(n)
+      }
+      document.getElementById("inserted").value = '2'
+      d.updateFrameButtons()
+    }
+    function e5() {
+      tree.root = null
+      all.pop()
+      const str = '8,5,10,3'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.put(n)
+      }
+      document.getElementById("inserted").value = '4'
+      d.updateFrameButtons()
+    }
+    function e6() {
+      tree.root = null
+      all.pop()
+      const str = '8,5,10,9,11,3,6,7,2,4'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.put(n)
+      }
+      document.getElementById("inserted").value = '1'
+      d.updateFrameButtons()
+    }
+    function e7() {
+      tree.root = null
+      all.pop()
+      const str = '8,5,10,7'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.put(n)
+      }
+      document.getElementById("inserted").value = '6'
+      d.updateFrameButtons()
+    }
+    function e8() {
+      tree.root = null
+      all.pop()
+      const str = '8,5,10,6'
+      document.getElementById("data").value = str
+      const data = str.split(',').map(e => Number(e))
+      for (let n of data) {
+        tree.put(n)
+      }
+      document.getElementById("inserted").value = '7'
+      d.updateFrameButtons()
+    }
+    const options = loadOptionsFromStorage('tree_redblack')
+    let data = options.data
+    const DIAMETER = options.DIAMETER
+    const n = options.n
+    const d = new Draw(options.animate_speed)
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 12
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      d.add({ cloned: clone(all) }, frame)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    function frame({ cloned }) {
+      for (let i = 0; i < cloned.length; i++) {
+        const node = cloned[i]
+        drawTree(node, width / 2, DIAMETER / 2 + 10 + i * 120, n - 1, 0, 0)
+      }
+    }
+
+    const subs = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉']
+    function drawTree(node, x, y, deep, px, py) {
+      if (node) {
+        if (node.key) {
+          if (px && py) {
+            stroke(0)
+            line(x, y, px, py)
+          }
+        }
+        drawTree(node.left, x - Math.pow(2, deep) * DIAMETER / 4, y + Math.pow(2, n - deep) * DIAMETER / 5, deep - 1, x, y)
+        drawTree(node.right, x + Math.pow(2, deep) * DIAMETER / 4, y + Math.pow(2, n - deep) * DIAMETER / 5, deep - 1, x, y)
+        if (node.key) {
+          stroke(0)
+          fill(node.color)
+          circle(x, y, DIAMETER + 8)
+          let color = "#ccc"
+          if ((node.status & 1) === 1) { color = "pink" }
+          if ((node.status & 2) === 2) { color = "#f0ff1c" }
+          if ((node.status & 4) === 4) { color = "#00FF99" }
+          if ((node.status & 8) === 8) { color = 'white' }
+          fill(color)
+          circle(x, y, DIAMETER)
+          fill('black')
+          // text(`${node.key}_${subs[node.height]}`, x, y + 4)
+          noStroke()
+          text(`${node.key}`, x, y + 4)
+        }
+      }
+    }
+
+    function doPut() {
+      const key = Number(document.getElementById("inserted").value)
+      tree.put(key)
+      d.updateFrameButtons()
+    }
+
+    function doDelete() {
+      const key = Number(document.getElementById("deleted").value)
+      tree.remove(key)
+      d.updateFrameButtons()
+    }
+
+    class Node {
+      constructor(key, color, left, right) {
+        this.key = key
+        this.left = left ?? null
+        this.right = right ?? null
+        this.color = color ?? 'red'
+        this.updateHeight()
+        this.parent = null
+        this.status = 0
+        if (left) {
+          left.parent = this
+        }
+        if (right) {
+          right.parent = this
+        }
+      }
+      updateHeight() {
+        this.height = Math.max(this.height(this.left), this.height(this.right)) + (this.color === 'red' ? 0 : 1)
+      }
+      height(node) {
+        return (node === null || node === undefined) ? 0 : node.height
+      }
+      isLeftChild() {
+        return this.parent && this == this.parent.left
+      }
+      uncle() {
+        if (this.parent == null || this.parent.parent == null) {
+          return null
+        }
+        if (this.isLeftChild()) {
+          return this.parent.parent.right
+        } else {
+          return this.parent.parent.left
+        }
+      }
+      sibling() {
+        if (this.parent == null) {
+          return null
+        }
+        if (this.isLeftChild()) {
+          return this.parent.right
+        } else {
+          return this.parent.left
+        }
+      }
+    }
+
+    function isBlack(node) {
+      return !isRed(node)
+    }
+    function isRed(node) {
+      return node && node.color === 'red'
+    }
+    function setRED(node) {
+      node.color = 'red'
+    }
+    function setBlack(node) {
+      node.color = 'black'
+    }
+    class Tree {
+      constructor() {
+        this.root = null
+        this.rootChange = false
+      }
+      remove(key) {
+        let p = this.root
+        while (p) {
+          if (key < p.key) {
+            p = p.left
+          } else if (p.key < key) {
+            p = p.right
+          } else {
+            break
+          }
+        }
+        if (!p) {
+          return
+        }
+        p.status |= 8
+        this.updateHeights(this.root)
+        d.add({ cloned: clone(all) }, frame)
+        this.doRemove(p)
+      }
+      replace(x) {
+        if (!x.left && !x.right) {
+          return null
+        }
+        if (!x.left) {
+          return x.right
+        }
+        if (!x.right) {
+          return x.left
+        }
+        let s = x.right
+        while (s.left) {
+          s = s.left
+        }
+        return s
+      }
+      fixDoubleBlack(x) {
+        if (x === this.root) {
+          return
+        }
+        const sibling = x.sibling()
+        const parent = x.parent
+        if (!sibling) {
+          this.fixDoubleBlack(parent)
+        } else {
+          if (isRed(sibling)) {
+            if (sibling.isLeftChild()) {
+              this.rightRotate(parent)
+            } else {
+              this.leftRotate(parent)
+            }
+            setRED(parent)
+            setBlack(sibling)
+            this.updateHeights(this.root)
+            d.add({ cloned: clone(all) }, frame)
+            this.fixDoubleBlack(x)
+          } else {
+            if (isRed(sibling.left) || isRed(sibling.right)) {
+              if (sibling.isLeftChild() && isRed(sibling.left)) {
+                this.rightRotate(parent)
+                setBlack(sibling.left)
+                d.add({ cloned: clone(all) }, frame)
+                sibling.color = parent.color
+                d.add({ cloned: clone(all) }, frame)
+              } else if (sibling.isLeftChild() && isRed(sibling.right)) {
+                const redChild = sibling.right
+                this.leftRotate(sibling)
+                this.rightRotate(parent)
+                redChild.color = parent.color
+                d.add({ cloned: clone(all) }, frame)
+              } else if (!sibling.isLeftChild() && isRed(sibling.left)) {
+                const redChild = sibling.left
+                this.rightRotate(sibling)
+                this.leftRotate(parent)
+                redChild.color = parent.color
+                d.add({ cloned: clone(all) }, frame)
+              } else {
+                this.leftRotate(parent)
+                setBlack(sibling.right)
+                d.add({ cloned: clone(all) }, frame)
+                sibling.color = parent.color
+                d.add({ cloned: clone(all) }, frame)
+              }
+              setBlack(parent)
+              d.add({ cloned: clone(all) }, frame)
+            } else {
+              if (isBlack(parent)) {
+                setRED(sibling)
+                this.updateHeights(this.root)
+                d.add({ cloned: clone(all) }, frame)
+                this.fixDoubleBlack(parent)
+              } else {
+                setRED(sibling)
+                d.add({ cloned: clone(all) }, frame)
+                setBlack(parent)
+                this.updateHeights(this.root)
+                d.add({ cloned: clone(all) }, frame)
+              }
+            }
+          }
+        }
+      }
+      doRemove(deleted) {
+        const replaced = this.replace(deleted)
+        const doubleBlack = isBlack(deleted) && isBlack(replaced)
+        const parent = deleted.parent
+        if (!replaced) {
+          if (!parent) {
+            this.root = null
+            all.pop()
+            all.push(this.root)
+          } else {
+            if (doubleBlack) {
+              this.fixDoubleBlack(deleted)
+            }
+            if (deleted.isLeftChild()) {
+              parent.left = null
+            } else {
+              parent.right = null
+            }
+          }
+          this.updateHeights(this.root)
+          d.add({ cloned: clone(all) }, frame)
+          return
+        }
+        if (!deleted.left || !deleted.right) {
+          if (!parent) {
+            deleted.key = replaced.key
+            d.add({ cloned: clone(all) }, frame)
+            deleted.left = deleted.right = null
+          } else {
+            if (deleted.isLeftChild()) {
+              parent.left = replaced
+            } else {
+              parent.right = replaced
+            }
+            replaced.parent = parent
+            if (doubleBlack) {
+              this.fixDoubleBlack(replaced)
+            } else {
+              d.add({ cloned: clone(all) }, frame)
+              setBlack(replaced)
+            }
+          }
+          this.updateHeights(this.root)
+          d.add({ cloned: clone(all) }, frame)
+          return
+        }
+
+        if (replaced) {
+          deleted.status &= 0xfff7
+          replaced.status |= 8
+          this.updateHeights(this.root)
+        }
+        const t = deleted.key
+        deleted.key = replaced.key
+        replaced.key = t
+        d.add({ cloned: clone(all) }, frame)
+        this.doRemove(replaced)
+      }
+
+      put(key) {
+        let node = this.root
+        let parent = null
+        while (node) {
+          parent = node
+          if (key < node.key) {
+            node = node.left
+          } else if (node.key < key) {
+            node = node.right
+          } else {
+            return
+          }
+        }
+        const inserted = new Node(key)
+        if (parent == null) {
+          this.root = inserted
+          all.push(this.root)
+        } else if (key < parent.key) {
+          parent.left = inserted
+          inserted.parent = parent
+        } else {
+          parent.right = inserted
+          inserted.parent = parent
+        }
+        this.updateHeights(this.root)
+        d.add({ cloned: clone(all) }, frame)
+        this.fixRedRed(inserted)
+      }
+
+      fixRedRed(x) {
+        while (x != this.root && x.parent.color === 'red') {
+          let parent = x.parent
+          let grandparent = parent.parent
+          if (parent == grandparent.left) {
+            const uncle = grandparent.right
+            if (uncle && uncle.color === 'red') {
+              x = grandparent
+              setBlack(parent)
+              d.add({ cloned: clone(all) }, frame)
+              setBlack(uncle)
+              d.add({ cloned: clone(all) }, frame)
+              setRED(grandparent)
+              d.add({ cloned: clone(all) }, frame)
+            } else {
+              if (x == parent.right) {
+                x = parent
+                this.leftRotate(parent)
+              }
+              setBlack(x.parent)
+              d.add({ cloned: clone(all) }, frame)
+              setRED(x.parent.parent)
+              d.add({ cloned: clone(all) }, frame)
+              this.rightRotate(x.parent.parent)
+            }
+          } else {
+            const uncle = grandparent.left
+            if (uncle && uncle.color === 'red') {
+              x = grandparent
+              setBlack(parent)
+              d.add({ cloned: clone(all) }, frame)
+              setBlack(uncle)
+              d.add({ cloned: clone(all) }, frame)
+              setRED(grandparent)
+              d.add({ cloned: clone(all) }, frame)
+            } else {
+              if (x == parent.left) {
+                x = parent
+                this.rightRotate(x)
+              }
+              setBlack(x.parent)
+              d.add({ cloned: clone(all) }, frame)
+              setRED(x.parent.parent)
+              d.add({ cloned: clone(all) }, frame)
+              this.leftRotate(x.parent.parent)
+            }
+          }
+        }
+        const old = this.root.color
+        setBlack(this.root)
+        if (old === 'red') {
+          this.updateHeights(this.root)
+          d.add({ cloned: clone(all) }, frame)
+        }
+      }
+      updateHeight(node) {
+        if (!node)
+          return
+        node.height = Math.max(this.height(node.left), this.height(node.right)) + (node.color === 'red' ? 0 : 1)
+      }
+      updateHeights(node) {
+        if (!node) {
+          return
+        }
+        this.updateHeights(node.left)
+        this.updateHeights(node.right)
+        this.updateHeight(node)
+      }
+      height(node) {
+        return (node === null || node === undefined) ? 0 : node.height
+      }
+      leftRotate(red) {
+        const parent = red.parent
+        const yellow = red.right
+        const green = yellow.left
+        red.status |= 1
+        yellow.status |= 2
+        if (green) {
+          green.status |= 4
+          green.parent = red
+        }
+        this.updateHeights(this.root)
+        d.add({ cloned: clone(all) }, frame)
+        red.right = green
+        red.parent = yellow
+        yellow.left = red
+        yellow.parent = parent
+        if (parent == null) {
+          this.root = yellow
+          all.pop()
+          all.push(this.root)
+        } else if (parent.left == red) {
+          parent.left = yellow
+        } else {
+          parent.right = yellow
+        }
+        // this.updateHeight(red)
+        // this.updateHeight(yellow)
+        this.updateHeights(this.root)
+        d.add({ cloned: clone(all) }, frame)
+        red.status &= 0xfffe
+        yellow.status &= 0xfffd
+        if (green) {
+          green.status &= 0xfffb
+        }
+        d.add({ cloned: clone(all) }, frame)
+      }
+      rightRotate(red) {
+        const parent = red.parent
+        const yellow = red.left
+        const green = yellow.right
+        red.status |= 1
+        yellow.status |= 2
+        if (green) {
+          green.status |= 4
+          green.parent = red
+        }
+        this.updateHeights(this.root)
+        d.add({ cloned: clone(all) }, frame)
+        red.left = green
+        red.parent = yellow
+        yellow.right = red
+        yellow.parent = parent
+        if (parent == null) {
+          this.root = yellow
+          all.pop()
+          all.push(this.root)
+        } else if (parent.left == red) {
+          parent.left = yellow
+        } else {
+          parent.right = yellow
+        }
+        // this.updateHeight(red)
+        // this.updateHeight(yellow)
+        this.updateHeights(this.root)
+        d.add({ cloned: clone(all) }, frame)
+        red.status &= 0xfffe
+        yellow.status &= 0xfffd
+        if (green) {
+          green.status &= 0xfffb
+        }
+        d.add({ cloned: clone(all) }, frame)
+      }
+    }
+    const tree = new Tree()
+    const all = []
+
+    function clone(tree) {
+      return JSON.parse(JSON.stringify(tree, ['color', 'key', 'left', 'right', 'height', 'status']))
+    }
+
+  </script>
+</body>
+
+</html>

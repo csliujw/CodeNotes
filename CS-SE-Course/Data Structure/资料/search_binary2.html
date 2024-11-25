@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 40%;
+      min-height: 200px;
+    }
+  </style>
+  <title>二分查找 - 改动版</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <div class="code" style="display: none;">
+    <pre><code class="language-java">public static int binarySearch(int[] a, int target) {
+    int i = 0, j = a.length;
+    while (i < j) {
+        int m = (i + j) >>> 1;
+        if (target < a[m]) {          // 在左边
+            j = m;
+        } else if (a[m] < target) {   // 在右边
+            i = m + 1;
+        } else {
+            return m;
+        }
+    }
+    return -1;
+}</code></pre>
+  </div>
+  <main></main>
+  <section>
+    <div style='background-color:#cc99cd; margin: 2px 2px 0 0; padding: 4px 6px;'>索引</div>
+    <div style='background-color:#f08d49; margin: 2px 2px 0 0; padding: 4px 6px;'>找到</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>元素个数&nbsp;</span><input type="text" id='count' class="saveable" value="8">
+    <span>待查找值&nbsp;</span><input type="text" id='key' class="saveable">
+    <input style='font-size:12px;' type="button" value="查找" onclick="onSearch()">
+    <span id="searchCount">所用次数:?</span>
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('search_binary2')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    function onSearch() {
+      binarySearch(dataArray, document.querySelector('#key').value)
+      d.updateFrameButtons()
+    }
+    const options = loadOptionsFromStorage('search_binary2')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    let dataArray = []
+    const count = options.count
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 10
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      initArray()
+      sortArray()
+      d.add({ array: dataArray }, frame)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    /*
+      array: 数组
+      pointers: 指针
+      highlights: 高亮位置
+      lineNumber: 高亮行号
+    */
+    function frame({ array, pointers, highlights, lineNumber }) {
+      const pre = document.querySelector('pre')
+      if (lineNumber > 0) {
+        pre.setAttribute('data-line', lineNumber)
+        Prism.highlightAllUnder(pre)
+      }
+      const LEFT = (width - array.length * RECT_WIDTH) / 2
+      for (let i = 0; i <= array.length; i++) {
+        // 注：矩形以左下角 x, y 作为起点坐标
+        let x = LEFT + i * RECT_WIDTH
+        let y = height - RECT_HEIGHT
+        stroke(0)
+        pointers.draw(i, x + RECT_WIDTH / 2, RECT_HEIGHT)
+        if (i >= 0 && i < array.length) {
+          highlights.includes(i) ? fill('#f08d49') : fill('#67cdcc')
+          stroke(0)
+          rect(x, y, RECT_WIDTH, -RECT_HEIGHT)
+          fill('#ffffff')
+          noStroke()
+          text(array[i], x + RECT_WIDTH / 2, y - 6)
+          fill('#cc99cd')
+          stroke(0)
+          rect(x, height, RECT_WIDTH, -RECT_HEIGHT)
+          fill('#ffffff')
+          noStroke()
+          text(i, x + RECT_WIDTH / 2, height - 6)
+        }
+      }
+    }
+
+    function initArray() {
+      let lastVal = 1
+      for (let i = 0; i < count; i++) {
+        let v = lastVal + Math.max(Math.floor(Math.random() * (10)), 1)
+        dataArray.push(v)
+        lastVal = v
+      }
+      shuffleArray()
+    }
+
+    function shuffleArray() {
+      let index = -1,
+        length = dataArray.length,
+        lastIndex = length - 1
+      while (++index < length) {
+        const rand = index + Math.floor(Math.random() * (lastIndex - index + 1))
+        value = dataArray[rand]
+        dataArray[rand] = dataArray[index]
+        dataArray[index] = value
+      }
+    }
+
+    function sortArray() {
+      dataArray = dataArray.sort((a, b) => a - b)
+    }
+
+    function binarySearch(a, target) {
+      let i = 0
+      let j = a.length
+      let count = 0
+      while (i < j) {
+        d.add({ array: dataArray, pointers: [{ text: 'i', index: i }, { text: 'j', index: j }], lineNumber: 3 }, frame)
+        const m = (i + j) >>> 1
+        d.add({ array: dataArray, pointers: [{ text: 'i', index: i }, { text: 'j', index: j }, { text: 'm', index: m }], lineNumber: 5 }, frame)
+        count++
+        document.querySelector('#searchCount').innerHTML = '所用次数:' + count
+        if (target < a[m]) {
+          d.add({ array: dataArray, pointers: [{ text: 'i', index: i }, { text: 'j', index: j }, { text: 'm', index: m }], lineNumber: 6 }, frame)
+          j = m
+        } else if (a[m] < target) {
+          d.add({ array: dataArray, pointers: [{ text: 'i', index: i }, { text: 'j', index: j }, { text: 'm', index: m }], lineNumber: 8 }, frame)
+          i = m + 1
+        } else {
+          d.add({ array: dataArray, pointers: [{ text: 'i', index: i }, { text: 'j', index: j }, { text: 'm', index: m }], highlights: [m], lineNumber: 10 }, frame)
+          return m
+        }
+      }
+      d.add({ array: dataArray, pointers: [{ text: 'i', index: i }, { text: 'j', index: j }], lineNumber: 13 }, frame)
+      return -1
+    }
+  </script>
+</body>
+
+</html>

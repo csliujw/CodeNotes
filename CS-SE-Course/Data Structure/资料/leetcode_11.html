@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 11 - 盛水最多容器</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:rgba(88,195,224,0.8); margin: 2px 2px 0 0; padding: 4px 6px;'>水</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    显示最大 <input type="checkbox" name="showmax">
+    i: <input type="number" id="i" value="0" min="0" style="width: 40px;" onChange="onChangeIJ()" />
+    j: <input type="number" id="j" value="8" min="0" style="width: 40px;" onChange="onChangeIJ()" />
+    原始数组 <input type="text" id="myArray" value="1,8,6,2,5,4,8,3,7" class="saveable array" />
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="20" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_11')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    function onChangeIJ() {
+      updateLiveNode()
+    }
+    function updateLiveNode() {
+      const i = document.getElementById("i").value - 0
+      const j = document.getElementById("j").value - 0
+      liveNode.i = i
+      liveNode.j = j
+      const area = (j - i) * Math.min(myArray[i], myArray[j])
+      liveNode.area = area
+      max = Math.max(max, area)
+      liveNode.max = max
+    }
+    const options = loadOptionsFromStorage('leetcode_11')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    const myArray = options.myArray
+    document.getElementById("j").value = myArray.length - 1
+    const showmax = document.querySelector('[name=showmax]')
+    let liveNode = {};
+    let max = 0
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 16
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      updateLiveNode()
+      d.add({ cloned: liveNode }, frame)
+      maxArea()
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'), () => true)
+    }
+    function frame({ cloned: node }) {
+      if (node) {
+        const startX = width / 2 - myArray.length / 2 * RECT_WIDTH
+        const startY = height - 100
+        stroke('black')
+        strokeWeight(5)
+        let x = startX
+        let y = startY
+        for (let i = 0; i < myArray.length; i++) {
+          line(x, y - myArray[i] * RECT_HEIGHT, x, y)
+          x += RECT_WIDTH
+        }
+        line(startX, startY, startX + myArray.length * RECT_WIDTH - RECT_WIDTH, startY)
+        noStroke()
+        fill("rgba(88,195,224,0.8)")
+        let min = myArray[node.i] > myArray[node.j] ? myArray[node.j] : myArray[node.i]
+        rect(startX + node.i * RECT_WIDTH, startY - min * RECT_HEIGHT, (node.j - node.i) * RECT_WIDTH, min * RECT_HEIGHT)
+        fill("rgba(255,0,0,0.1)")
+        if (showmax.checked) {
+          min = myArray[node.maxi] > myArray[node.maxj] ? myArray[node.maxj] : myArray[node.maxi]
+          rect(startX + node.maxi * RECT_WIDTH, startY - min * RECT_HEIGHT, (node.maxj - node.maxi) * RECT_WIDTH, min * RECT_HEIGHT)
+        }
+        fill("black")
+        text(`Max: ${node.max} Current: ${node.area}`, width / 2, 100)
+      }
+    }
+
+    function maxArea() {
+      let i = 0;
+      let j = myArray.length - 1
+      let max = 0
+      let maxi = i
+      let maxj = j
+      while (i < j) {
+        if (myArray[i] < myArray[j]) {
+          const area = (j - i) * myArray[i]
+          if (area > max) {
+            max = area
+            maxi = i
+            maxj = j
+          }
+          const node = { i, j, area, maxi, maxj, max }
+          d.add({ cloned: clone(node) }, frame)
+          i++
+        } else {
+          const area = (j - i) * myArray[j]
+          if (area > max) {
+            max = area
+            maxi = i
+            maxj = j
+          }
+          const node = { i, j, area, maxi, maxj, max }
+          d.add({ cloned: clone(node) }, frame)
+          j--
+        }
+      }
+    }
+
+  </script>
+</body>
+
+</html>

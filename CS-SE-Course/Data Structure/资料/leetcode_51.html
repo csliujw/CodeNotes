@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>N皇后</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#ffffff; margin: 2px 2px 0 0; padding: 4px 6px; border: 1px solid black;'>可用</div>
+    <div style='background-color:rgba(255,0,0,.2); margin: 2px 2px 0 0; padding: 4px 6px; border: 1px solid black;'>冲突
+    </div>
+    <!-- <div style='background-color:#7df4f2; margin: 2px 2px 0 0; padding: 4px 6px;'>已结束</div> -->
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>n&nbsp;</span><input type="text" id='n' class="saveable" value="4">
+    行冲突<input type="checkbox" onchange="checkVd(this)" name="vd" id="cvd" class="saveable bool" />
+    列冲突<input type="checkbox" onchange="checkVa(this)" name="va" id="cva" class="saveable bool" />
+    左斜冲突<input type="checkbox" onchange="checkVb(this)" name="vb" id="cvb" class="saveable bool" />
+    右斜冲突<input type="checkbox" onchange="checkVc(this)" name="vc" id="cvc" class="saveable bool" />
+    i <input type="number" id="i" class="saveable" value="0" style="width: 24px;">
+    j <input type="number" id="j" class="saveable" value="0" style="width: 24px;">
+    <input style='font-size:12px;' type="button" value="👸" onclick="putQueen()">
+    <input style='font-size:12px;' type="button" value="清除" onclick="clearQueen()">
+    none<input type="radio" onchange="shownumberChange(this)" name="aa" value="0" checked />
+    i+j<input type="radio" onchange="shownumberChange(this)" name="aa" value="1" />
+    i-j<input type="radio" onchange="shownumberChange(this)" name="aa" value="2" />
+    n-1-(i-j)<input type="radio" onchange="shownumberChange(this)" name="aa" value="3" />
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="40" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_51')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    function putQueen() {
+      let i = document.getElementById("i").value - 0
+      let j = document.getElementById("j").value - 0
+      va[j] = true
+      vd[i] = true
+      vb[i + j] = true
+      vc[table.length - 1 - (i - j)] = true
+      table[i][j] = 'Q'
+    }
+    function clearQueen() {
+      clearTable()
+    }
+    let shownumber = 0
+    function shownumberChange(me) {
+      shownumber = me.value
+    }
+    function checkVa(me) {
+      cva = me.checked
+    }
+    function checkVb(me) {
+      cvb = me.checked
+    }
+    function checkVc(me) {
+      cvc = me.checked
+    }
+    function checkVd(me) {
+      cvd = me.checked
+    }
+    const options = loadOptionsFromStorage('leetcode_51')
+    let cva = options.cva
+    let cvb = options.cvb
+    let cvc = options.cvc
+    let cvd = options.cvd
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+
+    const tree = { done: false, nodes: [], txt: ' ' }
+    const table = []
+    const va = []
+    const vb = []
+    const vc = []
+    const vd = []
+    const total = options.n
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 18
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      clearTable()
+      let aliveNode = { i: -1, j: -1, n: total, table, va, vb, vc, vd }
+      d.add({ cloned: aliveNode }, frame)
+      clearTable()
+      queen(0, total, table, va, vb, vc, vd)
+      d.updateFrameButtons()
+      stroke('black')
+    }
+    function draw() {
+      d.draw(() => background('#ccc'), () => true)
+    }
+    function frame({ cloned }) {
+      drawTree(cloned)
+    }
+    function clearTable() {
+      for (let i = 0; i < total; i++) {
+        va[i] = false;
+      }
+      for (let i = 0; i < total; i++) {
+        vd[i] = false;
+      }
+      for (let i = 0; i < 2 * total - 1; i++) {
+        vb[i] = false;
+      }
+      for (let i = 0; i < 2 * total - 1; i++) {
+        vc[i] = false;
+      }
+      table.splice(0)
+      for (let i = 0; i < total; i++) {
+        let temp = []
+        for (let j = 0; j < total; j++) {
+          temp[j] = '.'
+        }
+        table.push(temp)
+      }
+    }
+
+    function drawTree(node) {
+      // console.log(node)
+      if (node) {
+        const startX = width / 2 - node.n / 2 * RECT_WIDTH
+        const startY = height / 2 - node.n / 2 * RECT_WIDTH
+        fill('black')
+        let x = startX + RECT_WIDTH
+        let y = startY - RECT_WIDTH
+        // text(`i=${node.i}      j=${node.j}`, x, y)
+        x = startX
+        y = startY
+        for (let i = 0; i < node.n; i++) {
+          for (let j = 0; j < node.n; j++) {
+            fill('white')
+            rect(x, y, RECT_WIDTH, RECT_WIDTH)
+            if (cva && node.va[j] || cvd && node.vd[i]) {
+              fill('rgba(255,0,0,.2)')
+              rect(x, y, RECT_WIDTH, RECT_WIDTH)
+            }
+            if (cvb && node.vb[i + j]) {
+              // fill('rgb(0,255,0)')
+              fill('rgba(255,0,0,.2)')
+              rect(x, y, RECT_WIDTH, RECT_WIDTH)
+            }
+            if (cvc && node.vc[node.n - 1 - (i - j)]) {
+              // fill('rgb(0,0,255)')
+              fill('rgba(255,0,0,.2)')
+              rect(x, y, RECT_WIDTH, RECT_WIDTH)
+            }
+            if (node.table[i][j] == 'Q') {
+              text('👸', x + RECT_WIDTH / 2, y + RECT_WIDTH / 2 + 4)
+            }
+            fill('black')
+            if (shownumber == 1) {
+              text(`${i + j}`, x + RECT_WIDTH / 2, y + RECT_WIDTH / 2 + 4)
+            }
+            if (shownumber == 2) {
+              text(`${i - j}`, x + RECT_WIDTH / 2, y + RECT_WIDTH / 2 + 4)
+            }
+            if (shownumber == 3) {
+              text(`${node.n - 1 - (i - j)}`, x + RECT_WIDTH / 2, y + RECT_WIDTH / 2 + 4)
+            }
+            x += RECT_WIDTH
+          }
+          y += RECT_WIDTH
+          x = startX
+        }
+      }
+    }
+
+    function queen(i, n, table, va, vb, vc, vd) {
+      if (i == n) {
+        return
+      }
+      for (let j = 0; j < n; j++) {
+        if (va[j] || vb[i + j] || vc[n - 1 - (i - j)]) {
+          continue
+        }
+        let node = { i, j, n, table, va, vb, vc, vd }
+        table[i][j] = 'Q'
+        va[j] = vb[i + j] = vc[n - 1 - (i - j)] = true
+        vd[i] = true
+        d.add({ cloned: clone(node), keyframe: i + 1 == n }, frame)
+        queen(i + 1, n, table, va, vb, vc, vd)
+        va[j] = vb[i + j] = vc[n - 1 - (i - j)] = false
+        vd[i] = false
+        table[i][j] = '.'
+        d.add({ cloned: clone(node) }, frame)
+      }
+    }
+
+  </script>
+</body>
+
+</html>

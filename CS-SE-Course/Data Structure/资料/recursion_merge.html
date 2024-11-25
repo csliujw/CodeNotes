@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>递归合并k个有序链表</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:#00FF99; margin: 2px 2px 0 0; padding: 4px 6px;'>进行中</div>
+    <div style='background-color:#7df4f2; margin: 2px 2px 0 0; padding: 4px 6px;'>已结束</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>n&nbsp;</span><input type="text" id='n' class="saveable" value="6">
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="30" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('recursion_merge')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('recursion_merge')
+    const WIDTH_ARRAY = [15, 30, 45, 80, 120, 150, 180]
+    const HEIGHT_ARRAY = [80, 60, 60, 50, 50, 50, 50]
+    const RECT_HEIGHT = 20                // 值矩形高度
+    const n = options.n
+    const d = new Draw(options.animate_speed)
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 16
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      d.add({}, frame)
+      const array = [[1, 3], [4, 8], [2, 5], [2, 6], [3, 7]]
+      // const array = [[6], [1], [2], [5], [4], [3]]
+      const f = merge(array, tree, 0, array.length - 1)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'))
+    }
+    function frame({ cloned }) {
+      drawTree(cloned, width / 2, RECT_HEIGHT, n - 1, 0, 0)
+    }
+
+    function drawTree(node, x, y, deep, px, py) {
+      if (node) {
+        if (node.txt) {
+          if (px && py) {
+            stroke('black')
+            line(x, y, px, py)
+            noStroke()
+          }
+        }
+        drawTree(node.left, x - WIDTH_ARRAY[deep], y + HEIGHT_ARRAY[deep], deep - 1, x, y)
+        drawTree(node.right, x + WIDTH_ARRAY[deep], y + HEIGHT_ARRAY[deep], deep - 1, x, y)
+        if (node.txt) {
+          if (node.done) {
+            fill('#7df4f2')
+          } else {
+            fill('#00FF99')
+          }
+          const w = node.txt.length * 6 + 16
+          stroke(0)
+          rect(x - w / 2, y - RECT_HEIGHT / 2, w, RECT_HEIGHT)
+          noStroke()
+          fill('black')
+          text(node.txt, x, y + 5)
+        }
+      }
+    }
+
+    const tree = { done: false }
+    function merge(lists, t, i, j) {
+      t.txt = `${JSON.stringify(lists.slice(i, j + 1))}`
+      d.add({ cloned: clone(tree) }, frame)
+      if (i === j) {
+        t.done = true
+        t.txt = `${JSON.stringify(lists[i])}`
+        d.add({ cloned: clone(tree) }, frame)
+        return lists[i]
+      }
+      t.left = { done: false }
+      t.right = { done: false }
+      const m = (i + j) >>> 1
+      const l = merge(lists, t.left, i, m)
+      const r = merge(lists, t.right, m + 1, j)
+      const f = merge2(l, r)
+      t.done = true
+      t.txt = `${JSON.stringify(f)}`
+      d.add({ cloned: clone(tree) }, frame)
+      return f
+    }
+    function merge2(l, r) {
+      return l.concat(r).sort((a, b) => a - b)
+    }
+
+  </script>
+</body>
+
+</html>

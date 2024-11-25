@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/prism.css">
+  <style>
+    html,
+    body {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-size: 12px;
+    }
+
+    body {
+      min-height: 500px;
+    }
+
+    section {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .code {
+      margin-top: 3px;
+    }
+
+    pre[class*=language-] {
+      margin: 0;
+      padding: 0;
+    }
+
+    main {
+      border-top: 2px solid #ccc;
+      width: 100%;
+      height: 65%;
+      min-height: 200px;
+    }
+  </style>
+  <title>Leetcode 167 - 两数之和</title>
+</head>
+
+<body>
+  <section class="frames"></section>
+  <section style="display: none;">
+    <pre><code class="language-java">int factorial(int n) {
+    if (n == 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  </section>
+  <main></main>
+  <section>
+    <div style='background-color:black; margin: 2px 2px 0 0; padding: 4px 6px; color:white'>原始数组</div>
+    <div style='background-color:red; margin: 2px 2px 0 0; padding: 4px 6px; color:white'>两数之和</div>
+    <div style='background-color:#0000ff; margin: 2px 2px 0 0; padding: 4px 6px; color:white'>目标</div>
+  </section>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    原始数组 <input type="text" id="myArray" value="1, 2, 3, 4, 5, 10, 20" class="saveable array" />
+    目标 <input type="text" id="target" value="15" class="saveable int" />
+    显示和 <input type="checkbox" name="showmax" checked>
+  </div>
+  <div style='margin: 2px 2px 0 0; padding: 4px 6px;'>
+    <span>动画速度(ms)&nbsp;</span><input type="number" step="100" value="300" id="animate_speed" class="saveable int"
+      style="width: 40px;">
+    <span>矩形宽</span><input type="number" step="1" value="30" id="RECT_WIDTH" class="saveable int" style="width: 40px;">
+    <span>矩形高</span><input type="number" step="1" value="3" id="RECT_HEIGHT" class="saveable int" style="width: 40px;">
+    <input style='font-size:12px;' type="button" value="保存" onclick="onSave('leetcode_167')">
+  </div>
+  <script src="js/p5.js"></script>
+  <script src="js/p5-svg.js"></script>
+  <script src="js/util.js"></script>
+  <script src="js/prism.js"></script>
+  <script>
+    const options = loadOptionsFromStorage('leetcode_167')
+    const d = new Draw(options.animate_speed)
+    const RECT_WIDTH = options.RECT_WIDTH
+    const RECT_HEIGHT = options.RECT_HEIGHT
+    // const target = 9
+    // const myArray = [2, 7, 11, 15]
+    const target = options.target
+    const myArray = options.myArray
+    const showmax = document.querySelector('[name=showmax]')
+
+    function setup() {
+      const WIN_WIDTH = document.querySelector('main').clientWidth
+      const WIN_HEIGHT = document.querySelector('main').clientHeight
+      const FONT_SIZE = 16
+      createCanvas(WIN_WIDTH, WIN_HEIGHT, SVG)
+      textSize(FONT_SIZE)
+      textAlign(CENTER)
+      const node = { i: 0, j: myArray.length - 1, target, sum: myArray[0] + myArray[myArray.length - 1] }
+      d.add({ cloned: clone(node) }, frame)
+      twoSum(0, myArray.length - 1, target)
+      d.updateFrameButtons()
+    }
+    function draw() {
+      d.draw(() => background('#eee'), () => true)
+    }
+    function frame({ cloned: node }) {
+      const startX = width / 2 - myArray.length / 2 * RECT_WIDTH
+      const startY = height - 100
+
+      let x = startX
+      let y = startY
+
+      stroke('blue')
+      strokeWeight(5)
+      x = startX - 100
+      y = startY
+      line(x, y, x, y - target * RECT_HEIGHT)
+
+      if (showmax.checked) {
+        stroke('red')
+        x = startX - 50
+        if (node.i < node.j) {
+          if (node.sum > 0) {
+            line(x, y - node.sum * RECT_HEIGHT, x, y)
+          } else if (node.sum < 0) {
+            line(x, y, x, y - node.sum * RECT_HEIGHT)
+          } else {
+            line(x, y, x, y)
+          }
+        }
+      }
+
+      x = startX
+      y = startY
+      stroke('red')
+      fill('red')
+      strokeWeight(1)
+      text('i', x + node.i * RECT_WIDTH, y + 20)
+      text('j', x + node.j * RECT_WIDTH, y + 20)
+
+      x = startX
+      y = startY
+      stroke('black')
+      strokeWeight(5)
+      fill('#888')
+      for (let i = 0; i < myArray.length; i++) {
+        stroke('black')
+        line(x, y, x, y - myArray[i] * RECT_HEIGHT)
+
+        x += RECT_WIDTH
+      }
+
+      stroke('black')
+      strokeWeight(1)
+      y = startY + 3
+      line(startX - 120, y, startX + myArray.length * RECT_WIDTH - RECT_WIDTH + 20, y)
+      y = startY - target * RECT_HEIGHT - 3
+      line(startX - 120, y, startX + myArray.length * RECT_WIDTH - RECT_WIDTH + 20, y)
+    }
+
+    function twoSum(left, right, target) {
+      let i = left
+      let j = right
+      while (i < j) {
+        const sum = myArray[i] + myArray[j]
+        if (sum == target) {
+          return
+        } else if (sum < target) {
+          i++
+          d.add({ cloned: clone({ i, j, sum: myArray[i] + myArray[j] }) }, frame)
+        } else {
+          j--
+          d.add({ cloned: clone({ i, j, sum: myArray[i] + myArray[j] }) }, frame)
+        }
+      }
+    }
+
+  </script>
+</body>
+
+</html>
