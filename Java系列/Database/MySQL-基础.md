@@ -1041,7 +1041,21 @@ select avg(math) from student;
 
 ### 分组查询
 
-让同属性的多条记录组成一个组合，这样就可以以组为单位计算该组记录的总和或平均值了。
+让同属性的多条记录组成一个组合，这样就能以组为单位计算该组记录的总和或平均值了。
+
+#### group by
+
+对数据进行分组，然后将组作为操作的基本单位。如要查询每个班级中分数最高的人，按班级进行分组，然后查询每组中的 max。
+
+<b>注意：</b>select 字句后面的查询字段只能是聚合函数和出现在 group by 后面的字段。即在使用 group by 进行分组查询时，应该显式地将所有非聚合列指定在 `GROUP BY` 后面。
+
+如果发现 `select *,count(1) from users group by user_name;` 这种语句可以正常执行，是因为 `MySQL 8.x` 版本允许在 `GROUP BY` 子句中隐式包含所有未指定的列。
+
+```sql
+select *,count(1) from users group by user_name;
+被 MySQL 隐式转换为
+select *,count(1) from users group by col1, col2, clo3,...
+```
 
 #### 典型场景
 
@@ -1077,10 +1091,6 @@ GROUP BY species;
  from products 
  group by vend_id;
 ```
-
-#### group by
-
-对数据进行分组，然后将组作为操作的基本单位。如要查询每个班级中分数最高的人，按班级进行分组，然后查询每组中的 max。
 
 <b>group by 细节</b>
 

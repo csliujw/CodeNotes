@@ -39,7 +39,7 @@
 
 `git push :branch_name` # 删除远端分支
 
-`git rm --cached filename` # 取消追踪某个文件  （去除已经commit了的文件）
+`git rm --cached filename` # 取消追踪某个文件（不会影响该文件之前的 commit）
 
 `git commit --amend` # 提交一个 commit 但是记录到上一次 log 中（commit 时不想再新增一个记录，压缩两个日志）
 

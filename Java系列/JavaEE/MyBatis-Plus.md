@@ -18,19 +18,19 @@ MyBatis-Plus 在 MyBatis 的 xml 和注解注入之后，通过反射分析实�
 
 > MyBatis vs JPA
 
-MyBatis 的优势
+<b>MyBatis 的优势</b>
 
 - SQL 语句可以自由控制，更灵活，性能比 JPA 略高；但是新版的 JPA SQL 语句也很灵活了。
 - SQL 与代码分离，易于阅读和维护
 - 提供 XML 标签，支持编写动态 SQL 语句
 
-JPA 的优势
+<b>JPA 的优势</b>
 
 - JPA 一致性比较好
 - 提供了很多 CRUD 方法，开发效率高
 - 对象化程度更高
 
-MyBatis 的劣势
+<b>MyBatis 的劣势</b>
 
 - 简单 CRUD 还得写 SQL 语句
 - XML 中有大量的 SQL 要维护
@@ -69,7 +69,7 @@ MyBatis 的劣势
 
 ### 创建表
 
-常见数据库 mp，在 mp 下创建四张表 `tb_user\tb_produce\tb_type\tb_orders`。
+创建数据库 mp，在 mp 下创建四张表 `tb_user \ tb_produce \ tb_type \ tb_orders`。
 
 ```mysql
 drop database if exists mp;
@@ -108,7 +108,6 @@ create table `tb_produce`
   AUTO_INCREMENT = 1
   DEFAULT CHARSET = utf8;
 
-
 -- 商品类别表
 create table `tb_type`
 (
@@ -119,7 +118,6 @@ create table `tb_type`
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 1
   DEFAULT CHARSET = utf8;
-
 
 -- 订单表
 create table `tb_orders`
@@ -1548,9 +1546,11 @@ mybatis-plus:
 
 ## SqlRunner
 
-SqlRunner 执行原始的 SQL 语句。可以通过 SqlRunner 执行多表查询的语句。
+如果我们希望执行原生的 SQL 语句，可以使用 SqlRunner，这也意味着我们可以使用 SqlRunner 执行多表查询语句。
 
 ```java
+import com.baomidou.mybatisplus.extension.toolkit.SqlRunner;
+
 public void test(){
     Page<Map<String, Object>> ordersPage = new Page<>(1, 2);
     Map<String, Object> stringObjectMap = SqlRunner.db().selectOne("select * from book limit 1,10");
@@ -1561,10 +1561,33 @@ public void test(){
 }
 ```
 
-## 多表/多表分页查询
+## 一对一查询
 
-- 用 @Select，直接写 SQL 进行多表查询。
-- 如果想多表分页查询，那就给方法加参数 `IPage<Book> page`
+MP 实现一对一查询的方式有很多种。
+
+1️⃣SqlRunner，执行自定义的一对一查询 SQL 语句，然后利用 lambda 将查询到的 key-value 映射到对应的 POJO。
+
+2️⃣先查询主表数据，然后查询附属表的数据，然后将数据封装到 VO 中。
+
+3️⃣借助 MyBatis 的能力实现一对一查询（xml 的方式或注解的方式），推荐使用 xml 的方式完成。
+
+简单的一对一（两张表）查询可以采用查两次的方式来做，复杂的一对一还是写 xml 比较合适。
+
+## 一对多查询
+
+MP 实现一对多查询的方式有很多种。
+
+1️⃣SqlRunner，执行自定义的一对一查询 SQL 语句，然后利用 lambda 将查询到的 key-value 映射到对应的 POJO。
+
+2️⃣先查询主表数据，然后查询附属表的数据，然后将数据封装到 VO 中。
+
+3️⃣借助 MyBatis 的能力实现一对多查询（xml 的方式或注解的方式），推荐使用 xml 的方式完成。
+
+简单的一对多（两张表）查询可以采用查两次的方式来做，复杂的一对一还是写 xml 比较合适。
+
+## 分页查询
+
+用 @Select，直接写 SQL 进行多表查询。如果想多表分页查询，那就给方法加参数 `IPage<Book> page`，MP 的分页插件会自动利用 page 中的参数完成分页。注意！page 一定要写在第一行！
 
 ```java
 @Select(" select b.id as id,b.name as name,b.description as description,b.price as price,c.name as cname from book b left join catalog c on b.cid = c.id")
@@ -1575,21 +1598,21 @@ List<BookAndCatalog> queryBookAndCatalog(IPage<Book> page);
 
 逻辑删除就是通过一个字段标识数据是否被删除。本例中添加的逻辑删除标识字段为 delete，0 表示未删除，1 表示已删除。
 
-MP 配置逻辑删除有两种方式
+MP 配置逻辑删除有两种方式：在 yml 中做全局配置 / 在逻辑删除的字段上加 @TableLogic 注解
 
-- 在 yml 文件中配置（全局配置）推荐😀
+<b>在 yml 文件中配置（全局配置）推荐😀</b>
 
-  ```yml
-  mybatis-plus:
-    global-config:
-      db-config:
-        logic-delete-field: deleted #默认deleted
-        logic-delete-value: 1 # 1 表示删除
-        logic-not-delete-value: 0 # 0 表示未删除
-        id-type: auto
-  ```
+```yml
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: deleted #默认deleted
+      logic-delete-value: 1 # 1 表示删除
+      logic-not-delete-value: 0 # 0 表示未删除
+      id-type: auto
+```
 
-- 直接在逻辑删除的字段上加 @TableLogic 注解 `@TableLogic(value="1", delval="0")`
+<b>直接在逻辑删除的字段上加 @TableLogic 注解 `@TableLogic(value="1", delval="0")`</b>
 
 下面时测试逻辑删除的代码。
 
@@ -1745,7 +1768,7 @@ public class TestField {
     void testUpdate() {
         U u = new U();
         u.setAge(13);
-        System.out.println(uMapper.update(u, new LambdaUpdateWrapper<U>().eq(U::getUserName, "payphone")));
+        System.out.println(uMapper.update(u, new LambdaUpdateWrapper<U>().eq(U::getUserName, "cc")));
     }
 }
 ```
