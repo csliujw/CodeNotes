@@ -5297,7 +5297,7 @@ java -jar 工程包名.jar
 
 样例：[springboot_08_ssmp/pom.xml · TangGuoNiuBi/spring-boot-study - 码云 - 开源中国 (gitee.com)](https://gitee.com/CandyWall/spring-boot-study/blob/master/springboot_08_ssmp/pom.xml)
 
-千万不要在 configuration 里加 `<skip>true</skip>`
+<b style="color:red">千万不要在 configuration 里加 `<skip>true</skip>`</b>
 
 ```xml
 <plugin>
@@ -5424,7 +5424,8 @@ java -jar 工程包名.jar
 </project>
 ```
 
-
+1. 打包的时候，<b style="color:red">千万不要在 configuration 里加 `<skip>true</skip>`，它会忽略主启动类</b>
+2. resources xml 配置这里，我图方便（mapper代码和 mapper 的 xml 文件可以写在一个目录，做了个 src/main/java 的配置），导致 maven 打包的时候忽略了其他资源文件（src/main/resources）下的配置文件，重新配置下就可以了，包含 src/main/resources 下的所有文件。
 
 ### 打包失败处理
 

@@ -9,6 +9,13 @@ PS：MyBatis 3.4x 版本，把它内部需要的三方 jar 都整合在一起了
 - Hibernate：全自动的 ORM 框架，无需编写 SQL 语句，不支持存储过程，开发效率高，但是不能通过优化 SQL 来提高性能。
 - MyBatis 半自动化的 ORM 框架，需要写 SQL，支持存储过程。对可以通过优化 SQL 来提高性能，适合一些复杂的和需要优化性能的项目。
 
+<b style="color:red">MyBatis 提供了两种 SQL 语句映射方式：xml 和 注解</b>
+
+使用注解来映射简单语句会使代码显得更加简洁，但对于稍微复杂一点的语句，Java 注解不仅力不从心，还会让本就复杂的 SQL 语句更加混乱不堪。 因此，如果你需要做一些很复杂的操作，最好用 XML 来映射语句。`Tongyilima` xml 生成的提示还可以。
+
+- 复杂 SQL 使用 xml 来配置
+- 较简单的 SQL 可以使用注解来配置
+
 ## 解决的问题
 
 MyBatis 减少了样板代码，简化了持久层的开发。
@@ -63,6 +70,31 @@ MyBatis 框架在操作数据库时，大体经过了 8 个步骤
 </build>
 ```
 
+上述配置会导致 resources 目录下的资源文件无法被发布到 classes 下。如果希望 resources 目录下的文件也被发布到 classes 下，需要增加下面的配置。
+
+```xml
+<bulid>        
+    <resources>
+        <resource>
+            <directory>src/main/java</directory>
+            <includes>
+                <include>**/*.xml</include>
+            </includes>
+            <filtering>true</filtering>
+        </resource>
+        <!-- src/main/resources 下的所有文件也是需要发布的资源 -->
+        <resource>
+        	<directory>src/main/resources</directory>
+            <includes>
+            	<include>*.*</include>
+            </includes>
+        </resource>
+    </resources>
+</build>
+```
+
+原因：maven 通过 `<resources>` 标签可以定义项目的资源目录。先前只定义了 src/main/java/ 下的 xml 文件是项目的资源目录。
+
 # 设计模式
 
 相对路径 `src/java/main/文件名.xml`
@@ -97,15 +129,15 @@ build.build(in)
 create table mybatis.clazz
 (
     id   int auto_increment primary key,
-    name varchar(60) default 'one' null
+    name varchar(60) default 'one' not null
 );
 
 create table mybatis.users
 (
     id       int auto_increment primary key,
     name     varchar(60)      not null,
-    sex      char default '1' null,
-    clazz_id int  default 1   null -- 和 clazz 表的 id 对应，是逻辑外键关系
+    sex      char default '1' not null,
+    clazz_id int  default 1   not null -- 和 clazz 表的 id 对应，是逻辑外键关系
 );
 ```
 

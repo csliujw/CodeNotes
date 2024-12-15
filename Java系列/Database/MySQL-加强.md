@@ -2,43 +2,61 @@
 
 [TOC]
 
-## 常见面试题
+<b>什么是事务，以及事务的四大特性</b>
 
-- <b>什么是事务，以及事务的四大特性</b>
-    - <span style="color:red">事务</span>是一组操作的集合，将所有的操作作为一个整体一起向系统提交或撤销操作请求，即这些操作<span style="color:red">要么同时成功，要么同时失败。</span>
-    - ACID 四大特性。
+- <span style="color:red">事务</span>是一组操作的集合，将所有的操作作为一个整体一起向系统提交或撤销操作请求，即这些操作<span style="color:red">要么同时成功，要么同时失败。</span>
+- ACID 四大特性。
 
-- <b>事务的隔离级别有哪些, MySQL 默认是哪个</b>
-    - <span style="color:orange">读未提交、读已提交、可重复读、可串行化。MySQL 默认是可重复读。</span>
-- <b>内连接与左外连接的区别是什么 </b>
-    - <span style="color:orange">内连接只返回两个表中连接字段相等的行。</span>
-    - <span style="color:orange">左外连接返回包括左表中的所有记录和右表中连接字段相等的记录。</span>
-- <b>InnoDB 与 MyISAM 的区别</b>
-    - <span style="color:orange">InnoDB 支持事务，支持行级锁，支持外键。</span>
-    - <span style="color:orange">MyISAM 不支持事务，不支持行级锁，不支持外键。</span>
-- <b>MySQL 默认 InnoDB 引擎的索引是什么数据结构</b>
-    - <span style="color:orange">采用的 B+Tree 数据结构。采用这种数据结构，一个数据块中保存的结点数就多少，查找数据所需要的 IO 次数就少，查找效率高。</span>
-- <b>如何查看 MySQL 的执行计划 </b>
-    - <span style="color:orange">每次我们提交一个 SQL 查询语句给 MySQL，他内核里的查询优化器，都会针对这个 SQL 语句的语义去生成一个执行计划，这个执行计划就代表了，他会怎么查各个表，用哪些索引，如何做排序和分组。</span>
-    - <span style="color:orange">可以使用 explain sql 语句或者 desc sql 语句来查看执行计划。</span>
-- <b>索引失效的情况有哪些 </b>
-    - <span style="color:orange">联合索引中，出现范围查询 (>,<)，范围查询右侧的列索引失效。条件允许的话，尽量用 >=,<=。</span>
-    - <span style="color:orange">用 or 分隔开的条例，如果 or 前面条件中的列有索引，后面的没有索引，那么涉及到的索引都会失效。可以将 or 中的所有字段都设置为索引。</span>
-    - <span style="color:orange">字符串类型的字段使用时不加引号，索引会失效。</span>
-    - <span style="color:orange">不符合索引的最左前缀法则的话，索引会失效。如  like '%d' 这种模糊匹配。</span>
-    - <span style="color:orange">如果 MySQL 优化器评估发现走索引慢，就不会走索引。</span>
-- <b>什么是回表查询</b>
-    - <span style="color:orange">回表查询是指，当我们使用非聚集索引时，需要索引中没有完全包含我们需要检索的字段，需要根据当前索引查询到的主键 id，进行回表，通过主键 id 再查询一次数据库。</span>
-- <b>什么是 MVCC</b>
-    - <span style="color:orange">全称 Multi-Version Concurrency Control，即多版本并发控制，主要是为了提高数据库的并发性能。以下文章都是围绕 InnoDB 引擎来讲，因为 MyLASM 不支持事务。</span>
-    - <span style="color:orange">MVCC 是“维持一个数据的多个版本，使读写操作没有冲突”的一个抽象概念。</span>
-    - <span style="color:orange">它的实现原理主要是版本链，undo 日志，Read View 来实现的。</span>
-- <b>MySQL 主从复制的原理是什么</b>
-    - 主从复制中分为<b>「主服务器 (master) 「和」从服务器 (slave) 」，「主服务器负责写，而从服务器负责读」</b>，MySQL 的主从复制的过程是一个「异步的过程」。这样读写分离的过程能够是整体的服务性能提高，即使写操作时间比较长，也不影响读操作的进行。
-    - 主从复制中主要有三个线程：master(binlog dump thread )、slave(I/O thread、SQL thread)，Master 一条线程，Slave 两条线程。
-    - master 的 binlog dump thread 负责主库中有数据更新时，按照 binlong 格式将更新的事件类型写入到主库。并且 Master 会趁机 log dump 线程通知 Slave 主库存在数据更新。Slave 中会创建 IO thread 用于请求 Master 的 binlog，将信息更新到 relay log 中。当 Slave 发现 relay log 有更新是，就创建 SQL 线程将更新的内容同步到 Slave 数据库中。
-- <b>主从复制之后的读写分离如何实现</b>
-- <b>数据库的分库分表如何实现</b>
+<b>事务的隔离级别有哪些, MySQL 默认是哪个</b>
+
+- <span style="color:orange">读未提交、读已提交、可重复读、可串行化。MySQL 默认是可重复读。</span>
+
+<b>内连接与左外连接的区别是什么 </b>
+
+- <span style="color:orange">内连接只返回两个表中连接字段相等的行。</span>
+- <span style="color:orange">左外连接返回包括左表中的所有记录和右表中连接字段相等的记录。</span>
+
+<b>InnoDB 与 MyISAM 的区别</b>
+
+- <span style="color:orange">InnoDB 支持事务，支持行级锁，支持外键。</span>
+- <span style="color:orange">MyISAM 不支持事务，不支持行级锁，不支持外键。</span>
+
+<b>MySQL 默认 InnoDB 引擎的索引是什么数据结构</b>
+
+- <span style="color:orange">采用的 B+Tree 数据结构。采用这种数据结构，一个数据块中保存的结点数就多少，查找数据所需要的 IO 次数就少，查找效率高。</span>
+
+<b>如何查看 MySQL 的执行计划 </b>
+
+- <span style="color:orange">每次我们提交一个 SQL 查询语句给 MySQL，他内核里的查询优化器，都会针对这个 SQL 语句的语义去生成一个执行计划，这个执行计划就代表了，他会怎么查各个表，用哪些索引，如何做排序和分组。</span>
+- <span style="color:orange">可以使用 explain sql 语句或者 desc sql 语句来查看执行计划。</span>
+
+<b>索引失效的情况有哪些 </b>
+
+- <span style="color:orange">联合索引中，出现范围查询 (>,<)，范围查询右侧的列索引失效。条件允许的话，尽量用 >=,<=。</span>
+- <span style="color:orange">用 or 分隔开的条例，如果 or 前面条件中的列有索引，后面的没有索引，那么涉及到的索引都会失效。可以将 or 中的所有字段都设置为索引。</span>
+- <span style="color:orange">字符串类型的字段使用时不加引号，索引会失效。</span>
+- <span style="color:orange">不符合索引的最左前缀法则的话，索引会失效。如  like '%d' 这种模糊匹配。</span>
+- <span style="color:orange">如果 MySQL 优化器评估发现走索引慢，就不会走索引。</span>
+
+<b>什么是回表查询</b>
+
+- <span style="color:orange">回表查询是指，当我们使用非聚集索引时，需要索引中没有完全包含我们需要检索的字段，需要根据当前索引查询到的主键 id，进行回表，通过主键 id 再查询一次数据库。</span>
+
+<b>什么是 MVCC</b>
+
+- <span style="color:orange">全称 Multi-Version Concurrency Control，即多版本并发控制，主要是为了提高数据库的并发性能。以下文章都是围绕 InnoDB 引擎来讲，因为 MyLASM 不支持事务。</span>
+- <span style="color:orange">MVCC 是“维持一个数据的多个版本，使读写操作没有冲突”的一个抽象概念。</span>
+- <span style="color:orange">它的实现原理主要是版本链，undo 日志，Read View 来实现的。</span>
+
+<b>MySQL 主从复制的原理是什么</b>
+
+- 主从复制中分为<b>「主服务器 (master) 「和」从服务器 (slave) 」，「主服务器负责写，而从服务器负责读」</b>，MySQL 的主从复制的过程是一个「异步的过程」。这样读写分离的过程能够是整体的服务性能提高，即使写操作时间比较长，也不影响读操作的进行。
+- 主从复制中主要有三个线程：master(binlog dump thread )、slave(I/O thread、SQL thread)，Master 一条线程，Slave 两条线程。
+- master 的 binlog dump thread 负责主库中有数据更新时，按照 binlong 格式将更新的事件类型写入到主库。并且 Master 会趁机 log dump 线程通知 Slave 主库存在数据更新。Slave 中会创建 IO thread 用于请求 Master 的 binlog，将信息更新到 relay log 中。当 Slave 发现 relay log 有更新是，就创建 SQL 线程将更新的内容同步到 Slave 数据库中。
+
+<b>主从复制之后的读写分离如何实现</b>
+
+<b>数据库的分库分表如何实现</b>
 
 ## 内容规划
 
@@ -135,9 +153,9 @@ net stop mysql80
 - 用 MySQL 提供的 MySQL 8.0 Command Line Client
 - 用系统自带的命令窗口，执行指令 `mysql -h 127.0.0.1 -P 3306 -u root -p password`
 
-## SQL
+## SQL基础
 
-### SQL通用语法
+### 通用语法
 
 1. SQL 语句可以单行或多行书写，以分号结尾。 
 
@@ -546,6 +564,7 @@ create table dept(
     id   int auto_increment comment 'ID' primary key,
     name varchar(50) not null comment '部门名称'
 )comment '部门表';
+
 INSERT INTO dept (id, name) VALUES (1, '研发部'), (2, '市场部'),(3, '财务部'), (4, '销售部');
 
 create table emp(
@@ -555,6 +574,7 @@ create table emp(
     idcard char(18) default '120235681203256878',
     dept_id int comment '部门ID'
 )comment '员工表';
+
 INSERT INTO emp (id, name, age, dept_id) VALUES (1, '张无忌', 20, 1),(2, '杨逍', 33, 1),(3, '赵敏', 18, 2), (4, '常遇春', 43, 2),(5, '小昭', 19, 3),(6, '韦一笑', 48, 3);
 ```
 
@@ -628,6 +648,16 @@ COUNT(字段) 会有一个 NULL 判断，效率低。COUNT(1) 和 COUNT(\*) 没�
 
 `select 字段列表 from 表名 [where 条件] group by 分组字段名 [having 分组后过滤条件]`
 
+<b>注意：</b>select 字句后面的查询字段只能是聚合函数和出现在 group by 后面的字段。即在使用 group by 进行分组查询时，应该显式地将所有非聚合列指定在 `GROUP BY` 后面。
+
+如果发现 `select *,count(1) from users group by user_name;` 这种语句可以正常执行，是因为 `MySQL 8.x` 版本允许在 `GROUP BY` 子句中隐式包含所有未指定的列。
+
+```sql
+select *,count(1) from users group by user_name;
+被 MySQL 隐式转换为
+select *,count(1) from users group by col1, col2, clo3,...
+```
+
 <b style="color:red">where 和 having 的区别：</b>
 
 - 执行时机不同：where 是分组之前进行过滤，不满足 where 条件，不参与分组；<u>而 having 是分组之后的结果进行过滤。</u>
@@ -647,8 +677,8 @@ select workaddress,count(*) as address_count from emp where age<45 group by work
 
 <b>注意：</b>
 
--  执行顺序: where > 聚合函数 > having 。 
-- 分组之后，查询的字段一般为聚合函数和分组字段，查询其他字段无任何意义。
+-  分组之后，查询的字段一般为聚合函数和分组字段，查询其他字段无任何意义。
+-  执行顺序：where > 聚合函数 > having 。 
 - “where” 是一个约束声明，使用 where 来约束来自数据库的数据，<u>where 是在结果返回之前起作用的</u>，且 where 中不能使用聚合函数。
 
     “Having” 是一个过滤声明，是<u>在查询返回结果集以后对查询结果进行的过滤操作</u>，在 having 中可以使用聚合函数。
@@ -684,7 +714,32 @@ select * from emp limit 0,5;
 - <u>分页查询是数据库的方言，不同的数据库有不同的实现，MySQL 中是 LIMIT。</u>
 - 如果查询的是第一页数据，起始索引可以省略，直接简写为 limit 10。
 
-#### 其他
+#### 常用函数
+
+<b>if 函数</b>
+
+`if(condtion, true取值, false取值)`
+
+`select if(gender=1, 'man', 'woman'), count(*) from tb group by gender;`
+
+<b>case 表达式</b>
+
+`case 表达式 when 值1 then 结果1 when 值2 then 结果2 ... else ... end`
+
+```sql
+select job, count(*) from tb group by job;
+
+select case job 
+	when 1 then '班主任' 
+	when 2 then '助教' 
+	when 3 then '教授' 
+	else 'unknow' end,
+count(*) from tb group by job;
+```
+
+
+
+#### leetcode习题
 
 [1873. 计算特殊奖金 - 力扣 (LeetCode)  (leetcode-cn.com)](https://leetcode-cn.com/problems/calculate-special-bonus/)
 
@@ -871,7 +926,7 @@ revoke 权限列表 on 数据库名.表名 to '用户名'@'主机';
 revoke all on demo.* to 'user2'@'%';
 ```
 
-## 函数
+## 常用函数
 
 | 函数分类   | 常见函数                                               |
 | ---------- | ------------------------------------------------------ |
@@ -1098,10 +1153,10 @@ select name, datediff(curdate(),entrydate) ddiff from emp order by ddiff desc;
 
 | 函数                                                       | 功能                                                         |
 | ---------------------------------------------------------- | ------------------------------------------------------------ |
-| IF(value, ans1, ans2)                                      | 如果 value 为 true，则返回 ans1，否则返回 ans2               |
-| IFNULL(value1, value2)                                     | 如果 value 不为空，返回 value1，否则返 value2                |
-| CASE WHEN [val1] THEN [res1] ... ELSE [default] END        | 如果 val1 为 true，返回 res1，... 否则返回 default 默认值    |
-| CASE [expr] WHEN [val1] THEN [res1] ... ELSE [default] END | 如果 expr 的值等于 val，返回 res1 ， 否则返回 default 默认值 |
+| if(value, ans1, ans2)                                      | 如果 value 为 true，则返回 ans1，否则返回 ans2               |
+| ifnull(value1, value2)                                     | 如果 value 不为空，返回 value1，否则返 value2                |
+| case when [val1] then [res1] ... else [default] end        | 如果 val1 为 true，返回 res1，... 否则返回 default 默认值    |
+| case [expr] when [val1] then [res1] ... else [default] end | 如果 expr 的值等于 val，返回 res1 ， 否则返回 default 默认值 |
 
 ```mysql
 mysql> select ifnull('','Default');
@@ -1154,7 +1209,7 @@ name,
 from score;
 ```
 
-## 约束
+## 常见约束
 
 - 非空约束：NOT NULL 
 - 唯一约束：UNIQUE 
@@ -1201,7 +1256,7 @@ create table tb_user(
 );
 ```
 
-### 外键约束
+### 外键
 
 外键用来让两张表的数据之间建立连接，从而保证数据的一致性和完整性。
 
@@ -1233,6 +1288,15 @@ alter table 表名 drop foreign key 外键名称;
 alter table 表名 add constraint 外键名称 foreign key(外键字段名) references 主表(主表字段名)
 on update cascade on delete cascade;
 ```
+
+<b>数据库的外键分为逻辑外键和物理外键。</b>
+
+- 物理外键，使用 foreign key 定义外键关联另外一张表。
+- 缺点
+  - 影响增、删、改的效率（需要检测外键关系）
+  - 仅用于单节点数据库，不适用于分布式、集群场景
+  - 容易引发数据库的死锁问题，消耗性能
+- 逻辑外键，在业务层逻辑中，解决外键关联。通过逻辑外键，可以很方便的解决上述问题。
 
 ### 演示
 
@@ -1357,7 +1421,7 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 
 ## 多表查询
 
-<b>多表关系：</b>一对一、一对多、多对多
+<b>多表关系：</b>一对一、一对多、多对多。一对一关系，多用于单表拆分，将一张表的基础字段放在一张表中，其他字段放在另一张表中，提升操作效率。
 
 <b>多表查询</b>
 
@@ -1372,41 +1436,35 @@ insert into tb_user_edu(id, degree, major, primaryschool, middleschool, universi
 
  ### 多表关系
 
-项目开发中，在进行数据库表结构设计时，会根据业务需求及业务模块之间的关系，分析并设计表结构，由于业务之间相互关联，所以各个表结构之间也存在着各种联系，基本上分为三种：一对多(多对一) ；多对多；一对一。
+项目开发中，在进行数据库表结构设计时，会根据业务需求及业务模块之间的关系，分析并设计表结构，由于业务之间相互关联，所以各个表结构之间也存在着各种联系，<b>基本上分为三种：一对多(多对一) ；多对多；一对一。</b>
 
 <b>一对多 (多对一)</b>
 
-案例：部门与员工的关系。
-
-关系：一个部门对应多个员工，一个员工对应一个部门。
-
-实现：在多的一方建立外键，指向一的一方的主键。
+- 案例：部门与员工的关系。
+- 关系：一个部门对应多个员工，一个员工对应一个部门。
+- 实现：在多的一方建立外键，指向一的一方的主键。
 
 <div align="center"><img src="img/image-20220201162055837.png"></div>
 
 <b>多对多</b>
 
-案例：学生与课程的关系 
-
-关系：一个学生可以选修多门课程，一门课程也可以供多个学生选择 
-
-实现：建立第三张中间表，中间表至少包含两个外键，分别关联两方主键
+- 案例：学生与课程的关系。
+- 关系：一个学生可以选修多门课程，一门课程也可以供多个学生选择。
+- 实现：建立第三张中间表，中间表至少包含两个外键，分别关联两方主键。
 
 <div align="center"><img src="img/image-20220201162206455.png"></div>
 
 <b>一对一</b>
 
-案例：用户与用户详情的关系 
-
-关系：一对一关系，多用于单表拆分，将一张表的基础字段放在一张表中，其他详情字段放在另一张表中，以提升操作效率
-
-实现：在任意一方加入外键，关联另外一方的主键，并且设置外键为唯一的 (UNIQUE)
+- 案例：用户与用户详情的关系。
+- 关系：一对一关系，多用于单表拆分，将一张表的基础字段放在一张表中，其他详情字段放在另一张表中，以提升操作效率。
+- 实现：在任意一方加入外键，关联另外一方的主键，并且设置外键为唯一的 (UNIQUE)
 
 <div align="center"><img src="img/image-20220201162313709.png"></div>
 
 ### 多表查询
 
-多表查询：指从多张表中查询数据 
+多 表查询：指从多张表中查询数据 
 
 笛卡尔积：笛卡尔乘积是指在数学中，两个集合 A 集合和 B 集合的所有组合情况。(在多表查询时，需要消除无效的笛卡尔积) 
 
@@ -1732,7 +1790,7 @@ from dept d;
 select count(*) from emp where dept_id = 1;
 ```
 
-## 事务
+## 数据库事务
 
 - 简介：事务是一组操作的集合，这组操作，要么全部执行成功，要么全部执行失败。
 - 操作：
@@ -1926,7 +1984,7 @@ set session transaction isolation level read uncommitted ;
 set session transaction isolation level repeatable read ;
 ```
 
-# SQL专项
+# 专项
 
 ## SQL查询错误
 

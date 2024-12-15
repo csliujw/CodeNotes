@@ -3207,7 +3207,7 @@ public class WebConfig implements WebMvcConfigurer {
     }
 	// 把拦截器注入容器
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new MyInterceptors());
+        registry.addInterceptor(new MyInterceptors()).addPathPatterns("/filter/header");
     }
 }
 ```
@@ -3367,7 +3367,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
 
-        registry.addMapping("/api/<b>")
+        registry.addMapping("/api/*")
             .allowedOrigins("https://domain2.com")
             .allowedMethods("PUT", "DELETE")
             .allowedHeaders("header1", "header2", "header3")
@@ -3389,7 +3389,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class CrossConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/<b>")
+        registry.addMapping("/*")
                 .allowedOrigins("*")
                 .allowedMethods("GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowCredentials(true)

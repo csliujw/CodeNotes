@@ -6853,6 +6853,8 @@ scp "hw:/home/{.tmux.conf,.vimrc}" D:/git/
 
 # SSH-安全通道协议⭐
 
+[SSH 基本知识 - SSH 教程 - 网道](https://wangdoc.com/ssh/basic)
+
 <b>SSH</b> 全称 Secure Shell（安全外壳），它是一种<b>网络安全协议</b>，通过加密和认证机制实现安全的访问和文件传输等业务。SSH 协议通过对网络数据进行加密和验证，在不安全的网络环境中提供了安全的网络服务。
 
 SSH 是（C/S架构）由<b>服务器</b>和<b>客户端</b>组成，为建立安全的 SSH 通道，双方需要先建立 TCP 连接，然后协商使用的版本号和各类算法，并生成相同的<b>会话密钥</b>用于后续的对称加密。在完成用户认证后，双方即可建立会话进行数据交互。
@@ -7331,18 +7333,26 @@ end
 
 <b>Git 中有三个基本概念：工作区、暂存区和 Git 版本库。理解这三个概念有利于我们学习 Git 的命令。</b>
 
-- 工作区：当我们在本地创建一个 Git 项目，或者从 GitHub 上 clone 代码到本地后，项目所在的<u>这个目录就是工作区</u>。这里是我们对项目文件进行编辑和使用的地方。工作区是独立于各个分支的。实际上每个分支都是用的同一个工作区。
+- <b>工作区：</b>当我们在本地创建一个 Git 项目，或者从 GitHub 上 clone 代码到本地后，项目所在的<u>这个目录就是工作区</u>。这里是我们对项目文件进行编辑和使用的地方。工作区是独立于各个分支的。实际上每个分支都是用的同一个工作区。
 
-- 暂存区：从字面上理解，暂存区就是数据暂时存放的区域，我们可以将其认为是工作区写入版本库前的缓存区。暂存区是独立于各个分支的。
+- <b>暂存区：</b>从字面上理解，暂存区就是数据暂时存放的区域，我们可以将其认为是工作区写入版本库前的缓存区。暂存区是独立于各个分支的。
 
-- 版本库：在项目目录中，.git 隐藏目录不属于工作区，而是 Git 的版本仓库。这个仓库区包含了所有历史版本的完整信息，是 Git 项目的“本体”。`.git` 里存放了所有已经提交到本地仓库的代码版本。
+- <b>版本库：</b>在项目目录中，.git 隐藏目录不属于工作区，而是 Git 的版本仓库。这个仓库区包含了所有历史版本的完整信息，是 Git 项目的“本体”。`.git` 里存放了所有已经提交到本地仓库的代码版本。
 
 ```mermaid
 graph LR
 工作区-->|暂存|暂存区-->|持久化|版本库---|形成一个版本|版本库
 ```
 
-版本结构：树结构，树中每个节点代表一个代码版本。
+版本结构：树结构，树中每个节点代表一个代码版本。<span style="color:blue">可以认为，git 的最终目的就是让这三个区域的内容保持一致~</span>
+
+<b>为什么要设置暂存区？</b>
+
+Git 设置暂存区主要是为了提供一个缓冲地带，让开发者可以有选择性地提交工作目录中的更改。做更细粒度和干净的提交。
+
+- 选择性提交：可以挑选哪些更改应该被纳入下一次提交。
+- 组织提交：有助于创建清晰、有组织的提交历史。
+- 避免污染提交：防止不小心将无关或未完成的更改包含在提交中。
 
 <b>还有一个非常重要的概念：文件状态</b>
 
@@ -7350,7 +7360,7 @@ graph LR
 
 - 已跟踪：文件已被纳入版本控制，根据其是否被修改，可以进一步分为未修改（Unmodified）、已修改（Modified）或已暂存（Staged）。
 - 未跟踪：文件存在于工作目录中，但还没被纳入版本控制，也未处于暂存状态。
-- `git add file` 将文件纳入版本控制。
+- `git add file` 命令可以将文件纳入版本控制。
 
 <b>分支</b>是 Git 的一大特性，Git 支持轻量级的分支创建和切换。Git 鼓励频繁使用分支和合并，使得并行开发和错误修正更为高效（团队项目合作，分配好任务，各自独立开发。可以每个人创建一个分支，在自己的分支上开发）
 
@@ -7374,35 +7384,32 @@ local->>remote:7.push<br>修改完成后，<br>需要和团队成员共享代码
 
 <b>命令解释如下</b>
 
-| 编号 | 命令             | 说明                                                         |
+| 序号 | 命令             | 说明                                                         |
 | ---- | ---------------- | ------------------------------------------------------------ |
 | 1    | clone (克隆)     | 从远程仓库中克隆代码到本地仓库                               |
 | 2    | checkout  (检出) | 从本地仓库中检出一个仓库分支然后进行修订                     |
 | 3    | add (添加)       | 在提交前先将代码提交到暂存区                                 |
 | 4    | commit (提交)    | 提交到本地仓库。本地仓库中保存修改的各个历史版本             |
-| 5    | fetch (抓取)     | 从远程库，抓取到本地仓库，不进行任何的合并动作，一般操作比较少 |
+| 5    | fetch (抓取)     | 从远程库，抓取到跟踪分支，不进行任何的合并动作，一般操作比较少 |
 | 6    | pull (拉取)      | 从远程库拉到本地库，自动进行合并 (merge)，然后放到到工作区，相当于 fetch+merge |
 | 7    | push (推送)      | 修改完成后，需要和团队成员共享代码时，将代码推送到远程仓库   |
 
-pull 是为了看下会不会产生冲突，也可以不执行 pull 直接 push；push 过程中如果发现有冲突，会提示我们代码冲突；冲突了再 pull 也可。
+pull 可以查看本地和远程是否会有冲突，也可以不执行 pull 直接 push；push 过程中如果发现有冲突，会提示我们代码冲突；冲突了再 pull 也可。
 
 <b>git 的作用</b>
 
-- [x] <b>代码历史记录跟踪</b>
-  - [ ] 我们可以使用 Git 记录每一次代码提交；可以使用 Git 查看项目的历史版本和变更记录；可以还原任一时间点的代码（代码版本回滚：迭代系统，加功能，上线 1 天出现 bug，使用 git 找到先前稳定运行的系统代码，重新部署）
-
-- [x] <b>协同开发</b>
-  - [ ] Git 提供了合并、分支和版本控制的功能，利用这些功能，我们可以轻松进行多人协作开发项目。
-- [x] <b>追溯代码问题</b>
-  - [ ] 如果项目出现了问题，我们可以根据 Git 的提交记录追溯编写人和编写时间，防止甩锅。
-- [x] <b>变更审查</b>
-  - [ ] 允许开发者查看代码变更的具体内容，了解谁在何时做了哪些修改，这对于代码审查和质量控制至关重要（开源项目，你提交合并请求，项目审查者是可以看到你的修改内容，提交的内容质量过关就同意合并，质量不过关就拒绝合并）
+| 作用             | 说明                                                         |
+| ---------------- | ------------------------------------------------------------ |
+| 代码历史记录跟踪 | 我们可以使用 Git 记录每一次代码提交；查看项目的历史版本和变更记录；还原任一时间点的代码（代码版本回滚：迭代系统，加功能，上线 1 天出现 bug，使用 git 找到先前稳定运行的系统代码，重新部署） |
+| 协同开发         | Git 提供了合并、分支和版本控制的功能，利用这些功能，我们可以轻松进行多人协作开发项目。 |
+| 追溯代码问题     | 如果项目出现了问题，我们可以根据 Git 的提交记录追溯编写人和编写时间，防止甩锅。 |
+| 变更审查         | 允许开发者查看代码变更的具体内容，了解谁在何时做了哪些修改，这对于代码审查和质量控制至关重要（开源项目，你提交合并请求，项目审查者是可以看到你的修改内容，提交的内容质量过关就同意合并，质量不过关就拒绝合并） |
 
 <b>基本要求</b>
 
-- [x] 了解 Git 基本概念
-- [x] 了解 Git 工作流程
-- [x] 熟悉 Git 常用命令
+- 了解 Git 基本概念
+- 了解 Git 工作流程
+- 熟悉 Git 常用命令
 
 ## 安装/配置Git
 
@@ -7414,8 +7421,8 @@ Linux 一般自带 git。如果 Linux 上没有 git，可以安装官方文档�
 
 ```shell
 # Ubuntu 安装 git 的命令
-sudo apt update	# 先更新下 apt 源
-sudo apt install git
+$ sudo apt update	# 先更新下 apt 源
+$ sudo apt install git
 ```
 
 <b>Windows 安装 git</b>
@@ -7445,8 +7452,6 @@ sudo apt install git
 - Github：是全球最大的代码托管平台之一，拥有丰富的开源项目和活跃的开发者社区。它提供了版本控制、项目管理、协作开发等功能，并支持多种编程语言。
 - GitLab：一个自托管或基于云的平台，提供了完整的 DevOps 工具链，包括代码托管、持续集成/持续部署（CI/CD）、问题跟踪等。【一般用于在企业、学校等内部网络搭建 git 私服。】
 
-<b>github 需要魔法</b>
-
 我们会配合托管平台来使用 Git（使用 Git = Git + 对应的托管平台）。
 
 要想在本地的 Git 上畅通无阻地使用托管平台，需要进行一些配置。让我们的 Git 关联上托管平台。然后就将本地的代码托管到这些平台上了。
@@ -7471,18 +7476,18 @@ sudo apt install git
 除了 git config --global 外，还有其他的命令
 
 ```sh
-git config --local		# local 只对某个仓库有效
-git config --global		# global 对当前用户所有仓库有效,信息记录在~/.gitconfig文件中
-git config --system		# system 对系统所有登录的用户有效
+$ git config --local		# local 只对某个仓库有效
+$ git config --global		# global 对当前用户所有仓库有效,信息记录在~/.gitconfig文件中
+$ git config --system		# system 对系统所有登录的用户有效
 ```
 
 显示 config 配置，加 --list
 
 ```sh
-git config --list 			# 查看所有的 config 配置
-git config --list --local
-git config --list --global
-git config --list --system
+$ git config --list 			# 查看所有的 config 配置
+$ git config --list --local
+$ git config --list --global
+$ git config --list --system
 ```
 
 ### 配置别名
@@ -7498,9 +7503,9 @@ git config --list --system
 
 ```shell
 #用于输出git提交日志
-alias git-log='git log --pretty=oneline --all --graph --abbrev-commit'
+$ alias git-log='git log --pretty=oneline --all --graph --abbrev-commit'
 #用于输出当前目录所有文件及基本信息
-alias ll='ls -al'
+$ alias ll='ls -al'
 ```
 
 ### 解决乱码
@@ -7508,7 +7513,7 @@ alias ll='ls -al'
 打开 GitBash 执行下面命令
 
 ```shell
-git config --global core.quotepath false 
+$ git config --global core.quotepath false 
 ```
 
 在 `${git_home}/etc/bash.bashrc$`  文件后面加入下面两行
@@ -7520,7 +7525,7 @@ export LC_ALL="zh_CN.UTF-8"
 
 ### 免密登录:star:
 
-在本地机器输入以下命令 `ssh-keygen -t rsa -C 邮箱` 如：`ssh-keygen -t rsa -C 695466632@qq.com` 然后一直回车
+在本地机器输入以下命令 `ssh-keygen -t rsa -C 邮箱`。`ssh-keygen -t rsa -C 695466632@qq.com` 然后一直回车
 
 打开 github 网站 ==> 找到 setting ==> new ssh key，title 任意，key 输入本地生成的 pubkey (公钥) , pubkey 的存放地址请仔细看 Git 控制台的输出。
 
@@ -7528,7 +7533,7 @@ export LC_ALL="zh_CN.UTF-8"
 
 测试连通性 `ssh -T git@github.com` [写死的]
 
-本地和远程成功通信则可以在 .ssh 中发现 known_hosts 文件，出错就多试几次可能是网络问题。不行就检测建立 ssh 时输入的 pub key。
+本地和远程成功通信则可以在 `.ssh` 中发现 `known_hosts` 文件，出错就多试几次可能是网络问题。不行就检测建立 `ssh` 时输入的 `pub key`。
 
 ## 常用Git命令
 
@@ -7539,11 +7544,11 @@ export LC_ALL="zh_CN.UTF-8"
 | 指令           | 描述                                       |
 | -------------- | ------------------------------------------ |
 | `git config`   | 配置用户信息和偏好设置                     |
-| `git init`     | 初始化一个新的 Git 仓库                    |
-| `git clone`    | 克隆一个远程仓库到本地                     |
+| `git init`     | 初始化新的 Git 仓库                        |
+| `git clone`    | 克隆远程仓库到本地                         |
 | `git status`   | 查看仓库当前的状态，显示有变更的文件       |
-| `git add`      | 将文件更改添加到暂存区                     |
-| `git commit`   | 提交暂存区到仓库区                         |
+| `git add`      | 将文件更改添加到暂存区 / 纳入版本跟踪      |
+| `git commit`   | 提交暂存区的文件到仓库区                   |
 | `git branch`   | 列出、创建或删除分支                       |
 | `git checkout` | 切换分支或恢复工作树文件                   |
 | `git merge`    | 合并两个或更多的开发历史                   |
@@ -7556,27 +7561,27 @@ export LC_ALL="zh_CN.UTF-8"
 
 | 指令              | 描述                                                 |
 | ----------------- | ---------------------------------------------------- |
-| `git stash`       | 暂存当前工作目录的修改，以便可以切换分支             |
+| `git stash`       | 暂存当前工作目录的修改，以便稍后恢复                 |
 | `git cherry-pick` | 选择一个提交，将其作为新的提交引入                   |
 | `git rebase`      | 将提交从一个分支移动到另一个分支                     |
-| `git reset`       | 重设当前 HEAD 到指定状态，可选修改工作区和暂存区     |
+| `git reset`       | 重设当前 HEAD 到指定状态，也可修改工作区和暂存区     |
 | `git revert`      | 通过创建一个新的提交来撤销之前的提交                 |
 | `git mv`          | 移动或重命名一个文件、目录或符号链接，并自动更新索引 |
 | `git rm`          | 从工作区和索引中删除文件                             |
 
-每个指令都有其特定的用途和场景，详细的使用方法和参数可以通过命令行的帮助文档（`git command -h`,例如 `git pull -h`）来获取更多信息。
+每个指令都有其特定的用途和场景，详细的使用方法和参数可以通过命令行的帮助文档（`git command -h`，例如 `git pull -h`）来获取更多信息。
 
 ### 创建本地仓库
 
 <b>创建一个本地仓库</b>
 
-- 在电脑的任意位置创建一个空目录 (例如 test) 作为我们的本地 Git 仓库
+- 在电脑的任意位置创建一个空目录（例如 test）作为我们的本地 Git 仓库
 - 进入这个目录中，点击右键打开 Git bash 窗口                                           
 - 执行命令 git init，将当前目录配置成 git 仓库
 - 如果创建成功后可在文件夹下看到隐藏的 .git 目录，仓库的信息记录在隐藏的 .git 文件夹中
 
 ```shell
-root@hecs-87621:~/test# git init
+$ git init
 Initialized empty Git repository in /root/test/.git/
 ```
 
@@ -7585,13 +7590,13 @@ Initialized empty Git repository in /root/test/.git/
 如果已经有一个远端仓库，我们可以直接 clone 到本地。
 
 ```shell
-git clone <仓库地址> [本地目录]
+$ git clone <仓库地址> [本地目录]
 ```
 
 本地目录可以省略，会自动生成一个目录
 
 ```shell
-git clone git@gitee.com:lalala-payphone/test.git
+$ git clone git@gitee.com:lalala-payphone/test.git
 ```
 
 <b>git 项目的目录结构</b>
@@ -7604,7 +7609,7 @@ drwx------ 11 root root 4096 Jul 26 16:30 ..
 drwxr-xr-x  7 root root 4096 Jul 26 16:30 .git
 ```
 
-进入 .git 目录，可以发现有这些内容
+进入 `.git` 目录，可以发现有这些内容
 
 ```shell
 branches  config  description  HEAD  hooks  info  objects  refs
@@ -7622,37 +7627,46 @@ branches  config  description  HEAD  hooks  info  objects  refs
 
 Git 工作目录下对于文件的<b>修改</b>（增加、删除、更新）会存在几个状态，这些<b>修改</b>的状态会随着我们执行 Git 的命令而发生变化。
 
-<img src="常用工具/img/image-20220118144908667.png">
+<img src="img/image-20220118144908667.png">
 
 <b>使用命令来控制这些状态之间的转换</b>
 
-- ① git add (工作区➡️ 暂存区)，将工作区的改动添加到暂存区，为下一次提交做准备。把项目文件纳入 git 的管理。例如本地写了一个版本，先提交到暂存区；然后写了第二个版本，发现版本一更佳，此时可以把版本一回退到本地，然后提交到仓库。
-- ② git commit (暂存区➡️本地仓库)。
+① git add (工作区➡️暂存区)
+
+将工作区的改动添加到暂存区，为下一次提交做准备 / 把项目文件纳入 git 的管理。
+
+例如本地写了一个版本，先提交到暂存区；然后写了第二个版本，发现版本一更佳，此时可以把版本一回退到本地，然后提交到仓库。
+
+② git commit (暂存区➡️本地仓库)。
+
+将暂存区的内容提交到本地仓库，形成一个版本库。
 
 #### 添加到暂存区(add)
 
-<b>add 将修改工作区的改动添加到暂存区</b>
+<b>add 将修改工作区的改动添加到暂存区 / 指定需要追踪的文件</b>
 
-- 作用：添加工作区一个或多个文件的修改到暂存区。
+- 作用：添加工作区一个或多个文件的修改到暂存区 / 将文件纳入 git 的版本跟踪。
 - 场景举例：我们需要修改多个文件以达成一个目的，可以逐个修改，修改好一个后就添加到暂存区，当该功能的所有文件都以修改完毕则统一提交到版本库。
 - 命令形式：git add 单个文件名|通配符。
 
 ```shell
-touch file.txt		# 创建一个文件
-git add file.txt 	# 将 file.txt 加入暂存区
-git add . 			# 将所有改动加入暂存区
-git add -u			# 将已经被追踪（tracked）的文件中被修改（modified）或者删除（deleted）的内容加入到暂存区（staging area），为追踪的文件不会修改
+$ touch file.txt		# 创建一个文件
+$ git add file.txt 	# 将 file.txt 加入暂存区
+$ git add . 			# 将所有改动加入暂存区
+$ git add -u			# 将已经被追踪（tracked）的文件中被修改（modified）或者删除（deleted）的内容加入到暂存区（staging area），未追踪的文件不会修改
 ```
+
+可以使用 `git ls-files` 命令查看暂存区目前有什么内容。
 
 #### 查看修改状态(status)
 
-<b>status 查看修改状态</b>
+<b>git status 查看修改状态</b>
 
 - 作用：查看修改的状态 (暂存区、工作区) 
 - 命令形式：`git status`
 
 ```shell
-root@hecs-87621:~/test# git status
+$ git status
 On branch master
 
 No commits yet
@@ -7663,6 +7677,23 @@ Changes to be committed:
 ```
 
 Changes to be committed 即将被提交，进入了暂存区。
+
+<b>我们来详细了解下 git 文件的状态变化周期</b>
+
+```mermaid
+sequenceDiagram
+	participant untracked
+	participant unmodified
+	participant modified
+	participant staged
+	
+    untracked->>staged: add the file
+    unmodified->>modified: edit the file
+    modified->>staged: stage the file
+    staged->>unmodified: commit
+    unmodified->>untracked: remove the file
+
+```
 
 <b>我们使用 status 来观察下 git add -u 的作用</b>
 
@@ -7702,9 +7733,11 @@ Untracked files:
         tmp.txt
 ```
 
+我们发现，git add -u 只会将已经纳入被追踪的文件的更改纳入暂存区；未追踪的文件不会纳入。
+
 #### 提交到本地仓库(commit)
 
-<b>commit 提交暂存区到本地仓库，形成一个版本，后面的版本回滚，head 指针也都是操作的 commit</b>
+<b>commit 提交暂存区到本地仓库，形成一个版本</b>
 
 - 作用：提交暂存区内容到本地仓库的当前分支
 - 命令形式：git commit -m '注释内容'
@@ -7723,271 +7756,107 @@ git status
 On branch master
 ```
 
-git 还有一条命令，可以 add 和 commit 一起执行，但是不推荐使用。这种做法工作区的内容直接添加到了版本历史库里了。
+git 还有一条命令，可以 add 和 commit 一起执行，但是不推荐使用。这种做法工作区的内容直接添加到了版本历史库里了（高版本 git 无效？）。
 
 ```shell
-git commit -am 'add xxx'
+git commit -am 'add xxx' # 高版本 git 没用了
 ```
+
+<b>修改最近一次提交的 message</b>
+
+有时候我们会发现，commit 的时候，提交的信息写错了或写的有问题，这时候可以用 `git commit --amend -m "新的提交信息"` 来修改最近一次提交的 message。
+
+```shell
+$ git commit --amend -m "add file file.txt"
+```
+
+<b>用新提交替换旧提交</b>
+
+前面我们讲过如何修改最近一次的提交。但是有时候，我们提交完了发现漏掉了几个文件没有添加，此时，也可以使用 `--amend` 选项用<b>新的提交替换旧的提交</b>。
+
+```shell
+# 将漏掉的文件添加进去
+$ git add forgotten_file
+# 用新提交替换旧提交（旧提交的内容在，新提交补充的内容也在）
+$ git commit --amend
+```
+
+<b>切换到其他 commit</b> 
+
+git 的每个 commit 都会形成一个版本，如果我们想在不同的版本直接切换，可以使用 `git checkout commit-id` 命令回溯到之前的代码。
+
+```mermaid
+gitGraph
+commit
+commit
+checkout main
+commit
+commit
+```
+
+在切换到其他 commit 之前，我们需要先理解下 HEAD 指针。
+
+HEAD 的本质是指向某个 commit 对象的指针，HEAD 指针默认指向当前（分支）最新的提交。在上面的 git 图中，我们进行了四次提交，最新的一次提交是 `3-5b0d470`，因此 HEAD 指针指向的 `3-5b0d470`。我们想切换到其他 commit 只需要将 HEAD 指针移动到对应的 commit，这样仓库就恢复到了对应 commit 的状态了。
+
+利用 `git checkout commit-id` 将 HEAD 指针移动到 `1-841c，git checkout 1-841c`，完成 commit 的切换。git checkout 和 HEAD 有许多用法，后面细讲。
 
 #### 忽略文件(.gitignore)
 
 我们总会有些文件无需纳入 Git 的管理，也不希望它们总出现在未跟踪文件列表。 通常都是些自动生成的文件，比如日志文件，或者编译过程中创建的临时文件等。 在这种情况下，我们可以在工作目录中创建一个名为 `.gitignore` 的文件 (文件名称固定) ，列出要忽略的文件模式。
 
-```shell
+```.gitignore
 *.a # 以 .a 结尾的文件不让 git 管理, 如 demo.a 就会被忽略
 *.dSYM/ # 文件夹下的任何文件都不纳入 git 管理, 但是 a.dSYM git 是要管理的。
 doc/	# doc 文件夹下的所有文件都不纳入 git 管理
 ```
 
-#### 远程仓库(github)
+#### 分支(branch)
 
-Git 中存在两种类型的仓库，即本地仓库和远程仓库。比较常用的远程仓库（代码托管服务）有 GitHub、码云、GitLab 等。
-
-```mermaid
-sequenceDiagram
-	participant local as 本地仓库
-	participant remote as 远程仓库
-	local->>local:空仓库，什么都没有
-    local->>remote:关联远程仓库: git remote add origin git@gitee.com:pay/test.git
-    remote->>local:从远程仓库拉取内容: git pull
-    local->>local:查看有那些分支：git branch -av
-    local->>local:发现只有远程分支：remotes/origin/dev
-    
-```
-
-> PS：gitee 和 github 让 git 变得更加好用，用户可以便捷的分享自己的 code。可以方便的检索自己想要的开源项目。
-
-#### 关联远程仓库(remote)
-
-我们需要先在远程创建一个仓库，然后初始化好本地仓库，再进行对接。
-
-<b>关联远程仓库的命令格式如下</b>
-
-- 远端名称：默认是 origin，取决于远端服务器设置
-- 仓库地址：从远端服务器获取此 url
-
-```shell
-git remote add <远端名称> <仓库地址>  #===> add 新增远端站点, 一个本地参考可以关联多个远端仓库。
-```
-
-我们在 gitee 创建一个 test 仓库，在本地也创建一个名为 test 的仓库
-
-```shell
-# 本地创建 test 仓库
-mkdir test; cd test; git init
-# 关联远程仓库
-git remote add origin git@gitee.com:lalala-payphone/test.git
-```
-
-<b>我们使用命令 `git remote` 查看关联的仓库，显示我们成功关联了 origin。</b>
-
-```shell
-git remote
-
-origin
-```
-
-我们的远程仓库中是有文件（readme.md）的，但是我们本地并没有拿到这些文件，这时候可以使用 `git pull origin branch_name` 拉取远程仓库中对应分支的文件。
-
-```shell
-git pull origin master	# 这条命令的具体作用？把远程分支 master 拉到当前分支，如果没有会默认创建一个 master 分支
-
-remote: Enumerating objects: 6, done.
-remote: Total 6 (delta 0), reused 0 (delta 0), pack-reused 6
-Unpacking objects: 100% (6/6), 1.95 KiB | 1.95 MiB/s, done.
-From gitee.com:lalala-payphone/test
- * branch            master     -> FETCH_HEAD
- * [new branch]      master     -> origin/master
- 
-ls
-
-README.en.md  README.md
-```
-
-可以看到，文件已经被拉取过来了。现在，我们给文件做一些修改。然后将修改的内容推送到远程仓库中。如果我们想拉取所有的远程分支到本地，可以使用 `git pull`。
-
-<b>推送到远程仓库的命令</b>
-
-```shell
-git push [-f] [--set-upstream] [远端名称] [本地分支名][:远端分支名]
-# 可以简写成 git push [-f] -u [远端名称] [本地分支名][:远端分支名]
-```
-
-```shell
-echo hello >> test.md
-git add test.md
-git commit -m "add file test.md"
-
-# -f 表示 force 强制推送，不推荐使用
-# --set-upstream 会将本地的 master 分支设置为跟踪远程的 master 分支
-# 后面再次推送的时候，直接使用 git push 即可
-git push -f --set-ustream origin master:master
-```
-
-后面，如果我们继续在 master 分支修改，需要将修改推送到远程分支
-
-```shell
-git push
-```
-
-查看本地仓库和远程参考都有那些分支
-
-```shell
-git branch -av
-* master                67080bf add file a
-  remotes/origin/master 67080bf add file a
-```
-
-注意：我们操作的其实都是本地分支，操作完毕后把内容 push 到远程分支上。如果本地分支和远程分支发生了冲突，可以将远程分支合并到本地分支，处理完冲突后再 push。
-
-- 最简单的方式，直接拉取远程分支的内容到本地分支，处理冲突
-
-```shell
-git pull
-
-remote: Enumerating objects: 5, done.
-remote: Counting objects: 100% (5/5), done.
-remote: Compressing objects: 100% (2/2), done.
-remote: Total 3 (delta 1), reused 0 (delta 0), pack-reused 0
-Unpacking objects: 100% (3/3), 958 bytes | 958.00 KiB/s, done.
-From gitee.com:lalala-payphone/test
-   67080bf..f56ba1b  master     -> origin/master
-Auto-merging a.md
-CONFLICT (content): Merge conflict in a.md	# a.md 文件有冲突，处理冲突后提交
-Automatic merge failed; fix conflicts and then commit the result.
-```
-
-#### 同步仓库内容(pull/fetch)
-
-git 中是有三个分支的，本地分支，追踪分支，远程分支。
+Git 分支是 Git 版本控制系统中的一个核心概念，它允许开发者在主线（通常是 master 或 main 分支）之外进行工作，而不影响主线上的代码。分支可以被看作是代码的一个独立版本，开发者可以在不同分支上并行开发，最后再将它们合并。
 
 ```mermaid
-graph TD
- subgraph 本地分支
- 	direction LR
- 	工作区1
- 	暂存区1
- 	对象区1
- end
- subgraph 追踪分支
-  	direction LR
- 	工作区2
- 	暂存区2
- 	对象区2
- end
- subgraph 远程分支
-  	direction LR
- 	工作区3
- 	暂存区3
- 	对象区3
- end
+gitGraph
+	commit id: "main-1"
+	commit id: "main-2"
+	branch dev1
+	branch dev2
+	commit id: "dev2-1"
+	commit id: "dev2-2"
+	commit id: "dev2-3"
+	checkout dev1
+    commit id: "dev1-1"
+	commit id: "dev1-2"
+	commit id: "dev1-3"
 ```
 
-追踪分支也叫本地的远程分支，是远程分支在本地的拷贝，作为本地与远程的媒介。
+分支的基本用法包括
 
-<b>同步仓库内容有两种情况。</b>
-
-1️⃣本地→远程，本地有 dev 分支，远程没有:star:。
-
-将本地分支关联到远程仓库并同步内容。`-u` 表示关联本地分支和远程分支
-
-```shell
-git push --set-upstream origin dev
-git push -u origin dev # 上面命令的简写
-```
-
-本地的 dev 分支使用上述命令关联 dev 分支后，后面再推送修改给 remote 就不用指定推送分支的名称了
-
-```shell
-# 后面再次推送的话, 直接输入,将远程仓库的当前分支与本地仓库的当前分支合并
-git push
-```
-
-除了上面的方式，还有一种方式（了解）
-
-```shell
-# 将本地的分支 local_dev 推送到远程分支 remote_dev,如果remote_dev不存在则自动创建 
-git push origin local_dev:remote_dev
-```
-
-2️⃣远程→本地，远程有 dev 分支，本地没有:star:。
-
-先拉取远程的分支到追踪分支（`origin/xx` `origin` 开头的是追踪分支哦）
-
-```shell
-git pull
-```
-
-创建并切换到本地分支 dev，然后将本地分支和追踪分支关联（一气呵成）
-
-```shell
-git checkout -b dev origin/dev
-git checkout -b dev --track origin/dev # 和上面的命令一致
-git checkout --track origin/dev	# 简写,默认将 dev 分支的名字作为本地分支的名字
-git checkout -t origin/branch_name	# track 可以简写为 t
-```
-
-关联本地和远端仓库后，将本地的推送到远端发生了冲突，需要解决冲突。如果发送了冲突，git 会提示我们如何解决，提示需要 pull xxx，可以用下面的方式解决。
-
-方式一，先将远程分支的改动拉取到 remotes/origin/分支, 然后我们可以手动合并
-
-```shell
-git fetch 远端仓库名 分支名
-```
-
-方式二，自动拉取远端分支到本地分支，自动合并
-
-```shell
-git push 远端仓库名 分支名
-```
-
-如果发现仓库的分支走向不是线性的，可以通过 merge 的手段合并分支，变成线性的（后面讲解）。
-
-#### 删除远端分支(branch)
-
-删除远端分支的方式有很多种。
-
-1️⃣直接删除远端分支
-
-一般，本地分支和远端分支是同步的，删除了远端分支，本地分支也应该删除。
-
-先删除本地分支
-
-```shell
-git branch -d branch_name	# -d = --delete
-```
-
-然后删除远端分支
-
-```shell
-git push origin -d branch_name
-```
-
-2️⃣推送空分支到远程分支（删除远端分支的另一种实现）
-
-```shell
-git push origin _:远程分支	# _表示空格,用_只是方便告诉你这是空格
-```
+- 查看分支：git branch 
+- 创建分支：git branch new_branch
+- 切换分支：git checkout new_branch
+- 合并分支：git merge new_branch
 
 ### 重命名(mv):star:
 
-`git mv` 是 git 自带的对文件进行重命名的命令。git 并不显式跟踪文件移动操作。如果在 git 中重命名了某个文件，仓库中存储的元数据并不会体现出这是一次更名操作。
+`git mv` 是 `git` 自带的对文件进行重命名的命令。git 并不显式跟踪文件移动操作。如果在 `git` 中重命名了某个文件，仓库中存储的元数据并不会体现出这是一次更名操作。
 
 #### git-mv的优点
 
 假如我们想对已经加入仓库的文件进行重命名（file.txt 修改为 readme.md），该怎么做？我们之前学过 Linux 命令，直到可以用 mv 对文件重命名。
 
-但是直接重命名的话，会出现这种情况：git status 变成删除了 readme 文件，然后新增了一个未追踪的文件 readme.md。
+> 直接重命名的话，会出现这种情况：git status 变成删除了 readme 文件，然后新增了一个未追踪的文件 readme.md。为什么呢？
+
+git 最终是希望三个区的内容都保持一致的。mv 只是修改了工作区的内容，并未修改暂存区的内容，因此还需要使用 add 将工作区和暂存区的内容进行同步~。
 
 我们复制 test 中的所有内容，直接用 mv 进行重命名。
 
 ```shell
-cp -r test test2
-cd test2
-mv file.txt readme.md
+$ cp -r test test2
+$ cd test2
+$ mv file.txt readme.md
 
-git add readme.md
-git status
+$ git add readme.md
+$ git status
 #============================output============================#
 On branch master
 Changes to be committed:
@@ -8000,8 +7869,8 @@ Changes not staged for commit:
         deleted:    file.txt # 提示我们需要处理 file.txt 文件
 #============================output============================#
 
-git rm file.txt	# 将 file.txt 从暂存区剔除
-git status		# 再次查看状态
+$ git rm file.txt	# 将 file.txt 从暂存区剔除
+$ git status		# 再次查看状态
 
 #============================output============================#
 On branch master
@@ -8011,7 +7880,7 @@ Changes to be committed:
 #============================output============================#
 ```
 
-可以看出，git 是知道我们进行文件重命名的，但是操作流程却比较繁琐。`git mv` 则是可以非常简便的对文件进行重命名。
+可以看出，git 是知道我们进行文件重命名的，但是操作流程却比较繁琐，需要先修改工作区，然后同步到暂存区。。`git mv` 则是可以非常简便的对文件进行重命名，并自动完成工作区和暂存区的同步。
 
 #### git-mv实操
 
@@ -8020,28 +7889,118 @@ Changes to be committed:
 PS：`git reset --hard` 会清理暂存区中所有的工作变更，将工作区恢复到最近一次提交时的状态。(只会清空暂存区的提交，对 commit 无任何影响)
 
 ```shell
-git reset --hard
+$ git reset --hard
 HEAD is now at 7b9652f add file.txt
 
-git status
+$ git status
 On branch master
 nothing to commit, working tree clean
 
-ls
+$ ls
 file.txt
 ```
 
 刚刚上面繁琐的文件名变更过程可以用这条命令替代：`git mv readme readme.md`
 
 ```shell
-git mv file.txt readme.md
-git status
+$ git mv file.txt readme.md
+$ git status
 
 On branch master
 Changes to be committed:
   (use "git restore --staged <file>..." to unstage)
         renamed:    file.txt -> readme.md
 ```
+
+### 移除文件(rm)
+
+git rm 是用于移除文件的，其用法和作用与 git mv 类似。git rm 有两个基础命令
+
+```shell
+$ git rm filename
+$ git rm --cached filename 
+```
+
+git rm filename 用于删除，如果工作区和暂存区都有名字为 filename 的文件，那么会给出提示是否要强制删除该文件（同意执行后工作区和暂存区该文件都会消失）。
+
+如果工作区中该文件已经删除但暂存区还有，那么该命令直接执行，将从暂存区中删除该文件（此时效果等同于直接 git add .，将工作区更改应用于暂存区）。
+
+git rm --cached filename 仅仅是在暂存区中将该文件删除，取消跟踪（类似于工作区中刚创建该文件还没有 add 到暂存区），工作区没有任何变化。
+
+<b>命令演示</b>
+
+```shell
+$ touch a
+$ git add a
+$ git status
+
+$ git rm --cached a
+$ git status
+```
+
+如何撤销删除操作？
+
+```shell
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        deleted:    aaa
+```
+
+如果你不希望提交这个删除操作，你可以使用以下命令将其从暂存区移除
+
+```sh
+$ git restore --staged aaa
+```
+
+这将撤销对 `aaa` 文件的暂存状态（撤销删除状态），但不会恢复该文件。如果 `aaa` 文件已经被删除并且你想恢复它，你需要使用不同的命令来恢复文件内容。
+
+```sh
+# 让工作区的文件恢复成和暂存区一样,都是未删除文件 aaa
+$ git restore aaa
+```
+
+### 查看提交日志(log):star:
+
+`git log` 是用于查看当前分支的所有版本，每次 commit 都会形成一个版本。
+
+```shell
+$ git log
+
+commit 6650768a739d07f78bb22841ae400fd2fa7a47c9 (HEAD -> master)
+Author: kkx <ok@qq.com>
+Date:   Thu Jul 25 17:29:03 2024 +0800
+
+    update 2 readme.md
+
+commit 5908e93baffd55cfea505dc67869b82de5d91adc
+Author: csliujw <695466632@qq.com>
+Date:   Thu Jul 25 17:26:36 2024 +0800
+```
+
+其中 （HEAD-> master）表示当前的 HEAD 指针执向 master。
+
+也可以查看简短的提交日志
+
+```shell
+$ git log --oneline
+
+6650768 (HEAD -> master) update 2 readme.md
+5908e93 update readme.md
+a292507 add readme.md
+7b9652f add file.txt
+```
+
+<b>常用命令</b>
+
+| 命令                                | 说明                                                |
+| ----------------------------------- | --------------------------------------------------- |
+| git log --oneline                   | 简要的显示每个 log，每个 log 仅占一行               |
+| git log -n2 --oneline               | 只显示最近的两条 log，每个 log 仅占一行             |
+| git log --all                       | 显示所有分支的 log                                  |
+| git log --all --graph               | 用图形化的方式显示所有分支的 log                    |
+| git log --all --oneline -n4 --graph | 用图形化的方式显示所有分支的前 4 个 log（打组合拳） |
+| git log --pretty=oneline            | 将提交信息显示为一行                                |
+| git log --abbrev-commit             | 使得输出的 commitId 更简短                          |
 
 ### 比较差异(diff)
 
@@ -8059,8 +8018,8 @@ end
 <b>基础命令</b>
 
 ```shell
-git diff new
-git diff old new
+$ git diff new
+$ git diff old new
 ```
 
 <b>git diff 的常用命令如下</b>
@@ -8079,8 +8038,8 @@ git diff old new
 git diff 比较的对象都是那些已经被放入暂存区的文件。我们先将暂存区的文件提交到本地仓库，然后修改 `readme.md`，用 diff 比较文件差异。
 
 ```shell
-echo hello >> readme.md
-git diff	# 比较了 readme.md 与本地仓库中 readme.md 的差异
+$ echo hello >> readme.md
+$ git diff	# 比较了 readme.md 与本地仓库中 readme.md 的差异
 
 ##############################output##############################
 diff --git a/readme.md b/readme.md
@@ -8095,7 +8054,7 @@ index e69de29..ce01362 100644
 我们将 readme.md 添加到暂存区。
 
 ```shell
-git diff readme.md
+$ git diff readme.md
 # 无输出, 因为 git diff 比较的是尚未暂存的修改，即当前工作目录和暂存区的区别
 ```
 
@@ -8104,8 +8063,8 @@ git diff readme.md
 如果想要比较暂存区和 HEAD 的区别，可以使用 `git diff --cached / --staged`
 
 ```shell
-git diff --staged
-git diff --cached
+$ git diff --staged
+$ git diff --cached
 
 ##############################output##############################
 diff --git a/readme.md b/readme.md
@@ -8122,13 +8081,13 @@ index e69de29..ce01362 100644
 也可以比较两个 commit 的差异
 
 ```shell
-git diff old_commid_id1 new_commid_id2
+$ git diff old_commid_id1 new_commid_id2
 ```
 
 这里我们比较两个 commit 的差异，其中 6650 是最新的一个提交，它在 readme.md 中新增了 `hello`
 
 ```shell
-git diff 5908 6650
+$ git diff 5908 6650
 diff --git a/readme.md b/readme.md
 index ce01362..317e967 100644
 --- a/readme.md
@@ -8151,86 +8110,117 @@ index ce01362..317e967 100644
 - `hello`：这是未发生变化的内容，出现在两个版本的同一位置。
 - `+hello`：这行以加号 `+` 开头，表示这一行是在旧版本中不存在，而在新版本中增加的内容。
 
-### 删除文件(rm)
-
-git rm 是用于删除文件的，它有两个基础命令
-
-```shell
-git rm filename
-git rm --cached filename
-```
-
-git rm filename 用于删除，如果工作区和暂存区都有名字为 filename 的文件，那么会给出提示是否要强制删除该文件（同一执行后工作区和暂存区该文件都会消失），如果工作区中该文件已经删除但暂存区还有，那么该命令直接执行，将从暂存区中删除该文件（此时效果等同于直接 git add .，将工作区更改应用于暂存区）。
-
-git rm --cached filename 仅仅是在暂存区中将该文件删除，取消跟踪（类似于工作区中刚创建该文件还没有 add 到暂存区），工作区没有任何变化。
-
-<b>命令演示</b>
-
-```shell
-touch a
-git add a
-git status
-
-git rm --cached a
-git status
-```
-
-### 查看提交日志(log):star:
-
-`git log` 是用于查看当前分支的所有版本，每次 commit 都会形成一个版本。
-
-```shell
-git log
-
-commit 6650768a739d07f78bb22841ae400fd2fa7a47c9 (HEAD -> master)
-Author: kkx <ok@qq.com>
-Date:   Thu Jul 25 17:29:03 2024 +0800
-
-    update 2 readme.md
-
-commit 5908e93baffd55cfea505dc67869b82de5d91adc
-Author: csliujw <695466632@qq.com>
-Date:   Thu Jul 25 17:26:36 2024 +0800
-```
-
-其中 （HEAD-> master）表示当前的 HEAD 指针执向 master。
-
-也可以查看简短的提交日志
-
-```shell
-git log --oneline
-
-6650768 (HEAD -> master) update 2 readme.md
-5908e93 update readme.md
-a292507 add readme.md
-7b9652f add file.txt
-```
-
-<b>常用命令</b>
-
-| 命令                                | 说明                                                |
-| ----------------------------------- | --------------------------------------------------- |
-| git log --oneline                   | 简要的显示每个 log，每个 log 仅占一行               |
-| git log -n2 --oneline               | 只显示最近的两条 log，每个 log 仅占一行             |
-| git log --all                       | 显示所有分支的 log                                  |
-| git log --all --graph               | 用图形化的方式显示所有分支的 log                    |
-| git log --all --oneline -n4 --graph | 用图形化的方式显示所有分支的前 4 个 log（打组合拳） |
-| git log --pretty=oneline            | 将提交信息显示为一行                                |
-| git log --abbrev-commit             | 使得输出的 commitId 更简短                          |
-
 ### 版本回退(reset&revert):star:
 
-reset 是用于本地仓库，revert 是用于远程仓库，远程仓库这节再讲。
+reset 和 revert 都是用于撤销修改内容 / 回退版本。reset 是用于本地仓库，revert 是用于远程仓库，远程仓库这节再讲。
 
-- 作用：清除暂存区的提交 / 版本切换 
+#### reset
+
+- 作用：撤销修改内容 / 回退版本 
 - 命令形式
 
 ```shell
-# 清除暂存区的提交（时光倒流）
-git reset --hard
+# git reset 有三种模型
+$ git reset --soft commitID	 # 回退到某一版本，并且保留工作区和暂存区的所有修改内容
+$ git reset --hard commitID	 # 回退到某一版本，并且丢弃工作区和暂存区的所有修改内容
+$ git reset --mixed commitID # 回退到某一版本，并且只保留工作区的修改内容
+```
 
-# commitID 可以使用 git-log 或 git log 指令查看
-git reset --hard commitID 
+| 命令              | 工作区 | 暂存区 |
+| ----------------- | ------ | ------ |
+| git reset --soft  | 保存✔️  | 保存✔️  |
+| git reset --hard  | 丢弃❌  | 丢弃❌  |
+| git reset --mixed | 保存✔️  | 丢弃❌  |
+
+我们来看一下上述三个命令分别有什么作用
+
+```shell
+# shell 脚本，用于初始化仓库
+mkdir test-reset-hard; cd test-reset-hard
+git init
+echo 111>>file111
+git add .
+git commit -m "add file111"
+echo 222>>file222
+git add .
+git commit -m "add file222"
+echo 333>>file333
+git add .
+git commit -m "add file333"
+
+cp -r ../test-reset-hard ../test-reset-soft
+cp -r ../test-reset-hard ../test-reset-mixed
+```
+
+假设当前有三次提交
+
+```mermaid
+gitGraph
+	commit id: "abc111"
+	commit id: "abc222"
+	commit id: "abc333"
+```
+
+> git reset --soft
+
+如果我们连续提交了多个版本，又觉得这些提交没有太大意义，可以合并成一个版本的时候，就可以通过这两个参数，回退之后再进行提交。
+
+我们使用 git reset --soft 将提交回退到第一次
+
+```shell
+$ cd test-reset-soft
+$ git reset --soft abc111
+$ # 发现，暂存区和工作区保存了第一次到第三次的所有内容
+```
+
+> git reset --mixed
+
+会保留工作区的内容，清除暂存区的内容。和 soft 的区别就是要多做一次 `git add .`，如果是希望某些文件不被纳入版本管理，可以使用 mixed。
+
+```shell
+$ cd test-reset-hard
+$ git reset --hard abc111
+$ # 发现，暂存区的内容都消失了，工作区的依然保留着
+```
+
+> git reset --hard
+
+会清除暂存区和工作区的所有内容，慎用！！
+
+```shell
+$ cd test-reset-hard
+$ git reset --hard abc111
+$ # 发现，暂存区和工作区的内容都消失了
+```
+
+能不能再回到回退前的版本呢？可以的，只要记得 commit id 就行。
+
+但是我们发现 git log 查不出来 c02c 这个 id 了。如果之前我们没有记住这个 id，是不是就不能恢复了？不是的。可以用 `git reflog` 来查看。
+
+git reflog，把所有的操作记录下来了（记录了 HEAD 指针的移动情况），可以看到已经删除的提交记录。<span style="color:red">git reflog 是用来恢复本地错误操作很重要的一个命令。</span>
+
+<b>使用 git reflog 查看 HEAD 指针的移动历史（包括被回滚的版本）</b>
+
+```shell
+$ git reflog --oneline
+
+abc111 (HEAD -> master) HEAD@{0}: reset: moving to abc111
+abc333 HEAD@{1}: commit: add file333
+abc222 (HEAD -> master) HEAD@{2}: add file222
+abc111 HEAD@{3}: commit (initial): add file111
+```
+
+可以看到，HEAD 最近的一次移动是 moving to abc111。我们恢复到 `abc333` 这个版本。
+
+```shell
+$ git reset --hard abc333
+HEAD is now at abc333 add file333
+
+$ cat readme.md
+
+hello,this is test3 readme.md
+first append
+second append
 ```
 
 <b>reset 常用命令</b>
@@ -8243,92 +8233,12 @@ git reset --hard commitID
 | git reset --hard HEAD~100 | 往上回滚 100 个版本      |
 | git reset --hard 版本号   | 回滚到某一特定版本       |
 
-<b>reset 实战</b>
-
-我们创建一个 git 仓库，然后向仓库添加 readme.md 文件，创建几次提交到本地仓库。下面是一个创建 git 仓库的 Shell 脚本。
-
-```shell
-# git.sh
-read dirs
-mkdir $dirs
-cd $dirs
-git init
-echo "hello,this is $dirs readme.md" >> readme.md
-git add readme.md
-git commit -m "create readme.md"
-
-echo "first append" >> readme.md
-git add readme.md
-git commit -m "first update readme.md"
-
-echo "second append" >> readme.md
-git add readme.md
-git commit -m "second update readme.md"
-```
-
-执行创建仓库的 shell 脚本
-
-```shell
-bash git.sh
-test3
-```
-
-执行后有三次 commit 记录
-
-```shell
-git log --oneline
-
-c02c2cb (HEAD -> master) second update readme.md
-af7564a first update readme.md
-14bd3be create readme.md
-```
-
-后续所有的命令都是以此仓库 / 脚本为基础。
-
-<b>使用 reset 回退版本到 af75</b>
-
-```shell
-git reset --hard af75
-
-HEAD is now at af7564a first update readme.md
-```
-
-能不能再回到回退前的版本呢？可以的，只要记得 commit id 就行。
-
-但是我们发现 git log 查不出来 c02c 这个 id 了。如果之前我们没有记住这个 id，是不是就不能恢复了？不是的。可以用 `git reflog` 来查看。
-
-git reflog，把所有的操作记录下来了（记录了 HEAD 指针的移动情况），可以看到已经删除的提交记录。<span style="color:red">git reflog 是用来恢复本地错误操作很重要的一个命令。</span>
-
-<b>使用 git reflog 查看 HEAD 指针的移动历史（包括被回滚的版本）</b>
-
-```shell
-git reflog --oneline
-
-af7564a (HEAD -> master) HEAD@{0}: reset: moving to af75
-c02c2cb HEAD@{1}: commit: second update readme.md
-af7564a (HEAD -> master) HEAD@{2}: commit: first update readme.md
-14bd3be HEAD@{3}: commit (initial): create readme.md
-```
-
-可以看到，HEAD 最近的一次移动是 moving to af75。我们恢复到 `c02c` 这个版本。
-
-```shell
-git reset --hard c02c
-HEAD is now at c02c2cb second update readme.md
-
-cat readme.md
-
-hello,this is test3 readme.md
-first append
-second append
-```
-
 <b>reset 的作用</b>
 
 如果有些 commit 我们确实是完全不想要了，可以使用 reset 消除最近的几次提交（只能消除本地的提交，远程的需要用 revert）
 
 ```shell
-git reset --hard commit_id 	#===> 将暂存区、工作区的状态都恢复到 commit_id 这次提交的内容了。
+$ git reset --hard commit_id 	#===> 将暂存区、工作区的状态都恢复到 commit_id 这次提交的内容了。
 ```
 
 ### 操作分支(branch):star:
@@ -8336,6 +8246,21 @@ git reset --hard commit_id 	#===> 将暂存区、工作区的状态都恢复到 
 几乎所有的版本控制系统都以某种形式支持分支。 使用分支意味着我们可以把工作从开发主线上分离开来进行重大的 Bug 修改、开发新的功能等，以免影响开发主线。
 
 团队分工合作开发项目，一共三个人负责后端部分。其中后端部分有三个大模块，每个人负责其中一个模块。这时候可以先创建一个项目的基本框架。然后创建三个分支，每个人只在自己的分支里进行项目开发，互不干扰。开发完毕/完成一部分后合并分支。
+
+```mermaid
+gitGraph
+	commit id: "main-1"
+	commit id: "main-2"
+	branch dev1
+	branch dev2
+	commit id: "dev2-1"
+	commit id: "dev2-2"
+	commit id: "dev2-3"
+	checkout dev1
+    commit id: "dev1-1"
+	commit id: "dev1-2"
+	commit id: "dev1-3"
+```
 
 <b>分支相关的操作有很多，也是日后开发用的最多的命令之一。</b>
 
@@ -8357,15 +8282,15 @@ git reset --hard commit_id 	#===> 将暂存区、工作区的状态都恢复到 
 查看分支，* 表示当前分支为 master 分支。
 
 ```shell
-git branch
+$ git branch
 * master
 ```
 
 创建一个新的分支 `dev`。
 
 ```shell
-git branch dev
-git branch
+$ git branch dev
+$ git branch
 
   dev
 * master
@@ -8374,10 +8299,10 @@ git branch
 切换到 dev 分支。
 
 ```shell
-git checkout dev
+$ git checkout dev
 Switched to branch 'dev'
 
-git branch
+$ git branch
 
 * dev
   master
@@ -8386,10 +8311,10 @@ git branch
 创建并切换到 dev2 分支
 
 ```shell
-git checkout -b dev2
+$ git checkout -b dev2
 Switched to a new branch 'dev2'
 
-git branch
+$ git branch
   dev
 * dev2
   master
@@ -8402,21 +8327,19 @@ git branch
 命令的格式
 
 ```shell
-git branch 新分支 旧分支
-git checkout -b 新分支 旧分支
-```
+$ git branch 新分支 旧分支
+$ git checkout -b 新分支 旧分支
 
-```shell
-git branch dev3 dev
-git checkout -b dev4 dev
+$ git branch dev3 dev
+$ git checkout -b dev4 dev
 ```
 
 <b>操作完毕后删除 master、dev 外的所有分支</b>
 
 ```shell
-git checkout master
+$ git checkout master
 
-git branch -D dev2 dev3 dev4
+$ git branch -D dev2 dev3 dev4
 ```
 
 #### 关联分支
@@ -8424,7 +8347,7 @@ git branch -D dev2 dev3 dev4
 将远程的 branch_name1 分支与本地的 branch_name2 分支对应
 
 ```shell
-git branch --set-upstream-to=origin/branch_name1 branch_name2
+$ git branch --set-upstream-to=origin/branch_name1 branch_name2
 ```
 
 #### 重命名
@@ -8434,8 +8357,8 @@ git branch --set-upstream-to=origin/branch_name1 branch_name2
 ```shell
 # 假定当前处于 dev 分支
 
-git branch -m dev new_dev
-git branch -m dev
+$ git branch -m dev new_dev
+$ git branch -m dev
 ```
 
 #### 合并分支
@@ -8444,7 +8367,7 @@ git branch -m dev
 
 ```shell
 # 我们先为 dev 分支添加一个 main.cpp 文件
-git merge branch_name	# 将 branch_name 合并到当前分支
+$ git merge branch_name	# 将 branch_name 合并到当前分支
 ```
 
 下图是一个合并的示意图。main 有若干次提交，dev 分支也有若干次提交。当前分支是 dev 分支，执行 `git merge main` 命令会将 main 合并到 dev 分支。（实际开发时 dev 分支合并到 main 分支）
@@ -8469,7 +8392,7 @@ merge main
 <b>合并分支</b>
 
 ```shell
-git merge dev
+$ git merge dev
 
 CONFLICT (add/add): Merge conflict in main.cpp
 Auto-merging main.cpp
@@ -8522,7 +8445,7 @@ git branch -D b1 不做任何检查，强制删除
 如果我们想修改 msg 的最新提交，可以用 `git commit --amend` 命令来修改 msg。
 
 ```shell
-git log --oneline
+$ git log --oneline
 
 8f2975d (HEAD -> main) main branch update
 c02c2cb second update readme.md
@@ -8536,10 +8459,22 @@ af7564a first update readme.md
 # 会用默认的编辑器打开文件
 export EDITOR=vim	# 设置 vim 为默认编辑器
 
-git commit --amend	# 之后会自动打开最近一次 commit 记录的修改页面。
+$ git commit --amend	# 之后会自动打开最近一次 commit 记录的修改页面。
 ```
 
 如果想修改先前 commit 的 msg，可以使用 [rebase](##变基（rebase）)
+
+#### 查看追踪关系
+
+通过前面的学习我们可以知道
+
+- `git branch` 可以看到本地有什么分支，
+- `git branch -v` 可以看到本地分支及其最近的提交信息，
+- `git branch -av` 可以看到本地和远程分支
+
+除此之外，我们可以通过 `git branch -vv` 可以看到本地分支和远程分支的<span style="color:blue">追踪关系</span>
+
+
 
 #### 文件冲突
 
@@ -8603,10 +8538,10 @@ A、B 都改了文件名，A 改成了 index1.htm，B 改成了 index2.htm，此
 
 ```shell
 # 一般会提示我们把 index.html (被修改名字的) 删除，然后选择 index1.htm 或 index2.htm 加入暂存区
-git rm index.html
-git add index1.htm
-git rm index2.htm
-git commit -m 'decide to v index to index1'
+$ git rm index.html
+$ git add index1.htm
+$ git rm index2.htm
+$ git commit -m 'decide to v index to index1'
 ```
 
 #### 危险命令
@@ -8643,20 +8578,20 @@ head 可以指向分支，也可以指向具体的 commit，不和任何分支�
 修改部分文件，添加到暂存区。然后执行下列命令。
 
 ```shell
-echo "3" >> readme.md
-git add readme.md
-git status
+$ echo "3" >> readme.md
+$ git add readme.md
+$ git status
 
 On branch master
 Changes to be committed:
   (use "git restore --staged <file>..." to unstage)
         modified:   readme.md
         
-git reset HEAD # 将暂存区恢复成和 HEAD 一样(暂存区提交的内容还原到工作区)
+$ git reset HEAD # 将暂存区恢复成和 HEAD 一样(暂存区提交的内容还原到工作区)
 Unstaged changes after reset:
 M       readme.md
 
-git diff --cached readme.md	# 暂存区确实和 HEAD 一样了
+$ git diff --cached readme.md	# 暂存区确实和 HEAD 一样了
 ```
 
 <b>工作区的文件恢复成和暂存区一样</b>
@@ -8664,25 +8599,25 @@ git diff --cached readme.md	# 暂存区确实和 HEAD 一样了
 有些时候我们做了变更，这部分变更添加到了暂存区，然后工作区继续做变更；但是变更过程中发现工作区的变更不如暂存区好，这时候我们可以使用 restore 将工作区恢复成暂存区的样子。
 
 ```shell
-echo "3" >> readme.md
-git add readme.md
+$ echo "3" >> readme.md
+$ git add readme.md
 
 # 继续修改
-echo "4455" >> readme.md
+$ echo "4455" >> readme.md
 # 觉得这次的修改没上一次的好(工作区希望恢复成暂存区的样子, git 提示我们可以使用 git restore)
 Changes not staged for commit:
   (use "git add <file>..." to update what will be committed)
   (use "git restore <file>..." to discard changes in working directory)
         modified:   readme.md
         
-git restore readme.md
-git diff readme.md		# 对比工作区和暂存区, 没有差异。
+$ git restore readme.md
+$ git diff readme.md		# 对比工作区和暂存区, 没有差异。
 ```
 
 <b>将文件从暂存区域移回工作区</b>
 
 ```shell
-git reset HEAD filename
+$ git reset HEAD filename
 ```
 
 ### 暂存(stash)
@@ -8704,17 +8639,411 @@ git stash 可以将工作区和暂存区中尚未提交的修改存入栈中。
 <b>stash 实战</b>
 
 ```shell
-git status
+$ git status
 modified:   README.md
 
-git stash		#===>将手头的工作暂时存放起来，去解决 bug
+$ git stash		#===>将手头的工作暂时存放起来，去解决 bug
 Saved working directory and index state WIP on notes: 8053ebd lg
 
-git status
+$ git status
 nothing to commit, working tree clean
 
-git stash apply	#===>将暂存的内容恢复过来, 暂存区(stash)的内容会保留
-git stash pop	#===>将暂存的内容恢复过来, 且暂存区(stash)中的内容会弹出/移除。
+$ git stash apply	#===>将暂存的内容恢复过来, 暂存区(stash)的内容会保留
+$ git stash pop	#===>将暂存的内容恢复过来, 且暂存区(stash)中的内容会弹出/移除。
+```
+
+## 远程仓库
+
+### 远程仓库(github)
+
+Git 中存在两种类型的仓库，即本地仓库和远程仓库。比较常用的远程仓库（代码托管服务）有 GitHub、码云、GitLab 等。
+
+```mermaid
+sequenceDiagram
+	participant local as 本地仓库
+	participant remote as 远程仓库
+	local->>local:空仓库，什么都没有
+    local->>remote:关联远程仓库: git remote add origin git@gitee.com:pay/test.git
+    remote->>local:从远程仓库拉取内容: git pull
+    local->>local:查看有那些分支：git branch -av
+    local->>local:发现只有远程分支：remotes/origin/dev
+    
+```
+
+> PS：gitee 和 github 让 git 变得更加好用，用户可以便捷的分享自己的 code。可以方便的检索自己想要的开源项目。
+
+### 克隆远程仓库(clone)
+
+如果我们想拉取远程仓库到本地（克隆），可以使用 `git clone`。克隆的命令格式如下
+
+```shell
+$ git clone resp_url
+```
+
+git clone 克隆仓库时会将仓库的默认分支拉取到本地，例如，执行下面的命令，会把 JavaWeb 的默认分支拉取到本地。 
+
+```shell
+$ git clone https://gitee.com/maoxiaojiu9/JavaWeb
+```
+
+使用 `git clone -b branch_name resp_url` 拉取 branch_name 分支到本地
+
+```shell
+$ git clone -b branch_name resp_url
+# 拉取 java-ee 项目的 JVM 分支
+$ git clone -b JVM https://gitee.com/deng-chongshuang/java-ee
+```
+
+此外，如果后希望将 java-ee 的其他分支也拉取到本地，可以使用 `git checkout branch_name` 命令。
+
+```shell
+$ git branch -av
+
+* JVM                               b11753a JVM
+  remotes/origin/Design-Patterns    02ea04c 设计模式
+  remotes/origin/HEAD               -> origin/Spring-Framework-6
+  remotes/origin/JVM                b11753a JVM
+  remotes/origin/MyBatis-Plus       21f0167 通用分页实体与Mp Page转换
+  remotes/origin/Spring-Framework-5 2f30d49 add LICENSE.
+  remotes/origin/Spring-Framework-6 affc609 Bean 的5个生命周期
+  
+$ git checkout MyBatis-Plus
+
+Branch 'MyBatis-Plus' set up to track remote branch 'MyBatis-Plus' from 'origin'.
+Switched to a new branch 'MyBatis-Plus'
+
+$ git branch -av
+
+  JVM                               b11753a JVM
+* MyBatis-Plus                      21f0167 通用分页实体与Mp Page转换
+  remotes/origin/Design-Patterns    02ea04c 设计模式
+  remotes/origin/HEAD               -> origin/Spring-Framework-6
+  remotes/origin/JVM                b11753a JVM
+  remotes/origin/MyBatis-Plus       21f0167 通用分页实体与Mp Page转换
+  remotes/origin/Spring-Framework-5 2f30d49 add LICENSE.
+  remotes/origin/Spring-Framework-6 affc609 Bean 的5个生命周期
+```
+
+从上面可以看到，clone 项目后，本地只有 JVM 分支，remotes 开头的是远程分支；使用 `git checkout MyBatis-Plus` 后，将远程的 `MyBatis-Plus` 分支拉取到了本地仓库。
+
+### 拉取到本地(pull/fetch)
+
+git 中是有三个分支的，本地分支，追踪分支，远程分支。
+
+```mermaid
+graph TD
+ subgraph 本地分支
+ 	direction LR
+ 	工作区1
+ 	暂存区1
+ 	对象区1
+ end
+ subgraph 追踪分支
+  	direction LR
+ 	工作区2
+ 	暂存区2
+ 	对象区2
+ end
+ subgraph 远程分支
+  	direction LR
+ 	工作区3
+ 	暂存区3
+ 	对象区3
+ end
+```
+
+追踪分支也叫本地的远程分支，是远程分支在本地的拷贝，作为本地与远程的媒介。
+
+#### fetch
+
+fetch 命令可以将远程仓库的分支拉取到本地的跟踪分支，但是不会主动把远程分支拉取到的内容合并到本地分支。
+
+```shell
+$ git fetch origin remote_branch:local_branch
+```
+
+如果没有指定将远程分支拉取到本地的那个分支，默认会拉取到对应的跟踪分支上 `remotes/origin/remote_branch`。
+
+<b>将远程分支拉取到本地对应的跟踪分支</b>
+
+```shell
+$ git fetch origin master
+# 等价于下面的命令
+$ git fetch origin master:origin/master
+```
+
+<b>此外，也可以将远程分支拉取到指定的分支上</b>
+
+```shell
+# 将远程的 master 分支拉取到本地的 mm 分支，如果不存在则会创建 mm 分支
+$ git fetch origin master:mm
+```
+
+使用 fetch 将远程分支的内容拉取过来后，还需要手动合并到本地对应的分支中。
+
+```shell
+$ git fetch origin master
+# 或
+$ git fetch origin master:origin/master
+
+# 将 fetch 到的内容合并到 master 分支（假定当前是 master 分支）
+$ git merge origin/master
+```
+
+#### pull
+
+pull 命令：拉取指定的远程分支并将其合并到本地的分支中 = fetch + merge
+
+```shell
+$ git pull <远程主机名> <远程分支名>:<本地分支名>
+$ git pull origin remote_branch:local_branch
+```
+
+将远程主机的 main 分支拉取到本地的 main 分支
+
+```shell
+$ git pull origin main:main
+# 如果分支名称一样，可以省略:main
+$ git pull origin main
+```
+
+### 关联远程仓库(remote)
+
+我们可以从远程仓库拉取内容，也可以将本地的修改推送到远程仓库，不过推送修改需要我们的 git 关联对应的远程仓库。
+
+在 git 中，我们可以使用 remote 命令来关联本地仓库和远程仓库。 
+
+<b>关联远程仓库的命令格式如下</b>
+
+```shell
+$ git remote add <远端名称> <仓库地址>
+```
+
+- add：表示执行新增远端站点操作；一个本地参考可以关联多个远端仓库。
+- 远端名称：默认是 origin，取决于远端服务器设置
+- 仓库地址：从远端服务器获取此 url
+
+#### 本地仓库关联远程空仓库
+
+我们在 gitee 创建一个 test 仓库，在本地也创建一个名为 test 的仓库
+
+```shell
+# 本地创建 test 仓库
+$ mkdir test; cd test; git init
+$ echo file >>> file
+$ git add .
+$ git commit -m "add file"
+# 关联远程仓库
+$ git remote add origin git@gitee.com:lalala-payphone/test.git
+```
+
+<b>我们使用命令 `git remote` 查看关联的仓库，显示我们成功关联了 origin。</b>
+
+```shell
+$ git remote
+origin
+```
+
+我们的远程仓库中是有文件（readme.md）的，但是我们本地并没有拿到这些文件，这时候可以使用 `git pull origin branch_name` 拉取远程仓库中对应分支的文件。
+
+```shell
+$ git pull origin master	# 把远程仓库的 master 分支拉到当前分支，如果没有会默认创建一个 master 分支
+
+remote: Enumerating objects: 6, done.
+remote: Total 6 (delta 0), reused 0 (delta 0), pack-reused 6
+Unpacking objects: 100% (6/6), 1.95 KiB | 1.95 MiB/s, done.
+From gitee.com:lalala-payphone/test
+ * branch            master     -> FETCH_HEAD
+ * [new branch]      master     -> origin/master
+ 
+$ ls
+
+README.en.md  README.md
+```
+
+可以看到，文件已经被拉取过来了。现在，我们给文件做一些修改。然后将修改的内容推送到远程仓库中。如果我们想拉取所有的远程分支到本地，可以使用 `git pull`。
+
+### 推送至远程仓库(push)
+
+#### 基本用法
+
+<b>推送到远程仓库的命令</b>
+
+将本地分支的推送到远程分支的命令如下
+
+```shell
+$ git push [-f] [--set-upstream] [远端名称] [本地分支名][:远端分支名]
+# 可以简写成 git push [-f] -u [远端名称] [本地分支名][:远端分支名]
+```
+
+将本地的 dev 分支推送到远程的 dev 分支
+
+```shell
+$ git push origin dev:dev
+
+# 如果本地分支和远程分支名称一样，可以简写
+
+$ git push origin dev
+```
+
+#### 上游关系
+
+push 还有一个非常实用的功能，在推送分支时可以设置上游（跟踪）关系。
+
+```shell
+$ git push -u origin dev:dev
+
+$ # 设置本地分支 dev 跟踪远程分支 dev
+
+$ git push # 不指定分支时，默认推送到远程的 dev 分支
+```
+
+设置分支的跟踪关系后，我们在分支里执行 `git push/pull` 命令就会默认推送到远程的 dev 分支。
+
+- 每个本地分支可以独立设置其上游分支。
+- 设置了上游关系后，后续的 `git push` 和 `git pull` 操作可以不指定远程分支，Git 会使用已设置的上游分支。
+- 如果你有多个本地分支，并且每个分支都设置了不同的上游分支，那么在每个分支上的 `git push` 和 `git pull` 操作都会针对其各自的上游分支进行
+
+<b>eg</b>
+
+```shell
+$ echo hello >> test.md
+$ git add test.md
+$ git commit -m "add file test.md"
+
+# -f 表示 force 强制推送，不推荐使用
+# --set-upstream 会将本地的 master 分支设置为跟踪远程的 master 分支
+# 后面再次推送的时候，直接使用 git push 即可
+$ git push -f --set-upstream origin master:master
+
+$ git push -f -u origin master # 上面命令的简写
+```
+
+后面，如果我们继续在 master 分支修改，需要将修改推送到远程分支
+
+```shell
+$ git push
+```
+
+查看本地仓库和远程参考都有那些分支
+
+```shell
+$ git branch -av
+* master                67080bf add file a
+  remotes/origin/master 67080bf add file a
+```
+
+注意：我们操作的其实都是本地分支，操作完毕后把内容 push 到远程分支上。如果本地分支和远程分支发生了冲突，可以将远程分支合并到本地分支，处理完冲突后再 push。
+
+- 最简单的方式，直接拉取远程分支的内容到本地分支，处理冲突
+
+```shell
+$ git pull
+
+remote: Enumerating objects: 5, done.
+remote: Counting objects: 100% (5/5), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 3 (delta 1), reused 0 (delta 0), pack-reused 0
+Unpacking objects: 100% (3/3), 958 bytes | 958.00 KiB/s, done.
+From gitee.com:lalala-payphone/test
+   67080bf..f56ba1b  master     -> origin/master
+Auto-merging a.md
+CONFLICT (content): Merge conflict in a.md	# a.md 文件有冲突，处理冲突后提交
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+### 仓库同步的两种情况
+
+<b>同步仓库内容有两种情况</b>
+
+- 本地→远程
+- 远程→本地
+
+#### 本地→远程
+
+1️⃣本地→远程，本地有 dev 分支，远程没有:star:。
+
+将本地分支关联到远程仓库并同步内容。`-u` 表示关联本地分支和远程分支
+
+```shell
+$ git push --set-upstream origin dev
+$ git push -u origin dev # 上面命令的简写
+```
+
+本地的 dev 分支使用上述命令关联 dev 分支后，后面再推送修改给 remote 就不用指定推送分支的名称了
+
+```shell
+# 后面再次推送的话, 直接输入,将远程仓库的当前分支与本地仓库的当前分支合并
+$ git push
+```
+
+除了上面的方式，还有一种方式（了解）
+
+```shell
+# 将本地的分支 local_dev 推送到远程分支 remote_dev,如果remote_dev不存在则自动创建 
+$ git push origin local_dev:remote_dev
+```
+
+#### 远程→本地
+
+2️⃣远程→本地，远程有 dev 分支，本地没有:star:。
+
+先拉取远程的分支到追踪分支（`origin/xx` `origin` 开头的是追踪分支哦）
+
+```shell
+$ git pull
+```
+
+创建并切换到本地分支 dev，然后将本地分支和追踪分支关联（一气呵成）
+
+```shell
+$ git checkout -b dev origin/dev
+$ git checkout -b dev --track origin/dev # 和上面的命令一致
+$ git checkout --track origin/dev	# 简写,默认将 dev 分支的名字作为本地分支的名字
+$ git checkout -t origin/branch_name	# track 可以简写为 t
+```
+
+关联本地和远端仓库后，将本地的推送到远端发生了冲突，需要解决冲突。如果发送了冲突，git 会提示我们如何解决，提示需要 pull xxx，可以用下面的方式解决。
+
+方式一，先将远程分支的改动拉取到 remotes/origin/分支, 然后我们可以手动合并
+
+```shell
+$ git fetch 远端仓库名 分支名
+```
+
+方式二，自动拉取远端分支到本地分支，自动合并
+
+```shell
+$ git push 远端仓库名 分支名
+```
+
+如果发现仓库的分支走向不是线性的，可以通过 merge 的手段合并分支，变成线性的（后面讲解）。
+
+### 删除远端分支(branch)
+
+1️⃣直接删除远端分支
+
+一般，本地分支和远端分支是同步的，删除了远端分支，本地分支也应该删除。
+
+先删除本地分支
+
+```shell
+$ git branch -d branch_name	
+# -d = --delete
+```
+
+然后删除远端分支
+
+```shell
+$ git push origin -d branch_name
+```
+
+2️⃣推送空分支到远程分支（删除远端分支的另一种实现）
+
+```shell
+$ git push origin _:远程分支	
+$ # _表示空格,用_只是方便告诉你这是空格
+$ git push origin _:dev
 ```
 
 ## Git 备份:star:
@@ -8745,7 +9074,7 @@ gitee 使用的什么协议？
 仓库克隆的命令格式，如果目标目录不存在，这条命令会自动创建目标目录。
 
 ```shell
-git clone [--bare] <git仓库全路径> <目标路径>
+$ git clone [--bare] <git仓库全路径> <目标路径>
 ```
 
 - `--bare` 表示创建一个裸仓库。裸仓库只含有 .git 目录下的内容，不包含 .git 同级目录中的工作文件。
@@ -8755,13 +9084,13 @@ git clone [--bare] <git仓库全路径> <目标路径>
 
 ```shell
 #===> 哑协议备份
-git clone --bare /root/test back
+$ git clone --bare /root/test back
 
 Cloning into bare repository 'back'...
 done.
 
 #===> 智能协议备份
-git clone --bare file:///root/test back
+$ git clone --bare file:///root/test back
 
 Cloning into bare repository 'back'...
 remote: Enumerating objects: 3, done.
@@ -8773,14 +9102,14 @@ remote: Total 3 (delta 0), reused 0 (delta 0)
 现在，我们就有两个仓库了，分别是 test / back。我们将 back 视为远端仓库，test 视为本地仓库，将 test 关联 back 进行同步。
 
 ```shell
-git remote add back file:///root/back.git
+$ git remote add back file:///root/back.git
 
 # 查看是否完成关联
-git remote
+$ git remote
 
 back	# 已经关联了 back 仓库
 
-git remote -v
+$ git remote -v
 
 back file:///root/back.git (fetch)
 back file:///root/back.git (push)
@@ -8789,22 +9118,22 @@ back file:///root/back.git (push)
 解除关联也很简单，将 add 换成 remove，后面再接上仓库名称即可。
 
 ```shell
-git remote remove <仓库名称>
-git remote remove bach
+$ git remote remove <仓库名称>
+$ git remote remove bach
 ```
 
 现在，我们在本地仓库 `test` 里做一些改动，然后同步到 `back` 里。
 
 ```shell
-echo hello >> new.md
-git add .
-git commit -m "add new.md"
+$ echo hello >> new.md
+$ git add .
+$ git commit -m "add new.md"
 
 [master c3c70bd] add new.md
  2 files changed, 2 insertions(+)
  create mode 100644 new.md
  
-git push --set-upstream back master
+$ git push --set-upstream back master
 
 Enumerating objects: 6, done.
 Counting objects: 100% (6/6), done.
@@ -8819,9 +9148,9 @@ Branch 'master' set up to track remote branch 'master' from 'back'.
 这样，我们就将文件同步到了远程仓库。此时，可以使用 clone 从远程仓库拉取仓库中的内容。
 
 ```shell
-git clone ./back new_resp		# 远程仓库就在当前路径，所以我写 ./back
-cd new_resp
-ls
+$ git clone ./back new_resp		# 远程仓库就在当前路径，所以我写 ./back
+$ cd new_resp
+$ ls
 
 new.md	readme.md
 ```
@@ -8841,7 +9170,7 @@ new.md	readme.md
 <b>示例</b>
 
 ```shell
-git checkout 5ae0216
+$ git checkout 5ae0216
 Note: checking out '5ae0216'.
 
 You are in 'detached HEAD' state. You can look around, make experimental
@@ -8859,7 +9188,7 @@ HEAD is now at 5ae0216 add tmp file
 比如我们想在 tmp 中加内容。
 
 ```shell
-ls -al
+$ ls -al
 total 12
 drwxr-xr-x 3 payphone payphone 4096 Mar 28 16:12 .
 drwxr-xr-x 3 payphone payphone 4096 Mar 28 11:23 ..
@@ -8868,10 +9197,10 @@ drwxr-xr-x 8 payphone payphone 4096 Mar 28 16:12 .git
 -rw-r--r-- 1 payphone payphone    0 Mar 28 16:12 tmp.txt
 
 # 修改 tmp
-vi tmp.txt
+$ vi tmp.txt
 
 # 查看状态
-git status
+$ git status
 HEAD detached at 5ae0216
 Changes not staged for commit:
   (use "git add <file>..." to update what will be committed)
@@ -8882,12 +9211,12 @@ Changes not staged for commit:
 no changes added to commit (use "git add" and/or "git commit -a")
 
 # 提交修改
-git commit -am'attach head'
+$ git commit -am'attach head'
 [detached HEAD f80e735] attach head
  1 file changed, 1 insertion(+)
 
 # 查看日志
-git log --graph
+$ git log --graph
 * commit f80e7354548b70e4ce9ce2b87b894adba2b6077d (HEAD)  # 以前 HEAD 和 分支总是一起出现的，这次这里只有 HEAD，没有分支了。
 | Author: csliujw <695466632@qq.com>
 | Date:   Tue Mar 28 16:15:38 2023 +0800
@@ -8913,7 +9242,7 @@ git log --graph
       add readme
 
 # 如果我们突然切换出去，那么这次的提交就会丢掉。
-git checkout master
+$ git checkout master
 Warning: you are leaving 1 commit behind, not connected to
 any of your branches:
 
@@ -8932,7 +9261,7 @@ to do so with:
 - 也可以用 rebase 把连续的 commit 合并成一个。
 - 也可以用 rebase 把不连续的 commit 合并成一个。
 
-不过在讲解之前需要注意，我们可以把 rebase 用在自己负责的分支上，但是如果分支已经被合并了，被其他人所依赖，就不要轻易 rebase 了（会打乱别人的开发） 。
+不过在讲解之前需要注意，我们可以把 rebase 用在自己负责的分支上，但是如果分支已经被合并了，被其他人所依赖，就不要轻易 rebase 了（会打乱别人的开发）。
 
 <b>在使用 rebase 前，先阅读下 rebase 相关的文档。</b>
 
@@ -8963,10 +9292,12 @@ to do so with:
 
 <b>修改之前 commit 的 msg</b>
 
-如果想修改当前 commit 的 msg 我们可以用 `git commit --amend`，如果想修改之前记录的 msg 呢？可以用 rebase，`git rebase -i 选择需要变更提交的父亲`，例如我们需要把 update juc 变更为 update juc note，那么我们需要选择的是 `77deb4` 这个 msg。
+如果想修改当前 commit 的 msg 我们可以用 `git commit --amend`，如果想修改之前记录的 msg 呢？
+
+可以用 rebase，`git rebase -i 选择需要变更提交的父亲`，例如我们需要把 update juc 变更为 update juc note，那么我们需要选择的是 `77deb4` 这个 msg。
 
 ```shell
-git log -n3
+$ git log -n3
 commit c8701e8874ed55d611d9a4fcfe0483ccc8705a2e (HEAD -> notes)
 Author: csliujw <695466632@qq.com>
 Date:   Tue Mar 28 22:50:25 2023 +0800
@@ -8989,7 +9320,7 @@ Date:   Thu Mar 16 23:05:21 2023 +0800
 使用 rebase 来变更 msg
 
 ```shell
-git rebase -i 77deb477
+$ git rebase -i 77deb477
 pick 7578d05 update juc				
 pick c8701e8 update this message
 
@@ -9032,7 +9363,7 @@ Date:   Sat Mar 25 23:23:36 2023 +0800
 例如，我们将 77deb47 和它的两个父亲 (0b0bc32 和 ebc7606）合并到一起。这时候选择对 d4e2532（选择那三个的祖先） 进行变基。（变基，变基，可以理解为变更祖先吗？）
 
 ```shell
-git log -n6 --oneline
+$ git log -n6 --oneline
 e95f195 (HEAD -> notes) update this message
 4e03c93 update juc notes
 ➡️77deb47 (origin/notes, origin/HEAD) update	#===>合并
@@ -9042,7 +9373,7 @@ d4e2532 整合笔记内容，清理部分无用图片，新增部分读书笔记
 ```
 
 ```shell
-git rebase -i d4e2532
+$ git rebase -i d4e2532
 
 pick ebc7606 内容更新	  #===>合并		#===>这里面最旧的 commit
 pick 0b0bc32 update		#===>合并
@@ -9082,7 +9413,7 @@ update, 合并提交记录
 操作也很简单，就是选好一个 commit_id 进行 rebase，然后把需要融合的 commit 的 id 写进去，最老的 commit 写在最前面。比如，我们需要把 commit 修改.
 
 ```shell
-git log -n6 --oneline
+$ git log -n6 --oneline
 3bcb25f (HEAD -> notes) update this message
 01f8f98 update juc notes							# 需要合并
 188b96c 内容更新, 合并								# 需要合并
@@ -9090,7 +9421,7 @@ d4e2532 整合笔记内容，清理部分无用图片，新增部分读书笔记
 78f7367 复习并更新mysql笔记						    # 需要合并
 3d2fd52 fix gitpage bug			
 
-git rebase -i d4e2532
+$ git rebase -i d4e2532
 pick 188b96c 内容更新, 合并
 pick 01f8f98 update juc notes
 pick 3bcb25f update this message
@@ -9163,7 +9494,7 @@ cherry-pick 可以非常灵活地选择特定的提交进行复制，而不需�
 - 修复 bug：当发现某个分支上的 bug，并且已经在其他分支上修复了该bug，可以使用 git cherry-pick 将修复提交应用到当前分支上。
 - 应用特定功能：当需要将其他分支或提交中的某个特定功能应用到当前分支时，可以使用 git cherry-pick 选择性地复制提交。
 
-## 使用Gitee
+## 使用Github
 
 [GitHub Docs](https://docs.github.com/zh)
 
@@ -9379,8 +9710,8 @@ git stash list：查看栈中所有元素
 ## 积累
 
 ```shell
-git log # 查看提交记录
-git reset --hard 版本id
+$ git log # 查看提交记录
+$ git reset --hard 版本id
 
 # 强制修改分支名称
 $ git branch -M [<原分支名称>] <新的分支名称>
@@ -9390,11 +9721,11 @@ $ git branch -d <分支名称>
 $ git branch -D <分支名称>
 
 # 删除git服务器上的分支
-git push origin -d BranchName
-git push origin --delete BranchName
+$ git push origin -d BranchName
+$ git push origin --delete BranchName
 
 # 回溯分支
-git clone --recursive -b 8.2-EA https://github.com/onnx/onnx-tensorrt.git
+$ git clone --recursive -b 8.2-EA https://github.com/onnx/onnx-tensorrt.git
 ```
 
 # nginx-选讲
@@ -9504,14 +9835,14 @@ nginx-->购物子系统服务器3
 我们可以直接通过命令安装 nginx。
 
 ```shell
-sudo apt-get update
-sudo apt-get install nginx
+$ sudo apt-get update
+$ sudo apt-get install nginx
 ```
 
 查找 nginx 安装的位置
 
 ```shell
-whereis nginx
+$ whereis nginx
 ```
 
 -  `/usr/sbin/nginx` 可执行文件 nginx 的位置（启动 nginx）
@@ -9524,7 +9855,7 @@ whereis nginx
 查看 nginx 的版本
 
 ```shell
-nginx -v
+$ nginx -v
 ```
 
 ## 启动/停止
@@ -9532,20 +9863,20 @@ nginx -v
 我们可以使用 service 或 systemctl 来启动/停止 nginx。
 
 ```shell
-sudo systemctl start nginx  # 启动 Nginx
-sudo systemctl stop nginx   # 停止 Nginx
-sudo systemctl restart nginx # 重启 Nginx
-sudo systemctl reload nginx # 重新加载配置文件
+$ sudo systemctl start nginx  # 启动 Nginx
+$ sudo systemctl stop nginx   # 停止 Nginx
+$ sudo systemctl restart nginx # 重启 Nginx
+$ sudo systemctl reload nginx # 重新加载配置文件
 ```
 
 也可以使用 nginx 自带的命令来启动和停止服务。
 
 ```shell
-nginx				# 启动 nginx
-nginx -s stop		# 关闭 nginx
-nginx -s quit		# 优雅停止
-nginx -s reload		# 重载配置文件（会启动新的工作进程并优雅地关闭旧的工作进程，实现无缝的配置更新。）
-nginx -s reopen		# 重新打开日志文件（关闭当前打开的日志文件，并根据配置文件中的设置重新打开新的日志文件）
+$ nginx				# 启动 nginx
+$ nginx -s stop		# 关闭 nginx
+$ nginx -s quit		# 优雅停止
+$ nginx -s reload		# 重载配置文件（会启动新的工作进程并优雅地关闭旧的工作进程，实现无缝的配置更新。）
+$ nginx -s reopen		# 重新打开日志文件（关闭当前打开的日志文件，并根据配置文件中的设置重新打开新的日志文件）
 ```
 
 <b>nginx 常用命令</b>
@@ -9576,14 +9907,14 @@ nginx: configuration file /etc/nginx/nginx.conf test is successful
 - 卸载 nginx
 
 ```shell
-sudo apt purge nginx nginx-common nginx-core
+$ sudo apt purge nginx nginx-common nginx-core
 ```
 
 - 清理残留文件
 
 ```shell
-sudo apt autoclean
-sudo apt autoremove
+$ sudo apt autoclean
+$ sudo apt autoremove
 ```
 
 ## 架构
@@ -9615,7 +9946,7 @@ include /etc/nginx/modules-enabled/*.conf;
 我们的服务器是 1 核的，因此只有一个 worker 进程。我们使用 `ps aux | grep nginx` 查看下 nginx 进程，发现只有一个 worker 进程。
 
 ```shell
-ps aux | grep 'nginx'
+$ ps aux | grep 'nginx'
 root      657553  0.0  0.0  51212  1484 ?        Ss   14:53   0:00 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
 www-data  657554  0.0  0.2  51776  5208 ?        S    14:53   0:00 nginx: worker process
 ```
@@ -9629,9 +9960,9 @@ worker_processes 4;		# 修改为 4 个 worker 进程
 重新启动 nginx 或执行 `systemctl reload ngingx` 重新加载配置，就会启动 4 个 worker 进程了。
 
 ```shell
-vim /etc/nginx/nginx.conf
-systemctl reload nginx
-ps aux | grep 'nginx'
+$ vim /etc/nginx/nginx.conf
+$ systemctl reload nginx
+$ ps aux | grep 'nginx'
 root      657631  0.0  0.3  51232  5664 ?        Ss   14:56   0:00 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
 www-data  657707  0.0  0.2  51792  5168 ?        S    14:57   0:00 nginx: worker process
 www-data  657708  0.0  0.2  51792  5168 ?        S    14:57   0:00 nginx: worker process
