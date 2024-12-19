@@ -7406,6 +7406,7 @@ pull 可以查看本地和远程是否会有冲突，也可以不执行 pull 直
 
 <b>git 的作用</b>
 
+<<<<<<< HEAD
 | 作用             | 说明                                                         |
 | ---------------- | ------------------------------------------------------------ |
 | 代码历史记录跟踪 | 我们可以使用 Git 记录每一次代码提交；查看项目的历史版本和变更记录；还原任一时间点的代码（代码版本回滚：迭代系统，加功能，上线 1 天出现 bug，使用 git 找到先前稳定运行的系统代码，重新部署） |
@@ -7418,6 +7419,23 @@ pull 可以查看本地和远程是否会有冲突，也可以不执行 pull 直
 - 了解 Git 基本概念
 - 了解 Git 工作流程
 - 熟悉 Git 常用命令
+=======
+- [ ] <b>代码历史记录跟踪</b>
+  - [ ] 我们可以使用 Git 记录每一次代码提交；查看项目的历史版本和变更记录；还原任一时间点的代码（代码版本回滚：迭代系统，加功能，上线 1 天出现 bug，使用 git 找到先前稳定运行的系统代码，重新部署）
+
+- [ ] <b>协同开发</b>
+  - [ ] Git 提供了合并、分支和版本控制的功能，利用这些功能，我们可以轻松进行多人协作开发项目。
+- [ ] <b>追溯代码问题</b>
+  - [ ] 如果项目出现了问题，我们可以根据 Git 的提交记录追溯编写人和编写时间，防止甩锅。
+- [ ] <b>变更审查</b>
+  - [ ] 允许开发者查看代码变更的具体内容，了解谁在何时做了哪些修改，这对于代码审查和质量控制至关重要（开源项目，你提交合并请求，项目审查者是可以看到你的修改内容，提交的内容质量过关就同意合并，质量不过关就拒绝合并）
+
+<b>基本要求</b>
+
+- [ ] 了解 Git 基本概念
+- [ ] 了解 Git 工作流程
+- [ ] 熟悉 Git 常用命令
+>>>>>>> e3297f43f13d401ea3c65b581c506069166e037e
 
 ## 安装/配置Git
 
@@ -7639,7 +7657,11 @@ Git 工作目录下对于文件的<b>修改</b>（增加、删除、更新）会
 
 <b>使用命令来控制这些状态之间的转换</b>
 
+<<<<<<< HEAD
 ① git add (工作区➡️暂存区)
+=======
+① git add (工作区➡️ 暂存区)
+>>>>>>> e3297f43f13d401ea3c65b581c506069166e037e
 
 将工作区的改动添加到暂存区，为下一次提交做准备 / 把项目文件纳入 git 的管理。
 
@@ -7658,10 +7680,17 @@ Git 工作目录下对于文件的<b>修改</b>（增加、删除、更新）会
 - 命令形式：git add 单个文件名|通配符。
 
 ```shell
+<<<<<<< HEAD
 $ touch file.txt		# 创建一个文件
 $ git add file.txt 	# 将 file.txt 加入暂存区
 $ git add . 			# 将所有改动加入暂存区
 $ git add -u			# 将已经被追踪（tracked）的文件中被修改（modified）或者删除（deleted）的内容加入到暂存区（staging area），未追踪的文件不会修改
+=======
+touch file.txt		# 创建一个文件
+git add file.txt 	# 将 file.txt 加入暂存区
+git add . 			# 将所有改动加入暂存区
+git add -u			# 将已经被追踪（tracked）的文件中被修改（modified）或者删除（deleted）的内容加入到暂存区（staging area），未追踪的文件不会修改
+>>>>>>> e3297f43f13d401ea3c65b581c506069166e037e
 ```
 
 可以使用 `git ls-files` 命令查看暂存区目前有什么内容。
@@ -7674,7 +7703,11 @@ $ git add -u			# 将已经被追踪（tracked）的文件中被修改（modified
 - 命令形式：`git status`
 
 ```shell
+<<<<<<< HEAD
 $ git status
+=======
+root@hecs:~/test# git status
+>>>>>>> e3297f43f13d401ea3c65b581c506069166e037e
 On branch master
 
 No commits yet
@@ -7839,10 +7872,223 @@ gitGraph
 
 分支的基本用法包括
 
+<<<<<<< HEAD
 - 查看分支：git branch 
 - 创建分支：git branch new_branch
 - 切换分支：git checkout new_branch
 - 合并分支：git merge new_branch
+=======
+#### 关联远程仓库(remote)
+
+我们需要先在远程创建一个仓库，然后初始化好本地仓库，再进行对接。
+
+<b>关联远程仓库的命令格式如下</b>
+
+- 远端名称：默认是 origin，取决于远端服务器设置
+- 仓库地址：从远端服务器获取此 url
+
+```shell
+$ git remote add <远端名称> <仓库地址>  #===> add 新增远端站点, 一个本地参考可以关联多个远端仓库。
+```
+
+我们在 gitee 创建一个 test 仓库，在本地也创建一个名为 test 的仓库
+
+```shell
+# 本地创建 test 仓库
+$ mkdir test; cd test; git init
+# 关联远程仓库
+$ git remote add origin git@gitee.com:lalala-payphone/test.git
+```
+
+<b>我们使用命令 `git remote` 查看关联的仓库，显示我们成功关联了 origin。</b>
+
+```shell
+$ git remote
+origin
+```
+
+我们的远程仓库中是有文件（readme.md）的，但是我们本地并没有拿到这些文件，这时候可以使用 `git pull origin branch_name` 拉取远程仓库中对应分支的文件。
+
+```shell
+$ git pull origin master	# 这条命令的具体作用？把远程分支 master 拉到当前分支，如果没有会默认创建一个 master 分支
+
+remote: Enumerating objects: 6, done.
+remote: Total 6 (delta 0), reused 0 (delta 0), pack-reused 6
+Unpacking objects: 100% (6/6), 1.95 KiB | 1.95 MiB/s, done.
+From gitee.com:lalala-payphone/test
+ * branch            master     -> FETCH_HEAD
+ * [new branch]      master     -> origin/master
+ 
+$ ls
+
+README.en.md  README.md
+```
+
+可以看到，文件已经被拉取过来了。现在，我们给文件做一些修改。然后将修改的内容推送到远程仓库中。如果我们想拉取所有的远程分支到本地，可以使用 `git pull`。
+
+<b>推送到远程仓库的命令</b>
+
+```shell
+$ git push [-f] [--set-upstream] [远端名称] [本地分支名][:远端分支名]
+# 可以简写成 git push [-f] -u [远端名称] [本地分支名][:远端分支名]
+```
+
+```shell
+$ echo hello >> test.md
+$ git add test.md
+$ git commit -m "add file test.md"
+
+# -f 表示 force 强制推送，不推荐使用
+# --set-upstream 会将本地的 master 分支设置为跟踪远程的 master 分支
+# 后面再次推送的时候，直接使用 git push 即可
+$ git push -f --set-ustream origin master:master
+```
+
+后面，如果我们继续在 master 分支修改，需要将修改推送到远程分支
+
+```shell
+$ git push
+```
+
+查看本地仓库和远程参考都有那些分支
+
+```shell
+$ git branch -av
+* master                67080bf add file a
+  remotes/origin/master 67080bf add file a
+```
+
+注意：我们操作的其实都是本地分支，操作完毕后把内容 push 到远程分支上。如果本地分支和远程分支发生了冲突，可以将远程分支合并到本地分支，处理完冲突后再 push。
+
+- 最简单的方式，直接拉取远程分支的内容到本地分支，处理冲突
+
+```shell
+$ git pull
+
+remote: Enumerating objects: 5, done.
+remote: Counting objects: 100% (5/5), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 3 (delta 1), reused 0 (delta 0), pack-reused 0
+Unpacking objects: 100% (3/3), 958 bytes | 958.00 KiB/s, done.
+From gitee.com:lalala-payphone/test
+   67080bf..f56ba1b  master     -> origin/master
+Auto-merging a.md
+CONFLICT (content): Merge conflict in a.md	# a.md 文件有冲突，处理冲突后提交
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+#### 同步仓库内容(pull/fetch)
+
+git 中是有三个分支的，本地分支，追踪分支，远程分支。
+
+```mermaid
+graph TD
+ subgraph 本地分支
+ 	direction LR
+ 	工作区1
+ 	暂存区1
+ 	对象区1
+ end
+ subgraph 追踪分支
+  	direction LR
+ 	工作区2
+ 	暂存区2
+ 	对象区2
+ end
+ subgraph 远程分支
+  	direction LR
+ 	工作区3
+ 	暂存区3
+ 	对象区3
+ end
+```
+
+追踪分支也叫本地的远程分支，是远程分支在本地的拷贝，作为本地与远程的媒介。
+
+<b>同步仓库内容有两种情况。</b>
+
+1️⃣本地→远程，本地有 dev 分支，远程没有:star:。
+
+将本地分支关联到远程仓库并同步内容。`-u` 表示关联本地分支和远程分支
+
+```shell
+$ git push --set-upstream origin dev
+$ git push -u origin dev # 上面命令的简写
+```
+
+本地的 dev 分支使用上述命令关联 dev 分支后，后面再推送修改给 remote 就不用指定推送分支的名称了
+
+```shell
+# 后面再次推送的话, 直接输入,将远程仓库的当前分支与本地仓库的当前分支合并
+$ git push
+```
+
+除了上面的方式，还有一种方式（了解）
+
+```shell
+# 将本地的分支 local_dev 推送到远程分支 remote_dev,如果remote_dev不存在则自动创建 
+$ git push origin local_dev:remote_dev
+```
+
+2️⃣远程→本地，远程有 dev 分支，本地没有:star:。
+
+先拉取远程的分支到追踪分支（`origin/xx` `origin` 开头的是追踪分支哦）
+
+```shell
+$ git pull
+```
+
+创建并切换到本地分支 dev，然后将本地分支和追踪分支关联（一气呵成）
+
+```shell
+$ git checkout -b dev origin/dev
+$ git checkout -b dev --track origin/dev # 和上面的命令一致
+$ git checkout --track origin/dev	# 简写,默认将 dev 分支的名字作为本地分支的名字
+$ git checkout -t origin/branch_name	# track 可以简写为 t
+```
+
+关联本地和远端仓库后，将本地的推送到远端发生了冲突，需要解决冲突。如果发送了冲突，git 会提示我们如何解决，提示需要 pull xxx，可以用下面的方式解决。
+
+方式一，先将远程分支的改动拉取到 remotes/origin/分支, 然后我们可以手动合并
+
+```shell
+$ git fetch 远端仓库名 分支名
+```
+
+方式二，自动拉取远端分支到本地分支，自动合并
+
+```shell
+$ git push 远端仓库名 分支名
+```
+
+如果发现仓库的分支走向不是线性的，可以通过 merge 的手段合并分支，变成线性的（后面讲解）。
+
+#### 删除远端分支(branch)
+
+删除远端分支的方式有很多种。
+
+1️⃣直接删除远端分支
+
+一般，本地分支和远端分支是同步的，删除了远端分支，本地分支也应该删除。
+
+先删除本地分支
+
+```shell
+$ git branch -d branch_name	# -d = --delete
+```
+
+然后删除远端分支
+
+```shell
+$ git push origin -d branch_name
+```
+
+2️⃣推送空分支到远程分支（删除远端分支的另一种实现）
+
+```shell
+$ git push origin _:远程分支	# _表示空格,用_只是方便告诉你这是空格
+```
+>>>>>>> e3297f43f13d401ea3c65b581c506069166e037e
 
 ### 重命名(mv):star:
 
@@ -7922,11 +8168,19 @@ Changes to be committed:
 
 ### 移除文件(rm)
 
+<<<<<<< HEAD
 git rm 是用于移除文件的，其用法和作用与 git mv 类似。git rm 有两个基础命令
 
 ```shell
 $ git rm filename
 $ git rm --cached filename 
+=======
+git rm 是用于移除文件的，其用法与 git mv 类似。git rm 有两个基础命令
+
+```shell
+$ git rm filename
+$ git rm --cached filename
+>>>>>>> e3297f43f13d401ea3c65b581c506069166e037e
 ```
 
 git rm filename 用于删除，如果工作区和暂存区都有名字为 filename 的文件，那么会给出提示是否要强制删除该文件（同意执行后工作区和暂存区该文件都会消失）。
@@ -8128,6 +8382,7 @@ reset 和 revert 都是用于撤销修改内容 / 回退版本。reset 是用于
 - 命令形式
 
 ```shell
+<<<<<<< HEAD
 # git reset 有三种模型
 $ git reset --soft commitID	 # 回退到某一版本，并且保留工作区和暂存区的所有修改内容
 $ git reset --hard commitID	 # 回退到某一版本，并且丢弃工作区和暂存区的所有修改内容
@@ -8229,6 +8484,13 @@ $ cat readme.md
 hello,this is test3 readme.md
 first append
 second append
+=======
+# 清除暂存区的提交（时光倒流）
+$ git reset --hard
+
+# commitID 可以使用 git-log 或 git log 指令查看
+$ git reset --hard commitID 
+>>>>>>> e3297f43f13d401ea3c65b581c506069166e037e
 ```
 
 <b>reset 常用命令</b>
@@ -8241,6 +8503,89 @@ second append
 | git reset --hard HEAD~100 | 往上回滚 100 个版本      |
 | git reset --hard 版本号   | 回滚到某一特定版本       |
 
+<<<<<<< HEAD
+=======
+<b>reset 实战</b>
+
+我们创建一个 git 仓库，然后向仓库添加 readme.md 文件，创建几次提交到本地仓库。下面是一个创建 git 仓库的 Shell 脚本。
+
+```shell
+# git.sh
+$ read dirs
+$ mkdir $dirs
+$ cd $dirs
+$ git init
+$ echo "hello,this is $dirs readme.md" >> readme.md
+$ git add readme.md
+$ git commit -m "create readme.md"
+
+$ echo "first append" >> readme.md
+$ git add readme.md
+$ git commit -m "first update readme.md"
+
+$ echo "second append" >> readme.md
+$ git add readme.md
+$ git commit -m "second update readme.md"
+```
+
+执行创建仓库的 shell 脚本
+
+```shell
+$ bash git.sh
+test3
+```
+
+执行后有三次 commit 记录
+
+```shell
+$ git log --oneline
+
+c02c2cb (HEAD -> master) second update readme.md
+af7564a first update readme.md
+14bd3be create readme.md
+```
+
+后续所有的命令都是以此仓库 / 脚本为基础。
+
+<b>使用 reset 回退版本到 af75</b>
+
+```shell
+$ git reset --hard af75
+
+HEAD is now at af7564a first update readme.md
+```
+
+能不能再回到回退前的版本呢？可以的，只要记得 commit id 就行。
+
+但是我们发现 git log 查不出来 c02c 这个 id 了。如果之前我们没有记住这个 id，是不是就不能恢复了？不是的。可以用 `git reflog` 来查看。
+
+git reflog，把所有的操作记录下来了（记录了 HEAD 指针的移动情况），可以看到已经删除的提交记录。<span style="color:red">git reflog 是用来恢复本地错误操作很重要的一个命令。</span>
+
+<b>使用 git reflog 查看 HEAD 指针的移动历史（包括被回滚的版本）</b>
+
+```shell
+$ git reflog --oneline
+
+af7564a (HEAD -> master) HEAD@{0}: reset: moving to af75
+c02c2cb HEAD@{1}: commit: second update readme.md
+af7564a (HEAD -> master) HEAD@{2}: commit: first update readme.md
+14bd3be HEAD@{3}: commit (initial): create readme.md
+```
+
+可以看到，HEAD 最近的一次移动是 moving to af75。我们恢复到 `c02c` 这个版本。
+
+```shell
+$ git reset --hard c02c
+HEAD is now at c02c2cb second update readme.md
+
+$ cat readme.md
+
+hello,this is test3 readme.md
+first append
+second append
+```
+
+>>>>>>> e3297f43f13d401ea3c65b581c506069166e037e
 <b>reset 的作用</b>
 
 如果有些 commit 我们确实是完全不想要了，可以使用 reset 消除最近的几次提交（只能消除本地的提交，远程的需要用 revert）
@@ -8337,6 +8682,13 @@ $ git branch
 ```shell
 $ git branch 新分支 旧分支
 $ git checkout -b 新分支 旧分支
+<<<<<<< HEAD
+
+=======
+```
+
+```shell
+>>>>>>> e3297f43f13d401ea3c65b581c506069166e037e
 $ git branch dev3 dev
 $ git checkout -b dev4 dev
 ```
@@ -8412,8 +8764,19 @@ Automatic merge failed; fix conflicts and then commit the result.
 #include<iostream>
 using namespace std;
 int main(){
+<<<<<<< HEAD
     return 0;
 }
+=======
+# 上面的表示是主分支的内容
+
+# 下面的是 test 分支和主分支不一致的内容，选择一个进行保留即可。
+return 0
+}
+
+多余的内容
+
+>>>>>>> dev
 ```
 
 <b>解决冲突</b>
@@ -8646,6 +9009,7 @@ nothing to commit, working tree clean
 
 $ git stash apply	#===>将暂存的内容恢复过来, 暂存区(stash)的内容会保留
 $ git stash pop	#===>将暂存的内容恢复过来, 且暂存区(stash)中的内容会弹出/移除。
+<<<<<<< HEAD
 ```
 
 ## 远程仓库
@@ -9040,6 +9404,8 @@ $ git push origin -d branch_name
 $ git push origin _:远程分支	
 $ # _表示空格,用_只是方便告诉你这是空格
 $ git push origin _:dev
+=======
+>>>>>>> e3297f43f13d401ea3c65b581c506069166e037e
 ```
 
 ## Git 备份:star:
@@ -9151,15 +9517,15 @@ $ ls
 new.md	readme.md
 ```
 
-## 高级命令
+## 高级命令-选讲
 
 ### 分离头指针(HEAD)
 
-分离头指针的意思是，我们工作在一个没有分支的状态下，做的 commit、变更是不会影响到其他分支的。分离头指针的基础命令 `git checkout xx`
+分离头指针的基础命令 `git checkout xx`
 
 #### 应用场景
 
-在分离头指针情况下，可以继续做开发，继续产生 commit，且不会对其他分支有影响。
+在分离头指针情况下，可以继续做开发，继续产生 commit，且不会对其他分支有影响。分离头指针的意思是，我们工作在一个没有分支的状态下，做的 commit、变更是不会影响到其他分支的。
 
 想做变更，当时只是尝试性的变更，做的不好想扔掉。扔掉的办法就是后面不再理会这些变更。这时候 checkout 到新的分支就可以了。
 
@@ -9253,9 +9619,9 @@ to do so with:
 
 ### 变基(rebase)
 
-- 用 rebase 修改之前 commit 的 msg
-- 用 rebase 把连续的 commit 合并成一个。
-- 用 rebase 把不连续的 commit 合并成一个。
+- 我们可以用 rebase 修改之前 commit 的 msg
+- 也可以用 rebase 把连续的 commit 合并成一个。
+- 也可以用 rebase 把不连续的 commit 合并成一个。
 
 不过在讲解之前需要注意，我们可以把 rebase 用在自己负责的分支上，但是如果分支已经被合并了，被其他人所依赖，就不要轻易 rebase 了（会打乱别人的开发）。
 
