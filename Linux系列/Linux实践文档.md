@@ -7354,6 +7354,14 @@ Git 设置暂存区主要是为了提供一个缓冲地带，让开发者可以�
 - 组织提交：有助于创建清晰、有组织的提交历史。
 - 避免污染提交：防止不小心将无关或未完成的更改包含在提交中。
 
+<b>为什么要设置暂存区？</b>
+
+Git 设置暂存区主要是为了提供一个缓冲地带，让开发者可以有选择性地提交工作目录中的更改。做更细粒度和干净的提交。
+
+- 选择性提交：可以挑选哪些更改应该被纳入下一次提交。
+- 组织提交：有助于创建清晰、有组织的提交历史。
+- 避免污染提交：防止不小心将无关或未完成的更改包含在提交中。
+
 <b>还有一个非常重要的概念：文件状态</b>
 
 文件状态是指文件在 Git 工作区（目录）中的状态。
@@ -8329,7 +8337,6 @@ $ git branch
 ```shell
 $ git branch 新分支 旧分支
 $ git checkout -b 新分支 旧分支
-
 $ git branch dev3 dev
 $ git checkout -b dev4 dev
 ```
@@ -8405,19 +8412,8 @@ Automatic merge failed; fix conflicts and then commit the result.
 #include<iostream>
 using namespace std;
 int main(){
-<<<<<<< HEAD
     return 0;
 }
-=======
-# 上面的表示是主分支的内容
-
-# 下面的是 test 分支和主分支不一致的内容，选择一个进行保留即可。
-return 0
-}
-
-多余的内容
-
->>>>>>> dev
 ```
 
 <b>解决冲突</b>
@@ -9155,15 +9151,15 @@ $ ls
 new.md	readme.md
 ```
 
-## 高级命令-选讲
+## 高级命令
 
 ### 分离头指针(HEAD)
 
-分离头指针的基础命令 `git checkout xx`
+分离头指针的意思是，我们工作在一个没有分支的状态下，做的 commit、变更是不会影响到其他分支的。分离头指针的基础命令 `git checkout xx`
 
 #### 应用场景
 
-在分离头指针情况下，可以继续做开发，继续产生 commit，且不会对其他分支有影响。分离头指针的意思是，我们工作在一个没有分支的状态下，做的 commit、变更是不会影响到其他分支的。
+在分离头指针情况下，可以继续做开发，继续产生 commit，且不会对其他分支有影响。
 
 想做变更，当时只是尝试性的变更，做的不好想扔掉。扔掉的办法就是后面不再理会这些变更。这时候 checkout 到新的分支就可以了。
 
@@ -9257,9 +9253,11 @@ to do so with:
 
 ### 变基(rebase)
 
-- 我们可以用 rebase 修改之前 commit 的 msg
-- 也可以用 rebase 把连续的 commit 合并成一个。
-- 也可以用 rebase 把不连续的 commit 合并成一个。
+[Git - 变基 - Git 版本控制系统](https://git-scm.cn/book/en/v2/Git-Branching-Rebasing)
+
+- 用 rebase 修改之前 commit 的 msg。
+- 用 rebase 把连续的 commit 合并成一个。
+- 用 rebase 把不连续的 commit 合并成一个。
 
 不过在讲解之前需要注意，我们可以把 rebase 用在自己负责的分支上，但是如果分支已经被合并了，被其他人所依赖，就不要轻易 rebase 了（会打乱别人的开发）。
 
