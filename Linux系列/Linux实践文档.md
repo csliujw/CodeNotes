@@ -8650,7 +8650,7 @@ $ git stash pop	#===>将暂存的内容恢复过来, 且暂存区(stash)中的�
 
 ## 远程仓库
 
-### 远程仓库(github)
+### 远程仓库
 
 Git 中存在两种类型的仓库，即本地仓库和远程仓库。比较常用的远程仓库（代码托管服务）有 GitHub、码云、GitLab 等。
 
@@ -8669,60 +8669,6 @@ sequenceDiagram
 > PS：gitee 和 github 让 git 变得更加好用，用户可以便捷的分享自己的 code。可以方便的检索自己想要的开源项目。
 
 ### 克隆远程仓库(clone)
-
-如果我们想拉取远程仓库到本地（克隆），可以使用 `git clone`。克隆的命令格式如下
-
-```shell
-$ git clone resp_url
-```
-
-git clone 克隆仓库时会将仓库的默认分支拉取到本地，例如，执行下面的命令，会把 JavaWeb 的默认分支拉取到本地。 
-
-```shell
-$ git clone https://gitee.com/maoxiaojiu9/JavaWeb
-```
-
-使用 `git clone -b branch_name resp_url` 拉取 branch_name 分支到本地
-
-```shell
-$ git clone -b branch_name resp_url
-# 拉取 java-ee 项目的 JVM 分支
-$ git clone -b JVM https://gitee.com/deng-chongshuang/java-ee
-```
-
-此外，如果后希望将 java-ee 的其他分支也拉取到本地，可以使用 `git checkout branch_name` 命令。
-
-```shell
-$ git branch -av
-
-* JVM                               b11753a JVM
-  remotes/origin/Design-Patterns    02ea04c 设计模式
-  remotes/origin/HEAD               -> origin/Spring-Framework-6
-  remotes/origin/JVM                b11753a JVM
-  remotes/origin/MyBatis-Plus       21f0167 通用分页实体与Mp Page转换
-  remotes/origin/Spring-Framework-5 2f30d49 add LICENSE.
-  remotes/origin/Spring-Framework-6 affc609 Bean 的5个生命周期
-  
-$ git checkout MyBatis-Plus
-
-Branch 'MyBatis-Plus' set up to track remote branch 'MyBatis-Plus' from 'origin'.
-Switched to a new branch 'MyBatis-Plus'
-
-$ git branch -av
-
-  JVM                               b11753a JVM
-* MyBatis-Plus                      21f0167 通用分页实体与Mp Page转换
-  remotes/origin/Design-Patterns    02ea04c 设计模式
-  remotes/origin/HEAD               -> origin/Spring-Framework-6
-  remotes/origin/JVM                b11753a JVM
-  remotes/origin/MyBatis-Plus       21f0167 通用分页实体与Mp Page转换
-  remotes/origin/Spring-Framework-5 2f30d49 add LICENSE.
-  remotes/origin/Spring-Framework-6 affc609 Bean 的5个生命周期
-```
-
-从上面可以看到，clone 项目后，本地只有 JVM 分支，remotes 开头的是远程分支；使用 `git checkout MyBatis-Plus` 后，将远程的 `MyBatis-Plus` 分支拉取到了本地仓库。
-
-### 拉取到本地(pull/fetch)
 
 git 中是有三个分支的，本地分支，追踪分支，远程分支。
 
@@ -8749,6 +8695,101 @@ graph TD
 ```
 
 追踪分支也叫本地的远程分支，是远程分支在本地的拷贝，作为本地与远程的媒介。
+
+如果我们想拉取远程仓库到本地（克隆），可以使用 `git clone`。克隆的命令格式如下
+
+```shell
+$ git clone <resp_url> <directory>
+```
+
+`git clone` 克隆仓库时会将仓库的所有分支和提交记录拉取到本地，执行下面的命令会把 java-ee 的所有分支拉取到本地
+
+```shell
+$ git clone https://gitee.com/deng-chongshuang/java-ee
+```
+
+拉取后使用 `git branch` 查看分支，发现本地分支只有 `Spring-Framework-6`，因为 `git clone` 只会在本地创建默认分支，非默认分支是被拉取到了<span style="color:blue">追踪分支~（remotes 开头的分支）</span>
+
+```shell
+$ git branch
+
+* Spring-Framework-6                affc609 Bean 的5个生命周期
+
+
+$ git branch -av
+
+* Spring-Framework-6                affc609 Bean 的5个生命周期
+  remotes/origin/Design-Patterns    02ea04c 设计模式
+  remotes/origin/HEAD               -> origin/Spring-Framework-6
+  remotes/origin/JVM                b11753a JVM
+  remotes/origin/MyBatis-Plus       21f0167 通用分页实体与Mp Page转换
+  remotes/origin/Spring-Framework-5 2f30d49 add LICENSE.
+  remotes/origin/Spring-Framework-6 affc609 Bean 的5个生命周期
+```
+
+使用 `checkout` 可以创建本地分支，并且这个分支被配置为跟踪远程仓库 `origin` 上的同名分支。例如，我们创建本地分支 `JVM` 并跟踪远程仓库 `origin` 上的 `JVM` 分支
+
+```shell
+$ git checkout JVM
+
+Branch 'JVM' set up to track remote branch 'JVM' from 'origin'.
+Switched to a new branch 'JVM'
+```
+
+如果我们希望，拉取项目的时候，本地创建的分支是非默认分支，可以使用 `git clone -b branch_name resp_url`。
+
+```shell
+$ git clone -b branch_name resp_url
+# 拉取 java-ee 项目的 JVM 分支
+$ git clone -b JVM https://gitee.com/deng-chongshuang/java-ee
+```
+
+此外，如果后希望将 `java-ee` 的其他分支也拉取到本地，可以使用 `git checkout branch_name` 命令。
+
+```shell
+$ git branch -av
+* JVM                               b11753a JVM
+  remotes/origin/Design-Patterns    02ea04c 设计模式
+  remotes/origin/HEAD               -> origin/Spring-Framework-6
+  remotes/origin/JVM                b11753a JVM
+  remotes/origin/MyBatis-Plus       21f0167 通用分页实体与Mp Page转换
+  remotes/origin/Spring-Framework-5 2f30d49 add LICENSE.
+  remotes/origin/Spring-Framework-6 affc609 Bean 的5个生命周期
+  
+$ git checkout MyBatis-Plus
+Branch 'MyBatis-Plus' set up to track remote branch 'MyBatis-Plus' from 'origin'.
+Switched to a new branch 'MyBatis-Plus'
+
+$ git branch -av
+  JVM                               b11753a JVM
+* MyBatis-Plus                      21f0167 通用分页实体与Mp Page转换
+  remotes/origin/Design-Patterns    02ea04c 设计模式
+  remotes/origin/HEAD               -> origin/Spring-Framework-6
+  remotes/origin/JVM                b11753a JVM
+  remotes/origin/MyBatis-Plus       21f0167 通用分页实体与Mp Page转换
+  remotes/origin/Spring-Framework-5 2f30d49 add LICENSE.
+  remotes/origin/Spring-Framework-6 affc609 Bean 的5个生命周期
+```
+
+从上面可以看到，clone 项目后，本地只有 JVM 分支，remotes 开头的是远程分支；使用 `git checkout MyBatis-Plus` 后，创建本地分支 `MyBatis-Plus`，并且这个分支被配置为跟踪远程仓库 `origin` 上的同名分支。
+
+有时候项目很大，我们可能也只需要使用到其中的一个分支，这时候可以使用 `--single-branch` 选项，只拉取指定的分支
+
+```shell
+$ git clone --single-branch -b JVM https://gitee.com/deng-chongshuang/java-ee
+
+$ git branch -av
+* JVM                b11753a JVM
+  remotes/origin/JVM b11753a JVM
+```
+
+如果不需要所有的提交记录，可以使用 `--depth`
+
+```shell
+$ git clone --depth 1 https://gitee.com/deng-chongshuang/java-ee
+```
+
+### 拉取到本地(pull/fetch)
 
 #### fetch
 
@@ -9052,8 +9093,6 @@ $ git push origin _:dev
 | 本地协议（2）   | fil:///path/to/repo.git                                      | 智能协议                 |
 | http/https 协议 | http://git-server.com:port/path/to/repo.git<br>https://git-server.com:port/path/to/repo.git | 平时接触到的都是智能协议 |
 | ssh 协议        | user@git-server.com:path/to/repo.git                         | 工作中最常用的智能协议   |
-
-gitee 使用的什么协议？
 
 ### 哑协议与智能协议
 
