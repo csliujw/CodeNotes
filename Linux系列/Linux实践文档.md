@@ -4601,6 +4601,7 @@ df -TH
 vim /etc/fstab
 # 加入配置
 UUDI=12F44ECBF44EB0B1	/mnt/data	fuseblk	default	0	0
+# UUID=设备名称也可以 eg UUID=/dev/sdb
 ```
 
 <b>other</b>
@@ -4639,22 +4640,7 @@ sys:x:3:3:sys:/dev:/usr/sbin/nologin
 sync:x:4:65534:sync:/bin:/bin/sync
 games:x:5:60:games:/usr/games:/usr/sbin/nologin
 man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
-lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
-mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
-news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
-uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
-proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
-www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
-backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
-list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
-irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
-gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
-nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
-_apt:x:100:65534::/nonexistent:/usr/sbin/nologin
-systemd-timesync:x:101:101:systemd Time Synchronization,,,:/run/systemd:/usr/sbin/nologin
-systemd-network:x:102:103:systemd Network Management,,,:/run/systemd:/usr/sbin/nologin
-systemd-resolve:x:103:104:systemd Resolver,,,:/run/systemd:/usr/sbin/nologin
-messagebus:x:104:106::/nonexistent:/usr/sbin/nologin
+....
 sshd:x:105:65534::/run/sshd:/usr/sbin/nologin
 tom:x:1000:1000:tom,tom,,:/home/tom:/bin/bash
 ```
@@ -4693,13 +4679,11 @@ who 命令则可以显示用户当前的状态信息，whoami 和 id 用于显�
 | 命令                         | 说明                                                         |
 | ---------------------------- | ------------------------------------------------------------ |
 | adduser jw                   | 创建用户 jw<br>会自动创建用户目录，将必要的初始化文件复制给该用户，并提示用户设置初始密码。 |
-| usermod -aG sudo jw          | 给用户分配用户组到 root,赋予该用户执行管理员权限的能力       |
-| deluser cv                   | 删除cv用户，但是只删除 /etc/passwd 和 /etc/group 中的用户信息，不会删除用户主目录的数据。 |
+| usermod -aG sudo jw          | 给用户分配用户组到 root， 赋予该用户执行管理员权限的能力     |
+| deluser cv                   | 删除 cv 用户，但是只删除 /etc/passwd 和 /etc/group 中的用户信息，不会删除用户主目录的数据。 |
 | userdel  cv<br>userdel -r cv | 删除用户但保存用户主目录<br>用户和用户主目录，都删除         |
 
-### useradd🥶
-
-<b>可以了解下 useradd</b>
+<b>可以了解下 useradd🥶</b>
 
 ```shell
 useradd	jw # 添加用户
@@ -4726,7 +4710,7 @@ CREATE_MAIL_SPOOL=no	# 系统不会为该用户账户在mail目录下创建一�
 useradd -m sc	# 创建用户，并创建家目录
 ```
 
-### 其他
+<b>其他</b>
 
 | 命令   | 说明             | 示例                                                     |
 | ------ | ---------------- | -------------------------------------------------------- |
@@ -4735,8 +4719,6 @@ useradd -m sc	# 创建用户，并创建家目录
 | who    | 查看登录用户信息 | whoami 显示自身用户名称<br>who am i 显示登陆用户的用户名 |
 
 ## 切换用户
-
-### su 和 sudo
 
 命令 su（switch user 或 substitute user）的作用是切换用户，即以某个用户的用户名作为参数，无参数时表示切换到 root 用户。切换到 root 账户后，提示符是 “#”，以警示用户的操作。
 
@@ -4751,9 +4733,9 @@ Ubuntu 超级用户权限通常使用命令 sudo（switch user do）。如果一
 <b>基本语法</b>
 
 ```shell
-su 用户名称		# 切换用户，只能获得用户的执行权限，不能获得环境变量
-su cv -c ls		# 以用户 cv 的身份执行 ls 命令，但是不切换用户
-su - 用户名称	# 切换到用户并获得该用户的环境变量及执行权限
+$ su 用户名称		# 切换用户，只能获得用户的执行权限，不能获得环境变量
+$ su cv -c ls		# 以用户 cv 的身份执行 ls 命令，但是不切换用户
+$ su - 用户名称	# 切换到用户并获得该用户的环境变量及执行权限
 ```
 
 ### sudo
@@ -4789,9 +4771,9 @@ Linux 用户组的信息存储在 /etc/group 文件中。我们知道怎么创�
 创建一个新的用户 tuser 和用户组 tg，将 t 加入 tg 组
 
 ```shell
-adduser tuser
-addgroup tg
-addgroup tuser tg
+$ adduser tuser
+$ addgroup tg
+$ addgroup tuser tg
 ```
 
 <b>usermod</b>
@@ -4799,7 +4781,7 @@ addgroup tuser tg
 用于修改用户信息的。
 
 ```shell
-usermod -g 用户组 用户名
+$ usermod -g 用户组 用户名
 ```
 
 | 选项 | 功能                                                     |
@@ -4815,19 +4797,19 @@ usermod -g 用户组 用户名
 修改用户账号的登录名
 
 ```shell
-usermod -l oldname newname
+$ usermod -l oldname newname
 ```
 
 修改家目录
 
 ```shell
-usermod -d /home/newhome/ -m username
+$ usermod -d /home/newhome/ -m username
 ```
 
 将用户加入 root 用户组
 
 ```shell
-usermod -g root jw
+$ usermod -g root jw
 ```
 
 # Linux系统管理
@@ -4840,7 +4822,7 @@ Ubuntu 支持两种服务管理方式：service / systemctl。推荐使用 `syst
 
 ## 包管理
 
-Ubuntu 安装包使用 Debian 安装包格式，文件名后缀是 .deb。我们可以使用 dpkg（Debian package manager） 安装离线包，也可以使用 apt 安装在线包。我们重点学习如何使用包管理安装、卸载、更新软件。
+Ubuntu 安装包使用 Debian 安装包格式，文件名后缀是 `.deb`。我们可以使用 dpkg（Debian package manager） 安装离线包，也可以使用 apt 安装在线包。我们重点学习如何使用包管理安装、卸载、更新软件。
 
 ### dpkg
 
@@ -4850,26 +4832,26 @@ Ubuntu 安装包使用 Debian 安装包格式，文件名后缀是 .deb。我们
 
 我们把 deb 后缀的文件解压，观察下里面的目录结构。
 
-```shel
-dpkg -x jdk.deb jdk
+```shell
+$ dpkg -x jdk.deb jdk
 ```
 
 <b>基本语法</b>
 
 ```shell
-dpkg [option] 包名
+$ dpkg [option] 包名
 ```
 
 dpkg 安装 deb 包⭐
 
 ```shell
-dpkg -i 包名
+$ dpkg -i 包名
 ```
 
 删除软件包
 
 ```shell
-dpkg -r 包名
+$ dpkg -r 包名
 ```
 
 需要注意的是，删除软件包的参数是软件名称，而不是文件名称。具体删除过程如下。
@@ -4882,7 +4864,7 @@ dpkg -r 包名
 创建安装包
 
 ```shell
-dpkg -b directory 包名
+$ dpkg -b directory 包名
 ```
 
 dpkg 能分析软件包之间的依赖关系，但不能主动解决依赖问题。更常用的还是 apt 这个高级软件包管理工具。
@@ -4967,10 +4949,11 @@ $
 apt install sl
 ```
 
-如果我们不知道安装包的具体名称，我们可以先尝试使用关键字检索软件包，找到对应的软件包后再使用 apt 安装。例如，我们要安装 JDK。
+在不知道安装包的具体名称的情况下，我们可以先尝试使用关键字检索软件包，找到对应的软件包后再使用 apt 安装。例如，我们要安装 JDK。
 
 ```shell
-apt search JDK
+# 先按关键字进行查找
+$ apt search JDK
 
 apt search JDK
 Sorting... Done
@@ -4989,13 +4972,13 @@ default-jdk-headless/focal 2:1.11-72 amd64
 search 命令直接就有通配符搜索的效果。在默认情况下，search 命令显示的是在名称或描述中包含搜索关键字的那些软件包，这有时候会产生误导。如果只想搜索软件包名称，可以加入 --name-only 选项。
 
 ```shell
-apt search JDK --names-only
+$ apt search JDK --names-only
 ```
 
 找到后再使用 apt install 安装。
 
 ```shell
-apt install openjdk-17-jdk
+$ apt install openjdk-17-jdk
 ```
 
 #### 更新包
@@ -5003,13 +4986,13 @@ apt install openjdk-17-jdk
 虽然 apt 让你免受软件安装之烦，但协调有依赖关系的多个软件包的更新可不是件容易事。upgrade 命令可以使用仓库中的任何新版本安全地升级系统中所有的软件包。
 
 ```shell
-apt upgrade
+$ apt upgrade
 ```
 
 upgrade 命令在升级过程中不会删除任何软件包。如果必须删除某个软件包才能完成升级，可以使用以下命令。
 
 ```shell
-apt full-upgrade
+$ apt full-upgrade
 ```
 
 #### 卸载包
@@ -5017,9 +5000,9 @@ apt full-upgrade
 apt 卸载包的命令非常简单，就三个。
 
 ```shell
-apt remove xxx	# 卸载软件包 xxx
-apt purge xxx	# 清除指定软件包 xxx，并删除用户配置文件
-apt auto remove	# 查所有被标记为存在依赖关系且不再被需要的软件包并删除。
+$ apt remove xxx	# 卸载软件包 xxx
+$ apt purge xxx	# 清除指定软件包 xxx，并删除用户配置文件
+$ apt auto remove	# 查所有被标记为存在依赖关系且不再被需要的软件包并删除。
 ```
 
 apt 的 remove 命令可以删除软件包，同时保留数据和配置文件。如果要将软件包以及相关的数据和配置文件全部删除，可以使用 apt purge。有时候，我们使用 apt purge 卸载的时候，apt 会警告我们 xx 软件包存在依赖，不能自动删除，以免其他软件包还有需要。如果确定有依赖关系的软件包不会再有他用，可以使用 apt auto remove 命令将其删除。
@@ -8363,7 +8346,7 @@ $ git branch --set-upstream-to=origin/branch_name1 branch_name2
 
 ```shell
 # 假定当前处于 dev 分支
-
+$ git branch -m <old_name> <new_name>
 $ git branch -m dev new_dev
 $ git branch -m dev
 ```
@@ -8702,7 +8685,7 @@ graph TD
 $ git clone <resp_url> <directory>
 ```
 
-`git clone` 克隆仓库时会将仓库的所有分支和提交记录拉取到本地，执行下面的命令会把 java-ee 的所有分支拉取到本地
+`git clone` 克隆仓库时会将仓库的<span style="color:blue">所有分支和提交记录拉取到本地</span>，执行下面的命令会把 java-ee 的所有分支拉取到本地
 
 ```shell
 $ git clone https://gitee.com/deng-chongshuang/java-ee
@@ -8789,14 +8772,14 @@ $ git branch -av
 $ git clone --depth 1 https://gitee.com/deng-chongshuang/java-ee
 ```
 
-### 拉取到本地(pull/fetch)
+### 拉取到本地
 
 #### fetch
 
 fetch 命令可以将远程仓库的分支拉取到本地的跟踪分支，但是不会主动把远程分支拉取到的内容合并到本地分支。
 
 ```shell
-$ git fetch origin remote_branch:local_branch
+$ git fetch origin <remote_branch>:<local_branch>
 ```
 
 如果没有指定将远程分支拉取到本地的那个分支，默认会拉取到对应的跟踪分支上 `remotes/origin/remote_branch`。
@@ -8833,7 +8816,7 @@ pull 命令：拉取指定的远程分支并将其合并到本地的分支中 = 
 
 ```shell
 $ git pull <远程主机名> <远程分支名>:<本地分支名>
-$ git pull origin remote_branch:local_branch
+$ git pull origin <remote_branch>:<local_branch>
 ```
 
 将远程主机的 main 分支拉取到本地的 main 分支
@@ -8846,7 +8829,7 @@ $ git pull origin main
 
 ### 关联远程仓库(remote)
 
-我们可以从远程仓库拉取内容，也可以将本地的修改推送到远程仓库，不过推送修改需要我们的 git 关联对应的远程仓库。
+我们可以从远程仓库拉取内容，也可以将本地的修改推送到远程仓库，不过<span style="color:blue">推送修改需要我们的 git 关联对应的远程仓库。</span>
 
 在 git 中，我们可以使用 remote 命令来关联本地仓库和远程仓库。 
 
@@ -8860,7 +8843,7 @@ $ git remote add <远端名称> <仓库地址>
 - 远端名称：默认是 origin，取决于远端服务器设置
 - 仓库地址：从远端服务器获取此 url
 
-#### 本地仓库关联远程空仓库
+> 本地仓库关联远程空仓库
 
 我们在 gitee 创建一个 test 仓库，在本地也创建一个名为 test 的仓库
 
@@ -8881,7 +8864,7 @@ $ git remote
 origin
 ```
 
-我们的远程仓库中是有文件（readme.md）的，但是我们本地并没有拿到这些文件，这时候可以使用 `git pull origin branch_name` 拉取远程仓库中对应分支的文件。
+我们的远程仓库中是有文件（readme.md）的，但是我们本地并没有拿到这些文件，这时候可以使用 `git pull origin branch_name` 将远程仓库中对应的文件拉取并合并到本地分支。
 
 ```shell
 $ git pull origin master	# 把远程仓库的 master 分支拉到当前分支，如果没有会默认创建一个 master 分支
@@ -8911,6 +8894,8 @@ README.en.md  README.md
 ```shell
 $ git push [-f] [--set-upstream] [远端名称] [本地分支名][:远端分支名]
 # 可以简写成 git push [-f] -u [远端名称] [本地分支名][:远端分支名]
+# -f == --force 表示强制推送本地文件到远程仓库（无视差异，直接用本地的覆盖远程的）
+# --set-upstream 表示设置上游分支
 ```
 
 将本地的 dev 分支推送到远程的 dev 分支
@@ -8972,7 +8957,7 @@ $ git branch -av
 
 注意：我们操作的其实都是本地分支，操作完毕后把内容 push 到远程分支上。如果本地分支和远程分支发生了冲突，可以将远程分支合并到本地分支，处理完冲突后再 push。
 
-- 最简单的方式，直接拉取远程分支的内容到本地分支，处理冲突
+最简单的方式，直接拉取远程分支的内容到本地分支，处理冲突
 
 ```shell
 $ git pull
@@ -9058,7 +9043,7 @@ $ git push 远端仓库名 分支名
 
 ### 删除远端分支(branch)
 
-1️⃣直接删除远端分支
+<b>1️⃣直接删除远端分支</b>
 
 一般，本地分支和远端分支是同步的，删除了远端分支，本地分支也应该删除。
 
@@ -9075,7 +9060,7 @@ $ git branch -d branch_name
 $ git push origin -d branch_name
 ```
 
-2️⃣推送空分支到远程分支（删除远端分支的另一种实现）
+<b>2️⃣推送空分支到远程分支（删除远端分支的另一种实现）</b>
 
 ```shell
 $ git push origin _:远程分支	
@@ -9112,7 +9097,7 @@ $ git push origin _:dev
 $ git clone [--bare] <git仓库全路径> <目标路径>
 ```
 
-- `--bare` 表示创建一个裸仓库。裸仓库只含有 .git 目录下的内容，不包含 .git 同级目录中的工作文件。
+- `--bare` 表示创建一个裸仓库。裸仓库只含有 `.git` 目录下的内容，不包含 `.git` 同级目录中的工作文件。
 - 裸仓库主要作为远程仓库（github 里的仓库不是裸仓库？）
 
 将 test 仓库备份到 back 目录。
