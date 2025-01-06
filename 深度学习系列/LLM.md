@@ -1,3 +1,10 @@
+# 前置知识
+
+- Linux
+- git
+- Python
+- PyTorch
+
 # LLM博文
 
 [万字长文——这次彻底了解LLM大语言模型-腾讯云开发者社区-腾讯云 (tencent.com)](https://cloud.tencent.com/developer/article/2368425)
@@ -277,7 +284,43 @@ Chroma向量数据库-->匹配相似文本段
 
 
 
-# LLM介绍
+# Hugging Face
+Hugging Face 是一家专注于自然语言处理和机器学习的公司，以其开源的Transformers库而闻名。该平台提供了丰富的预训练模型，支持多种语言任务，如文本生成、
+翻译和情感分析。Hugging Face 还致力于推动A!的民主化，鼓励开发者和研究人员共享和合作。
+
+作为 Hugging Face 最核心的项目，Transformers 无疑是这个社区的灵魂。
+
+Transformers 提供 API 和工具，可轻松下载和训练最先进的预训练模型。使用预训练模型可以降低计算成本
+并节省从头开始训练模型所需的时间和资源。这些模型支持不同模式的常见任务:
+
+- 自然语言处理:文本分类、命名实体识别、问答、语言建模、摘要、翻译、多项选择和文本生成。
+- 计算机视觉:图像分类、对象检测和分割。
+- 音频:自动语音识别和音频分类。
+- 多模态:表格问答、光学字符识别、扫描文档信息提取、视频分类和视觉问答。
+
+此外，Hugging Face官方还提供免费的课程，如何利用社区生态(Transformers等项目)来进行NLP的学习
+
+Hugging Face 中检索模型。
+
+- Files and Versions 里包含了模型文件和模型的版本管理。我们如果想要使用模型，需要把里面所有的文件都下载过来。
+
+## GitHub CodeSpace 的使用
+GitHub Codespace 通过 GitHub 原生的完全配置、安全的云开发环境，可以更快地启动和写代码
+它提供了一系列模板，我们在跑机器学习深度学习相关的实验的时候，可以选择它的 Jupyter NoteBook 模板
+
+## 模型上传
+
+Hugging Face 同样是跟 Git 相关联，对于大文件，我们需要安装 git-lfs，对大文件系统支持。
+使用 huggingface-cli login 命令进行登录，登录过程中需要输入用户的 Access Tokens
+
+## Spaces 的使用
+
+Hugging Face Spaces 是一个允许我们轻松地托管、分享和发现基于机器学习模型的应用的平台。
+Spaces 使得开发者可以快速将我们的模型部署为可交互的 web 应用，且无需担心后端基础设施或部署的复杂性。
+
+# LLM
+
+## LLM介绍
 
 专用模型==>通用模型。通用大模型，一个模型应对多种任务，多种模态。
 
@@ -336,13 +379,82 @@ graph TB
 
 <b>OpenCompass 评测体系</b>
 
-![image-20240815151147641](D:\CodeNotes\深度学习系列\image-20240815151147641.png)
+<div align="center"><img src="./image-20240815151147641.png"></div>
 
 <b>LLM==>智能体</b>
 
 Lagent 是一个轻量级、开源的基于大语言模型的智能体(agent) 框架，用户可以快速地将一个大语言模型转变为多种类型的智能体。通过 Lagent 框架可以更好的发挥 InternLM 模型的全部性能。
 
-# 检索增强生成
+## LLM 部署
+
+常规部署
+
+量化部署
+
+## LLM 微调
+
+不同的微调范式
+
+微调后模型的量化、融合
+
+## LLM RAG
+
+RAG 检索增强生成。
+
+# 工程化
+
+## 向量数据库
+
+[LangChain教程 - 支持的向量数据库列举_langchain支持的向量数据库-CSDN博客](https://blog.csdn.net/fenglingguitar/article/details/142436241)
+
+市面上的向量数据库有很多，这里我们主要学习 LlamaIndex 和 Chroma。
+
+### LlamaIndex
+
+[LlamaIndex - LlamaIndex](https://docs.llamaindex.ai/en/stable/#introduction)
+
+LlamaIndex 是一个上下文增强的 LLM 框架，旨在通过将其与特定上下文数据集集成，增强大型语言模型（LLMs）的能力。它允许您构建应用程序，既利用 LLMs 的优势，又融入您的私有或领域特定信息。LlamaIndex 支持文本、图片等多种数据的向量化存储和检索。
+
+<b>什么是向量化存储?</b>
+
+向量化存储就是指把文本、图像这种数据转换成为<b>向量/特征</b>，存储到特定的向量数据库中，便于快速检索。
+
+<b>如何利用 LlamaIndex 构建向量数据库，并从向量数据库中检索相关信息，一并送入 LLM 中，增强 LLM 的能力</b>
+
+### Chroma
+
+Chroma 是一个开源且轻量级，易于本地部署，专门为检索增强生成 (RAG) 应用设计的向量数据库。不过目前 Chroma 的功能较为基础，缺乏大规模分布式支持；比较适合用于开发和测试阶段的小型项目或个人应用。
+
+快速入门
+
+```python
+from langchain.vectorstores import Chroma
+from langchain.embeddings.openai import OpenAIEmbeddings
+
+embedding_model = OpenAIEmbeddings()
+texts = ["这是一个例子", "另一个例子"]
+vectorstore = Chroma.from_texts(texts, embedding_model)
+docs = vectorstore.similarity_search("这是查询")
+print(docs)
+```
+
+## LangChain
+
+[构建检索增强生成（RAG）应用：第一部分 | 🦜️🔗 LangChain 框架](https://python.langchain.ac.cn/docs/tutorials/rag/)
+
+LangChain 提供了一个模块化和适应性强的框架，用于构建各种 NLP 应用程序，包括聊天机器人、内容生成工具和复杂的流程自动化系统。
+
+通过 LangChain，我们可以方便快捷的调用 LLM 的 API 接口，并集成 RAG 增强 LLM。LangChain 内部也集成了一个非常简易的向量数据库 `InMemoryVectorStore`。
+
+`InMemoryVectorStore` 将向量数据存储在内存中，提供了快速的访问速度，但不具备数据持久化的能力。这种实现方式适合于数据量较小且需要快速访问的场景，例如原型开发、测试或小型应用。由于数据存储在内存中，一旦程序终止，内存中的数据将会丢失。因此，`InMemoryVectorStore` 不适合需要长期存储和大规模数据处理的生产环境。
+
+## 工程化实现
+
+茴香豆[InternLM/HuixiangDou: HuixiangDou: Overcoming Group Chat Scenarios with LLM-based Technical Assistance](https://github.com/InternLM/HuixiangDou/tree/main)
+
+
+
+ 
 
 
 
