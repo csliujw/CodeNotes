@@ -401,15 +401,193 @@ Lagent 是一个轻量级、开源的基于大语言模型的智能体(agent) �
 
 RAG 检索增强生成。
 
+### RAG
+
+思路：RAG ≈ 开卷考试。用户向 LLM 提问。在回答问题前，先从知识库中找到和提问相似的内容；将问题和可能的答案一起送到 LLM 中让 LLM 回答问题。
+
+基于普通的 RAG 的 LLM 一般包含两种阶段：检索阶段和生成阶段。
+
+- 检索阶段：从预先向量化的知识库或文档集合中，检索与用户查询语义相似的文档片段。
+- 生成阶段：LLM 根据检索到的信息生成最终回答。
+
+普通 RAG 的缺点
+
+- 相似度高的内容相关性不一定高（相似性高，但是不相关的文档）
+- 参考的信息可能不完整
+
+### GraphRAG
+
+在 RAG 的基础上做了两个层面的增强
+
+- 实体知识图谱构建：从源文档中提取实体及关系，构建知识图谱。
+- 社区摘要生成：使用社区检测算法识别图谱中的模块化社区，并生成摘要，提供高层次的理解。
+
+通过知识图谱和文本索引的方式增强查询的质量。
+
+提取实体用比较好的模型~
+
+GraphRAG 的缺点
+
+- 高成本、复杂性高、响应时间较慢、数据更新和维护成本高
+
+## LLM Agent
+
+
+
 # 工程化
 
-## 向量数据库
+LlamaIndex 和 LangChain 太笨重了，封装的太深，变化太大了。主要业务代码还是自己编写。
 
-[LangChain教程 - 支持的向量数据库列举_langchain支持的向量数据库-CSDN博客](https://blog.csdn.net/fenglingguitar/article/details/142436241)
+## HuggingFace
 
-市面上的向量数据库有很多，这里我们主要学习 LlamaIndex 和 Chroma。
+我们是要将 RAG 集成到 LLM 中。因此需要制作一个知识库，并且在向 LLM 提问时，先向 RAG 中检索信息，将检索到的信息和问题一起送入到 LLM 中。
 
-### LlamaIndex
+这意味着我们需要做“问题”和“知识库”的一个检索/匹配。如何计算呢？一般是将文字向量化然后算这些向量的相似度。
+
+### HuggingFace初步
+
+<span style="color:blue">我们使用 huggingface 上的 embeddings 模型（特征提取模型）对文本进行向量化。</span>
+
+[Models - Hugging Face](https://huggingface.co/models?pipeline_tag=feature-extraction&language=zh&sort=trending)
+
+[The Tasks Manager](https://huggingface.co/docs/optimum/exporters/task_manager)
+
+<div align="center"><img src="llm_img/image-20250110141716175.png"></div>
+
+1️⃣下载 huggingface 上的模型，这里我们下载两个模型，
+
+```python
+import os
+
+# 设置环境变量，从国内镜像下载
+os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+
+# 下载模型
+os.system('huggingface-cli download --resume-download sentence-transformers/all-MiniLM-L6-v2 --local-dir ./all-MiniLM-L6-v2')
+os.system('huggingface-cli download --resume-download BAAI/bge-large-zh-v1.5 --local-dir ./bge-large-zh-v1.5')
+```
+
+2️⃣下载好后我们就可以加载本地下载好的 HuggingFace 的模型，使用 sentence_transformers 对文本进行向量化。
+
+```shell
+from sentence_transformers import SentenceTransformer
+
+sentences = [
+    "我喜欢在公园散步",
+    "公园里散步很舒服",
+    "今天天气真不错",
+    "这个苹果很甜",
+    "我最喜欢吃水果了"
+]
+# cache_folder 表示从本地的指定目录加载模型参数
+model = SentenceTransformer('all-MiniLM-L6-v2', cache_folder='/home/hp/Code/rag-demo/all-MiniLM-L6-v2')
+model_bge = SentenceTransformer('bge-large-zh-v1.5', cache_folder='/home/hp/Code/rag-demo/bge-large-zh-v1.5')
+
+embeddings = model.encode(sentences)
+embeddings_bge = model_bge.encode(sentences)
+print(embeddings)
+print(embeddings_bge)
+```
+
+也可以使用 transformers 对文本进行向量化，我们对 bge-large-zh-v1.5 的句子进行向量化 
+
+```python
+from transformers import AutoTokenizer, AutoModel
+import torch
+# Sentences we want sentence embeddings for
+sentences = [
+    "我喜欢在公园散步",
+    "公园里散步很舒服",
+    "今天天气真不错",
+    "这个苹果很甜",
+    "我最喜欢吃水果了"
+]
+
+# Load model from HuggingFace Hub
+tokenizer = AutoTokenizer.from_pretrained('bge-large-zh-v1.5')
+model = AutoModel.from_pretrained('bge-large-zh-v1.5')
+model.eval()
+
+# Tokenize sentences
+encoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors='pt')
+
+# Compute token embeddings
+with torch.no_grad():
+    model_output = model(**encoded_input)
+    # Perform pooling. In this case, cls pooling.
+    # 拿到句子的特征
+    sentence_embeddings = model_output[0][:, 0]
+# normalize embeddings
+sentence_embeddings = torch.nn.functional.normalize(sentence_embeddings, p=2, dim=1)
+print("Sentence embeddings:", sentence_embeddings)
+```
+
+transformers 的写法要复杂点，但是有助于我们理解如何得到 sentence_embedding，后面的 ONNX 加速需要用的这些内容。
+
+### HuggingFace加速
+
+传统的深度学习模型参数推理速度比较慢，如果想将其应用到生产环境，建议将模型转换为其他加速格式，如 ONNX。这里我们使用 HuggingFace 提供的 optimum 将 HuggingFace 上的模型转成 ONNX。
+
+```shell
+# 安装 optimum
+pip install optimum
+```
+
+[HuggingFace 模型导出成 ONNX 官方文档](https://huggingface.co/docs/optimum/exporters/task_manager)
+
+[The Tasks Manager](https://huggingface.co/docs/transformers/main/zh/serialization)
+
+```shell
+# 将 xxx 文件夹下的模型参数转为 onnx。这里没有指定 task 参数，将默认导出不带特定任务头的模型架构。
+# 简单说就是，如果你这个模型支持两个任务（文本分类、问答），那么一般这个模型会有两个任务头，不指定 task 参数
+# 导出模型的时候就不会导出这两个任务头，只导出编码器（encode）
+optimum-cli export onnx --model BAAI/bge-large-zh-v1.5 bge_onnx/ --task feature-extraction
+```
+
+生成的 `model.onnx` 文件可以在支持 ONNX 标准的 [许多加速引擎（accelerators）](https://onnx.ai/supported-tools.html#deployModel) 之一上运行。例如，可以使用 [ONNX Runtime](https://onnxruntime.ai/) 加载和运行模型，下面是 HuggingFace 上 ONNX 推理的示例代码：
+
+```python
+from transformers import AutoTokenizer
+from onnxruntime import InferenceSession
+
+tokenizer = AutoTokenizer.from_pretrained("distilbert/distilbert-base-uncased")
+session = InferenceSession("onnx/model.onnx")
+# ONNX Runtime expects NumPy arrays as input
+inputs = tokenizer("Using DistilBERT with ONNX Runtime!", return_tensors="np")
+
+# onnx 推理的时候需要定义好输出的名字和输入的数据
+outputs = session.run(output_names=["last_hidden_state"], input_feed=dict(inputs))
+```
+
+从上面的代码我们可以看到，需要定义模型的输入（input_feed）和输出（output_names），我们如何得知 onnx 模型需要什么输入，什么输出呢？使用 netron 来查看 onnx 结构，进而得知 onnx 模型需要什么输入和输出。[netron](https://netron.app/)
+
+<div align="center"><img src="llm_img/image-20250111015653590.png"></div>
+
+```python
+from transformers import AutoTokenizer
+from onnxruntime import InferenceSession
+import numpy as np
+
+tokenizer = AutoTokenizer.from_pretrained("/home/hp/Code/rag-demo/bge_onnx")
+session = InferenceSession("/home/hp/Code/rag-demo/bge_onnx/model.onnx")
+# ONNX Runtime expects NumPy arrays as input
+sentences = [
+    "我喜欢在公园散步",
+    "公园里散步很舒服",
+    "今天天气真不错",
+    "这个苹果很甜",
+    "我最喜欢吃水果了"
+]
+
+encoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors='np')
+
+inputs = dict(encoded_input) 
+del inputs['token_type_ids']
+
+sentence_embedding = session.run(output_names=["token_embeddings", "sentence_embedding"], input_feed=dict(inputs))[1]
+```
+
+## LlamaIndex
 
 [LlamaIndex - LlamaIndex](https://docs.llamaindex.ai/en/stable/#introduction)
 
@@ -420,6 +598,142 @@ LlamaIndex 是一个上下文增强的 LLM 框架，旨在通过将其与特定�
 向量化存储就是指把文本、图像这种数据转换成为<b>向量/特征</b>，存储到特定的向量数据库中，便于快速检索。
 
 <b>如何利用 LlamaIndex 构建向量数据库，并从向量数据库中检索相关信息，一并送入 LLM 中，增强 LLM 的能力</b>
+
+### LlamaIndex初步
+
+安装必备库
+
+[安装和设置 - LlamaIndex](https://www.aidoczh.com/llamaindex/getting_started/installation/)
+
+```shell
+pip install llama-index
+pip install llama-index-embeddings-huggingface
+pip install llama-index-openllm
+```
+
+使用 LlamaIndex 提供的 OpenLLM 来使用国产大模型的 API 服务。
+
+```python
+from llama_index.llms.openllm import OpenLLM
+
+llm = OpenLLM(model="deepseek-chat", api_base="https://api.deepseek.com", api_key="sk-d94daa", is_chat_model=True)
+
+for it in llm.stream_complete("请你结合这些内容作答，你是萍乡学院的助教模型。现在我向你说：你好呀"):
+    print(it, end="\n", flush=True)
+```
+
+### 配置Settings
+
+我们是希望集成 RAG 进来的。通过前面的学习，我们知道需要将文本进行向量化然后再计算相似度，因此，在这里我们需要为 LlamaIndex 配置 Embeddings 模型。
+
+```python
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.llms.openllm import OpenLLM
+
+
+# 配置 embeddings，llm
+Settings.embed_model = HuggingFaceEmbedding(model_name="/home/hp/Code/rag-demo/bge-large-zh-v1.5")
+Settings.llm = OpenLLM(model="deepseek-chat", api_base="https://api.deepseek.com", api_key="sk-d94daa05fc82", is_chat_model=True)
+
+# 将文档加载到向量数据库
+documents = SimpleDirectoryReader("data").load_data()
+index = VectorStoreIndex.from_documents(documents,)
+
+query_engine = index.as_query_engine()
+response = query_engine.query("给我介绍下萍乡学院")
+print(response)
+```
+
+前面我们尝试过将 HuggingFace 的模型转为 ONNX 格式加速推理。这里，我们尝试自定义一个 Embedding，使用 ONNX 的 bge-large 进行 Embeddings。
+
+[Custom Embeddings - LlamaIndex](https://docs.llamaindex.ai/en/stable/examples/embeddings/custom_embeddings/)
+
+```python
+from typing import Any, List
+from InstructorEmbedding import INSTRUCTOR
+
+from llama_index.core.bridge.pydantic import PrivateAttr
+from llama_index.core.embeddings import BaseEmbedding
+from transformers import AutoTokenizer
+from onnxruntime import InferenceSession
+import numpy as np
+
+class ONNXEmbeddings(BaseEmbedding):
+    _model = PrivateAttr()
+    _instruction: str = PrivateAttr()
+    
+    def __init__(
+        self,
+        instruction: str = "Represent a document for semantic search:",
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(**kwargs)
+        self._model = InferenceSession("/home/hp/Code/rag-demo/bge_onnx/model.onnx")
+        self._tokenizer =  AutoTokenizer.from_pretrained("/home/hp/Code/rag-demo/bge_onnx")
+        self._instruction = instruction
+
+    @classmethod
+    def class_name(cls) -> str:
+        return "onnx"
+
+    async def _aget_query_embedding(self, query: str) -> List[float]:
+        return self._get_query_embedding(query)
+
+    async def _aget_text_embedding(self, text: str) -> List[float]:
+        return self._get_text_embedding(text)
+
+    def _get_query_embedding(self, query: str) -> List[float]:
+        encoded_input = self._tokenizer([self._instruction+"\n"+query], padding=True, truncation=True, return_tensors='np')
+
+        inputs = dict(encoded_input) 
+        del inputs['token_type_ids']
+        return self._model.run(output_names=["token_embeddings", "sentence_embedding"], input_feed=dict(inputs))[1][0].tolist()
+
+    def _get_text_embedding(self, text: str) -> List[float]:
+        encoded_input = self._tokenizer([self._instruction+"\n"+text], padding=True, truncation=True, return_tensors='np')
+        inputs = dict(encoded_input) 
+        del inputs['token_type_ids']
+        return self._model.run(output_names=["token_embeddings", "sentence_embedding"], input_feed=dict(inputs))[1][0].tolist()
+
+    def _get_text_embeddings(self, texts: List[str]) -> List[List[float]]:
+        encoded_input = self._tokenizer([self._instruction+"\n"+text for text in texts], padding=True, truncation=True, return_tensors='np')
+        inputs = dict(encoded_input) 
+        del inputs['token_type_ids']
+        return self._model.run(output_names=["token_embeddings", "sentence_embedding"], input_feed=dict(inputs))[1].tolist()
+    
+
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.llms.openllm import OpenLLM
+
+
+# 配置 embeddings，llm
+Settings.embed_model = ONNXEmbeddings()
+Settings.llm = OpenLLM(model="deepseek-chat", api_base="https://api.deepseek.com", api_key="sk-d94daa05fc82406", is_chat_model=True)
+
+# 将文档加载到向量数据库
+documents = SimpleDirectoryReader("data").load_data()
+index = VectorStoreIndex.from_documents(documents,)
+
+query_engine = index.as_query_engine()
+response = query_engine.query("给我介绍下萍乡学院")
+print(response)
+```
+
+### 结合向量数据库
+
+
+
+
+
+
+
+## 向量数据库
+
+[LangChain教程 - 支持的向量数据库列举_langchain支持的向量数据库-CSDN博客](https://blog.csdn.net/fenglingguitar/article/details/142436241)
+
+市面上的向量数据库有很多，这里我们主要学习 Chroma。
 
 ### Chroma
 
@@ -438,6 +752,8 @@ docs = vectorstore.similarity_search("这是查询")
 print(docs)
 ```
 
+## LlamaIndex
+
 ## LangChain
 
 [构建检索增强生成（RAG）应用：第一部分 | 🦜️🔗 LangChain 框架](https://python.langchain.ac.cn/docs/tutorials/rag/)
@@ -448,9 +764,93 @@ LangChain 提供了一个模块化和适应性强的框架，用于构建各种 
 
 `InMemoryVectorStore` 将向量数据存储在内存中，提供了快速的访问速度，但不具备数据持久化的能力。这种实现方式适合于数据量较小且需要快速访问的场景，例如原型开发、测试或小型应用。由于数据存储在内存中，一旦程序终止，内存中的数据将会丢失。因此，`InMemoryVectorStore` 不适合需要长期存储和大规模数据处理的生产环境。
 
+- 使用 PyPDF2 解析 pdf，`pip install pypdf2`
+- openai
+- langchain，`pip install langchain`
+
+```python
+import PyPDF2
+
+"""
+RAG 文字切分方式
+- 按行
+- 按句号
+- 按长度切分
+- 按长度 + 滑动窗口切分（确保知识重叠。）
+"""
+
+pdf_dir = "程序员代码面试指南（第2版） (左程云) (Z-Library).pdf"
+def extract_pdf():
+    with open(pdf_dir, 'rb') as file:
+        reader = PyPDF2.PdfReader(file)
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text()
+    return text
+
+def split_by_sliding_window(text, window_size=300, step_size=100):
+    chunks = []
+    start = 0
+    while start<len(text):
+        end = start + window_size
+        if end > len(text):
+            end = len(text)
+        chunks.append(text[start:end])
+        start+=step_size
+    return chunks
+
+"""
+测试split
+text = extract_pdf()
+text_list = split_by_sliding_window(text)
+print(text_list[2])
+"""
+
+"""
+openai 调用开源模型进行embedding
+"""
+from openai import OpenAI
+client = OpenAI(api_key="") 
+```
+
 ## 工程化实现
 
 茴香豆[InternLM/HuixiangDou: HuixiangDou: Overcoming Group Chat Scenarios with LLM-based Technical Assistance](https://github.com/InternLM/HuixiangDou/tree/main)
+
+[后端研发Marion/rag-demo](https://gitee.com/zeus-maker/rag-demo#注意事项-1)
+
+[【小白学大模型】强推！两小时彻底掌握LlamaIndex，从原理讲解到实战练习，全程干货无废话！_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1jUq3Y8Ey6/?spm_id_from=333.1387.favlist.content.click&vd_source=cb8bc4312b30b416beadaad7244940ac)
+
+[10-大模型应用开发框架LangChain：开干_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV16dzRYhEUM?spm_id_from=333.788.videopod.episodes&vd_source=cb8bc4312b30b416beadaad7244940ac&p=9)
+
+[如何选择RAG的Embedding模型？_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1h142197Fm?spm_id_from=333.788.videopod.sections&vd_source=cb8bc4312b30b416beadaad7244940ac)
+
+### 技术栈
+
+基于 LLM 和 RAG 的助教问答系统
+
+<b>模型层面</b>
+
+- LLM 模型，回答问题；支持调用外部模型或使用本地模型
+- Embedding 模型，将文本进行向量化；可以调用外部模型（选用中文支持好的）
+
+<b>技术框架层面</b>
+
+- Web 展示框架：streamlit、<b>chainlit</b>、gradio
+- 数据存储：聊天历史记录 postgresql
+- 文件存储：minio 服务器或持久化到本地
+- 向量数据库：向量数据库，用于快速检索出和问题相关的信息
+  - chroma（首选）
+  - milvus
+- LLM 开发框架
+  - Llamaindex 即可：RAG、Agent、业务流都支持。
+- 链接到搜索引擎：使用三方搜索引擎的开放 API
+- 数据质量问题（后期扩充）
+  - 开发 ocr 识别系统解决
+  - 借助多模态系统对多媒体处理
+  - 借助多模态嵌入模型及向量数据库直接处理
+
+
 
 
 
