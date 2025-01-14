@@ -1160,8 +1160,6 @@ docs = vectorstore.similarity_search("这是查询")
 print(docs)
 ```
 
-## LlamaIndex
-
 ## LangChain
 
 [构建检索增强生成（RAG）应用：第一部分 | 🦜️🔗 LangChain 框架](https://python.langchain.ac.cn/docs/tutorials/rag/)
