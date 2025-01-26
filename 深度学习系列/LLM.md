@@ -5,6 +5,126 @@
 - Python
 - PyTorch
 
+[(22 封私信) 随缘 - 知乎](https://www.zhihu.com/people/xu-shi-fang-35/posts)
+
+# GPT系列
+
+[3W字长文带你轻松入门视觉transformer - 知乎](https://zhuanlan.zhihu.com/p/308301901)
+
+[GPT-1, GPT-2, GPT-3, GPT-3.5, GPT-4论文内容解读_gpt3.5是175b-CSDN博客](https://blog.csdn.net/BGoodHabit/article/details/130134446)
+
+[李沐论文精度系列之八：视频理解论文串讲 - 知乎](https://zhuanlan.zhihu.com/p/639251630)
+
+[李沐论文精度系列之九：InstructGPT - 知乎](https://zhuanlan.zhihu.com/p/639252063)
+
+[大模型超详细解读 (目录) - 知乎](https://zhuanlan.zhihu.com/p/625926419)
+
+- 2017/06 transformer
+- 2018/06 GPT -- 只用到了 Transformer 的解码器！在没有标记的语言文本上训练了一个模型。然后在子任务上做微调，得到不同任务的分类器（与 CV 类似）
+- 2018/10 BERT -- 把 Transformer 的编码器拿过来，用更大的数据集做预训练。
+- 2019/02 GPT-2 -- 吸取教训，用更大的数据集做预训练，然后发现很适合做 zero-shot
+- 2020/05 GPT-3 -- 数据和模型都大了一百倍。
+
+## GPT-1
+
+[LLM 系列超详细解读 (一)：GPT：无标注数据的预训练生成式语言模型 - 知乎](https://zhuanlan.zhihu.com/p/616667762)
+
+GPT 与其他 NLP 任务不同的是，GPT 是通过改变输入的形式来完成对应的任务【如何实现的？】
+
+GPT 优化器的选择是一个棘手的问题。因为 NLP 不同任务的差异很大，有些优化器适用于任务 A，有些适用于 B，如何选择适用于多种任务的有效的优化器？
+
+另一个问题是如何把学到的表征迁移到下游子任务中？
+
+### GPT模型的选择和训练
+
+在当时，NLP 中比较主流的模型有 RNN、Transformer。GPT 选的 transoformer 而非 RNN。因为 transoformer  学到的特征迁移到下游任务的时候，比 RNN 更稳定（在当时并不是显而易见的）。
+
+在训练方式上，GPT 采用的训练方式是：在无标签数据预训练，然后用少量有标签的数据微调各个子任务。
+
+模型结构上，GPT **只用 Transformer 的解码器**没有用编码器
+
+- 编码器编码，对第 i 个元素抽特征的时候可以看到整个序列的所有元素；但是对解码器来说，由于掩码的存在，对第 i 个元素抽特征的时候只能看到当前元素和之前的元素，后面的元素被 mask 掩住了。
+- BERT 的预训练采用的是完形填空的方式，预测需要填空的位置时，模型既可以看到它前面的内容，又可以看到它后面的内容；所以用的是 Transformer 的编码器+解码器。
+
+很明显，GPT 的难度更大，因为 BERT 是知道过去和未来，推测中间；而 GPT 是在了解过去的基础上来预测未来。因此 GPT 在最开始的时候效果比 BERT 弱一些。但是 GPT 这种模式训练的模型会比 BERT 的能力更强，天花板更高？
+
+### 微调
+
+微调部分有两个目标函数
+
+- 给的一个序列，让模型预测下一个输出
+- 给定一个序列和它对应的标号，让它预测这个标号
+
+两个一起训练效果最佳。
+
+问题来了，如何把 NLP 中不同的任务表示成 **“给定一个序列和它对应的标签，让它预测这个标号”** 这种形式？
+
+## GPT-2
+
+[LLM 系列超详细解读 (二)：GPT-2：GPT 在零样本多任务学习的探索 - 知乎](https://zhuanlan.zhihu.com/p/616975731)
+
+做了个更大的数据集，训练了一个更大的模型。并且迁移到 zero-shot 任务上，部分主流任务表现不错。新意度很高，但是效果一般
+
+### Introduce
+
+现在的模型大多是拿上游任务大模型，收集少量下游任务的数据来做微调。GPT-2 依旧是这样做，不过在做下游任务的时候，用 zero-shot 的设定，做下游任务的时候不用任何有标注的数据（即不训练模型）。
+
+### method
+
+GPT-2 和 GPT-1 模型结构是一样的。但是在做下游任务的时候，GPT-2 对模型的输入进行了构造，加入了开始符号，结束符和中间的分隔符。
+
+在做下游任务的时候，要确保这些符号模型在预训练的时候也要看到过。
+
+### dataset
+
+去 reddit 上选取用户评价度比较高的网页（这种网页的质量比较高，信噪比低，用来训练模型比较合适），筛选出了 4500w 个链接，然后爬虫爬取这些链接，抽取里面的文本数据。800w个文本，40TB的文字。以英语翻法语这个任务而言，在这些数据集里，包含了很多英语翻法语的例子。我们用这些文本训练模型的话，模型很有可能就可以完成英语翻译成法语的任务。
+
+### Exp
+
+和其他 zero-shot 方法作比较。在一些任务上 GPT 比之前的模型效果好，一些任务上比其他模型还是差点意思。但是可以观察到，随着模型的增大，模型的性能还是在上升的。还是有希望用更多的数据训练更大的模型，让模型的性能达到更高，超越现有有监督模型的。
+
+## GPT-3
+
+[LLM 系列超详细解读 (三)：GPT-3：大型语言模型是少样本学习器 - 知乎](https://zhuanlan.zhihu.com/p/622067372)
+
+Language Models are Few-Shot Learners。比 GPT-2 大十倍。在将 GPT-3 迁移到子任务上时（即便是 few shot），不对模型做任何梯度更新。
+
+### Introduce
+
+比 GPT-2 大十倍。在将 GPT-3 迁移到子任务上时（即便是 few shot），不对模型做任何梯度更新。并且在做新闻摘要的时候，难以分辨出是人写的还是 GPT 写的。
+
+GPT-3 Zero-shot、One-Shot、Few-Shot 均不会微调模型，而是以下面的形式给出，指导模型。
+
+<img src="llm_img/image-20250125115604976.png">
+
+## Instruct-GPT
+
+[李沐论文精度系列之九：InstructGPT - 知乎](https://zhuanlan.zhihu.com/p/639252063)
+
+[LLM 系列超详细解读 (四)：InstructGPT：训练语言模型以遵从人类指令 - 知乎](https://zhuanlan.zhihu.com/p/637419868)
+
+## 复刻 GPT-3
+
+[LLM 系列超详细解读 (五)：OPT：完整开源的 GPT-3 复刻版 - 知乎](https://zhuanlan.zhihu.com/p/643335978)
+
+## GPT-4
+
+## LLama
+
+[LLM 系列超详细解读 (六)：LLaMa：开源高效的大语言模型 - 知乎](https://zhuanlan.zhihu.com/p/643894722)
+
+[LLM 系列超详细解读 (七)：LLaMa 2：开源微调的聊天大语言模型 - 知乎](https://zhuanlan.zhihu.com/p/644994939)
+
+## LLLM
+
+[LLM 系列超详细解读 (七)：LLaMa 2：开源微调的聊天大语言模型 - 知乎](https://zhuanlan.zhihu.com/p/644994939)
+
+[LLM 系列超详细解读 (九)：MobileLLM：优化 1B 参数之下的语言模型 - 知乎](https://zhuanlan.zhihu.com/p/689006901)
+
+[LLM 系列超详细解读 (十)：帝江大模型：频域角度降低 LLM 的成本 - 知乎](https://zhuanlan.zhihu.com/p/692469499)
+
+[LLM 系列超详细解读 (十一)：大语言模型中的超大激活值 - 知乎](https://zhuanlan.zhihu.com/p/689959264)
+
 # LLM博文
 
 [万字长文——这次彻底了解LLM大语言模型-腾讯云开发者社区-腾讯云 (tencent.com)](https://cloud.tencent.com/developer/article/2368425)
@@ -437,6 +557,8 @@ GraphRAG 的缺点
 # LLM开发
 
 LlamaIndex 和 LangChain 有点笨重，封装的有点深，建议主要业务代码还是自己写。
+
+[(27 封私信 / 80 条消息) 神洛 - 知乎](https://www.zhihu.com/people/shen-luo-74-23/posts)
 
 ## HuggingFace
 

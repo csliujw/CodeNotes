@@ -11,6 +11,8 @@
 
 [Typora3](https://blog.csdn.net/qq_33154343/article/details/106134472)
 
+https://mp.weixin.qq.com/s/qNoyEHVO2vWPkJqdzG7ksw
+
 # Linux入门
 
 - 简单介绍什么是 Linux，Linux 和 Windows 的区别
