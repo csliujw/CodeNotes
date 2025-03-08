@@ -7528,6 +7528,16 @@ export LC_ALL="zh_CN.UTF-8"
 
 本地和远程成功通信则可以在 `.ssh` 中发现 `known_hosts` 文件，出错就多试几次可能是网络问题。不行就检测建立 `ssh` 时输入的 `pub key`。
 
+如果实在是无法 ping 通 github.com（开了 VPN），可以修改本机的 hosts 文件，将 github.com 的默认地址修改为 140.82.114.3。
+
+```shell
+# windows 的 hosts 文件位于  C:\Windows\System32\drivers\etc\hosts
+# 在 hosts 文件中加入
+140.82.114.3 github.com
+```
+
+再次尝试 `ssh -T git@github.com`, ping 通了。
+
 ## 常用Git命令
 
 下面是我们要学习的 Git 命令。
