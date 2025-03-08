@@ -125,6 +125,67 @@ GPT-3 Zero-shot、One-Shot、Few-Shot 均不会微调模型，而是以下面的
 
 [LLM 系列超详细解读 (十一)：大语言模型中的超大激活值 - 知乎](https://zhuanlan.zhihu.com/p/689959264)
 
+## 参数计算
+
+### 参数存储
+
+- **FP32（全精度）**：每参数4字节
+- **FP16（半精度）**：每参数2字节
+- **INT8量化**：每参数1字节
+
+$$
+显存（GB）= 参数数量 × 每参数字节数 ÷ 1e9
+$$
+
+### 训练阶段总显存
+
+需额外存储梯度、优化器状态和激活值：
+
+- **梯度**：与参数同类型（如 FP32 需 4 字节/参数）
+- **优化器状态**：Adam 优化器需存储动量和方差（FP32，共 8 字节/参数）
+- **激活值**：与批次大小、序列长度强相关（约占20%~50%总显存）
+
+经验公式（FP16混合精度下，优化器状态仍为FP32）
+$$
+训练显存 ≈ 参数数量 × 20字节
+$$
+
+### 推理阶段总显存
+
+仅需加载参数和少量激活值（激活值占额外20%~50%）
+$$
+推理显存 ≈ 参数存储 × 1.2~1.5
+$$
+
+### 部署模型所需参数
+
+以 70B 的模型为例。70B 中的 B 代表十亿（Billion）。70B = 700亿参数。
+
+> 以 float32 部署 70B 的模型
+
+- 每个参数以 float32 存储（4 字节）
+- 700 * 4 = 2800 亿字节 ≈ 280 GB
+
+> 以 float16 部署 70B 的模型
+
+- 每个参数以 float16 存储（2 字节）
+- 700 * 2 = 1400 亿字节 ≈ 140 GB
+
+> 以 int8 部署 70B 的模型
+
+- 每个参数以 int8 存储（1 字节）
+- 700 * 1 = 700 亿字节 ≈ 70 GB
+
+> 以 int4 部署 70B 的模型
+
+- 每个参数以 int4 存储（0.5 字节）
+
+- 700 * 0.5 = 350 亿字节 ≈ 35 GB
+
+实际部署时，得益于部署框架对显存的优化，所需的显存可能少于上述的计算结果。
+
+
+
 # LLM博文
 
 [万字长文——这次彻底了解LLM大语言模型-腾讯云开发者社区-腾讯云 (tencent.com)](https://cloud.tencent.com/developer/article/2368425)
@@ -405,38 +466,148 @@ Chroma向量数据库-->匹配相似文本段
 
 
 # Hugging Face
-Hugging Face 是一家专注于自然语言处理和机器学习的公司，以其开源的Transformers库而闻名。该平台提供了丰富的预训练模型，支持多种语言任务，如文本生成、
-翻译和情感分析。Hugging Face 还致力于推动A!的民主化，鼓励开发者和研究人员共享和合作。
+Hugging Face 是一家专注于自然语言处理和机器学习的公司，以其开源的Transformers库而闻名。该平台提供了丰富的预训练模型，支持多种语言任务，如文本生成、翻译和情感分析。Hugging Face 还致力于推动 AI 的民主化，鼓励开发者和研究人员共享和合作。
 
 作为 Hugging Face 最核心的项目，Transformers 无疑是这个社区的灵魂。
 
-Transformers 提供 API 和工具，可轻松下载和训练最先进的预训练模型。使用预训练模型可以降低计算成本
-并节省从头开始训练模型所需的时间和资源。这些模型支持不同模式的常见任务:
+> Transformers 提供 API 和工具，可轻松下载和训练最先进的预训练模型。使用预训练模型可以降低计算成本，并节省从头开始训练模型所需的时间和资源。这些模型支持不同模式的常见任务：
 
-- 自然语言处理:文本分类、命名实体识别、问答、语言建模、摘要、翻译、多项选择和文本生成。
-- 计算机视觉:图像分类、对象检测和分割。
-- 音频:自动语音识别和音频分类。
-- 多模态:表格问答、光学字符识别、扫描文档信息提取、视频分类和视觉问答。
+- 自然语言处理：文本分类、命名实体识别、问答、语言建模、摘要、翻译、多项选择和文本生成。
+- 计算机视觉：图像分类、对象检测和分割。
+- 音频：自动语音识别和音频分类。
+- 多模态：表格问答、光学字符识别、扫描文档信息提取、视频分类和视觉问答。
 
-此外，Hugging Face官方还提供免费的课程，如何利用社区生态(Transformers等项目)来进行NLP的学习
+此外，Hugging Face官方还提供免费的课程，如何利用社区生态(Transformers等项目)来进行 NLP 的学习
 
-Hugging Face 中检索模型。
+> Hugging Face 中检索模型。
 
-- Files and Versions 里包含了模型文件和模型的版本管理。我们如果想要使用模型，需要把里面所有的文件都下载过来。
+Files and Versions 里包含了模型文件和模型的版本管理。我们如果想要使用模型，需要把里面所有的文件都下载过来。
 
 ## GitHub CodeSpace 的使用
-GitHub Codespace 通过 GitHub 原生的完全配置、安全的云开发环境，可以更快地启动和写代码
-它提供了一系列模板，我们在跑机器学习深度学习相关的实验的时候，可以选择它的 Jupyter NoteBook 模板
+GitHub Codespace 通过 GitHub 原生的完全配置、安全的云开发环境，可以更快地启动和写代码，它提供了一系列模板，我们在跑机器学习深度学习相关的实验的时候，可以选择它的 Jupyter NoteBook 模板。
+
+- [Create new codespace](https://github.com/codespaces/new?skip_quickstart=true&geo=SoutheastAsia)
+- 根据已有的 github 仓库创建一个 Code Space 空间
+
+![image-20250128130944821](D:\Code_Notes\Note\CodeNotes\深度学习系列\llm_img\image-20250128130944821.png)
+
+## ModelScope
+
+ModelScope 可以认为是国内版的 HuggingFace，其用法与 HuggingFace 类似。我们先安装 ModelScope 必备的环境，安装了必备环境我们才能用它下载模型、数据集、微调模型。
+
+> pip 安装
+
+ModelScope Library 由核心 hub 支持，框架，以及不同领域模型的对接组件组成。根据您实际使用的场景，可以选择不同的安装选项。如果只需要通过 ModelScope SDK，或者 ModelScope 命令行工具来[下载模型](https://www.modelscope.cn/docs/models/download)，可以只最轻量化的安装 ModelScope 的核心 hub 支持：
+
+```shell
+pip install modelscope
+```
+
+如果需要更完整的使用 ModelScope 平台上的一系列框架能力，包括**数据集的加载**，外部模型的使用等，则推荐使用 "framework" 的安装选项，也就是：
+
+```shell
+pip install modelscope[framework]
+```
+
+安装好后，我们使用 ModelScope 来下载 deepseek-ai/DeepSeek-R1-Distill-Qwen-7B 模型。
+
+```shell
+# 下载整个模型到指定目录
+modelscope download --model 'deepseek-ai/DeepSeek-R1-Distill-Qwen-7B'  --local_dir './'
+
+# 下载单个文件
+modelscope download --model 'Qwen/Qwen2-7b' tokenizer.json
+    
+# 下载多个    
+modelscope download --model 'Qwen/Qwen2-7b' tokenizer.json config.json
+modelscope download --model 'Qwen/Qwen2-7b' --include '*.safetensors'
+
+# 过滤指定文件
+modelscope download --model 'Qwen/Qwen2-7b' --exclude '*.safetensors'
+```
+
+更多内容可以参考官方文档 [模型的下载 · 文档中心](https://www.modelscope.cn/docs/models/download)
+
+> **下载好后我们尝试部署该模型**
+
+怎么让这个模型跑起来呢？我们可以参照模型 readme 来部署 [How to Run Locally](https://huggingface.co/deepseek-ai/DeepSeek-R1)，也可以去 HuggingFace 找到这个模型，然后找到 Use this modle，这里有加载模型的方式。
+
+```python
+# Use a pipeline as a high-level helper
+from transformers import pipeline
+
+messages = [
+    {"role": "user", "content": "Who are you?"},
+]
+pipe = pipeline("text-generation", model="deepseek-ai/DeepSeek-R1", trust_remote_code=True)
+pipe(messages)
+```
+
+```python
+# Load model directly
+from transformers import AutoModelForCausalLM
+model = AutoModelForCausalLM.from_pretrained("deepseek-ai/DeepSeek-R1", trust_remote_code=True)
+```
+
+现在模型跑起来了，接下来我们怎么用模型做预测/推理呢？这个代码应该怎么写呢？
+
+## Fundation Model推理
+
+> 此处，我们指的是 Fundation Model 的推理，包括但并不局限于 LLM（大语言模型）的推理
+
+- LLM 的加载和推理：即纯对话/问答式的大语言生成式模型。模型的输入和输出都是文本，不包含其他模态的数据。
+- VLLM 的加载和推理：VLLM 视觉语言大模型。VLLM 是一种结合了视觉和语言信息的预训练模型，通过将视觉和语言信息相结合，使模型能够同时处理文本和图像数据。以 Qwen2.5s-VL 为例，我们来看看它具备什么能力。
+  - 视觉理解：Qwen2.5-VL 不仅擅长识别常见物体，如花、鸟、鱼和昆虫，还能够分析图像中的文本、图表、图标、图形和布局。
+  - Agent：Qwen2.5-VL 直接作为一个视觉 Agent，可以推理并动态地使用工具，初步具备了使用电脑和使用手机的能力。
+  - 理解长视频和捕捉事件：Qwen2.5-VL 能够理解超过 1 小时的视频，并且这次它具备了通过精准定位相关视频片段来捕捉事件的新能力。
+  - 视觉定位：Qwen2.5-VL 可以通过生成 bounding boxes 或者 points 来准确定位图像中的物体，并能够为坐标和属性提供稳定的 JSON 输出。
+  - 结构化输出：对于发票、表单、表格等数据，Qwen2.5-VL 支持其内容的结构化输出，惠及金融、商业等领域的应用。
+
+## LLM部署
+
+> LLM 的部署比较简单，我们来理一下它的流程。
+
+```mermaid
+graph LR
+下载模型所需文件-->使用HuggingFace加载模型-->模型等待输入
+用户提问-->embedding提取特征-->模型等待输入
+模型等待输入-->生成回答
+```
+
+从上面的流程图我们可以看到，我们需要做两大步骤
+
+- 利用框架将模型跑起来（ModelScope 或 HuggingFace）
+- 准备好问题，利用 embedding 模型提取词向量特征
+
+做好后将准备好的词向量模型送入模型，等待其生成回答即可。
+
+> 明白了 LLM 部署的流程，那我们应该怎么加载模型，怎么对问题做特征提取，有需要怎么组织数据输入给模型呢？
+
+首先，我们要确定使用什么 LLM；然后去 github 看他的开源代码，一般开源代码中会告诉我们如何部署。以 Qwen2.5 为例
+
+[Qwen2.5 官方部署教程](https://github.com/QwenLM/Qwen2.5)
+
+### Qwen2.5部署-HuggingFace
+
+### Qwen2.5部署-OpenAI
+
+### Qwen2.5部署-ollama
+
+### Qwen2.5部署-量化
+
+
+
+
+
+
 
 ## 模型上传
 
-Hugging Face 同样是跟 Git 相关联，对于大文件，我们需要安装 git-lfs，对大文件系统支持。
-使用 huggingface-cli login 命令进行登录，登录过程中需要输入用户的 Access Tokens
+Hugging Face 同样是跟 Git 相关联，对于大文件，我们需要安装 git-lfs，对大文件系统支持。使用 huggingface-cli login 命令进行登录，登录过程中需要输入用户的 Access Tokens
 
 ## Spaces 的使用
 
-Hugging Face Spaces 是一个允许我们轻松地托管、分享和发现基于机器学习模型的应用的平台。
-Spaces 使得开发者可以快速将我们的模型部署为可交互的 web 应用，且无需担心后端基础设施或部署的复杂性。
+Hugging Face Spaces 是一个允许我们轻松地托管、分享和发现基于机器学习模型的应用的平台。Spaces 使得开发者可以快速将我们的模型部署为可交互的 web 应用，且无需担心后端基础设施或部署的复杂性。
 
 # LLM
 
@@ -516,6 +687,10 @@ Lagent 是一个轻量级、开源的基于大语言模型的智能体(agent) �
 不同的微调范式
 
 微调后模型的量化、融合
+
+[手把手教学，DeepSeek-R1微调全流程拆解 - 雨梦山人 - 博客园](https://www.cnblogs.com/shanren/p/18707513)
+
+[如何通过unSloth 微调(Fine-tuning)专业大模型_unsloth本地微调-CSDN博客](https://blog.csdn.net/python1222_/article/details/145749857)
 
 ## LLM RAG
 
@@ -1099,6 +1274,23 @@ print(response)
 
 ### 文档向量化
 
+### 提升RAG
+
+RAG 检索一般有三种方式（Dify）
+
+- 向量检索：这种模式下，会将知识库的内容进行切分，转换成 embeddings，然后存储向量数据库。用户提问后，先从向量数据库中检索相似的内容，然后将问题和检索的内容一并送模型，让模型根据内容进行回答。
+
+```mermaid
+graph LR
+1(User)-->提问-->|在向量数据库中检索|相关知识片段-->整合知识片段&查询到的内容-->形成提示词-->|送入|LLM
+```
+
+- 全文检索：这种模式下，索引文档中的所有词汇，从而允许用户查询任意词汇，并返回包含这些词汇的文本片段（ES）
+
+- 混合检索：同时执行全文检索和向量检索，并应用重排序步骤，从两类查询结果中选择匹配用户问题的最佳结果。
+
+
+
 ### Agent
 
 大模型遇到问题时，先对问题进行规划/拆解。执行问题的过程中，如果可以自己解决就自己解决，无法解决就借助外部工具解决。
@@ -1340,6 +1532,12 @@ openai 调用开源模型进行embedding
 from openai import OpenAI
 client = OpenAI(api_key="") 
 ```
+
+## Dify
+
+免费版本的能力有限。如何需要达到比较好的效果需要去购买三方 API 接口，或者自己本地部署一个比较好的 Embedding 模型、Rerank 模型等。搭建基本知识库供内网的人员使用还是很合适的。用来体验 agent 也非常棒，自带了很多 agent 工具，无需自己去 github / gitee 搜索相关的项目。
+
+[保姆教程篇：手把手教你从零开始本地部署Dify - 知乎](https://zhuanlan.zhihu.com/p/713902500)
 
 ## 工程化实现
 
