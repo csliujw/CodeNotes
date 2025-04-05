@@ -4519,7 +4519,7 @@ fdisk -l	# 查看磁盘分区详情 -l 显示所有硬盘的分区列表
 可以用 fdisk 查看所有的磁盘，然后找到那些磁盘未挂载。
 
 ```shell
-fdusk -l # 2 的
+fdisk -l # 2 的
 Disk /dev/sdb	1.76TiB
 Disk /dev/sdc	1.76TiB
 Disk /dev/sdd	1.76TiB
@@ -4603,7 +4603,7 @@ df -TH
 vim /etc/fstab
 # 加入配置
 UUDI=12F44ECBF44EB0B1	/mnt/data	fuseblk	default	0	0
-# UUID=设备名称也可以 eg UUID=/dev/sdb
+UUDI=12F44ECBF44EB0B1	/mnt/data	ext4	default	0	0
 ```
 
 <b>other</b>
@@ -5101,6 +5101,8 @@ tcpdump tcp port 80
 | sudo ufw enable                   | 开启防火墙                        |
 | sudo ufw disable                  | 关闭防火墙                        |
 | sudo ufw status                   | 查看防火墙的状态                  |
+| sudo ufw status numbered          | 查看防火墙的状态和对应的 number   |
+| sudo ufw delete numbered          | 删除指定 number 的防火墙规则      |
 | sudo ufw allow 22                 | 开放 22 端口（重启 ufw 才会生效） |
 | sudo ufw delete allow 22          | 关闭 22 端口（重启 ufw 才会生效） |
 | sudo ufw reload                   | 重启 ufw 防火墙                   |
