@@ -16,7 +16,7 @@
 
 ## 数据结构
 
-介绍 Python 数据模型，说明为什么特殊方法（例如 `__repr__`）是所有类型的对象在行为上保持一致的关键。
+介绍 Python 数据模型，说明为什么特殊方法（`__repr__`）是所有类型的对象在行为上保持一致的关键。
 
 介绍各种容器类型，包括序列（sequence）、映射（mapping）和集合（set），另外还涉及字符串（str）和字节序列（bytes）的区别。
 
@@ -40,13 +40,13 @@
 
 涉及生成器、上下文管理器（with 语法的实现）、协程和一些强大的语法糖。同时讲解了 Python 并发和并行处理的各种方案和局限性，重点讲解了异步编程。
 
-<b>这部分整体难度较高，基本都是重点，都需要了解；如果涉及不到并发编程，并发编程部分可以不看</b>
+<b>这部分整体难度较高，基本都是重点，都需要了解；如果涉及不到并发编程，并发编程部分可以不看。</b>
 
 ## 元编程
 
 逐步实现一个字段验证库，以此来学习元编程中的内容。
 
-<b>这部分的重点是：类装饰器和元类（metaclass），纯高级内容，如果涉及不到类库开发可以不看</b>
+<b>这部分的重点是：类装饰器和元类（metaclass），纯高级内容，如果涉及不到类库开发可以不看。</b>
 
 # ➡️第一部分-数据结构
 
@@ -186,27 +186,29 @@ print(repr(demo1))  # repr My name is "'tony1"
 |反向位运算符| `__rlshift__、__rrshift__、__rand__、__rxor__、__ror__`|
 |增量赋值位运算符| `__ilshift__、__irshift__、__iand__、__ixor__、__ior__`|
 
-更多的特殊方法: [https://docs.Python.org/3/reference/datamodel.html](https://link.segmentfault.com/?enc=fTu%2F6envClCH1hc3pb3wPA%3D%3D.YAfEMmtm0jaM2LaU%2BHKZQ3ytdIaghZ1Ob1OssOs5VjDfoWlNa%2BXPdQ7Op7IIERbhLJhzgGZ8UAX79xx%2FPw42Rw%3D%3D)
+更多的特殊方法: 
+
+[https://docs.Python.org/3/reference/datamodel.html](https://link.segmentfault.com/?enc=fTu%2F6envClCH1hc3pb3wPA%3D%3D.YAfEMmtm0jaM2LaU%2BHKZQ3ytdIaghZ1Ob1OssOs5VjDfoWlNa%2BXPdQ7Op7IIERbhLJhzgGZ8UAX79xx%2FPw42Rw%3D%3D)
 
 # 序列和数组
 
 这部分主要是介绍序列，着重介绍数组和元组的一些高级用法，以深入理解 Python 中不同的序列类型。
 
-Python 使用 C 语言实现了丰富的序列类型，由于是使用 C 来实现的，因此，尝试继承这些序列，重写它们的方法时，会有意想不到的结果。[不要试图子类化内置类型](##不要试图子类化内置类型)
+Python 使用 C 语言实现了丰富的序列类型，由于是使用 C 来实现的，因此，尝试继承这些序列，重写它们的方法时，会有意想不到的结果。[不要试图子类化内置类型](##不要试图子类化内置类型)。
 
 <b>序列按照容纳数据的类型可以分为</b>
 
-- `容器序列`：list、tuple 和 collections.deque 这些序列存放的是所包含对象的引用，对象可以是任何类型
-- `扁平序列`：str、bytes、bytearray、memoryview 和 array.array，这类序列在自己的内存空间中存储所含内容的值，而不是各自不同的 Python 对象。<span style="color:blue">因此，扁平序列更加紧凑，但是只能存放原始机器值，例如字节、整数和浮点数。</span>
+- 容器序列：list、tuple 和 collections.deque 这些序列存放的是所包含对象的引用，对象可以是任何类型。
+- 扁平序列：str、bytes、bytearray、memoryview 和 array.array，这类序列在自己的内存空间中存储所含内容的值，而不是各自不同的 Python 对象。<span style="color:blue">因此，扁平序列更加紧凑，但是只能存放原始机器值，例如字节、整数和浮点数。</span>
 
 <div align="center"><img src="FluentPython/sequence.jpeg"></div>
 
-图中展示的是一个元组和一个数组的内存简图，它们各有 3 项。灰色方块（未按比例绘制）表示各个 Python 对象的内存标头。元组中的每一项都是引用，引用的是不同的 Python 对象，对象中还可以存放其他 Python 对象的引用，例如那个包含两个项的列表。相比之下，Python 中的数组整体是一个对象，存放一个 C 语言数组，包含 3 个双精度数
+图中展示的是一个元组和一个数组的内存简图，它们各有 3 项。灰色方块（未按比例绘制）表示各个 Python 对象的内存标头。元组中的每一项都是引用，引用的是不同的 Python 对象，对象中还可以存放其他 Python 对象的引用，例如那个包含两个项的列表。相比之下，Python 中的数组整体是一个对象，存放一个 C 语言数组，包含 3 个双精度数。
 
 <b>如果按照是否能被修改可以分为</b>
 
-- `可变序列`：list、bytearray、array.array、collections.deque 和 memoryview
-- `不可变序列`：tuple、str 和 bytes
+- 可变序列：list、bytearray、array.array、collections.deque 和 memoryview
+- 不可变序列：tuple、str 和 bytes
 
 可变序列继承不可变序列的所有方法，另外还多实现了几个方法。内置的具体序列类型其实不是 Sequence 和 MutableSequence 抽象基类的子类，而是一种虚拟子类（virtual subclass），使用这两个抽象基类注册（Python 3.10 测试，MutableSequence 是 False）
 
@@ -243,7 +245,7 @@ codes = [last := ord(c) for c in t]
 print(codes, last)
 ```
 
-<b>map 和 filter 不一定比列表推导式快，Python 中推荐使用列表推导式而非 map 和 filter</b>
+<b>map 和 filter 不一定比列表推导式快，Python 中推荐使用列表推导式而非 map 和 filter。</b>
 
 ## 生成器表达式
 

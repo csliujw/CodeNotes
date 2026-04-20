@@ -31,13 +31,7 @@ LANG=zh_CN.UTF-8
 
 ## Linux
 
-<b>本节目标：了解什么是操作系统，谁开发的 Linux，Linux 系统由什么组成的</b>
-
-在深入学习如何使用 Linux 命令行和 shell 之前，我们先知道下，什么是 Linux、它的起源以及运作方式。
-
-Linux 是一种操作系统，负责管理、分配、调度计算机软件硬件资源的系统软件。Linux 最初是由 Linus 创建的（只是创建了 Linux 系统内核），并没有创建能够运行在内核之上的系统实用工具。这些实用工具是 Linus 开发内核的同时，其他人在 Internet 上同心协力，模仿 Unix 操作系统开发一套标准的计算机系统实用工具。
-
-我们可以认为 Linux 系统 = Linux 内核 + GNU 操作系统实用工具。有时候，Linux 系统也会被称为 GNU/Linux 系统。我们学习 Linux 系统不是学习它的内核源码，而是学习 GNU。
+Linux 系统 = Linux 内核 + GNU 操作系统实用工具。
 
 GNU coreutils 软件包由 3 部分构成
 
@@ -63,18 +57,13 @@ Linux 操作系统提供两种典型的操作界面：命令行界面（Command 
 
 <b>命令行介绍</b>
 
-前面我们提到过，我们是通过 shell 提供的文本命令行界面来和操作系统进行交互的。我们在文本命令行界面输入指令，shell 分析命令行中的内容调用对应的命令（其实，命令就是运行在 shell 里的程序，类似于 Java 程序跑在 JVM 里）。目前，Linux 系统中使用最普遍的是 bash（Bourne Again SHell）。本课程学习的也是 bash 下的命令。
+一个程序，可以解析控制台输入的各种命令并执行相应的动作。
 
 <b>命令行界面分类</b>
 
 命令行界面又称字符界面，Linux 下有两种字符界面：一种是纯字符界面，另一种是图形界面中的终端（图形化终端仿真器）。
 
-- 纯字符界面是真正的终端，而这个纯字符界面总是可用的——即使在图形界面发生故障或是崩溃。如果系统使用 lightdm 作为显示管理器，纯字符界面可以通过控制键 Ctrl+Alt+Fn（n 从1～6）进行切换。在默认的系统安装下，这六个都是字符界面。从 Ctrl+Alt+F7 之后都是图形界面（除了快捷键外，我们也可以使用 chvt 切换终端。）
-- 图形界面的终端是图形界面的一部分，是一个终端模拟器，该终端内只能执行命令。
-
-## 认识终端环境
-
-打开终端后，会看到在光标位置出现如下的提示信息，表示当前所处的环境。
+## 终端环境
 
 ```shell
 root@hecs-87821:/home#
@@ -6743,7 +6732,7 @@ sudo systemctl start xx.service
 
 # SCP-安全复制:star:
 
-`SCP`（Secure Copy）命令是基于 `ssh`（Secure Shell）协议实现的。它使用 `ssh` 提供的加密通道安全地在本地和远程系统之间复制文件和目录。这里我们先学 SCP 再学 SSH（需要借助 SCP 来复制一些东西）
+`SCP`（Secure Copy）命令是基于 `ssh`（Secure Shell）协议实现的文件传输命令。
 
 ## 上传文件
 
@@ -6752,7 +6741,7 @@ sudo systemctl start xx.service
 <b>基本命令 </b>
 
 ```shell
-scp [option] location_file server_user@server_ip:server_dir
+scp [option] location_file username@ip:filePath
 ```
 
 使用 scp 将本地文件上传到服务器
@@ -6842,13 +6831,13 @@ scp "hw:/home/{.tmux.conf,.vimrc}" D:/git/
 
 [SSH 基本知识 - SSH 教程 - 网道](https://wangdoc.com/ssh/basic)
 
-<b>SSH</b> 全称 Secure Shell（安全外壳），它是一种<b>网络安全协议</b>，通过加密和认证机制实现安全的访问和文件传输等业务。SSH 协议通过对网络数据进行加密和验证，在不安全的网络环境中提供了安全的网络服务。
+<b>SSH</b> 全称 Secure Shell（安全外壳）是一种<b>网络安全协议</b>，通过加密和认证机制实现在不安全网络环境中的安全访问。
 
-SSH 是（C/S架构）由<b>服务器</b>和<b>客户端</b>组成，为建立安全的 SSH 通道，双方需要先建立 TCP 连接，然后协商使用的版本号和各类算法，并生成相同的<b>会话密钥</b>用于后续的对称加密。在完成用户认证后，双方即可建立会话进行数据交互。
+SSH （C/S架构）由<b>服务器</b>和<b>客户端</b>组成，为建立安全的 SSH 通道，双方需要先建立 TCP 连接，然后协商使用的版本号和各类算法，并生成相同的<b>会话密钥</b>用于后续的对称加密。在完成用户认证后，双方即可建立会话进行数据交互。
 
 为什么要进行远程连接了？为了远程办公！本地没环境？小问题！直接 ssh 远程服务器进行开发。
 
-<b>准备工作</b>
+> <b>准备工作</b>
 
 - 给服务器安装 openssh-server
 - 启动 ssh `service ssh start`
@@ -6862,14 +6851,12 @@ SSH 是（C/S架构）由<b>服务器</b>和<b>客户端</b>组成，为建立�
 
 ```shell
 ssh user@hostname
+# eg
+ssh root@110.2.3.123 -p 22 # -p 22 指定端口，默认端口是 22 可以不写 -p 22
 ```
 
 - user：服务器用户名
 - hostname：服务器的 `IP 地址`/`域名`
-
-```shell
-ssh root@110.2.3.123
-```
 
 第一次登录时会提示
 
@@ -6879,42 +6866,19 @@ ECDSA key fingerprint is SHA256:iy237yysfCe013/l+kpDGfEG9xxHxm0dnxnAbJTPpG8.
 Are you sure you want to continue connecting (yes/no/[fingerprint])?
 ```
 
-输入 yes，然后回车即可。这样会将该服务器的信息记录在 `~/.ssh/known_hosts` 文件中（windows 系统是在`C:User\username\.ssh` 下）。然后输入密码即可登录到远程服务器中。
-
-默认登录端口号为 22。如果修改了 ssh 的默认端口，可以使用 -p 来指定登录的端口 2233<span style="color:red">（小写 p）</span>
-
-```shell
-ssh user@hostname -p 2233
-```
+输入 yes，然后回车即可。这样会将该服务器的信息记录在 `~/.ssh/known_hosts` 文件中（windows 系统是在 `C:User\username\.ssh` 下）。然后输入密码即可登录到远程服务器中。
 
 ## 快速登录
 
 创建文件 `~/.ssh/config`，然后文件中输入（windows 是在 C:\Users\用户名\\.ssh\  文件夹下创建 config 文件）
 
-```shell
-Host hw
-	HostName IP地址或域名
-	User 用户名
-	Port 端口号	# 可选，使用默认端口的话就不用加端口号
-    IdentitiesOnly yes
-    # 添加这些配置，ssh 不会一分钟就断了。
-  	# 保持连接活跃，每隔20秒发送一次请求到服务器
-  	ServerAliveInterval 20
-  	# 如果服务器没有响应，重试30次
-  	ServerAliveCountMax 30
-Host hw2
-	HostName IP地址或域名
-	User 用户名
-    Port 端口号	# 可选
-```
-
 例如给服务器 10.236.31.2 配置用于快速登录的别名
 
 ```shell
 Host hw
-	HostName 10.236.31.2
-	User root
-	Port 22
+	HostName 10.236.31.2 # IP地址或域名
+	User root	# 用户名
+	Port 22		# 端口，默认端口可不写
     IdentitiesOnly yes
     # 添加这些配置，ssh 不会一分钟就断了。
   	# 保持连接活跃，每隔20秒发送一次请求到服务器
@@ -6923,28 +6887,40 @@ Host hw
   	ServerAliveCountMax 30
 ```
 
-之后再使用服务器时就可以使用别名 `hw` \ `hw2` 了。
+之后再使用服务器时就可以使用别名 `hw` 了。
+
+```shell
+ssh hw
+
+# 等价于
+ssh -o IdentitiesOnly=yes \
+-o ServerAliveInterval=20 \
+-o ServerAliveCountMax=30 \
+-p 22 \
+root@10.236.31.2
+```
 
 ## 免密登录
 
-ssh 的 config 文件本身并不用于存储服务器的密码。这是因为 SSH 协议设计之初就考虑到了安全性，因此不推荐在配置文件中明文存储密码。相反，SSH 提供了基于密钥对的认证机制，即使用公钥和私钥来进行身份验证，从而避免了密码在网络中传输的风险。
+ssh 的 config 仅用于设置连接参数（如服务器地址、端口、用户名等），**不存储密码**。由于每次登录需手动输入密码比较麻烦，SSH 提供了『公钥 + 私钥』的机制实现**免密登录**。
 
 <b>配置免密登录</b>
 
-1️⃣（本地机器）创建密钥 `ssh-keygen -t rsa`，执行该命令后一直按回车即可。
+1️⃣（本地机器）执行命令 `ssh-keygen -t rsa` 创建密钥 ，执行该命令后一直按回车即可；
 
-2️⃣执行结束后，本地机器的 `~/.ssh/` 目录下会多两个文件
+2️⃣执行结束后，本地机器的 `~/.ssh/` 目录下会多两个文件；
 
 - 密钥 `id_rsa`
 - 公钥 `id_rsa_pub`
 
-3️⃣将本地机器的公钥传给希望免密登录的服务器即可。
+3️⃣将本地机器的公钥传给需要免密登录的服务器即可
 
-- 如，我们想免密登录 hw 服务器，将公钥中的内容复制到 hw 中的 `~/.ssh/authorized_keys` 文件里即可（`.ssh` 文件夹最开始没有 `authorized_keys` 文件）。
-- `scp id_rsa.pub hw:~/.ssh/authorized_keys`。直接上传 authorized_keys 文件会覆盖之前的文件，导致先前配置的免密登录失效。
-- 将本地的公钥上次到服务器 `hw` 的 `~/.ssh/authorzed_keys`
-
-- 也可以直接使用这个命令一键添加公钥 `ssh-copy-id hw`（windows 自带的 ssh 没有 ssh-copy-id 命令）
+```bash
+# 通用，但是直接上传 authorized_keys 文件会覆盖之前的文件，导致先前配置的免密登录
+scp id_rsa.pub hw:~/.ssh/authorized_keys
+# Linux 支持一键配置，不存在覆盖的问题
+ssh-copy-id hw
+```
 
 ## 执行命令
 
@@ -6954,15 +6930,11 @@ ssh 的 config 文件本身并不用于存储服务器的密码。这是因为 S
 ssh user@hostname command
 ```
 
-例如
+执行命令或 shell 脚本
 
 ```shell
 ssh hw ls -a
-```
 
-或者执行 shell 脚本
-
-```shell
 # 单引号中的 $i 可以求值
 ssh hw 'for ((i=0; i<3; i++)) do echo $i; done'
 0
@@ -6993,21 +6965,16 @@ ssh hw "for ((i=0; i<3; i++)) do echo $i; done" # 双引号中的内容被提前
 
 ## 修改端口
 
-SSH 的默认端口是 22 端口。如果我们想修改 ssh 的默认端口，可以编辑 `/etc/ssh/sshd_config` 文件
+SSH 的默认端口是 22 端口。如果我们想修改 ssh 的默认端口，可以编辑 `/etc/ssh/sshd_config` 文件。不使用默认端口连接更安全
 
 ```shell
-# 添加配置, 这样服务器端的 ssh 就会监听 2022 端口了。
+# 添加配置, 这样服务器端的 ssh 就会监听 2022 端口了。配置这个后，ssh 和 ssh.socket 都会监听 2022 端口
 Port 2022
 ```
 
-客户端就可以通过
-
 ```shell
-ssh server_user@server_ip -p 2022
-ssh -p 20222 server_user@server_ip
+ssh username@ip -p 2022
 ```
-
-来连接服务器了。不使用默认端口连接也更安全~
 
 ## 端口映射
 
@@ -7020,8 +6987,8 @@ graph LR
 
 <b>SSH 端口映射分为两种类型</b>
 
-- 本地端口转发：将本地的端口转发到远程服务器上；这样访问本地端口的时候，请求就会被转发到远程服务器了
-- 远程端口转发：将远程服务器的端口转发到其他主机上；这样访问远程端口的时候，请求就会被转发到其他主机上了
+- 本地端口转发：将本地的端口 A 转发到远程服务器的端口 B；访问 A 时请求会自动被传送给 B。
+- 远程端口转发：将远程服务器的端口 C 转发到其他主机的端口 D；访问 C 时请求会被自动传送给 D
 
 ### 准备工作
 
@@ -7030,11 +6997,18 @@ graph LR
 <b>这里假定</b>
 
 - 内网服务器 inner：安装了 `openssh-server`，开放用到的端口号。
-- 公网服务器 remote：安装了 `openssh-server`；`/etc/ssh/sshd_config` 中配置了 `GatewayPorts yes`。
 
-默认情况下，OpenSSH 只允许从服务器主机连接到远程转发端口。能够防止从服务器计算机外部连接到转发端口。设置成 `yes` 后，外部主机就可以连接了。
+- 公网服务器 remote：安装了 `openssh-server`；`/etc/ssh/sshd_config` 有如下配置
 
-`GatewayPorts` 设置为 `yes` 时，任何能够访问到远程服务器的主机都可以通过远程服务器上转发的端口访问到本地机器上的服务。就是说远程服务器上的转发端口将对网络中的所有主机开放，如果不设置 `GatewayPorts yes`，这个端口就不对外开放。
+  ```bash
+  # 允许 SSH 端口转发功能（-L/-R/-D）。
+  AllowTcpForwarding yes
+  
+  GatewayPorts yes
+  ```
+
+- GatewayPorts 不开（默认）：远程转发端口只监听 127.0.0.1，只有服务器自己能连。
+- GatewayPorts 开：远程转发端口可监听 0.0.0.0，其他机器也能连到这个端口。
 
 <b>安装软件</b>
 
@@ -7116,14 +7090,20 @@ ssh -CNg -L 80:localhost:8083 username@host -o StrictHostKeyChecking=no
 
 ### 远程端口转发
 
-远程端口转发是将远程计算机上的一个端口映射到本地计算机上的一个端口。这允许用户从外部网络通过远程计算机访问本地计算机上的服务。
+把远程服务器的端口 A 转发到服务器 B。这样访问 A 端口时会自动连上服务器 B。
 
 ```mermaid
 graph LR
 远程主机-->|远程端口转发|内网主机
 ```
 
-完成远程端口转发后，就可以通过访问远程主机，来访问内网主机了（这里假定配置了 `GatewaysPorts yes`）。
+可以借助这种手段实现内网穿透，把公网服务器的端口转发到内外服务器，登录公网服务器端口时自动连接到内网。
+
+```shell
+# 需要在 sshd_config 做好下面的配置
+AllowTcpForwarding yes
+GatewayPorts yes
+```
 
 ```mermaid
 sequenceDiagram
@@ -7142,18 +7122,18 @@ sequenceDiagram
 我们在内网主机上执行这条命令
 
 ```shell
-ssh -N -R [remote_port]:[local_host]:[local_port] [user]@[remote_server]
+ssh -N -R [remotePort]:[localhost]:[localport] [user]@[remote_server]
 ```
 
-| 参数                         | 说明                                                         |
-| ---------------------------- | ------------------------------------------------------------ |
-| `-N`                         | 表示不执行远程命令，仅建立连接用于端口转发                   |
-| `-R`                         | 用于指定远程（Remote）端口转发的设置，后面跟着的参数就是端口转发的具体设置。 |
-| `remote_port:localhost:8083` | 表示将远程主机的 80 端口转发到内网主机的 `localhost:8083` 端口。 |
-| `user@remote_server`         | 远程主机的用户名和 IP 地址                                   |
+| 参数                        | 说明                                                         |
+| --------------------------- | ------------------------------------------------------------ |
+| `-N`                        | 表示不执行远程命令，仅建立连接用于端口转发                   |
+| `-R`                        | 用于指定远程（Remote）端口转发的设置，后面跟着的参数就是端口转发的具体设置。 |
+| `remotePort:localhost:8083` | 表示将远程主机的 80 端口转发到内网主机的 `localhost:8083` 端口。 |
+| `user@remote_server`        | 远程主机的用户名和 IP 地址                                   |
 
 ```shell
-ssh -N -R 8083:localhost:80 test_user@110.78.26.2
+ssh -N -R 8083:localhost:80 root@110.78.26.2
 ```
 
 一条参数更为全面的转发命令
@@ -7165,8 +7145,9 @@ ssh -fCNR [公网IP(可省略)]:[公网端口]:[内网IP]:[内网端口] \
 
 ```shell
 ssh -fCNR 8083:localhost:80 -o ServerAliveInterval=60 remote_user@remote_server_ip  -p 22 # 这里 root 就是 公网服务器的用户名
+
 # 或者使用autossh:
-# autossh -M 8999 -CNR 8022:localhost:22 root@19.168.100.4 -p 22
+autossh -M 8999 -CNR 8022:localhost:22 root@19.168.100.4 -p 22
 ```
 
 - `-f` 让 `ssh` 在后台运行。更推荐用 tmux 让程序在后台执行。
@@ -7189,10 +7170,6 @@ ssh -fCNL *:8888:localhost:8083 -o ServerAliveInterval=60 root@localhost -p 2222
 # autossh -M 8999 -CNL *:8023:localhost:8022 root@localhost -p 22
 ```
 
-### 动态端口转发
-
-[ssh端口转发的三种方式 - tlanyan (itlanyan.com)](https://itlanyan.com/ssh-tunnel-port-forward-ways/#bnp_i_1)
-
 ### 实战-SSH内网穿透
 
 我们来使用 ssh 实现一个内网穿透
@@ -7210,13 +7187,13 @@ apt install autossh
 
 # ssh 连接
 ssh root@xxx -p 22
-# autossh 连接，8999端口监听22端口，22断了就重连
+# autossh 连接，8999 端口监听 ssh 服务
 autossh -M 8999 root@xxx -p 22
 ```
 
 <b>ssh 远程端口转发，将远程服务器的端口转发到内网服务器。</b>
 
-我们在内网服务器上执行远程端口转发的指令，将远程服务器的 8022 端口转发到内网机器的 22 端口。
+我们在内网服务器上执行远程端口转发的指令，将远程服务器的 8022 端口转发到内网机器的 22 端口。远程服务器需要开放 8022 端口的防火墙（不是在 ssh 里增加 8022 端口！！）
 
 ```shell
 ssh -fCNR 8022:localhost:22 -o ServerAliveInterval=60 root@19.168.100.4	-p 22
@@ -7260,6 +7237,10 @@ ssh -fCNL *:8023:localhost:8022 -o ServerAliveInterval=60 root@localhost -p 22
 # autossh -M 8999 -CNL *:8023:localhost:8022 root@localhost -p 22
 ```
 
+### 动态端口转发
+
+[ssh端口转发的三种方式 - tlanyan (itlanyan.com)](https://itlanyan.com/ssh-tunnel-port-forward-ways/#bnp_i_1)
+
 # Git-版本控制工具⭐
 
 - 讲的时候按知识点讲，先讲最基本的 git 命令，然后讲如何关联 github，最后再讲其他常用命令。
@@ -7282,7 +7263,7 @@ Git 是一个开源的分布式版本控制系统，在软件开发领域，大�
 
 <b>集中式版本控制工具</b>
 
-- 版本库是集中存放在中央服务器的，team 里每个人工作时从中央服务器下载代码，是必须联网才能工作，局域网或互联网。个人修改后然后提交到中央版本库。【典型的集中式版本控制软件有 SVN】
+版本库集中存放在中央服务器，team 里每个人工作时从中央服务器下载代码。个人修改后然后提交到中央版本库。【典型的集中式版本控制软件有 SVN】
 
 ```mermaid
 graph
@@ -7295,7 +7276,7 @@ end
 
 <b>分布式版本控制工具（每个人都有一份副本，那就是分布式啦）</b>
 
-- 分布式版本控制系统没有“中央服务器”，每个人的电脑上都是一个完整的版本库，这样工作的时候无需要联网，因为版本库就在你自己的电脑上。多人协作只需要各自的修改推送给对方，就能互相看到对方的修改了。【典型的分布式版本控制软件有 Git】
+分布式版本控制系统没有“中央服务器”，每个人的电脑上都是一个完整的版本库，这样工作的时候无需要联网，因为版本库就在你自己的电脑上。多人协作只需要各自的修改推送给对方，就能互相看到对方的修改了。【典型的分布式版本控制软件有 Git】
 
 ```mermaid
 graph
@@ -7322,7 +7303,7 @@ end
 
 - <b>工作区：</b>当我们在本地创建一个 Git 项目，或者从 GitHub 上 clone 代码到本地后，项目所在的<u>这个目录就是工作区</u>。这里是我们对项目文件进行编辑和使用的地方。工作区是独立于各个分支的。实际上每个分支都是用的同一个工作区。
 
-- <b>暂存区：</b>从字面上理解，暂存区就是数据暂时存放的区域，我们可以将其认为是工作区写入版本库前的缓存区。暂存区是独立于各个分支的。
+- <b>暂存区：</b>从字面上理解，暂存区就是暂时存放数据的区域，我们可以将其认为是工作区写入版本库前的缓存区。暂存区独立于各个分支。
 
 - <b>版本库：</b>在项目目录中，.git 隐藏目录不属于工作区，而是 Git 的版本仓库。这个仓库区包含了所有历史版本的完整信息，是 Git 项目的“本体”。`.git` 里存放了所有已经提交到本地仓库的代码版本。
 
@@ -7341,15 +7322,7 @@ Git 设置暂存区主要是为了提供一个缓冲地带，让开发者可以�
 - 组织提交：有助于创建清晰、有组织的提交历史。
 - 避免污染提交：防止不小心将无关或未完成的更改包含在提交中。
 
-<b>为什么要设置暂存区？</b>
-
-Git 设置暂存区主要是为了提供一个缓冲地带，让开发者可以有选择性地提交工作目录中的更改。做更细粒度和干净的提交。
-
-- 选择性提交：可以挑选哪些更改应该被纳入下一次提交。
-- 组织提交：有助于创建清晰、有组织的提交历史。
-- 避免污染提交：防止不小心将无关或未完成的更改包含在提交中。
-
-<b>还有一个非常重要的概念：文件状态</b>
+<b>文件状态</b>
 
 文件状态是指文件在 Git 工作区（目录）中的状态。
 
@@ -7421,8 +7394,6 @@ $ sudo apt install git
 ```
 
 <b>Windows 安装 git</b>
-
-这里主要讲解 windows 下 git 的安装方式。
 
 下载地址： https://git-scm.com/download
 
